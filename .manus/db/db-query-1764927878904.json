@@ -1,0 +1,106 @@
+{
+  "query": "SELECT id, name, type, pricePetite, priceRegular, priceLarge FROM addons WHERE type = 'extra_boba'",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT id, name, type, pricePetite, priceRegular, priceLarge FROM addons WHERE type = 'extra_boba'",
+  "rows": [
+    {
+      "id": "30003",
+      "name": "Extra Tapioca Pearls",
+      "type": "extra_boba",
+      "pricePetite": "3000",
+      "priceRegular": "4000",
+      "priceLarge": "5000"
+    },
+    {
+      "id": "30004",
+      "name": "Extra Strawberry Popping Boba",
+      "type": "extra_boba",
+      "pricePetite": "3000",
+      "priceRegular": "4000",
+      "priceLarge": "5000"
+    },
+    {
+      "id": "30005",
+      "name": "Extra Blueberry Popping Boba",
+      "type": "extra_boba",
+      "pricePetite": "3000",
+      "priceRegular": "4000",
+      "priceLarge": "5000"
+    },
+    {
+      "id": "30006",
+      "name": "Extra Mango Popping Boba",
+      "type": "extra_boba",
+      "pricePetite": "3000",
+      "priceRegular": "4000",
+      "priceLarge": "5000"
+    },
+    {
+      "id": "30007",
+      "name": "Extra Lychee Popping Boba",
+      "type": "extra_boba",
+      "pricePetite": "3000",
+      "priceRegular": "4000",
+      "priceLarge": "5000"
+    },
+    {
+      "id": "30008",
+      "name": "Extra Passionfruit Popping Boba",
+      "type": "extra_boba",
+      "pricePetite": "3000",
+      "priceRegular": "4000",
+      "priceLarge": "5000"
+    },
+    {
+      "id": "30011",
+      "name": "Extra Tapioca Pearls",
+      "type": "extra_boba",
+      "pricePetite": "3000",
+      "priceRegular": "4000",
+      "priceLarge": "5000"
+    },
+    {
+      "id": "30012",
+      "name": "Extra Strawberry Popping Boba",
+      "type": "extra_boba",
+      "pricePetite": "3000",
+      "priceRegular": "4000",
+      "priceLarge": "5000"
+    },
+    {
+      "id": "30013",
+      "name": "Extra Blueberry Popping Boba",
+      "type": "extra_boba",
+      "pricePetite": "3000",
+      "priceRegular": "4000",
+      "priceLarge": "5000"
+    },
+    {
+      "id": "30014",
+      "name": "Extra Mango Popping Boba",
+      "type": "extra_boba",
+      "pricePetite": "3000",
+      "priceRegular": "4000",
+      "priceLarge": "5000"
+    },
+    {
+      "id": "30015",
+      "name": "Extra Lychee Popping Boba",
+      "type": "extra_boba",
+      "pricePetite": "3000",
+      "priceRegular": "4000",
+      "priceLarge": "5000"
+    },
+    {
+      "id": "30016",
+      "name": "Extra Passionfruit Popping Boba",
+      "type": "extra_boba",
+      "pricePetite": "3000",
+      "priceRegular": "4000",
+      "priceLarge": "5000"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\ttype\tpricePetite\tpriceRegular\tpriceLarge\n30003\tExtra Tapioca Pearls\textra_boba\t3000\t4000\t5000\n30004\tExtra Strawberry Popping Boba\textra_boba\t3000\t4000\t5000\n30005\tExtra Blueberry Popping Boba\textra_boba\t3000\t4000\t5000\n30006\tExtra Mango Popping Boba\textra_boba\t3000\t4000\t5000\n30007\tExtra Lychee Popping Boba\textra_boba\t3000\t4000\t5000\n30008\tExtra Passionfruit Popping Boba\textra_boba\t3000\t4000\t5000\n30011\tExtra Tapioca Pearls\textra_boba\t3000\t4000\t5000\n30012\tExtra Strawberry Popping Boba\textra_boba\t3000\t4000\t5000\n30013\tExtra Blueberry Popping Boba\textra_boba\t3000\t4000\t5000\n30014\tExtra Mango Popping Boba\textra_boba\t3000\t4000\t5000\n30015\tExtra Lychee Popping Boba\textra_boba\t3000\t4000\t5000\n30016\tExtra Passionfruit Popping Boba\textra_boba\t3000\t4000\t5000\n",
+  "stderr": "",
+  "execution_time_ms": 90
+}

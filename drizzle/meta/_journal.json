@@ -15,6 +15,13 @@
       "when": 1764922491687,
       "tag": "0001_tidy_genesis",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1764927223169,
+      "tag": "0002_hot_puma",
+      "breakpoints": true
     }
   ]
 }

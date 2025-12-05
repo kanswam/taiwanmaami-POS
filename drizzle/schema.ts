@@ -103,7 +103,7 @@ export const addons = mysqlTable("addons", {
   id: int("id").autoincrement().primaryKey(),
   name: varchar("name", { length: 100 }).notNull(),
   chineseName: varchar("chineseName", { length: 100 }),
-  type: mysqlEnum("type", ["boba_flavor", "vegan_milk", "food_addon"]).notNull(),
+  type: mysqlEnum("type", ["boba_flavor", "boba_size", "extra_boba", "vegan_milk", "food_addon"]).notNull(),
   // Size-based pricing for boba/milk add-ons
   pricePetite: int("pricePetite"),
   priceRegular: int("priceRegular"),

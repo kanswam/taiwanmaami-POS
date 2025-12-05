@@ -48,6 +48,10 @@ export type PaymentMethod = "cash" | "card" | "upi" | "razorpay";
 // User roles
 export type UserRole = "customer" | "staff" | "admin";
 
+// Boba types
+export type BobaSize = 'small' | 'big';
+export type BobaType = 'tapioca' | 'popping';
+
 // Cart item type
 export interface CartItem {
   id: string;
@@ -58,6 +62,9 @@ export interface CartItem {
   imageUrl?: string;
   size?: Size;
   withBoba?: boolean;
+  bobaSize?: BobaSize;
+  bobaType?: BobaType;
+  poppingBobaFlavor?: string;
   sugarLevel?: string;
   iceLevel?: string;
   addons: { id: number; name: string; price: number }[];

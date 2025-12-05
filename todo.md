@@ -80,3 +80,29 @@
 - [x] Display price with GST included
 - [x] Billing breakdown with GST split
 
+
+## Phase 2 - UI/UX Improvements (Dec 5, 2025)
+
+### Navigation & Layout
+- [x] Subcategory-first navigation for Bubble Tea (Black, Green, Oolong, Matcha, Taro)
+- [x] Subcategory-first navigation for Food (Onigiri, Noodles, Cong You Bing, Omelette, etc.)
+- [x] Separate Mochis into Fruit and Signature subcategories display
+- [x] Reorganize POS layout by categories/subcategories
+
+### Boba Customization Enhancement
+- [x] Boba size selection (Small or Big boba)
+- [x] Popping boba flavor selection as alternative to tapioca
+- [x] Extra boba/popping boba add-on with size-appropriate pricing
+
+### Special Instructions
+- [x] Special instructions field on website ordering
+- [x] Special instructions field on POS
+
+### Menu Items
+- [x] Add Hot Beverages to in-store menu
+
+### Branding & Images
+- [x] Add product photos to menu cards
+- [x] Add interior/shopfront images to homepage hero
+- [x] Use brand images on About Us page
+- [x] Proper image display on product cards

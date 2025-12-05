@@ -1,0 +1,1 @@
+ALTER TABLE `addons` MODIFY COLUMN `type` enum('boba_flavor','boba_size','extra_boba','vegan_milk','food_addon') NOT NULL;

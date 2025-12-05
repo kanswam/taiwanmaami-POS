@@ -126,13 +126,20 @@ export default function Cart() {
                     <div className="text-sm text-muted-foreground mt-1 space-y-0.5">
                       {item.size && <span className="capitalize">{item.size}</span>}
                       {item.withBoba !== undefined && (
-                        <span> • {item.withBoba ? 'With Boba' : 'No Boba'}</span>
+                        <span> • {item.withBoba ? (
+                          `${item.bobaSize === 'big' ? 'Big' : 'Small'} ${item.bobaType === 'popping' ? `${item.poppingBobaFlavor} Popping Boba` : 'Tapioca Boba'}`
+                        ) : 'No Boba'}</span>
                       )}
                       {item.sugarLevel && <span> • Sugar: {item.sugarLevel}</span>}
                       {item.iceLevel && <span> • {item.iceLevel}</span>}
                       {item.addons.length > 0 && (
                         <div className="text-xs">
                           Add-ons: {item.addons.map(a => a.name).join(', ')}
+                        </div>
+                      )}
+                      {item.specialInstructions && (
+                        <div className="text-xs text-orange-600 mt-1">
+                          Note: {item.specialInstructions}
                         </div>
                       )}
                     </div>
