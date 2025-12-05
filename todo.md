@@ -257,3 +257,13 @@
 - [x] Stock availability toggle exists (In Stock switch)
 - [x] Product list with search/filter by category exists
 - [ ] Support bulk image import (ready for user to share images)
+
+
+## Phase 10 - Razorpay Payment Integration
+
+- [x] Add Razorpay API keys as secrets
+- [x] Create Razorpay order creation endpoint
+- [x] Add Razorpay checkout script to frontend
+- [x] Implement payment verification endpoint
+- [x] Update checkout flow to use Razorpay
+- [x] Handle payment success/failure callbacks

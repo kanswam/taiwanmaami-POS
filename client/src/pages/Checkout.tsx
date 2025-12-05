@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useLocation } from 'wouter';
 import { Header } from '@/components/Header';
 import { Button } from '@/components/ui/button';
@@ -11,10 +11,17 @@ import { useCart } from '@/contexts/CartContext';
 import { useAuth } from '@/_core/hooks/useAuth';
 import { trpc } from '@/lib/trpc';
 import { formatPrice, GST_RATE } from '@shared/types';
-import { ArrowLeft, MapPin, Clock, CreditCard, Banknote } from 'lucide-react';
+import { ArrowLeft, MapPin, Clock, CreditCard, Banknote, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Link } from 'wouter';
 import { getLoginUrl } from '@/const';
+
+// Declare Razorpay types
+declare global {
+  interface Window {
+    Razorpay: any;
+  }
+}
 
 export default function Checkout() {
   const [, navigate] = useLocation();
@@ -43,17 +50,74 @@ export default function Checkout() {
     notes: '',
   });
 
-  const createOrder = trpc.orders.create.useMutation({
-    onSuccess: (data) => {
-      // For now, go directly to confirmation (Razorpay integration will be added later)
-      clearCart();
-      navigate(`/order-confirmation/${data.orderId}`);
-    },
-    onError: (error) => {
-      toast.error(error.message || 'Failed to create order');
+  const createOrder = trpc.orders.create.useMutation();
+  const createPaymentOrder = trpc.orders.createPaymentOrder.useMutation();
+  const verifyPayment = trpc.orders.verifyPayment.useMutation();
+
+  // Load Razorpay script
+  useEffect(() => {
+    const script = document.createElement('script');
+    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+    script.async = true;
+    document.body.appendChild(script);
+    return () => {
+      document.body.removeChild(script);
+    };
+  }, []);
+
+  const handleRazorpayPayment = useCallback(async (orderId: number, amount: number) => {
+    try {
+      // Create Razorpay order
+      const paymentOrder = await createPaymentOrder.mutateAsync({ orderId, amount });
+      
+      const options = {
+        key: paymentOrder.razorpayKeyId,
+        amount: paymentOrder.amount,
+        currency: paymentOrder.currency,
+        name: 'Taiwan Maami',
+        description: `Order #${orderId}`,
+        order_id: paymentOrder.razorpayOrderId,
+        handler: async (response: any) => {
+          try {
+            // Verify payment
+            await verifyPayment.mutateAsync({
+              orderId,
+              razorpayOrderId: response.razorpay_order_id,
+              razorpayPaymentId: response.razorpay_payment_id,
+              razorpaySignature: response.razorpay_signature,
+            });
+            
+            clearCart();
+            toast.success('Payment successful!');
+            navigate(`/order-confirmation/${orderId}`);
+          } catch (err: any) {
+            toast.error(err.message || 'Payment verification failed');
+            setIsSubmitting(false);
+          }
+        },
+        prefill: {
+          name: formData.name,
+          email: formData.email,
+          contact: formData.phone,
+        },
+        theme: {
+          color: '#B45309', // Primary brand color
+        },
+        modal: {
+          ondismiss: () => {
+            setIsSubmitting(false);
+            toast.info('Payment cancelled');
+          },
+        },
+      };
+      
+      const razorpay = new window.Razorpay(options);
+      razorpay.open();
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to initiate payment');
       setIsSubmitting(false);
-    },
-  });
+    }
+  }, [createPaymentOrder, verifyPayment, formData, clearCart, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -82,30 +146,46 @@ export default function Checkout() {
 
     setIsSubmitting(true);
 
-    createOrder.mutate({
-      orderType: state.orderType,
-      items: state.items.map(item => ({
-        productId: item.productId,
-        productName: item.productName,
-        size: item.size,
-        withBoba: item.withBoba,
-        sugarLevel: item.sugarLevel,
-        iceLevel: item.iceLevel,
-        addons: item.addons,
-        quantity: item.quantity,
-        unitPrice: item.unitPrice,
-        addonsTotal: item.addonsTotal,
-        lineTotal: item.lineTotal,
-      })),
-      discountCode: state.discountCode || undefined,
-      customerName: formData.name,
-      customerPhone: formData.phone,
-      deliveryAddress: state.orderType === 'delivery' 
-        ? `${formData.addressLine1}, ${formData.addressLine2 ? formData.addressLine2 + ', ' : ''}${formData.area}, ${formData.city} - ${formData.pincode}`
-        : undefined,
-      scheduledTime: formData.scheduledTime || undefined,
-      specialInstructions: formData.notes || undefined,
-    });
+    try {
+      // Create order first
+      const orderData = await createOrder.mutateAsync({
+        orderType: state.orderType,
+        items: state.items.map(item => ({
+          productId: item.productId,
+          productName: item.productName,
+          size: item.size,
+          withBoba: item.withBoba,
+          sugarLevel: item.sugarLevel,
+          iceLevel: item.iceLevel,
+          addons: item.addons,
+          quantity: item.quantity,
+          unitPrice: item.unitPrice,
+          addonsTotal: item.addonsTotal,
+          lineTotal: item.lineTotal,
+        })),
+        discountCode: state.discountCode || undefined,
+        customerName: formData.name,
+        customerPhone: formData.phone,
+        deliveryAddress: state.orderType === 'delivery' 
+          ? `${formData.addressLine1}, ${formData.addressLine2 ? formData.addressLine2 + ', ' : ''}${formData.area}, ${formData.city} - ${formData.pincode}`
+          : undefined,
+        scheduledTime: formData.scheduledTime || undefined,
+        specialInstructions: formData.notes || undefined,
+      });
+
+      if (paymentMethod === 'online') {
+        // Initiate Razorpay payment
+        await handleRazorpayPayment(orderData.orderId, displayTotal);
+      } else {
+        // Cash on delivery - go directly to confirmation
+        clearCart();
+        toast.success('Order placed successfully!');
+        navigate(`/order-confirmation/${orderData.orderId}`);
+      }
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to create order');
+      setIsSubmitting(false);
+    }
   };
 
   const displayTotal = total + gst.total;

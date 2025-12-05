@@ -249,6 +249,71 @@ export const appRouter = router({
       .query(async ({ input }) => {
         return db.getRecentOrders(input?.limit || 50);
       }),
+
+    // Razorpay payment procedures
+    createPaymentOrder: publicProcedure
+      .input(z.object({
+        orderId: z.number(),
+        amount: z.number(), // Amount in paise
+      }))
+      .mutation(async ({ input }) => {
+        const { createRazorpayOrder, getRazorpayKeyId } = await import('./razorpay');
+        
+        const razorpayOrder = await createRazorpayOrder({
+          amount: input.amount,
+          currency: 'INR',
+          receipt: `order_${input.orderId}`,
+          notes: { orderId: String(input.orderId) },
+        });
+        
+        return {
+          razorpayOrderId: razorpayOrder.id,
+          razorpayKeyId: getRazorpayKeyId(),
+          amount: razorpayOrder.amount,
+          currency: razorpayOrder.currency,
+        };
+      }),
+
+    verifyPayment: publicProcedure
+      .input(z.object({
+        orderId: z.number(),
+        razorpayOrderId: z.string(),
+        razorpayPaymentId: z.string(),
+        razorpaySignature: z.string(),
+      }))
+      .mutation(async ({ input }) => {
+        const { verifyPaymentSignature } = await import('./razorpay');
+        const dbInstance = await getDb();
+        if (!dbInstance) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
+        
+        // Verify signature
+        const isValid = verifyPaymentSignature(
+          input.razorpayOrderId,
+          input.razorpayPaymentId,
+          input.razorpaySignature
+        );
+        
+        if (!isValid) {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: 'Invalid payment signature' });
+        }
+        
+        // Update order payment status
+        await dbInstance.insert(payments).values({
+          orderId: input.orderId,
+          paymentMethod: 'razorpay',
+          paymentStatus: 'success',
+          amount: 0, // Will be updated from order
+          razorpayPaymentId: input.razorpayPaymentId,
+          razorpaySignature: input.razorpaySignature,
+        });
+        
+        // Update order status to confirmed
+        await dbInstance.update(orders)
+          .set({ orderStatus: 'confirmed', paymentStatus: 'completed' })
+          .where(eq(orders.id, input.orderId));
+        
+        return { success: true, message: 'Payment verified successfully' };
+      }),
   }),
 
   // Discount routes
@@ -386,9 +451,9 @@ export const appRouter = router({
       .input(z.object({
         id: z.number(),
         name: z.string().optional(),
-        chineseName: z.string().optional(),
-        description: z.string().optional(),
-        imageUrl: z.string().optional(),
+        chineseName: z.string().nullable().optional(),
+        description: z.string().nullable().optional(),
+        imageUrl: z.string().nullable().optional(),
         instorePrice: z.number().optional(),
         deliveryPrice: z.number().optional(),
         isInStock: z.boolean().optional(),
