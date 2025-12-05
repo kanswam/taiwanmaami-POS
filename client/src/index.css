@@ -43,39 +43,40 @@
 }
 
 :root {
-  --primary: var(--color-blue-700);
-  --primary-foreground: var(--color-blue-50);
-  --sidebar-primary: var(--color-blue-600);
-  --sidebar-primary-foreground: var(--color-blue-50);
-  --chart-1: var(--color-blue-300);
-  --chart-2: var(--color-blue-500);
-  --chart-3: var(--color-blue-600);
-  --chart-4: var(--color-blue-700);
-  --chart-5: var(--color-blue-800);
+  /* Taiwan Maami Brand - Teal/Turquoise Theme */
+  --primary: oklch(0.45 0.12 180);
+  --primary-foreground: oklch(0.98 0.005 180);
+  --sidebar-primary: oklch(0.50 0.12 180);
+  --sidebar-primary-foreground: oklch(0.98 0.005 180);
+  --chart-1: oklch(0.55 0.10 180);
+  --chart-2: oklch(0.60 0.12 150);
+  --chart-3: oklch(0.70 0.12 85);
+  --chart-4: oklch(0.65 0.15 30);
+  --chart-5: oklch(0.55 0.12 300);
   --radius: 0.65rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.235 0.015 65);
+  --background: oklch(0.98 0.005 180);
+  --foreground: oklch(0.20 0.02 180);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.235 0.015 65);
+  --card-foreground: oklch(0.20 0.02 180);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.235 0.015 65);
-  --secondary: oklch(0.98 0.001 286.375);
-  --secondary-foreground: oklch(0.4 0.015 65);
-  --muted: oklch(0.967 0.001 286.375);
-  --muted-foreground: oklch(0.552 0.016 285.938);
-  --accent: oklch(0.967 0.001 286.375);
-  --accent-foreground: oklch(0.141 0.005 285.823);
-  --destructive: oklch(0.577 0.245 27.325);
-  --destructive-foreground: oklch(0.985 0 0);
-  --border: oklch(0.92 0.004 286.32);
-  --input: oklch(0.92 0.004 286.32);
-  --ring: oklch(0.623 0.214 259.815);
+  --popover-foreground: oklch(0.20 0.02 180);
+  --secondary: oklch(0.96 0.01 180);
+  --secondary-foreground: oklch(0.25 0.02 180);
+  --muted: oklch(0.96 0.01 180);
+  --muted-foreground: oklch(0.50 0.02 180);
+  --accent: oklch(0.85 0.15 85);
+  --accent-foreground: oklch(0.25 0.02 180);
+  --destructive: oklch(0.55 0.2 25);
+  --destructive-foreground: oklch(0.98 0.005 180);
+  --border: oklch(0.90 0.02 180);
+  --input: oklch(0.90 0.02 180);
+  --ring: oklch(0.45 0.12 180);
   --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.235 0.015 65);
-  --sidebar-accent: oklch(0.967 0.001 286.375);
-  --sidebar-accent-foreground: oklch(0.141 0.005 285.823);
-  --sidebar-border: oklch(0.92 0.004 286.32);
-  --sidebar-ring: oklch(0.623 0.214 259.815);
+  --sidebar-foreground: oklch(0.20 0.02 180);
+  --sidebar-accent: oklch(0.96 0.01 180);
+  --sidebar-accent-foreground: oklch(0.20 0.02 180);
+  --sidebar-border: oklch(0.90 0.02 180);
+  --sidebar-ring: oklch(0.45 0.12 180);
 }
 
 .dark {
@@ -173,5 +174,175 @@
       padding-right: 2rem;
       max-width: 1280px; /* Standard content width */
     }
+  }
+}
+
+/* Taiwan Maami Custom Styles */
+@layer components {
+  /* Portrait product card */
+  .product-card {
+    @apply bg-card rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 border border-border;
+    aspect-ratio: 3/4;
+  }
+  
+  .product-card-image {
+    @apply w-full h-3/5 object-cover;
+  }
+  
+  .product-card-content {
+    @apply p-4 h-2/5 flex flex-col justify-between;
+  }
+  
+  /* Touch-optimized buttons for POS */
+  .pos-btn {
+    min-height: 56px;
+    min-width: 56px;
+    font-size: 1.125rem;
+    font-weight: 500;
+    border-radius: 0.5rem;
+    transition: all 0.2s;
+  }
+  
+  .pos-btn:active {
+    transform: scale(0.95);
+  }
+  
+  .pos-btn-primary {
+    min-height: 56px;
+    min-width: 56px;
+    font-size: 1.125rem;
+    font-weight: 500;
+    border-radius: 0.5rem;
+    transition: all 0.2s;
+    background-color: var(--primary);
+    color: var(--primary-foreground);
+  }
+  
+  .pos-btn-primary:hover {
+    opacity: 0.9;
+  }
+  
+  .pos-btn-primary:active {
+    transform: scale(0.95);
+  }
+  
+  .pos-btn-secondary {
+    min-height: 56px;
+    min-width: 56px;
+    font-size: 1.125rem;
+    font-weight: 500;
+    border-radius: 0.5rem;
+    transition: all 0.2s;
+    background-color: var(--secondary);
+    color: var(--secondary-foreground);
+  }
+  
+  .pos-btn-secondary:hover {
+    background-color: oklch(0.94 0.01 180);
+  }
+  
+  .pos-btn-secondary:active {
+    transform: scale(0.95);
+  }
+  
+  /* Category pill */
+  .category-pill {
+    @apply px-4 py-2 rounded-full text-sm font-medium transition-all cursor-pointer;
+  }
+  
+  .category-pill-active {
+    @apply bg-primary text-primary-foreground;
+  }
+  
+  .category-pill-inactive {
+    @apply bg-secondary text-secondary-foreground hover:bg-secondary/80;
+  }
+  
+  /* Price tag */
+  .price-tag {
+    @apply text-lg font-bold text-primary;
+  }
+  
+  .price-tag-small {
+    @apply text-sm font-semibold text-primary;
+  }
+  
+  /* Dietary badges */
+  .badge-veg {
+    @apply inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800;
+  }
+  
+  .badge-vegan {
+    @apply inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-emerald-100 text-emerald-800;
+  }
+  
+  .badge-egg {
+    @apply inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-800;
+  }
+  
+  /* Order status badges */
+  .status-pending {
+    @apply bg-yellow-100 text-yellow-800;
+  }
+  
+  .status-confirmed {
+    @apply bg-blue-100 text-blue-800;
+  }
+  
+  .status-preparing {
+    @apply bg-orange-100 text-orange-800;
+  }
+  
+  .status-ready {
+    @apply bg-green-100 text-green-800;
+  }
+  
+  .status-completed {
+    @apply bg-gray-100 text-gray-800;
+  }
+  
+  .status-cancelled {
+    @apply bg-red-100 text-red-800;
+  }
+}
+
+@layer utilities {
+  /* Glass effect */
+  .glass {
+    @apply bg-white/80 backdrop-blur-md;
+  }
+  
+  /* Gradient backgrounds */
+  .gradient-primary {
+    background: linear-gradient(135deg, oklch(0.45 0.12 180) 0%, oklch(0.55 0.15 150) 100%);
+  }
+  
+  .gradient-accent {
+    background: linear-gradient(135deg, oklch(0.85 0.15 85) 0%, oklch(0.75 0.18 60) 100%);
+  }
+  
+  /* Text gradient */
+  .text-gradient {
+    @apply bg-clip-text text-transparent;
+    background-image: linear-gradient(135deg, oklch(0.45 0.12 180) 0%, oklch(0.55 0.15 150) 100%);
+  }
+  
+  /* Animation utilities */
+  .animate-fade-in {
+    animation: fadeIn 0.3s ease-out;
+  }
+  
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  
+  .animate-slide-up {
+    animation: slideUp 0.4s ease-out;
+  }
+  
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
   }
 }
