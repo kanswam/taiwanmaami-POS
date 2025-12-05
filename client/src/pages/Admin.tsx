@@ -266,6 +266,8 @@ function ProductEditDialog({ product, onUpdate }: { product: any; onUpdate: () =
     instorePrice: product.instorePrice || 0,
     deliveryPrice: product.deliveryPrice || 0,
   });
+  const [imagePreview, setImagePreview] = useState<string | null>(product.imageUrl || null);
+  const [uploading, setUploading] = useState(false);
 
   const updateProduct = trpc.admin.updateProduct.useMutation({
     onSuccess: () => {
@@ -275,6 +277,40 @@ function ProductEditDialog({ product, onUpdate }: { product: any; onUpdate: () =
     },
     onError: (err) => toast.error(err.message),
   });
+
+  const uploadImage = trpc.admin.uploadProductImage.useMutation({
+    onSuccess: (data) => {
+      toast.success('Image uploaded');
+      setImagePreview(data.imageUrl);
+      onUpdate();
+    },
+    onError: (err) => toast.error(err.message),
+  });
+
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Image must be less than 5MB');
+      return;
+    }
+    
+    setUploading(true);
+    const reader = new FileReader();
+    reader.onload = async () => {
+      const base64 = reader.result as string;
+      setImagePreview(base64);
+      await uploadImage.mutateAsync({
+        productId: product.id,
+        imageBase64: base64,
+        mimeType: file.type,
+        fileName: file.name,
+      });
+      setUploading(false);
+    };
+    reader.readAsDataURL(file);
+  };
 
   const handleSubmit = () => {
     updateProduct.mutate({
@@ -299,6 +335,42 @@ function ProductEditDialog({ product, onUpdate }: { product: any; onUpdate: () =
           <DialogTitle>Edit Product</DialogTitle>
         </DialogHeader>
         <div className="space-y-4 py-4">
+          {/* Image Upload */}
+          <div>
+            <Label>Product Image</Label>
+            <div className="mt-2 flex items-center gap-4">
+              <div className="w-20 h-20 rounded-lg border-2 border-dashed border-border overflow-hidden bg-secondary flex items-center justify-center">
+                {imagePreview ? (
+                  <img src={imagePreview} alt="" className="w-full h-full object-cover" />
+                ) : (
+                  <ImageIcon className="w-8 h-8 text-muted-foreground" />
+                )}
+              </div>
+              <div className="flex-1">
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageChange}
+                  className="hidden"
+                  id={`image-upload-${product.id}`}
+                  disabled={uploading}
+                />
+                <label htmlFor={`image-upload-${product.id}`}>
+                  <Button variant="outline" size="sm" asChild disabled={uploading}>
+                    <span className="cursor-pointer">
+                      {uploading ? (
+                        <><RefreshCw className="w-4 h-4 mr-2 animate-spin" />Uploading...</>
+                      ) : (
+                        <><Upload className="w-4 h-4 mr-2" />Upload Image</>
+                      )}
+                    </span>
+                  </Button>
+                </label>
+                <p className="text-xs text-muted-foreground mt-1">Max 5MB. JPG, PNG, WebP</p>
+              </div>
+            </div>
+          </div>
+
           <div>
             <Label>Name</Label>
             <Input

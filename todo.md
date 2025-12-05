@@ -247,3 +247,13 @@
 - [x] Add "Set of 2" badge on mochi product cards for delivery
 - [x] Add "Set of 2 pieces" indicator in customization modal for delivery
 - [x] Make indicator visible to customers on menu page
+
+
+## Phase 9 - Admin Product Management
+
+- [x] Products tab already exists in Admin page
+- [x] Implement product image upload with S3 storage
+- [x] Add price editing (in-store and delivery prices)
+- [x] Stock availability toggle exists (In Stock switch)
+- [x] Product list with search/filter by category exists
+- [ ] Support bulk image import (ready for user to share images)

@@ -405,6 +405,35 @@ export const appRouter = router({
         return { success: true };
       }),
 
+    uploadProductImage: adminProcedure
+      .input(z.object({
+        productId: z.number(),
+        imageBase64: z.string(),
+        mimeType: z.string(),
+        fileName: z.string(),
+      }))
+      .mutation(async ({ input }) => {
+        const { storagePut } = await import('./storage');
+        const dbInstance = await getDb();
+        if (!dbInstance) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
+        
+        // Convert base64 to buffer
+        const base64Data = input.imageBase64.replace(/^data:[^;]+;base64,/, '');
+        const buffer = Buffer.from(base64Data, 'base64');
+        
+        // Generate unique file key
+        const ext = input.fileName.split('.').pop() || 'jpg';
+        const fileKey = `products/${input.productId}-${Date.now()}.${ext}`;
+        
+        // Upload to S3
+        const { url } = await storagePut(fileKey, buffer, input.mimeType);
+        
+        // Update product with new image URL
+        await dbInstance.update(products).set({ imageUrl: url }).where(eq(products.id, input.productId));
+        
+        return { success: true, imageUrl: url };
+      }),
+
     deleteProduct: adminProcedure
       .input(z.object({ id: z.number() }))
       .mutation(async ({ input }) => {
