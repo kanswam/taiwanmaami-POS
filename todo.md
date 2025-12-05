@@ -231,3 +231,12 @@
 - [x] Implement Fruit Mochi pricing: 1pc=₹185, 2pc=₹350, 3pc=₹495
 - [x] Implement Signature Mochi pricing: 1pc=₹270, 2pc=₹530, 3pc=₹750
 - [x] Update database with mochi quantity pricing structure
+
+
+## Phase 8b - POS Mochi Mix-and-Match
+
+- [x] Redesign mochi ordering as "Mochi Box" concept
+- [x] Add Fruit Mochi Box options: 1pc, 2pc, 3pc with respective pricing
+- [x] Add Signature Mochi Box options: 1pc, 2pc, 3pc with respective pricing
+- [x] Allow staff to select individual flavors for each slot in the box (including duplicates)
+- [x] Display selected flavors in cart (e.g., "Fruit Mochi 2pc: Strawberry, Cherry")

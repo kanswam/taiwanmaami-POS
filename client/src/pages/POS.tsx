@@ -42,6 +42,7 @@ interface POSCartItem {
   lineTotal: number;
   specialInstructions?: string;
   mochiQuantity?: 1 | 2 | 3; // For mochi products: 1pc, 2pc, or 3pc
+  mochiSelections?: { productId: number; name: string }[]; // Selected mochi flavors for mix-and-match
 }
 
 // Popping boba flavors
@@ -150,9 +151,11 @@ export default function POS() {
   const [extraBobaType, setExtraBobaType] = useState<BobaType | null>(null);
   const [extraBobaSize, setExtraBobaSize] = useState<BobaSize>('small');
   const [extraPoppingFlavor, setExtraPoppingFlavor] = useState('');
-  
   // Mochi quantity state (for mochi products only)
   const [mochiQuantity, setMochiQuantity] = useState<1 | 2 | 3>(1);
+  const [mochiSelections, setMochiSelections] = useState<{ productId: number; name: string }[]>([]);
+  const [showMochiBoxModal, setShowMochiBoxModal] = useState(false);
+  const [selectedMochiSubcategory, setSelectedMochiSubcategory] = useState<any>(null);
 
   // Payment modal state
   const [showPayment, setShowPayment] = useState(false);
@@ -243,6 +246,17 @@ export default function POS() {
   // Handle product click
   const handleProductClick = (product: any) => {
     const subcategory = getSubcategoryById(product.subcategoryId);
+    
+    // Check if this is a mochi product - open mochi box modal instead
+    const isMochiProduct = product.mochiPrice1pc && product.mochiPrice2pc && product.mochiPrice3pc;
+    if (isMochiProduct) {
+      setSelectedMochiSubcategory(subcategory);
+      setMochiQuantity(1);
+      setMochiSelections([{ productId: product.id, name: product.name }]); // Start with clicked product
+      setShowMochiBoxModal(true);
+      return;
+    }
+    
     setSelectedProduct(product);
     setSelectedSubcategoryData(subcategory);
     setCustomSize('regular');
@@ -1335,6 +1349,186 @@ export default function POS() {
                 <RefreshCw className="w-5 h-5 animate-spin mr-2" />
               ) : null}
               Complete Payment
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Mochi Box Modal - Mix and Match */}
+      <Dialog open={showMochiBoxModal} onOpenChange={setShowMochiBoxModal}>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              {selectedMochiSubcategory?.name} Box
+              {selectedMochiSubcategory?.chineseName && (
+                <span className="block text-sm text-muted-foreground font-normal">
+                  {selectedMochiSubcategory.chineseName}
+                </span>
+              )}
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-5 py-2">
+            {/* Quantity Selection */}
+            <div>
+              <h4 className="font-medium mb-2">How many mochis?</h4>
+              <RadioGroup 
+                value={String(mochiQuantity)} 
+                onValueChange={(v) => {
+                  const qty = Number(v) as 1 | 2 | 3;
+                  setMochiQuantity(qty);
+                  // Adjust selections array to match quantity
+                  if (qty < mochiSelections.length) {
+                    setMochiSelections(mochiSelections.slice(0, qty));
+                  } else if (qty > mochiSelections.length && mochiSelections.length > 0) {
+                    // Fill with the first selection
+                    const fill = Array(qty - mochiSelections.length).fill(mochiSelections[0]);
+                    setMochiSelections([...mochiSelections, ...fill]);
+                  }
+                }} 
+                className="grid grid-cols-3 gap-2"
+              >
+                {(() => {
+                  const mochiProducts = menuData?.products.filter(p => 
+                    p.subcategoryId === selectedMochiSubcategory?.id && p.mochiPrice1pc
+                  ) || [];
+                  const sampleProduct = mochiProducts[0];
+                  if (!sampleProduct) return null;
+                  return (
+                    <>
+                      <div>
+                        <RadioGroupItem value="1" id="mochi-box-1" className="peer sr-only" />
+                        <Label
+                          htmlFor="mochi-box-1"
+                          className="flex flex-col items-center justify-center rounded-lg border-2 border-muted bg-popover p-3 hover:bg-accent peer-data-[state=checked]:border-primary cursor-pointer"
+                        >
+                          <span className="font-medium">1 Mochi</span>
+                          <span className="text-sm text-primary font-semibold">
+                            {formatPrice(sampleProduct.mochiPrice1pc || 0)}
+                          </span>
+                        </Label>
+                      </div>
+                      <div>
+                        <RadioGroupItem value="2" id="mochi-box-2" className="peer sr-only" />
+                        <Label
+                          htmlFor="mochi-box-2"
+                          className="flex flex-col items-center justify-center rounded-lg border-2 border-muted bg-popover p-3 hover:bg-accent peer-data-[state=checked]:border-primary cursor-pointer"
+                        >
+                          <span className="font-medium">2 Mochis</span>
+                          <span className="text-sm text-primary font-semibold">
+                            {formatPrice(sampleProduct.mochiPrice2pc || 0)}
+                          </span>
+                        </Label>
+                      </div>
+                      <div>
+                        <RadioGroupItem value="3" id="mochi-box-3" className="peer sr-only" />
+                        <Label
+                          htmlFor="mochi-box-3"
+                          className="flex flex-col items-center justify-center rounded-lg border-2 border-muted bg-popover p-3 hover:bg-accent peer-data-[state=checked]:border-primary cursor-pointer"
+                        >
+                          <span className="font-medium">3 Mochis</span>
+                          <span className="text-sm text-primary font-semibold">
+                            {formatPrice(sampleProduct.mochiPrice3pc || 0)}
+                          </span>
+                        </Label>
+                      </div>
+                    </>
+                  );
+                })()}
+              </RadioGroup>
+            </div>
+
+            {/* Flavor Selection for each slot */}
+            <div>
+              <h4 className="font-medium mb-2">Select Flavors</h4>
+              <div className="space-y-3">
+                {Array.from({ length: mochiQuantity }).map((_, index) => {
+                  const mochiProducts = menuData?.products.filter(p => 
+                    p.subcategoryId === selectedMochiSubcategory?.id && p.mochiPrice1pc
+                  ) || [];
+                  return (
+                    <div key={index} className="flex items-center gap-2">
+                      <span className="text-sm font-medium w-20">Mochi {index + 1}:</span>
+                      <select
+                        value={mochiSelections[index]?.productId || ''}
+                        onChange={(e) => {
+                          const productId = Number(e.target.value);
+                          const product = mochiProducts.find(p => p.id === productId);
+                          if (product) {
+                            const newSelections = [...mochiSelections];
+                            newSelections[index] = { productId: product.id, name: product.name };
+                            setMochiSelections(newSelections);
+                          }
+                        }}
+                        className="flex-1 rounded-lg border border-border bg-background px-3 py-2 text-sm"
+                      >
+                        <option value="">Select flavor...</option>
+                        {mochiProducts.map(p => (
+                          <option key={p.id} value={p.id}>{p.name}</option>
+                        ))}
+                      </select>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Selected Summary */}
+            {mochiSelections.length > 0 && mochiSelections.every(s => s?.productId) && (
+              <div className="bg-muted/50 rounded-lg p-3">
+                <p className="text-sm text-muted-foreground mb-1">Your selection:</p>
+                <p className="font-medium">
+                  {mochiSelections.map(s => s.name).join(', ')}
+                </p>
+              </div>
+            )}
+          </div>
+
+          {/* Add to Cart Button */}
+          <div className="flex gap-2 pt-4">
+            <Button variant="outline" onClick={() => setShowMochiBoxModal(false)} className="flex-1">
+              Cancel
+            </Button>
+            <Button 
+              onClick={() => {
+                if (mochiSelections.length !== mochiQuantity || !mochiSelections.every(s => s?.productId)) {
+                  toast.error('Please select all mochi flavors');
+                  return;
+                }
+                const mochiProducts = menuData?.products.filter(p => 
+                  p.subcategoryId === selectedMochiSubcategory?.id && p.mochiPrice1pc
+                ) || [];
+                const sampleProduct = mochiProducts[0];
+                if (!sampleProduct) return;
+                
+                let unitPrice = 0;
+                if (mochiQuantity === 1) unitPrice = sampleProduct.mochiPrice1pc || 0;
+                else if (mochiQuantity === 2) unitPrice = sampleProduct.mochiPrice2pc || 0;
+                else unitPrice = sampleProduct.mochiPrice3pc || 0;
+                
+                const flavorNames = mochiSelections.map(s => s.name.replace(' Mochi', '')).join(', ');
+                
+                addToCart({
+                  id: nanoid(),
+                  productId: sampleProduct.id,
+                  productName: `${selectedMochiSubcategory?.name} (${mochiQuantity}pc): ${flavorNames}`,
+                  chineseName: selectedMochiSubcategory?.chineseName,
+                  imageUrl: getProductImage(sampleProduct),
+                  addons: [],
+                  quantity: 1,
+                  unitPrice,
+                  addonsTotal: 0,
+                  lineTotal: unitPrice,
+                  mochiQuantity,
+                  mochiSelections,
+                });
+                
+                setShowMochiBoxModal(false);
+                toast.success(`Added ${selectedMochiSubcategory?.name} Box`);
+              }}
+              className="flex-1 bg-primary hover:bg-primary/90"
+            >
+              Add to Cart
             </Button>
           </div>
         </DialogContent>
