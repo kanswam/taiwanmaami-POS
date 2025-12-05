@@ -291,8 +291,8 @@ function ProductEditDialog({ product, onUpdate }: { product: any; onUpdate: () =
     const file = e.target.files?.[0];
     if (!file) return;
     
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error('Image must be less than 5MB');
+    if (file.size > 20 * 1024 * 1024) {
+      toast.error('Image must be less than 20MB');
       return;
     }
     
@@ -366,7 +366,7 @@ function ProductEditDialog({ product, onUpdate }: { product: any; onUpdate: () =
                     </span>
                   </Button>
                 </label>
-                <p className="text-xs text-muted-foreground mt-1">Max 5MB. JPG, PNG, WebP</p>
+                <p className="text-xs text-muted-foreground mt-1">Max 20MB. JPG, PNG, WebP</p>
               </div>
             </div>
           </div>
