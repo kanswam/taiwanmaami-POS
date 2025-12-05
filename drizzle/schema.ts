@@ -160,6 +160,8 @@ export const orders = mysqlTable("orders", {
   porterOrderId: varchar("porterOrderId", { length: 100 }),
   // Staff info for POS orders
   staffId: int("staffId"),
+  outletId: int("outletId"), // Which outlet processed this order
+  posSessionId: int("posSessionId"), // Link to POS session for audit
   specialInstructions: text("specialInstructions"),
   discountCode: varchar("discountCode", { length: 50 }),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
@@ -252,6 +254,54 @@ export const storeLocations = mysqlTable("store_locations", {
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 
+// Outlet-specific product availability and pricing
+export const outletProducts = mysqlTable("outlet_products", {
+  id: int("id").autoincrement().primaryKey(),
+  outletId: int("outletId").notNull(), // References storeLocations.id
+  productId: int("productId").notNull(),
+  isAvailable: boolean("isAvailable").default(true).notNull(),
+  // Price overrides (null means use default product price)
+  instorePriceOverride: int("instorePriceOverride"),
+  deliveryPriceOverride: int("deliveryPriceOverride"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+// POS staff sessions for audit trail
+export const posSessions = mysqlTable("pos_sessions", {
+  id: int("id").autoincrement().primaryKey(),
+  // Employee Master data
+  employeeId: varchar("employeeId", { length: 50 }).notNull(),
+  employeeCode: varchar("employeeCode", { length: 50 }).notNull(),
+  employeeName: varchar("employeeName", { length: 200 }).notNull(),
+  employeeMobile: varchar("employeeMobile", { length: 20 }).notNull(),
+  // Outlet assignment
+  outletId: int("outletId").notNull(),
+  outletName: varchar("outletName", { length: 200 }).notNull(),
+  // Session timing
+  loginTime: timestamp("loginTime").defaultNow().notNull(),
+  logoutTime: timestamp("logoutTime"),
+  isActive: boolean("isActive").default(true).notNull(),
+  // Device info for security
+  deviceInfo: text("deviceInfo"),
+  ipAddress: varchar("ipAddress", { length: 50 }),
+});
+
+// POS audit log for all actions
+export const posAuditLog = mysqlTable("pos_audit_log", {
+  id: int("id").autoincrement().primaryKey(),
+  sessionId: int("sessionId").notNull(),
+  employeeCode: varchar("employeeCode", { length: 50 }).notNull(),
+  outletId: int("outletId").notNull(),
+  action: mysqlEnum("action", [
+    "login", "logout", "create_order", "void_order", "apply_discount",
+    "refund", "cash_drawer_open", "price_override", "item_void"
+  ]).notNull(),
+  orderId: int("orderId"),
+  details: json("details"), // Additional action-specific data
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
 // Chennai areas for delivery validation
 export const deliveryAreas = mysqlTable("delivery_areas", {
   id: int("id").autoincrement().primaryKey(),
@@ -274,3 +324,6 @@ export type Discount = typeof discounts.$inferSelect;
 export type Address = typeof addresses.$inferSelect;
 export type StoreLocation = typeof storeLocations.$inferSelect;
 export type DeliveryArea = typeof deliveryAreas.$inferSelect;
+export type OutletProduct = typeof outletProducts.$inferSelect;
+export type PosSession = typeof posSessions.$inferSelect;
+export type PosAuditLog = typeof posAuditLog.$inferSelect;

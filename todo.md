@@ -178,3 +178,41 @@
 - [x] Remove vegan milk options from bubble teas in POS
 - [x] Add Coconut Cream Cap option for Tea Lattes only in POS
 - [x] Keep vegan milk options only for hot coffee in POS
+
+
+## Phase 6 - Multi-Outlet POS & Employee Integration
+
+### Database Schema Updates
+- [x] Add outlets table (using existing storeLocations)
+- [x] Add outlet_products table (outletId, productId, isAvailable, priceOverride)
+- [x] Add pos_sessions table (staffId, outletId, loginTime, logoutTime)
+- [x] Add pos_audit_log table (sessionId, action, details, timestamp)
+- [x] Update orders table to include outletId and posSessionId
+
+### Employee Master Integration
+- [x] Create server-side Employee API service (employeeMaster.ts)
+- [x] Add tRPC procedure for staff authentication via mobile
+- [x] Store Employee API credentials as secrets (EMP_MASTER_API_URL, EMP_MASTER_API_KEY)
+
+### POS Staff Login
+- [x] Create /pos/login route with mobile number input
+- [x] Validate against Employee Master API
+- [x] Create staff session with outlet assignment
+- [x] Show outlet selection after authentication
+
+### Outlet-Aware POS
+- [x] Filter products by outlet availability (admin can toggle)
+- [x] Use outlet-specific prices when configured
+- [x] Track all orders with outlet and staff info
+- [x] Log all POS actions for audit trail
+
+### Admin Outlet Management
+- [x] Add Outlets tab in Admin
+- [x] Per-outlet product availability toggle
+- [x] Per-outlet price override option
+- [x] Add POS Audit tab for viewing session logs
+
+### Future Integrations (Noted)
+- [ ] Zomato/Swiggy API integration (pending API credentials)
+- [ ] Porter delivery integration (pending business account)
+- [ ] Meta Pixel for social media retargeting

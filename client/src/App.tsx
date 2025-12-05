@@ -19,6 +19,7 @@ import Terms from "./pages/Terms";
 import Privacy from "./pages/Privacy";
 import Refund from "./pages/Refund";
 import POS from "./pages/POS";
+import POSLogin from "./pages/POSLogin";
 import Admin from "./pages/Admin";
 
 function Router() {
@@ -40,6 +41,7 @@ function Router() {
       <Route path="/refund" component={Refund} />
       
       {/* Staff/Admin Routes */}
+      <Route path="/pos/login" component={POSLogin} />
       <Route path="/pos" component={POS} />
       <Route path="/admin" component={Admin} />
       

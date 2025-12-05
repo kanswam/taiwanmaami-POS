@@ -19,6 +19,7 @@ import {
 import { toast } from 'sonner';
 import { Link, useLocation } from 'wouter';
 import { nanoid } from 'nanoid';
+import { getPOSSession, clearPOSSession, POSSessionData } from './POSLogin';
 
 interface POSCartItem {
   id: string;
@@ -87,6 +88,36 @@ const PRODUCT_IMAGES: Record<string, string> = {
 export default function POS() {
   const [, navigate] = useLocation();
   const { user, isAuthenticated, logout } = useAuth();
+  
+  // POS Session state
+  const [posSession, setPosSession] = useState<POSSessionData | null>(null);
+  
+  // Check for POS session on mount
+  useEffect(() => {
+    const session = getPOSSession();
+    if (!session) {
+      // No session, redirect to login
+      navigate('/pos/login');
+    } else {
+      setPosSession(session);
+    }
+  }, [navigate]);
+
+  // End session mutation
+  const endSessionMutation = trpc.posAuth.endSession.useMutation({
+    onSuccess: () => {
+      clearPOSSession();
+      toast.success('Session ended');
+      navigate('/pos/login');
+    },
+  });
+
+  const handleEndSession = () => {
+    if (posSession) {
+      endSessionMutation.mutate({ sessionId: posSession.sessionId });
+    }
+  };
+
   const { data: menuData, isLoading } = trpc.menu.getFullMenu.useQuery({ isDelivery: false });
   const { data: addonsData } = trpc.menu.getAddons.useQuery();
 
@@ -128,8 +159,8 @@ export default function POS() {
   const [customerName, setCustomerName] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
 
-  // Create order mutation
-  const createOrder = trpc.orders.create.useMutation({
+  // Create order mutation - using POS endpoint with session tracking
+  const createOrder = trpc.pos.createOrder.useMutation({
     onSuccess: (data) => {
       toast.success(`Order #${data.orderNumber} created!`);
       setCart([]);
@@ -375,8 +406,25 @@ export default function POS() {
       }
     }
 
+    if (!posSession) {
+      toast.error('No active session');
+      return;
+    }
+
+    const paymentsList: { method: 'cash' | 'card' | 'upi'; amount: number }[] = [];
+    if (paymentMethod === 'cash') {
+      paymentsList.push({ method: 'cash', amount: total });
+    } else if (paymentMethod === 'card') {
+      paymentsList.push({ method: 'card', amount: total });
+    } else {
+      // Split payment
+      const cashNum = Math.round((parseFloat(cashAmount) || 0) * 100);
+      const cardNum = Math.round((parseFloat(cardAmount) || 0) * 100);
+      if (cashNum > 0) paymentsList.push({ method: 'cash', amount: cashNum });
+      if (cardNum > 0) paymentsList.push({ method: 'card', amount: cardNum });
+    }
+
     createOrder.mutate({
-      orderType: 'instore',
       items: cart.map(item => ({
         productId: item.productId,
         productName: item.productName,
@@ -389,10 +437,15 @@ export default function POS() {
         unitPrice: item.unitPrice,
         addonsTotal: item.addonsTotal,
         lineTotal: item.lineTotal,
-        specialInstructions: item.specialInstructions,
       })),
       customerName: customerName || 'Walk-in Customer',
       customerPhone: customerPhone || '',
+      discountAmount,
+      payments: paymentsList,
+      // Session info for audit
+      sessionId: posSession.sessionId,
+      outletId: posSession.outletId,
+      employeeCode: posSession.employeeCode,
     });
   };
 
@@ -571,13 +624,25 @@ export default function POS() {
     return parts.join(' • ');
   };
 
+  // Show loading while checking session
+  if (!posSession) {
+    return (
+      <div className="h-screen flex items-center justify-center bg-background">
+        <RefreshCw className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
   return (
     <div className="h-screen flex flex-col bg-background overflow-hidden">
       {/* Header */}
       <header className="h-14 bg-primary text-primary-foreground flex items-center justify-between px-4 flex-shrink-0">
         <div className="flex items-center gap-4">
           <h1 className="font-bold text-lg">Taiwan Maami POS</h1>
-          <span className="text-sm opacity-80">T Nagar</span>
+          <div className="flex flex-col text-xs leading-tight">
+            <span className="font-medium">{posSession.outletName}</span>
+            <span className="opacity-70">{posSession.employeeName}</span>
+          </div>
         </div>
         <div className="flex items-center gap-2">
           <div className="relative">
@@ -598,7 +663,8 @@ export default function POS() {
             variant="ghost" 
             size="icon" 
             className="text-white hover:bg-white/10"
-            onClick={() => logout()}
+            onClick={handleEndSession}
+            title="End Session"
           >
             <LogOut className="w-5 h-5" />
           </Button>

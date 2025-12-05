@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Link, useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -14,7 +14,7 @@ import { formatPrice, GST_RATE } from '@shared/types';
 import { 
   Home, Package, ShoppingCart, Tag, Upload, Settings, LogOut, 
   Plus, Edit, Trash2, ImageIcon, RefreshCw, Check, X, Search,
-  ChevronDown, ChevronUp, Eye, EyeOff
+  ChevronDown, ChevronUp, Eye, EyeOff, Store, ClipboardList
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -67,7 +67,7 @@ export default function Admin() {
 
       <div className="container py-6">
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-4 mb-6">
+          <TabsList className="grid w-full grid-cols-6 mb-6">
             <TabsTrigger value="products" className="gap-2">
               <Package className="w-4 h-4" />
               Products
@@ -75,6 +75,14 @@ export default function Admin() {
             <TabsTrigger value="orders" className="gap-2">
               <ShoppingCart className="w-4 h-4" />
               Orders
+            </TabsTrigger>
+            <TabsTrigger value="outlets" className="gap-2">
+              <Store className="w-4 h-4" />
+              Outlets
+            </TabsTrigger>
+            <TabsTrigger value="audit" className="gap-2">
+              <ClipboardList className="w-4 h-4" />
+              POS Audit
             </TabsTrigger>
             <TabsTrigger value="discounts" className="gap-2">
               <Tag className="w-4 h-4" />
@@ -96,6 +104,14 @@ export default function Admin() {
 
           <TabsContent value="discounts">
             <DiscountsTab />
+          </TabsContent>
+
+          <TabsContent value="outlets">
+            <OutletsTab />
+          </TabsContent>
+
+          <TabsContent value="audit">
+            <POSAuditTab />
           </TabsContent>
 
           <TabsContent value="bulk-upload">
@@ -703,6 +719,264 @@ function BulkUploadTab() {
           <p>3. Supported formats: JPG, PNG, WebP</p>
           <p>4. Recommended size: 800x1200 pixels (portrait orientation)</p>
           <p>5. Maximum file size: 5MB per image</p>
+        </div>
+      </Card>
+    </div>
+  );
+}
+
+
+// Outlets Tab - Manage outlet-specific product availability and pricing
+function OutletsTab() {
+  const { data: outlets, refetch: refetchOutlets } = trpc.posAuth.getOutlets.useQuery();
+  const { data: menuData } = trpc.menu.getFullMenu.useQuery({ isDelivery: false });
+  const [selectedOutlet, setSelectedOutlet] = useState<number | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  // Get outlet products configuration
+  const { data: outletProducts, refetch: refetchOutletProducts } = trpc.admin.getOutletProducts.useQuery(
+    { outletId: selectedOutlet! },
+    { enabled: !!selectedOutlet }
+  );
+
+  const updateOutletProduct = trpc.admin.updateOutletProduct.useMutation({
+    onSuccess: () => {
+      toast.success('Product availability updated');
+      refetchOutletProducts();
+    },
+    onError: (err: any) => toast.error(err.message),
+  });
+
+  // Create a map of product availability for the selected outlet
+  const productAvailability = useMemo(() => {
+    const map = new Map<number, { isAvailable: boolean; priceOverride?: number }>();
+    outletProducts?.forEach((op: any) => {
+      map.set(op.productId, { isAvailable: op.isAvailable, priceOverride: op.instorePriceOverride || undefined });
+    });
+    return map;
+  }, [outletProducts]);
+
+  const filteredProducts = menuData?.products.filter(p => {
+    if (searchQuery) {
+      return p.name.toLowerCase().includes(searchQuery.toLowerCase());
+    }
+    return true;
+  }) || [];
+
+  const toggleProductAvailability = (productId: number) => {
+    if (!selectedOutlet) return;
+    const current = productAvailability.get(productId);
+    updateOutletProduct.mutate({
+      outletId: selectedOutlet,
+      productId,
+      isAvailable: !(current?.isAvailable ?? true),
+    });
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="flex flex-col sm:flex-row gap-4">
+        <div className="w-full sm:w-64">
+          <Label className="mb-2 block">Select Outlet</Label>
+          <Select
+            value={selectedOutlet?.toString() || ''}
+            onValueChange={(v) => setSelectedOutlet(parseInt(v))}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select an outlet" />
+            </SelectTrigger>
+            <SelectContent>
+              {outlets?.map((outlet) => (
+                <SelectItem key={outlet.id} value={outlet.id.toString()}>
+                  {outlet.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        {selectedOutlet && (
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              placeholder="Search products..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+        )}
+      </div>
+
+      {!selectedOutlet ? (
+        <Card className="p-8 text-center">
+          <Store className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
+          <h3 className="text-lg font-medium mb-2">Select an Outlet</h3>
+          <p className="text-muted-foreground">
+            Choose an outlet from the dropdown above to manage its product availability.
+          </p>
+        </Card>
+      ) : (
+        <Card>
+          <div className="p-4 border-b bg-secondary/50">
+            <h3 className="font-medium">
+              Product Availability for {outlets?.find(o => o.id === selectedOutlet)?.name}
+            </h3>
+            <p className="text-sm text-muted-foreground mt-1">
+              Toggle products on/off for this outlet. Products turned off will not appear in POS for this location.
+            </p>
+          </div>
+          <div className="divide-y max-h-[500px] overflow-auto">
+            {filteredProducts.map((product) => {
+              const availability = productAvailability.get(product.id);
+              const isAvailable = availability?.isAvailable ?? true;
+              const subcategory = menuData?.subcategories.find(s => s.id === product.subcategoryId);
+              const category = menuData?.categories.find(c => c.id === subcategory?.categoryId);
+              
+              return (
+                <div key={product.id} className="flex items-center justify-between p-4 hover:bg-secondary/30">
+                  <div className="flex-1">
+                    <p className="font-medium">{product.name}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {category?.name} → {subcategory?.name}
+                    </p>
+                    {product.instorePrice && (
+                      <p className="text-sm text-muted-foreground">
+                        Price: {formatPrice(product.instorePrice)}
+                      </p>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <Switch
+                      checked={isAvailable}
+                      onCheckedChange={() => toggleProductAvailability(product.id)}
+                    />
+                    <span className={`text-sm ${isAvailable ? 'text-green-600' : 'text-red-600'}`}>
+                      {isAvailable ? 'Available' : 'Unavailable'}
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </Card>
+      )}
+    </div>
+  );
+}
+
+// POS Audit Tab - View POS session logs and order history
+function POSAuditTab() {
+  const { data: outlets } = trpc.posAuth.getOutlets.useQuery();
+  const [selectedOutlet, setSelectedOutlet] = useState<number | null>(null);
+  const [dateRange, setDateRange] = useState<'today' | 'week' | 'month'>('today');
+
+  // Get audit logs
+  const { data: auditLogs, refetch } = trpc.admin.getPOSAuditLogs.useQuery(
+    { outletId: selectedOutlet || undefined, dateRange },
+    { enabled: true }
+  );
+
+  const actionColors: Record<string, string> = {
+    login: 'bg-blue-100 text-blue-800',
+    logout: 'bg-gray-100 text-gray-800',
+    create_order: 'bg-green-100 text-green-800',
+    void_order: 'bg-red-100 text-red-800',
+    apply_discount: 'bg-yellow-100 text-yellow-800',
+    refund: 'bg-orange-100 text-orange-800',
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="flex flex-col sm:flex-row gap-4">
+        <div className="w-full sm:w-64">
+          <Label className="mb-2 block">Filter by Outlet</Label>
+          <Select
+            value={selectedOutlet?.toString() || 'all'}
+            onValueChange={(v) => setSelectedOutlet(v === 'all' ? null : parseInt(v))}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="All outlets" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Outlets</SelectItem>
+              {outlets?.map((outlet) => (
+                <SelectItem key={outlet.id} value={outlet.id.toString()}>
+                  {outlet.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="w-full sm:w-48">
+          <Label className="mb-2 block">Date Range</Label>
+          <Select value={dateRange} onValueChange={(v: 'today' | 'week' | 'month') => setDateRange(v)}>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="today">Today</SelectItem>
+              <SelectItem value="week">Last 7 Days</SelectItem>
+              <SelectItem value="month">Last 30 Days</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="flex items-end">
+          <Button variant="outline" onClick={() => refetch()}>
+            <RefreshCw className="w-4 h-4 mr-2" />
+            Refresh
+          </Button>
+        </div>
+      </div>
+
+      <Card>
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-secondary">
+              <tr>
+                <th className="text-left p-3 text-sm font-medium">Time</th>
+                <th className="text-left p-3 text-sm font-medium">Employee</th>
+                <th className="text-left p-3 text-sm font-medium">Outlet</th>
+                <th className="text-center p-3 text-sm font-medium">Action</th>
+                <th className="text-left p-3 text-sm font-medium">Details</th>
+              </tr>
+            </thead>
+            <tbody>
+              {auditLogs?.length === 0 && (
+                <tr>
+                  <td colSpan={5} className="p-8 text-center text-muted-foreground">
+                    No audit logs found for the selected filters.
+                  </td>
+                </tr>
+              )}
+              {auditLogs?.map((log: any) => (
+                <tr key={log.id} className="border-b hover:bg-secondary/50">
+                  <td className="p-3 text-sm">
+                    {new Date(log.createdAt).toLocaleString()}
+                  </td>
+                  <td className="p-3">
+                    <p className="font-medium">{log.employeeCode}</p>
+                  </td>
+                  <td className="p-3">
+                    {outlets?.find(o => o.id === log.outletId)?.name || `Outlet ${log.outletId}`}
+                  </td>
+                  <td className="p-3 text-center">
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${actionColors[log.action] || 'bg-gray-100'}`}>
+                      {log.action.replace('_', ' ')}
+                    </span>
+                  </td>
+                  <td className="p-3 text-sm text-muted-foreground">
+                    {log.orderId && `Order #${log.orderId}`}
+                    {log.details && typeof log.details === 'object' && (
+                      <span className="ml-2">
+                        {(log.details as any).orderNumber && `(${(log.details as any).orderNumber})`}
+                        {(log.details as any).totalAmount && ` - ${formatPrice((log.details as any).totalAmount)}`}
+                      </span>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </Card>
     </div>
