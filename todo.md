@@ -216,3 +216,10 @@
 - [ ] Zomato/Swiggy API integration (pending API credentials)
 - [ ] Porter delivery integration (pending business account)
 - [ ] Meta Pixel for social media retargeting
+
+
+## Phase 7 - Homepage Video Hero
+
+- [x] Convert video to MP4 for web compatibility
+- [x] Replace static hero image with video background
+- [x] Ensure video autoplays, loops, and is muted

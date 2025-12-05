@@ -29,14 +29,25 @@ export default function Home() {
     <div className="min-h-screen bg-background">
       <Header />
 
-      {/* Hero Section with Background Image */}
+      {/* Hero Section with Video Background */}
       <section className="relative overflow-hidden">
         <div className="absolute inset-0">
-          <img
-            src="/images/interior2.jpg"
-            alt="Taiwan Maami Interior"
+          <video
+            autoPlay
+            loop
+            muted
+            playsInline
             className="w-full h-full object-cover"
-          />
+            poster="/images/interior2.jpg"
+          >
+            <source src="/videos/hero-video.mp4" type="video/mp4" />
+            {/* Fallback to image if video doesn't load */}
+            <img
+              src="/images/interior2.jpg"
+              alt="Taiwan Maami Interior"
+              className="w-full h-full object-cover"
+            />
+          </video>
           <div className="absolute inset-0 bg-gradient-to-r from-primary/95 via-primary/80 to-primary/60" />
         </div>
         <div className="relative py-20 sm:py-32">

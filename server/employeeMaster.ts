@@ -78,7 +78,7 @@ export async function authenticateStaffByMobile(mobile: string): Promise<AuthRes
     return {
       success: true,
       employee: {
-        id: employee.id,
+        id: String(employee.id), // Ensure id is always a string
         employeeCode: employee.employeeCode,
         name: employee.name,
         email: employee.email,
