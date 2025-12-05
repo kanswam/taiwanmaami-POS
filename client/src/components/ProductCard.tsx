@@ -35,10 +35,15 @@ interface ProductCardProps {
     deliveryPriceLargeWithBoba?: number | null;
     deliveryPriceLargeNoBoba?: number | null;
   };
+  category?: {
+    id: number;
+    name: string;
+    slug: string;
+  };
   isDelivery?: boolean;
 }
 
-export function ProductCard({ product, subcategory, isDelivery = false }: ProductCardProps) {
+export function ProductCard({ product, subcategory, category, isDelivery = false }: ProductCardProps) {
   const [showModal, setShowModal] = useState(false);
 
   // Calculate display price (with GST)
@@ -140,6 +145,7 @@ export function ProductCard({ product, subcategory, isDelivery = false }: Produc
         <ProductCustomizationModal
           product={product}
           subcategory={subcategory}
+          category={category}
           isDelivery={isDelivery}
           open={showModal}
           onClose={() => setShowModal(false)}

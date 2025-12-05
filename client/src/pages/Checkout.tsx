@@ -133,7 +133,7 @@ export default function Checkout() {
     <div className="min-h-screen bg-background pb-12">
       <Header />
 
-      <div className="container py-6">
+      <div className="container pt-20 pb-6">
         <div className="flex items-center gap-4 mb-6">
           <Link href="/cart">
             <Button variant="ghost" size="sm">

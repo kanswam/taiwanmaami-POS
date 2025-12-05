@@ -148,3 +148,28 @@
 ### Iced Coffee Repositioning
 - [x] Move Iced Coffee to main category level (alongside Bubble Tea, Mochis, Food, Slush)
 - [x] Update both website and POS navigation to reflect new structure
+
+
+## Phase 5 - Bug Fixes (Dec 5, 2025)
+
+### Extra Boba Fix
+- [x] Make extra boba option clickable for delivery bubble tea
+
+### Milk Options Fix
+- [ ] Remove vegan/almond milk from bubble tea drinks
+- [ ] Remove vegan/almond milk from slush drinks
+- [ ] Keep vegan/almond milk only for hot coffee
+
+### Coconut Cream Cap
+- [ ] Add coconut cream cap option for bubble tea latte drinks
+- [ ] Apply to both delivery and POS
+
+### Category Fixes
+- [x] Move Omurice and Omunoodles to Omelette subcategory
+- [x] Rename "Flat Bread" subcategory to "Cong You Bing"
+
+### Additional Phase 5 Fixes (User Reported)
+- [x] Fix extra boba still not clickable on delivery site
+- [x] Fix slush still showing vegan milk options (code already restricts to hot-beverages + coffee)
+- [x] Move Omurice and Omunoodles from Noodles to Omelette subcategory
+- [x] Fix header overlap issue on checkout page (content scrolls behind sticky header)

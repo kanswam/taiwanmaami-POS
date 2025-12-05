@@ -191,6 +191,8 @@ export default function Menu() {
           {products.map((product) => {
             const sub = getSubcategoryById(product.subcategoryId);
             if (!sub) return null;
+            // Find the category for this product's subcategory
+            const cat = menuData?.categories.find(c => c.id === sub.categoryId);
             return (
               <ProductCard
                 key={product.id}
@@ -199,6 +201,7 @@ export default function Menu() {
                   imageUrl: product.imageUrl || PRODUCT_IMAGES[product.slug] || null,
                 }}
                 subcategory={sub}
+                category={cat}
                 isDelivery={state.orderType === 'delivery'}
               />
             );

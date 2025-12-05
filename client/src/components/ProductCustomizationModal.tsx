@@ -36,6 +36,11 @@ interface ProductCustomizationModalProps {
     deliveryPriceLargeWithBoba?: number | null;
     deliveryPriceLargeNoBoba?: number | null;
   };
+  category?: {
+    id: number;
+    name: string;
+    slug: string;
+  };
   isDelivery?: boolean;
   open: boolean;
   onClose: () => void;
@@ -44,6 +49,7 @@ interface ProductCustomizationModalProps {
 export function ProductCustomizationModal({
   product,
   subcategory,
+  category,
   isDelivery = false,
   open,
   onClose,
@@ -71,6 +77,10 @@ export function ProductCustomizationModal({
   const [selectedAddons, setSelectedAddons] = useState<{ id: number; name: string; price: number }[]>([]);
   const [quantity, setQuantity] = useState(1);
   const [specialInstructions, setSpecialInstructions] = useState('');
+  
+  // Coconut Cream Cap option for latte drinks
+  const [wantCoconutCreamCap, setWantCoconutCreamCap] = useState(false);
+  const isLatteDrink = product.name.toLowerCase().includes('latte');
 
   // Filter available sizes for delivery (no petite)
   const availableSizes = isDelivery ? SIZES.filter(s => s.value !== 'petite') : SIZES;
@@ -417,20 +427,20 @@ export function ProductCustomizationModal({
           {/* EXTRA BOBA SECTION */}
           {subcategory.hasBobaOption && withBoba && (
             <div className="border-t pt-4">
-              <div className="flex items-center justify-between mb-3">
-                <div>
-                  <h4 className="font-medium">Extra Boba</h4>
-                  <p className="text-xs text-muted-foreground">Add an extra serving of boba</p>
+              <div 
+                className={`flex items-center justify-between p-3 rounded-lg border-2 cursor-pointer transition-colors mb-3 ${wantExtraBoba ? 'border-primary bg-primary/5' : 'border-muted hover:border-muted-foreground/50'}`}
+                onClick={() => setWantExtraBoba(!wantExtraBoba)}
+              >
+                <div className="flex items-center gap-3">
+                  <Checkbox checked={wantExtraBoba} />
+                  <div>
+                    <h4 className="font-medium">Extra Boba</h4>
+                    <p className="text-xs text-muted-foreground">Add an extra serving of boba</p>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-primary font-medium">
-                    +{formatPrice(size === 'petite' ? 3000 : size === 'regular' ? 4000 : 5000)}
-                  </span>
-                  <Checkbox 
-                    checked={wantExtraBoba} 
-                    onCheckedChange={(checked) => setWantExtraBoba(!!checked)}
-                  />
-                </div>
+                <span className="text-sm text-primary font-medium">
+                  +{formatPrice(size === 'petite' ? 3000 : size === 'regular' ? 4000 : 5000)}
+                </span>
               </div>
 
               {wantExtraBoba && (
@@ -551,8 +561,25 @@ export function ProductCustomizationModal({
             </div>
           )}
 
-          {/* Vegan Milk Add-ons - Hidden for Slush */}
-          {milkAddons.length > 0 && subcategory.hasSizeVariants && !subcategory.name.toLowerCase().includes('slush') && (
+          {/* Coconut Cream Cap - Only for Latte drinks */}
+          {isLatteDrink && category?.slug === 'bubble-tea' && (
+            <div 
+              className={`flex items-center justify-between p-3 rounded-lg border-2 cursor-pointer transition-colors ${wantCoconutCreamCap ? 'border-primary bg-primary/5' : 'border-muted hover:border-muted-foreground/50'}`}
+              onClick={() => setWantCoconutCreamCap(!wantCoconutCreamCap)}
+            >
+              <div className="flex items-center gap-3">
+                <Checkbox checked={wantCoconutCreamCap} />
+                <div>
+                  <span className="font-medium">Coconut Cream Cap</span>
+                  <p className="text-xs text-muted-foreground">Replace regular cream cap with coconut cream</p>
+                </div>
+              </div>
+              <span className="text-sm font-medium text-muted-foreground">Free</span>
+            </div>
+          )}
+
+          {/* Vegan Milk Add-ons - Only for Hot Coffee */}
+          {milkAddons.length > 0 && category?.slug === 'hot-beverages' && subcategory.name.toLowerCase().includes('coffee') && (
             <div>
               <h4 className="font-medium mb-3">Vegan Milk (Optional)</h4>
               <div className="space-y-2">
