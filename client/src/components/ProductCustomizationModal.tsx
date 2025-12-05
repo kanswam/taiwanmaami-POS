@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
@@ -54,9 +54,18 @@ export function ProductCustomizationModal({
   // State for customization
   const [size, setSize] = useState<Size>(isDelivery ? 'regular' : 'petite');
   const [withBoba, setWithBoba] = useState(true);
-  const [bobaSize, setBobaSize] = useState<'small' | 'big'>('small');
+  
+  // NEW BOBA FLOW: First choose Tapioca or Popping, then size/flavor
   const [bobaType, setBobaType] = useState<'tapioca' | 'popping'>('tapioca');
-  const [poppingBobaFlavor, setPoppingBobaFlavor] = useState<string>('');
+  const [bobaSize, setBobaSize] = useState<'small' | 'big'>('small'); // Only for tapioca
+  const [poppingBobaFlavor, setPoppingBobaFlavor] = useState<string>('strawberry'); // Only for popping
+  
+  // Extra boba settings - defaults to same as primary boba
+  const [wantExtraBoba, setWantExtraBoba] = useState(false);
+  const [extraBobaType, setExtraBobaType] = useState<'tapioca' | 'popping'>('tapioca');
+  const [extraBobaSize, setExtraBobaSize] = useState<'small' | 'big'>('small');
+  const [extraPoppingFlavor, setExtraPoppingFlavor] = useState<string>('strawberry');
+  
   const [sugarLevel, setSugarLevel] = useState('100%');
   const [iceLevel, setIceLevel] = useState('Regular Ice');
   const [selectedAddons, setSelectedAddons] = useState<{ id: number; name: string; price: number }[]>([]);
@@ -68,7 +77,6 @@ export function ProductCustomizationModal({
 
   // Get addons by type
   const bobaFlavorAddons = addonsData?.filter(a => a.type === 'boba_flavor') || [];
-  const extraBobaAddons = addonsData?.filter(a => a.type === 'extra_boba') || [];
   const milkAddons = addonsData?.filter(a => a.type === 'vegan_milk') || [];
 
   // Popping boba flavors
@@ -113,7 +121,6 @@ export function ProductCustomizationModal({
 
   // Calculate popping boba upgrade price (if choosing popping boba instead of tapioca)
   const getPoppingBobaUpgradePrice = () => {
-    // Find the popping boba addon for the selected flavor
     const poppingAddon = bobaFlavorAddons.find(a => 
       a.name.toLowerCase().includes(poppingBobaFlavor.toLowerCase())
     );
@@ -123,10 +130,35 @@ export function ProductCustomizationModal({
     return 0;
   };
 
+  // Calculate extra boba price based on drink size and extra boba type
+  const getExtraBobaPrice = () => {
+    if (!wantExtraBoba) return 0;
+    
+    // Base extra boba price by drink size
+    let baseExtraPrice = 0;
+    if (size === 'petite') baseExtraPrice = 3000; // ₹30
+    else if (size === 'regular') baseExtraPrice = 4000; // ₹40
+    else baseExtraPrice = 5000; // ₹50
+    
+    // If extra boba is popping, add the popping boba upgrade price
+    if (extraBobaType === 'popping') {
+      const poppingAddon = bobaFlavorAddons.find(a => 
+        a.name.toLowerCase().includes(extraPoppingFlavor.toLowerCase())
+      );
+      if (poppingAddon) {
+        baseExtraPrice += getAddonPrice(poppingAddon);
+      }
+    }
+    
+    return baseExtraPrice;
+  };
+
   // Calculate totals
   const basePrice = getBasePrice();
-  const poppingBobaPrice = (withBoba && bobaType === 'popping' && poppingBobaFlavor) ? getPoppingBobaUpgradePrice() : 0;
-  const addonsTotal = selectedAddons.reduce((sum, a) => sum + a.price, 0) + poppingBobaPrice;
+  const poppingBobaPrice = (withBoba && bobaType === 'popping') ? getPoppingBobaUpgradePrice() : 0;
+  const extraBobaPrice = getExtraBobaPrice();
+  const milkAddonsTotal = selectedAddons.reduce((sum, a) => sum + a.price, 0);
+  const addonsTotal = poppingBobaPrice + extraBobaPrice + milkAddonsTotal;
   const unitPrice = basePrice;
   const lineTotal = (unitPrice + addonsTotal) * quantity;
   const displayTotal = Math.round(lineTotal * (1 + GST_RATE));
@@ -160,26 +192,41 @@ export function ProductCustomizationModal({
   const handleSizeChange = (newSize: Size) => {
     setSize(newSize);
     updateAddonPrices(newSize);
-    // Clear extra boba selections that don't match the new size
-    setSelectedAddons(prev => prev.filter(a => {
-      const addon = addonsData?.find(ad => ad.id === a.id);
-      return addon?.type !== 'extra_boba';
-    }));
   };
 
-  // Get extra boba options filtered by current drink size
-  const getAvailableExtraBobaAddons = () => {
-    return extraBobaAddons.filter(addon => {
-      // All extra boba addons are available, price varies by size
-      return true;
-    });
+  // When boba type changes, set defaults for extra boba to match
+  const handleBobaTypeChange = (type: 'tapioca' | 'popping') => {
+    setBobaType(type);
+    // Default extra boba to same type
+    setExtraBobaType(type);
+    if (type === 'tapioca') {
+      setExtraBobaSize(bobaSize);
+    } else {
+      setExtraPoppingFlavor(poppingBobaFlavor);
+    }
   };
 
   const handleAddToCart = () => {
     // Build boba description
     let bobaDescription = '';
     if (subcategory.hasBobaOption && withBoba) {
-      bobaDescription = `${bobaSize === 'big' ? 'Big' : 'Small'} ${bobaType === 'popping' ? poppingBobaFlavor + ' Popping Boba' : 'Tapioca Pearls'}`;
+      if (bobaType === 'tapioca') {
+        bobaDescription = `${bobaSize === 'big' ? 'Big' : 'Small'} Tapioca Pearls`;
+      } else {
+        const flavorLabel = poppingBobaFlavors.find(f => f.value === poppingBobaFlavor)?.label || poppingBobaFlavor;
+        bobaDescription = `${flavorLabel} Popping Boba`;
+      }
+    }
+
+    // Build extra boba description
+    let extraBobaDescription = '';
+    if (wantExtraBoba && withBoba) {
+      if (extraBobaType === 'tapioca') {
+        extraBobaDescription = `Extra ${extraBobaSize === 'big' ? 'Big' : 'Small'} Tapioca`;
+      } else {
+        const flavorLabel = poppingBobaFlavors.find(f => f.value === extraPoppingFlavor)?.label || extraPoppingFlavor;
+        extraBobaDescription = `Extra ${flavorLabel} Popping Boba`;
+      }
     }
 
     addItem({
@@ -191,9 +238,15 @@ export function ProductCustomizationModal({
       imageUrl: product.imageUrl || undefined,
       size: subcategory.hasSizeVariants ? size : undefined,
       withBoba: subcategory.hasBobaOption ? withBoba : undefined,
-      bobaSize: subcategory.hasBobaOption && withBoba ? bobaSize : undefined,
+      bobaSize: subcategory.hasBobaOption && withBoba && bobaType === 'tapioca' ? bobaSize : undefined,
       bobaType: subcategory.hasBobaOption && withBoba ? bobaType : undefined,
       poppingBobaFlavor: subcategory.hasBobaOption && withBoba && bobaType === 'popping' ? poppingBobaFlavor : undefined,
+      extraBoba: wantExtraBoba ? {
+        type: extraBobaType,
+        size: extraBobaType === 'tapioca' ? extraBobaSize : undefined,
+        flavor: extraBobaType === 'popping' ? extraPoppingFlavor : undefined,
+        price: extraBobaPrice,
+      } : undefined,
       sugarLevel: subcategory.hasSizeVariants ? sugarLevel : undefined,
       iceLevel: subcategory.hasSizeVariants ? iceLevel : undefined,
       addons: selectedAddons,
@@ -242,11 +295,16 @@ export function ProductCustomizationModal({
             </div>
           )}
 
-          {/* Boba option */}
+          {/* Boba option - With or Without */}
           {subcategory.hasBobaOption && (
             <div>
               <h4 className="font-medium mb-3">Boba</h4>
-              <RadioGroup value={withBoba ? 'with' : 'without'} onValueChange={(v) => setWithBoba(v === 'with')} className="grid grid-cols-2 gap-2">
+              <RadioGroup value={withBoba ? 'with' : 'without'} onValueChange={(v) => {
+                setWithBoba(v === 'with');
+                if (v === 'without') {
+                  setWantExtraBoba(false);
+                }
+              }} className="grid grid-cols-2 gap-2">
                 <div>
                   <RadioGroupItem value="with" id="boba-with" className="peer sr-only" />
                   <Label
@@ -269,43 +327,11 @@ export function ProductCustomizationModal({
             </div>
           )}
 
-          {/* Boba Size Selection (only if with boba) */}
-          {subcategory.hasBobaOption && withBoba && (
-            <div>
-              <h4 className="font-medium mb-3">Boba Size</h4>
-              <RadioGroup value={bobaSize} onValueChange={(v) => setBobaSize(v as 'small' | 'big')} className="grid grid-cols-2 gap-2">
-                <div>
-                  <RadioGroupItem value="small" id="boba-small" className="peer sr-only" />
-                  <Label
-                    htmlFor="boba-small"
-                    className="flex flex-col items-center justify-center rounded-lg border-2 border-muted bg-popover p-3 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary cursor-pointer"
-                  >
-                    <span className="font-medium">Small Boba</span>
-                    <span className="text-xs text-muted-foreground">小珍珠</span>
-                  </Label>
-                </div>
-                <div>
-                  <RadioGroupItem value="big" id="boba-big" className="peer sr-only" />
-                  <Label
-                    htmlFor="boba-big"
-                    className="flex flex-col items-center justify-center rounded-lg border-2 border-muted bg-popover p-3 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary cursor-pointer"
-                  >
-                    <span className="font-medium">Big Boba</span>
-                    <span className="text-xs text-muted-foreground">大珍珠</span>
-                  </Label>
-                </div>
-              </RadioGroup>
-            </div>
-          )}
-
-          {/* Boba Type Selection (Tapioca or Popping) */}
+          {/* STEP 1: Boba Type Selection (Tapioca or Popping) - Only if with boba */}
           {subcategory.hasBobaOption && withBoba && (
             <div>
               <h4 className="font-medium mb-3">Boba Type</h4>
-              <RadioGroup value={bobaType} onValueChange={(v) => {
-                setBobaType(v as 'tapioca' | 'popping');
-                if (v === 'tapioca') setPoppingBobaFlavor('');
-              }} className="grid grid-cols-2 gap-2">
+              <RadioGroup value={bobaType} onValueChange={(v) => handleBobaTypeChange(v as 'tapioca' | 'popping')} className="grid grid-cols-2 gap-2">
                 <div>
                   <RadioGroupItem value="tapioca" id="boba-tapioca" className="peer sr-only" />
                   <Label
@@ -330,11 +356,48 @@ export function ProductCustomizationModal({
             </div>
           )}
 
-          {/* Popping Boba Flavor Selection */}
+          {/* STEP 2A: If Tapioca - Show Size Selection (Small/Big) */}
+          {subcategory.hasBobaOption && withBoba && bobaType === 'tapioca' && (
+            <div>
+              <h4 className="font-medium mb-3">Tapioca Size</h4>
+              <RadioGroup value={bobaSize} onValueChange={(v) => {
+                setBobaSize(v as 'small' | 'big');
+                // Default extra boba size to match
+                setExtraBobaSize(v as 'small' | 'big');
+              }} className="grid grid-cols-2 gap-2">
+                <div>
+                  <RadioGroupItem value="small" id="boba-small" className="peer sr-only" />
+                  <Label
+                    htmlFor="boba-small"
+                    className="flex flex-col items-center justify-center rounded-lg border-2 border-muted bg-popover p-3 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary cursor-pointer"
+                  >
+                    <span className="font-medium">Small Boba</span>
+                    <span className="text-xs text-muted-foreground">小珍珠</span>
+                  </Label>
+                </div>
+                <div>
+                  <RadioGroupItem value="big" id="boba-big" className="peer sr-only" />
+                  <Label
+                    htmlFor="boba-big"
+                    className="flex flex-col items-center justify-center rounded-lg border-2 border-muted bg-popover p-3 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary cursor-pointer"
+                  >
+                    <span className="font-medium">Big Boba</span>
+                    <span className="text-xs text-muted-foreground">大珍珠</span>
+                  </Label>
+                </div>
+              </RadioGroup>
+            </div>
+          )}
+
+          {/* STEP 2B: If Popping - Show Flavor Selection */}
           {subcategory.hasBobaOption && withBoba && bobaType === 'popping' && (
             <div>
               <h4 className="font-medium mb-3">Popping Boba Flavor</h4>
-              <RadioGroup value={poppingBobaFlavor} onValueChange={setPoppingBobaFlavor} className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+              <RadioGroup value={poppingBobaFlavor} onValueChange={(v) => {
+                setPoppingBobaFlavor(v);
+                // Default extra popping flavor to match
+                setExtraPoppingFlavor(v);
+              }} className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                 {poppingBobaFlavors.map((flavor) => (
                   <div key={flavor.value}>
                     <RadioGroupItem value={flavor.value} id={`popping-${flavor.value}`} className="peer sr-only" />
@@ -348,6 +411,103 @@ export function ProductCustomizationModal({
                   </div>
                 ))}
               </RadioGroup>
+            </div>
+          )}
+
+          {/* EXTRA BOBA SECTION */}
+          {subcategory.hasBobaOption && withBoba && (
+            <div className="border-t pt-4">
+              <div className="flex items-center justify-between mb-3">
+                <div>
+                  <h4 className="font-medium">Extra Boba</h4>
+                  <p className="text-xs text-muted-foreground">Add an extra serving of boba</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-primary font-medium">
+                    +{formatPrice(size === 'petite' ? 3000 : size === 'regular' ? 4000 : 5000)}
+                  </span>
+                  <Checkbox 
+                    checked={wantExtraBoba} 
+                    onCheckedChange={(checked) => setWantExtraBoba(!!checked)}
+                  />
+                </div>
+              </div>
+
+              {wantExtraBoba && (
+                <div className="space-y-4 pl-4 border-l-2 border-primary/20">
+                  {/* Extra Boba Type */}
+                  <div>
+                    <h5 className="text-sm font-medium mb-2">Extra Boba Type</h5>
+                    <RadioGroup value={extraBobaType} onValueChange={(v) => setExtraBobaType(v as 'tapioca' | 'popping')} className="grid grid-cols-2 gap-2">
+                      <div>
+                        <RadioGroupItem value="tapioca" id="extra-tapioca" className="peer sr-only" />
+                        <Label
+                          htmlFor="extra-tapioca"
+                          className="flex items-center justify-center rounded-lg border-2 border-muted bg-popover p-2 text-sm hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary cursor-pointer"
+                        >
+                          Tapioca
+                        </Label>
+                      </div>
+                      <div>
+                        <RadioGroupItem value="popping" id="extra-popping" className="peer sr-only" />
+                        <Label
+                          htmlFor="extra-popping"
+                          className="flex items-center justify-center rounded-lg border-2 border-muted bg-popover p-2 text-sm hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary cursor-pointer"
+                        >
+                          Popping Boba
+                        </Label>
+                      </div>
+                    </RadioGroup>
+                  </div>
+
+                  {/* Extra Tapioca Size */}
+                  {extraBobaType === 'tapioca' && (
+                    <div>
+                      <h5 className="text-sm font-medium mb-2">Extra Tapioca Size</h5>
+                      <RadioGroup value={extraBobaSize} onValueChange={(v) => setExtraBobaSize(v as 'small' | 'big')} className="grid grid-cols-2 gap-2">
+                        <div>
+                          <RadioGroupItem value="small" id="extra-small" className="peer sr-only" />
+                          <Label
+                            htmlFor="extra-small"
+                            className="flex items-center justify-center rounded-lg border-2 border-muted bg-popover p-2 text-sm hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary cursor-pointer"
+                          >
+                            Small
+                          </Label>
+                        </div>
+                        <div>
+                          <RadioGroupItem value="big" id="extra-big" className="peer sr-only" />
+                          <Label
+                            htmlFor="extra-big"
+                            className="flex items-center justify-center rounded-lg border-2 border-muted bg-popover p-2 text-sm hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary cursor-pointer"
+                          >
+                            Big
+                          </Label>
+                        </div>
+                      </RadioGroup>
+                    </div>
+                  )}
+
+                  {/* Extra Popping Flavor */}
+                  {extraBobaType === 'popping' && (
+                    <div>
+                      <h5 className="text-sm font-medium mb-2">Extra Popping Flavor</h5>
+                      <RadioGroup value={extraPoppingFlavor} onValueChange={setExtraPoppingFlavor} className="grid grid-cols-3 gap-1">
+                        {poppingBobaFlavors.map((flavor) => (
+                          <div key={flavor.value}>
+                            <RadioGroupItem value={flavor.value} id={`extra-pop-${flavor.value}`} className="peer sr-only" />
+                            <Label
+                              htmlFor={`extra-pop-${flavor.value}`}
+                              className="flex items-center justify-center rounded-lg border-2 border-muted bg-popover p-2 text-xs hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary cursor-pointer"
+                            >
+                              {flavor.label}
+                            </Label>
+                          </div>
+                        ))}
+                      </RadioGroup>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           )}
 
@@ -388,40 +548,6 @@ export function ProductCustomizationModal({
                   </div>
                 ))}
               </RadioGroup>
-            </div>
-          )}
-
-          {/* Extra Boba Add-ons (size-appropriate) */}
-          {withBoba && getAvailableExtraBobaAddons().length > 0 && subcategory.hasBobaOption && (
-            <div>
-              <h4 className="font-medium mb-3">Extra Boba (Optional)</h4>
-              <p className="text-xs text-muted-foreground mb-2">Add an extra serving of boba to your drink</p>
-              <div className="space-y-2">
-                {getAvailableExtraBobaAddons().map((addon) => {
-                  const price = getAddonPrice(addon);
-                  const isSelected = selectedAddons.some(a => a.id === addon.id);
-                  return (
-                    <div
-                      key={addon.id}
-                      className={`flex items-center justify-between p-3 rounded-lg border-2 cursor-pointer transition-colors ${
-                        isSelected ? 'border-primary bg-primary/5' : 'border-muted hover:border-muted-foreground/50'
-                      }`}
-                      onClick={() => toggleAddon(addon)}
-                    >
-                      <div className="flex items-center gap-3">
-                        <Checkbox checked={isSelected} />
-                        <div>
-                          <span className="font-medium">{addon.name}</span>
-                          {addon.chineseName && (
-                            <span className="text-xs text-muted-foreground ml-2">{addon.chineseName}</span>
-                          )}
-                        </div>
-                      </div>
-                      <span className="text-sm font-medium text-primary">+{formatPrice(price)}</span>
-                    </div>
-                  );
-                })}
-              </div>
             </div>
           )}
 

@@ -106,3 +106,27 @@
 - [x] Add interior/shopfront images to homepage hero
 - [x] Use brand images on About Us page
 - [x] Proper image display on product cards
+
+
+## Phase 3 - Fixes & Enhancements (Dec 5, 2025)
+
+### Hot Beverages (Missing Items)
+- [x] Add Tea in Pot subcategory with: Organic Rose Black Tea, Organic Jasmin Black Tea, Organic Masala Whole Leaf, Hong Kong Style Yuen-Yeung Milk Tea, Yuzu Honey
+- [x] Add Hot Chocolate to hot beverages
+
+### Boba Selection Flow Fix
+- [x] Fix hierarchy: With Boba → Tapioca OR Popping
+- [x] If Tapioca selected → Show Small/Big size options
+- [x] If Popping selected → Show 5 flavor options
+- [x] Extra boba defaults to same size/type as primary boba
+
+### POS Enhancements
+- [x] Add product photos to POS interface
+- [x] Add extra boba add-on option to POS
+- [x] Apply same boba selection logic to POS
+
+### Brand Colors Update
+- [x] Change from green to warm wood tones (golden oak, honey)
+- [x] Add dusty rose/blush pink accents
+- [x] Use cream/beige backgrounds
+- [x] Add terracotta/coral accent colors

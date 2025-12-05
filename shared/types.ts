@@ -52,6 +52,14 @@ export type UserRole = "customer" | "staff" | "admin";
 export type BobaSize = 'small' | 'big';
 export type BobaType = 'tapioca' | 'popping';
 
+// Extra boba type
+export interface ExtraBoba {
+  type: BobaType;
+  size?: BobaSize;
+  flavor?: string;
+  price: number;
+}
+
 // Cart item type
 export interface CartItem {
   id: string;
@@ -65,6 +73,7 @@ export interface CartItem {
   bobaSize?: BobaSize;
   bobaType?: BobaType;
   poppingBobaFlavor?: string;
+  extraBoba?: ExtraBoba;
   sugarLevel?: string;
   iceLevel?: string;
   addons: { id: number; name: string; price: number }[];

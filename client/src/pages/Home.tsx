@@ -33,7 +33,7 @@ export default function Home() {
       <section className="relative overflow-hidden">
         <div className="absolute inset-0">
           <img
-            src="/images/interior.jpg"
+            src="/images/interior2.jpg"
             alt="Taiwan Maami Interior"
             className="w-full h-full object-cover"
           />
