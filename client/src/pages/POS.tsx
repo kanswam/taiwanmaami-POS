@@ -41,6 +41,7 @@ interface POSCartItem {
   addonsTotal: number;
   lineTotal: number;
   specialInstructions?: string;
+  mochiQuantity?: 1 | 2 | 3; // For mochi products: 1pc, 2pc, or 3pc
 }
 
 // Popping boba flavors
@@ -149,6 +150,9 @@ export default function POS() {
   const [extraBobaType, setExtraBobaType] = useState<BobaType | null>(null);
   const [extraBobaSize, setExtraBobaSize] = useState<BobaSize>('small');
   const [extraPoppingFlavor, setExtraPoppingFlavor] = useState('');
+  
+  // Mochi quantity state (for mochi products only)
+  const [mochiQuantity, setMochiQuantity] = useState<1 | 2 | 3>(1);
 
   // Payment modal state
   const [showPayment, setShowPayment] = useState(false);
@@ -255,6 +259,7 @@ export default function POS() {
     setExtraBobaType('tapioca');
     setExtraBobaSize('small');
     setExtraPoppingFlavor('strawberry');
+    setMochiQuantity(1); // Reset mochi quantity
     setShowCustomization(true);
   };
 
@@ -269,6 +274,7 @@ export default function POS() {
       c.poppingBobaFlavor === item.poppingBobaFlavor &&
       c.sugarLevel === item.sugarLevel &&
       c.iceLevel === item.iceLevel &&
+      c.mochiQuantity === item.mochiQuantity &&
       JSON.stringify(c.addons) === JSON.stringify(item.addons) &&
       JSON.stringify(c.extraBoba) === JSON.stringify(item.extraBoba) &&
       c.specialInstructions === item.specialInstructions
@@ -317,7 +323,19 @@ export default function POS() {
     }
 
     let unitPrice = 0;
-    if (selectedSubcategoryData.hasSizeVariants) {
+    // Check if this is a mochi product with quantity pricing
+    const isMochiProduct = selectedProduct.mochiPrice1pc && selectedProduct.mochiPrice2pc && selectedProduct.mochiPrice3pc;
+    
+    if (isMochiProduct) {
+      // Use mochi quantity pricing
+      if (mochiQuantity === 1) {
+        unitPrice = selectedProduct.mochiPrice1pc;
+      } else if (mochiQuantity === 2) {
+        unitPrice = selectedProduct.mochiPrice2pc;
+      } else {
+        unitPrice = selectedProduct.mochiPrice3pc;
+      }
+    } else if (selectedSubcategoryData.hasSizeVariants) {
       if (customSize === 'petite') {
         unitPrice = customBoba ? selectedSubcategoryData.basePricePetiteWithBoba : selectedSubcategoryData.basePricePetiteNoBoba;
       } else if (customSize === 'regular') {
@@ -345,10 +363,13 @@ export default function POS() {
       };
     }
 
+    // Check if mochi product
+    const isMochiProductForCart = selectedProduct.mochiPrice1pc && selectedProduct.mochiPrice2pc && selectedProduct.mochiPrice3pc;
+    
     addToCart({
       id: nanoid(),
       productId: selectedProduct.id,
-      productName: selectedProduct.name,
+      productName: isMochiProductForCart ? `${selectedProduct.name} (${mochiQuantity}pc)` : selectedProduct.name,
       chineseName: selectedProduct.chineseName,
       imageUrl: getProductImage(selectedProduct),
       size: selectedSubcategoryData.hasSizeVariants ? customSize : undefined,
@@ -365,6 +386,7 @@ export default function POS() {
       addonsTotal,
       lineTotal: (unitPrice + addonsTotal) * customQty,
       specialInstructions: customInstructions.trim() || undefined,
+      mochiQuantity: isMochiProductForCart ? mochiQuantity : undefined,
     });
 
     setShowCustomization(false);
@@ -845,6 +867,55 @@ export default function POS() {
           </DialogHeader>
 
           <div className="space-y-5 py-2">
+            {/* Mochi Quantity Selection (for mochi products only) */}
+            {selectedProduct?.mochiPrice1pc && selectedProduct?.mochiPrice2pc && selectedProduct?.mochiPrice3pc && (
+              <div>
+                <h4 className="font-medium mb-2">Quantity</h4>
+                <RadioGroup 
+                  value={String(mochiQuantity)} 
+                  onValueChange={(v) => setMochiQuantity(Number(v) as 1 | 2 | 3)} 
+                  className="grid grid-cols-3 gap-2"
+                >
+                  <div>
+                    <RadioGroupItem value="1" id="pos-mochi-1pc" className="peer sr-only" />
+                    <Label
+                      htmlFor="pos-mochi-1pc"
+                      className="flex flex-col items-center justify-center rounded-lg border-2 border-muted bg-popover p-3 hover:bg-accent peer-data-[state=checked]:border-primary cursor-pointer"
+                    >
+                      <span className="font-medium">1 Mochi</span>
+                      <span className="text-sm text-primary font-semibold">
+                        {formatPrice(selectedProduct.mochiPrice1pc)}
+                      </span>
+                    </Label>
+                  </div>
+                  <div>
+                    <RadioGroupItem value="2" id="pos-mochi-2pc" className="peer sr-only" />
+                    <Label
+                      htmlFor="pos-mochi-2pc"
+                      className="flex flex-col items-center justify-center rounded-lg border-2 border-muted bg-popover p-3 hover:bg-accent peer-data-[state=checked]:border-primary cursor-pointer"
+                    >
+                      <span className="font-medium">2 Mochis</span>
+                      <span className="text-sm text-primary font-semibold">
+                        {formatPrice(selectedProduct.mochiPrice2pc)}
+                      </span>
+                    </Label>
+                  </div>
+                  <div>
+                    <RadioGroupItem value="3" id="pos-mochi-3pc" className="peer sr-only" />
+                    <Label
+                      htmlFor="pos-mochi-3pc"
+                      className="flex flex-col items-center justify-center rounded-lg border-2 border-muted bg-popover p-3 hover:bg-accent peer-data-[state=checked]:border-primary cursor-pointer"
+                    >
+                      <span className="font-medium">3 Mochis</span>
+                      <span className="text-sm text-primary font-semibold">
+                        {formatPrice(selectedProduct.mochiPrice3pc)}
+                      </span>
+                    </Label>
+                  </div>
+                </RadioGroup>
+              </div>
+            )}
+
             {/* Size */}
             {selectedSubcategoryData?.hasSizeVariants && (
               <div>

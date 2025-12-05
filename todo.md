@@ -223,3 +223,11 @@
 - [x] Convert video to MP4 for web compatibility
 - [x] Replace static hero image with video background
 - [x] Ensure video autoplays, loops, and is muted
+
+
+## Phase 8 - POS Mochi Quantity Pricing
+
+- [x] Add mochi quantity selection (1/2/3 pieces) to POS
+- [x] Implement Fruit Mochi pricing: 1pc=₹185, 2pc=₹350, 3pc=₹495
+- [x] Implement Signature Mochi pricing: 1pc=₹270, 2pc=₹530, 3pc=₹750
+- [x] Update database with mochi quantity pricing structure

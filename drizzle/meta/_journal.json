@@ -29,6 +29,13 @@
       "when": 1764971299363,
       "tag": "0003_gorgeous_speed_demon",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "5",
+      "when": 1764973693023,
+      "tag": "0004_gorgeous_mad_thinker",
+      "breakpoints": true
     }
   ]
 }

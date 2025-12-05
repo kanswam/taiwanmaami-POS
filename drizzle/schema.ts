@@ -84,6 +84,10 @@ export const products = mysqlTable("products", {
   instorePrice: int("instorePrice"),
   deliveryPrice: int("deliveryPrice"),
   deliveryUnitMultiplier: int("deliveryUnitMultiplier").default(1).notNull(),
+  // Mochi quantity pricing (in-store only) - prices in paise
+  mochiPrice1pc: int("mochiPrice1pc"),
+  mochiPrice2pc: int("mochiPrice2pc"),
+  mochiPrice3pc: int("mochiPrice3pc"),
   // Dietary info
   isVegetarian: boolean("isVegetarian").default(true).notNull(),
   isVegan: boolean("isVegan").default(false).notNull(),
