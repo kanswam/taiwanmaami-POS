@@ -69,6 +69,9 @@ export function ProductCard({ product, subcategory, category, isDelivery = false
 
   // Default placeholder image
   const imageUrl = product.imageUrl || '/placeholder-drink.jpg';
+  
+  // Check if this is a mochi product (for delivery, mochis are sold as set of 2)
+  const isMochiProduct = subcategory.name.toLowerCase().includes('mochi');
 
   return (
     <>
@@ -107,6 +110,14 @@ export function ProductCard({ product, subcategory, category, isDelivery = false
               </span>
             )}
           </div>
+          {/* Mochi set indicator for delivery */}
+          {isDelivery && isMochiProduct && (
+            <div className="absolute top-2 right-2">
+              <span className="bg-primary text-primary-foreground text-xs font-semibold px-2 py-1 rounded-full shadow-sm">
+                Set of 2
+              </span>
+            </div>
+          )}
         </div>
 
         {/* Content section - 40% height */}

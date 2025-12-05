@@ -240,3 +240,10 @@
 - [x] Add Signature Mochi Box options: 1pc, 2pc, 3pc with respective pricing
 - [x] Allow staff to select individual flavors for each slot in the box (including duplicates)
 - [x] Display selected flavors in cart (e.g., "Fruit Mochi 2pc: Strawberry, Cherry")
+
+
+## Phase 8c - Mochi Delivery "Set of 2" Indicator
+
+- [x] Add "Set of 2" badge on mochi product cards for delivery
+- [x] Add "Set of 2 pieces" indicator in customization modal for delivery
+- [x] Make indicator visible to customers on menu page

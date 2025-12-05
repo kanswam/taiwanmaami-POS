@@ -279,6 +279,12 @@ export function ProductCustomizationModal({
               {product.chineseName && (
                 <span className="block text-sm text-muted-foreground">{product.chineseName}</span>
               )}
+              {/* Mochi set indicator for delivery */}
+              {isDelivery && subcategory.name.toLowerCase().includes('mochi') && (
+                <span className="inline-block mt-1 bg-primary/10 text-primary text-xs font-semibold px-2 py-0.5 rounded-full">
+                  Set of 2 pieces
+                </span>
+              )}
             </div>
           </DialogTitle>
         </DialogHeader>
