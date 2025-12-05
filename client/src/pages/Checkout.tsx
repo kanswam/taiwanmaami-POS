@@ -65,7 +65,7 @@ export default function Checkout() {
     };
   }, []);
 
-  const handleRazorpayPayment = useCallback(async (orderId: number, amount: number) => {
+  const handleRazorpayPayment = useCallback(async (orderId: number, orderNumber: string, amount: number) => {
     try {
       // Create Razorpay order
       const paymentOrder = await createPaymentOrder.mutateAsync({ orderId, amount });
@@ -89,7 +89,7 @@ export default function Checkout() {
             
             clearCart();
             toast.success('Payment successful!');
-            navigate(`/order-confirmation/${orderId}`);
+            navigate(`/order-confirmation/${orderNumber}`);
           } catch (err: any) {
             toast.error(err.message || 'Payment verification failed');
             setIsSubmitting(false);
@@ -176,12 +176,12 @@ export default function Checkout() {
       // Delivery orders must pay online
       if (state.orderType === 'delivery' || paymentMethod === 'online') {
         // Initiate Razorpay payment
-        await handleRazorpayPayment(orderData.orderId, displayTotal);
+        await handleRazorpayPayment(orderData.orderId, orderData.orderNumber, displayTotal);
       } else {
         // Cash at pickup - go directly to confirmation
         clearCart();
         toast.success('Order placed! Pay at pickup.');
-        navigate(`/order-confirmation/${orderData.orderId}`);
+        navigate(`/order-confirmation/${orderData.orderNumber}`);
       }
     } catch (err: any) {
       toast.error(err.message || 'Failed to create order');
