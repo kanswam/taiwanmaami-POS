@@ -277,3 +277,9 @@
 - [x] Add status update buttons for staff (/staff/orders page)
 - [x] Show order tracker on order confirmation page
 - [x] Order tracking page already exists at /track
+
+
+## Bug Fixes - Order Workflow
+
+- [x] Remove payment method section for delivery orders (only online payment required)
+- [x] Add status update buttons to Admin Orders tab for workflow progression

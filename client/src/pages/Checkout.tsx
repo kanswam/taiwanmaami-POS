@@ -380,39 +380,31 @@ export default function Checkout() {
                 </div>
               </Card>
 
-              {/* Payment Method */}
+              {/* Payment Method - Only show for pickup orders */}
+              {state.orderType === 'pickup' && (
               <Card className="p-6">
                 <h2 className="text-lg font-semibold mb-4">Payment Method</h2>
-                {state.orderType === 'delivery' ? (
-                  <div className="flex items-center space-x-3 p-4 border rounded-lg bg-muted/50">
-                    <CreditCard className="w-5 h-5 text-primary" />
-                    <div>
-                      <p className="font-medium">Pay Online (Razorpay)</p>
-                      <p className="text-sm text-muted-foreground">Secure payment via UPI, Card, or Net Banking</p>
-                    </div>
+                <RadioGroup
+                  value={paymentMethod}
+                  onValueChange={(v) => setPaymentMethod(v as 'online' | 'cash')}
+                >
+                  <div className="flex items-center space-x-3 p-4 border rounded-lg">
+                    <RadioGroupItem value="online" id="payment-online" />
+                    <Label htmlFor="payment-online" className="flex items-center gap-2 cursor-pointer">
+                      <CreditCard className="w-5 h-5" />
+                      Pay Online (Razorpay)
+                    </Label>
                   </div>
-                ) : (
-                  <RadioGroup
-                    value={paymentMethod}
-                    onValueChange={(v) => setPaymentMethod(v as 'online' | 'cash')}
-                  >
-                    <div className="flex items-center space-x-3 p-4 border rounded-lg">
-                      <RadioGroupItem value="online" id="payment-online" />
-                      <Label htmlFor="payment-online" className="flex items-center gap-2 cursor-pointer">
-                        <CreditCard className="w-5 h-5" />
-                        Pay Online (Razorpay)
-                      </Label>
-                    </div>
-                    <div className="flex items-center space-x-3 p-4 border rounded-lg mt-2">
-                      <RadioGroupItem value="cash" id="payment-cash" />
-                      <Label htmlFor="payment-cash" className="flex items-center gap-2 cursor-pointer">
-                        <Banknote className="w-5 h-5" />
-                        Pay at Pickup
-                      </Label>
-                    </div>
-                  </RadioGroup>
-                )}
+                  <div className="flex items-center space-x-3 p-4 border rounded-lg mt-2">
+                    <RadioGroupItem value="cash" id="payment-cash" />
+                    <Label htmlFor="payment-cash" className="flex items-center gap-2 cursor-pointer">
+                      <Banknote className="w-5 h-5" />
+                      Pay at Pickup
+                    </Label>
+                  </div>
+                </RadioGroup>
               </Card>
+              )}
 
               {/* Notes */}
               <Card className="p-6">

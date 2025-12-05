@@ -434,14 +434,37 @@ function OrdersTab() {
     onError: (err) => toast.error(err.message),
   });
 
-  const statusOptions = ['pending', 'confirmed', 'preparing', 'ready', 'completed', 'cancelled'];
+  const statusOptions = ['pending', 'confirmed', 'preparing', 'ready', 'out_for_delivery', 'completed', 'cancelled'];
   const statusColors: Record<string, string> = {
     pending: 'bg-yellow-100 text-yellow-800',
     confirmed: 'bg-blue-100 text-blue-800',
     preparing: 'bg-orange-100 text-orange-800',
     ready: 'bg-green-100 text-green-800',
+    out_for_delivery: 'bg-purple-100 text-purple-800',
     completed: 'bg-gray-100 text-gray-800',
     cancelled: 'bg-red-100 text-red-800',
+  };
+
+  // Get next status in workflow
+  const getNextStatus = (currentStatus: string, orderType: string) => {
+    const deliveryFlow = ['confirmed', 'preparing', 'ready', 'out_for_delivery', 'completed'];
+    const pickupFlow = ['confirmed', 'preparing', 'ready', 'completed'];
+    const flow = orderType === 'delivery' ? deliveryFlow : pickupFlow;
+    const currentIndex = flow.indexOf(currentStatus);
+    if (currentIndex >= 0 && currentIndex < flow.length - 1) {
+      return flow[currentIndex + 1];
+    }
+    return null;
+  };
+
+  const getNextStatusLabel = (status: string) => {
+    const labels: Record<string, string> = {
+      preparing: 'Start Preparing',
+      ready: 'Mark Ready',
+      out_for_delivery: 'Out for Delivery',
+      completed: 'Complete Order',
+    };
+    return labels[status] || status;
   };
 
   return (
@@ -465,6 +488,7 @@ function OrdersTab() {
                 <th className="text-right p-3 text-sm font-medium">Total</th>
                 <th className="text-center p-3 text-sm font-medium">Status</th>
                 <th className="text-left p-3 text-sm font-medium">Time</th>
+                <th className="text-center p-3 text-sm font-medium">Action</th>
               </tr>
             </thead>
             <tbody>
@@ -498,6 +522,28 @@ function OrdersTab() {
                   </td>
                   <td className="p-3 text-sm text-muted-foreground">
                     {new Date(order.createdAt).toLocaleString()}
+                  </td>
+                  <td className="p-3 text-center">
+                    {getNextStatus(order.orderStatus, order.orderType) && (
+                      <Button
+                        size="sm"
+                        onClick={() => {
+                          const nextStatus = getNextStatus(order.orderStatus, order.orderType);
+                          if (nextStatus) {
+                            updateStatus.mutate({ orderId: order.id, status: nextStatus });
+                          }
+                        }}
+                        disabled={updateStatus.isPending}
+                      >
+                        {getNextStatusLabel(getNextStatus(order.orderStatus, order.orderType)!)}
+                      </Button>
+                    )}
+                    {order.orderStatus === 'completed' && (
+                      <span className="text-green-600 font-medium">✓ Done</span>
+                    )}
+                    {order.orderStatus === 'cancelled' && (
+                      <span className="text-red-600 font-medium">Cancelled</span>
+                    )}
                   </td>
                 </tr>
               ))}
