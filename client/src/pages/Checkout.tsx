@@ -29,7 +29,7 @@ export default function Checkout() {
   const { state, subtotal, gst, total, clearCart, itemCount } = useCart();
   const { data: stores } = trpc.stores.getAll.useQuery();
 
-  const [paymentMethod, setPaymentMethod] = useState<'online' | 'cod'>('online');
+  const [paymentMethod, setPaymentMethod] = useState<'online' | 'cash'>('online');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Form state
@@ -173,13 +173,14 @@ export default function Checkout() {
         specialInstructions: formData.notes || undefined,
       });
 
-      if (paymentMethod === 'online') {
+      // Delivery orders must pay online
+      if (state.orderType === 'delivery' || paymentMethod === 'online') {
         // Initiate Razorpay payment
         await handleRazorpayPayment(orderData.orderId, displayTotal);
       } else {
-        // Cash on delivery - go directly to confirmation
+        // Cash at pickup - go directly to confirmation
         clearCart();
-        toast.success('Order placed successfully!');
+        toast.success('Order placed! Pay at pickup.');
         navigate(`/order-confirmation/${orderData.orderId}`);
       }
     } catch (err: any) {
@@ -382,27 +383,35 @@ export default function Checkout() {
               {/* Payment Method */}
               <Card className="p-6">
                 <h2 className="text-lg font-semibold mb-4">Payment Method</h2>
-                <RadioGroup
-                  value={paymentMethod}
-                  onValueChange={(v) => setPaymentMethod(v as 'online' | 'cod')}
-                >
-                  <div className="flex items-center space-x-3 p-4 border rounded-lg">
-                    <RadioGroupItem value="online" id="payment-online" />
-                    <Label htmlFor="payment-online" className="flex items-center gap-2 cursor-pointer">
-                      <CreditCard className="w-5 h-5" />
-                      Pay Online (Razorpay)
-                    </Label>
+                {state.orderType === 'delivery' ? (
+                  <div className="flex items-center space-x-3 p-4 border rounded-lg bg-muted/50">
+                    <CreditCard className="w-5 h-5 text-primary" />
+                    <div>
+                      <p className="font-medium">Pay Online (Razorpay)</p>
+                      <p className="text-sm text-muted-foreground">Secure payment via UPI, Card, or Net Banking</p>
+                    </div>
                   </div>
-                  {state.orderType !== 'delivery' && (
+                ) : (
+                  <RadioGroup
+                    value={paymentMethod}
+                    onValueChange={(v) => setPaymentMethod(v as 'online' | 'cash')}
+                  >
                     <div className="flex items-center space-x-3 p-4 border rounded-lg">
-                      <RadioGroupItem value="cod" id="payment-cod" />
-                      <Label htmlFor="payment-cod" className="flex items-center gap-2 cursor-pointer">
-                        <Banknote className="w-5 h-5" />
-                        Pay at Store
+                      <RadioGroupItem value="online" id="payment-online" />
+                      <Label htmlFor="payment-online" className="flex items-center gap-2 cursor-pointer">
+                        <CreditCard className="w-5 h-5" />
+                        Pay Online (Razorpay)
                       </Label>
                     </div>
-                  )}
-                </RadioGroup>
+                    <div className="flex items-center space-x-3 p-4 border rounded-lg mt-2">
+                      <RadioGroupItem value="cash" id="payment-cash" />
+                      <Label htmlFor="payment-cash" className="flex items-center gap-2 cursor-pointer">
+                        <Banknote className="w-5 h-5" />
+                        Pay at Pickup
+                      </Label>
+                    </div>
+                  </RadioGroup>
+                )}
               </Card>
 
               {/* Notes */}

@@ -21,6 +21,7 @@ import Refund from "./pages/Refund";
 import POS from "./pages/POS";
 import POSLogin from "./pages/POSLogin";
 import Admin from "./pages/Admin";
+import StaffOrders from "./pages/StaffOrders";
 
 function Router() {
   return (
@@ -43,6 +44,7 @@ function Router() {
       {/* Staff/Admin Routes */}
       <Route path="/pos/login" component={POSLogin} />
       <Route path="/pos" component={POS} />
+      <Route path="/staff/orders" component={StaffOrders} />
       <Route path="/admin" component={Admin} />
       
       {/* Fallback */}

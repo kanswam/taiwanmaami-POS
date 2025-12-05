@@ -1,10 +1,12 @@
+import React from 'react';
 import { useParams, Link } from 'wouter';
 import { Header } from '@/components/Header';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { trpc } from '@/lib/trpc';
 import { formatPrice } from '@shared/types';
-import { CheckCircle, Clock, MapPin, Phone, ArrowRight } from 'lucide-react';
+import { CheckCircle, Clock, MapPin, Phone, ArrowRight, RefreshCw } from 'lucide-react';
+import { OrderTracker } from '@/components/OrderTracker';
 
 export default function OrderConfirmation() {
   const { orderId } = useParams<{ orderId: string }>();
@@ -68,15 +70,24 @@ export default function OrderConfirmation() {
       <div className="container py-8">
         <div className="max-w-2xl mx-auto">
           {/* Success Header */}
-          <div className="text-center mb-8">
-            <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <CheckCircle className="w-10 h-10 text-green-600" />
+          <div className="text-center mb-6">
+            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
+              <CheckCircle className="w-8 h-8 text-green-600" />
             </div>
-            <h1 className="text-2xl font-bold mb-2">Order Placed Successfully!</h1>
-            <p className="text-muted-foreground">
-              Thank you for your order. We'll start preparing it right away.
+            <h1 className="text-2xl font-bold mb-1">Order Placed!</h1>
+            <p className="text-muted-foreground text-sm">
+              Order #{order.orderNumber}
             </p>
           </div>
+
+          {/* Order Status Tracker */}
+          <Card className="p-6 mb-6">
+            <OrderTracker 
+              currentStatus={order.orderStatus} 
+              orderType={order.orderType as 'delivery' | 'pickup' | 'instore'}
+              paymentStatus={order.paymentStatus}
+            />
+          </Card>
 
           {/* Order Details Card */}
           <Card className="p-6 mb-6">

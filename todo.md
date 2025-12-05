@@ -267,3 +267,13 @@
 - [x] Implement payment verification endpoint
 - [x] Update checkout flow to use Razorpay
 - [x] Handle payment success/failure callbacks
+
+
+## Phase 11 - Order Status Tracker & Payment Flow
+
+- [x] Remove Cash on Delivery option for delivery orders
+- [x] Allow Cash at Pickup for pickup orders only
+- [x] Create visual order status tracker for customers (OrderTracker component)
+- [x] Add status update buttons for staff (/staff/orders page)
+- [x] Show order tracker on order confirmation page
+- [x] Order tracking page already exists at /track
