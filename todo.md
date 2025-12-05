@@ -130,3 +130,21 @@
 - [x] Add dusty rose/blush pink accents
 - [x] Use cream/beige backgrounds
 - [x] Add terracotta/coral accent colors
+
+
+## Phase 4 - Category Restructure & Fixes (Dec 5, 2025)
+
+### Website Extra Boba
+- [x] Add extra boba capability to website customization modal (already exists, verified working)
+
+### Slush Fix
+- [x] Remove milk options from Slush products (slushes don't have milk)
+
+### Hot Beverages Restructure
+- [x] Make Hot Beverages a main category (same level as Bubble Tea, Food, etc.)
+- [x] Create Hot Coffee subcategory under Hot Beverages
+- [x] Create Hot Tea (Tea in Pot) subcategory under Hot Beverages
+
+### Iced Coffee Repositioning
+- [x] Move Iced Coffee to main category level (alongside Bubble Tea, Mochis, Food, Slush)
+- [x] Update both website and POS navigation to reflect new structure

@@ -115,9 +115,16 @@ export default function Menu() {
   };
 
   // Render subcategory cards
-  const renderSubcategoryCards = () => (
+  const renderSubcategoryCards = () => {
+    // Filter out subcategories with 0 products in current mode
+    const visibleSubcategories = categorySubcategories.filter(sub => {
+      const count = menuData?.products.filter(p => p.subcategoryId === sub.id).length || 0;
+      return count > 0;
+    });
+    
+    return (
     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-      {categorySubcategories.map((subcategory) => {
+      {visibleSubcategories.map((subcategory) => {
         const productCount = menuData?.products.filter(p => p.subcategoryId === subcategory.id).length || 0;
         const imageUrl = SUBCATEGORY_IMAGES[subcategory.slug] || '/images/shopfront.jpg';
         
@@ -153,6 +160,7 @@ export default function Menu() {
       })}
     </div>
   );
+  };
 
   // Render product grid
   const renderProductGrid = (products: typeof subcategoryProducts) => {

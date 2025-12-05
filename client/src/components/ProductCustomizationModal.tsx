@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
@@ -551,8 +551,8 @@ export function ProductCustomizationModal({
             </div>
           )}
 
-          {/* Vegan Milk Add-ons */}
-          {milkAddons.length > 0 && subcategory.hasSizeVariants && (
+          {/* Vegan Milk Add-ons - Hidden for Slush */}
+          {milkAddons.length > 0 && subcategory.hasSizeVariants && !subcategory.name.toLowerCase().includes('slush') && (
             <div>
               <h4 className="font-medium mb-3">Vegan Milk (Optional)</h4>
               <div className="space-y-2">
