@@ -173,3 +173,8 @@
 - [x] Fix slush still showing vegan milk options (code already restricts to hot-beverages + coffee)
 - [x] Move Omurice and Omunoodles from Noodles to Omelette subcategory
 - [x] Fix header overlap issue on checkout page (content scrolls behind sticky header)
+
+### POS Milk Options Fix (User Reported)
+- [x] Remove vegan milk options from bubble teas in POS
+- [x] Add Coconut Cream Cap option for Tea Lattes only in POS
+- [x] Keep vegan milk options only for hot coffee in POS

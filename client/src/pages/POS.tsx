@@ -1026,10 +1026,10 @@ export default function POS() {
               </div>
             )}
 
-            {/* Vegan Milk Add-ons */}
-            {milkAddons.length > 0 && selectedSubcategoryData?.hasSizeVariants && (
+            {/* Vegan Milk Add-ons - Only for Hot Coffee */}
+            {milkAddons.length > 0 && selectedSubcategoryData?.name?.toLowerCase().includes('coffee') && menuData?.categories.find(c => menuData?.subcategories.find(s => s.id === selectedSubcategoryData?.id)?.categoryId === c.id)?.slug === 'hot-beverages' && (
               <div>
-                <h4 className="font-medium mb-2">Milk Options</h4>
+                <h4 className="font-medium mb-2">Vegan Milk Options</h4>
                 <div className="grid grid-cols-2 gap-2">
                   {milkAddons.map((addon) => {
                     const isSelected = customAddons.some(a => a.id === addon.id);
@@ -1054,6 +1054,30 @@ export default function POS() {
                     );
                   })}
                 </div>
+              </div>
+            )}
+
+            {/* Coconut Cream Cap - Only for Tea Lattes (bubble tea lattes) */}
+            {selectedSubcategoryData?.hasBobaOption && selectedProduct?.name?.toLowerCase().includes('latte') && (
+              <div>
+                <h4 className="font-medium mb-2">Cream Cap</h4>
+                <button
+                  onClick={() => {
+                    const coconutCreamAddon = { id: 99999, name: 'Coconut Cream Cap', price: 0 };
+                    const isSelected = customAddons.some(a => a.id === 99999);
+                    if (isSelected) {
+                      setCustomAddons(customAddons.filter(a => a.id !== 99999));
+                    } else {
+                      setCustomAddons([...customAddons, coconutCreamAddon]);
+                    }
+                  }}
+                  className={`rounded-lg border-2 p-3 text-left transition-colors w-full ${
+                    customAddons.some(a => a.id === 99999) ? 'border-primary bg-primary/10' : 'border-muted hover:bg-accent'
+                  }`}
+                >
+                  <div className="font-medium text-sm">Coconut Cream Cap</div>
+                  <div className="text-xs text-muted-foreground">Free</div>
+                </button>
               </div>
             )}
 
