@@ -1,13 +1,17 @@
-import { Link } from 'wouter';
+import { Link, useLocation } from 'wouter';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Header } from '@/components/Header';
 import { trpc } from '@/lib/trpc';
-import { ArrowRight, MapPin, Clock, Star, Sparkles } from 'lucide-react';
+import { ArrowRight, MapPin, Clock, Star, Sparkles, Instagram, Play } from 'lucide-react';
 
 export default function Home() {
   const { data: categories } = trpc.menu.getCategories.useQuery();
   const { data: stores } = trpc.stores.getAll.useQuery();
+  const { data: featuredVideos } = trpc.admin.getFeaturedVideos.useQuery();
+  const [playingVideo, setPlayingVideo] = useState<number | null>(null);
+  const [, navigate] = useLocation();
 
   const categoryImages: Record<string, string> = {
     'bubble-tea': '/images/caramel-milk-tea.jpg',
@@ -114,6 +118,61 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* Featured Videos Carousel */}
+      {featuredVideos && featuredVideos.length > 0 && (
+        <section className="py-16 bg-gradient-to-b from-background to-secondary/20">
+          <div className="container">
+            <div className="text-center mb-10">
+              <div className="flex items-center justify-center gap-3 mb-4">
+                <Play className="w-8 h-8 text-primary" />
+                <h2 className="text-3xl font-bold">Watch Our Creations</h2>
+              </div>
+              <p className="text-muted-foreground max-w-2xl mx-auto">
+                See how we craft our signature drinks and dishes with premium ingredients.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {featuredVideos.map((video) => (
+                <div key={video.id} className="group relative">
+                  <div className="aspect-video rounded-2xl overflow-hidden shadow-lg bg-secondary">
+                    <video
+                      src={video.videoUrl || ''}
+                      poster={video.videoThumbnail || video.imageUrl || ''}
+                      className="w-full h-full object-cover"
+                      muted
+                      loop
+                      playsInline
+                      onMouseEnter={(e) => (e.target as HTMLVideoElement).play()}
+                      onMouseLeave={(e) => {
+                        const vid = e.target as HTMLVideoElement;
+                        vid.pause();
+                        vid.currentTime = 0;
+                      }}
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
+                    <div className="absolute bottom-0 left-0 right-0 p-4">
+                      <h3 className="text-white font-semibold text-lg mb-2">{video.name}</h3>
+                      {video.deliveryPrice && (
+                        <p className="text-white/80 text-sm mb-3">₹{video.deliveryPrice}</p>
+                      )}
+                      <Button
+                        size="sm"
+                        className="bg-white text-primary hover:bg-white/90"
+                        onClick={() => navigate(`/menu?product=${video.slug}`)}
+                      >
+                        Order Now
+                        <ArrowRight className="ml-2 w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Featured Products Showcase */}
       <section className="py-16 bg-gradient-to-b from-background to-secondary/20">
@@ -226,6 +285,69 @@ export default function Home() {
                   alt="Taiwan Maami Shopfront"
                   className="w-full h-auto"
                 />
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Instagram Feed Section */}
+      <section className="py-16 bg-gradient-to-b from-secondary/20 to-background">
+        <div className="container">
+          <div className="text-center mb-10">
+            <div className="flex items-center justify-center gap-3 mb-4">
+              <Instagram className="w-8 h-8 text-primary" />
+              <h2 className="text-3xl font-bold">Follow Us on Instagram</h2>
+            </div>
+            <p className="text-muted-foreground max-w-2xl mx-auto mb-6">
+              Stay updated with our latest creations, behind-the-scenes moments, and special offers.
+            </p>
+            <a
+              href="https://www.instagram.com/taiwan_maami/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 text-primary hover:text-primary/80 font-semibold"
+            >
+              <Instagram className="w-5 h-5" />
+              @taiwan_maami
+            </a>
+          </div>
+
+          {/* Instagram Embed Widget */}
+          <div className="max-w-4xl mx-auto">
+            <div className="bg-card rounded-2xl shadow-lg p-6 border">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {/* Instagram-style placeholder cards that link to Instagram */}
+                {[1, 2, 3, 4].map((i) => (
+                  <a
+                    key={i}
+                    href="https://www.instagram.com/taiwan_maami/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="group relative aspect-square rounded-xl overflow-hidden bg-secondary"
+                  >
+                    <img
+                      src={`/images/${['caramel-milk-tea', 'mango-mochi', 'hazelnut-milk-tea', 'dragon-speck-mochi'][i-1]}.jpg`}
+                      alt="Instagram post"
+                      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                    />
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center">
+                      <Instagram className="w-8 h-8 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                    </div>
+                  </a>
+                ))}
+              </div>
+              <div className="text-center mt-6">
+                <a
+                  href="https://www.instagram.com/taiwan_maami/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <Button variant="outline" className="gap-2">
+                    <Instagram className="w-4 h-4" />
+                    View More on Instagram
+                  </Button>
+                </a>
               </div>
             </div>
           </div>

@@ -14,7 +14,7 @@ import { formatPrice, GST_RATE } from '@shared/types';
 import { 
   Home, Package, ShoppingCart, Tag, Upload, Settings, LogOut, 
   Plus, Edit, Trash2, ImageIcon, RefreshCw, Check, X, Search,
-  ChevronDown, ChevronUp, Eye, EyeOff, Store, ClipboardList, Star
+  ChevronDown, ChevronUp, Eye, EyeOff, Store, ClipboardList, Star, Video, Play
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -67,7 +67,7 @@ export default function Admin() {
 
       <div className="container py-6">
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-7 mb-6">
+          <TabsList className="grid w-full grid-cols-8 mb-6">
             <TabsTrigger value="products" className="gap-2">
               <Package className="w-4 h-4" />
               Products
@@ -91,6 +91,10 @@ export default function Admin() {
             <TabsTrigger value="reviews" className="gap-2">
               <Star className="w-4 h-4" />
               Reviews
+            </TabsTrigger>
+            <TabsTrigger value="videos" className="gap-2">
+              <Video className="w-4 h-4" />
+              Videos
             </TabsTrigger>
             <TabsTrigger value="bulk-upload" className="gap-2">
               <Upload className="w-4 h-4" />
@@ -120,6 +124,10 @@ export default function Admin() {
 
           <TabsContent value="reviews">
             <ReviewsTab />
+          </TabsContent>
+
+          <TabsContent value="videos">
+            <VideosTab />
           </TabsContent>
 
           <TabsContent value="bulk-upload">
@@ -1224,6 +1232,252 @@ function ReviewsTab() {
           ))}
         </div>
       )}
+    </div>
+  );
+}
+
+
+// Videos Tab Component
+function VideosTab() {
+  const [selectedProduct, setSelectedProduct] = useState<number | null>(null);
+  const [videoFile, setVideoFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  
+  const { data: products, refetch } = trpc.admin.getAllProducts.useQuery();
+  const { data: featuredVideos } = trpc.admin.getFeaturedVideos.useQuery();
+  
+  const uploadVideo = trpc.admin.uploadProductVideo.useMutation({
+    onSuccess: () => {
+      toast.success('Video uploaded successfully');
+      refetch();
+      setVideoFile(null);
+      setSelectedProduct(null);
+    },
+    onError: (error) => {
+      toast.error(error.message || 'Failed to upload video');
+    },
+  });
+  
+  const updateProduct = trpc.admin.updateProduct.useMutation({
+    onSuccess: () => {
+      toast.success('Product updated');
+      refetch();
+    },
+  });
+
+  const handleVideoUpload = async () => {
+    if (!selectedProduct || !videoFile) return;
+    
+    setUploading(true);
+    try {
+      // Convert file to base64
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        const base64 = e.target?.result as string;
+        await uploadVideo.mutateAsync({
+          productId: selectedProduct,
+          videoBase64: base64,
+          mimeType: videoFile.type,
+          fileName: videoFile.name,
+        });
+        setUploading(false);
+      };
+      reader.readAsDataURL(videoFile);
+    } catch (error) {
+      setUploading(false);
+      toast.error('Failed to upload video');
+    }
+  };
+
+  const toggleFeatured = (productId: number, currentValue: boolean) => {
+    updateProduct.mutate({
+      id: productId,
+      isFeaturedVideo: !currentValue,
+    });
+  };
+
+  const removeVideo = (productId: number) => {
+    if (confirm('Are you sure you want to remove this video?')) {
+      updateProduct.mutate({
+        id: productId,
+        videoUrl: null,
+        videoThumbnail: null,
+        isFeaturedVideo: false,
+      });
+    }
+  };
+
+  type Product = NonNullable<typeof products>[number];
+  const productsWithVideos = products?.filter((p: Product) => p.videoUrl) || [];
+  const productsWithoutVideos = products?.filter((p: Product) => !p.videoUrl && p.name.toLowerCase().includes(searchTerm.toLowerCase())) || [];
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h2 className="text-2xl font-bold">Product Videos</h2>
+        <div className="text-sm text-muted-foreground">
+          {productsWithVideos.length} products with videos
+        </div>
+      </div>
+
+      {/* Upload Section */}
+      <Card className="p-6">
+        <h3 className="font-semibold mb-4">Upload New Video</h3>
+        <div className="grid md:grid-cols-3 gap-4">
+          <div>
+            <Label>Select Product</Label>
+            <Input
+              placeholder="Search products..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="mb-2"
+            />
+            <Select
+              value={selectedProduct?.toString() || ''}
+              onValueChange={(v) => setSelectedProduct(parseInt(v))}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Choose a product" />
+              </SelectTrigger>
+              <SelectContent>
+                {productsWithoutVideos.slice(0, 20).map((product: Product) => (
+                  <SelectItem key={product.id} value={product.id.toString()}>
+                    {product.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <Label>Video File (MP4, WebM)</Label>
+            <Input
+              type="file"
+              accept="video/mp4,video/webm"
+              onChange={(e) => setVideoFile(e.target.files?.[0] || null)}
+              className="mt-1"
+            />
+            {videoFile && (
+              <p className="text-xs text-muted-foreground mt-1">
+                {videoFile.name} ({(videoFile.size / 1024 / 1024).toFixed(2)} MB)
+              </p>
+            )}
+          </div>
+          <div className="flex items-end">
+            <Button
+              onClick={handleVideoUpload}
+              disabled={!selectedProduct || !videoFile || uploading}
+              className="w-full"
+            >
+              {uploading ? (
+                <>
+                  <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                  Uploading...
+                </>
+              ) : (
+                <>
+                  <Upload className="w-4 h-4 mr-2" />
+                  Upload Video
+                </>
+              )}
+            </Button>
+          </div>
+        </div>
+      </Card>
+
+      {/* Featured Videos Section */}
+      {featuredVideos && featuredVideos.length > 0 && (
+        <Card className="p-6">
+          <h3 className="font-semibold mb-4 flex items-center gap-2">
+            <Star className="w-5 h-5 text-yellow-500" />
+            Featured Videos (Homepage Carousel)
+          </h3>
+          <div className="grid md:grid-cols-4 gap-4">
+            {featuredVideos.map((product) => (
+              <div key={product.id} className="relative group">
+                <div className="aspect-video bg-secondary rounded-lg overflow-hidden">
+                  {product.videoUrl ? (
+                    <video
+                      src={product.videoUrl}
+                      className="w-full h-full object-cover"
+                      muted
+                      loop
+                      onMouseEnter={(e) => (e.target as HTMLVideoElement).play()}
+                      onMouseLeave={(e) => {
+                        const video = e.target as HTMLVideoElement;
+                        video.pause();
+                        video.currentTime = 0;
+                      }}
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <Video className="w-8 h-8 text-muted-foreground" />
+                    </div>
+                  )}
+                </div>
+                <p className="text-sm font-medium mt-2 truncate">{product.name}</p>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
+
+      {/* All Videos Grid */}
+      <Card className="p-6">
+        <h3 className="font-semibold mb-4">All Product Videos</h3>
+        {productsWithVideos.length === 0 ? (
+          <p className="text-muted-foreground text-center py-8">
+            No product videos uploaded yet. Upload your first video above.
+          </p>
+        ) : (
+          <div className="grid md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {productsWithVideos.map((product: Product) => (
+              <div key={product.id} className="relative group">
+                <div className="aspect-video bg-secondary rounded-lg overflow-hidden relative">
+                  {product.videoUrl ? (
+                    <video
+                      src={product.videoUrl}
+                      className="w-full h-full object-cover"
+                      muted
+                      loop
+                      onMouseEnter={(e) => (e.target as HTMLVideoElement).play()}
+                      onMouseLeave={(e) => {
+                        const video = e.target as HTMLVideoElement;
+                        video.pause();
+                        video.currentTime = 0;
+                      }}
+                    />
+                  ) : null}
+                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                    <Button
+                      size="sm"
+                      variant={product.isFeaturedVideo ? 'default' : 'outline'}
+                      className="bg-white/20 hover:bg-white/30"
+                      onClick={() => toggleFeatured(product.id, product.isFeaturedVideo)}
+                    >
+                      <Star className={`w-4 h-4 ${product.isFeaturedVideo ? 'fill-yellow-500 text-yellow-500' : ''}`} />
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="bg-white/20 hover:bg-white/30 text-red-500"
+                      onClick={() => removeVideo(product.id)}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
+                  {product.isFeaturedVideo && (
+                    <div className="absolute top-2 right-2">
+                      <Star className="w-5 h-5 fill-yellow-500 text-yellow-500" />
+                    </div>
+                  )}
+                </div>
+                <p className="text-sm font-medium mt-2 truncate">{product.name}</p>
+              </div>
+            ))}
+          </div>
+        )}
+      </Card>
     </div>
   );
 }

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Plus, Leaf, Egg, Star } from 'lucide-react';
+import { Plus, Leaf, Egg, Star, Play } from 'lucide-react';
 import { formatPrice, GST_RATE } from '@shared/types';
 import { ProductCustomizationModal } from './ProductCustomizationModal';
 
@@ -18,6 +18,7 @@ interface ProductCardProps {
     isVegetarian?: boolean;
     isVegan?: boolean;
     containsEgg?: boolean;
+    videoUrl?: string | null;
   };
   subcategory: {
     id: number;
@@ -116,6 +117,15 @@ export function ProductCard({ product, subcategory, category, isDelivery = false
             <div className="absolute top-2 right-2">
               <span className="bg-primary text-primary-foreground text-xs font-semibold px-2 py-1 rounded-full shadow-sm">
                 Set of 2
+              </span>
+            </div>
+          )}
+          {/* Video badge */}
+          {product.videoUrl && (
+            <div className="absolute bottom-2 right-2">
+              <span className="bg-black/70 text-white text-xs font-medium px-2 py-1 rounded-full shadow-sm flex items-center gap-1">
+                <Play className="w-3 h-3 fill-white" />
+                Video
               </span>
             </div>
           )}

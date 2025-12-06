@@ -740,6 +740,9 @@ export const appRouter = router({
         availableDelivery: z.boolean().optional(),
         displayOrder: z.number().optional(),
         isActive: z.boolean().optional(),
+        videoUrl: z.string().nullable().optional(),
+        videoThumbnail: z.string().nullable().optional(),
+        isFeaturedVideo: z.boolean().optional(),
       }))
       .mutation(async ({ input }) => {
         const dbInstance = await getDb();
@@ -777,6 +780,84 @@ export const appRouter = router({
         
         return { success: true, imageUrl: url };
       }),
+
+    // Upload product video
+    uploadProductVideo: adminProcedure
+      .input(z.object({
+        productId: z.number(),
+        videoBase64: z.string(),
+        mimeType: z.string(),
+        fileName: z.string(),
+      }))
+      .mutation(async ({ input }) => {
+        const { storagePut } = await import('./storage');
+        const dbInstance = await getDb();
+        if (!dbInstance) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
+        
+        // Convert base64 to buffer
+        const base64Data = input.videoBase64.replace(/^data:[^;]+;base64,/, '');
+        const buffer = Buffer.from(base64Data, 'base64');
+        
+        // Generate unique file key
+        const ext = input.fileName.split('.').pop() || 'mp4';
+        const fileKey = `videos/${input.productId}-${Date.now()}.${ext}`;
+        
+        // Upload to S3
+        const { url } = await storagePut(fileKey, buffer, input.mimeType);
+        
+        // Update product with new video URL
+        await dbInstance.update(products).set({ videoUrl: url }).where(eq(products.id, input.productId));
+        
+        return { success: true, videoUrl: url };
+      }),
+
+    // Get featured videos for homepage carousel
+    getFeaturedVideos: publicProcedure.query(async () => {
+      const dbInstance = await getDb();
+      if (!dbInstance) return [];
+      
+      const result = await dbInstance.select({
+        id: products.id,
+        name: products.name,
+        slug: products.slug,
+        videoUrl: products.videoUrl,
+        videoThumbnail: products.videoThumbnail,
+        imageUrl: products.imageUrl,
+        deliveryPrice: products.deliveryPrice,
+      })
+      .from(products)
+      .where(and(
+        eq(products.isFeaturedVideo, true),
+        eq(products.isActive, true),
+        sql`${products.videoUrl} IS NOT NULL`
+      ))
+      .limit(10);
+      
+      return result;
+    }),
+
+    // Get products with videos
+    getProductsWithVideos: publicProcedure.query(async () => {
+      const dbInstance = await getDb();
+      if (!dbInstance) return [];
+      
+      const result = await dbInstance.select({
+        id: products.id,
+        name: products.name,
+        slug: products.slug,
+        videoUrl: products.videoUrl,
+        videoThumbnail: products.videoThumbnail,
+        imageUrl: products.imageUrl,
+        deliveryPrice: products.deliveryPrice,
+      })
+      .from(products)
+      .where(and(
+        eq(products.isActive, true),
+        sql`${products.videoUrl} IS NOT NULL`
+      ));
+      
+      return result;
+    }),
 
     deleteProduct: adminProcedure
       .input(z.object({ id: z.number() }))

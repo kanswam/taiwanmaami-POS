@@ -98,6 +98,10 @@ export const products = mysqlTable("products", {
   availableDelivery: boolean("availableDelivery").default(true).notNull(),
   displayOrder: int("displayOrder").default(0).notNull(),
   isActive: boolean("isActive").default(true).notNull(),
+  // Video fields for product showcase
+  videoUrl: text("videoUrl"),
+  videoThumbnail: text("videoThumbnail"),
+  isFeaturedVideo: boolean("isFeaturedVideo").default(false).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });

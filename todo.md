@@ -326,3 +326,49 @@
 - [x] Fix nested anchor tag error in checkout T&C checkbox
 - [x] Fix invoice time to show IST (India Standard Time) instead of server time
 - [x] Fix invoice payment method to show actual payment method from order (Razorpay/Cash)
+
+
+## Phase 14 - Social Media & Video Integration
+
+### Instagram Feed
+- [x] Add Instagram feed embed section on homepage (@taiwan_maami)
+- [x] Display latest posts from Instagram
+- [x] Add "Follow us on Instagram" CTA button
+
+### Product Videos
+- [x] Add videoUrl and videoThumbnail fields to products table
+- [x] Create admin UI for uploading product videos
+- [x] Build homepage video carousel for featured products
+- [ ] Add video playback modal with "Order Now" button
+
+### Video Badges on Product Cards
+- [x] Show video badge on products with videos
+- [x] Click badge to play video in modal (via product customization modal)
+- [x] Add to cart from video modal (via product customization modal)
+
+## Phase 15 - Analytics & Reporting System
+
+### Phase 1: Core Sales Reports
+- [ ] Create Analytics tab in Admin panel
+- [ ] Build KPI cards (Today, Week, Month, YTD sales)
+- [ ] Add date range picker with presets
+- [ ] Sales breakdown by major category
+- [ ] Sales breakdown by sub-category
+- [ ] Sales breakdown by individual item
+- [ ] Export to CSV/Excel
+
+### Phase 2: Trend Analysis
+- [ ] Sales trend line charts (daily/weekly/monthly)
+- [ ] Product performance matrix
+- [ ] Customer insights (new vs returning)
+- [ ] Peak hours and weekday patterns
+
+### Phase 3: Predictive Analytics
+- [ ] Demand forecasting (next 7/14/30 days)
+- [ ] Surge prediction alerts based on historical data
+- [ ] Inventory recommendations
+
+### Phase 4: AI-Powered Insights
+- [ ] Market basket analysis (combo discovery)
+- [ ] AI insights feed with recommendations
+- [ ] Hidden correlation detection
