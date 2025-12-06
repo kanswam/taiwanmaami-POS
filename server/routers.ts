@@ -1360,11 +1360,12 @@ export const appRouter = router({
         const avgOrderValue = current.totalOrders > 0 ? current.totalRevenue / current.totalOrders : 0;
         const prevAvgOrderValue = prev.totalOrders > 0 ? prev.totalRevenue / prev.totalOrders : 0;
 
+        // Convert paise to rupees (divide by 100)
         return {
-          totalRevenue: current.totalRevenue,
+          totalRevenue: Math.round(current.totalRevenue / 100),
           totalOrders: current.totalOrders,
           totalItems: current.totalItems,
-          avgOrderValue: Math.round(avgOrderValue),
+          avgOrderValue: Math.round(avgOrderValue / 100),
           revenueChange: prev.totalRevenue > 0 ? ((current.totalRevenue - prev.totalRevenue) / prev.totalRevenue) * 100 : 0,
           ordersChange: prev.totalOrders > 0 ? ((current.totalOrders - prev.totalOrders) / prev.totalOrders) * 100 : 0,
           aovChange: prevAvgOrderValue > 0 ? ((avgOrderValue - prevAvgOrderValue) / prevAvgOrderValue) * 100 : 0,
@@ -1405,10 +1406,11 @@ export const appRouter = router({
 
         const totalRevenue = breakdown.reduce((sum: number, cat: typeof breakdown[0]) => sum + Number(cat.revenue), 0);
 
+        // Convert paise to rupees (divide by 100)
         return breakdown.map((cat: typeof breakdown[0]) => ({
           categoryId: cat.categoryId,
           categoryName: cat.categoryName,
-          revenue: Number(cat.revenue),
+          revenue: Math.round(Number(cat.revenue) / 100),
           orderCount: Number(cat.orderCount),
           percentage: totalRevenue > 0 ? (Number(cat.revenue) / totalRevenue) * 100 : 0,
         }));
@@ -1445,11 +1447,12 @@ export const appRouter = router({
           .orderBy(desc(sql`SUM(${orderItems.lineTotal})`))
           .limit(input.limit);
 
+        // Convert paise to rupees (divide by 100)
         return topProducts.map(p => ({
           productId: p.productId,
           productName: p.productName,
           quantity: Number(p.quantity),
-          revenue: Number(p.revenue),
+          revenue: Math.round(Number(p.revenue) / 100),
         }));
       }),
   }),

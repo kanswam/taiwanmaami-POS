@@ -373,3 +373,6 @@
 - [ ] Market basket analysis (combo discovery)
 - [ ] AI insights feed with recommendations
 - [ ] Hidden correlation detection
+
+## Bug Fixes - Analytics
+- [x] Fix analytics to convert paise to rupees (divide amounts by 100)
