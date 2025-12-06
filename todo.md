@@ -305,3 +305,4 @@
 
 ### Invoice Updates
 - [x] Add Thamarai Foods and Trading Private Limited as legal entity on invoice for payment transparency
+- [x] Add complete Thamarai Foods registration details (GSTIN, address, CIN) to invoice

@@ -140,12 +140,12 @@ export function generateInvoiceHtml(data: InvoiceData): string {
 
   <div class="footer">
     <p>Thank you for choosing Taiwan Maami!</p>
-    <p style="margin-top: 15px; font-size: 11px; color: #888;">
-      <strong>Legal Entity:</strong> Thamarai Foods and Trading Private Limited<br>
-      All payments are processed by Thamarai Foods and Trading Private Limited
+    <p style="margin-top: 15px; font-size: 11px; color: #555; line-height: 1.6;">
+      <strong>Thamarai Foods and Trading Private Limited</strong><br>
+      34/8 Singarar Street, Triplicane, Chennai - 600005<br>
+      GSTIN: 33AAKCT4782H1Z1 | CIN: U47219TN2023PTC164226
     </p>
-    <p>For queries, contact us at: +91 98765 43210 | info@taiwanmaami.com</p>
-    <p>GSTIN: 33XXXXX1234X1ZX</p>
+    <p>For queries, contact us at: info@taiwanmaami.com</p>
   </div>
 </body>
 </html>
