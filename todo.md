@@ -404,7 +404,11 @@
 ## Phase 17 - KOT Printer Setup
 
 ### Kitchen Order Ticket (KOT) Printing
-- [ ] Integrate with thermal printer for T Nagar outlet
-- [ ] Create KOT print format with order details
-- [ ] Auto-print KOT when new order is placed
-- [ ] Include order number, items, customizations, special instructions
+- [x] Add kot_queue database table
+- [x] Create KOT tRPC procedures (pollPending, markPrinted, getHistory)
+- [x] Integrate KOT creation with payment verification
+- [x] Create polling-client.js for outlet computer
+- [x] Configure KOT_PRINT_SECRET environment variable
+- [x] Create KOT print format with ESC/POS commands
+- [x] Include order number, items, customizations, special instructions
+- [x] Add README with setup instructions for outlet computer

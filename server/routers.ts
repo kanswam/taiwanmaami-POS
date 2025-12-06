@@ -11,7 +11,7 @@ import { categories, subcategories, products, addons, orders, orderItems, orderI
 import { eq, and, desc, asc, sql, gte, lte } from "drizzle-orm";
 import { generateOrderNumber, calculateGst } from "@shared/types";
 import { authenticateStaffByMobile, getActiveEmployees } from "./employeeMaster";
-import { posSessions, posAuditLog, outletProducts, reviews } from "../drizzle/schema";
+import { posSessions, posAuditLog, outletProducts, reviews, kotQueue } from "../drizzle/schema";
 import { generateInvoiceHtml, type InvoiceData } from "./invoice";
 
 // Admin procedure - only allows admin role
@@ -317,6 +317,55 @@ export const appRouter = router({
             razorpayPaymentId: input.razorpayPaymentId
           })
           .where(eq(orders.id, input.orderId));
+        
+        // Create KOT for kitchen printing
+        try {
+          const orderData = await dbInstance.select().from(orders).where(eq(orders.id, input.orderId));
+          if (orderData.length > 0) {
+            const order = orderData[0];
+            const items = await dbInstance.select({
+              productName: orderItems.productName,
+              quantity: orderItems.quantity,
+              unitPrice: orderItems.unitPrice,
+              lineTotal: orderItems.lineTotal,
+              size: orderItems.size,
+              sugarLevel: orderItems.sugarLevel,
+              iceLevel: orderItems.iceLevel,
+              withBoba: orderItems.withBoba,
+              specialInstructions: orderItems.specialInstructions,
+            }).from(orderItems).where(eq(orderItems.orderId, input.orderId));
+
+            const kotData = {
+              orderId: order.orderNumber,
+              customerName: order.customerName || 'Guest',
+              customerPhone: order.customerPhone || '',
+              orderType: order.orderType,
+              items: items.map(item => ({
+                productName: item.productName,
+                quantity: item.quantity,
+                price: item.unitPrice,
+                size: item.size,
+                sugarLevel: item.sugarLevel,
+                iceLevel: item.iceLevel,
+                withBoba: item.withBoba,
+                specialInstructions: item.specialInstructions,
+              })),
+              totalAmount: order.totalAmount,
+              createdAt: new Date().toISOString(),
+            };
+
+            // Insert into KOT queue (default to outlet 1 - T Nagar)
+            await dbInstance.insert(kotQueue).values({
+              orderId: order.orderNumber,
+              outletId: 1, // T Nagar outlet
+              kotData: kotData,
+              isPrinted: false,
+            });
+          }
+        } catch (kotError) {
+          console.error('Failed to create KOT:', kotError);
+          // Don't fail the payment verification if KOT creation fails
+        }
         
         return { success: true, message: 'Payment verified successfully' };
       }),
@@ -1490,6 +1539,92 @@ export const appRouter = router({
           quantity: Number(p.quantity),
           revenue: Math.round(Number(p.revenue) / 100),
         }));
+      }),
+  }),
+
+  // KOT (Kitchen Order Ticket) routes for thermal printer integration
+  kot: router({
+    // Poll for pending KOTs - called by outlet polling client
+    pollPending: publicProcedure
+      .input(z.object({
+        secret: z.string(),
+        outletId: z.number().optional().default(1), // Default to T Nagar outlet
+      }))
+      .query(async ({ input }) => {
+        // Verify the KOT print secret
+        const kotSecret = process.env.KOT_PRINT_SECRET;
+        if (!kotSecret || input.secret !== kotSecret) {
+          throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Invalid KOT print secret' });
+        }
+
+        const database = await getDb();
+        if (!database) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Database not available' });
+
+        // Get pending KOTs for this outlet
+        const pendingKots = await database
+          .select()
+          .from(kotQueue)
+          .where(and(
+            eq(kotQueue.isPrinted, false),
+            eq(kotQueue.outletId, input.outletId)
+          ))
+          .orderBy(asc(kotQueue.createdAt))
+          .limit(10);
+
+        return pendingKots;
+      }),
+
+    // Mark KOT as printed - called after successful print
+    markPrinted: publicProcedure
+      .input(z.object({
+        secret: z.string(),
+        kotId: z.number(),
+      }))
+      .mutation(async ({ input }) => {
+        // Verify the KOT print secret
+        const kotSecret = process.env.KOT_PRINT_SECRET;
+        if (!kotSecret || input.secret !== kotSecret) {
+          throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Invalid KOT print secret' });
+        }
+
+        const database = await getDb();
+        if (!database) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Database not available' });
+
+        await database
+          .update(kotQueue)
+          .set({
+            isPrinted: true,
+            printedAt: new Date(),
+          })
+          .where(eq(kotQueue.id, input.kotId));
+
+        return { success: true };
+      }),
+
+    // Get KOT history for admin
+    getHistory: adminProcedure
+      .input(z.object({
+        outletId: z.number().optional(),
+        limit: z.number().optional().default(50),
+      }))
+      .query(async ({ input }) => {
+        const database = await getDb();
+        if (!database) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Database not available' });
+
+        if (input.outletId) {
+          return database
+            .select()
+            .from(kotQueue)
+            .where(eq(kotQueue.outletId, input.outletId))
+            .orderBy(desc(kotQueue.createdAt))
+            .limit(input.limit);
+        }
+
+        return database
+          .select()
+          .from(kotQueue)
+          .orderBy(desc(kotQueue.createdAt))
+          .limit(input.limit);
       }),
   }),
 });

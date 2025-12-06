@@ -332,6 +332,17 @@ export const reviews = mysqlTable("reviews", {
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 
+// KOT (Kitchen Order Ticket) queue for thermal printer
+export const kotQueue = mysqlTable("kot_queue", {
+  id: int("id").autoincrement().primaryKey(),
+  orderId: varchar("orderId", { length: 255 }).notNull(),
+  outletId: int("outletId").notNull(), // Which outlet should print this
+  kotData: json("kotData").notNull(), // Full order details for printing
+  isPrinted: boolean("isPrinted").default(false).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  printedAt: timestamp("printedAt"),
+});
+
 // Type exports
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
@@ -350,3 +361,5 @@ export type InsertReview = typeof reviews.$inferInsert;
 export type OutletProduct = typeof outletProducts.$inferSelect;
 export type PosSession = typeof posSessions.$inferSelect;
 export type PosAuditLog = typeof posAuditLog.$inferSelect;
+export type KotQueue = typeof kotQueue.$inferSelect;
+export type InsertKotQueue = typeof kotQueue.$inferInsert;
