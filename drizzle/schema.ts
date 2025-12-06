@@ -10,6 +10,10 @@ export const users = mysqlTable("users", {
   loginMethod: varchar("loginMethod", { length: 64 }),
   role: mysqlEnum("role", ["customer", "staff", "admin"]).default("customer").notNull(),
   loyaltyPoints: int("loyaltyPoints").default(0).notNull(),
+  // Digital stamp card fields
+  stampCount: int("stampCount").default(0).notNull(),
+  lifetimeStamps: int("lifetimeStamps").default(0).notNull(),
+  lastStampDate: timestamp("lastStampDate"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
   lastSignedIn: timestamp("lastSignedIn").defaultNow().notNull(),
@@ -315,6 +319,41 @@ export const deliveryAreas = mysqlTable("delivery_areas", {
   isActive: boolean("isActive").default(true).notNull(),
 });
 
+// Loyalty rewards (vouchers earned from stamp card)
+export const loyaltyRewards = mysqlTable("loyalty_rewards", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  rewardType: varchar("rewardType", { length: 50 }).notNull(), // 'free_large_bubble_tea'
+  voucherCode: varchar("voucherCode", { length: 20 }).notNull().unique(),
+  isRedeemed: boolean("isRedeemed").default(false).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  expiresAt: timestamp("expiresAt").notNull(),
+  redeemedAt: timestamp("redeemedAt"),
+  redeemedOrderId: int("redeemedOrderId"),
+});
+
+// Stamp transaction log for audit
+export const stampTransactions = mysqlTable("stamp_transactions", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  orderId: int("orderId"),
+  action: mysqlEnum("action", ["earn", "bonus", "welcome", "redeem", "expire"]).notNull(),
+  stamps: int("stamps").notNull(), // positive for earn, negative for redeem
+  orderTotal: int("orderTotal"), // in paise
+  description: text("description"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+// Guest orders (for checkout without login)
+export const guestOrders = mysqlTable("guest_orders", {
+  id: int("id").autoincrement().primaryKey(),
+  orderId: int("orderId").notNull(),
+  guestName: varchar("guestName", { length: 200 }).notNull(),
+  guestPhone: varchar("guestPhone", { length: 20 }).notNull(),
+  guestEmail: varchar("guestEmail", { length: 320 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
 // Type exports
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
@@ -331,3 +370,6 @@ export type DeliveryArea = typeof deliveryAreas.$inferSelect;
 export type OutletProduct = typeof outletProducts.$inferSelect;
 export type PosSession = typeof posSessions.$inferSelect;
 export type PosAuditLog = typeof posAuditLog.$inferSelect;
+export type LoyaltyReward = typeof loyaltyRewards.$inferSelect;
+export type StampTransaction = typeof stampTransactions.$inferSelect;
+export type GuestOrder = typeof guestOrders.$inferSelect;

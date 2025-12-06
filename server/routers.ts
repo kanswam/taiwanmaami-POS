@@ -11,7 +11,7 @@ import { categories, subcategories, products, addons, orders, orderItems, orderI
 import { eq, and, desc, asc, sql } from "drizzle-orm";
 import { generateOrderNumber, calculateGst } from "@shared/types";
 import { authenticateStaffByMobile, getActiveEmployees } from "./employeeMaster";
-import { posSessions, posAuditLog, outletProducts } from "../drizzle/schema";
+import { posSessions, posAuditLog, outletProducts, loyaltyRewards, stampTransactions, guestOrders } from "../drizzle/schema";
 
 // Admin procedure - only allows admin role
 const adminProcedure = protectedProcedure.use(({ ctx, next }) => {
@@ -94,7 +94,7 @@ export const appRouter = router({
 
         const cats = await db.getCategories();
         const subs = await db.getSubcategories();
-        const prods = await dbInstance.select().from(products)
+        const prods = await dbInstance!.select().from(products)
           .where(and(
             eq(products.isActive, true),
             eq(products.isInStock, true),
@@ -168,7 +168,7 @@ export const appRouter = router({
         const orderNumber = generateOrderNumber();
 
         // Create order
-        const [orderResult] = await dbInstance.insert(orders).values({
+        const [orderResult] = await dbInstance!.insert(orders).values({
           orderNumber,
           userId: ctx.user?.id,
           customerName: input.customerName,
@@ -192,7 +192,7 @@ export const appRouter = router({
 
         // Create order items
         for (const item of input.items) {
-          const [itemResult] = await dbInstance.insert(orderItems).values({
+          const [itemResult] = await dbInstance!.insert(orderItems).values({
             orderId,
             productId: item.productId,
             productName: item.productName,
@@ -211,7 +211,7 @@ export const appRouter = router({
 
           // Create order item addons
           for (const addon of item.addons) {
-            await dbInstance.insert(orderItemAddons).values({
+            await dbInstance!.insert(orderItemAddons).values({
               orderItemId,
               addonId: addon.id,
               addonName: addon.name,
@@ -298,7 +298,7 @@ export const appRouter = router({
         }
         
         // Update order payment status
-        await dbInstance.insert(payments).values({
+        await dbInstance!.insert(payments).values({
           orderId: input.orderId,
           paymentMethod: 'razorpay',
           paymentStatus: 'success',
@@ -308,7 +308,7 @@ export const appRouter = router({
         });
         
         // Update order status to confirmed
-        await dbInstance.update(orders)
+        await dbInstance!.update(orders)
           .set({ orderStatus: 'confirmed', paymentStatus: 'completed' })
           .where(eq(orders.id, input.orderId));
         
@@ -400,7 +400,7 @@ export const appRouter = router({
       .mutation(async ({ input }) => {
         const dbInstance = await getDb();
         if (!dbInstance) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
-        const [result] = await dbInstance.insert(categories).values(input);
+        const [result] = await dbInstance!.insert(categories).values(input);
         return { id: result.insertId };
       }),
 
@@ -417,7 +417,7 @@ export const appRouter = router({
         const dbInstance = await getDb();
         if (!dbInstance) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
         const { id, ...data } = input;
-        await dbInstance.update(categories).set(data).where(eq(categories.id, id));
+        await dbInstance!.update(categories).set(data).where(eq(categories.id, id));
         return { success: true };
       }),
 
@@ -443,7 +443,7 @@ export const appRouter = router({
       .mutation(async ({ input }) => {
         const dbInstance = await getDb();
         if (!dbInstance) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
-        const [result] = await dbInstance.insert(products).values(input);
+        const [result] = await dbInstance!.insert(products).values(input);
         return { id: result.insertId };
       }),
 
@@ -466,7 +466,7 @@ export const appRouter = router({
         const dbInstance = await getDb();
         if (!dbInstance) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
         const { id, ...data } = input;
-        await dbInstance.update(products).set(data).where(eq(products.id, id));
+        await dbInstance!.update(products).set(data).where(eq(products.id, id));
         return { success: true };
       }),
 
@@ -494,7 +494,7 @@ export const appRouter = router({
         const { url } = await storagePut(fileKey, buffer, input.mimeType);
         
         // Update product with new image URL
-        await dbInstance.update(products).set({ imageUrl: url }).where(eq(products.id, input.productId));
+        await dbInstance!.update(products).set({ imageUrl: url }).where(eq(products.id, input.productId));
         
         return { success: true, imageUrl: url };
       }),
@@ -504,7 +504,7 @@ export const appRouter = router({
       .mutation(async ({ input }) => {
         const dbInstance = await getDb();
         if (!dbInstance) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
-        await dbInstance.update(products).set({ isActive: false }).where(eq(products.id, input.id));
+        await dbInstance!.update(products).set({ isActive: false }).where(eq(products.id, input.id));
         return { success: true };
       }),
 
@@ -518,7 +518,7 @@ export const appRouter = router({
         const dbInstance = await getDb();
         if (!dbInstance) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
         for (const item of input) {
-          await dbInstance.update(products).set({ imageUrl: item.imageUrl }).where(eq(products.id, item.productId));
+          await dbInstance!.update(products).set({ imageUrl: item.imageUrl }).where(eq(products.id, item.productId));
         }
         return { success: true, count: input.length };
       }),
@@ -542,7 +542,7 @@ export const appRouter = router({
         const dbInstance = await getDb();
         if (!dbInstance) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
         const { id, ...data } = input;
-        await dbInstance.update(subcategories).set(data).where(eq(subcategories.id, id));
+        await dbInstance!.update(subcategories).set(data).where(eq(subcategories.id, id));
         return { success: true };
       }),
 
@@ -562,7 +562,7 @@ export const appRouter = router({
       .mutation(async ({ input }) => {
         const dbInstance = await getDb();
         if (!dbInstance) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
-        const [result] = await dbInstance.insert(discounts).values({
+        const [result] = await dbInstance!.insert(discounts).values({
           ...input,
           validFrom: input.validFrom ? new Date(input.validFrom) : null,
           validUntil: input.validUntil ? new Date(input.validUntil) : null,
@@ -594,7 +594,7 @@ export const appRouter = router({
       const today = new Date();
       today.setHours(0, 0, 0, 0);
 
-      const allOrders = await dbInstance.select().from(orders);
+      const allOrders = await dbInstance!.select().from(orders);
       const todayOrders = allOrders.filter(o => new Date(o.createdAt) >= today);
       
       const totalRevenue = allOrders.reduce((sum, o) => sum + o.totalAmount, 0);
@@ -620,7 +620,7 @@ export const appRouter = router({
       .mutation(async ({ input }) => {
         const dbInstance = await getDb();
         if (!dbInstance) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
-        await dbInstance.update(users).set({ role: input.role }).where(eq(users.id, input.userId));
+        await dbInstance!.update(users).set({ role: input.role }).where(eq(users.id, input.userId));
         return { success: true };
       }),
 
@@ -645,7 +645,7 @@ export const appRouter = router({
         if (!dbInstance) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
 
         // Check if record exists
-        const existing = await dbInstance.select().from(outletProducts)
+        const existing = await dbInstance!.select().from(outletProducts)
           .where(and(
             eq(outletProducts.outletId, input.outletId),
             eq(outletProducts.productId, input.productId)
@@ -653,7 +653,7 @@ export const appRouter = router({
 
         if (existing.length > 0) {
           // Update existing
-          await dbInstance.update(outletProducts)
+          await dbInstance!.update(outletProducts)
             .set({
               isAvailable: input.isAvailable,
               instorePriceOverride: input.instorePriceOverride,
@@ -664,7 +664,7 @@ export const appRouter = router({
             ));
         } else {
           // Insert new
-          await dbInstance.insert(outletProducts).values({
+          await dbInstance!.insert(outletProducts).values({
             outletId: input.outletId,
             productId: input.productId,
             isAvailable: input.isAvailable,
@@ -736,7 +736,7 @@ export const appRouter = router({
         if (!dbInstance) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
 
         // Create new session
-        const [result] = await dbInstance.insert(posSessions).values({
+        const [result] = await dbInstance!.insert(posSessions).values({
           employeeId: input.employeeId,
           employeeCode: input.employeeCode,
           employeeName: input.employeeName,
@@ -751,7 +751,7 @@ export const appRouter = router({
         const sessionId = result.insertId;
 
         // Log the login action
-        await dbInstance.insert(posAuditLog).values({
+        await dbInstance!.insert(posAuditLog).values({
           sessionId,
           employeeCode: input.employeeCode,
           outletId: input.outletId,
@@ -770,17 +770,17 @@ export const appRouter = router({
         if (!dbInstance) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
 
         // Get session details for audit log
-        const [session] = await dbInstance.select().from(posSessions).where(eq(posSessions.id, input.sessionId));
+        const [session] = await dbInstance!.select().from(posSessions).where(eq(posSessions.id, input.sessionId));
         if (!session) throw new TRPCError({ code: 'NOT_FOUND', message: 'Session not found' });
 
         // Update session
-        await dbInstance.update(posSessions).set({
+        await dbInstance!.update(posSessions).set({
           logoutTime: new Date(),
           isActive: false,
         }).where(eq(posSessions.id, input.sessionId));
 
         // Log the logout action
-        await dbInstance.insert(posAuditLog).values({
+        await dbInstance!.insert(posAuditLog).values({
           sessionId: input.sessionId,
           employeeCode: session.employeeCode,
           outletId: session.outletId,
@@ -797,7 +797,7 @@ export const appRouter = router({
         const dbInstance = await getDb();
         if (!dbInstance) return null;
 
-        const [session] = await dbInstance.select().from(posSessions)
+        const [session] = await dbInstance!.select().from(posSessions)
           .where(and(
             eq(posSessions.employeeCode, input.employeeCode),
             eq(posSessions.isActive, true)
@@ -862,7 +862,7 @@ export const appRouter = router({
         const orderNumber = generateOrderNumber();
 
         // Create order with outlet and session tracking
-        const [orderResult] = await dbInstance.insert(orders).values({
+        const [orderResult] = await dbInstance!.insert(orders).values({
           orderNumber,
           orderType: 'instore',
           orderStatus: 'completed',
@@ -886,7 +886,7 @@ export const appRouter = router({
 
         // Create order items
         for (const item of input.items) {
-          const [itemResult] = await dbInstance.insert(orderItems).values({
+          const [itemResult] = await dbInstance!.insert(orderItems).values({
             orderId,
             productId: item.productId,
             productName: item.productName,
@@ -901,7 +901,7 @@ export const appRouter = router({
           });
 
           for (const addon of item.addons) {
-            await dbInstance.insert(orderItemAddons).values({
+            await dbInstance!.insert(orderItemAddons).values({
               orderItemId: itemResult.insertId,
               addonId: addon.id,
               addonName: addon.name,
@@ -912,7 +912,7 @@ export const appRouter = router({
 
         // Record payments
         for (const payment of input.payments) {
-          await dbInstance.insert(payments).values({
+          await dbInstance!.insert(payments).values({
             orderId,
             paymentMethod: payment.method,
             amount: payment.amount,
@@ -921,7 +921,7 @@ export const appRouter = router({
         }
 
         // Log the order creation for audit
-        await dbInstance.insert(posAuditLog).values({
+        await dbInstance!.insert(posAuditLog).values({
           sessionId: input.sessionId,
           employeeCode: input.employeeCode,
           outletId: input.outletId,
@@ -936,6 +936,492 @@ export const appRouter = router({
         });
 
         return { orderId, orderNumber, totalAmount };
+      }),
+  }),
+
+  // Loyalty program routes
+  loyalty: router({
+    // Get user's stamp card status
+    getStampCard: protectedProcedure.query(async ({ ctx }) => {
+      const dbInstance = await getDb();
+      const [user] = await dbInstance!
+        .select({
+          stampCount: users.stampCount,
+          lifetimeStamps: users.lifetimeStamps,
+          lastStampDate: users.lastStampDate,
+        })
+        .from(users)
+        .where(eq(users.id, ctx.user.id));
+      
+      // Get available rewards
+      const rewards = await dbInstance!
+        .select()
+        .from(loyaltyRewards)
+        .where(and(
+          eq(loyaltyRewards.userId, ctx.user.id),
+          eq(loyaltyRewards.isRedeemed, false)
+        ))
+        .orderBy(desc(loyaltyRewards.createdAt));
+      
+      return {
+        stampCount: user?.stampCount || 0,
+        lifetimeStamps: user?.lifetimeStamps || 0,
+        lastStampDate: user?.lastStampDate,
+        stampsToNextReward: 10 - ((user?.stampCount || 0) % 10),
+        availableRewards: rewards,
+      };
+    }),
+
+    // Get stamp transaction history
+    getHistory: protectedProcedure
+      .input(z.object({ limit: z.number().default(20) }))
+      .query(async ({ ctx, input }) => {
+        const dbInstance = await getDb();
+        const transactions = await dbInstance!
+          .select()
+          .from(stampTransactions)
+          .where(eq(stampTransactions.userId, ctx.user.id))
+          .orderBy(desc(stampTransactions.createdAt))
+          .limit(input.limit);
+        return transactions;
+      }),
+
+    // Calculate stamps for an order (preview before checkout)
+    previewStamps: protectedProcedure
+      .input(z.object({ orderTotal: z.number() })) // in paise
+      .query(async ({ ctx, input }) => {
+        const dbInstance = await getDb();
+        const [user] = await dbInstance!
+          .select({ lifetimeStamps: users.lifetimeStamps })
+          .from(users)
+          .where(eq(users.id, ctx.user.id));
+        
+        const isFirstOrder = (user?.lifetimeStamps || 0) === 0;
+        let stamps = Math.floor(input.orderTotal / 45000); // 1 stamp per ₹450
+        
+        // Bonus stamp for orders ≥ ₹900
+        if (input.orderTotal >= 90000) {
+          stamps += 1;
+        }
+        
+        // Welcome stamp for first order
+        if (isFirstOrder) {
+          stamps += 1;
+        }
+        
+        return {
+          stampsToEarn: stamps,
+          isFirstOrder,
+          hasBonus: input.orderTotal >= 90000,
+        };
+      }),
+
+    // Award stamps after order completion
+    awardStamps: protectedProcedure
+      .input(z.object({
+        orderId: z.number(),
+        orderTotal: z.number(), // in paise
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const dbInstance = await getDb();
+        
+        // Get current user stamp count
+        const [user] = await dbInstance!
+          .select({
+            stampCount: users.stampCount,
+            lifetimeStamps: users.lifetimeStamps,
+          })
+          .from(users)
+          .where(eq(users.id, ctx.user.id));
+        
+        const isFirstOrder = (user?.lifetimeStamps || 0) === 0;
+        let stampsEarned = Math.floor(input.orderTotal / 45000); // 1 stamp per ₹450
+        let bonusStamps = 0;
+        let welcomeStamp = 0;
+        
+        // Bonus stamp for orders ≥ ₹900
+        if (input.orderTotal >= 90000) {
+          bonusStamps = 1;
+        }
+        
+        // Welcome stamp for first order
+        if (isFirstOrder) {
+          welcomeStamp = 1;
+        }
+        
+        const totalStamps = stampsEarned + bonusStamps + welcomeStamp;
+        
+        if (totalStamps > 0) {
+          // Update user stamps
+          const newStampCount = (user?.stampCount || 0) + totalStamps;
+          const newLifetimeStamps = (user?.lifetimeStamps || 0) + totalStamps;
+          
+          await dbInstance!
+            .update(users)
+            .set({
+              stampCount: newStampCount,
+              lifetimeStamps: newLifetimeStamps,
+              lastStampDate: new Date(),
+            })
+            .where(eq(users.id, ctx.user.id));
+          
+          // Log transactions
+          if (stampsEarned > 0) {
+            await dbInstance!.insert(stampTransactions).values({
+              userId: ctx.user.id,
+              orderId: input.orderId,
+              action: 'earn',
+              stamps: stampsEarned,
+              orderTotal: input.orderTotal,
+              description: `Earned ${stampsEarned} stamp(s) for order`,
+            });
+          }
+          
+          if (bonusStamps > 0) {
+            await dbInstance!.insert(stampTransactions).values({
+              userId: ctx.user.id,
+              orderId: input.orderId,
+              action: 'bonus',
+              stamps: bonusStamps,
+              orderTotal: input.orderTotal,
+              description: 'Bonus stamp for spending ₹900+',
+            });
+          }
+          
+          if (welcomeStamp > 0) {
+            await dbInstance!.insert(stampTransactions).values({
+              userId: ctx.user.id,
+              orderId: input.orderId,
+              action: 'welcome',
+              stamps: welcomeStamp,
+              orderTotal: input.orderTotal,
+              description: 'Welcome stamp for first order',
+            });
+          }
+          
+          // Check if reward earned (10 stamps)
+          let rewardsCreated = 0;
+          let currentStamps = newStampCount;
+          while (currentStamps >= 10) {
+            currentStamps -= 10;
+            rewardsCreated++;
+            
+            // Generate unique voucher code
+            const voucherCode = `TM${Date.now().toString(36).toUpperCase()}${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
+            
+            // Create reward (expires in 30 days)
+            const expiresAt = new Date();
+            expiresAt.setDate(expiresAt.getDate() + 30);
+            
+            await dbInstance!.insert(loyaltyRewards).values({
+              userId: ctx.user.id,
+              rewardType: 'free_large_bubble_tea',
+              voucherCode,
+              expiresAt,
+            });
+          }
+          
+          // Update stamp count after rewards
+          if (rewardsCreated > 0) {
+            await dbInstance!
+              .update(users)
+              .set({ stampCount: currentStamps })
+              .where(eq(users.id, ctx.user.id));
+          }
+          
+          return {
+            stampsEarned: totalStamps,
+            currentStamps: rewardsCreated > 0 ? currentStamps : newStampCount,
+            rewardsCreated,
+            isFirstOrder,
+          };
+        }
+        
+        return {
+          stampsEarned: 0,
+          currentStamps: user?.stampCount || 0,
+          rewardsCreated: 0,
+          isFirstOrder,
+        };
+      }),
+
+    // Get available rewards for redemption
+    getAvailableRewards: protectedProcedure.query(async ({ ctx }) => {
+      const dbInstance = await getDb();
+      const rewards = await dbInstance!
+        .select()
+        .from(loyaltyRewards)
+        .where(and(
+          eq(loyaltyRewards.userId, ctx.user.id),
+          eq(loyaltyRewards.isRedeemed, false)
+        ))
+        .orderBy(asc(loyaltyRewards.expiresAt));
+      
+      // Filter out expired rewards
+      const now = new Date();
+      return rewards.filter(r => new Date(r.expiresAt) > now);
+    }),
+
+    // Redeem a reward
+    redeemReward: protectedProcedure
+      .input(z.object({
+        voucherCode: z.string(),
+        orderId: z.number(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const dbInstance = await getDb();
+        
+        // Find the reward
+        const [reward] = await dbInstance!
+          .select()
+          .from(loyaltyRewards)
+          .where(eq(loyaltyRewards.voucherCode, input.voucherCode));
+        
+        if (!reward) {
+          throw new TRPCError({ code: 'NOT_FOUND', message: 'Invalid voucher code' });
+        }
+        
+        if (reward.userId !== ctx.user.id) {
+          throw new TRPCError({ code: 'FORBIDDEN', message: 'This voucher belongs to another account' });
+        }
+        
+        if (reward.isRedeemed) {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: 'Voucher already used' });
+        }
+        
+        if (new Date(reward.expiresAt) < new Date()) {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: 'Voucher has expired' });
+        }
+        
+        // Mark as redeemed
+        await dbInstance!
+          .update(loyaltyRewards)
+          .set({
+            isRedeemed: true,
+            redeemedAt: new Date(),
+            redeemedOrderId: input.orderId,
+          })
+          .where(eq(loyaltyRewards.id, reward.id));
+        
+        // Log transaction
+        await dbInstance!.insert(stampTransactions).values({
+          userId: ctx.user.id,
+          orderId: input.orderId,
+          action: 'redeem',
+          stamps: -10,
+          description: 'Redeemed reward: Free Large Bubble Tea',
+        });
+        
+        // Return discount amount (₹250 for large bubble tea)
+        return {
+          discountAmount: 25000, // ₹250 in paise
+          rewardType: 'Free Large Bubble Tea',
+          voucherCode: input.voucherCode,
+        };
+      }),
+
+    // Validate voucher code (for checkout preview)
+    validateVoucher: protectedProcedure
+      .input(z.object({ voucherCode: z.string() }))
+      .query(async ({ ctx, input }) => {
+        const dbInstance = await getDb();
+        
+        const [reward] = await dbInstance!
+          .select()
+          .from(loyaltyRewards)
+          .where(eq(loyaltyRewards.voucherCode, input.voucherCode));
+        
+        if (!reward) {
+          return { valid: false, error: 'Invalid voucher code' };
+        }
+        
+        if (reward.userId !== ctx.user.id) {
+          return { valid: false, error: 'This voucher belongs to another account' };
+        }
+        
+        if (reward.isRedeemed) {
+          return { valid: false, error: 'Voucher already used' };
+        }
+        
+        if (new Date(reward.expiresAt) < new Date()) {
+          return { valid: false, error: 'Voucher has expired' };
+        }
+        
+        return {
+          valid: true,
+          discountAmount: 25000, // ₹250
+          rewardType: 'Free Large Bubble Tea',
+          expiresAt: reward.expiresAt,
+        };
+      }),
+  }),
+
+  // Guest checkout routes
+  guest: router({
+    // Create order as guest
+    createOrder: publicProcedure
+      .input(z.object({
+        guestName: z.string().min(2),
+        guestPhone: z.string().min(10),
+        guestEmail: z.string().email().optional(),
+        orderType: z.enum(['delivery', 'pickup']),
+        items: z.array(z.object({
+          productId: z.number(),
+          productName: z.string(),
+          size: z.enum(['petite', 'regular', 'large']).optional(),
+          withBoba: z.boolean().optional(),
+          bobaType: z.string().optional(),
+          bobaSize: z.string().optional(),
+          poppingBobaFlavor: z.string().optional(),
+          sugarLevel: z.string().optional(),
+          iceLevel: z.string().optional(),
+          specialInstructions: z.string().optional(),
+          quantity: z.number(),
+          unitPrice: z.number(),
+          addons: z.array(z.object({
+            id: z.number(),
+            name: z.string(),
+            price: z.number(),
+          })),
+        })),
+        // Delivery address
+        addressLine1: z.string().optional(),
+        addressLine2: z.string().optional(),
+        area: z.string().optional(),
+        pincode: z.string().optional(),
+        landmark: z.string().optional(),
+        // Pickup details
+        pickupTime: z.string().optional(),
+        storeLocationId: z.number().optional(),
+        // Payment
+        paymentMethod: z.enum(['online', 'cash_at_pickup']),
+      }))
+      .mutation(async ({ input }) => {
+        const dbInstance = await getDb();
+        
+        // Calculate totals
+        let subtotal = 0;
+        for (const item of input.items) {
+          const addonsTotal = item.addons.reduce((sum, a) => sum + a.price, 0);
+          subtotal += (item.unitPrice + addonsTotal) * item.quantity;
+        }
+        
+        const gstDetails = calculateGst(subtotal);
+        const deliveryCharge = input.orderType === 'delivery' ? 5000 : 0; // ₹50 delivery
+        const totalAmount = subtotal + deliveryCharge;
+        
+        const orderNumber = generateOrderNumber();
+        
+        // Create order (userId = null for guest)
+        const [orderResult] = await dbInstance!.insert(orders).values({
+          orderNumber,
+          userId: 0, // Guest order marker
+          orderType: input.orderType,
+          orderStatus: 'pending',
+          paymentStatus: input.paymentMethod === 'cash_at_pickup' ? 'pending' : 'pending',
+          subtotal,
+          stateGst: gstDetails.stateGst,
+          centralGst: gstDetails.centralGst,
+          deliveryCharge,
+          totalAmount,
+          // Delivery address as single field
+          deliveryAddress: input.addressLine1 ? `${input.addressLine1}${input.addressLine2 ? ', ' + input.addressLine2 : ''}, ${input.area}, Chennai - ${input.pincode}` : undefined,
+          // Pickup
+          scheduledTime: input.pickupTime ? new Date(`1970-01-01T${input.pickupTime}:00`) : undefined,
+          outletId: input.storeLocationId,
+        });
+        
+        const orderId = orderResult.insertId;
+        
+        // Create order items
+        for (const item of input.items) {
+          const addonsTotal = item.addons.reduce((sum, a) => sum + a.price, 0);
+          const lineTotal = (item.unitPrice + addonsTotal) * item.quantity;
+          
+          const [itemResult] = await dbInstance!.insert(orderItems).values({
+            orderId,
+            productId: item.productId,
+            productName: item.productName,
+            size: item.size,
+            withBoba: item.withBoba,
+            sugarLevel: item.sugarLevel,
+            iceLevel: item.iceLevel,
+            specialInstructions: item.specialInstructions,
+            quantity: item.quantity,
+            unitPrice: item.unitPrice,
+            addonsTotal,
+            lineTotal,
+          });
+          
+          // Add addons
+          for (const addon of item.addons) {
+            await dbInstance!.insert(orderItemAddons).values({
+              orderItemId: itemResult.insertId,
+              addonId: addon.id,
+              addonName: addon.name,
+              addonPrice: addon.price,
+            });
+          }
+        }
+        
+        // Create guest order record
+        await dbInstance!.insert(guestOrders).values({
+          orderId,
+          guestName: input.guestName,
+          guestPhone: input.guestPhone,
+          guestEmail: input.guestEmail,
+        });
+        
+        return {
+          orderId,
+          orderNumber,
+          totalAmount,
+          gstDetails,
+        };
+      }),
+
+    // Get guest order by order number and phone
+    getOrder: publicProcedure
+      .input(z.object({
+        orderNumber: z.string(),
+        phone: z.string(),
+      }))
+      .query(async ({ input }) => {
+        const dbInstance = await getDb();
+        
+        // Find order
+        const [order] = await dbInstance!
+          .select()
+          .from(orders)
+          .where(eq(orders.orderNumber, input.orderNumber));
+        
+        if (!order) {
+          throw new TRPCError({ code: 'NOT_FOUND', message: 'Order not found' });
+        }
+        
+        // Verify guest phone
+        const [guest] = await dbInstance!
+          .select()
+          .from(guestOrders)
+          .where(eq(guestOrders.orderId, order.id));
+        
+        if (!guest || guest.guestPhone !== input.phone) {
+          throw new TRPCError({ code: 'FORBIDDEN', message: 'Phone number does not match' });
+        }
+        
+        // Get order items
+        const items = await dbInstance!
+          .select()
+          .from(orderItems)
+          .where(eq(orderItems.orderId, order.id));
+        
+        return {
+          ...order,
+          guestName: guest.guestName,
+          guestPhone: guest.guestPhone,
+          guestEmail: guest.guestEmail,
+          items,
+        };
       }),
   }),
 });

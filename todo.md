@@ -304,3 +304,28 @@
 - [x] Add Instagram link with icon to homepage footer
 - [x] Add Instagram link to About page footer
 - [x] Link to @taiwan_maami Instagram profile
+
+
+## Phase 19 - Guest Checkout & Loyalty Program
+
+### Guest Checkout
+- [x] Add guest checkout option at checkout page
+- [x] Collect name, mobile, email (optional), address for guests
+- [x] Show benefits of logging in (earn stamps)
+- [x] Create guest_orders table for guest order tracking
+
+### Digital Stamp Card Loyalty Program
+- [x] Add stamp_count, lifetime_stamps, last_stamp_date to users table
+- [x] Create loyalty_rewards table for vouchers
+- [x] Create stamp_transactions table for audit log
+- [x] Earn 1 stamp per ₹450 spent
+- [x] Bonus stamp when spending ₹900+
+- [x] 10 stamps = Free Large Bubble Tea reward
+- [x] Stamp card UI on My Orders page
+- [x] Show stamps earned preview at checkout
+- [x] Create loyalty tRPC procedures (earnStamps, getRewards, redeemReward)
+
+### Chennai Locality Dropdown
+- [x] Add locality dropdown to checkout address form
+- [x] Auto-fill pincode when locality selected
+- [x] Use existing CHENNAI_AREAS from shared/types.ts
