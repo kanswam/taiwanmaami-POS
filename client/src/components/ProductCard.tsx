@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
+import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 import { Plus, Leaf, Egg, Star, Play, X } from 'lucide-react';
 import { formatPrice, GST_RATE } from '@shared/types';
 import { ProductCustomizationModal } from './ProductCustomizationModal';
@@ -192,6 +193,9 @@ export function ProductCard({ product, subcategory, category, isDelivery = false
       {/* Video Player Modal */}
       <Dialog open={showVideo} onOpenChange={setShowVideo}>
         <DialogContent className="max-w-3xl p-0 overflow-hidden bg-black">
+          <VisuallyHidden>
+            <DialogTitle>{product.name} - Video</DialogTitle>
+          </VisuallyHidden>
           <button
             onClick={() => setShowVideo(false)}
             className="absolute top-2 right-2 z-10 bg-black/50 hover:bg-black/70 text-white rounded-full p-1.5 transition-colors"

@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Header } from '@/components/Header';
+import { Footer } from '@/components/Footer';
 import { trpc } from '@/lib/trpc';
 import { ArrowRight, MapPin, Clock, Star, Sparkles, Instagram, Play } from 'lucide-react';
 
@@ -385,55 +386,7 @@ export default function Home() {
       </section>
 
       {/* Footer */}
-      <footer className="bg-foreground text-background py-12">
-        <div className="container">
-          <div className="grid md:grid-cols-4 gap-8">
-            <div>
-              <div className="flex items-center gap-3 mb-4">
-                <img src="/logo.png" alt="Taiwan Maami" className="h-10 w-auto" />
-                <h3 className="font-bold text-lg">Taiwan Maami</h3>
-              </div>
-              <p className="text-sm text-background/70">
-                Authentic Taiwanese bubble tea crafted with premium imported ingredients.
-              </p>
-            </div>
-            <div>
-              <h4 className="font-semibold mb-4">Quick Links</h4>
-              <div className="space-y-2 text-sm">
-                <Link href="/menu" className="block text-background/70 hover:text-background">Menu</Link>
-                <Link href="/about" className="block text-background/70 hover:text-background">About Us</Link>
-                <Link href="/about" className="block text-background/70 hover:text-background">Locations</Link>
-              </div>
-            </div>
-            <div>
-              <h4 className="font-semibold mb-4">Policies</h4>
-              <div className="space-y-2 text-sm">
-                <Link href="/terms" className="block text-background/70 hover:text-background">Terms & Conditions</Link>
-                <Link href="/privacy" className="block text-background/70 hover:text-background">Privacy Policy</Link>
-                <Link href="/refund" className="block text-background/70 hover:text-background">Refund Policy</Link>
-              </div>
-            </div>
-            <div>
-              <h4 className="font-semibold mb-4">Contact</h4>
-              <div className="space-y-2 text-sm text-background/70">
-                <p>Chennai, Tamil Nadu</p>
-                <p>India</p>
-                <a 
-                  href="https://www.instagram.com/taiwan_maami/" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="block hover:text-background"
-                >
-                  @taiwan_maami
-                </a>
-              </div>
-            </div>
-          </div>
-          <div className="border-t border-background/20 mt-8 pt-8 text-center text-sm text-background/50">
-            <p>© {new Date().getFullYear()} Thamarai Foods and Trading Private Limited. All rights reserved.</p>
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }

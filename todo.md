@@ -381,3 +381,30 @@
 - [x] Support large video uploads (30MB+) via video URL input mode
 - [x] Implement direct S3 upload for large video files (up to 100MB) with progress tracking
 - [x] Add upload progress bar for large video uploads
+
+
+## Phase 16 - Footer & Customer Reviews Display
+
+### Website Footer
+- [ ] Create footer component with company info
+- [ ] Add links to all policy pages (Terms, Privacy, Refund, Shipping)
+- [ ] Add social media links (Instagram @taiwan_maami)
+- [ ] Add contact information (email, phone)
+- [ ] Add outlet locations summary
+- [ ] Include Thamarai Foods legal entity name
+
+### Customer Reviews on Product Modal
+- [ ] Display average rating on product customization modal
+- [ ] Show list of customer reviews with star ratings
+- [ ] Display reviewer name and date
+- [ ] Show review text content
+- [ ] Handle products with no reviews gracefully
+
+
+## Phase 17 - KOT Printer Setup
+
+### Kitchen Order Ticket (KOT) Printing
+- [ ] Integrate with thermal printer for T Nagar outlet
+- [ ] Create KOT print format with order details
+- [ ] Auto-print KOT when new order is placed
+- [ ] Include order number, items, customizations, special instructions
