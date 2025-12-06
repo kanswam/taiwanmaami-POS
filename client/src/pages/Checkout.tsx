@@ -480,17 +480,17 @@ export default function Checkout() {
                   />
                   <label htmlFor="terms" className="text-sm text-muted-foreground leading-tight cursor-pointer">
                     I agree to the{' '}
-                    <Link href="/terms" className="text-primary hover:underline" target="_blank">
+                    <a href="/terms" className="text-primary hover:underline" target="_blank" rel="noopener noreferrer">
                       Terms & Conditions
-                    </Link>
+                    </a>
                     ,{' '}
-                    <Link href="/privacy" className="text-primary hover:underline" target="_blank">
+                    <a href="/privacy" className="text-primary hover:underline" target="_blank" rel="noopener noreferrer">
                       Privacy Policy
-                    </Link>
+                    </a>
                     , and{' '}
-                    <Link href="/refund" className="text-primary hover:underline" target="_blank">
+                    <a href="/refund" className="text-primary hover:underline" target="_blank" rel="noopener noreferrer">
                       Refund Policy
-                    </Link>
+                    </a>
                   </label>
                 </div>
 

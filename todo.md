@@ -321,3 +321,6 @@
 ### Checkout Compliance
 - [x] Add T&C agreement checkbox at checkout before payment
 - [x] Link checkbox to Terms & Conditions, Privacy Policy, and Refund Policy pages
+
+## Bug Fixes - Dec 6, 2025
+- [x] Fix nested anchor tag error in checkout T&C checkbox
