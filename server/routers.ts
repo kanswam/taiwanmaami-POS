@@ -8,7 +8,7 @@ import * as db from "./db";
 import { getDb } from "./db";
 import { seedDatabase } from "./seed";
 import { categories, subcategories, products, addons, orders, orderItems, orderItemAddons, payments, discounts, addresses, storeLocations, deliveryAreas, users } from "../drizzle/schema";
-import { eq, and, desc, asc, sql } from "drizzle-orm";
+import { eq, and, desc, asc, sql, gte, lte } from "drizzle-orm";
 import { generateOrderNumber, calculateGst } from "@shared/types";
 import { authenticateStaffByMobile, getActiveEmployees } from "./employeeMaster";
 import { posSessions, posAuditLog, outletProducts, reviews } from "../drizzle/schema";
@@ -474,8 +474,8 @@ export const appRouter = router({
         if (!dbInstance) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
         
         const result = await dbInstance.select({
-          avgRating: sql<number>`AVG(${reviews.rating})`,
-          count: sql<number>`COUNT(*)`,
+          avgRating: sql`AVG(${reviews.rating})`,
+          count: sql`COUNT(*)`,
         })
         .from(reviews)
         .where(and(
@@ -484,7 +484,7 @@ export const appRouter = router({
         ));
         
         return {
-          averageRating: result[0]?.avgRating ? Number(result[0].avgRating.toFixed(1)) : null,
+          averageRating: result[0]?.avgRating ? Number(Number(result[0].avgRating).toFixed(1)) : null,
           reviewCount: Number(result[0]?.count) || 0,
         };
       }),
@@ -497,8 +497,8 @@ export const appRouter = router({
         
         const ratings = await dbInstance.select({
           productId: reviews.productId,
-          avgRating: sql<number>`AVG(${reviews.rating})`,
-          count: sql<number>`COUNT(*)`,
+          avgRating: sql`AVG(${reviews.rating})`,
+          count: sql`COUNT(*)`,
         })
         .from(reviews)
         .where(and(
@@ -1296,6 +1296,161 @@ export const appRouter = router({
         });
 
         return { orderId, orderNumber, totalAmount };
+      }),
+  }),
+
+  // Analytics routes
+  analytics: router({
+    getSalesSummary: adminProcedure
+      .input(z.object({
+        startDate: z.string(),
+        endDate: z.string(),
+      }))
+      .query(async ({ input }) => {
+        const database = await getDb();
+        if (!database) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Database not available' });
+        const start = new Date(input.startDate);
+        const end = new Date(input.endDate);
+        
+        // Calculate previous period for comparison
+        const periodLength = end.getTime() - start.getTime();
+        const prevStart = new Date(start.getTime() - periodLength);
+        const prevEnd = new Date(start.getTime());
+
+        // Current period stats
+        const currentStats = await database
+          .select({
+            totalRevenue: sql`COALESCE(SUM(${orders.totalAmount}), 0)`,
+            totalOrders: sql`COUNT(*)`,
+            totalItems: sql`0`,
+          })
+          .from(orders)
+          .where(and(
+            gte(orders.createdAt, start),
+            lte(orders.createdAt, end),
+            eq(orders.orderStatus, 'completed')
+          ));
+
+        // Previous period stats
+        const prevStats = await database
+          .select({
+            totalRevenue: sql`COALESCE(SUM(${orders.totalAmount}), 0)`,
+            totalOrders: sql`COUNT(*)`,
+          })
+          .from(orders)
+          .where(and(
+            gte(orders.createdAt, prevStart),
+            lte(orders.createdAt, prevEnd),
+            eq(orders.orderStatus, 'completed')
+          ));
+
+        const currentRaw = currentStats[0] || { totalRevenue: 0, totalOrders: 0, totalItems: 0 };
+        const prevRaw = prevStats[0] || { totalRevenue: 0, totalOrders: 0 };
+        
+        const current = {
+          totalRevenue: Number(currentRaw.totalRevenue) || 0,
+          totalOrders: Number(currentRaw.totalOrders) || 0,
+          totalItems: Number(currentRaw.totalItems) || 0,
+        };
+        const prev = {
+          totalRevenue: Number(prevRaw.totalRevenue) || 0,
+          totalOrders: Number(prevRaw.totalOrders) || 0,
+        };
+
+        const avgOrderValue = current.totalOrders > 0 ? current.totalRevenue / current.totalOrders : 0;
+        const prevAvgOrderValue = prev.totalOrders > 0 ? prev.totalRevenue / prev.totalOrders : 0;
+
+        return {
+          totalRevenue: current.totalRevenue,
+          totalOrders: current.totalOrders,
+          totalItems: current.totalItems,
+          avgOrderValue: Math.round(avgOrderValue),
+          revenueChange: prev.totalRevenue > 0 ? ((current.totalRevenue - prev.totalRevenue) / prev.totalRevenue) * 100 : 0,
+          ordersChange: prev.totalOrders > 0 ? ((current.totalOrders - prev.totalOrders) / prev.totalOrders) * 100 : 0,
+          aovChange: prevAvgOrderValue > 0 ? ((avgOrderValue - prevAvgOrderValue) / prevAvgOrderValue) * 100 : 0,
+          itemsChange: 0,
+        };
+      }),
+
+    getCategoryBreakdown: adminProcedure
+      .input(z.object({
+        startDate: z.string(),
+        endDate: z.string(),
+      }))
+      .query(async ({ input }) => {
+        const database = await getDb();
+        if (!database) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Database not available' });
+        const start = new Date(input.startDate);
+        const end = new Date(input.endDate);
+
+        const breakdown = await database
+          .select({
+            categoryId: categories.id,
+            categoryName: categories.name,
+            revenue: sql`COALESCE(SUM(${orderItems.lineTotal}), 0)`,
+            orderCount: sql`COUNT(DISTINCT ${orders.id})`,
+          })
+          .from(orderItems)
+          .innerJoin(orders, eq(orderItems.orderId, orders.id))
+          .innerJoin(products, eq(orderItems.productId, products.id))
+          .innerJoin(subcategories, eq(products.subcategoryId, subcategories.id))
+          .innerJoin(categories, eq(subcategories.categoryId, categories.id))
+          .where(and(
+            gte(orders.createdAt, start),
+            lte(orders.createdAt, end),
+            eq(orders.orderStatus, 'completed')
+          ))
+          .groupBy(categories.id, categories.name)
+          .orderBy(desc(sql`SUM(${orderItems.lineTotal})`));
+
+        const totalRevenue = breakdown.reduce((sum: number, cat: typeof breakdown[0]) => sum + Number(cat.revenue), 0);
+
+        return breakdown.map((cat: typeof breakdown[0]) => ({
+          categoryId: cat.categoryId,
+          categoryName: cat.categoryName,
+          revenue: Number(cat.revenue),
+          orderCount: Number(cat.orderCount),
+          percentage: totalRevenue > 0 ? (Number(cat.revenue) / totalRevenue) * 100 : 0,
+        }));
+      }),
+
+    getTopProducts: adminProcedure
+      .input(z.object({
+        startDate: z.string(),
+        endDate: z.string(),
+        limit: z.number().optional().default(10),
+      }))
+      .query(async ({ input }) => {
+        const database = await getDb();
+        if (!database) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Database not available' });
+        const start = new Date(input.startDate);
+        const end = new Date(input.endDate);
+
+        const topProducts = await database
+          .select({
+            productId: products.id,
+            productName: products.name,
+            quantity: sql`COALESCE(SUM(${orderItems.quantity}), 0)`,
+            revenue: sql`COALESCE(SUM(${orderItems.lineTotal}), 0)`,
+          })
+          .from(orderItems)
+          .innerJoin(orders, eq(orderItems.orderId, orders.id))
+          .innerJoin(products, eq(orderItems.productId, products.id))
+          .where(and(
+            gte(orders.createdAt, start),
+            lte(orders.createdAt, end),
+            eq(orders.orderStatus, 'completed')
+          ))
+          .groupBy(products.id, products.name)
+          .orderBy(desc(sql`SUM(${orderItems.lineTotal})`))
+          .limit(input.limit);
+
+        return topProducts.map(p => ({
+          productId: p.productId,
+          productName: p.productName,
+          quantity: Number(p.quantity),
+          revenue: Number(p.revenue),
+        }));
       }),
   }),
 });

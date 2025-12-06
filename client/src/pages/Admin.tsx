@@ -14,7 +14,8 @@ import { formatPrice, GST_RATE } from '@shared/types';
 import { 
   Home, Package, ShoppingCart, Tag, Upload, Settings, LogOut, 
   Plus, Edit, Trash2, ImageIcon, RefreshCw, Check, X, Search,
-  ChevronDown, ChevronUp, Eye, EyeOff, Store, ClipboardList, Star, Video, Play
+  ChevronDown, ChevronUp, Eye, EyeOff, Store, ClipboardList, Star, Video, Play,
+  BarChart3, TrendingUp, TrendingDown, Calendar, Download, Filter, ArrowUpRight, ArrowDownRight
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -67,7 +68,7 @@ export default function Admin() {
 
       <div className="container py-6">
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-8 mb-6">
+          <TabsList className="grid w-full grid-cols-9 mb-6">
             <TabsTrigger value="products" className="gap-2">
               <Package className="w-4 h-4" />
               Products
@@ -95,6 +96,10 @@ export default function Admin() {
             <TabsTrigger value="videos" className="gap-2">
               <Video className="w-4 h-4" />
               Videos
+            </TabsTrigger>
+            <TabsTrigger value="analytics" className="gap-2">
+              <BarChart3 className="w-4 h-4" />
+              Analytics
             </TabsTrigger>
             <TabsTrigger value="bulk-upload" className="gap-2">
               <Upload className="w-4 h-4" />
@@ -128,6 +133,10 @@ export default function Admin() {
 
           <TabsContent value="videos">
             <VideosTab />
+          </TabsContent>
+
+          <TabsContent value="analytics">
+            <AnalyticsTab />
           </TabsContent>
 
           <TabsContent value="bulk-upload">
@@ -1478,6 +1487,286 @@ function VideosTab() {
           </div>
         )}
       </Card>
+    </div>
+  );
+}
+
+
+// Analytics Tab Component - Phase 1: Core Sales Reports
+function AnalyticsTab() {
+  const [dateRange, setDateRange] = useState<'today' | '7d' | '30d' | '90d' | 'custom'>('7d');
+  const [startDate, setStartDate] = useState<string>(() => {
+    const d = new Date();
+    d.setDate(d.getDate() - 7);
+    return d.toISOString().split('T')[0];
+  });
+  const [endDate, setEndDate] = useState<string>(() => new Date().toISOString().split('T')[0]);
+
+  // Calculate date range based on selection - memoized to prevent infinite re-renders
+  const { startISO, endISO } = useMemo(() => {
+    const end = new Date();
+    let start = new Date();
+    
+    switch (dateRange) {
+      case 'today':
+        start = new Date();
+        start.setHours(0, 0, 0, 0);
+        break;
+      case '7d':
+        start.setDate(end.getDate() - 7);
+        break;
+      case '30d':
+        start.setDate(end.getDate() - 30);
+        break;
+      case '90d':
+        start.setDate(end.getDate() - 90);
+        break;
+      case 'custom':
+        return { startISO: new Date(startDate).toISOString(), endISO: new Date(endDate).toISOString() };
+    }
+    return { startISO: start.toISOString(), endISO: end.toISOString() };
+  }, [dateRange, startDate, endDate]);
+  
+  const { data: salesSummary, isLoading: loadingSummary } = trpc.analytics.getSalesSummary.useQuery({
+    startDate: startISO,
+    endDate: endISO,
+  });
+
+  const { data: categoryBreakdown, isLoading: loadingCategories } = trpc.analytics.getCategoryBreakdown.useQuery({
+    startDate: startISO,
+    endDate: endISO,
+  });
+
+  const { data: topProducts, isLoading: loadingProducts } = trpc.analytics.getTopProducts.useQuery({
+    startDate: startISO,
+    endDate: endISO,
+    limit: 10,
+  });
+
+  const formatCurrency = (amount: number) => `₹${amount.toLocaleString('en-IN')}`;
+  const formatPercent = (value: number) => `${value >= 0 ? '+' : ''}${value.toFixed(1)}%`;
+
+  return (
+    <div className="space-y-6">
+      {/* Header with Date Range Selector */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h2 className="text-2xl font-bold">Sales Analytics</h2>
+          <p className="text-muted-foreground">Track your business performance</p>
+        </div>
+        
+        <div className="flex items-center gap-2">
+          <div className="flex bg-secondary rounded-lg p-1">
+            {(['today', '7d', '30d', '90d'] as const).map((range) => (
+              <Button
+                key={range}
+                variant={dateRange === range ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setDateRange(range)}
+                className="px-3"
+              >
+                {range === 'today' ? 'Today' : range === '7d' ? '7 Days' : range === '30d' ? '30 Days' : '90 Days'}
+              </Button>
+            ))}
+          </div>
+          <Button
+            variant={dateRange === 'custom' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setDateRange('custom')}
+          >
+            <Calendar className="w-4 h-4 mr-2" />
+            Custom
+          </Button>
+        </div>
+      </div>
+
+      {/* Custom Date Range Picker */}
+      {dateRange === 'custom' && (
+        <Card className="p-4">
+          <div className="flex items-center gap-4">
+            <div>
+              <Label>Start Date</Label>
+              <Input
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                className="w-40"
+              />
+            </div>
+            <div>
+              <Label>End Date</Label>
+              <Input
+                type="date"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+                className="w-40"
+              />
+            </div>
+          </div>
+        </Card>
+      )}
+
+      {/* KPI Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <Card className="p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-muted-foreground">Total Revenue</p>
+              <p className="text-2xl font-bold">
+                {loadingSummary ? '...' : formatCurrency(salesSummary?.totalRevenue || 0)}
+              </p>
+            </div>
+            {salesSummary?.revenueChange !== undefined && (
+              <div className={`flex items-center ${salesSummary.revenueChange >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                {salesSummary.revenueChange >= 0 ? (
+                  <ArrowUpRight className="w-5 h-5" />
+                ) : (
+                  <ArrowDownRight className="w-5 h-5" />
+                )}
+                <span className="text-sm font-medium">{formatPercent(salesSummary.revenueChange)}</span>
+              </div>
+            )}
+          </div>
+        </Card>
+
+        <Card className="p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-muted-foreground">Total Orders</p>
+              <p className="text-2xl font-bold">
+                {loadingSummary ? '...' : (salesSummary?.totalOrders || 0).toLocaleString()}
+              </p>
+            </div>
+            {salesSummary?.ordersChange !== undefined && (
+              <div className={`flex items-center ${salesSummary.ordersChange >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                {salesSummary.ordersChange >= 0 ? (
+                  <ArrowUpRight className="w-5 h-5" />
+                ) : (
+                  <ArrowDownRight className="w-5 h-5" />
+                )}
+                <span className="text-sm font-medium">{formatPercent(salesSummary.ordersChange)}</span>
+              </div>
+            )}
+          </div>
+        </Card>
+
+        <Card className="p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-muted-foreground">Avg Order Value</p>
+              <p className="text-2xl font-bold">
+                {loadingSummary ? '...' : formatCurrency(salesSummary?.avgOrderValue || 0)}
+              </p>
+            </div>
+            {salesSummary?.aovChange !== undefined && (
+              <div className={`flex items-center ${salesSummary.aovChange >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                {salesSummary.aovChange >= 0 ? (
+                  <ArrowUpRight className="w-5 h-5" />
+                ) : (
+                  <ArrowDownRight className="w-5 h-5" />
+                )}
+                <span className="text-sm font-medium">{formatPercent(salesSummary.aovChange)}</span>
+              </div>
+            )}
+          </div>
+        </Card>
+
+        <Card className="p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-muted-foreground">Items Sold</p>
+              <p className="text-2xl font-bold">
+                {loadingSummary ? '...' : (salesSummary?.totalItems || 0).toLocaleString()}
+              </p>
+            </div>
+            {salesSummary?.itemsChange !== undefined && (
+              <div className={`flex items-center ${salesSummary.itemsChange >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                {salesSummary.itemsChange >= 0 ? (
+                  <ArrowUpRight className="w-5 h-5" />
+                ) : (
+                  <ArrowDownRight className="w-5 h-5" />
+                )}
+                <span className="text-sm font-medium">{formatPercent(salesSummary.itemsChange)}</span>
+              </div>
+            )}
+          </div>
+        </Card>
+      </div>
+
+      {/* Category Breakdown */}
+      <div className="grid md:grid-cols-2 gap-6">
+        <Card className="p-6">
+          <h3 className="font-semibold mb-4 flex items-center gap-2">
+            <BarChart3 className="w-5 h-5" />
+            Sales by Category
+          </h3>
+          {loadingCategories ? (
+            <div className="h-64 flex items-center justify-center text-muted-foreground">Loading...</div>
+          ) : categoryBreakdown && categoryBreakdown.length > 0 ? (
+            <div className="space-y-3">
+              {categoryBreakdown.map((cat: { categoryId: number; categoryName: string; revenue: number; orderCount: number; percentage: number }, index: number) => (
+                <div key={cat.categoryId || index}>
+                  <div className="flex justify-between text-sm mb-1">
+                    <span>{cat.categoryName}</span>
+                    <span className="font-medium">{formatCurrency(cat.revenue)}</span>
+                  </div>
+                  <div className="h-2 bg-secondary rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-primary rounded-full transition-all"
+                      style={{ width: `${cat.percentage}%` }}
+                    />
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {cat.orderCount} orders • {cat.percentage.toFixed(1)}% of total
+                  </p>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="h-64 flex items-center justify-center text-muted-foreground">
+              No sales data for this period
+            </div>
+          )}
+        </Card>
+
+        {/* Top Products */}
+        <Card className="p-6">
+          <h3 className="font-semibold mb-4 flex items-center gap-2">
+            <TrendingUp className="w-5 h-5" />
+            Top Selling Products
+          </h3>
+          {loadingProducts ? (
+            <div className="h-64 flex items-center justify-center text-muted-foreground">Loading...</div>
+          ) : topProducts && topProducts.length > 0 ? (
+            <div className="space-y-3">
+              {topProducts.map((product: { productId: number; productName: string; quantity: number; revenue: number }, index: number) => (
+                <div key={product.productId} className="flex items-center gap-3">
+                  <span className="w-6 h-6 rounded-full bg-primary/10 text-primary text-sm font-medium flex items-center justify-center">
+                    {index + 1}
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium truncate">{product.productName}</p>
+                    <p className="text-xs text-muted-foreground">{product.quantity} sold</p>
+                  </div>
+                  <span className="font-medium">{formatCurrency(product.revenue)}</span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="h-64 flex items-center justify-center text-muted-foreground">
+              No sales data for this period
+            </div>
+          )}
+        </Card>
+      </div>
+
+      {/* Export Button */}
+      <div className="flex justify-end">
+        <Button variant="outline" onClick={() => toast.info('Export feature coming soon')}>
+          <Download className="w-4 h-4 mr-2" />
+          Export Report
+        </Button>
+      </div>
     </div>
   );
 }
