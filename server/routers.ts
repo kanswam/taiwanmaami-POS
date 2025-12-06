@@ -308,9 +308,14 @@ export const appRouter = router({
           razorpaySignature: input.razorpaySignature,
         });
         
-        // Update order status to confirmed
+        // Update order status to confirmed and save Razorpay payment details
         await dbInstance.update(orders)
-          .set({ orderStatus: 'confirmed', paymentStatus: 'completed' })
+          .set({ 
+            orderStatus: 'confirmed', 
+            paymentStatus: 'completed',
+            razorpayOrderId: input.razorpayOrderId,
+            razorpayPaymentId: input.razorpayPaymentId
+          })
           .where(eq(orders.id, input.orderId));
         
         return { success: true, message: 'Payment verified successfully' };

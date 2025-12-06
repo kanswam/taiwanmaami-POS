@@ -1,0 +1,40 @@
+{
+  "query": "SELECT orderNumber, razorpayOrderId, razorpayPaymentId, paymentStatus FROM orders ORDER BY id DESC LIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT orderNumber, razorpayOrderId, razorpayPaymentId, paymentStatus FROM orders ORDER BY id DESC LIMIT 5;",
+  "rows": [
+    {
+      "orderNumber": "TMMIU2WNAYWYW8",
+      "razorpayOrderId": "NULL",
+      "razorpayPaymentId": "NULL",
+      "paymentStatus": "completed"
+    },
+    {
+      "orderNumber": "TMMIU2F2YHHEOA",
+      "razorpayOrderId": "NULL",
+      "razorpayPaymentId": "NULL",
+      "paymentStatus": "completed"
+    },
+    {
+      "orderNumber": "TMMITZ6A08R9U9",
+      "razorpayOrderId": "NULL",
+      "razorpayPaymentId": "NULL",
+      "paymentStatus": "completed"
+    },
+    {
+      "orderNumber": "TMMITIK7PWA0W8",
+      "razorpayOrderId": "NULL",
+      "razorpayPaymentId": "NULL",
+      "paymentStatus": "completed"
+    },
+    {
+      "orderNumber": "TMMITIBJK4FLPP",
+      "razorpayOrderId": "NULL",
+      "razorpayPaymentId": "NULL",
+      "paymentStatus": "completed"
+    }
+  ],
+  "messages": [],
+  "stdout": "orderNumber\trazorpayOrderId\trazorpayPaymentId\tpaymentStatus\nTMMIU2WNAYWYW8\tNULL\tNULL\tcompleted\nTMMIU2F2YHHEOA\tNULL\tNULL\tcompleted\nTMMITZ6A08R9U9\tNULL\tNULL\tcompleted\nTMMITIK7PWA0W8\tNULL\tNULL\tcompleted\nTMMITIBJK4FLPP\tNULL\tNULL\tcompleted\n",
+  "stderr": "",
+  "execution_time_ms": 49
+}
