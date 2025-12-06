@@ -306,3 +306,18 @@
 ### Invoice Updates
 - [x] Add Thamarai Foods and Trading Private Limited as legal entity on invoice for payment transparency
 - [x] Add complete Thamarai Foods registration details (GSTIN, address, CIN) to invoice
+
+## Phase 13 - Policy Pages & Legal Compliance
+
+### Policy Pages
+- [x] Create Terms & Conditions page
+- [x] Create Privacy Policy page
+- [x] Create Refund Policy page
+- [x] Create Shipping & Delivery Policy page
+- [x] Update all policy dates to December 6, 2025
+- [x] Review policy documents for legal compliance
+- [x] Add Thamarai Foods company details to all policy pages
+
+### Checkout Compliance
+- [x] Add T&C agreement checkbox at checkout before payment
+- [x] Link checkbox to Terms & Conditions, Privacy Policy, and Refund Policy pages

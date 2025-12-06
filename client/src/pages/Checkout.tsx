@@ -11,7 +11,8 @@ import { useCart } from '@/contexts/CartContext';
 import { useAuth } from '@/_core/hooks/useAuth';
 import { trpc } from '@/lib/trpc';
 import { formatPrice, GST_RATE } from '@shared/types';
-import { ArrowLeft, MapPin, Clock, CreditCard, Banknote, Loader2 } from 'lucide-react';
+import { ArrowLeft, MapPin, Clock, CreditCard, Banknote, Loader2, CheckCircle2 } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
 import { Link } from 'wouter';
 import { getLoginUrl } from '@/const';
@@ -31,6 +32,7 @@ export default function Checkout() {
 
   const [paymentMethod, setPaymentMethod] = useState<'online' | 'cash'>('online');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -129,6 +131,11 @@ export default function Checkout() {
     // Validation
     if (!formData.name || !formData.phone) {
       toast.error('Please fill in all required fields');
+      return;
+    }
+
+    if (!agreedToTerms) {
+      toast.error('Please agree to the Terms & Conditions to proceed');
       return;
     }
 
@@ -463,10 +470,34 @@ export default function Checkout() {
                   </div>
                 </div>
 
+                {/* Terms & Conditions Checkbox */}
+                <div className="mt-6 flex items-start space-x-3">
+                  <Checkbox
+                    id="terms"
+                    checked={agreedToTerms}
+                    onCheckedChange={(checked) => setAgreedToTerms(checked === true)}
+                    className="mt-0.5"
+                  />
+                  <label htmlFor="terms" className="text-sm text-muted-foreground leading-tight cursor-pointer">
+                    I agree to the{' '}
+                    <Link href="/terms" className="text-primary hover:underline" target="_blank">
+                      Terms & Conditions
+                    </Link>
+                    ,{' '}
+                    <Link href="/privacy" className="text-primary hover:underline" target="_blank">
+                      Privacy Policy
+                    </Link>
+                    , and{' '}
+                    <Link href="/refund" className="text-primary hover:underline" target="_blank">
+                      Refund Policy
+                    </Link>
+                  </label>
+                </div>
+
                 <Button
                   type="submit"
-                  className="w-full mt-6 h-12 text-lg"
-                  disabled={isSubmitting || itemCount === 0}
+                  className="w-full mt-4 h-12 text-lg"
+                  disabled={isSubmitting || itemCount === 0 || !agreedToTerms}
                 >
                   {isSubmitting ? 'Processing...' : `Place Order - ${formatPrice(displayTotal)}`}
                 </Button>

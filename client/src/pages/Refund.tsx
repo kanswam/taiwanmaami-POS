@@ -1,112 +1,112 @@
 import { Header } from '@/components/Header';
 import { Link } from 'wouter';
+import { ArrowLeft } from 'lucide-react';
 
 export default function Refund() {
   return (
     <div className="min-h-screen bg-background">
       <Header />
+      
+      <main className="container py-8 max-w-4xl">
+        <Link href="/">
+          <a className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-6">
+            <ArrowLeft className="w-4 h-4" />
+            Back to Home
+          </a>
+        </Link>
 
-      <div className="container py-12">
-        <div className="max-w-3xl mx-auto">
-          <h1 className="text-3xl font-bold mb-8">Refund and Cancellation Policy</h1>
-          
-          <div className="prose prose-lg max-w-none space-y-6 text-muted-foreground">
-            <p className="text-sm">Last updated: December 2025</p>
+        <article className="prose prose-neutral max-w-none">
+          <h1 className="text-3xl font-bold mb-2">Refund Policy</h1>
+          <p className="text-muted-foreground mb-8"><strong>Last Updated:</strong> December 6, 2025</p>
 
-            <section>
-              <h2 className="text-xl font-semibold text-foreground mt-8 mb-4">1. Order Cancellation</h2>
-              <div className="bg-secondary/50 p-4 rounded-lg border-l-4 border-primary">
-                <p className="font-medium text-foreground">Important Notice:</p>
-                <p>
-                  Orders can only be cancelled before food preparation begins. Once preparation has started, 
-                  orders cannot be cancelled or changed.
-                </p>
-              </div>
-              <p className="mt-4">
-                To request a cancellation, please contact us immediately at the store. We will process 
-                your cancellation request only if the preparation has not yet begun.
-              </p>
-            </section>
+          <section className="mb-8">
+            <h2 className="text-xl font-semibold mb-4">1. Overview</h2>
+            <p>
+              At Taiwan Maami, we strive to provide the highest quality Taiwanese bubble tea, mochi, and desserts. Customer satisfaction is our top priority. This Refund Policy outlines the circumstances under which refunds may be issued and the process for requesting them.
+            </p>
+          </section>
 
-            <section>
-              <h2 className="text-xl font-semibold text-foreground mt-8 mb-4">2. Refund Eligibility</h2>
-              <p>Refunds may be issued in the following circumstances:</p>
-              <ul className="list-disc pl-6 mt-2 space-y-1">
-                <li>Order cancelled before preparation begins</li>
-                <li>Wrong item delivered (different from what was ordered)</li>
-                <li>Order not delivered within reasonable time</li>
-                <li>Quality issues with the product</li>
-                <li>Payment charged but order not confirmed</li>
-              </ul>
-            </section>
+          <section className="mb-8">
+            <h2 className="text-xl font-semibold mb-4">2. Eligibility for Refunds</h2>
+            <p className="mb-4">Refunds may be issued in the following situations:</p>
 
-            <section>
-              <h2 className="text-xl font-semibold text-foreground mt-8 mb-4">3. Non-Refundable Situations</h2>
-              <p>Refunds will not be provided for:</p>
-              <ul className="list-disc pl-6 mt-2 space-y-1">
-                <li>Orders cancelled after preparation has begun</li>
-                <li>Change of mind after order confirmation</li>
-                <li>Incorrect address provided by customer</li>
-                <li>Customer unavailable at delivery location</li>
-                <li>Taste preferences (unless there is a quality issue)</li>
-              </ul>
-            </section>
+            <h3 className="text-lg font-medium mt-4 mb-2">2.1 Product Quality Issues</h3>
+            <ul className="list-disc pl-6 space-y-2">
+              <li><strong>Wrong Product:</strong> You received a product different from what you ordered</li>
+              <li><strong>Wrong Quantity:</strong> You received an incorrect quantity of items</li>
+              <li><strong>Poor Quality:</strong> The product does not meet our quality standards (spoiled, stale, or contaminated)</li>
+              <li><strong>Spillage:</strong> The product was spilled or damaged during delivery</li>
+              <li><strong>Missing Items:</strong> Items from your order are missing</li>
+            </ul>
 
-            <section>
-              <h2 className="text-xl font-semibold text-foreground mt-8 mb-4">4. How to Request a Refund</h2>
-              <p>To request a refund:</p>
-              <ol className="list-decimal pl-6 mt-2 space-y-1">
-                <li>Contact us within 24 hours of your order</li>
-                <li>Provide your order number and details of the issue</li>
-                <li>Include photos if applicable (e.g., wrong item, quality issue)</li>
-                <li>Our team will review your request within 2 business days</li>
-              </ol>
-            </section>
+            <h3 className="text-lg font-medium mt-4 mb-2">2.2 Order Cancellation</h3>
+            <ul className="list-disc pl-6 space-y-2">
+              <li><strong>Before Preparation:</strong> Full refund if cancelled before order preparation begins</li>
+              <li><strong>During Preparation:</strong> Partial refund may be issued at our discretion</li>
+              <li><strong>After Dispatch:</strong> No refund available once the order has been dispatched for delivery</li>
+            </ul>
+          </section>
 
-            <section>
-              <h2 className="text-xl font-semibold text-foreground mt-8 mb-4">5. Refund Process</h2>
-              <p>
-                Once your refund is approved:
-              </p>
-              <ul className="list-disc pl-6 mt-2 space-y-1">
-                <li>Refunds will be processed to the original payment method</li>
-                <li>Credit/debit card refunds may take 5-7 business days to reflect</li>
-                <li>UPI refunds are typically processed within 2-3 business days</li>
-                <li>You will receive a confirmation email once the refund is initiated</li>
-              </ul>
-            </section>
+          <section className="mb-8">
+            <h2 className="text-xl font-semibold mb-4">3. Non-Refundable Situations</h2>
+            <p className="mb-2">Refunds will NOT be issued for:</p>
+            <ul className="list-disc pl-6 space-y-2">
+              <li>Change of mind after order confirmation</li>
+              <li>Incorrect address provided by the customer</li>
+              <li>Customer unavailable at the time of delivery</li>
+              <li>Orders not collected within the specified pickup time</li>
+              <li>Products consumed or partially consumed</li>
+              <li>Subjective taste preferences</li>
+            </ul>
+          </section>
 
-            <section>
-              <h2 className="text-xl font-semibold text-foreground mt-8 mb-4">6. Partial Refunds</h2>
-              <p>
-                In some cases, partial refunds may be issued:
-              </p>
-              <ul className="list-disc pl-6 mt-2 space-y-1">
-                <li>If only part of the order was affected</li>
-                <li>If the issue was partially due to customer error</li>
-                <li>Delivery charges may not be refunded in certain cases</li>
-              </ul>
-            </section>
+          <section className="mb-8">
+            <h2 className="text-xl font-semibold mb-4">4. How to Request a Refund</h2>
+            <ol className="list-decimal pl-6 space-y-2">
+              <li>Contact us within 24 hours of receiving your order</li>
+              <li>Provide your order number and details of the issue</li>
+              <li>Include photos of the product if applicable (for quality issues)</li>
+              <li>Our team will review your request within 24-48 hours</li>
+            </ol>
+            <p className="mt-4">
+              Contact us at: <strong>info@taiwanmaami.com</strong> or call <strong>+91 78450 53909</strong>
+            </p>
+          </section>
 
-            <section>
-              <h2 className="text-xl font-semibold text-foreground mt-8 mb-4">7. Contact Us</h2>
-              <p>
-                For refund requests or questions about this policy:
-              </p>
-              <ul className="list-disc pl-6 mt-2">
-                <li>Email: support@taiwanmaami.com</li>
-                <li>Phone: +91 98765 43210</li>
-                <li>Store: Visit us at Palladium Mall or T Nagar outlet</li>
-              </ul>
-            </section>
-          </div>
+          <section className="mb-8">
+            <h2 className="text-xl font-semibold mb-4">5. Refund Processing</h2>
+            <ul className="list-disc pl-6 space-y-2">
+              <li>Approved refunds will be processed within <strong>5-7 business days</strong></li>
+              <li>Refunds will be credited to the original payment method used for the order</li>
+              <li>Bank processing times may vary; please allow additional time for the refund to appear in your account</li>
+            </ul>
+          </section>
+
+          <section className="mb-8">
+            <h2 className="text-xl font-semibold mb-4">6. Replacements</h2>
+            <p>
+              In some cases, we may offer a replacement instead of a refund. This will be discussed with you during the refund request process.
+            </p>
+          </section>
+
+          <section className="mb-8">
+            <h2 className="text-xl font-semibold mb-4">7. Contact Us</h2>
+            <p>For refund requests or questions about this policy, please contact us at:</p>
+            <div className="mt-4 p-4 bg-secondary rounded-lg">
+              <p className="font-semibold">Thamarai Foods and Trading Private Limited</p>
+              <p>34/8 Singarar Street, Triplicane, Chennai - 600005</p>
+              <p>Email: info@taiwanmaami.com</p>
+              <p>Phone: +91 78450 53909</p>
+            </div>
+          </section>
 
           <div className="mt-12 pt-8 border-t flex gap-4 text-sm">
-            <Link href="/terms" className="text-primary hover:underline">Terms and Conditions</Link>
+            <Link href="/terms" className="text-primary hover:underline">Terms & Conditions</Link>
             <Link href="/privacy" className="text-primary hover:underline">Privacy Policy</Link>
+            <Link href="/shipping" className="text-primary hover:underline">Shipping Policy</Link>
           </div>
-        </div>
-      </div>
+        </article>
+      </main>
     </div>
   );
 }
