@@ -324,3 +324,5 @@
 
 ## Bug Fixes - Dec 6, 2025
 - [x] Fix nested anchor tag error in checkout T&C checkbox
+- [x] Fix invoice time to show IST (India Standard Time) instead of server time
+- [x] Fix invoice payment method to show actual payment method from order (Razorpay/Cash)

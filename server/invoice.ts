@@ -69,8 +69,8 @@ export function generateInvoiceHtml(data: InvoiceData): string {
       <div class="invoice-title">INVOICE</div>
       <div style="margin-top: 10px;">
         <strong>Order #:</strong> ${data.orderNumber}<br>
-        <strong>Date:</strong> ${data.orderDate.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}<br>
-        <strong>Time:</strong> ${data.orderDate.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
+        <strong>Date:</strong> ${data.orderDate.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', timeZone: 'Asia/Kolkata' })}<br>
+        <strong>Time:</strong> ${data.orderDate.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Kolkata' })}
       </div>
     </div>
   </div>

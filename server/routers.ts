@@ -356,7 +356,7 @@ export const appRouter = router({
           deliveryCharge: order.deliveryCharge || 0,
           discount: order.discountAmount || 0,
           totalAmount: order.totalAmount,
-          paymentMethod: order.razorpayPaymentId ? 'Online' : 'Cash',
+          paymentMethod: order.razorpayPaymentId ? 'Online (Razorpay)' : 'Cash',
           paymentStatus: order.paymentStatus || 'Pending',
         };
         
