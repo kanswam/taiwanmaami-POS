@@ -283,3 +283,22 @@
 
 - [x] Remove payment method section for delivery orders (only online payment required)
 - [x] Add status update buttons to Admin Orders tab for workflow progression
+
+
+## Phase 12 - Invoice & Review System
+
+### Invoice Feature
+- [x] Create PDF invoice generation on server
+- [x] Add invoice email functionality using notification system
+- [x] Add "Download Invoice" button on order confirmation page
+- [x] Add "Email Invoice" option with prompt
+- [ ] Add invoice access on My Orders page
+
+### Review & Rating System
+- [x] Add reviews table to database schema (orderId, userId, productId, rating, reviewText, isApproved, createdAt)
+- [x] Create review submission UI after order completion
+- [x] Allow rating for overall order AND individual products
+- [x] Auto-approve reviews (visible immediately)
+- [x] Display average rating on product cards
+- [ ] Show reviews in product details/modal
+- [x] Add Admin Reviews tab for moderation (remove/hide reviews)

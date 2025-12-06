@@ -65,6 +65,14 @@ export default function Menu() {
     isDelivery: state.orderType === 'delivery',
   });
 
+  // Fetch product ratings
+  const { data: productRatings } = trpc.reviews.getAllProductRatings.useQuery();
+  
+  // Helper to get rating for a product
+  const getProductRating = (productId: number) => {
+    return productRatings?.find(r => r.productId === productId) || null;
+  };
+
   // Get subcategories for selected category
   const categorySubcategories = useMemo(() => {
     if (!menuData || selectedCategory === 'all') return [];
@@ -203,6 +211,7 @@ export default function Menu() {
                 subcategory={sub}
                 category={cat}
                 isDelivery={state.orderType === 'delivery'}
+                rating={getProductRating(product.id)}
               />
             );
           })}
@@ -366,6 +375,7 @@ export default function Menu() {
                       }}
                       subcategory={sub}
                       isDelivery={state.orderType === 'delivery'}
+                      rating={getProductRating(product.id)}
                     />
                   );
                 })}

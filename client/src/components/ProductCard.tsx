@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Plus, Leaf, Egg } from 'lucide-react';
+import { Plus, Leaf, Egg, Star } from 'lucide-react';
 import { formatPrice, GST_RATE } from '@shared/types';
 import { ProductCustomizationModal } from './ProductCustomizationModal';
 
@@ -41,9 +41,10 @@ interface ProductCardProps {
     slug: string;
   };
   isDelivery?: boolean;
+  rating?: { averageRating: number | null; reviewCount: number } | null;
 }
 
-export function ProductCard({ product, subcategory, category, isDelivery = false }: ProductCardProps) {
+export function ProductCard({ product, subcategory, category, isDelivery = false, rating }: ProductCardProps) {
   const [showModal, setShowModal] = useState(false);
 
   // Calculate display price (with GST)
@@ -130,6 +131,15 @@ export function ProductCard({ product, subcategory, category, isDelivery = false
               <p className="text-xs text-muted-foreground mt-0.5">{product.chineseName}</p>
             )}
           </div>
+
+          {/* Rating display */}
+          {rating && rating.averageRating && rating.reviewCount > 0 && (
+            <div className="flex items-center gap-1 mt-1">
+              <Star className="w-3.5 h-3.5 fill-yellow-400 text-yellow-400" />
+              <span className="text-xs font-medium">{rating.averageRating}</span>
+              <span className="text-xs text-muted-foreground">({rating.reviewCount})</span>
+            </div>
+          )}
 
           <div className="flex items-center justify-between mt-2">
             <div>

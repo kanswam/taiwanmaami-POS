@@ -14,7 +14,7 @@ import { formatPrice, GST_RATE } from '@shared/types';
 import { 
   Home, Package, ShoppingCart, Tag, Upload, Settings, LogOut, 
   Plus, Edit, Trash2, ImageIcon, RefreshCw, Check, X, Search,
-  ChevronDown, ChevronUp, Eye, EyeOff, Store, ClipboardList
+  ChevronDown, ChevronUp, Eye, EyeOff, Store, ClipboardList, Star
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -67,7 +67,7 @@ export default function Admin() {
 
       <div className="container py-6">
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-6 mb-6">
+          <TabsList className="grid w-full grid-cols-7 mb-6">
             <TabsTrigger value="products" className="gap-2">
               <Package className="w-4 h-4" />
               Products
@@ -87,6 +87,10 @@ export default function Admin() {
             <TabsTrigger value="discounts" className="gap-2">
               <Tag className="w-4 h-4" />
               Discounts
+            </TabsTrigger>
+            <TabsTrigger value="reviews" className="gap-2">
+              <Star className="w-4 h-4" />
+              Reviews
             </TabsTrigger>
             <TabsTrigger value="bulk-upload" className="gap-2">
               <Upload className="w-4 h-4" />
@@ -112,6 +116,10 @@ export default function Admin() {
 
           <TabsContent value="audit">
             <POSAuditTab />
+          </TabsContent>
+
+          <TabsContent value="reviews">
+            <ReviewsTab />
           </TabsContent>
 
           <TabsContent value="bulk-upload">
@@ -1097,6 +1105,125 @@ function POSAuditTab() {
           </table>
         </div>
       </Card>
+    </div>
+  );
+}
+
+
+// Reviews Tab - Admin moderation
+function ReviewsTab() {
+  const { data: reviews, refetch } = trpc.reviews.getAllAdmin.useQuery();
+  
+  const toggleVisibility = trpc.reviews.toggleVisibility.useMutation({
+    onSuccess: () => {
+      toast.success('Review visibility updated');
+      refetch();
+    },
+    onError: (err) => toast.error(err.message),
+  });
+  
+  const deleteReview = trpc.reviews.delete.useMutation({
+    onSuccess: () => {
+      toast.success('Review deleted');
+      refetch();
+    },
+    onError: (err) => toast.error(err.message),
+  });
+
+  const renderStars = (rating: number) => {
+    return (
+      <div className="flex gap-0.5">
+        {[1, 2, 3, 4, 5].map((star) => (
+          <Star
+            key={star}
+            className={`w-4 h-4 ${star <= rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`}
+          />
+        ))}
+      </div>
+    );
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h2 className="text-xl font-semibold">Customer Reviews</h2>
+        <p className="text-sm text-muted-foreground">
+          {reviews?.length || 0} reviews
+        </p>
+      </div>
+
+      {!reviews?.length ? (
+        <Card className="p-8 text-center">
+          <Star className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+          <p className="text-muted-foreground">No reviews yet</p>
+        </Card>
+      ) : (
+        <div className="space-y-4">
+          {reviews.map((review) => (
+            <Card key={review.id} className={`p-4 ${!review.isVisible ? 'opacity-60 bg-muted' : ''}`}>
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <div className="flex items-center gap-3 mb-2">
+                    {renderStars(review.rating)}
+                    <span className="text-sm text-muted-foreground">
+                      Order #{review.orderNumber}
+                    </span>
+                    {review.productId && (
+                      <span className="text-xs bg-secondary px-2 py-0.5 rounded">
+                        Product Review
+                      </span>
+                    )}
+                    {!review.productId && (
+                      <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded">
+                        Order Review
+                      </span>
+                    )}
+                  </div>
+                  
+                  <p className="text-sm mb-2">
+                    {review.reviewText || <span className="text-muted-foreground italic">No written review</span>}
+                  </p>
+                  
+                  <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                    <span>By: {review.userName || 'Anonymous'}</span>
+                    <span>{new Date(review.createdAt).toLocaleDateString()}</span>
+                  </div>
+                </div>
+                
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => toggleVisibility.mutate({ 
+                      reviewId: review.id, 
+                      isVisible: !review.isVisible 
+                    })}
+                    title={review.isVisible ? 'Hide review' : 'Show review'}
+                  >
+                    {review.isVisible ? (
+                      <Eye className="w-4 h-4" />
+                    ) : (
+                      <EyeOff className="w-4 h-4" />
+                    )}
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-destructive hover:text-destructive"
+                    onClick={() => {
+                      if (confirm('Are you sure you want to delete this review?')) {
+                        deleteReview.mutate({ reviewId: review.id });
+                      }
+                    }}
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+            </Card>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

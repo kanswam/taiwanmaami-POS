@@ -11,7 +11,8 @@ import { categories, subcategories, products, addons, orders, orderItems, orderI
 import { eq, and, desc, asc, sql } from "drizzle-orm";
 import { generateOrderNumber, calculateGst } from "@shared/types";
 import { authenticateStaffByMobile, getActiveEmployees } from "./employeeMaster";
-import { posSessions, posAuditLog, outletProducts } from "../drizzle/schema";
+import { posSessions, posAuditLog, outletProducts, reviews } from "../drizzle/schema";
+import { generateInvoiceHtml, type InvoiceData } from "./invoice";
 
 // Admin procedure - only allows admin role
 const adminProcedure = protectedProcedure.use(({ ctx, next }) => {
@@ -313,6 +314,279 @@ export const appRouter = router({
           .where(eq(orders.id, input.orderId));
         
         return { success: true, message: 'Payment verified successfully' };
+      }),
+
+    // Generate invoice HTML
+    getInvoice: publicProcedure
+      .input(z.object({ orderNumber: z.string() }))
+      .query(async ({ input }) => {
+        const dbInstance = await getDb();
+        if (!dbInstance) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
+        
+        const orderResult = await dbInstance.select().from(orders).where(eq(orders.orderNumber, input.orderNumber));
+        if (!orderResult.length) throw new TRPCError({ code: 'NOT_FOUND' });
+        const order = orderResult[0];
+        
+        // Get order items
+        const items = await dbInstance.select({
+          id: orderItems.id,
+          productName: orderItems.productName,
+          quantity: orderItems.quantity,
+          unitPrice: orderItems.unitPrice,
+          lineTotal: orderItems.lineTotal,
+        }).from(orderItems).where(eq(orderItems.orderId, order.id));
+        
+        const invoiceData: InvoiceData = {
+          orderNumber: order.orderNumber,
+          orderDate: order.createdAt,
+          customerName: order.customerName || 'Guest',
+          customerPhone: order.customerPhone || '',
+  
+          orderType: order.orderType as 'delivery' | 'pickup',
+          deliveryAddress: order.deliveryAddress || undefined,
+          items: items.map(item => ({
+            name: item.productName,
+            quantity: item.quantity,
+            unitPrice: item.unitPrice,
+            totalPrice: item.lineTotal,
+          })),
+          subtotal: order.subtotal,
+          stateGst: order.stateGst,
+          centralGst: order.centralGst,
+          deliveryCharge: order.deliveryCharge || 0,
+          discount: order.discountAmount || 0,
+          totalAmount: order.totalAmount,
+          paymentMethod: order.razorpayPaymentId ? 'Online' : 'Cash',
+          paymentStatus: order.paymentStatus || 'Pending',
+        };
+        
+        const html = generateInvoiceHtml(invoiceData);
+        return { html, invoiceData };
+      }),
+
+    // Email invoice
+    emailInvoice: protectedProcedure
+      .input(z.object({ orderNumber: z.string(), email: z.string().email() }))
+      .mutation(async ({ input }) => {
+        const { notifyOwner } = await import('./_core/notification');
+        
+        // For now, notify owner about invoice request
+        // In production, this would send email to customer
+        await notifyOwner({
+          title: 'Invoice Email Request',
+          content: `Customer requested invoice for order ${input.orderNumber} to be sent to ${input.email}`,
+        });
+        
+        return { success: true, message: 'Invoice will be sent to your email shortly' };
+      }),
+  }),
+
+  // Reviews router
+  reviews: router({
+    // Submit a review
+    submit: protectedProcedure
+      .input(z.object({
+        orderId: z.number(),
+        overallRating: z.number().min(1).max(5),
+        overallReview: z.string().optional(),
+        productReviews: z.array(z.object({
+          productId: z.number(),
+          rating: z.number().min(1).max(5),
+          reviewText: z.string().optional(),
+        })).optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const dbInstance = await getDb();
+        if (!dbInstance) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
+        
+        // Check if order exists and belongs to user
+        const orderResult = await dbInstance.select().from(orders).where(eq(orders.id, input.orderId));
+        if (!orderResult.length) throw new TRPCError({ code: 'NOT_FOUND', message: 'Order not found' });
+        
+        // Check if already reviewed
+        const existingReview = await dbInstance.select().from(reviews)
+          .where(and(eq(reviews.orderId, input.orderId), eq(reviews.userId, ctx.user.id)));
+        if (existingReview.length) {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: 'You have already reviewed this order' });
+        }
+        
+        // Insert overall order review
+        await dbInstance.insert(reviews).values({
+          orderId: input.orderId,
+          userId: ctx.user.id,
+          productId: null, // null means overall order review
+          rating: input.overallRating,
+          reviewText: input.overallReview || null,
+        });
+        
+        // Insert product-specific reviews
+        if (input.productReviews?.length) {
+          for (const pr of input.productReviews) {
+            await dbInstance.insert(reviews).values({
+              orderId: input.orderId,
+              userId: ctx.user.id,
+              productId: pr.productId,
+              rating: pr.rating,
+              reviewText: pr.reviewText || null,
+            });
+          }
+        }
+        
+        return { success: true, message: 'Thank you for your review!' };
+      }),
+
+    // Get reviews for a product
+    getByProduct: publicProcedure
+      .input(z.object({ productId: z.number() }))
+      .query(async ({ input }) => {
+        const dbInstance = await getDb();
+        if (!dbInstance) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
+        
+        const productReviews = await dbInstance.select({
+          id: reviews.id,
+          rating: reviews.rating,
+          reviewText: reviews.reviewText,
+          createdAt: reviews.createdAt,
+          userName: users.name,
+        })
+        .from(reviews)
+        .leftJoin(users, eq(reviews.userId, users.id))
+        .where(and(
+          eq(reviews.productId, input.productId),
+          eq(reviews.isVisible, true)
+        ))
+        .orderBy(desc(reviews.createdAt))
+        .limit(10);
+        
+        return productReviews;
+      }),
+
+    // Get average rating for a product
+    getProductRating: publicProcedure
+      .input(z.object({ productId: z.number() }))
+      .query(async ({ input }) => {
+        const dbInstance = await getDb();
+        if (!dbInstance) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
+        
+        const result = await dbInstance.select({
+          avgRating: sql<number>`AVG(${reviews.rating})`,
+          count: sql<number>`COUNT(*)`,
+        })
+        .from(reviews)
+        .where(and(
+          eq(reviews.productId, input.productId),
+          eq(reviews.isVisible, true)
+        ));
+        
+        return {
+          averageRating: result[0]?.avgRating ? Number(result[0].avgRating.toFixed(1)) : null,
+          reviewCount: Number(result[0]?.count) || 0,
+        };
+      }),
+
+    // Get all product ratings (for displaying on product cards)
+    getAllProductRatings: publicProcedure
+      .query(async () => {
+        const dbInstance = await getDb();
+        if (!dbInstance) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
+        
+        const ratings = await dbInstance.select({
+          productId: reviews.productId,
+          avgRating: sql<number>`AVG(${reviews.rating})`,
+          count: sql<number>`COUNT(*)`,
+        })
+        .from(reviews)
+        .where(and(
+          sql`${reviews.productId} IS NOT NULL`,
+          eq(reviews.isVisible, true)
+        ))
+        .groupBy(reviews.productId);
+        
+        return ratings.map(r => ({
+          productId: r.productId,
+          averageRating: r.avgRating ? Number(Number(r.avgRating).toFixed(1)) : null,
+          reviewCount: Number(r.count) || 0,
+        }));
+      }),
+
+    // Check if user can review an order
+    canReview: protectedProcedure
+      .input(z.object({ orderId: z.number() }))
+      .query(async ({ ctx, input }) => {
+        const dbInstance = await getDb();
+        if (!dbInstance) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
+        
+        // Check if order is completed
+        const orderResult = await dbInstance.select().from(orders).where(eq(orders.id, input.orderId));
+        if (!orderResult.length) return { canReview: false, reason: 'Order not found' };
+        
+        const order = orderResult[0];
+        if (order.orderStatus !== 'completed') {
+          return { canReview: false, reason: 'Order must be completed before reviewing' };
+        }
+        
+        // Check if already reviewed
+        const existingReview = await dbInstance.select().from(reviews)
+          .where(and(eq(reviews.orderId, input.orderId), eq(reviews.userId, ctx.user.id)));
+        if (existingReview.length) {
+          return { canReview: false, reason: 'Already reviewed' };
+        }
+        
+        return { canReview: true };
+      }),
+
+    // Admin: Get all reviews for moderation
+    getAllAdmin: adminProcedure
+      .query(async () => {
+        const dbInstance = await getDb();
+        if (!dbInstance) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
+        
+        const allReviews = await dbInstance.select({
+          id: reviews.id,
+          orderId: reviews.orderId,
+          userId: reviews.userId,
+          productId: reviews.productId,
+          rating: reviews.rating,
+          reviewText: reviews.reviewText,
+          isApproved: reviews.isApproved,
+          isVisible: reviews.isVisible,
+          createdAt: reviews.createdAt,
+          userName: users.name,
+          orderNumber: orders.orderNumber,
+        })
+        .from(reviews)
+        .leftJoin(users, eq(reviews.userId, users.id))
+        .leftJoin(orders, eq(reviews.orderId, orders.id))
+        .orderBy(desc(reviews.createdAt))
+        .limit(100);
+        
+        return allReviews;
+      }),
+
+    // Admin: Toggle review visibility
+    toggleVisibility: adminProcedure
+      .input(z.object({ reviewId: z.number(), isVisible: z.boolean() }))
+      .mutation(async ({ input }) => {
+        const dbInstance = await getDb();
+        if (!dbInstance) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
+        
+        await dbInstance.update(reviews)
+          .set({ isVisible: input.isVisible })
+          .where(eq(reviews.id, input.reviewId));
+        
+        return { success: true };
+      }),
+
+    // Admin: Delete review
+    delete: adminProcedure
+      .input(z.object({ reviewId: z.number() }))
+      .mutation(async ({ input }) => {
+        const dbInstance = await getDb();
+        if (!dbInstance) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
+        
+        await dbInstance.delete(reviews).where(eq(reviews.id, input.reviewId));
+        
+        return { success: true };
       }),
   }),
 

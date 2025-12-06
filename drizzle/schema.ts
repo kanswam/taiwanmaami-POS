@@ -315,6 +315,19 @@ export const deliveryAreas = mysqlTable("delivery_areas", {
   isActive: boolean("isActive").default(true).notNull(),
 });
 
+// Reviews and ratings
+export const reviews = mysqlTable("reviews", {
+  id: int("id").autoincrement().primaryKey(),
+  orderId: int("orderId").notNull(),
+  userId: int("userId").notNull(),
+  productId: int("productId"), // null for overall order review
+  rating: int("rating").notNull(), // 1-5 stars
+  reviewText: text("reviewText"),
+  isApproved: boolean("isApproved").default(true).notNull(), // auto-approve
+  isVisible: boolean("isVisible").default(true).notNull(), // admin can hide
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
 // Type exports
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
@@ -328,6 +341,8 @@ export type Discount = typeof discounts.$inferSelect;
 export type Address = typeof addresses.$inferSelect;
 export type StoreLocation = typeof storeLocations.$inferSelect;
 export type DeliveryArea = typeof deliveryAreas.$inferSelect;
+export type Review = typeof reviews.$inferSelect;
+export type InsertReview = typeof reviews.$inferInsert;
 export type OutletProduct = typeof outletProducts.$inferSelect;
 export type PosSession = typeof posSessions.$inferSelect;
 export type PosAuditLog = typeof posAuditLog.$inferSelect;
