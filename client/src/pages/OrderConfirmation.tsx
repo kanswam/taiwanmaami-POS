@@ -5,32 +5,11 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { trpc } from '@/lib/trpc';
 import { formatPrice } from '@shared/types';
-import { CheckCircle, Clock, MapPin, Phone, ArrowRight, RefreshCw, Download, Mail, Star } from 'lucide-react';
-import { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { toast } from 'sonner';
-import { useAuth } from '@/_core/hooks/useAuth';
+import { CheckCircle, Clock, MapPin, Phone, ArrowRight, RefreshCw } from 'lucide-react';
 import { OrderTracker } from '@/components/OrderTracker';
 
 export default function OrderConfirmation() {
   const { orderId } = useParams<{ orderId: string }>();
-
-  const { user } = useAuth();
-  const [showEmailDialog, setShowEmailDialog] = useState(false);
-  const [email, setEmail] = useState('');
-  const [showReviewDialog, setShowReviewDialog] = useState(false);
-  const [overallRating, setOverallRating] = useState(0);
-  const [overallReview, setOverallReview] = useState('');
-  
-  const invoiceQuery = trpc.orders.getInvoice.useQuery(
-    { orderNumber: orderId || '' },
-    { enabled: false }
-  );
-  const emailInvoiceMutation = trpc.orders.emailInvoice.useMutation();
-  const submitReviewMutation = trpc.reviews.submit.useMutation();
-  
   const { data, isLoading } = trpc.orders.getByNumber.useQuery(
     { orderNumber: orderId || '' },
     { enabled: !!orderId }
@@ -193,58 +172,6 @@ export default function OrderConfirmation() {
             </div>
           </Card>
 
-          {/* Invoice Options */}
-          <Card className="p-6 mb-6">
-            <h3 className="font-semibold mb-4">Invoice</h3>
-            <div className="flex flex-col sm:flex-row gap-3">
-              <Button
-                variant="outline"
-                className="flex-1"
-                onClick={async () => {
-                  const result = await invoiceQuery.refetch();
-                  if (result.data?.html) {
-                    const printWindow = window.open('', '_blank');
-                    if (printWindow) {
-                      printWindow.document.write(result.data.html);
-                      printWindow.document.close();
-                      printWindow.print();
-                    }
-                  }
-                }}
-              >
-                <Download className="w-4 h-4 mr-2" />
-                Download Invoice
-              </Button>
-              <Button
-                variant="outline"
-                className="flex-1"
-                onClick={() => {
-                  setEmail(user?.email || '');
-                  setShowEmailDialog(true);
-                }}
-              >
-                <Mail className="w-4 h-4 mr-2" />
-                Email Invoice
-              </Button>
-            </div>
-          </Card>
-
-          {/* Review Prompt - only show for completed orders */}
-          {order.orderStatus === 'completed' && (
-            <Card className="p-6 mb-6 border-primary/20 bg-primary/5">
-              <div className="flex items-center gap-2 mb-2">
-                <Star className="w-5 h-5 text-primary" />
-                <span className="font-medium">How was your order?</span>
-              </div>
-              <p className="text-sm text-muted-foreground mb-4">
-                We'd love to hear your feedback!
-              </p>
-              <Button onClick={() => setShowReviewDialog(true)}>
-                Leave a Review
-              </Button>
-            </Card>
-          )}
-
           {/* Contact Info */}
           <Card className="p-6 mb-6">
             <div className="flex items-center gap-2 mb-2">
@@ -272,120 +199,6 @@ export default function OrderConfirmation() {
           </div>
         </div>
       </div>
-
-      {/* Email Invoice Dialog */}
-      <Dialog open={showEmailDialog} onOpenChange={setShowEmailDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Email Invoice</DialogTitle>
-            <DialogDescription>
-              Enter your email address to receive the invoice.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="email">Email Address</Label>
-              <Input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="your@email.com"
-              />
-            </div>
-            <Button
-              className="w-full"
-              onClick={async () => {
-                if (!email) {
-                  toast.error('Please enter an email address');
-                  return;
-                }
-                try {
-                  await emailInvoiceMutation.mutateAsync({
-                    orderNumber: order.orderNumber,
-                    email,
-                  });
-                  toast.success('Invoice sent! Check your email for the invoice.');
-                  setShowEmailDialog(false);
-                } catch (error) {
-                  toast.error('Failed to send invoice');
-                }
-              }}
-              disabled={emailInvoiceMutation.isPending}
-            >
-              {emailInvoiceMutation.isPending ? 'Sending...' : 'Send Invoice'}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Review Dialog */}
-      <Dialog open={showReviewDialog} onOpenChange={setShowReviewDialog}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Rate Your Order</DialogTitle>
-            <DialogDescription>
-              How was your experience with order #{order.orderNumber}?
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-6">
-            {/* Star Rating */}
-            <div>
-              <Label className="mb-2 block">Overall Rating</Label>
-              <div className="flex gap-2">
-                {[1, 2, 3, 4, 5].map((star) => (
-                  <button
-                    key={star}
-                    type="button"
-                    onClick={() => setOverallRating(star)}
-                    className="focus:outline-none"
-                  >
-                    <Star
-                      className={`w-8 h-8 ${star <= overallRating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`}
-                    />
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Review Text */}
-            <div>
-              <Label htmlFor="review">Your Review (Optional)</Label>
-              <textarea
-                id="review"
-                className="w-full mt-1 p-3 border rounded-md min-h-[100px] resize-none"
-                value={overallReview}
-                onChange={(e) => setOverallReview(e.target.value)}
-                placeholder="Tell us about your experience..."
-              />
-            </div>
-
-            <Button
-              className="w-full"
-              onClick={async () => {
-                if (overallRating === 0) {
-                  toast.error('Please select a rating');
-                  return;
-                }
-                try {
-                  await submitReviewMutation.mutateAsync({
-                    orderId: order.id,
-                    overallRating,
-                    overallReview: overallReview || undefined,
-                  });
-                  toast.success('Thank you! Your review has been submitted.');
-                  setShowReviewDialog(false);
-                } catch (error: any) {
-                  toast.error(error.message || 'Failed to submit review');
-                }
-              }}
-              disabled={submitReviewMutation.isPending}
-            >
-              {submitReviewMutation.isPending ? 'Submitting...' : 'Submit Review'}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

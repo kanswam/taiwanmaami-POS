@@ -100,22 +100,3 @@ export async function storageGet(relKey: string): Promise<{ key: string; url: st
     url: await buildDownloadUrl(baseUrl, key, apiKey),
   };
 }
-
-/**
- * Get upload URL and API key for direct browser uploads
- * Returns the upload endpoint and auth header for large file uploads
- */
-export function getUploadCredentials(relKey: string): { 
-  uploadUrl: string; 
-  apiKey: string; 
-  key: string;
-} {
-  const { baseUrl, apiKey } = getStorageConfig();
-  const key = normalizeKey(relKey);
-  const uploadUrl = buildUploadUrl(baseUrl, key);
-  return { 
-    uploadUrl: uploadUrl.toString(), 
-    apiKey, 
-    key 
-  };
-}

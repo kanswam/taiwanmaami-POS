@@ -98,10 +98,6 @@ export const products = mysqlTable("products", {
   availableDelivery: boolean("availableDelivery").default(true).notNull(),
   displayOrder: int("displayOrder").default(0).notNull(),
   isActive: boolean("isActive").default(true).notNull(),
-  // Video fields for product showcase
-  videoUrl: text("videoUrl"),
-  videoThumbnail: text("videoThumbnail"),
-  isFeaturedVideo: boolean("isFeaturedVideo").default(false).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
@@ -319,30 +315,6 @@ export const deliveryAreas = mysqlTable("delivery_areas", {
   isActive: boolean("isActive").default(true).notNull(),
 });
 
-// Reviews and ratings
-export const reviews = mysqlTable("reviews", {
-  id: int("id").autoincrement().primaryKey(),
-  orderId: int("orderId").notNull(),
-  userId: int("userId").notNull(),
-  productId: int("productId"), // null for overall order review
-  rating: int("rating").notNull(), // 1-5 stars
-  reviewText: text("reviewText"),
-  isApproved: boolean("isApproved").default(true).notNull(), // auto-approve
-  isVisible: boolean("isVisible").default(true).notNull(), // admin can hide
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-});
-
-// KOT (Kitchen Order Ticket) queue for thermal printer
-export const kotQueue = mysqlTable("kot_queue", {
-  id: int("id").autoincrement().primaryKey(),
-  orderId: varchar("orderId", { length: 255 }).notNull(),
-  outletId: int("outletId").notNull(), // Which outlet should print this
-  kotData: json("kotData").notNull(), // Full order details for printing
-  isPrinted: boolean("isPrinted").default(false).notNull(),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  printedAt: timestamp("printedAt"),
-});
-
 // Type exports
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
@@ -356,10 +328,6 @@ export type Discount = typeof discounts.$inferSelect;
 export type Address = typeof addresses.$inferSelect;
 export type StoreLocation = typeof storeLocations.$inferSelect;
 export type DeliveryArea = typeof deliveryAreas.$inferSelect;
-export type Review = typeof reviews.$inferSelect;
-export type InsertReview = typeof reviews.$inferInsert;
 export type OutletProduct = typeof outletProducts.$inferSelect;
 export type PosSession = typeof posSessions.$inferSelect;
 export type PosAuditLog = typeof posAuditLog.$inferSelect;
-export type KotQueue = typeof kotQueue.$inferSelect;
-export type InsertKotQueue = typeof kotQueue.$inferInsert;

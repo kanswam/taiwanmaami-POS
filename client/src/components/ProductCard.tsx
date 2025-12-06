@@ -1,9 +1,7 @@
 import { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
-import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
-import { Plus, Leaf, Egg, Star, Play, X } from 'lucide-react';
+import { Plus, Leaf, Egg } from 'lucide-react';
 import { formatPrice, GST_RATE } from '@shared/types';
 import { ProductCustomizationModal } from './ProductCustomizationModal';
 
@@ -20,7 +18,6 @@ interface ProductCardProps {
     isVegetarian?: boolean;
     isVegan?: boolean;
     containsEgg?: boolean;
-    videoUrl?: string | null;
   };
   subcategory: {
     id: number;
@@ -44,12 +41,10 @@ interface ProductCardProps {
     slug: string;
   };
   isDelivery?: boolean;
-  rating?: { averageRating: number | null; reviewCount: number } | null;
 }
 
-export function ProductCard({ product, subcategory, category, isDelivery = false, rating }: ProductCardProps) {
+export function ProductCard({ product, subcategory, category, isDelivery = false }: ProductCardProps) {
   const [showModal, setShowModal] = useState(false);
-  const [showVideo, setShowVideo] = useState(false);
 
   // Calculate display price (with GST)
   const getDisplayPrice = () => {
@@ -123,19 +118,6 @@ export function ProductCard({ product, subcategory, category, isDelivery = false
               </span>
             </div>
           )}
-          {/* Video badge - clickable to play video */}
-          {product.videoUrl && (
-            <button
-              className="absolute bottom-2 right-2 bg-black/70 hover:bg-black/90 text-white text-xs font-medium px-2 py-1 rounded-full shadow-sm flex items-center gap-1 transition-colors"
-              onClick={(e) => {
-                e.stopPropagation();
-                setShowVideo(true);
-              }}
-            >
-              <Play className="w-3 h-3 fill-white" />
-              Video
-            </button>
-          )}
         </div>
 
         {/* Content section - 40% height */}
@@ -148,15 +130,6 @@ export function ProductCard({ product, subcategory, category, isDelivery = false
               <p className="text-xs text-muted-foreground mt-0.5">{product.chineseName}</p>
             )}
           </div>
-
-          {/* Rating display */}
-          {rating && rating.averageRating && rating.reviewCount > 0 && (
-            <div className="flex items-center gap-1 mt-1">
-              <Star className="w-3.5 h-3.5 fill-yellow-400 text-yellow-400" />
-              <span className="text-xs font-medium">{rating.averageRating}</span>
-              <span className="text-xs text-muted-foreground">({rating.reviewCount})</span>
-            </div>
-          )}
 
           <div className="flex items-center justify-between mt-2">
             <div>
@@ -189,45 +162,6 @@ export function ProductCard({ product, subcategory, category, isDelivery = false
           onClose={() => setShowModal(false)}
         />
       )}
-
-      {/* Video Player Modal */}
-      <Dialog open={showVideo} onOpenChange={setShowVideo}>
-        <DialogContent className="max-w-3xl p-0 overflow-hidden bg-black">
-          <VisuallyHidden>
-            <DialogTitle>{product.name} - Video</DialogTitle>
-          </VisuallyHidden>
-          <button
-            onClick={() => setShowVideo(false)}
-            className="absolute top-2 right-2 z-10 bg-black/50 hover:bg-black/70 text-white rounded-full p-1.5 transition-colors"
-          >
-            <X className="w-5 h-5" />
-          </button>
-          {product.videoUrl && (
-            <video
-              src={product.videoUrl}
-              controls
-              autoPlay
-              className="w-full max-h-[80vh]"
-            />
-          )}
-          <div className="p-4 bg-background">
-            <h3 className="font-semibold text-lg">{product.name}</h3>
-            {product.chineseName && (
-              <p className="text-sm text-muted-foreground">{product.chineseName}</p>
-            )}
-            <Button
-              className="w-full mt-3"
-              onClick={() => {
-                setShowVideo(false);
-                setShowModal(true);
-              }}
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Add to Cart
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
     </>
   );
 }
