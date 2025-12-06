@@ -376,3 +376,8 @@
 
 ## Bug Fixes - Analytics
 - [x] Fix analytics to convert paise to rupees (divide amounts by 100)
+- [x] Fix video upload - added file size limit (10MB) and URL mode for larger videos
+- [x] Add video player modal when clicking video badge on product cards
+- [x] Support large video uploads (30MB+) via video URL input mode
+- [x] Implement direct S3 upload for large video files (up to 100MB) with progress tracking
+- [x] Add upload progress bar for large video uploads

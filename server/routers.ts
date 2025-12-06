@@ -781,7 +781,43 @@ export const appRouter = router({
         return { success: true, imageUrl: url };
       }),
 
-    // Upload product video
+    // Get upload credentials for direct browser upload (large files)
+    getVideoUploadUrl: adminProcedure
+      .input(z.object({
+        productId: z.number(),
+        fileName: z.string(),
+        mimeType: z.string(),
+      }))
+      .mutation(async ({ input }) => {
+        const { getUploadCredentials } = await import('./storage');
+        
+        // Generate unique file key
+        const ext = input.fileName.split('.').pop() || 'mp4';
+        const fileKey = `videos/${input.productId}-${Date.now()}.${ext}`;
+        
+        // Get upload credentials for direct browser upload
+        const { uploadUrl, apiKey, key } = getUploadCredentials(fileKey);
+        
+        return { uploadUrl, apiKey, key };
+      }),
+
+    // Confirm video upload and save URL to product
+    confirmVideoUpload: adminProcedure
+      .input(z.object({
+        productId: z.number(),
+        videoUrl: z.string(),
+      }))
+      .mutation(async ({ input }) => {
+        const dbInstance = await getDb();
+        if (!dbInstance) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
+        
+        // Update product with new video URL
+        await dbInstance.update(products).set({ videoUrl: input.videoUrl }).where(eq(products.id, input.productId));
+        
+        return { success: true, videoUrl: input.videoUrl };
+      }),
+
+    // Upload product video (for small files via base64)
     uploadProductVideo: adminProcedure
       .input(z.object({
         productId: z.number(),

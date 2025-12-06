@@ -1250,7 +1250,10 @@ function ReviewsTab() {
 function VideosTab() {
   const [selectedProduct, setSelectedProduct] = useState<number | null>(null);
   const [videoFile, setVideoFile] = useState<File | null>(null);
+  const [videoUrl, setVideoUrl] = useState('');
+  const [uploadMode, setUploadMode] = useState<'file' | 'url'>('file');
   const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
   
   const { data: products, refetch } = trpc.admin.getAllProducts.useQuery();
@@ -1267,6 +1270,20 @@ function VideosTab() {
       toast.error(error.message || 'Failed to upload video');
     },
   });
+
+  const getVideoUploadUrl = trpc.admin.getVideoUploadUrl.useMutation();
+  const confirmVideoUpload = trpc.admin.confirmVideoUpload.useMutation({
+    onSuccess: () => {
+      toast.success('Video uploaded successfully');
+      refetch();
+      setVideoFile(null);
+      setSelectedProduct(null);
+      setUploadProgress(0);
+    },
+    onError: (error) => {
+      toast.error(error.message || 'Failed to save video');
+    },
+  });
   
   const updateProduct = trpc.admin.updateProduct.useMutation({
     onSuccess: () => {
@@ -1276,26 +1293,105 @@ function VideosTab() {
   });
 
   const handleVideoUpload = async () => {
-    if (!selectedProduct || !videoFile) return;
+    if (!selectedProduct) return;
+    
+    if (uploadMode === 'url') {
+      // Direct URL mode - just save the URL to the product
+      if (!videoUrl.trim()) {
+        toast.error('Please enter a video URL');
+        return;
+      }
+      setUploading(true);
+      try {
+        await updateProduct.mutateAsync({
+          id: selectedProduct,
+          videoUrl: videoUrl.trim(),
+        });
+        setVideoUrl('');
+        setSelectedProduct(null);
+        toast.success('Video URL saved successfully');
+      } catch (error) {
+        toast.error('Failed to save video URL');
+      }
+      setUploading(false);
+      return;
+    }
+    
+    // File upload mode
+    if (!videoFile) return;
     
     setUploading(true);
+    setUploadProgress(0);
+    
     try {
-      // Convert file to base64
-      const reader = new FileReader();
-      reader.onload = async (e) => {
-        const base64 = e.target?.result as string;
-        await uploadVideo.mutateAsync({
+      // For large files (>10MB), use direct S3 upload
+      if (videoFile.size > 10 * 1024 * 1024) {
+        // Get upload credentials from server
+        const { uploadUrl, apiKey } = await getVideoUploadUrl.mutateAsync({
           productId: selectedProduct,
-          videoBase64: base64,
-          mimeType: videoFile.type,
           fileName: videoFile.name,
+          mimeType: videoFile.type,
         });
-        setUploading(false);
-      };
-      reader.readAsDataURL(videoFile);
+        
+        // Create FormData for direct upload
+        const formData = new FormData();
+        formData.append('file', videoFile, videoFile.name);
+        
+        // Upload directly to S3 with progress tracking
+        const xhr = new XMLHttpRequest();
+        
+        await new Promise<void>((resolve, reject) => {
+          xhr.upload.addEventListener('progress', (event) => {
+            if (event.lengthComputable) {
+              const progress = Math.round((event.loaded / event.total) * 100);
+              setUploadProgress(progress);
+            }
+          });
+          
+          xhr.addEventListener('load', async () => {
+            if (xhr.status >= 200 && xhr.status < 300) {
+              try {
+                const response = JSON.parse(xhr.responseText);
+                // Confirm upload and save URL to product
+                await confirmVideoUpload.mutateAsync({
+                  productId: selectedProduct,
+                  videoUrl: response.url,
+                });
+                resolve();
+              } catch (e) {
+                reject(new Error('Failed to parse upload response'));
+              }
+            } else {
+              reject(new Error(`Upload failed: ${xhr.status}`));
+            }
+          });
+          
+          xhr.addEventListener('error', () => reject(new Error('Upload failed')));
+          xhr.addEventListener('abort', () => reject(new Error('Upload cancelled')));
+          
+          xhr.open('POST', uploadUrl);
+          xhr.setRequestHeader('Authorization', `Bearer ${apiKey}`);
+          xhr.send(formData);
+        });
+      } else {
+        // For small files, use base64 upload
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+          const base64 = e.target?.result as string;
+          await uploadVideo.mutateAsync({
+            productId: selectedProduct,
+            videoBase64: base64,
+            mimeType: videoFile.type,
+            fileName: videoFile.name,
+          });
+        };
+        reader.readAsDataURL(videoFile);
+      }
     } catch (error) {
-      setUploading(false);
       toast.error('Failed to upload video');
+    } finally {
+      setUploading(false);
+      setUploadProgress(0);
     }
   };
 
@@ -1333,6 +1429,25 @@ function VideosTab() {
       {/* Upload Section */}
       <Card className="p-6">
         <h3 className="font-semibold mb-4">Upload New Video</h3>
+        
+        {/* Upload Mode Toggle */}
+        <div className="flex gap-2 mb-4">
+          <Button
+            variant={uploadMode === 'file' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setUploadMode('file')}
+          >
+            Upload File (up to 100MB)
+          </Button>
+          <Button
+            variant={uploadMode === 'url' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setUploadMode('url')}
+          >
+            Paste Video URL (any size)
+          </Button>
+        </div>
+        
         <div className="grid md:grid-cols-3 gap-4">
           <div>
             <Label>Select Product</Label>
@@ -1359,34 +1474,65 @@ function VideosTab() {
             </Select>
           </div>
           <div>
-            <Label>Video File (MP4, WebM)</Label>
-            <Input
-              type="file"
-              accept="video/mp4,video/webm"
-              onChange={(e) => setVideoFile(e.target.files?.[0] || null)}
-              className="mt-1"
-            />
-            {videoFile && (
-              <p className="text-xs text-muted-foreground mt-1">
-                {videoFile.name} ({(videoFile.size / 1024 / 1024).toFixed(2)} MB)
-              </p>
+            {uploadMode === 'file' ? (
+              <>
+                <Label>Video File (MP4, WebM - up to 100MB)</Label>
+                <Input
+                  type="file"
+                  accept="video/mp4,video/webm"
+                  onChange={(e) => setVideoFile(e.target.files?.[0] || null)}
+                  className="mt-1"
+                />
+                {videoFile && (
+                  <p className={`text-xs mt-1 ${videoFile.size > 100 * 1024 * 1024 ? 'text-destructive' : 'text-muted-foreground'}`}>
+                    {videoFile.name} ({(videoFile.size / 1024 / 1024).toFixed(2)} MB)
+                    {videoFile.size > 100 * 1024 * 1024 && ' - File too large! Max 100MB.'}
+                    {videoFile.size > 10 * 1024 * 1024 && videoFile.size <= 100 * 1024 * 1024 && ' - Large file, will use direct upload'}
+                  </p>
+                )}
+                {uploading && uploadProgress > 0 && (
+                  <div className="mt-2">
+                    <div className="h-2 bg-secondary rounded-full overflow-hidden">
+                      <div 
+                        className="h-full bg-primary transition-all duration-300"
+                        style={{ width: `${uploadProgress}%` }}
+                      />
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">{uploadProgress}% uploaded</p>
+                  </div>
+                )}
+              </>
+            ) : (
+              <>
+                <Label>Video URL (YouTube, Vimeo, or direct link)</Label>
+                <Input
+                  type="url"
+                  placeholder="https://..."
+                  value={videoUrl}
+                  onChange={(e) => setVideoUrl(e.target.value)}
+                  className="mt-1"
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  For large videos, upload to Google Drive, Dropbox, or YouTube and paste the link here.
+                </p>
+              </>
             )}
           </div>
           <div className="flex items-end">
             <Button
               onClick={handleVideoUpload}
-              disabled={!selectedProduct || !videoFile || uploading}
+              disabled={!selectedProduct || (uploadMode === 'file' ? (!videoFile || (videoFile && videoFile.size > 100 * 1024 * 1024)) : !videoUrl.trim()) || uploading}
               className="w-full"
             >
               {uploading ? (
                 <>
                   <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-                  Uploading...
+                  {uploadMode === 'file' && uploadProgress > 0 ? `Uploading ${uploadProgress}%...` : uploadMode === 'file' ? 'Uploading...' : 'Saving...'}
                 </>
               ) : (
                 <>
                   <Upload className="w-4 h-4 mr-2" />
-                  Upload Video
+                  {uploadMode === 'file' ? 'Upload Video' : 'Save Video URL'}
                 </>
               )}
             </Button>

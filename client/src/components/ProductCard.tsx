@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Plus, Leaf, Egg, Star, Play } from 'lucide-react';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Plus, Leaf, Egg, Star, Play, X } from 'lucide-react';
 import { formatPrice, GST_RATE } from '@shared/types';
 import { ProductCustomizationModal } from './ProductCustomizationModal';
 
@@ -47,6 +48,7 @@ interface ProductCardProps {
 
 export function ProductCard({ product, subcategory, category, isDelivery = false, rating }: ProductCardProps) {
   const [showModal, setShowModal] = useState(false);
+  const [showVideo, setShowVideo] = useState(false);
 
   // Calculate display price (with GST)
   const getDisplayPrice = () => {
@@ -120,14 +122,18 @@ export function ProductCard({ product, subcategory, category, isDelivery = false
               </span>
             </div>
           )}
-          {/* Video badge */}
+          {/* Video badge - clickable to play video */}
           {product.videoUrl && (
-            <div className="absolute bottom-2 right-2">
-              <span className="bg-black/70 text-white text-xs font-medium px-2 py-1 rounded-full shadow-sm flex items-center gap-1">
-                <Play className="w-3 h-3 fill-white" />
-                Video
-              </span>
-            </div>
+            <button
+              className="absolute bottom-2 right-2 bg-black/70 hover:bg-black/90 text-white text-xs font-medium px-2 py-1 rounded-full shadow-sm flex items-center gap-1 transition-colors"
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowVideo(true);
+              }}
+            >
+              <Play className="w-3 h-3 fill-white" />
+              Video
+            </button>
           )}
         </div>
 
@@ -182,6 +188,42 @@ export function ProductCard({ product, subcategory, category, isDelivery = false
           onClose={() => setShowModal(false)}
         />
       )}
+
+      {/* Video Player Modal */}
+      <Dialog open={showVideo} onOpenChange={setShowVideo}>
+        <DialogContent className="max-w-3xl p-0 overflow-hidden bg-black">
+          <button
+            onClick={() => setShowVideo(false)}
+            className="absolute top-2 right-2 z-10 bg-black/50 hover:bg-black/70 text-white rounded-full p-1.5 transition-colors"
+          >
+            <X className="w-5 h-5" />
+          </button>
+          {product.videoUrl && (
+            <video
+              src={product.videoUrl}
+              controls
+              autoPlay
+              className="w-full max-h-[80vh]"
+            />
+          )}
+          <div className="p-4 bg-background">
+            <h3 className="font-semibold text-lg">{product.name}</h3>
+            {product.chineseName && (
+              <p className="text-sm text-muted-foreground">{product.chineseName}</p>
+            )}
+            <Button
+              className="w-full mt-3"
+              onClick={() => {
+                setShowVideo(false);
+                setShowModal(true);
+              }}
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Add to Cart
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
