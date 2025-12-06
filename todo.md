@@ -283,3 +283,11 @@
 
 - [x] Remove payment method section for delivery orders (only online payment required)
 - [x] Add status update buttons to Admin Orders tab for workflow progression
+
+
+## Phase 18 - Bug Fixes
+
+### Scrolling Issues
+- [x] Fix header overlap on homepage hero section
+- [x] Ensure smooth page scrolling
+- [x] Add solid background to header for visibility
