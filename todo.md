@@ -291,3 +291,16 @@
 - [x] Fix header overlap on homepage hero section
 - [x] Ensure smooth page scrolling
 - [x] Add solid background to header for visibility
+
+
+### Mochi Ordering Fix
+- [x] Enforce pair-only mochi selection for delivery/pickup orders (minimum 2 pieces)
+- [x] Single mochis only allowed for in-store orders
+- [x] Update cart to convert single mochis to pairs when switching to delivery/pickup
+- [x] Show "Min. 2 pcs" badge on mochi cards for delivery
+- [x] Show minimum quantity message in customization modal
+
+### Instagram Integration
+- [x] Add Instagram link with icon to homepage footer
+- [x] Add Instagram link to About page footer
+- [x] Link to @taiwan_maami Instagram profile

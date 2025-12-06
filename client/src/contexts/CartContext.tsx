@@ -74,8 +74,27 @@ function cartReducer(state: CartState, action: CartAction): CartState {
     }
     case 'CLEAR_CART':
       return { ...initialState, orderType: state.orderType };
-    case 'SET_ORDER_TYPE':
-      return { ...state, orderType: action.payload };
+    case 'SET_ORDER_TYPE': {
+      // When switching to delivery/pickup, ensure mochi items have minimum quantity of 2
+      const newOrderType = action.payload;
+      if (newOrderType === 'delivery' || newOrderType === 'pickup') {
+        const adjustedItems = state.items.map(item => {
+          // Check if this is a mochi item (by product name containing 'mochi')
+          const isMochi = item.productName.toLowerCase().includes('mochi');
+          if (isMochi && item.quantity < 2) {
+            // Upgrade to minimum 2 pieces
+            return {
+              ...item,
+              quantity: 2,
+              lineTotal: 2 * (item.unitPrice + item.addonsTotal),
+            };
+          }
+          return item;
+        });
+        return { ...state, orderType: newOrderType, items: adjustedItems };
+      }
+      return { ...state, orderType: newOrderType };
+    }
     case 'APPLY_DISCOUNT':
       return { ...state, discountCode: action.payload.code, discountAmount: action.payload.amount };
     case 'REMOVE_DISCOUNT':

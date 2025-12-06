@@ -110,11 +110,11 @@ export function ProductCard({ product, subcategory, category, isDelivery = false
               </span>
             )}
           </div>
-          {/* Mochi set indicator for delivery */}
+          {/* Mochi set indicator for delivery/pickup */}
           {isDelivery && isMochiProduct && (
             <div className="absolute top-2 right-2">
               <span className="bg-primary text-primary-foreground text-xs font-semibold px-2 py-1 rounded-full shadow-sm">
-                Set of 2
+                Min. 2 pcs
               </span>
             </div>
           )}

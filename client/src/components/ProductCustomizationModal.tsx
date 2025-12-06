@@ -75,8 +75,19 @@ export function ProductCustomizationModal({
   const [sugarLevel, setSugarLevel] = useState('100%');
   const [iceLevel, setIceLevel] = useState('Regular Ice');
   const [selectedAddons, setSelectedAddons] = useState<{ id: number; name: string; price: number }[]>([]);
-  const [quantity, setQuantity] = useState(1);
+  // Check if this is a mochi product
+  const isMochiProduct = subcategory.name.toLowerCase().includes('mochi');
+  // For delivery/pickup, mochis must be ordered in pairs (minimum 2)
+  const minQuantity = (isDelivery && isMochiProduct) ? 2 : 1;
+  const [quantity, setQuantity] = useState(minQuantity);
   const [specialInstructions, setSpecialInstructions] = useState('');
+
+  // Update quantity when switching to delivery mode for mochi products
+  useEffect(() => {
+    if (isDelivery && isMochiProduct && quantity < 2) {
+      setQuantity(2);
+    }
+  }, [isDelivery, isMochiProduct]);
   
   // Coconut Cream Cap option for latte drinks
   const [wantCoconutCreamCap, setWantCoconutCreamCap] = useState(false);
@@ -279,10 +290,10 @@ export function ProductCustomizationModal({
               {product.chineseName && (
                 <span className="block text-sm text-muted-foreground">{product.chineseName}</span>
               )}
-              {/* Mochi set indicator for delivery */}
-              {isDelivery && subcategory.name.toLowerCase().includes('mochi') && (
+              {/* Mochi set indicator for delivery/pickup */}
+              {isDelivery && isMochiProduct && (
                 <span className="inline-block mt-1 bg-primary/10 text-primary text-xs font-semibold px-2 py-0.5 rounded-full">
-                  Set of 2 pieces
+                  Minimum 2 pieces for delivery/pickup
                 </span>
               )}
             </div>
@@ -627,12 +638,17 @@ export function ProductCustomizationModal({
           {/* Quantity */}
           <div>
             <h4 className="font-medium mb-3">Quantity</h4>
+            {isDelivery && isMochiProduct && (
+              <p className="text-sm text-muted-foreground mb-2">
+                Mochis are sold in pairs for delivery orders (minimum 2)
+              </p>
+            )}
             <div className="flex items-center gap-4">
               <Button
                 variant="outline"
                 size="icon"
-                onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                disabled={quantity <= 1}
+                onClick={() => setQuantity(Math.max(minQuantity, quantity - 1))}
+                disabled={quantity <= minQuantity}
               >
                 <Minus className="w-4 h-4" />
               </Button>
