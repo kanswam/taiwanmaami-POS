@@ -63,6 +63,7 @@ export function generateInvoiceHtml(data: InvoiceData): string {
     <div>
       <div class="logo">Taiwan Maami</div>
       <div style="color: #666; font-size: 14px;">Authentic Taiwanese Bubble Tea</div>
+      <div style="color: #888; font-size: 11px; margin-top: 4px;">A unit of Thamarai Foods and Trading Private Limited</div>
     </div>
     <div style="text-align: right;">
       <div class="invoice-title">INVOICE</div>
@@ -139,6 +140,10 @@ export function generateInvoiceHtml(data: InvoiceData): string {
 
   <div class="footer">
     <p>Thank you for choosing Taiwan Maami!</p>
+    <p style="margin-top: 15px; font-size: 11px; color: #888;">
+      <strong>Legal Entity:</strong> Thamarai Foods and Trading Private Limited<br>
+      All payments are processed by Thamarai Foods and Trading Private Limited
+    </p>
     <p>For queries, contact us at: +91 98765 43210 | info@taiwanmaami.com</p>
     <p>GSTIN: 33XXXXX1234X1ZX</p>
   </div>

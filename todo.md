@@ -302,3 +302,6 @@
 - [x] Display average rating on product cards
 - [ ] Show reviews in product details/modal
 - [x] Add Admin Reviews tab for moderation (remove/hide reviews)
+
+### Invoice Updates
+- [x] Add Thamarai Foods and Trading Private Limited as legal entity on invoice for payment transparency
