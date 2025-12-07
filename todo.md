@@ -350,3 +350,10 @@
 - [x] Update hover states with #9e0b0f (deep red)
 - [x] Apply #a86462 (dusty rose) for secondary accents
 - [x] Verify colors across all pages
+
+
+## Phase 26 - Homepage Updates (Dec 7, 2025)
+
+- [x] Remove "Our Signature Creations" section from homepage
+- [x] Update "Explore Our Menu" with 4 category cards: Bubble Tea/Coffee, Hot Beverages, Asian Rice-Noodles-Bread, Asian Sweet Bites
+- [x] Add video backgrounds to each category card
