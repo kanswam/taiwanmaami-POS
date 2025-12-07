@@ -240,121 +240,7 @@ export const appRouter = router({
     updateStatus: staffProcedure
       .input(z.object({ orderId: z.number(), status: z.string() }))
       .mutation(async ({ input }) => {
-        // Get order details before updating
-        const order = await db.getOrderById(input.orderId);
-        
         await db.updateOrderStatus(input.orderId, input.status);
-        
-        // Award stamps when order is completed (only for logged-in users)
-        if (input.status === 'completed' && order?.userId) {
-          const dbInstance = await getDb();
-          if (dbInstance) {
-            // Get current user stamp count
-            const [user] = await dbInstance
-              .select({
-                stampCount: users.stampCount,
-                lifetimeStamps: users.lifetimeStamps,
-              })
-              .from(users)
-              .where(eq(users.id, order.userId));
-            
-            const isFirstOrder = (user?.lifetimeStamps || 0) === 0;
-            const orderTotal = order.totalAmount || 0;
-            let stampsEarned = Math.floor(orderTotal / 45000); // 1 stamp per ₹450
-            let bonusStamps = 0;
-            let welcomeStamp = 0;
-            
-            // Bonus stamp for orders ≥ ₹900
-            if (orderTotal >= 90000) {
-              bonusStamps = 1;
-            }
-            
-            // Welcome stamp for first order
-            if (isFirstOrder) {
-              welcomeStamp = 1;
-            }
-            
-            const totalStamps = stampsEarned + bonusStamps + welcomeStamp;
-            
-            if (totalStamps > 0) {
-              // Update user stamps
-              const newStampCount = (user?.stampCount || 0) + totalStamps;
-              const newLifetimeStamps = (user?.lifetimeStamps || 0) + totalStamps;
-              
-              await dbInstance
-                .update(users)
-                .set({
-                  stampCount: newStampCount,
-                  lifetimeStamps: newLifetimeStamps,
-                  lastStampDate: new Date(),
-                })
-                .where(eq(users.id, order.userId));
-              
-              // Log transactions
-              if (stampsEarned > 0) {
-                await dbInstance.insert(stampTransactions).values({
-                  userId: order.userId,
-                  orderId: input.orderId,
-                  action: 'earn',
-                  stamps: stampsEarned,
-                  orderTotal: orderTotal,
-                  description: `Earned ${stampsEarned} stamp(s) for order`,
-                });
-              }
-              
-              if (bonusStamps > 0) {
-                await dbInstance.insert(stampTransactions).values({
-                  userId: order.userId,
-                  orderId: input.orderId,
-                  action: 'bonus',
-                  stamps: bonusStamps,
-                  orderTotal: orderTotal,
-                  description: 'Bonus stamp for spending ₹900+',
-                });
-              }
-              
-              if (welcomeStamp > 0) {
-                await dbInstance.insert(stampTransactions).values({
-                  userId: order.userId,
-                  orderId: input.orderId,
-                  action: 'welcome',
-                  stamps: welcomeStamp,
-                  orderTotal: orderTotal,
-                  description: 'Welcome stamp for first order',
-                });
-              }
-              
-              // Check if reward earned (10 stamps)
-              let currentStamps = newStampCount;
-              while (currentStamps >= 10) {
-                currentStamps -= 10;
-                
-                // Generate unique voucher code
-                const voucherCode = `TM${Date.now().toString(36).toUpperCase()}${Math.random().toString(36).substring(2, 6).toUpperCase()}}`;
-                
-                // Create reward (expires in 30 days)
-                const expiresAt = new Date();
-                expiresAt.setDate(expiresAt.getDate() + 30);
-                
-                await dbInstance.insert(loyaltyRewards).values({
-                  userId: order.userId,
-                  rewardType: 'free_large_bubble_tea',
-                  voucherCode,
-                  expiresAt,
-                });
-              }
-              
-              // Update stamp count after rewards
-              if (currentStamps !== newStampCount) {
-                await dbInstance
-                  .update(users)
-                  .set({ stampCount: currentStamps })
-                  .where(eq(users.id, order.userId));
-              }
-            }
-          }
-        }
-        
         return { success: true };
       }),
 
@@ -687,25 +573,6 @@ export const appRouter = router({
     getAllDiscounts: adminProcedure.query(async () => {
       return db.getAllDiscounts();
     }),
-
-    updateDiscount: adminProcedure
-      .input(z.object({
-        id: z.number(),
-        isActive: z.boolean().optional(),
-        code: z.string().optional(),
-        description: z.string().nullable().optional(),
-        value: z.number().optional(),
-        minOrderAmount: z.number().optional(),
-        maxDiscountAmount: z.number().nullable().optional(),
-        usageLimit: z.number().nullable().optional(),
-      }))
-      .mutation(async ({ input }) => {
-        const dbInstance = await getDb();
-        if (!dbInstance) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
-        const { id, ...data } = input;
-        await dbInstance.update(discounts).set(data).where(eq(discounts.id, id));
-        return { success: true };
-      }),
 
     // Get all products for admin
     getAllProducts: adminProcedure.query(async () => {

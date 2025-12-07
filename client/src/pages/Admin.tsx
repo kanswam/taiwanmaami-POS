@@ -127,8 +127,7 @@ export default function Admin() {
 function ProductsTab() {
   const { data: menuData, refetch } = trpc.menu.getFullMenu.useQuery({ isDelivery: false });
   const [searchQuery, setSearchQuery] = useState('');
-  const [expandedCategories, setExpandedCategories] = useState<Set<number>>(new Set());
-  const [expandedSubcategories, setExpandedSubcategories] = useState<Set<number>>(new Set());
+  const [selectedCategory, setSelectedCategory] = useState('all');
 
   const updateProduct = trpc.admin.updateProduct.useMutation({
     onSuccess: () => {
@@ -138,73 +137,28 @@ function ProductsTab() {
     onError: (err) => toast.error(err.message),
   });
 
-  const uploadImage = trpc.admin.uploadProductImage.useMutation({
-    onSuccess: () => {
-      toast.success('Image uploaded');
-      refetch();
-    },
-    onError: (err) => toast.error(err.message),
-  });
-
-  const toggleCategory = (catId: number) => {
-    const newSet = new Set(expandedCategories);
-    if (newSet.has(catId)) {
-      newSet.delete(catId);
-    } else {
-      newSet.add(catId);
+  const filteredProducts = menuData?.products.filter(p => {
+    if (selectedCategory !== 'all') {
+      const sub = menuData.subcategories.find(s => s.id === p.subcategoryId);
+      const cat = menuData.categories.find(c => c.id === sub?.categoryId);
+      if (cat?.slug !== selectedCategory) return false;
     }
-    setExpandedCategories(newSet);
-  };
-
-  const toggleSubcategory = (subId: number) => {
-    const newSet = new Set(expandedSubcategories);
-    if (newSet.has(subId)) {
-      newSet.delete(subId);
-    } else {
-      newSet.add(subId);
+    if (searchQuery) {
+      return p.name.toLowerCase().includes(searchQuery.toLowerCase());
     }
-    setExpandedSubcategories(newSet);
+    return true;
+  }) || [];
+
+  const toggleStock = (productId: number, currentStatus: boolean) => {
+    updateProduct.mutate({ id: productId, isInStock: !currentStatus });
   };
 
-  const expandAll = () => {
-    setExpandedCategories(new Set(menuData?.categories.map(c => c.id) || []));
-    setExpandedSubcategories(new Set(menuData?.subcategories.map(s => s.id) || []));
+  const toggleActive = (productId: number, currentStatus: boolean) => {
+    updateProduct.mutate({ id: productId, isActive: !currentStatus });
   };
-
-  const collapseAll = () => {
-    setExpandedCategories(new Set());
-    setExpandedSubcategories(new Set());
-  };
-
-  const handleImageUpload = async (productId: number, file: File) => {
-    if (file.size > 20 * 1024 * 1024) {
-      toast.error('Image must be less than 20MB');
-      return;
-    }
-    const reader = new FileReader();
-    reader.onload = async () => {
-      const base64 = reader.result as string;
-      await uploadImage.mutateAsync({
-        productId,
-        imageBase64: base64,
-        mimeType: file.type,
-        fileName: file.name,
-      });
-    };
-    reader.readAsDataURL(file);
-  };
-
-  // Filter products by search
-  const filteredProducts = searchQuery
-    ? menuData?.products.filter(p => 
-        p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        p.chineseName?.toLowerCase().includes(searchQuery.toLowerCase())
-      ) || []
-    : null;
 
   return (
     <div className="space-y-4">
-      {/* Search and Controls */}
       <div className="flex flex-col sm:flex-row gap-4">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -215,224 +169,89 @@ function ProductsTab() {
             className="pl-10"
           />
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={expandAll}>
-            <ChevronDown className="w-4 h-4 mr-1" /> Expand All
-          </Button>
-          <Button variant="outline" size="sm" onClick={collapseAll}>
-            <ChevronUp className="w-4 h-4 mr-1" /> Collapse All
-          </Button>
-        </div>
+        <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+          <SelectTrigger className="w-48">
+            <SelectValue placeholder="All Categories" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Categories</SelectItem>
+            {menuData?.categories.map((cat) => (
+              <SelectItem key={cat.id} value={cat.slug}>{cat.name}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
-      {/* Search Results */}
-      {filteredProducts && (
-        <Card className="p-4">
-          <h3 className="font-semibold mb-4">Search Results ({filteredProducts.length})</h3>
-          <div className="space-y-2">
-            {filteredProducts.map((product) => {
-              const sub = menuData?.subcategories.find(s => s.id === product.subcategoryId);
-              const cat = menuData?.categories.find(c => c.id === sub?.categoryId);
-              return (
-                <ProductRow 
-                  key={product.id} 
-                  product={product} 
-                  category={cat?.name || ''}
-                  subcategory={sub?.name || ''}
-                  onUpdate={refetch}
-                  updateProduct={updateProduct}
-                  onImageUpload={handleImageUpload}
-                />
-              );
-            })}
-          </div>
-        </Card>
-      )}
-
-      {/* Category/Subcategory Organization */}
-      {!filteredProducts && menuData?.categories.map((category) => {
-        const categorySubcategories = menuData.subcategories.filter(s => s.categoryId === category.id);
-        const isExpanded = expandedCategories.has(category.id);
-        
-        return (
-          <Card key={category.id} className="overflow-hidden">
-            {/* Category Header */}
-            <button
-              onClick={() => toggleCategory(category.id)}
-              className="w-full flex items-center justify-between p-4 bg-primary/10 hover:bg-primary/20 transition-colors"
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-primary/20 flex items-center justify-center">
-                  {category.imageUrl ? (
-                    <img src={category.imageUrl} alt="" className="w-full h-full object-cover rounded-lg" />
-                  ) : (
-                    <Package className="w-5 h-5 text-primary" />
-                  )}
-                </div>
-                <div className="text-left">
-                  <h3 className="font-semibold text-lg">{category.name}</h3>
-                  <p className="text-sm text-muted-foreground">
-                    {categorySubcategories.length} subcategories
-                  </p>
-                </div>
-              </div>
-              {isExpanded ? (
-                <ChevronUp className="w-5 h-5 text-muted-foreground" />
-              ) : (
-                <ChevronDown className="w-5 h-5 text-muted-foreground" />
-              )}
-            </button>
-
-            {/* Subcategories */}
-            {isExpanded && (
-              <div className="divide-y">
-                {categorySubcategories.map((subcategory) => {
-                  const subcategoryProducts = menuData.products.filter(p => p.subcategoryId === subcategory.id);
-                  const isSubExpanded = expandedSubcategories.has(subcategory.id);
-                  
-                  return (
-                    <div key={subcategory.id}>
-                      {/* Subcategory Header */}
-                      <button
-                        onClick={() => toggleSubcategory(subcategory.id)}
-                        className="w-full flex items-center justify-between p-3 pl-8 bg-secondary/50 hover:bg-secondary transition-colors"
-                      >
-                        <div className="flex items-center gap-2">
-                          <span className="font-medium">{subcategory.name}</span>
-                          <span className="text-xs text-muted-foreground bg-background px-2 py-0.5 rounded">
-                            {subcategoryProducts.length} products
-                          </span>
-                        </div>
-                        {isSubExpanded ? (
-                          <ChevronUp className="w-4 h-4 text-muted-foreground" />
-                        ) : (
-                          <ChevronDown className="w-4 h-4 text-muted-foreground" />
-                        )}
-                      </button>
-
-                      {/* Products */}
-                      {isSubExpanded && (
-                        <div className="p-4 pl-8 space-y-2 bg-background">
-                          {subcategoryProducts.length === 0 ? (
-                            <p className="text-sm text-muted-foreground italic">No products in this subcategory</p>
+      <Card>
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-secondary">
+              <tr>
+                <th className="text-left p-3 text-sm font-medium">Product</th>
+                <th className="text-left p-3 text-sm font-medium">Category</th>
+                <th className="text-right p-3 text-sm font-medium">In-Store Price</th>
+                <th className="text-right p-3 text-sm font-medium">Delivery Price</th>
+                <th className="text-center p-3 text-sm font-medium">In Stock</th>
+                <th className="text-center p-3 text-sm font-medium">Active</th>
+                <th className="text-center p-3 text-sm font-medium">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredProducts.map((product) => {
+                const sub = menuData?.subcategories.find(s => s.id === product.subcategoryId);
+                const cat = menuData?.categories.find(c => c.id === sub?.categoryId);
+                return (
+                  <tr key={product.id} className="border-b hover:bg-secondary/50">
+                    <td className="p-3">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded bg-secondary overflow-hidden">
+                          {product.imageUrl ? (
+                            <img src={product.imageUrl} alt="" className="w-full h-full object-cover" />
                           ) : (
-                            subcategoryProducts.map((product) => (
-                              <ProductRow
-                                key={product.id}
-                                product={product}
-                                category={category.name}
-                                subcategory={subcategory.name}
-                                onUpdate={refetch}
-                                updateProduct={updateProduct}
-                                onImageUpload={handleImageUpload}
-                              />
-                            ))
+                            <div className="w-full h-full flex items-center justify-center">
+                              <ImageIcon className="w-4 h-4 text-muted-foreground" />
+                            </div>
                           )}
                         </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </Card>
-        );
-      })}
-    </div>
-  );
-}
-
-// Product Row Component
-function ProductRow({ 
-  product, 
-  category, 
-  subcategory, 
-  onUpdate, 
-  updateProduct,
-  onImageUpload 
-}: { 
-  product: any; 
-  category: string;
-  subcategory: string;
-  onUpdate: () => void;
-  updateProduct: any;
-  onImageUpload: (productId: number, file: File) => void;
-}) {
-  const fileInputRef = useState<HTMLInputElement | null>(null);
-
-  return (
-    <div className="flex items-center gap-4 p-3 rounded-lg border bg-card hover:bg-secondary/30 transition-colors">
-      {/* Image with upload */}
-      <div className="relative group">
-        <div className="w-14 h-14 rounded-lg bg-secondary overflow-hidden">
-          {product.imageUrl ? (
-            <img src={product.imageUrl} alt="" className="w-full h-full object-cover" />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center">
-              <ImageIcon className="w-6 h-6 text-muted-foreground" />
-            </div>
-          )}
+                        <div>
+                          <p className="font-medium">{product.name}</p>
+                          {product.chineseName && (
+                            <p className="text-xs text-muted-foreground">{product.chineseName}</p>
+                          )}
+                        </div>
+                      </div>
+                    </td>
+                    <td className="p-3 text-sm text-muted-foreground">
+                      {cat?.name} / {sub?.name}
+                    </td>
+                    <td className="p-3 text-right">
+                      {product.instorePrice ? formatPrice(product.instorePrice) : '-'}
+                    </td>
+                    <td className="p-3 text-right">
+                      {product.deliveryPrice ? formatPrice(product.deliveryPrice) : '-'}
+                    </td>
+                    <td className="p-3 text-center">
+                      <Switch
+                        checked={product.isInStock}
+                        onCheckedChange={() => toggleStock(product.id, product.isInStock)}
+                      />
+                    </td>
+                    <td className="p-3 text-center">
+                      <Switch
+                        checked={product.isActive}
+                        onCheckedChange={() => toggleActive(product.id, product.isActive)}
+                      />
+                    </td>
+                    <td className="p-3 text-center">
+                      <ProductEditDialog product={product} onUpdate={refetch} />
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
-        <label className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer rounded-lg">
-          <Upload className="w-5 h-5 text-white" />
-          <input
-            type="file"
-            accept="image/*"
-            className="hidden"
-            onChange={(e) => {
-              const file = e.target.files?.[0];
-              if (file) onImageUpload(product.id, file);
-            }}
-          />
-        </label>
-      </div>
-
-      {/* Product Info */}
-      <div className="flex-1 min-w-0">
-        <p className="font-medium truncate">{product.name}</p>
-        {product.chineseName && (
-          <p className="text-xs text-muted-foreground truncate">{product.chineseName}</p>
-        )}
-        <p className="text-xs text-muted-foreground">{category} / {subcategory}</p>
-      </div>
-
-      {/* Prices */}
-      <div className="text-right text-sm">
-        <p className="text-muted-foreground">In-store: {product.instorePrice ? formatPrice(product.instorePrice) : '-'}</p>
-        <p className="text-muted-foreground">Delivery: {product.deliveryPrice ? formatPrice(product.deliveryPrice) : '-'}</p>
-      </div>
-
-      {/* Availability Toggles */}
-      <div className="flex flex-col gap-1">
-        <div className="flex items-center gap-2">
-          <Switch
-            checked={product.availableInstore}
-            onCheckedChange={() => updateProduct.mutate({ id: product.id, availableInstore: !product.availableInstore })}
-            className="scale-75"
-          />
-          <span className="text-xs text-muted-foreground w-16">In-store</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <Switch
-            checked={product.availableDelivery}
-            onCheckedChange={() => updateProduct.mutate({ id: product.id, availableDelivery: !product.availableDelivery })}
-            className="scale-75"
-          />
-          <span className="text-xs text-muted-foreground w-16">Delivery</span>
-        </div>
-      </div>
-
-      {/* Stock Toggle */}
-      <div className="flex flex-col items-center gap-1">
-        <Switch
-          checked={product.isInStock}
-          onCheckedChange={() => updateProduct.mutate({ id: product.id, isInStock: !product.isInStock })}
-        />
-        <span className="text-xs text-muted-foreground">In Stock</span>
-      </div>
-
-      {/* Edit Button */}
-      <ProductEditDialog product={product} onUpdate={onUpdate} />
+      </Card>
     </div>
   );
 }
@@ -741,18 +560,6 @@ function DiscountsTab() {
   const { data: discounts, refetch } = trpc.admin.getAllDiscounts.useQuery();
   const [showCreate, setShowCreate] = useState(false);
 
-  const updateDiscount = trpc.admin.updateDiscount.useMutation({
-    onSuccess: () => {
-      toast.success('Discount updated');
-      refetch();
-    },
-    onError: (err) => toast.error(err.message),
-  });
-
-  const toggleActive = (discountId: number, currentStatus: boolean) => {
-    updateDiscount.mutate({ id: discountId, isActive: !currentStatus });
-  };
-
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
@@ -778,9 +585,9 @@ function DiscountsTab() {
             </thead>
             <tbody>
               {discounts?.map((discount: any) => (
-                <tr key={discount.id} className={`border-b hover:bg-secondary/50 ${!discount.isActive ? 'opacity-50' : ''}`}>
+                <tr key={discount.id} className="border-b hover:bg-secondary/50">
                   <td className="p-3 font-mono font-medium">{discount.code}</td>
-                  <td className="p-3 capitalize">{discount.type.replace('_', ' ')}</td>
+                  <td className="p-3 capitalize">{discount.type}</td>
                   <td className="p-3 text-right">
                     {discount.type === 'percentage' ? `${discount.value}%` : formatPrice(discount.value)}
                   </td>
@@ -791,10 +598,11 @@ function DiscountsTab() {
                     {discount.usageCount} / {discount.usageLimit || '∞'}
                   </td>
                   <td className="p-3 text-center">
-                    <Switch
-                      checked={discount.isActive}
-                      onCheckedChange={() => toggleActive(discount.id, discount.isActive)}
-                    />
+                    {discount.isActive ? (
+                      <Check className="w-4 h-4 text-green-600 mx-auto" />
+                    ) : (
+                      <X className="w-4 h-4 text-red-600 mx-auto" />
+                    )}
                   </td>
                 </tr>
               ))}

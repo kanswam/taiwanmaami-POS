@@ -342,33 +342,11 @@
 - [x] Verify order summary shows correct breakdown: Subtotal + SGST + CGST = Total
 
 
-## Phase 21 - Loyalty Stamp Bug Fix (Dec 7, 2025)
+## Phase 25 - Color Palette Update (Dec 7, 2025)
 
-- [x] Fix stamps not being awarded for completed orders
-- [x] Verify earnStamps procedure is called when order is completed
-- [x] Test stamp calculation: 1 stamp per ₹450 + bonus stamp for ₹900+
-
-
-## Phase 22 - Reward Redemption Flow (Dec 7, 2025)
-
-- [x] Show available rewards on cart page for logged-in users
-- [x] Auto-apply reward when user has available reward and bubble tea in cart
-- [x] Find cheapest bubble tea in cart and make it free when reward applied
-- [x] Mark reward as redeemed after order completion
-
-
-## Phase 23 - POS Session Error Fix (Dec 7, 2025)
-
-- [x] Fix "Session not found" error on POS page
-- [x] Verify POS session creation and retrieval works correctly
-
-
-## Phase 24 - Admin Product Management Improvements (Dec 7, 2025)
-
-- [x] Add availableForDelivery and availableInstore fields to products schema (already exists)
-- [x] Reorganize Products page with category/subcategory sections
-- [x] Add collapsible category sections for easier navigation
-- [x] Add product image upload directly on products page
-- [x] Add toggle switches for delivery/instore availability per product
-- [x] Update menu queries to filter by availability based on order type
-- [x] Add discount code deactivation option instead of delete
+- [x] Update primary color to #bd302c (warm red)
+- [x] Update secondary/accent to #a85348 (terracotta)
+- [x] Update background tones with #d2b48c (tan/wheat)
+- [x] Update hover states with #9e0b0f (deep red)
+- [x] Apply #a86462 (dusty rose) for secondary accents
+- [x] Verify colors across all pages
