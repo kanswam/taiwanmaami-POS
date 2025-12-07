@@ -311,6 +311,7 @@ export default function Home() {
                 <h3 className="font-bold text-lg">Taiwan Maami</h3>
                 <span className="text-background/50">×</span>
                 <img src="/images/moutan-logo.png" alt="Moutan" className="h-8 w-auto invert" />
+                <span className="font-bold text-lg">Moutan</span>
               </div>
               <p className="text-sm text-background/70 mb-4">
                 Authentic Taiwanese bubble tea and Asian cuisine in Chennai.

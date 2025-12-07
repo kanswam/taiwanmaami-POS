@@ -46,6 +46,7 @@ export function Header() {
                 (e.target as HTMLImageElement).style.display = 'none';
               }}
             />
+            <span className="font-bold text-xl text-primary hidden sm:block">Moutan</span>
           </Link>
 
           {/* Desktop Navigation */}
