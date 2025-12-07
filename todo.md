@@ -405,3 +405,7 @@
 - [x] Homepage category video cards link to subcategory pages
 - [x] Menu navigation goes to subcategory selection page
 - [x] Subcategory cards link to filtered product menu
+
+## Phase 23 - Video Updates
+
+- [x] Update Bubble Tea/Coffee category video with Creme Brulee Taro video
