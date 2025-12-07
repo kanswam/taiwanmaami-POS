@@ -361,3 +361,14 @@
 
 - [x] Fix "Session not found" error on POS page
 - [x] Verify POS session creation and retrieval works correctly
+
+
+## Phase 24 - Admin Product Management Improvements (Dec 7, 2025)
+
+- [x] Add availableForDelivery and availableInstore fields to products schema (already exists)
+- [x] Reorganize Products page with category/subcategory sections
+- [x] Add collapsible category sections for easier navigation
+- [x] Add product image upload directly on products page
+- [x] Add toggle switches for delivery/instore availability per product
+- [x] Update menu queries to filter by availability based on order type
+- [x] Add discount code deactivation option instead of delete

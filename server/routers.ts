@@ -688,6 +688,25 @@ export const appRouter = router({
       return db.getAllDiscounts();
     }),
 
+    updateDiscount: adminProcedure
+      .input(z.object({
+        id: z.number(),
+        isActive: z.boolean().optional(),
+        code: z.string().optional(),
+        description: z.string().nullable().optional(),
+        value: z.number().optional(),
+        minOrderAmount: z.number().optional(),
+        maxDiscountAmount: z.number().nullable().optional(),
+        usageLimit: z.number().nullable().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const dbInstance = await getDb();
+        if (!dbInstance) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
+        const { id, ...data } = input;
+        await dbInstance.update(discounts).set(data).where(eq(discounts.id, id));
+        return { success: true };
+      }),
+
     // Get all products for admin
     getAllProducts: adminProcedure.query(async () => {
       const dbInstance = await getDb();
