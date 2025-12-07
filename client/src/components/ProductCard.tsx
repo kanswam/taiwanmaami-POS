@@ -46,6 +46,9 @@ interface ProductCardProps {
 export function ProductCard({ product, subcategory, category, isDelivery = false }: ProductCardProps) {
   const [showModal, setShowModal] = useState(false);
 
+  // Check if this is a mochi product (for delivery/pickup, mochis are sold as set of 2)
+  const isMochiProduct = subcategory.name.toLowerCase().includes('mochi');
+
   // Calculate display price (with GST)
   const getDisplayPrice = () => {
     if (subcategory.hasSizeVariants) {
@@ -58,9 +61,18 @@ export function ProductCard({ product, subcategory, category, isDelivery = false
         return Math.round(basePrice * (1 + GST_RATE));
       }
     } else {
-      // For fixed price items
-      const basePrice = isDelivery ? (product.deliveryPrice || product.instorePrice || 0) : (product.instorePrice || 0);
-      return Math.round(basePrice * (1 + GST_RATE));
+      // For fixed price items (mochis, food, etc.)
+      // For mochis in delivery/pickup mode, use deliveryPrice (which is the set of 2 price)
+      if (isDelivery && isMochiProduct) {
+        const basePrice = product.deliveryPrice || product.instorePrice || 0;
+        return Math.round(basePrice * (1 + GST_RATE));
+      } else if (isDelivery) {
+        const basePrice = product.deliveryPrice || product.instorePrice || 0;
+        return Math.round(basePrice * (1 + GST_RATE));
+      } else {
+        const basePrice = product.instorePrice || 0;
+        return Math.round(basePrice * (1 + GST_RATE));
+      }
     }
   };
 
@@ -69,9 +81,6 @@ export function ProductCard({ product, subcategory, category, isDelivery = false
 
   // Default placeholder image
   const imageUrl = product.imageUrl || '/placeholder-drink.jpg';
-  
-  // Check if this is a mochi product (for delivery, mochis are sold as set of 2)
-  const isMochiProduct = subcategory.name.toLowerCase().includes('mochi');
 
   return (
     <>
@@ -114,7 +123,7 @@ export function ProductCard({ product, subcategory, category, isDelivery = false
           {isDelivery && isMochiProduct && (
             <div className="absolute top-2 right-2">
               <span className="bg-primary text-primary-foreground text-xs font-semibold px-2 py-1 rounded-full shadow-sm">
-                Min. 2 pcs
+                Set of 2
               </span>
             </div>
           )}

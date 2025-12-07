@@ -45,7 +45,8 @@ export default function Cart() {
     setIsApplyingDiscount(false);
   };
 
-  const displayTotal = Math.round(total * (1 + GST_RATE));
+  // Total already includes GST from CartContext
+  const displayTotal = Math.round(total);
 
   if (itemCount === 0) {
     return (
@@ -236,7 +237,7 @@ export default function Cart() {
                 <hr />
                 <div className="flex justify-between text-lg font-semibold">
                   <span>Total</span>
-                  <span>{formatPrice(total + gst.total)}</span>
+                  <span>{formatPrice(total)}</span>
                 </div>
               </div>
 

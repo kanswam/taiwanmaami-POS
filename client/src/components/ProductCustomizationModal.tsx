@@ -181,7 +181,13 @@ export function ProductCustomizationModal({
   const milkAddonsTotal = selectedAddons.reduce((sum, a) => sum + a.price, 0);
   const addonsTotal = poppingBobaPrice + extraBobaPrice + milkAddonsTotal;
   const unitPrice = basePrice;
-  const lineTotal = (unitPrice + addonsTotal) * quantity;
+  
+  // For mochis in delivery/pickup mode:
+  // - deliveryPrice is the price for a SET OF 2 pieces
+  // - quantity represents individual pieces (must be even: 2, 4, 6...)
+  // - So we calculate: (price per set) × (quantity / 2) = total for all sets
+  const effectiveQuantity = (isDelivery && isMochiProduct) ? (quantity / 2) : quantity;
+  const lineTotal = (unitPrice + addonsTotal) * effectiveQuantity;
   const displayTotal = Math.round(lineTotal * (1 + GST_RATE));
 
   // Toggle addon selection

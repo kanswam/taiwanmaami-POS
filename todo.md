@@ -329,3 +329,14 @@
 - [x] Add locality dropdown to checkout address form
 - [x] Auto-fill pincode when locality selected
 - [x] Use existing CHENNAI_AREAS from shared/types.ts
+
+
+## Phase 20 - Mochi Pricing Fix (Dec 7, 2025)
+
+### GST Double-Counting Fix
+- [x] Fix Header.tsx - removed double GST calculation in cart total
+- [x] Fix Cart.tsx - removed double GST in order summary total
+- [x] Fix Menu.tsx - removed double GST in View Cart button
+- [x] Fix ProductCard.tsx - correct mochi pricing for delivery/pickup (use deliveryPrice)
+- [x] Fix ProductCustomizationModal.tsx - correct mochi set pricing calculation (divide by 2 for sets)
+- [x] Verify order summary shows correct breakdown: Subtotal + SGST + CGST = Total

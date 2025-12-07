@@ -202,7 +202,7 @@ export default function Menu() {
                 }}
                 subcategory={sub}
                 category={cat}
-                isDelivery={state.orderType === 'delivery'}
+                isDelivery={state.orderType !== 'instore'}
               />
             );
           })}
@@ -365,7 +365,7 @@ export default function Menu() {
                         imageUrl: product.imageUrl || PRODUCT_IMAGES[product.slug] || null,
                       }}
                       subcategory={sub}
-                      isDelivery={state.orderType === 'delivery'}
+                      isDelivery={state.orderType !== 'instore'}
                     />
                   );
                 })}
@@ -406,7 +406,7 @@ export default function Menu() {
           <Link href="/cart">
             <Button className="w-full h-14 text-lg shadow-lg">
               <ShoppingCart className="w-5 h-5 mr-2" />
-              View Cart ({itemCount} items) - {formatPrice(Math.round(total * 1.05))}
+              View Cart ({itemCount} items) - {formatPrice(Math.round(total))}
             </Button>
           </Link>
         </div>

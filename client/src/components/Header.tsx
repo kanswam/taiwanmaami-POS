@@ -66,7 +66,7 @@ export function Header() {
                       {itemCount}
                     </span>
                     <span className="hidden sm:inline ml-2 text-sm font-medium">
-                      {formatPrice(Math.round(total * 1.05))}
+                      {formatPrice(Math.round(total))}
                     </span>
                   </>
                 )}
