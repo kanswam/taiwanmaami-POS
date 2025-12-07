@@ -340,3 +340,10 @@
 - [x] Fix ProductCard.tsx - correct mochi pricing for delivery/pickup (use deliveryPrice)
 - [x] Fix ProductCustomizationModal.tsx - correct mochi set pricing calculation (divide by 2 for sets)
 - [x] Verify order summary shows correct breakdown: Subtotal + SGST + CGST = Total
+
+
+## Phase 21 - Loyalty Stamp Bug Fix (Dec 7, 2025)
+
+- [x] Fix stamps not being awarded for completed orders
+- [x] Verify earnStamps procedure is called when order is completed
+- [x] Test stamp calculation: 1 stamp per ₹450 + bonus stamp for ₹900+
