@@ -409,3 +409,5 @@
 ## Phase 23 - Video Updates
 
 - [x] Update Bubble Tea/Coffee category video with Creme Brulee Taro video
+- [x] Update Asian Sweet Bites category video with Matcha Mochi video
+- [x] Update Hot Beverages category video with Yuzu Chadian video
