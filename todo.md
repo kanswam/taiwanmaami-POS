@@ -347,3 +347,11 @@
 - [x] Fix stamps not being awarded for completed orders
 - [x] Verify earnStamps procedure is called when order is completed
 - [x] Test stamp calculation: 1 stamp per ₹450 + bonus stamp for ₹900+
+
+
+## Phase 22 - Reward Redemption Flow (Dec 7, 2025)
+
+- [x] Show available rewards on cart page for logged-in users
+- [x] Auto-apply reward when user has available reward and bubble tea in cart
+- [x] Find cheapest bubble tea in cart and make it free when reward applied
+- [x] Mark reward as redeemed after order completion
