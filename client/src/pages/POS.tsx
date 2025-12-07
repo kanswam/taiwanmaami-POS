@@ -105,12 +105,38 @@ export default function POS() {
     }
   }, [navigate]);
 
+  // Validate session exists in database
+  const { data: validSession, isLoading: validatingSession } = trpc.posAuth.getActiveSession.useQuery(
+    { employeeCode: posSession?.employeeCode || '' },
+    { enabled: !!posSession?.employeeCode }
+  );
+
+  // If session in localStorage doesn't match database, clear and redirect
+  useEffect(() => {
+    if (posSession && !validatingSession && validSession === null) {
+      // Session in localStorage but not in database - clear and redirect
+      clearPOSSession();
+      toast.error('Session expired. Please login again.');
+      navigate('/pos/login');
+    }
+  }, [posSession, validSession, validatingSession, navigate]);
+
   // End session mutation
   const endSessionMutation = trpc.posAuth.endSession.useMutation({
     onSuccess: () => {
       clearPOSSession();
       toast.success('Session ended');
       navigate('/pos/login');
+    },
+    onError: (error) => {
+      // If session not found, just clear localStorage and redirect
+      if (error.message.includes('Session not found')) {
+        clearPOSSession();
+        toast.info('Session already ended');
+        navigate('/pos/login');
+      } else {
+        toast.error('Failed to end session');
+      }
     },
   });
 

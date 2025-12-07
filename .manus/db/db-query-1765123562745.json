@@ -1,0 +1,18 @@
+{
+  "query": "SELECT id, employeeCode, employeeName, outletId, isActive, loginTime FROM pos_sessions ORDER BY id DESC LIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT id, employeeCode, employeeName, outletId, isActive, loginTime FROM pos_sessions ORDER BY id DESC LIMIT 5;",
+  "rows": [
+    {
+      "id": "1",
+      "employeeCode": "MD001",
+      "employeeName": "Theresa Cheng Yun Hu",
+      "outletId": "2",
+      "isActive": "1",
+      "loginTime": "2025-12-07 16:05:07"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\temployeeCode\temployeeName\toutletId\tisActive\tloginTime\n1\tMD001\tTheresa Cheng Yun Hu\t2\t1\t2025-12-07 16:05:07\n",
+  "stderr": "",
+  "execution_time_ms": 66
+}
