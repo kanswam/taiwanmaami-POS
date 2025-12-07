@@ -46,9 +46,6 @@ interface ProductCardProps {
 export function ProductCard({ product, subcategory, category, isDelivery = false }: ProductCardProps) {
   const [showModal, setShowModal] = useState(false);
 
-  // Check if this is a mochi product (website orders require set of 2)
-  const isMochiProduct = subcategory.name.toLowerCase().includes('mochi');
-
   // Calculate display price (with GST)
   const getDisplayPrice = () => {
     if (subcategory.hasSizeVariants) {
@@ -63,12 +60,7 @@ export function ProductCard({ product, subcategory, category, isDelivery = false
     } else {
       // For fixed price items
       const basePrice = isDelivery ? (product.deliveryPrice || product.instorePrice || 0) : (product.instorePrice || 0);
-      const priceWithGst = Math.round(basePrice * (1 + GST_RATE));
-      // For mochi products on website, show set of 2 price
-      if (isMochiProduct) {
-        return priceWithGst * 2;
-      }
-      return priceWithGst;
+      return Math.round(basePrice * (1 + GST_RATE));
     }
   };
 
@@ -77,6 +69,9 @@ export function ProductCard({ product, subcategory, category, isDelivery = false
 
   // Default placeholder image
   const imageUrl = product.imageUrl || '/placeholder-drink.jpg';
+  
+  // Check if this is a mochi product (for delivery, mochis are sold as set of 2)
+  const isMochiProduct = subcategory.name.toLowerCase().includes('mochi');
 
   return (
     <>
@@ -115,11 +110,11 @@ export function ProductCard({ product, subcategory, category, isDelivery = false
               </span>
             )}
           </div>
-          {/* Mochi set indicator for delivery/pickup (website only, not POS) */}
-          {isMochiProduct && (
+          {/* Mochi set indicator for delivery/pickup */}
+          {isDelivery && isMochiProduct && (
             <div className="absolute top-2 right-2">
               <span className="bg-primary text-primary-foreground text-xs font-semibold px-2 py-1 rounded-full shadow-sm">
-                Set of 2
+                Min. 2 pcs
               </span>
             </div>
           )}
