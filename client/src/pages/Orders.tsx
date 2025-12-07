@@ -1,17 +1,21 @@
+import { useState } from 'react';
 import { Header } from '@/components/Header';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/_core/hooks/useAuth';
 import { trpc } from '@/lib/trpc';
 import { formatPrice } from '@shared/types';
 import { getLoginUrl } from '@/const';
 import { Link } from 'wouter';
-import { Package, Clock, ChevronRight, ShoppingBag } from 'lucide-react';
+import { Package, Clock, ChevronRight, ShoppingBag, Star, MessageSquare } from 'lucide-react';
 import { StampCard } from '@/components/StampCard';
+import { toast } from 'sonner';
 
 export default function Orders() {
   const { user, isAuthenticated, loading } = useAuth();
-  const { data: orders, isLoading } = trpc.orders.getUserOrders.useQuery(undefined, {
+  const { data: orders, isLoading, refetch } = trpc.orders.getUserOrders.useQuery(undefined, {
     enabled: isAuthenticated,
   });
 
@@ -82,35 +86,12 @@ export default function Orders() {
             ) : orders && orders.length > 0 ? (
               <div className="space-y-4">
                 {orders.map((order: any) => (
-                  <Link key={order.id} href={`/order-confirmation/${order.orderNumber}`}>
-                    <Card className="p-4 hover:bg-secondary/50 transition-colors cursor-pointer">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-4">
-                          <div className="w-12 h-12 bg-secondary rounded-lg flex items-center justify-center">
-                            <Package className="w-6 h-6 text-muted-foreground" />
-                          </div>
-                          <div>
-                            <p className="font-semibold">{order.orderNumber}</p>
-                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                              <Clock className="w-4 h-4" />
-                              <span>{new Date(order.createdAt).toLocaleDateString()}</span>
-                              <span>•</span>
-                              <span className="capitalize">{order.orderType}</span>
-                            </div>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-4">
-                          <div className="text-right">
-                            <p className="font-semibold">{formatPrice(order.totalAmount)}</p>
-                            <span className={`text-xs px-2 py-1 rounded-full ${statusColors[order.orderStatus] || 'bg-gray-100'}`}>
-                              {order.orderStatus.replace(/_/g, ' ')}
-                            </span>
-                          </div>
-                          <ChevronRight className="w-5 h-5 text-muted-foreground" />
-                        </div>
-                      </div>
-                    </Card>
-                  </Link>
+                  <OrderCard 
+                    key={order.id} 
+                    order={order} 
+                    statusColors={statusColors}
+                    onReviewSubmitted={refetch}
+                  />
                 ))}
               </div>
             ) : (
@@ -134,5 +115,152 @@ export default function Orders() {
         </div>
       </div>
     </div>
+  );
+}
+
+function OrderCard({ order, statusColors, onReviewSubmitted }: { 
+  order: any; 
+  statusColors: Record<string, string>;
+  onReviewSubmitted: () => void;
+}) {
+  const [reviewOpen, setReviewOpen] = useState(false);
+  const [rating, setRating] = useState(5);
+  const [comment, setComment] = useState('');
+  const [hoverRating, setHoverRating] = useState(0);
+
+  const { data: canReviewData } = trpc.reviews.canReview.useQuery(
+    { orderId: order.id },
+    { enabled: order.orderStatus === 'completed' }
+  );
+
+  const submitReview = trpc.reviews.submit.useMutation({
+    onSuccess: () => {
+      toast.success('Thank you for your review!');
+      setReviewOpen(false);
+      setRating(5);
+      setComment('');
+      onReviewSubmitted();
+    },
+    onError: (err) => toast.error(err.message),
+  });
+
+  const handleSubmitReview = () => {
+    submitReview.mutate({
+      orderId: order.id,
+      rating,
+      comment: comment.trim() || undefined,
+    });
+  };
+
+  const canReview = order.orderStatus === 'completed' && canReviewData?.canReview;
+
+  return (
+    <Card className="p-4 hover:bg-secondary/50 transition-colors">
+      <Link href={`/order-confirmation/${order.orderNumber}`}>
+        <div className="flex items-center justify-between cursor-pointer">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 bg-secondary rounded-lg flex items-center justify-center">
+              <Package className="w-6 h-6 text-muted-foreground" />
+            </div>
+            <div>
+              <p className="font-semibold">{order.orderNumber}</p>
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Clock className="w-4 h-4" />
+                <span>{new Date(order.createdAt).toLocaleDateString()}</span>
+                <span>•</span>
+                <span className="capitalize">{order.orderType}</span>
+              </div>
+            </div>
+          </div>
+          <div className="flex items-center gap-4">
+            <div className="text-right">
+              <p className="font-semibold">{formatPrice(order.totalAmount)}</p>
+              <span className={`text-xs px-2 py-1 rounded-full ${statusColors[order.orderStatus] || 'bg-gray-100'}`}>
+                {order.orderStatus.replace(/_/g, ' ')}
+              </span>
+            </div>
+            <ChevronRight className="w-5 h-5 text-muted-foreground" />
+          </div>
+        </div>
+      </Link>
+
+      {/* Review Button for completed orders */}
+      {canReview && (
+        <div className="mt-3 pt-3 border-t">
+          <Dialog open={reviewOpen} onOpenChange={setReviewOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline" size="sm" className="w-full gap-2">
+                <Star className="w-4 h-4" />
+                Leave a Review
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Rate Your Order</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 py-4">
+                <div>
+                  <p className="text-sm text-muted-foreground mb-2">Order #{order.orderNumber}</p>
+                  <div className="flex gap-1 justify-center">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <button
+                        key={star}
+                        type="button"
+                        onClick={() => setRating(star)}
+                        onMouseEnter={() => setHoverRating(star)}
+                        onMouseLeave={() => setHoverRating(0)}
+                        className="p-1 transition-transform hover:scale-110"
+                      >
+                        <Star
+                          className={`w-8 h-8 ${
+                            star <= (hoverRating || rating)
+                              ? 'fill-yellow-400 text-yellow-400'
+                              : 'text-gray-300'
+                          }`}
+                        />
+                      </button>
+                    ))}
+                  </div>
+                  <p className="text-center text-sm mt-2">
+                    {rating === 1 && 'Poor'}
+                    {rating === 2 && 'Fair'}
+                    {rating === 3 && 'Good'}
+                    {rating === 4 && 'Very Good'}
+                    {rating === 5 && 'Excellent'}
+                  </p>
+                </div>
+
+                <div>
+                  <Textarea
+                    placeholder="Tell us about your experience (optional)"
+                    value={comment}
+                    onChange={(e) => setComment(e.target.value)}
+                    rows={4}
+                  />
+                </div>
+
+                <Button 
+                  className="w-full" 
+                  onClick={handleSubmitReview}
+                  disabled={submitReview.isPending}
+                >
+                  {submitReview.isPending ? 'Submitting...' : 'Submit Review'}
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+        </div>
+      )}
+
+      {/* Show if already reviewed */}
+      {order.orderStatus === 'completed' && canReviewData && !canReviewData.canReview && canReviewData.reason === 'Already reviewed' && (
+        <div className="mt-3 pt-3 border-t">
+          <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+            <MessageSquare className="w-4 h-4" />
+            <span>You've reviewed this order</span>
+          </div>
+        </div>
+      )}
+    </Card>
   );
 }

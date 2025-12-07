@@ -14,7 +14,7 @@ import { formatPrice, GST_RATE } from '@shared/types';
 import { 
   Home, Package, ShoppingCart, Tag, Upload, Settings, LogOut, 
   Plus, Edit, Trash2, ImageIcon, RefreshCw, Check, X, Search,
-  ChevronDown, ChevronUp, Eye, EyeOff, Store, ClipboardList
+  ChevronDown, ChevronUp, Eye, EyeOff, Store, ClipboardList, Star, MessageSquare
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -67,7 +67,7 @@ export default function Admin() {
 
       <div className="container py-6">
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-6 mb-6">
+          <TabsList className="grid w-full grid-cols-7 mb-6">
             <TabsTrigger value="products" className="gap-2">
               <Package className="w-4 h-4" />
               Products
@@ -91,6 +91,10 @@ export default function Admin() {
             <TabsTrigger value="bulk-upload" className="gap-2">
               <Upload className="w-4 h-4" />
               Bulk Upload
+            </TabsTrigger>
+            <TabsTrigger value="reviews" className="gap-2">
+              <Star className="w-4 h-4" />
+              Reviews
             </TabsTrigger>
           </TabsList>
 
@@ -116,6 +120,10 @@ export default function Admin() {
 
           <TabsContent value="bulk-upload">
             <BulkUploadTab />
+          </TabsContent>
+
+          <TabsContent value="reviews">
+            <ReviewsTab />
           </TabsContent>
         </Tabs>
       </div>
@@ -1097,6 +1105,144 @@ function POSAuditTab() {
           </table>
         </div>
       </Card>
+    </div>
+  );
+}
+
+
+// Reviews Tab
+function ReviewsTab() {
+  const { data: reviews, refetch } = trpc.reviews.getAll.useQuery();
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+
+  const updateStatus = trpc.reviews.updateStatus.useMutation({
+    onSuccess: () => {
+      toast.success('Review status updated');
+      refetch();
+    },
+    onError: (err) => toast.error(err.message),
+  });
+
+  const deleteReview = trpc.reviews.delete.useMutation({
+    onSuccess: () => {
+      toast.success('Review deleted');
+      refetch();
+    },
+    onError: (err) => toast.error(err.message),
+  });
+
+  const filteredReviews = reviews?.filter(r => {
+    if (statusFilter === 'all') return true;
+    return r.status === statusFilter;
+  }) || [];
+
+  const renderStars = (rating: number) => {
+    return (
+      <div className="flex gap-0.5">
+        {[1, 2, 3, 4, 5].map((star) => (
+          <Star
+            key={star}
+            className={`w-4 h-4 ${star <= rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`}
+          />
+        ))}
+      </div>
+    );
+  };
+
+  const statusColors: Record<string, string> = {
+    pending: 'bg-yellow-100 text-yellow-800',
+    approved: 'bg-green-100 text-green-800',
+    rejected: 'bg-red-100 text-red-800',
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="flex justify-between items-center">
+        <h2 className="text-xl font-semibold">Customer Reviews</h2>
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="w-40">
+            <SelectValue placeholder="Filter by status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Reviews</SelectItem>
+            <SelectItem value="pending">Pending</SelectItem>
+            <SelectItem value="approved">Approved</SelectItem>
+            <SelectItem value="rejected">Rejected</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      {filteredReviews.length === 0 ? (
+        <Card className="p-8 text-center">
+          <MessageSquare className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
+          <p className="text-muted-foreground">No reviews found</p>
+        </Card>
+      ) : (
+        <div className="grid gap-4">
+          {filteredReviews.map((review) => (
+            <Card key={review.id} className="p-4">
+              <div className="flex justify-between items-start">
+                <div className="space-y-2">
+                  <div className="flex items-center gap-3">
+                    <span className="font-medium">{review.customerName || 'Anonymous'}</span>
+                    {renderStars(review.rating)}
+                    <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${statusColors[review.status]}`}>
+                      {review.status}
+                    </span>
+                  </div>
+                  {review.comment && (
+                    <p className="text-sm text-muted-foreground">{review.comment}</p>
+                  )}
+                  <p className="text-xs text-muted-foreground">
+                    {new Date(review.createdAt).toLocaleDateString('en-IN', {
+                      year: 'numeric',
+                      month: 'short',
+                      day: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })}
+                    {review.orderId && ` • Order #${review.orderId}`}
+                  </p>
+                </div>
+                <div className="flex gap-2">
+                  {review.status !== 'approved' && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="text-green-600 hover:text-green-700"
+                      onClick={() => updateStatus.mutate({ reviewId: review.id, status: 'approved' })}
+                    >
+                      <Check className="w-4 h-4" />
+                    </Button>
+                  )}
+                  {review.status !== 'rejected' && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="text-yellow-600 hover:text-yellow-700"
+                      onClick={() => updateStatus.mutate({ reviewId: review.id, status: 'rejected' })}
+                    >
+                      <EyeOff className="w-4 h-4" />
+                    </Button>
+                  )}
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="text-red-600 hover:text-red-700"
+                    onClick={() => {
+                      if (confirm('Are you sure you want to delete this review?')) {
+                        deleteReview.mutate({ reviewId: review.id });
+                      }
+                    }}
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+            </Card>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

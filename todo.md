@@ -357,3 +357,36 @@
 - [x] Remove "Our Signature Creations" section from homepage
 - [x] Update "Explore Our Menu" with 4 category cards: Bubble Tea/Coffee, Hot Beverages, Asian Rice-Noodles-Bread, Asian Sweet Bites
 - [x] Add video backgrounds to each category card
+
+
+## Phase 27 - Location Cards Update (Dec 7, 2025)
+
+- [ ] Update "Visit Our Outlets" with two video-background location cards
+- [ ] Add Palladium Mall location: First Floor Palladium Mall, Velachery, Chennai - 42
+- [ ] Add T Nagar (Moutan) location: New No. 29, Burkit Road, TNagar, Chennai - 17
+- [ ] Add video backgrounds to location cards
+
+
+## Phase 28 - Reviews Feature (Dec 7, 2025)
+
+- [ ] Add reviews table to database schema (rating, comment, user, order, status)
+- [ ] Add review CRUD procedures to routers.ts
+- [ ] Add Reviews tab to Admin dashboard with moderation
+- [ ] Add review submission UI for customers after order completion
+- [ ] Display reviews on homepage or product pages
+
+
+## Phase 21 - Reviews & Location Video Cards
+
+### Reviews Feature
+- [x] Add reviews table to database schema
+- [x] Create reviews router with CRUD procedures
+- [x] Add Reviews tab to Admin dashboard
+- [x] Add review submission UI for customers (on completed orders)
+- [x] Write vitest tests for reviews router
+
+### Location Video Cards
+- [x] Update Visit Our Outlets section with video background cards
+- [x] Add Palladium Mall location video
+- [ ] Add T Nagar (Moutan) location video (pending user upload)
+- [x] Add Get Directions button linking to Google Maps

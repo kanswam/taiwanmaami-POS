@@ -354,6 +354,20 @@ export const guestOrders = mysqlTable("guest_orders", {
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 
+// Customer reviews
+export const reviews = mysqlTable("reviews", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  orderId: int("orderId"),
+  rating: int("rating").notNull(), // 1-5 stars
+  comment: text("comment"),
+  customerName: varchar("customerName", { length: 200 }),
+  status: mysqlEnum("status", ["pending", "approved", "rejected"]).default("pending").notNull(),
+  adminResponse: text("adminResponse"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
 // Type exports
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
@@ -373,3 +387,4 @@ export type PosAuditLog = typeof posAuditLog.$inferSelect;
 export type LoyaltyReward = typeof loyaltyRewards.$inferSelect;
 export type StampTransaction = typeof stampTransactions.$inferSelect;
 export type GuestOrder = typeof guestOrders.$inferSelect;
+export type Review = typeof reviews.$inferSelect;

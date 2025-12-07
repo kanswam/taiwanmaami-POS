@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Header } from '@/components/Header';
 import { trpc } from '@/lib/trpc';
-import { ArrowRight, MapPin, Clock, Star, Sparkles } from 'lucide-react';
+import { ArrowRight, MapPin, Clock, Star, Sparkles, Instagram, Phone, Navigation } from 'lucide-react';
 
 export default function Home() {
   const { data: stores } = trpc.stores.getAll.useQuery();
@@ -33,6 +33,28 @@ export default function Home() {
       description: 'Delicious mochis & desserts',
       video: '/videos/sweet-bites.mp4',
       href: '/menu?category=mochis',
+    },
+  ];
+
+  // Location cards with video backgrounds
+  const locations = [
+    {
+      name: 'Taiwan Maami',
+      subtitle: 'Palladium Mall',
+      address: 'First Floor, Palladium Mall, Velachery',
+      city: 'Chennai - 600042',
+      video: '/videos/palladium-outlet.mp4',
+      mapUrl: 'https://maps.google.com/?q=Palladium+Mall+Velachery+Chennai',
+      phone: '+91 98765 43210',
+    },
+    {
+      name: 'Taiwan Maami (Moutan)',
+      subtitle: 'T Nagar',
+      address: 'New No. 29, Burkit Road, T Nagar',
+      city: 'Chennai - 600017',
+      video: '/videos/tnagar-outlet.mp4',
+      mapUrl: 'https://maps.google.com/?q=29+Burkit+Road+TNagar+Chennai',
+      phone: '+91 98765 43211',
     },
   ];
 
@@ -183,46 +205,68 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Shopfront Image Section */}
+      {/* Visit Our Outlets - Location Video Cards */}
       <section className="py-16 bg-secondary/30">
         <div className="container">
-          <div className="grid md:grid-cols-2 gap-8 items-center">
-            <div className="order-2 md:order-1">
-              <h2 className="text-3xl font-bold mb-4">Visit Our Outlets</h2>
-              <p className="text-muted-foreground mb-6">
-                Experience the authentic Taiwan Maami atmosphere at our beautifully designed outlets. 
-                Our T Nagar location features a cozy interior with traditional Taiwanese elements, 
-                while serving both our signature bubble tea and delicious Asian street food.
-              </p>
-              <div className="space-y-4">
-                {stores?.map((store) => (
-                  <Card key={store.id} className="p-4">
-                    <h3 className="font-semibold mb-2">{store.name}</h3>
-                    <div className="space-y-1 text-sm text-muted-foreground">
-                      <p className="flex items-start gap-2">
-                        <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                        {store.address}, {store.area}
-                      </p>
-                      {store.openingHours && (
-                        <p className="flex items-center gap-2">
-                          <Clock className="w-4 h-4" />
-                          {store.openingHours}
-                        </p>
-                      )}
-                    </div>
-                  </Card>
-                ))}
-              </div>
-            </div>
-            <div className="order-1 md:order-2">
-              <div className="rounded-2xl overflow-hidden shadow-xl">
-                <img
-                  src="/images/shopfront.jpg"
-                  alt="Taiwan Maami Shopfront"
-                  className="w-full h-auto"
-                />
-              </div>
-            </div>
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold mb-4">Visit Our Outlets</h2>
+            <p className="text-muted-foreground max-w-2xl mx-auto">
+              Experience the authentic Taiwan Maami atmosphere at our beautifully designed outlets in Chennai.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {locations.map((location, index) => (
+              <Card key={index} className="group overflow-hidden hover:shadow-2xl transition-all duration-300 relative aspect-[4/3]">
+                {/* Video Background */}
+                <video
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                  poster="/images/shopfront.jpg"
+                >
+                  <source src={location.video} type="video/mp4" />
+                </video>
+                
+                {/* Overlay */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-black/20" />
+                
+                {/* Content */}
+                <div className="absolute bottom-0 left-0 right-0 p-6">
+                  <div className="mb-4">
+                    <h3 className="font-bold text-white text-2xl mb-1">
+                      {location.name}
+                    </h3>
+                    <p className="text-primary-foreground font-medium text-lg">
+                      {location.subtitle}
+                    </p>
+                  </div>
+                  
+                  <div className="space-y-2 mb-4">
+                    <p className="text-white/90 text-sm flex items-start gap-2">
+                      <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                      <span>{location.address}<br />{location.city}</span>
+                    </p>
+                    <p className="text-white/80 text-sm flex items-center gap-2">
+                      <Phone className="w-4 h-4" />
+                      {location.phone}
+                    </p>
+                  </div>
+                  
+                  <a 
+                    href={location.mapUrl} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 text-white bg-primary/80 hover:bg-primary px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                  >
+                    <Navigation className="w-4 h-4" />
+                    Get Directions
+                  </a>
+                </div>
+              </Card>
+            ))}
           </div>
         </div>
       </section>
@@ -266,9 +310,18 @@ export default function Home() {
                 <img src="/logo.png" alt="Taiwan Maami" className="h-10 w-auto" />
                 <h3 className="font-bold text-lg">Taiwan Maami</h3>
               </div>
-              <p className="text-sm text-background/70">
+              <p className="text-sm text-background/70 mb-4">
                 Authentic Taiwanese bubble tea and Asian cuisine in Chennai.
               </p>
+              <a 
+                href="https://instagram.com/taiwan_maami" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 text-background/70 hover:text-background transition-colors"
+              >
+                <Instagram className="w-5 h-5" />
+                @taiwan_maami
+              </a>
             </div>
             <div>
               <h4 className="font-semibold mb-4">Quick Links</h4>
@@ -279,10 +332,12 @@ export default function Home() {
               </ul>
             </div>
             <div>
-              <h4 className="font-semibold mb-4">Contact</h4>
+              <h4 className="font-semibold mb-4">Legal</h4>
               <ul className="space-y-2 text-sm text-background/70">
-                <li>+91 98765 43210</li>
-                <li>hello@taiwanmaami.com</li>
+                <li><Link href="/terms" className="hover:text-background">Terms & Conditions</Link></li>
+                <li><Link href="/privacy" className="hover:text-background">Privacy Policy</Link></li>
+                <li><Link href="/refund" className="hover:text-background">Refund Policy</Link></li>
+                <li><Link href="/shipping" className="hover:text-background">Shipping Policy</Link></li>
               </ul>
             </div>
             <div>
@@ -293,7 +348,8 @@ export default function Home() {
             </div>
           </div>
           <div className="border-t border-background/20 mt-8 pt-8 text-center text-sm text-background/50">
-            © {new Date().getFullYear()} Taiwan Maami. All rights reserved.
+            <p>© {new Date().getFullYear()} Taiwan Maami. All rights reserved.</p>
+            <p className="mt-1">A unit of Thamarai Foods and Trading Private Limited</p>
           </div>
         </div>
       </footer>

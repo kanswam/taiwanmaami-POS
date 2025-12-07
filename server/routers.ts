@@ -11,7 +11,7 @@ import { categories, subcategories, products, addons, orders, orderItems, orderI
 import { eq, and, desc, asc, sql } from "drizzle-orm";
 import { generateOrderNumber, calculateGst } from "@shared/types";
 import { authenticateStaffByMobile, getActiveEmployees } from "./employeeMaster";
-import { posSessions, posAuditLog, outletProducts, loyaltyRewards, stampTransactions, guestOrders } from "../drizzle/schema";
+import { posSessions, posAuditLog, outletProducts, loyaltyRewards, stampTransactions, guestOrders, reviews } from "../drizzle/schema";
 
 // Admin procedure - only allows admin role
 const adminProcedure = protectedProcedure.use(({ ctx, next }) => {
@@ -1422,6 +1422,199 @@ export const appRouter = router({
           guestEmail: guest.guestEmail,
           items,
         };
+      }),
+  }),
+
+  // Reviews routes
+  reviews: router({
+    // Submit a review (authenticated users only)
+    submit: protectedProcedure
+      .input(z.object({
+        orderId: z.number().optional(),
+        rating: z.number().min(1).max(5),
+        comment: z.string().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const dbInstance = await getDb();
+        
+        // Check if user already reviewed this order
+        if (input.orderId) {
+          const [existingReview] = await dbInstance!
+            .select()
+            .from(reviews)
+            .where(and(
+              eq(reviews.userId, ctx.user.id),
+              eq(reviews.orderId, input.orderId)
+            ));
+          
+          if (existingReview) {
+            throw new TRPCError({ code: 'BAD_REQUEST', message: 'You have already reviewed this order' });
+          }
+        }
+        
+        const [review] = await dbInstance!.insert(reviews).values({
+          userId: ctx.user.id,
+          orderId: input.orderId || null,
+          rating: input.rating,
+          comment: input.comment || null,
+          customerName: ctx.user.name || 'Anonymous',
+          status: 'approved', // Auto-approve reviews
+        }).$returningId();
+        
+        return { success: true, reviewId: review.id };
+      }),
+
+    // Get all approved reviews (public)
+    getApproved: publicProcedure
+      .input(z.object({
+        limit: z.number().min(1).max(50).default(10),
+      }).optional())
+      .query(async ({ input }) => {
+        const dbInstance = await getDb();
+        const limit = input?.limit || 10;
+        
+        const reviewsList = await dbInstance!
+          .select({
+            id: reviews.id,
+            rating: reviews.rating,
+            comment: reviews.comment,
+            customerName: reviews.customerName,
+            createdAt: reviews.createdAt,
+          })
+          .from(reviews)
+          .where(eq(reviews.status, 'approved'))
+          .orderBy(desc(reviews.createdAt))
+          .limit(limit);
+        
+        return reviewsList;
+      }),
+
+    // Get review stats (public)
+    getStats: publicProcedure.query(async () => {
+      const dbInstance = await getDb();
+      
+      const stats = await dbInstance!
+        .select({
+          avgRating: sql<number>`AVG(${reviews.rating})`,
+          totalReviews: sql<number>`COUNT(*)`,
+        })
+        .from(reviews)
+        .where(eq(reviews.status, 'approved'));
+      
+      return {
+        averageRating: stats[0]?.avgRating ? Number(stats[0].avgRating.toFixed(1)) : 0,
+        totalReviews: Number(stats[0]?.totalReviews) || 0,
+      };
+    }),
+
+    // Check if user can review an order
+    canReview: protectedProcedure
+      .input(z.object({ orderId: z.number() }))
+      .query(async ({ ctx, input }) => {
+        const dbInstance = await getDb();
+        
+        // Check if order exists and belongs to user
+        const [order] = await dbInstance!
+          .select()
+          .from(orders)
+          .where(and(
+            eq(orders.id, input.orderId),
+            eq(orders.userId, ctx.user.id)
+          ));
+        
+        if (!order) {
+          return { canReview: false, reason: 'Order not found' };
+        }
+        
+        if (order.orderStatus !== 'completed') {
+          return { canReview: false, reason: 'Order not completed yet' };
+        }
+        
+        // Check if already reviewed
+        const [existingReview] = await dbInstance!
+          .select()
+          .from(reviews)
+          .where(and(
+            eq(reviews.userId, ctx.user.id),
+            eq(reviews.orderId, input.orderId)
+          ));
+        
+        if (existingReview) {
+          return { canReview: false, reason: 'Already reviewed' };
+        }
+        
+        return { canReview: true };
+      }),
+
+    // Admin: Get all reviews
+    getAll: adminProcedure
+      .input(z.object({
+        status: z.enum(['pending', 'approved', 'rejected']).optional(),
+        limit: z.number().min(1).max(100).default(50),
+        offset: z.number().min(0).default(0),
+      }).optional())
+      .query(async ({ input }) => {
+        const dbInstance = await getDb();
+        const limit = input?.limit || 50;
+        const offset = input?.offset || 0;
+        
+        let query = dbInstance!
+          .select({
+            id: reviews.id,
+            userId: reviews.userId,
+            orderId: reviews.orderId,
+            rating: reviews.rating,
+            comment: reviews.comment,
+            customerName: reviews.customerName,
+            status: reviews.status,
+            adminResponse: reviews.adminResponse,
+            createdAt: reviews.createdAt,
+            updatedAt: reviews.updatedAt,
+          })
+          .from(reviews)
+          .orderBy(desc(reviews.createdAt))
+          .limit(limit)
+          .offset(offset);
+        
+        if (input?.status) {
+          query = query.where(eq(reviews.status, input.status)) as typeof query;
+        }
+        
+        return query;
+      }),
+
+    // Admin: Update review status
+    updateStatus: adminProcedure
+      .input(z.object({
+        reviewId: z.number(),
+        status: z.enum(['pending', 'approved', 'rejected']),
+        adminResponse: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const dbInstance = await getDb();
+        
+        await dbInstance!
+          .update(reviews)
+          .set({
+            status: input.status,
+            adminResponse: input.adminResponse || null,
+          })
+          .where(eq(reviews.id, input.reviewId));
+        
+        return { success: true };
+      }),
+
+    // Admin: Delete review
+    delete: adminProcedure
+      .input(z.object({ reviewId: z.number() }))
+      .mutation(async ({ input }) => {
+        const dbInstance = await getDb();
+        
+        await dbInstance!
+          .delete(reviews)
+          .where(eq(reviews.id, input.reviewId));
+        
+        return { success: true };
       }),
   }),
 });
