@@ -336,3 +336,8 @@
 - [x] Fix mochi pair-only to include pickup orders (not just delivery)
 - [x] Only POS/in-store should allow single mochis
 - [x] Change label from "Min. 2 pcs" to "Set of 2"
+
+
+## Bug Fix - Mochi Price Display in Pickup Mode
+
+- [x] Show set of 2 price on mochi cards in pickup mode (same as delivery)

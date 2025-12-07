@@ -46,6 +46,9 @@ interface ProductCardProps {
 export function ProductCard({ product, subcategory, category, isDelivery = false }: ProductCardProps) {
   const [showModal, setShowModal] = useState(false);
 
+  // Check if this is a mochi product (website orders require set of 2)
+  const isMochiProduct = subcategory.name.toLowerCase().includes('mochi');
+
   // Calculate display price (with GST)
   const getDisplayPrice = () => {
     if (subcategory.hasSizeVariants) {
@@ -60,7 +63,12 @@ export function ProductCard({ product, subcategory, category, isDelivery = false
     } else {
       // For fixed price items
       const basePrice = isDelivery ? (product.deliveryPrice || product.instorePrice || 0) : (product.instorePrice || 0);
-      return Math.round(basePrice * (1 + GST_RATE));
+      const priceWithGst = Math.round(basePrice * (1 + GST_RATE));
+      // For mochi products on website, show set of 2 price
+      if (isMochiProduct) {
+        return priceWithGst * 2;
+      }
+      return priceWithGst;
     }
   };
 
@@ -69,9 +77,6 @@ export function ProductCard({ product, subcategory, category, isDelivery = false
 
   // Default placeholder image
   const imageUrl = product.imageUrl || '/placeholder-drink.jpg';
-  
-  // Check if this is a mochi product (for delivery, mochis are sold as set of 2)
-  const isMochiProduct = subcategory.name.toLowerCase().includes('mochi');
 
   return (
     <>
