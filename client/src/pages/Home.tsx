@@ -14,25 +14,25 @@ export default function Home() {
       name: 'Bubble Tea / Coffee',
       description: 'Authentic Taiwanese bubble tea & premium coffee',
       video: '/videos/bubble-tea-coffee.mp4',
-      href: '/menu?category=bubble-tea',
+      href: '/category/bubble-tea-coffee',
     },
     {
       name: 'Hot Beverages',
       description: 'Warm & comforting traditional drinks',
       video: '/videos/hot-beverages.mp4',
-      href: '/menu?category=coffee',
+      href: '/category/hot-beverages',
     },
     {
       name: 'Asian Rice-Noodles-Bread',
       description: 'Savory Asian street food favorites',
       video: '/videos/asian-food.mp4',
-      href: '/menu?category=food',
+      href: '/category/asian-food',
     },
     {
       name: 'Asian Sweet Bites',
       description: 'Delicious mochis & desserts',
       video: '/videos/sweet-bites.mp4',
-      href: '/menu?category=mochis',
+      href: '/category/sweet-bites',
     },
   ];
 

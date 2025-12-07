@@ -22,6 +22,8 @@ import POS from "./pages/POS";
 import POSLogin from "./pages/POSLogin";
 import Admin from "./pages/Admin";
 import StaffOrders from "./pages/StaffOrders";
+import MenuCategories from "./pages/MenuCategories";
+import CategorySubcategories from "./pages/CategorySubcategories";
 
 function Router() {
   return (
@@ -29,6 +31,8 @@ function Router() {
       {/* Public Routes */}
       <Route path="/" component={Home} />
       <Route path="/menu" component={Menu} />
+      <Route path="/categories" component={MenuCategories} />
+      <Route path="/category/:category" component={CategorySubcategories} />
       <Route path="/cart" component={Cart} />
       <Route path="/checkout" component={Checkout} />
       <Route path="/order-confirmation/:orderId" component={OrderConfirmation} />

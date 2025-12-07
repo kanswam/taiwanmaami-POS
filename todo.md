@@ -390,3 +390,18 @@
 - [x] Add Palladium Mall location video
 - [x] Add T Nagar (Moutan) location video
 - [x] Add Get Directions button linking to Google Maps
+
+
+## Phase 22 - Subcategory Navigation Page
+
+### Subcategory Portrait Cards
+- [x] Create subcategory page with portrait product cards
+- [x] Bubble Tea/Coffee subcategories: Black Tea, Oolong Tea, Green Tea, Matcha, Taro, Slush, Coffee
+- [x] Hot Beverages subcategories: Coffee, Hot Cocoa, Tea
+- [x] Asian Rice-Noodles-Bread subcategories: Rice, Noodle, Flat Bread, Savoury Pillow Brioche
+- [x] Asian Sweet Bites subcategories: Mochi, Boba Creme Caramel, Sweet Pillow Brioche
+
+### Navigation Updates
+- [x] Homepage category video cards link to subcategory pages
+- [x] Menu navigation goes to subcategory selection page
+- [x] Subcategory cards link to filtered product menu
