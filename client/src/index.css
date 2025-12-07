@@ -40,77 +40,100 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+  
+  /* Custom brand font */
+  --font-heading: 'Playfair Display', serif;
 }
 
 :root {
-  --primary: var(--color-blue-700);
-  --primary-foreground: var(--color-blue-50);
-  --sidebar-primary: var(--color-blue-600);
-  --sidebar-primary-foreground: var(--color-blue-50);
-  --chart-1: var(--color-blue-300);
-  --chart-2: var(--color-blue-500);
-  --chart-3: var(--color-blue-600);
-  --chart-4: var(--color-blue-700);
-  --chart-5: var(--color-blue-800);
+  /* Taiwan Maami Brand - Warm Palette from Interior Photos */
+  /* Primary: Warm wood/honey golden brown */
+  --primary: oklch(0.55 0.12 65);
+  --primary-foreground: oklch(0.98 0.01 65);
+  
+  /* Sidebar primary */
+  --sidebar-primary: oklch(0.50 0.12 65);
+  --sidebar-primary-foreground: oklch(0.98 0.01 65);
+  
+  /* Chart colors - warm palette */
+  --chart-1: oklch(0.55 0.12 65);
+  --chart-2: oklch(0.65 0.10 30);
+  --chart-3: oklch(0.70 0.08 85);
+  --chart-4: oklch(0.60 0.12 350);
+  --chart-5: oklch(0.55 0.08 180);
+  
   --radius: 0.65rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.235 0.015 65);
+  
+  /* Background: Warm cream/beige */
+  --background: oklch(0.97 0.01 85);
+  --foreground: oklch(0.25 0.03 50);
+  
+  /* Card: Pure white */
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.235 0.015 65);
+  --card-foreground: oklch(0.25 0.03 50);
+  
+  /* Popover */
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.235 0.015 65);
-  --secondary: oklch(0.98 0.001 286.375);
-  --secondary-foreground: oklch(0.4 0.015 65);
-  --muted: oklch(0.967 0.001 286.375);
-  --muted-foreground: oklch(0.552 0.016 285.938);
-  --accent: oklch(0.967 0.001 286.375);
-  --accent-foreground: oklch(0.141 0.005 285.823);
-  --destructive: oklch(0.577 0.245 27.325);
-  --destructive-foreground: oklch(0.985 0 0);
-  --border: oklch(0.92 0.004 286.32);
-  --input: oklch(0.92 0.004 286.32);
-  --ring: oklch(0.623 0.214 259.815);
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.235 0.015 65);
-  --sidebar-accent: oklch(0.967 0.001 286.375);
-  --sidebar-accent-foreground: oklch(0.141 0.005 285.823);
-  --sidebar-border: oklch(0.92 0.004 286.32);
-  --sidebar-ring: oklch(0.623 0.214 259.815);
+  --popover-foreground: oklch(0.25 0.03 50);
+  
+  /* Secondary: Light dusty rose/blush */
+  --secondary: oklch(0.94 0.02 20);
+  --secondary-foreground: oklch(0.35 0.05 50);
+  
+  /* Muted */
+  --muted: oklch(0.94 0.015 85);
+  --muted-foreground: oklch(0.50 0.02 50);
+  
+  /* Accent: Terracotta/coral */
+  --accent: oklch(0.70 0.12 30);
+  --accent-foreground: oklch(0.20 0.02 50);
+  
+  /* Destructive */
+  --destructive: oklch(0.55 0.2 25);
+  --destructive-foreground: oklch(0.98 0.01 65);
+  
+  /* Borders */
+  --border: oklch(0.88 0.02 65);
+  --input: oklch(0.88 0.02 65);
+  --ring: oklch(0.55 0.12 65);
+  
+  /* Sidebar */
+  --sidebar: oklch(0.985 0.005 85);
+  --sidebar-foreground: oklch(0.25 0.03 50);
+  --sidebar-accent: oklch(0.94 0.02 20);
+  --sidebar-accent-foreground: oklch(0.25 0.03 50);
+  --sidebar-border: oklch(0.88 0.02 65);
+  --sidebar-ring: oklch(0.55 0.12 65);
 }
 
 .dark {
-  --primary: var(--color-blue-700);
-  --primary-foreground: var(--color-blue-50);
-  --sidebar-primary: var(--color-blue-500);
-  --sidebar-primary-foreground: var(--color-blue-50);
-  --background: oklch(0.141 0.005 285.823);
-  --foreground: oklch(0.85 0.005 65);
-  --card: oklch(0.21 0.006 285.885);
-  --card-foreground: oklch(0.85 0.005 65);
-  --popover: oklch(0.21 0.006 285.885);
-  --popover-foreground: oklch(0.85 0.005 65);
-  --secondary: oklch(0.24 0.006 286.033);
-  --secondary-foreground: oklch(0.7 0.005 65);
-  --muted: oklch(0.274 0.006 286.033);
-  --muted-foreground: oklch(0.705 0.015 286.067);
-  --accent: oklch(0.274 0.006 286.033);
-  --accent-foreground:  oklch(0.92 0.005 65);
-  --destructive: oklch(0.704 0.191 22.216);
-  --destructive-foreground: oklch(0.985 0 0);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.488 0.243 264.376);
-  --chart-1: var(--color-blue-300);
-  --chart-2: var(--color-blue-500);
-  --chart-3: var(--color-blue-600);
-  --chart-4: var(--color-blue-700);
-  --chart-5: var(--color-blue-800);
-  --sidebar: oklch(0.21 0.006 285.885);
-  --sidebar-foreground: oklch(0.85 0.005 65);
-  --sidebar-accent: oklch(0.274 0.006 286.033);
-  --sidebar-accent-foreground:  oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.488 0.243 264.376);
+  --primary: oklch(0.65 0.12 65);
+  --primary-foreground: oklch(0.15 0.02 65);
+  --sidebar-primary: oklch(0.60 0.12 65);
+  --sidebar-primary-foreground: oklch(0.15 0.02 65);
+  --background: oklch(0.18 0.02 50);
+  --foreground: oklch(0.92 0.01 85);
+  --card: oklch(0.22 0.02 50);
+  --card-foreground: oklch(0.92 0.01 85);
+  --popover: oklch(0.22 0.02 50);
+  --popover-foreground: oklch(0.92 0.01 85);
+  --secondary: oklch(0.28 0.02 50);
+  --secondary-foreground: oklch(0.85 0.01 85);
+  --muted: oklch(0.30 0.02 50);
+  --muted-foreground: oklch(0.65 0.02 85);
+  --accent: oklch(0.35 0.03 30);
+  --accent-foreground: oklch(0.92 0.01 85);
+  --destructive: oklch(0.65 0.2 25);
+  --destructive-foreground: oklch(0.98 0.01 65);
+  --border: oklch(0.35 0.02 50);
+  --input: oklch(0.35 0.02 50);
+  --ring: oklch(0.65 0.12 65);
+  --sidebar: oklch(0.20 0.02 50);
+  --sidebar-foreground: oklch(0.92 0.01 85);
+  --sidebar-accent: oklch(0.28 0.02 50);
+  --sidebar-accent-foreground: oklch(0.92 0.01 85);
+  --sidebar-border: oklch(0.35 0.02 50);
+  --sidebar-ring: oklch(0.65 0.12 65);
 }
 
 @layer base {
@@ -119,59 +142,142 @@
   }
   body {
     @apply bg-background text-foreground;
+    font-family: 'Inter', system-ui, sans-serif;
   }
-  button:not(:disabled),
-  [role="button"]:not([aria-disabled="true"]),
-  [type="button"]:not(:disabled),
-  [type="submit"]:not(:disabled),
-  [type="reset"]:not(:disabled),
-  a[href],
-  select:not(:disabled),
-  input[type="checkbox"]:not(:disabled),
-  input[type="radio"]:not(:disabled) {
-    @apply cursor-pointer;
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-heading), serif;
   }
 }
 
-@layer components {
-  /**
-   * Custom container utility that centers content and adds responsive padding.
-   *
-   * This overrides Tailwind's default container behavior to:
-   * - Auto-center content (mx-auto)
-   * - Add responsive horizontal padding
-   * - Set max-width for large screens
-   *
-   * Usage: <div className="container">...</div>
-   *
-   * For custom widths, use max-w-* utilities directly:
-   * <div className="max-w-6xl mx-auto px-4">...</div>
-   */
-  .container {
-    width: 100%;
-    margin-left: auto;
-    margin-right: auto;
-    padding-left: 1rem; /* 16px - mobile padding */
-    padding-right: 1rem;
-  }
+/* Container customization */
+.container {
+  @apply mx-auto px-4 sm:px-6 lg:px-8;
+  max-width: 1280px;
+}
 
-  .flex {
-    min-height: 0;
-    min-width: 0;
-  }
+/* Flex defaults */
+.flex {
+  min-width: 0;
+  min-height: 0;
+}
 
-  @media (min-width: 640px) {
-    .container {
-      padding-left: 1.5rem; /* 24px - tablet padding */
-      padding-right: 1.5rem;
-    }
-  }
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
 
-  @media (min-width: 1024px) {
-    .container {
-      padding-left: 2rem; /* 32px - desktop padding */
-      padding-right: 2rem;
-      max-width: 1280px; /* Standard content width */
-    }
+::-webkit-scrollbar-track {
+  background: oklch(0.94 0.01 85);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: oklch(0.75 0.05 65);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: oklch(0.65 0.08 65);
+}
+
+/* Product card portrait styling */
+.product-card-portrait {
+  aspect-ratio: 3/4;
+}
+
+/* Category card styling */
+.category-card {
+  background: linear-gradient(135deg, oklch(0.55 0.12 65) 0%, oklch(0.45 0.10 50) 100%);
+}
+
+/* Subcategory card with image overlay */
+.subcategory-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.subcategory-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.2) 50%, transparent 100%);
+}
+
+/* Hero section gradient */
+.hero-gradient {
+  background: linear-gradient(135deg, oklch(0.97 0.01 85) 0%, oklch(0.94 0.02 20) 100%);
+}
+
+/* Warm button hover effect */
+.btn-warm:hover {
+  background: oklch(0.50 0.14 65);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px oklch(0.55 0.12 65 / 0.3);
+}
+
+/* Touch-friendly button for POS */
+.pos-touch-btn {
+  min-height: 48px;
+  min-width: 48px;
+  touch-action: manipulation;
+}
+
+/* Loading shimmer effect */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
   }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.shimmer {
+  background: linear-gradient(
+    90deg,
+    oklch(0.94 0.01 85) 0%,
+    oklch(0.98 0.005 85) 50%,
+    oklch(0.94 0.01 85) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* Price tag styling */
+.price-tag {
+  color: oklch(0.45 0.12 65);
+  font-weight: 700;
+}
+
+/* Badge styling */
+.badge-new {
+  background: oklch(0.65 0.15 30);
+  color: white;
+}
+
+.badge-popular {
+  background: oklch(0.55 0.12 65);
+  color: white;
+}
+
+/* Modal overlay */
+.modal-overlay {
+  background: oklch(0.20 0.02 50 / 0.6);
+  backdrop-filter: blur(4px);
+}
+
+/* Selection highlight */
+.selection-ring {
+  box-shadow: 0 0 0 3px oklch(0.55 0.12 65 / 0.3);
+}
+
+/* Warm gradient backgrounds */
+.bg-warm-gradient {
+  background: linear-gradient(135deg, oklch(0.97 0.01 85) 0%, oklch(0.94 0.02 65) 100%);
+}
+
+.bg-wood-pattern {
+  background-color: oklch(0.55 0.12 65);
+  background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
 }
