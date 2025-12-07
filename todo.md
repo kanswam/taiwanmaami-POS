@@ -388,5 +388,5 @@
 ### Location Video Cards
 - [x] Update Visit Our Outlets section with video background cards
 - [x] Add Palladium Mall location video
-- [ ] Add T Nagar (Moutan) location video (pending user upload)
+- [x] Add T Nagar (Moutan) location video
 - [x] Add Get Directions button linking to Google Maps
