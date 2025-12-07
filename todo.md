@@ -329,3 +329,10 @@
 - [x] Add locality dropdown to checkout address form
 - [x] Auto-fill pincode when locality selected
 - [x] Use existing CHENNAI_AREAS from shared/types.ts
+
+
+## Bug Fix - Mochi Pair-Only for Pickup
+
+- [x] Fix mochi pair-only to include pickup orders (not just delivery)
+- [x] Only POS/in-store should allow single mochis
+- [x] Change label from "Min. 2 pcs" to "Set of 2"

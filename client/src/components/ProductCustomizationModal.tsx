@@ -77,17 +77,18 @@ export function ProductCustomizationModal({
   const [selectedAddons, setSelectedAddons] = useState<{ id: number; name: string; price: number }[]>([]);
   // Check if this is a mochi product
   const isMochiProduct = subcategory.name.toLowerCase().includes('mochi');
-  // For delivery/pickup, mochis must be ordered in pairs (minimum 2)
-  const minQuantity = (isDelivery && isMochiProduct) ? 2 : 1;
+  // For website orders (delivery AND pickup), mochis must be ordered in pairs (minimum 2)
+  // Only POS allows single mochis
+  const minQuantity = isMochiProduct ? 2 : 1;
   const [quantity, setQuantity] = useState(minQuantity);
   const [specialInstructions, setSpecialInstructions] = useState('');
 
-  // Update quantity when switching to delivery mode for mochi products
+  // Update quantity for mochi products (always minimum 2 on website)
   useEffect(() => {
-    if (isDelivery && isMochiProduct && quantity < 2) {
+    if (isMochiProduct && quantity < 2) {
       setQuantity(2);
     }
-  }, [isDelivery, isMochiProduct]);
+  }, [isMochiProduct]);
   
   // Coconut Cream Cap option for latte drinks
   const [wantCoconutCreamCap, setWantCoconutCreamCap] = useState(false);
@@ -290,10 +291,10 @@ export function ProductCustomizationModal({
               {product.chineseName && (
                 <span className="block text-sm text-muted-foreground">{product.chineseName}</span>
               )}
-              {/* Mochi set indicator for delivery/pickup */}
-              {isDelivery && isMochiProduct && (
+              {/* Mochi set indicator (website orders require set of 2) */}
+              {isMochiProduct && (
                 <span className="inline-block mt-1 bg-primary/10 text-primary text-xs font-semibold px-2 py-0.5 rounded-full">
-                  Minimum 2 pieces for delivery/pickup
+                  Sold as set of 2 pieces
                 </span>
               )}
             </div>
@@ -638,9 +639,9 @@ export function ProductCustomizationModal({
           {/* Quantity */}
           <div>
             <h4 className="font-medium mb-3">Quantity</h4>
-            {isDelivery && isMochiProduct && (
+            {isMochiProduct && (
               <p className="text-sm text-muted-foreground mb-2">
-                Mochis are sold in pairs for delivery orders (minimum 2)
+                Mochis are sold as a set of 2 pieces
               </p>
             )}
             <div className="flex items-center gap-4">
