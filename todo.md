@@ -411,3 +411,8 @@
 - [x] Update Bubble Tea/Coffee category video with Creme Brulee Taro video
 - [x] Update Asian Sweet Bites category video with Matcha Mochi video
 - [x] Update Hot Beverages category video with Yuzu Chadian video
+
+## Phase 24 - Moutan Branding
+
+- [x] Add Moutan logo alongside Taiwan Maami in header
+- [x] Add Moutan logo alongside Taiwan Maami in footer

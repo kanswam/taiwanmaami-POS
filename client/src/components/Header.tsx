@@ -37,6 +37,15 @@ export function Header() {
               }}
             />
             <span className="font-bold text-xl text-primary hidden sm:block">Taiwan Maami</span>
+            <span className="text-muted-foreground hidden sm:block">×</span>
+            <img 
+              src="/images/moutan-logo.png" 
+              alt="Moutan" 
+              className="h-8 w-auto hidden sm:block"
+              onError={(e) => {
+                (e.target as HTMLImageElement).style.display = 'none';
+              }}
+            />
           </Link>
 
           {/* Desktop Navigation */}
