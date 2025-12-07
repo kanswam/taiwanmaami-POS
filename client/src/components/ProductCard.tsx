@@ -59,6 +59,7 @@ export function ProductCard({ product, subcategory, category, isDelivery = false
       }
     } else {
       // For fixed price items
+      // For mochi delivery/pickup: deliveryPrice is already the set of 2 price
       const basePrice = isDelivery ? (product.deliveryPrice || product.instorePrice || 0) : (product.instorePrice || 0);
       return Math.round(basePrice * (1 + GST_RATE));
     }
@@ -110,11 +111,11 @@ export function ProductCard({ product, subcategory, category, isDelivery = false
               </span>
             )}
           </div>
-          {/* Mochi set indicator for delivery/pickup */}
-          {isDelivery && isMochiProduct && (
+          {/* Mochi set indicator for delivery/pickup - show on website orders (not POS) */}
+          {isMochiProduct && (
             <div className="absolute top-2 right-2">
               <span className="bg-primary text-primary-foreground text-xs font-semibold px-2 py-1 rounded-full shadow-sm">
-                Min. 2 pcs
+                Set of 2
               </span>
             </div>
           )}

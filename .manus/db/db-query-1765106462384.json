@@ -1,0 +1,90 @@
+{
+  "query": "SELECT p.id, p.name, s.name as subcategory, p.instorePrice, p.deliveryPrice, p.mochiPrice1pc, p.mochiPrice2pc, p.mochiPrice3pc FROM products p JOIN subcategories s ON p.subcategoryId = s.id WHERE s.name LIKE '%Mochi%' LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT p.id, p.name, s.name as subcategory, p.instorePrice, p.deliveryPrice, p.mochiPrice1pc, p.mochiPrice2pc, p.mochiPrice3pc FROM products p JOIN subcategories s ON p.subcategoryId = s.id WHERE s.name LIKE '%Mochi%' LIMIT 10;",
+  "rows": [
+    {
+      "id": "52",
+      "name": "Strawberry Mochi",
+      "subcategory": "Fruit Mochi",
+      "instorePrice": "18500",
+      "deliveryPrice": "38500",
+      "mochiPrice1pc": "18500",
+      "mochiPrice2pc": "35000",
+      "mochiPrice3pc": "49500"
+    },
+    {
+      "id": "53",
+      "name": "Pineapple Mochi",
+      "subcategory": "Fruit Mochi",
+      "instorePrice": "18500",
+      "deliveryPrice": "38500",
+      "mochiPrice1pc": "18500",
+      "mochiPrice2pc": "35000",
+      "mochiPrice3pc": "49500"
+    },
+    {
+      "id": "54",
+      "name": "Mango Mochi",
+      "subcategory": "Fruit Mochi",
+      "instorePrice": "18500",
+      "deliveryPrice": "38500",
+      "mochiPrice1pc": "18500",
+      "mochiPrice2pc": "35000",
+      "mochiPrice3pc": "49500"
+    },
+    {
+      "id": "55",
+      "name": "Blueberry Mochi",
+      "subcategory": "Fruit Mochi",
+      "instorePrice": "18500",
+      "deliveryPrice": "38500",
+      "mochiPrice1pc": "18500",
+      "mochiPrice2pc": "35000",
+      "mochiPrice3pc": "49500"
+    },
+    {
+      "id": "56",
+      "name": "Cherry Mochi",
+      "subcategory": "Fruit Mochi",
+      "instorePrice": "18500",
+      "deliveryPrice": "38500",
+      "mochiPrice1pc": "18500",
+      "mochiPrice2pc": "35000",
+      "mochiPrice3pc": "49500"
+    },
+    {
+      "id": "57",
+      "name": "Rocher Mochi",
+      "subcategory": "Signature Mochi",
+      "instorePrice": "27000",
+      "deliveryPrice": "55000",
+      "mochiPrice1pc": "27000",
+      "mochiPrice2pc": "53000",
+      "mochiPrice3pc": "75000"
+    },
+    {
+      "id": "58",
+      "name": "Banoffee Mochi",
+      "subcategory": "Signature Mochi",
+      "instorePrice": "27000",
+      "deliveryPrice": "55000",
+      "mochiPrice1pc": "27000",
+      "mochiPrice2pc": "53000",
+      "mochiPrice3pc": "75000"
+    },
+    {
+      "id": "59",
+      "name": "Dragon Speck Mochi",
+      "subcategory": "Signature Mochi",
+      "instorePrice": "27000",
+      "deliveryPrice": "55000",
+      "mochiPrice1pc": "27000",
+      "mochiPrice2pc": "53000",
+      "mochiPrice3pc": "75000"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\tsubcategory\tinstorePrice\tdeliveryPrice\tmochiPrice1pc\tmochiPrice2pc\tmochiPrice3pc\n52\tStrawberry Mochi\tFruit Mochi\t18500\t38500\t18500\t35000\t49500\n53\tPineapple Mochi\tFruit Mochi\t18500\t38500\t18500\t35000\t49500\n54\tMango Mochi\tFruit Mochi\t18500\t38500\t18500\t35000\t49500\n55\tBlueberry Mochi\tFruit Mochi\t18500\t38500\t18500\t35000\t49500\n56\tCherry Mochi\tFruit Mochi\t18500\t38500\t18500\t35000\t49500\n57\tRocher Mochi\tSignature Mochi\t27000\t55000\t27000\t53000\t75000\n58\tBanoffee Mochi\tSignature Mochi\t27000\t55000\t27000\t53000\t75000\n59\tDragon Speck Mochi\tSignature Mochi\t27000\t55000\t27000\t53000\t75000\n",
+  "stderr": "",
+  "execution_time_ms": 55
+}

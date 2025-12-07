@@ -61,8 +61,12 @@ export default function Menu() {
   const [searchQuery, setSearchQuery] = useState('');
   const { state, setOrderType, itemCount, total } = useCart();
 
+  // For delivery and pickup, use delivery prices (isDelivery=true)
+  // Only in-store orders use in-store prices
+  const isDeliveryOrPickup = state.orderType === 'delivery' || state.orderType === 'pickup';
+  
   const { data: menuData, isLoading } = trpc.menu.getFullMenu.useQuery({
-    isDelivery: state.orderType === 'delivery',
+    isDelivery: isDeliveryOrPickup,
   });
 
   // Get subcategories for selected category
@@ -202,7 +206,7 @@ export default function Menu() {
                 }}
                 subcategory={sub}
                 category={cat}
-                isDelivery={state.orderType === 'delivery'}
+                isDelivery={isDeliveryOrPickup}
               />
             );
           })}
@@ -365,7 +369,7 @@ export default function Menu() {
                         imageUrl: product.imageUrl || PRODUCT_IMAGES[product.slug] || null,
                       }}
                       subcategory={sub}
-                      isDelivery={state.orderType === 'delivery'}
+                      isDelivery={isDeliveryOrPickup}
                     />
                   );
                 })}

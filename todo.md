@@ -329,3 +329,21 @@
 - [x] Add locality dropdown to checkout address form
 - [x] Auto-fill pincode when locality selected
 - [x] Use existing CHENNAI_AREAS from shared/types.ts
+
+
+## Phase 20 - Mochi Pricing Fix (Dec 7, 2025)
+
+### Critical Pricing Fix
+- [x] Fix mochi price display on product cards (should show ₹404 for fruit, ₹578 for signature with GST)
+- [x] Fix mochi pricing in customization modal
+- [x] Fix cart to handle mochi set pricing correctly (deliveryPrice is already set of 2 price)
+- [x] Enforce quantity increments of 2 for delivery/pickup mochis
+- [x] Fix checkout order summary to show correct item breakdown
+
+### Database Values (Reference)
+- Fruit Mochi: deliveryPrice = 38500 paise (₹385) → with 5% GST = ₹404
+- Signature Mochi: deliveryPrice = 55000 paise (₹550) → with 5% GST = ₹578
+- In-store: instorePrice = 18500 paise (₹185) per piece
+
+### TypeScript Errors
+- [x] Fix TypeScript errors from rollback (size type assignment issue)

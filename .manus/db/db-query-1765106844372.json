@@ -1,0 +1,58 @@
+{
+  "query": "SELECT id, name, instorePrice, deliveryPrice FROM products WHERE name LIKE '%Mochi%' LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT id, name, instorePrice, deliveryPrice FROM products WHERE name LIKE '%Mochi%' LIMIT 10;",
+  "rows": [
+    {
+      "id": "52",
+      "name": "Strawberry Mochi",
+      "instorePrice": "18500",
+      "deliveryPrice": "38500"
+    },
+    {
+      "id": "53",
+      "name": "Pineapple Mochi",
+      "instorePrice": "18500",
+      "deliveryPrice": "38500"
+    },
+    {
+      "id": "54",
+      "name": "Mango Mochi",
+      "instorePrice": "18500",
+      "deliveryPrice": "38500"
+    },
+    {
+      "id": "55",
+      "name": "Blueberry Mochi",
+      "instorePrice": "18500",
+      "deliveryPrice": "38500"
+    },
+    {
+      "id": "56",
+      "name": "Cherry Mochi",
+      "instorePrice": "18500",
+      "deliveryPrice": "38500"
+    },
+    {
+      "id": "57",
+      "name": "Rocher Mochi",
+      "instorePrice": "27000",
+      "deliveryPrice": "55000"
+    },
+    {
+      "id": "58",
+      "name": "Banoffee Mochi",
+      "instorePrice": "27000",
+      "deliveryPrice": "55000"
+    },
+    {
+      "id": "59",
+      "name": "Dragon Speck Mochi",
+      "instorePrice": "27000",
+      "deliveryPrice": "55000"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\tinstorePrice\tdeliveryPrice\n52\tStrawberry Mochi\t18500\t38500\n53\tPineapple Mochi\t18500\t38500\n54\tMango Mochi\t18500\t38500\n55\tBlueberry Mochi\t18500\t38500\n56\tCherry Mochi\t18500\t38500\n57\tRocher Mochi\t27000\t55000\n58\tBanoffee Mochi\t27000\t55000\n59\tDragon Speck Mochi\t27000\t55000\n",
+  "stderr": "",
+  "execution_time_ms": 92
+}

@@ -181,7 +181,10 @@ export function ProductCustomizationModal({
   const milkAddonsTotal = selectedAddons.reduce((sum, a) => sum + a.price, 0);
   const addonsTotal = poppingBobaPrice + extraBobaPrice + milkAddonsTotal;
   const unitPrice = basePrice;
-  const lineTotal = (unitPrice + addonsTotal) * quantity;
+  // For mochi delivery/pickup: deliveryPrice is already the set of 2 price, so quantity represents number of sets
+  // quantity=2 means 1 set (2 pieces), quantity=4 means 2 sets (4 pieces), etc.
+  const effectiveQuantity = (isDelivery && isMochiProduct) ? Math.floor(quantity / 2) : quantity;
+  const lineTotal = (unitPrice + addonsTotal) * effectiveQuantity;
   const displayTotal = Math.round(lineTotal * (1 + GST_RATE));
 
   // Toggle addon selection
@@ -290,10 +293,10 @@ export function ProductCustomizationModal({
               {product.chineseName && (
                 <span className="block text-sm text-muted-foreground">{product.chineseName}</span>
               )}
-              {/* Mochi set indicator for delivery/pickup */}
-              {isDelivery && isMochiProduct && (
+              {/* Mochi set indicator */}
+              {isMochiProduct && (
                 <span className="inline-block mt-1 bg-primary/10 text-primary text-xs font-semibold px-2 py-0.5 rounded-full">
-                  Minimum 2 pieces for delivery/pickup
+                  Sold as set of 2 pieces
                 </span>
               )}
             </div>
@@ -638,16 +641,16 @@ export function ProductCustomizationModal({
           {/* Quantity */}
           <div>
             <h4 className="font-medium mb-3">Quantity</h4>
-            {isDelivery && isMochiProduct && (
+            {isMochiProduct && (
               <p className="text-sm text-muted-foreground mb-2">
-                Mochis are sold in pairs for delivery orders (minimum 2)
+                Mochis are sold as a set of 2 pieces
               </p>
             )}
             <div className="flex items-center gap-4">
               <Button
                 variant="outline"
                 size="icon"
-                onClick={() => setQuantity(Math.max(minQuantity, quantity - 1))}
+                onClick={() => setQuantity(Math.max(minQuantity, quantity - (isMochiProduct ? 2 : 1)))}
                 disabled={quantity <= minQuantity}
               >
                 <Minus className="w-4 h-4" />
@@ -656,7 +659,7 @@ export function ProductCustomizationModal({
               <Button
                 variant="outline"
                 size="icon"
-                onClick={() => setQuantity(quantity + 1)}
+                onClick={() => setQuantity(quantity + (isMochiProduct ? 2 : 1))}
               >
                 <Plus className="w-4 h-4" />
               </Button>
