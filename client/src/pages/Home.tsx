@@ -73,7 +73,7 @@ export default function Home() {
             className="w-full h-full object-cover"
             poster="/images/interior2.jpg"
           >
-            <source src="/videos/hero-video.mp4" type="video/mp4" />
+            <source src="/videos/hero-banner.mp4" type="video/mp4" />
             <img
               src="/images/interior2.jpg"
               alt="Taiwan Maami Interior"

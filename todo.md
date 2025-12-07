@@ -416,3 +416,4 @@
 
 - [x] Add Moutan logo alongside Taiwan Maami in header
 - [x] Add Moutan logo alongside Taiwan Maami in footer
+- [x] Update hero banner video with new Boba Tea video
