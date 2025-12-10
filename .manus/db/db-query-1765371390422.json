@@ -1,0 +1,19 @@
+{
+  "query": "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'users' AND COLUMN_NAME IN ('stampCount', 'lifetimeStamps', 'lastStampDate');",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'users' AND COLUMN_NAME IN ('stampCount', 'lifetimeStamps', 'lastStampDate');",
+  "rows": [
+    {
+      "COLUMN_NAME": "stampCount"
+    },
+    {
+      "COLUMN_NAME": "lifetimeStamps"
+    },
+    {
+      "COLUMN_NAME": "lastStampDate"
+    }
+  ],
+  "messages": [],
+  "stdout": "COLUMN_NAME\nstampCount\nlifetimeStamps\nlastStampDate\n",
+  "stderr": "",
+  "execution_time_ms": 52
+}

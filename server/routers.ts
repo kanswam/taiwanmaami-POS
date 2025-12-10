@@ -11,7 +11,8 @@ import { categories, subcategories, products, addons, orders, orderItems, orderI
 import { eq, and, desc, asc, sql } from "drizzle-orm";
 import { generateOrderNumber, calculateGst } from "@shared/types";
 import { authenticateStaffByMobile, getActiveEmployees } from "./employeeMaster";
-import { posSessions, posAuditLog, outletProducts, loyaltyRewards, stampTransactions, guestOrders, reviews } from "../drizzle/schema";
+import { posSessions, posAuditLog, outletProducts, loyaltyRewards, stampTransactions, guestOrders, reviews, kotQueue } from "../drizzle/schema";
+import { ENV } from './_core/env';
 
 // Admin procedure - only allows admin role
 const adminProcedure = protectedProcedure.use(({ ctx, next }) => {
@@ -240,7 +241,99 @@ export const appRouter = router({
     updateStatus: staffProcedure
       .input(z.object({ orderId: z.number(), status: z.string() }))
       .mutation(async ({ input }) => {
+        const dbInstance = await db.getDb();
+        
+        // Get order details before updating
+        const [order] = await dbInstance!
+          .select()
+          .from(orders)
+          .where(eq(orders.id, input.orderId));
+        
         await db.updateOrderStatus(input.orderId, input.status);
+        
+        // Award stamps when order is marked as completed
+        if (input.status === 'completed' && order && order.userId) {
+          const orderTotal = order.totalAmount || 0;
+          
+          // Get current user stamp count
+          const [user] = await dbInstance!
+            .select({
+              stampCount: users.stampCount,
+              lifetimeStamps: users.lifetimeStamps,
+            })
+            .from(users)
+            .where(eq(users.id, order.userId));
+          
+          const isFirstOrder = (user?.lifetimeStamps || 0) === 0;
+          let stampsEarned = Math.floor(orderTotal / 45000); // 1 stamp per ₹450
+          let bonusStamps = 0;
+          let welcomeStamp = 0;
+          
+          // Bonus stamp for orders >= ₹900
+          if (orderTotal >= 90000) {
+            bonusStamps = 1;
+          }
+          
+          // Welcome stamp for first order
+          if (isFirstOrder) {
+            welcomeStamp = 1;
+          }
+          
+          const totalStamps = stampsEarned + bonusStamps + welcomeStamp;
+          
+          if (totalStamps > 0) {
+            // Update user stamps
+            const newStampCount = (user?.stampCount || 0) + totalStamps;
+            const newLifetimeStamps = (user?.lifetimeStamps || 0) + totalStamps;
+            
+            await dbInstance!
+              .update(users)
+              .set({
+                stampCount: newStampCount,
+                lifetimeStamps: newLifetimeStamps,
+                lastStampDate: new Date(),
+              })
+              .where(eq(users.id, order.userId));
+            
+            // Record stamp transaction
+            await dbInstance!.insert(stampTransactions).values({
+              userId: order.userId,
+              orderId: input.orderId,
+              action: isFirstOrder ? 'welcome' : (bonusStamps > 0 ? 'bonus' : 'earn'),
+              stamps: totalStamps,
+              orderTotal: orderTotal,
+              description: `Earned ${totalStamps} stamp(s) from order #${order.orderNumber}`,
+              createdAt: new Date(),
+            });
+            
+            // Check if user earned any rewards (every 10 stamps)
+            let currentStamps = newStampCount;
+            let rewardsCreated = 0;
+            while (currentStamps >= 10) {
+              // Create a reward with unique voucher code
+              const voucherCode = `REWARD${Date.now().toString(36).toUpperCase()}${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
+              await dbInstance!.insert(loyaltyRewards).values({
+                userId: order.userId,
+                rewardType: 'free_large_bubble_tea',
+                voucherCode: voucherCode,
+                isRedeemed: false,
+                expiresAt: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000), // 90 days
+                createdAt: new Date(),
+              });
+              currentStamps -= 10;
+              rewardsCreated++;
+            }
+            
+            // Update stamp count after creating rewards
+            if (rewardsCreated > 0) {
+              await dbInstance!
+                .update(users)
+                .set({ stampCount: currentStamps })
+                .where(eq(users.id, order.userId));
+            }
+          }
+        }
+        
         return { success: true };
       }),
 
@@ -311,6 +404,50 @@ export const appRouter = router({
         await dbInstance!.update(orders)
           .set({ orderStatus: 'confirmed', paymentStatus: 'completed' })
           .where(eq(orders.id, input.orderId));
+        
+        // Create KOT for kitchen printing
+        const [order] = await dbInstance!.select().from(orders).where(eq(orders.id, input.orderId));
+        if (order) {
+          // Get order items with details
+          const items = await dbInstance!.select().from(orderItems).where(eq(orderItems.orderId, input.orderId));
+          // Get all item addons for this order's items
+          const itemIds = items.map(i => i.id);
+          const itemAddons = itemIds.length > 0 
+            ? await dbInstance!.select().from(orderItemAddons).where(sql`${orderItemAddons.orderItemId} IN (${sql.join(itemIds.map(id => sql`${id}`), sql`, `)})`)
+            : [];
+          
+          // Build KOT data
+          const kotData = {
+            orderId: order.orderNumber,
+            customerName: order.customerName || 'Guest',
+            customerPhone: order.customerPhone || '',
+            items: items.map(item => {
+              const addons = itemAddons.filter(a => a.orderItemId === item.id);
+              return {
+                productName: item.productName,
+                quantity: item.quantity,
+                price: item.unitPrice,
+                size: item.size,
+                withBoba: item.withBoba,
+                sugarLevel: item.sugarLevel,
+                iceLevel: item.iceLevel,
+                addons: addons.map(a => ({
+                  name: a.addonName,
+                  price: a.addonPrice,
+                })),
+              };
+            }),
+            totalAmount: order.totalAmount,
+            createdAt: new Date().toISOString(),
+          };
+          
+          await dbInstance!.insert(kotQueue).values({
+            orderId: input.orderId,
+            orderNumber: order.orderNumber,
+            kotData: JSON.stringify(kotData),
+            isPrinted: false,
+          });
+        }
         
         return { success: true, message: 'Payment verified successfully' };
       }),
@@ -933,6 +1070,35 @@ export const appRouter = router({
             itemCount: input.items.length,
             paymentMethods: input.payments.map(p => p.method),
           },
+        });
+
+        // Create KOT for kitchen printing (POS orders)
+        const kotData = {
+          orderId: orderNumber,
+          customerName: input.customerName || 'Walk-in Customer',
+          customerPhone: input.customerPhone || '',
+          items: input.items.map(item => ({
+            productName: item.productName,
+            quantity: item.quantity,
+            price: item.unitPrice,
+            size: item.size,
+            withBoba: item.withBoba,
+            sugarLevel: item.sugarLevel,
+            iceLevel: item.iceLevel,
+            addons: item.addons.map(a => ({
+              name: a.name,
+              price: a.price,
+            })),
+          })),
+          totalAmount,
+          createdAt: new Date().toISOString(),
+        };
+        
+        await dbInstance!.insert(kotQueue).values({
+          orderId,
+          orderNumber,
+          kotData: JSON.stringify(kotData),
+          isPrinted: false,
         });
 
         return { orderId, orderNumber, totalAmount };
@@ -1615,6 +1781,90 @@ export const appRouter = router({
           .where(eq(reviews.id, input.reviewId));
         
         return { success: true };
+      }),
+  }),
+
+  // KOT (Kitchen Order Ticket) routes for polling from outlet printer
+  kot: router({
+    // Poll for pending KOTs - called by outlet computer
+    pollPending: publicProcedure
+      .input(z.object({ secret: z.string() }))
+      .query(async ({ input }) => {
+        // Verify secret
+        if (input.secret !== ENV.kotPrintSecret) {
+          throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Invalid KOT secret' });
+        }
+        
+        const dbInstance = await getDb();
+        if (!dbInstance) return [];
+        
+        // Get all pending KOTs (not yet printed)
+        const pendingKots = await dbInstance
+          .select()
+          .from(kotQueue)
+          .where(eq(kotQueue.isPrinted, false))
+          .orderBy(asc(kotQueue.createdAt));
+        
+        return pendingKots.map(kot => ({
+          id: kot.id,
+          orderId: kot.orderId,
+          orderNumber: kot.orderNumber,
+          kotData: JSON.parse(kot.kotData),
+          createdAt: kot.createdAt,
+        }));
+      }),
+
+    // Mark KOT as printed - called after successful print
+    markPrinted: publicProcedure
+      .input(z.object({ 
+        secret: z.string(),
+        kotId: z.number(),
+      }))
+      .mutation(async ({ input }) => {
+        // Verify secret
+        if (input.secret !== ENV.kotPrintSecret) {
+          throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Invalid KOT secret' });
+        }
+        
+        const dbInstance = await getDb();
+        if (!dbInstance) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
+        
+        await dbInstance
+          .update(kotQueue)
+          .set({
+            isPrinted: true,
+            printedAt: new Date(),
+          })
+          .where(eq(kotQueue.id, input.kotId));
+        
+        return { success: true };
+      }),
+
+    // Get KOT status (for debugging)
+    getStatus: publicProcedure
+      .input(z.object({ secret: z.string() }))
+      .query(async ({ input }) => {
+        // Verify secret
+        if (input.secret !== ENV.kotPrintSecret) {
+          throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Invalid KOT secret' });
+        }
+        
+        const dbInstance = await getDb();
+        if (!dbInstance) return { total: 0, pending: 0, printed: 0 };
+        
+        const [stats] = await dbInstance
+          .select({
+            total: sql<number>`COUNT(*)`,
+            pending: sql<number>`SUM(CASE WHEN isPrinted = false THEN 1 ELSE 0 END)`,
+            printed: sql<number>`SUM(CASE WHEN isPrinted = true THEN 1 ELSE 0 END)`,
+          })
+          .from(kotQueue);
+        
+        return {
+          total: Number(stats?.total || 0),
+          pending: Number(stats?.pending || 0),
+          printed: Number(stats?.printed || 0),
+        };
       }),
   }),
 });

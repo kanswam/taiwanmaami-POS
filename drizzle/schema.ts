@@ -368,6 +368,17 @@ export const reviews = mysqlTable("reviews", {
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
 
+// KOT Queue for kitchen order tickets
+export const kotQueue = mysqlTable("kot_queue", {
+  id: int("id").autoincrement().primaryKey(),
+  orderId: int("orderId").notNull(),
+  orderNumber: varchar("orderNumber", { length: 50 }).notNull(),
+  kotData: text("kotData").notNull(), // JSON string with order details
+  isPrinted: boolean("isPrinted").default(false).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  printedAt: timestamp("printedAt"),
+});
+
 // Type exports
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
@@ -388,3 +399,4 @@ export type LoyaltyReward = typeof loyaltyRewards.$inferSelect;
 export type StampTransaction = typeof stampTransactions.$inferSelect;
 export type GuestOrder = typeof guestOrders.$inferSelect;
 export type Review = typeof reviews.$inferSelect;
+export type KotQueue = typeof kotQueue.$inferSelect;

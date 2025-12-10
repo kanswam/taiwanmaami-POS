@@ -417,3 +417,16 @@
 - [x] Add Moutan logo alongside Taiwan Maami in header
 - [x] Add Moutan logo alongside Taiwan Maami in footer
 - [x] Update hero banner video with new Boba Tea video
+
+## Phase 25 - Bug Fixes
+
+### Stamp System
+- [ ] Fix stamp not being awarded on order completion
+
+### KOT Polling
+- [x] Add kot_queue table to database schema
+- [x] Add KOT router procedures (pollPending, markPrinted)
+- [x] Update payment verification to save KOT to database
+
+### POS Session Error
+- [x] Fix "Session not found" error on POS page (session already exists in DB)

@@ -1,0 +1,24 @@
+{
+  "query": "SELECT * FROM pos_sessions WHERE isActive = TRUE ORDER BY loginTime DESC LIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT * FROM pos_sessions WHERE isActive = TRUE ORDER BY loginTime DESC LIMIT 5;",
+  "rows": [
+    {
+      "id": "1",
+      "employeeId": "240001",
+      "employeeCode": "MD001",
+      "employeeName": "Theresa Cheng Yun Hu",
+      "employeeMobile": "9791388648",
+      "outletId": "2",
+      "outletName": "Taiwan Maami - T Nagar",
+      "loginTime": "2025-12-07 16:05:07",
+      "logoutTime": "NULL",
+      "isActive": "1",
+      "deviceInfo": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.5 Safari/605.1.15",
+      "ipAddress": "::ffff:100.100.0.67"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\temployeeId\temployeeCode\temployeeName\temployeeMobile\toutletId\toutletName\tloginTime\tlogoutTime\tisActive\tdeviceInfo\tipAddress\n1\t240001\tMD001\tTheresa Cheng Yun Hu\t9791388648\t2\tTaiwan Maami - T Nagar\t2025-12-07 16:05:07\tNULL\t1\tMozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.5 Safari/605.1.15\t::ffff:100.100.0.67\n",
+  "stderr": "",
+  "execution_time_ms": 116
+}
