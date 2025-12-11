@@ -1,0 +1,80 @@
+{
+  "query": "SELECT id, orderNumber, orderStatus, paymentStatus, createdAt FROM orders ORDER BY id DESC LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT id, orderNumber, orderStatus, paymentStatus, createdAt FROM orders ORDER BY id DESC LIMIT 10;",
+  "rows": [
+    {
+      "id": "150001",
+      "orderNumber": "TMMJ1DFKCFVS53",
+      "orderStatus": "completed",
+      "paymentStatus": "completed",
+      "createdAt": "2025-12-11 11:45:01"
+    },
+    {
+      "id": "120002",
+      "orderNumber": "TMMJ1CUXRNR473",
+      "orderStatus": "completed",
+      "paymentStatus": "completed",
+      "createdAt": "2025-12-11 11:28:59"
+    },
+    {
+      "id": "120001",
+      "orderNumber": "TMMJ1CS5E5VYAF",
+      "orderStatus": "completed",
+      "paymentStatus": "completed",
+      "createdAt": "2025-12-11 11:26:49"
+    },
+    {
+      "id": "90001",
+      "orderNumber": "TMMJ09M5G2OMMF",
+      "orderStatus": "completed",
+      "paymentStatus": "completed",
+      "createdAt": "2025-12-10 17:10:24"
+    },
+    {
+      "id": "60001",
+      "orderNumber": "TMMJ008PCE7STX",
+      "orderStatus": "completed",
+      "paymentStatus": "completed",
+      "createdAt": "2025-12-10 12:48:00"
+    },
+    {
+      "id": "30002",
+      "orderNumber": "TMMIW86QZ0WHPB",
+      "orderStatus": "confirmed",
+      "paymentStatus": "completed",
+      "createdAt": "2025-12-07 21:19:21"
+    },
+    {
+      "id": "30001",
+      "orderNumber": "TMMIW2GV4VV37Q",
+      "orderStatus": "completed",
+      "paymentStatus": "completed",
+      "createdAt": "2025-12-07 18:39:15"
+    },
+    {
+      "id": "4",
+      "orderNumber": "TMMIVW588AVFG3",
+      "orderStatus": "cancelled",
+      "paymentStatus": "pending",
+      "createdAt": "2025-12-07 15:42:15"
+    },
+    {
+      "id": "3",
+      "orderNumber": "TMMIVW2BGVXP2R",
+      "orderStatus": "completed",
+      "paymentStatus": "completed",
+      "createdAt": "2025-12-07 15:39:59"
+    },
+    {
+      "id": "2",
+      "orderNumber": "TMMIVVY6S4BAVF",
+      "orderStatus": "completed",
+      "paymentStatus": "completed",
+      "createdAt": "2025-12-07 15:36:46"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\torderNumber\torderStatus\tpaymentStatus\tcreatedAt\n150001\tTMMJ1DFKCFVS53\tcompleted\tcompleted\t2025-12-11 11:45:01\n120002\tTMMJ1CUXRNR473\tcompleted\tcompleted\t2025-12-11 11:28:59\n120001\tTMMJ1CS5E5VYAF\tcompleted\tcompleted\t2025-12-11 11:26:49\n90001\tTMMJ09M5G2OMMF\tcompleted\tcompleted\t2025-12-10 17:10:24\n60001\tTMMJ008PCE7STX\tcompleted\tcompleted\t2025-12-10 12:48:00\n30002\tTMMIW86QZ0WHPB\tconfirmed\tcompleted\t2025-12-07 21:19:21\n30001\tTMMIW2GV4VV37Q\tcompleted\tcompleted\t2025-12-07 18:39:15\n4\tTMMIVW588AVFG3\tcancelled\tpending\t2025-12-07 15:42:15\n3\tTMMIVW2BGVXP2R\tcompleted\tcompleted\t2025-12-07 15:39:59\n2\tTMMIVVY6S4BAVF\tcompleted\tcompleted\t2025-12-07 15:36:46\n",
+  "stderr": "",
+  "execution_time_ms": 54
+}
