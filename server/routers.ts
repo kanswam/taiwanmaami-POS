@@ -1870,3 +1870,5 @@ export const appRouter = router({
 });
 
 export type AppRouter = typeof appRouter;
+
+// KOT Polling System v1.0 - Updated 2025-12-11
