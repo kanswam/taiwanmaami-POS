@@ -421,7 +421,8 @@
 ## Phase 25 - Bug Fixes
 
 ### Stamp System
-- [ ] Fix stamp not being awarded on order completion
+- [x] Fix stamp not being awarded on order completion (stamps awarded when order marked 'completed')
+- [ ] Verify KOT polling works after publishing
 
 ### KOT Polling
 - [x] Add kot_queue table to database schema

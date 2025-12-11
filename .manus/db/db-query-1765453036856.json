@@ -1,0 +1,50 @@
+{
+  "query": "SELECT o.id, o.orderNumber, o.orderStatus, o.totalAmount, o.createdAt, u.name, u.stampCount, u.lifetimeStamps \nFROM orders o \nJOIN users u ON o.userId = u.id \nWHERE u.name LIKE '%Mujammil%' \nORDER BY o.id DESC \nLIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT o.id, o.orderNumber, o.orderStatus, o.totalAmount, o.createdAt, u.name, u.stampCount, u.lifetimeStamps \nFROM orders o \nJOIN users u ON o.userId = u.id \nWHERE u.name LIKE '%Mujammil%' \nORDER BY o.id DESC \nLIMIT 5;",
+  "rows": [
+    {
+      "id": "120002",
+      "orderNumber": "TMMJ1CUXRNR473",
+      "orderStatus": "confirmed",
+      "totalAmount": "54076",
+      "createdAt": "2025-12-11 11:28:59",
+      "name": "MUJAMMIL.M",
+      "stampCount": "0",
+      "lifetimeStamps": "0"
+    },
+    {
+      "id": "120001",
+      "orderNumber": "TMMJ1CS5E5VYAF",
+      "orderStatus": "confirmed",
+      "totalAmount": "41476",
+      "createdAt": "2025-12-11 11:26:49",
+      "name": "MUJAMMIL.M",
+      "stampCount": "0",
+      "lifetimeStamps": "0"
+    },
+    {
+      "id": "90001",
+      "orderNumber": "TMMJ09M5G2OMMF",
+      "orderStatus": "confirmed",
+      "totalAmount": "53550",
+      "createdAt": "2025-12-10 17:10:24",
+      "name": "MUJAMMIL.M",
+      "stampCount": "0",
+      "lifetimeStamps": "0"
+    },
+    {
+      "id": "60001",
+      "orderNumber": "TMMJ008PCE7STX",
+      "orderStatus": "completed",
+      "totalAmount": "64050",
+      "createdAt": "2025-12-10 12:48:00",
+      "name": "MUJAMMIL.M",
+      "stampCount": "0",
+      "lifetimeStamps": "0"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\torderNumber\torderStatus\ttotalAmount\tcreatedAt\tname\tstampCount\tlifetimeStamps\n120002\tTMMJ1CUXRNR473\tconfirmed\t54076\t2025-12-11 11:28:59\tMUJAMMIL.M\t0\t0\n120001\tTMMJ1CS5E5VYAF\tconfirmed\t41476\t2025-12-11 11:26:49\tMUJAMMIL.M\t0\t0\n90001\tTMMJ09M5G2OMMF\tconfirmed\t53550\t2025-12-10 17:10:24\tMUJAMMIL.M\t0\t0\n60001\tTMMJ008PCE7STX\tcompleted\t64050\t2025-12-10 12:48:00\tMUJAMMIL.M\t0\t0\n",
+  "stderr": "",
+  "execution_time_ms": 60
+}
