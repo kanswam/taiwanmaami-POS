@@ -418,7 +418,7 @@
 - [x] Add Moutan logo alongside Taiwan Maami in footer
 - [x] Update hero banner video with new Boba Tea video
 
-## Phase 25 - Bug Fixes
+## Phase 25 - Bug Fixes (Updated Dec 11, 2025 - KOT System Ready)
 
 ### Stamp System
 - [x] Fix stamp not being awarded on order completion (stamps awarded when order marked 'completed')
