@@ -423,6 +423,7 @@
 ### Stamp System
 - [x] Fix stamp not being awarded on order completion (stamps awarded when order marked 'completed')
 - [ ] Verify KOT polling works after publishing
+- [ ] Fix KOT creation to trigger on Razorpay payment confirmation (not manual verification)
 
 ### KOT Polling
 - [x] Add kot_queue table to database schema
