@@ -442,9 +442,9 @@ export const appRouter = router({
           };
           
           await dbInstance!.insert(kotQueue).values({
-            orderId: input.orderId,
-            orderNumber: order.orderNumber,
-            kotData: JSON.stringify(kotData),
+            orderId: String(input.orderId),
+            outletId: order.outletId || 1, // Default to outlet 1 if not set
+            kotData: kotData,
             isPrinted: false,
           });
         }
@@ -1095,9 +1095,9 @@ export const appRouter = router({
         };
         
         await dbInstance!.insert(kotQueue).values({
-          orderId,
-          orderNumber,
-          kotData: JSON.stringify(kotData),
+          orderId: String(orderId),
+          outletId: input.outletId,
+          kotData: kotData,
           isPrinted: false,
         });
 
@@ -1808,8 +1808,8 @@ export const appRouter = router({
         return pendingKots.map(kot => ({
           id: kot.id,
           orderId: kot.orderId,
-          orderNumber: kot.orderNumber,
-          kotData: JSON.parse(kot.kotData),
+          outletId: kot.outletId,
+          kotData: kot.kotData as Record<string, unknown>,
           createdAt: kot.createdAt,
         }));
       }),
