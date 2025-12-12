@@ -1871,4 +1871,4 @@ export const appRouter = router({
 
 export type AppRouter = typeof appRouter;
 
-// KOT Polling System v1.1 - Force Redeploy 2025-12-11 18:58 IST
+// KOT Polling System v1.2 - Schema fix deployed 2025-12-12 16:05 IST - orderId as varchar, outletId added, kotData as json
