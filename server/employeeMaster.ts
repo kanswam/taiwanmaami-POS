@@ -44,7 +44,7 @@ export async function authenticateStaffByMobile(mobile: string): Promise<AuthRes
     const cleanMobile = mobile.replace(/\s+/g, '').replace(/^\+91/, '');
     
     const response = await fetch(
-      `${EMP_MASTER_API_URL}/api/v1/employees/by-mobile/${cleanMobile}`,
+      `${EMP_MASTER_API_URL}/employees/by-mobile/${cleanMobile}`,
       {
         headers: {
           'X-API-Key': EMP_MASTER_API_KEY,
@@ -110,7 +110,7 @@ export async function getEmployeeById(employeeId: string): Promise<Employee | nu
 
   try {
     const response = await fetch(
-      `${EMP_MASTER_API_URL}/api/v1/employees/${employeeId}`,
+      `${EMP_MASTER_API_URL}/employees/${employeeId}`,
       {
         headers: {
           'X-API-Key': EMP_MASTER_API_KEY,
@@ -143,7 +143,7 @@ export async function getActiveEmployees(): Promise<Employee[]> {
 
   try {
     const response = await fetch(
-      `${EMP_MASTER_API_URL}/api/v1/employees?status=active&limit=100`,
+      `${EMP_MASTER_API_URL}/employees?status=active&limit=100`,
       {
         headers: {
           'X-API-Key': EMP_MASTER_API_KEY,
@@ -178,7 +178,7 @@ export async function testConnection(): Promise<{ success: boolean; error?: stri
 
   try {
     const response = await fetch(
-      `${EMP_MASTER_API_URL}/api/v1/employees?limit=1`,
+      `${EMP_MASTER_API_URL}/employees?limit=1`,
       {
         headers: {
           'X-API-Key': EMP_MASTER_API_KEY,
