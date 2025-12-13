@@ -1,4 +1,5 @@
 import { Link } from 'wouter';
+// Version: 2025-12-13-v4 - POS Auth Fix with hardcoded credentials
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Header } from '@/components/Header';
