@@ -25,7 +25,7 @@ const net = require('net');
 // ============== CONFIGURATION ==============
 const CONFIG = {
   WEBSITE_URL: 'https://www.taiwanmaami.com',  // Your website URL
-  KOT_SECRET: 'your-kot-secret-here',           // Replace with your actual KOT secret
+  KOT_SECRET: 'LqhbdPxvsm27rFoc2ImVqc9sZ8Rrme3a',  // Taiwan Maami KOT secret
   PRINTER_IP: '192.168.1.22',                   // Your thermal printer IP
   PRINTER_PORT: 9100,                           // Thermal printer port
   POLL_INTERVAL: 5000,                          // Poll every 5 seconds
