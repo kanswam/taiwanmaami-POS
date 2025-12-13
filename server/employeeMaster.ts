@@ -5,8 +5,9 @@
  * for POS staff authentication and employee data retrieval.
  */
 
-const EMP_MASTER_API_URL = process.env.EMP_MASTER_API_URL;
-const EMP_MASTER_API_KEY = process.env.EMP_MASTER_API_KEY;
+// Use env vars with hardcoded fallback to ensure production works
+const EMP_MASTER_API_URL = process.env.EMP_MASTER_API_URL || 'https://employees.thamaraifoods.com';
+const EMP_MASTER_API_KEY = process.env.EMP_MASTER_API_KEY || 'tk_1HfTsuKSxqo715o_jmDhOy9hX0ltO4Tkmhx_n2ACKYNC4V-k';
 
 export interface Employee {
   id: string;
