@@ -442,9 +442,9 @@ export const appRouter = router({
           };
           
           await dbInstance!.insert(kotQueue).values({
-            orderId: String(input.orderId),
-            outletId: order.outletId || 1, // Default to outlet 1 if not set
-            kotData: kotData,
+            orderId: input.orderId,
+            orderNumber: order.orderNumber,
+            kotData: JSON.stringify(kotData),
             isPrinted: false,
           });
         }
@@ -1095,9 +1095,9 @@ export const appRouter = router({
         };
         
         await dbInstance!.insert(kotQueue).values({
-          orderId: String(orderId),
-          outletId: input.outletId,
-          kotData: kotData,
+          orderId,
+          orderNumber,
+          kotData: JSON.stringify(kotData),
           isPrinted: false,
         });
 
@@ -1808,8 +1808,8 @@ export const appRouter = router({
         return pendingKots.map(kot => ({
           id: kot.id,
           orderId: kot.orderId,
-          outletId: kot.outletId,
-          kotData: kot.kotData as Record<string, unknown>,
+          orderNumber: kot.orderNumber,
+          kotData: JSON.parse(kot.kotData),
           createdAt: kot.createdAt,
         }));
       }),
@@ -1871,4 +1871,4 @@ export const appRouter = router({
 
 export type AppRouter = typeof appRouter;
 
-// KOT Polling System v1.2 - Schema fix deployed 2025-12-12 16:05 IST - orderId as varchar, outletId added, kotData as json
+// KOT Polling System v1.1 - Force Redeploy 2025-12-11 18:58 IST
