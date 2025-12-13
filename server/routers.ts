@@ -849,6 +849,18 @@ export const appRouter = router({
 
   // POS Staff Authentication routes
   posAuth: router({
+    // Diagnostic endpoint to check env vars (temporary)
+    checkEnv: publicProcedure.query(() => {
+      const url = process.env.EMP_MASTER_API_URL;
+      const key = process.env.EMP_MASTER_API_KEY;
+      return {
+        urlConfigured: !!url,
+        urlValue: url ? url.substring(0, 30) + '...' : 'NOT SET',
+        keyConfigured: !!key,
+        keyPrefix: key ? key.substring(0, 10) + '...' : 'NOT SET',
+      };
+    }),
+    
     // Authenticate staff by mobile number
     loginByMobile: publicProcedure
       .input(z.object({ mobile: z.string() }))
