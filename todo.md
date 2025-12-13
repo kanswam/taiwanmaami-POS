@@ -422,9 +422,8 @@
 
 ### Stamp System
 - [x] Fix stamp not being awarded on order completion (stamps awarded when order marked 'completed')
-- [x] Verify KOT polling works after publishing (fixed schema mismatch)
+- [ ] Verify KOT polling works after publishing
 - [ ] Fix KOT creation to trigger on Razorpay payment confirmation (not manual verification)
-- [x] Fix POS authentication service unavailable error (update Employee Master API URL and key)
 
 ### KOT Polling
 - [x] Add kot_queue table to database schema
