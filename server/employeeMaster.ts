@@ -94,9 +94,10 @@ export async function authenticateStaffByMobile(mobile: string): Promise<AuthRes
   } catch (error) {
     console.error('Employee Master API error:', error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    // v2.0 - Added detailed error for debugging
     return {
       success: false,
-      error: `Authentication service unavailable: ${errorMessage}`
+      error: `Auth failed (v2): ${errorMessage}. URL: ${EMP_MASTER_API_URL ? 'SET' : 'MISSING'}, Key: ${EMP_MASTER_API_KEY ? 'SET' : 'MISSING'}`
     };
   }
 }
