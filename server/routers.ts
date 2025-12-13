@@ -442,9 +442,9 @@ export const appRouter = router({
           };
           
           await dbInstance!.insert(kotQueue).values({
-            orderId: input.orderId,
-            orderNumber: order.orderNumber,
-            kotData: JSON.stringify(kotData),
+            orderId: String(input.orderId),
+            outletId: order.outletId || 1, // Default to outlet 1 if not set
+            kotData: kotData,
             isPrinted: false,
           });
         }
@@ -849,6 +849,18 @@ export const appRouter = router({
 
   // POS Staff Authentication routes
   posAuth: router({
+    // Diagnostic endpoint to check env vars (temporary)
+    checkEnv: publicProcedure.query(() => {
+      const url = process.env.EMP_MASTER_API_URL;
+      const key = process.env.EMP_MASTER_API_KEY;
+      return {
+        urlConfigured: !!url,
+        urlValue: url ? url.substring(0, 30) + '...' : 'NOT SET',
+        keyConfigured: !!key,
+        keyPrefix: key ? key.substring(0, 10) + '...' : 'NOT SET',
+      };
+    }),
+    
     // Authenticate staff by mobile number
     loginByMobile: publicProcedure
       .input(z.object({ mobile: z.string() }))
@@ -1095,9 +1107,9 @@ export const appRouter = router({
         };
         
         await dbInstance!.insert(kotQueue).values({
-          orderId,
-          orderNumber,
-          kotData: JSON.stringify(kotData),
+          orderId: String(orderId),
+          outletId: input.outletId,
+          kotData: kotData,
           isPrinted: false,
         });
 
@@ -1808,8 +1820,8 @@ export const appRouter = router({
         return pendingKots.map(kot => ({
           id: kot.id,
           orderId: kot.orderId,
-          orderNumber: kot.orderNumber,
-          kotData: JSON.parse(kot.kotData),
+          outletId: kot.outletId,
+          kotData: kot.kotData as Record<string, unknown>,
           createdAt: kot.createdAt,
         }));
       }),
@@ -1871,4 +1883,4 @@ export const appRouter = router({
 
 export type AppRouter = typeof appRouter;
 
-// KOT Polling System v1.1 - Force Redeploy 2025-12-11 18:58 IST
+// KOT Polling System v1.2 - Schema fix deployed 2025-12-12 16:05 IST - orderId as varchar, outletId added, kotData as json
