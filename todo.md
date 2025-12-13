@@ -474,3 +474,9 @@
 - [x] Remove POS version comment from Home.tsx
 - [ ] Update VITE_APP_TITLE in Settings (user action required)
 
+
+## Bug Fix - Reviews Query Error (Dec 13, 2025)
+
+- [x] Fix reviews.getByOrderId query failing on /orders page (schema mismatch)
+- [x] Fix KOT polling returning "API Error: undefined" - Added REST endpoints /api/kot/poll and /api/kot/printed
+

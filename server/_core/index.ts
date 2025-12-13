@@ -35,6 +35,76 @@ async function startServer() {
   app.use(express.urlencoded({ limit: "50mb", extended: true }));
   // OAuth callback under /api/oauth/callback
   registerOAuthRoutes(app);
+  
+  // Simple REST endpoint for KOT polling (easier for external clients)
+  app.get('/api/kot/poll', async (req, res) => {
+    try {
+      const secret = req.query.secret as string;
+      if (!secret || secret !== process.env.KOT_PRINT_SECRET) {
+        return res.status(401).json({ error: 'Invalid KOT secret' });
+      }
+      
+      const { getDb } = await import('../db');
+      const { kotQueue } = await import('../../drizzle/schema');
+      const { eq, asc } = await import('drizzle-orm');
+      
+      const dbInstance = await getDb();
+      if (!dbInstance) {
+        return res.json({ kots: [] });
+      }
+      
+      const pendingKots = await dbInstance
+        .select()
+        .from(kotQueue)
+        .where(eq(kotQueue.isPrinted, false))
+        .orderBy(asc(kotQueue.createdAt));
+      
+      return res.json({
+        kots: pendingKots.map(kot => ({
+          id: kot.id,
+          orderId: kot.orderId,
+          outletId: kot.outletId,
+          kotData: kot.kotData,
+          createdAt: kot.createdAt,
+        }))
+      });
+    } catch (error) {
+      console.error('KOT poll error:', error);
+      return res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+  
+  // Simple REST endpoint to mark KOT as printed
+  app.post('/api/kot/printed', async (req, res) => {
+    try {
+      const { secret, kotId } = req.body;
+      if (!secret || secret !== process.env.KOT_PRINT_SECRET) {
+        return res.status(401).json({ error: 'Invalid KOT secret' });
+      }
+      
+      const { getDb } = await import('../db');
+      const { kotQueue } = await import('../../drizzle/schema');
+      const { eq } = await import('drizzle-orm');
+      
+      const dbInstance = await getDb();
+      if (!dbInstance) {
+        return res.status(500).json({ error: 'Database not available' });
+      }
+      
+      await dbInstance
+        .update(kotQueue)
+        .set({
+          isPrinted: true,
+          printedAt: new Date(),
+        })
+        .where(eq(kotQueue.id, kotId));
+      
+      return res.json({ success: true });
+    } catch (error) {
+      console.error('KOT mark printed error:', error);
+      return res.status(500).json({ error: 'Internal server error' });
+    }
+  });
   // tRPC API
   app.use(
     "/api/trpc",
