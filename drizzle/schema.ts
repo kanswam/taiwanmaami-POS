@@ -371,9 +371,9 @@ export const reviews = mysqlTable("reviews", {
 // KOT Queue for kitchen order tickets
 export const kotQueue = mysqlTable("kot_queue", {
   id: int("id").autoincrement().primaryKey(),
-  orderId: int("orderId").notNull(),
-  orderNumber: varchar("orderNumber", { length: 50 }).notNull(),
-  kotData: text("kotData").notNull(), // JSON string with order details
+  orderId: varchar("orderId", { length: 255 }).notNull(),
+  outletId: int("outletId").notNull(),
+  kotData: json("kotData").notNull(), // JSON with order details
   isPrinted: boolean("isPrinted").default(false).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   printedAt: timestamp("printedAt"),
