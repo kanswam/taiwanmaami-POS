@@ -1,5 +1,5 @@
 import { Link } from 'wouter';
-// Version: 2025-12-13-v4 - POS Auth Fix with hardcoded credentials
+// Taiwan Maami Web Platform - Customer Ordering Website
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Header } from '@/components/Header';

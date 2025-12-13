@@ -467,3 +467,10 @@
 - Decision to build POS as a separate dedicated system
 - Simplifies the website codebase for easier maintenance
 
+
+## Phase 26 - Title Update (Dec 13, 2025)
+
+- [x] Update index.html title from "POS & Ordering Platform" to "Online Ordering"
+- [x] Remove POS version comment from Home.tsx
+- [ ] Update VITE_APP_TITLE in Settings (user action required)
+
