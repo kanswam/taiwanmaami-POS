@@ -1,0 +1,13 @@
+{
+  "query": "SELECT COUNT(*) as has_stamp_count FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'users' AND COLUMN_NAME = 'stampCount';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT COUNT(*) as has_stamp_count FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'users' AND COLUMN_NAME = 'stampCount';",
+  "rows": [
+    {
+      "has_stamp_count": "1"
+    }
+  ],
+  "messages": [],
+  "stdout": "has_stamp_count\n1\n",
+  "stderr": "",
+  "execution_time_ms": 57
+}
