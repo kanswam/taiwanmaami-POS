@@ -1,5 +1,5 @@
 /**
- * Taiwan Maami KOT Polling Client v2.0
+ * Taiwan Maami KOT Polling Client v3.0
  * 
  * This client polls the Taiwan Maami server for pending Kitchen Order Tickets (KOTs)
  * and sends them to a thermal printer via ESC/POS commands.
@@ -7,15 +7,8 @@
  * Usage:
  *   1. Install Node.js on your Windows machine
  *   2. Save this file as polling-client.js
- *   3. Update the configuration below
+ *   3. Update the configuration below if needed
  *   4. Run: node polling-client.js
- * 
- * Configuration:
- *   - WEBSITE_URL: The base URL of your Taiwan Maami website
- *   - KOT_SECRET: The secret key for KOT authentication (from your .env)
- *   - PRINTER_IP: The IP address of your thermal printer
- *   - PRINTER_PORT: The port of your thermal printer (usually 9100)
- *   - POLL_INTERVAL: How often to check for new KOTs (in milliseconds)
  */
 
 const http = require('http');
@@ -32,7 +25,7 @@ const CONFIG = {
 };
 // ============================================
 
-console.log('Taiwan Maami KOT Client v2.0 Started');
+console.log('Taiwan Maami KOT Client v3.0 Started');
 console.log(`Website: ${CONFIG.WEBSITE_URL}`);
 console.log(`Printer: ${CONFIG.PRINTER_IP}:${CONFIG.PRINTER_PORT}`);
 console.log('---');
@@ -41,18 +34,18 @@ console.log('---');
 const ESC = '\x1B';
 const GS = '\x1D';
 const COMMANDS = {
-  INIT: ESC + '@',                    // Initialize printer
-  ALIGN_CENTER: ESC + 'a' + '\x01',   // Center align
-  ALIGN_LEFT: ESC + 'a' + '\x00',     // Left align
-  BOLD_ON: ESC + 'E' + '\x01',        // Bold on
-  BOLD_OFF: ESC + 'E' + '\x00',       // Bold off
-  DOUBLE_HEIGHT: ESC + '!' + '\x10', // Double height
-  DOUBLE_WIDTH: ESC + '!' + '\x20',  // Double width
-  DOUBLE_SIZE: ESC + '!' + '\x30',   // Double height and width
-  NORMAL_SIZE: ESC + '!' + '\x00',   // Normal size
-  CUT: GS + 'V' + '\x00',            // Full cut
-  PARTIAL_CUT: GS + 'V' + '\x01',    // Partial cut
-  FEED: ESC + 'd' + '\x03',          // Feed 3 lines
+  INIT: ESC + '@',
+  ALIGN_CENTER: ESC + 'a' + '\x01',
+  ALIGN_LEFT: ESC + 'a' + '\x00',
+  BOLD_ON: ESC + 'E' + '\x01',
+  BOLD_OFF: ESC + 'E' + '\x00',
+  DOUBLE_HEIGHT: ESC + '!' + '\x10',
+  DOUBLE_WIDTH: ESC + '!' + '\x20',
+  DOUBLE_SIZE: ESC + '!' + '\x30',
+  NORMAL_SIZE: ESC + '!' + '\x00',
+  CUT: GS + 'V' + '\x00',
+  PARTIAL_CUT: GS + 'V' + '\x01',
+  FEED: ESC + 'd' + '\x03',
 };
 
 /**
@@ -71,17 +64,10 @@ function formatDate(dateStr) {
 }
 
 /**
- * Format price in rupees
- */
-function formatPrice(paise) {
-  return '₹' + (paise / 100).toFixed(2);
-}
-
-/**
  * Generate ESC/POS receipt for a KOT
  */
 function generateReceipt(kot) {
-  const data = kot.kotData;
+  const data = typeof kot.kotData === 'string' ? JSON.parse(kot.kotData) : kot.kotData;
   let receipt = '';
   
   // Initialize printer
@@ -100,7 +86,7 @@ function generateReceipt(kot) {
   // Order info
   receipt += COMMANDS.ALIGN_LEFT;
   receipt += COMMANDS.BOLD_ON;
-  receipt += `Order #: ${data.orderNumber || kot.orderId}\n`;
+  receipt += `Order #: ${data.orderId || kot.orderId}\n`;
   receipt += COMMANDS.BOLD_OFF;
   receipt += `Time: ${formatDate(kot.createdAt)}\n`;
   
@@ -130,34 +116,26 @@ function generateReceipt(kot) {
   if (data.items && Array.isArray(data.items)) {
     data.items.forEach((item, index) => {
       receipt += COMMANDS.DOUBLE_HEIGHT;
-      receipt += `${item.quantity}x ${item.name}\n`;
+      receipt += `${item.quantity}x ${item.name || item.productName}\n`;
       receipt += COMMANDS.NORMAL_SIZE;
       
-      // Size
       if (item.size) {
         receipt += `   Size: ${item.size}\n`;
       }
-      
-      // Customizations
       if (item.sugarLevel) {
         receipt += `   Sugar: ${item.sugarLevel}\n`;
       }
       if (item.iceLevel) {
         receipt += `   Ice: ${item.iceLevel}\n`;
       }
-      
-      // Addons
       if (item.addons && item.addons.length > 0) {
         receipt += `   Add-ons: ${item.addons.join(', ')}\n`;
       }
-      
-      // Special instructions
       if (item.specialInstructions) {
         receipt += COMMANDS.BOLD_ON;
         receipt += `   NOTE: ${item.specialInstructions}\n`;
         receipt += COMMANDS.BOLD_OFF;
       }
-      
       if (index < data.items.length - 1) {
         receipt += '   ---\n';
       }
@@ -166,7 +144,6 @@ function generateReceipt(kot) {
   
   receipt += '--------------------------------\n';
   
-  // Special instructions for whole order
   if (data.specialInstructions) {
     receipt += COMMANDS.BOLD_ON;
     receipt += 'SPECIAL INSTRUCTIONS:\n';
@@ -181,7 +158,6 @@ function generateReceipt(kot) {
   receipt += `Printed: ${new Date().toLocaleTimeString()}\n`;
   receipt += '\n';
   
-  // Feed and cut
   receipt += COMMANDS.FEED;
   receipt += COMMANDS.PARTIAL_CUT;
   
@@ -214,7 +190,6 @@ function printReceipt(receiptData) {
       reject(err);
     });
     
-    // Close connection after sending
     setTimeout(() => {
       client.end();
     }, 1000);
@@ -252,37 +227,44 @@ function makeRequest(url, options = {}) {
 }
 
 /**
- * Poll for pending KOTs
+ * Poll for pending KOTs using tRPC endpoint
  */
 async function pollForKOTs() {
   try {
-    const url = `${CONFIG.WEBSITE_URL}/api/kot/poll?secret=${encodeURIComponent(CONFIG.KOT_SECRET)}`;
+    // tRPC query format - input must be JSON stringified and wrapped in {"0": input}
+    const input = JSON.stringify({ "0": { json: { secret: CONFIG.KOT_SECRET } } });
+    const url = `${CONFIG.WEBSITE_URL}/api/trpc/kot.pollPending?batch=1&input=${encodeURIComponent(input)}`;
+    
     const response = await makeRequest(url);
     
-    if (response.error) {
-      console.error('API Error:', response.error);
-      return;
-    }
-    
-    const kots = response.kots || [];
-    
-    if (kots.length > 0) {
-      console.log(`Found ${kots.length} pending KOT(s)`);
+    // tRPC batch response format
+    if (response && response[0]) {
+      if (response[0].error) {
+        console.error('API Error:', response[0].error.message || response[0].error);
+        return;
+      }
       
-      for (const kot of kots) {
-        try {
-          console.log(`Printing KOT #${kot.id} for order ${kot.orderId}...`);
+      const result = response[0].result;
+      if (result && result.data && result.data.json) {
+        const kots = result.data.json.kots || result.data.json || [];
+        
+        if (Array.isArray(kots) && kots.length > 0) {
+          console.log(`Found ${kots.length} pending KOT(s)`);
           
-          // Generate and print receipt
-          const receipt = generateReceipt(kot);
-          await printReceipt(receipt);
-          
-          // Mark as printed
-          await markKOTAsPrinted(kot.id);
-          console.log(`KOT #${kot.id} printed and marked as complete`);
-          
-        } catch (printError) {
-          console.error(`Failed to print KOT #${kot.id}:`, printError.message);
+          for (const kot of kots) {
+            try {
+              console.log(`Printing KOT #${kot.id} for order ${kot.orderId}...`);
+              
+              const receipt = generateReceipt(kot);
+              await printReceipt(receipt);
+              
+              await markKOTAsPrinted(kot.id);
+              console.log(`KOT #${kot.id} printed and marked as complete`);
+              
+            } catch (printError) {
+              console.error(`Failed to print KOT #${kot.id}:`, printError.message);
+            }
+          }
         }
       }
     }
@@ -293,14 +275,13 @@ async function pollForKOTs() {
 }
 
 /**
- * Mark KOT as printed
+ * Mark KOT as printed using tRPC mutation
  */
 async function markKOTAsPrinted(kotId) {
-  const url = `${CONFIG.WEBSITE_URL}/api/kot/printed`;
-  const body = JSON.stringify({
-    secret: CONFIG.KOT_SECRET,
-    kotId: kotId,
-  });
+  const input = JSON.stringify({ "0": { json: { secret: CONFIG.KOT_SECRET, kotId: kotId } } });
+  const url = `${CONFIG.WEBSITE_URL}/api/trpc/kot.markPrinted?batch=1`;
+  
+  const body = input;
   
   const response = await makeRequest(url, {
     method: 'POST',
@@ -311,8 +292,8 @@ async function markKOTAsPrinted(kotId) {
     body: body,
   });
   
-  if (!response.success) {
-    throw new Error(response.error || 'Failed to mark KOT as printed');
+  if (response && response[0] && response[0].error) {
+    throw new Error(response[0].error.message || 'Failed to mark KOT as printed');
   }
   
   return response;
@@ -325,10 +306,8 @@ function startPolling() {
   console.log(`Starting polling every ${CONFIG.POLL_INTERVAL / 1000} seconds...`);
   console.log('');
   
-  // Initial poll
   pollForKOTs();
   
-  // Set up interval
   setInterval(() => {
     const now = new Date().toLocaleTimeString();
     console.log(`[${now}] Polling...`);

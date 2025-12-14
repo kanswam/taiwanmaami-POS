@@ -479,6 +479,7 @@
 
 - [x] Fix reviews.getByOrderId query failing on /orders page (schema mismatch)
 - [x] Fix KOT polling returning "API Error: undefined" - Added REST endpoints /api/kot/poll and /api/kot/printed
+- [x] Fix KOT tRPC endpoint returning "[object Object] is not valid JSON" - Fixed kotData parsing
 
 
 ## Deployment Fix (Dec 14, 2025)

@@ -1509,13 +1509,24 @@ export const appRouter = router({
           .where(eq(kotQueue.isPrinted, false))
           .orderBy(asc(kotQueue.createdAt));
         
-        return pendingKots.map(kot => ({
-          id: kot.id,
-          orderId: kot.orderId,
-          outletId: kot.outletId,
-          kotData: kot.kotData as Record<string, unknown>,
-          createdAt: kot.createdAt,
-        }));
+        return pendingKots.map(kot => {
+          // Parse kotData if it's a string, otherwise use as-is
+          let parsedKotData = kot.kotData;
+          if (typeof kot.kotData === 'string') {
+            try {
+              parsedKotData = JSON.parse(kot.kotData);
+            } catch (e) {
+              parsedKotData = { raw: kot.kotData };
+            }
+          }
+          return {
+            id: kot.id,
+            orderId: kot.orderId,
+            outletId: kot.outletId,
+            kotData: parsedKotData,
+            createdAt: kot.createdAt,
+          };
+        });
       }),
 
     // Mark KOT as printed - called after successful print
