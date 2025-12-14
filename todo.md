@@ -486,3 +486,7 @@
 
 - [x] Force redeploy to ensure KOT REST endpoints are deployed
 - Deployment marker: v2025.12.14.1
+
+## Bug Fix - Checkout Total Calculation (Dec 14, 2025)
+
+- [x] Fix checkout order summary - removed double GST calculation in displayTotal

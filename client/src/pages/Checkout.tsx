@@ -191,7 +191,8 @@ export default function Checkout() {
     }
   };
 
-  const displayTotal = total + gst.total;
+  // total from useCart already includes gst.total, so displayTotal should just be total
+  const displayTotal = total;
 
   // Guest checkout mutation
   const createGuestOrder = trpc.guest.createOrder.useMutation();
