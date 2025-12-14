@@ -480,3 +480,8 @@
 - [x] Fix reviews.getByOrderId query failing on /orders page (schema mismatch)
 - [x] Fix KOT polling returning "API Error: undefined" - Added REST endpoints /api/kot/poll and /api/kot/printed
 
+
+## Deployment Fix (Dec 14, 2025)
+
+- [x] Force redeploy to ensure KOT REST endpoints are deployed
+- Deployment marker: v2025.12.14.1
