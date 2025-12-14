@@ -10,8 +10,8 @@ import { seedDatabase } from "./seed";
 import { categories, subcategories, products, addons, orders, orderItems, orderItemAddons, payments, discounts, addresses, storeLocations, deliveryAreas, users } from "../drizzle/schema";
 import { eq, and, desc, asc, sql } from "drizzle-orm";
 import { generateOrderNumber, calculateGst } from "@shared/types";
-// POS functionality removed - Employee Master import removed
-import { outletProducts, loyaltyRewards, stampTransactions, guestOrders, reviews, kotQueue } from "../drizzle/schema";
+import { authenticateStaffByMobile, getActiveEmployees } from "./employeeMaster";
+import { posSessions, posAuditLog, outletProducts, loyaltyRewards, stampTransactions, guestOrders, reviews, kotQueue } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 // Admin procedure - only allows admin role
@@ -22,7 +22,13 @@ const adminProcedure = protectedProcedure.use(({ ctx, next }) => {
   return next({ ctx });
 });
 
-// POS functionality removed - staffProcedure removed, using adminProcedure for order management
+// Staff procedure - allows staff and admin roles
+const staffProcedure = protectedProcedure.use(({ ctx, next }) => {
+  if (ctx.user.role !== 'staff' && ctx.user.role !== 'admin') {
+    throw new TRPCError({ code: 'FORBIDDEN', message: 'Staff access required' });
+  }
+  return next({ ctx });
+});
 
 export const appRouter = router({
   system: systemRouter,
@@ -232,7 +238,7 @@ export const appRouter = router({
       return db.getUserOrders(ctx.user.id);
     }),
 
-    updateStatus: adminProcedure
+    updateStatus: staffProcedure
       .input(z.object({ orderId: z.number(), status: z.string() }))
       .mutation(async ({ input }) => {
         const dbInstance = await db.getDb();
@@ -331,7 +337,7 @@ export const appRouter = router({
         return { success: true };
       }),
 
-    getRecent: adminProcedure
+    getRecent: staffProcedure
       .input(z.object({ limit: z.number().default(50) }).optional())
       .query(async ({ input }) => {
         return db.getRecentOrders(input?.limit || 50);
@@ -436,9 +442,9 @@ export const appRouter = router({
           };
           
           await dbInstance!.insert(kotQueue).values({
-            orderId: String(input.orderId),
-            outletId: order.outletId || 1, // Default to outlet 1 if not set
-            kotData: kotData,
+            orderId: input.orderId,
+            orderNumber: order.orderNumber,
+            kotData: JSON.stringify(kotData),
             isPrinted: false,
           });
         }
@@ -804,10 +810,300 @@ export const appRouter = router({
         }
         return { success: true };
       }),
-    // POS Audit logs removed - POS functionality removed
+
+    // POS Audit logs
+    getPOSAuditLogs: adminProcedure
+      .input(z.object({
+        outletId: z.number().optional(),
+        dateRange: z.enum(['today', 'week', 'month']),
+      }))
+      .query(async ({ input }) => {
+        const dbInstance = await getDb();
+        if (!dbInstance) return [];
+
+        const now = new Date();
+        let startDate = new Date();
+        
+        if (input.dateRange === 'today') {
+          startDate.setHours(0, 0, 0, 0);
+        } else if (input.dateRange === 'week') {
+          startDate.setDate(now.getDate() - 7);
+        } else {
+          startDate.setDate(now.getDate() - 30);
+        }
+
+        let query = dbInstance.select().from(posAuditLog)
+          .where(sql`${posAuditLog.createdAt} >= ${startDate.toISOString()}`)
+          .orderBy(desc(posAuditLog.createdAt))
+          .limit(500);
+
+        const logs = await query;
+        
+        // Filter by outlet if specified
+        if (input.outletId) {
+          return logs.filter(log => log.outletId === input.outletId);
+        }
+        return logs;
+      }),
   }),
 
-  // POS functionality removed - posAuth and pos routers removed
+  // POS Staff Authentication routes
+  posAuth: router({
+    // Authenticate staff by mobile number
+    loginByMobile: publicProcedure
+      .input(z.object({ mobile: z.string() }))
+      .mutation(async ({ input }) => {
+        const result = await authenticateStaffByMobile(input.mobile);
+        return result;
+      }),
+
+    // Create POS session after successful authentication
+    createSession: publicProcedure
+      .input(z.object({
+        employeeId: z.string(),
+        employeeCode: z.string(),
+        employeeName: z.string(),
+        employeeMobile: z.string(),
+        outletId: z.number(),
+        outletName: z.string(),
+        deviceInfo: z.string().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const dbInstance = await getDb();
+        if (!dbInstance) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
+
+        // Create new session
+        const [result] = await dbInstance!.insert(posSessions).values({
+          employeeId: input.employeeId,
+          employeeCode: input.employeeCode,
+          employeeName: input.employeeName,
+          employeeMobile: input.employeeMobile,
+          outletId: input.outletId,
+          outletName: input.outletName,
+          deviceInfo: input.deviceInfo,
+          ipAddress: ctx.req.ip || ctx.req.headers['x-forwarded-for']?.toString() || 'unknown',
+          isActive: true,
+        });
+
+        const sessionId = result.insertId;
+
+        // Log the login action
+        await dbInstance!.insert(posAuditLog).values({
+          sessionId,
+          employeeCode: input.employeeCode,
+          outletId: input.outletId,
+          action: 'login',
+          details: { deviceInfo: input.deviceInfo },
+        });
+
+        return { sessionId, success: true };
+      }),
+
+    // End POS session (logout)
+    endSession: publicProcedure
+      .input(z.object({ sessionId: z.number() }))
+      .mutation(async ({ input }) => {
+        const dbInstance = await getDb();
+        if (!dbInstance) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
+
+        // Get session details for audit log
+        const [session] = await dbInstance!.select().from(posSessions).where(eq(posSessions.id, input.sessionId));
+        if (!session) throw new TRPCError({ code: 'NOT_FOUND', message: 'Session not found' });
+
+        // Update session
+        await dbInstance!.update(posSessions).set({
+          logoutTime: new Date(),
+          isActive: false,
+        }).where(eq(posSessions.id, input.sessionId));
+
+        // Log the logout action
+        await dbInstance!.insert(posAuditLog).values({
+          sessionId: input.sessionId,
+          employeeCode: session.employeeCode,
+          outletId: session.outletId,
+          action: 'logout',
+        });
+
+        return { success: true };
+      }),
+
+    // Get active session by employee
+    getActiveSession: publicProcedure
+      .input(z.object({ employeeCode: z.string() }))
+      .query(async ({ input }) => {
+        const dbInstance = await getDb();
+        if (!dbInstance) return null;
+
+        const [session] = await dbInstance!.select().from(posSessions)
+          .where(and(
+            eq(posSessions.employeeCode, input.employeeCode),
+            eq(posSessions.isActive, true)
+          ))
+          .orderBy(desc(posSessions.loginTime))
+          .limit(1);
+
+        return session || null;
+      }),
+
+    // Get available outlets for staff
+    getOutlets: publicProcedure.query(async () => {
+      const dbInstance = await getDb();
+      if (!dbInstance) return [];
+      return dbInstance.select().from(storeLocations).where(eq(storeLocations.isActive, true));
+    }),
+  }),
+
+  // POS routes
+  pos: router({
+    createOrder: publicProcedure
+      .input(z.object({
+        items: z.array(z.object({
+          productId: z.number(),
+          productName: z.string(),
+          size: z.enum(['petite', 'regular', 'large']).optional(),
+          withBoba: z.boolean().optional(),
+          sugarLevel: z.string().optional(),
+          iceLevel: z.string().optional(),
+          quantity: z.number().min(1),
+          unitPrice: z.number(),
+          addonsTotal: z.number(),
+          lineTotal: z.number(),
+          addons: z.array(z.object({
+            id: z.number(),
+            name: z.string(),
+            price: z.number(),
+          })),
+        })),
+        customerName: z.string().optional(),
+        customerPhone: z.string().optional(),
+        discountAmount: z.number().default(0),
+        discountCode: z.string().optional(),
+        loyaltyPointsUsed: z.number().default(0),
+        payments: z.array(z.object({
+          method: z.enum(['cash', 'card', 'upi']),
+          amount: z.number(),
+        })),
+        specialInstructions: z.string().optional(),
+        // Session info for audit
+        sessionId: z.number(),
+        outletId: z.number(),
+        employeeCode: z.string(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const dbInstance = await getDb();
+        if (!dbInstance) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
+
+        const subtotal = input.items.reduce((sum, item) => sum + item.lineTotal, 0);
+        const gst = calculateGst(subtotal);
+        const totalAmount = subtotal + gst.total - input.discountAmount - input.loyaltyPointsUsed;
+        const orderNumber = generateOrderNumber();
+
+        // Create order with outlet and session tracking
+        const [orderResult] = await dbInstance!.insert(orders).values({
+          orderNumber,
+          orderType: 'instore',
+          orderStatus: 'completed',
+          paymentStatus: 'completed',
+          customerName: input.customerName,
+          customerPhone: input.customerPhone,
+          subtotal,
+          stateGst: gst.stateGst,
+          centralGst: gst.centralGst,
+          deliveryCharge: 0,
+          discountAmount: input.discountAmount,
+          loyaltyPointsUsed: input.loyaltyPointsUsed,
+          totalAmount,
+          discountCode: input.discountCode,
+          outletId: input.outletId,
+          posSessionId: input.sessionId,
+          specialInstructions: input.specialInstructions,
+        });
+
+        const orderId = orderResult.insertId;
+
+        // Create order items
+        for (const item of input.items) {
+          const [itemResult] = await dbInstance!.insert(orderItems).values({
+            orderId,
+            productId: item.productId,
+            productName: item.productName,
+            size: item.size,
+            withBoba: item.withBoba,
+            sugarLevel: item.sugarLevel,
+            iceLevel: item.iceLevel,
+            quantity: item.quantity,
+            unitPrice: item.unitPrice,
+            addonsTotal: item.addonsTotal,
+            lineTotal: item.lineTotal,
+          });
+
+          for (const addon of item.addons) {
+            await dbInstance!.insert(orderItemAddons).values({
+              orderItemId: itemResult.insertId,
+              addonId: addon.id,
+              addonName: addon.name,
+              addonPrice: addon.price,
+            });
+          }
+        }
+
+        // Record payments
+        for (const payment of input.payments) {
+          await dbInstance!.insert(payments).values({
+            orderId,
+            paymentMethod: payment.method,
+            amount: payment.amount,
+            paymentStatus: 'success',
+          });
+        }
+
+        // Log the order creation for audit
+        await dbInstance!.insert(posAuditLog).values({
+          sessionId: input.sessionId,
+          employeeCode: input.employeeCode,
+          outletId: input.outletId,
+          action: 'create_order',
+          orderId,
+          details: {
+            orderNumber,
+            totalAmount,
+            itemCount: input.items.length,
+            paymentMethods: input.payments.map(p => p.method),
+          },
+        });
+
+        // Create KOT for kitchen printing (POS orders)
+        const kotData = {
+          orderId: orderNumber,
+          customerName: input.customerName || 'Walk-in Customer',
+          customerPhone: input.customerPhone || '',
+          items: input.items.map(item => ({
+            productName: item.productName,
+            quantity: item.quantity,
+            price: item.unitPrice,
+            size: item.size,
+            withBoba: item.withBoba,
+            sugarLevel: item.sugarLevel,
+            iceLevel: item.iceLevel,
+            addons: item.addons.map(a => ({
+              name: a.name,
+              price: a.price,
+            })),
+          })),
+          totalAmount,
+          createdAt: new Date().toISOString(),
+        };
+        
+        await dbInstance!.insert(kotQueue).values({
+          orderId,
+          orderNumber,
+          kotData: JSON.stringify(kotData),
+          isPrinted: false,
+        });
+
+        return { orderId, orderNumber, totalAmount };
+      }),
+  }),
 
   // Loyalty program routes
   loyalty: router({
@@ -1509,24 +1805,13 @@ export const appRouter = router({
           .where(eq(kotQueue.isPrinted, false))
           .orderBy(asc(kotQueue.createdAt));
         
-        return pendingKots.map(kot => {
-          // Parse kotData if it's a string, otherwise use as-is
-          let parsedKotData = kot.kotData;
-          if (typeof kot.kotData === 'string') {
-            try {
-              parsedKotData = JSON.parse(kot.kotData);
-            } catch (e) {
-              parsedKotData = { raw: kot.kotData };
-            }
-          }
-          return {
-            id: kot.id,
-            orderId: kot.orderId,
-            outletId: kot.outletId,
-            kotData: parsedKotData,
-            createdAt: kot.createdAt,
-          };
-        });
+        return pendingKots.map(kot => ({
+          id: kot.id,
+          orderId: kot.orderId,
+          orderNumber: kot.orderNumber,
+          kotData: JSON.parse(kot.kotData),
+          createdAt: kot.createdAt,
+        }));
       }),
 
     // Mark KOT as printed - called after successful print
@@ -1586,4 +1871,4 @@ export const appRouter = router({
 
 export type AppRouter = typeof appRouter;
 
-// KOT Polling System v1.2 - Schema fix deployed 2025-12-12 16:05 IST - orderId as varchar, outletId added, kotData as json
+// KOT Polling System v1.1 - Force Redeploy 2025-12-11 18:58 IST
