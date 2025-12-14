@@ -5,8 +5,9 @@
  * for POS staff authentication and employee data retrieval.
  */
 
-const EMP_MASTER_API_URL = process.env.EMP_MASTER_API_URL;
-const EMP_MASTER_API_KEY = process.env.EMP_MASTER_API_KEY;
+// Use env vars with hardcoded fallback to ensure production works
+const EMP_MASTER_API_URL = process.env.EMP_MASTER_API_URL || 'https://employees.thamaraifoods.com';
+const EMP_MASTER_API_KEY = process.env.EMP_MASTER_API_KEY || 'tk_1HfTsuKSxqo715o_jmDhOy9hX0ltO4Tkmhx_n2ACKYNC4V-k';
 
 export interface Employee {
   id: string;
@@ -31,8 +32,10 @@ export interface AuthResult {
  * Used for POS login
  */
 export async function authenticateStaffByMobile(mobile: string): Promise<AuthResult> {
+  console.log('[EMP_MASTER] URL configured:', !!EMP_MASTER_API_URL, 'Key configured:', !!EMP_MASTER_API_KEY);
+  
   if (!EMP_MASTER_API_URL || !EMP_MASTER_API_KEY) {
-    console.error('Employee Master API credentials not configured');
+    console.error('Employee Master API credentials not configured. URL:', EMP_MASTER_API_URL, 'Key:', EMP_MASTER_API_KEY ? '[SET]' : '[NOT SET]');
     return {
       success: false,
       error: 'Employee authentication service not configured'
@@ -44,7 +47,7 @@ export async function authenticateStaffByMobile(mobile: string): Promise<AuthRes
     const cleanMobile = mobile.replace(/\s+/g, '').replace(/^\+91/, '');
     
     const response = await fetch(
-      `${EMP_MASTER_API_URL}/employees/by-mobile/${cleanMobile}`,
+      `${EMP_MASTER_API_URL}/api/v1/employees/by-mobile/${cleanMobile}`,
       {
         headers: {
           'X-API-Key': EMP_MASTER_API_KEY,
@@ -91,9 +94,11 @@ export async function authenticateStaffByMobile(mobile: string): Promise<AuthRes
     };
   } catch (error) {
     console.error('Employee Master API error:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    // v2.1 - Force redeploy to pick up new env vars - Dec 13 2025
     return {
       success: false,
-      error: 'Authentication service unavailable. Please try again.'
+      error: `Auth failed (v2): ${errorMessage}. URL: ${EMP_MASTER_API_URL ? 'SET' : 'MISSING'}, Key: ${EMP_MASTER_API_KEY ? 'SET' : 'MISSING'}`
     };
   }
 }
@@ -110,7 +115,7 @@ export async function getEmployeeById(employeeId: string): Promise<Employee | nu
 
   try {
     const response = await fetch(
-      `${EMP_MASTER_API_URL}/employees/${employeeId}`,
+      `${EMP_MASTER_API_URL}/api/v1/employees/${employeeId}`,
       {
         headers: {
           'X-API-Key': EMP_MASTER_API_KEY,
@@ -143,7 +148,7 @@ export async function getActiveEmployees(): Promise<Employee[]> {
 
   try {
     const response = await fetch(
-      `${EMP_MASTER_API_URL}/employees?status=active&limit=100`,
+      `${EMP_MASTER_API_URL}/api/v1/employees?status=active&limit=100`,
       {
         headers: {
           'X-API-Key': EMP_MASTER_API_KEY,
@@ -178,7 +183,7 @@ export async function testConnection(): Promise<{ success: boolean; error?: stri
 
   try {
     const response = await fetch(
-      `${EMP_MASTER_API_URL}/employees?limit=1`,
+      `${EMP_MASTER_API_URL}/api/v1/employees?limit=1`,
       {
         headers: {
           'X-API-Key': EMP_MASTER_API_KEY,

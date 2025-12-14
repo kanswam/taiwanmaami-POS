@@ -1,0 +1,100 @@
+{
+  "query": "SELECT id, orderNumber, orderType, orderStatus, paymentStatus, totalAmount, DATE_FORMAT(createdAt, '%Y-%m-%d %H:%i:%s') as createdAt FROM orders ORDER BY createdAt DESC LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT id, orderNumber, orderType, orderStatus, paymentStatus, totalAmount, DATE_FORMAT(createdAt, '%Y-%m-%d %H:%i:%s') as createdAt FROM orders ORDER BY createdAt DESC LIMIT 10;",
+  "rows": [
+    {
+      "id": "270003",
+      "orderNumber": "TMMJ3WLN7AO96R",
+      "orderType": "delivery",
+      "orderStatus": "pending",
+      "paymentStatus": "pending",
+      "totalAmount": "106",
+      "createdAt": "2025-12-13 06:17:10"
+    },
+    {
+      "id": "270002",
+      "orderNumber": "TMMJ3WLI15AUVK",
+      "orderType": "delivery",
+      "orderStatus": "pending",
+      "paymentStatus": "pending",
+      "totalAmount": "106",
+      "createdAt": "2025-12-13 06:17:03"
+    },
+    {
+      "id": "270001",
+      "orderNumber": "TMMJ3WGTM9MHQP",
+      "orderType": "delivery",
+      "orderStatus": "completed",
+      "paymentStatus": "completed",
+      "totalAmount": "47776",
+      "createdAt": "2025-12-13 06:13:25"
+    },
+    {
+      "id": "240001",
+      "orderNumber": "TMMJ3RKZRUAJ7I",
+      "orderType": "delivery",
+      "orderStatus": "completed",
+      "paymentStatus": "completed",
+      "totalAmount": "97650",
+      "createdAt": "2025-12-13 03:56:42"
+    },
+    {
+      "id": "210001",
+      "orderNumber": "TMMJ2ZOMGHDC2H",
+      "orderType": "delivery",
+      "orderStatus": "completed",
+      "paymentStatus": "completed",
+      "totalAmount": "47776",
+      "createdAt": "2025-12-12 14:55:42"
+    },
+    {
+      "id": "180001",
+      "orderNumber": "TMMJ1MKP9HAQNH",
+      "orderType": "delivery",
+      "orderStatus": "completed",
+      "paymentStatus": "completed",
+      "totalAmount": "56176",
+      "createdAt": "2025-12-11 16:00:58"
+    },
+    {
+      "id": "150002",
+      "orderNumber": "TMMJ1G1AM09KES",
+      "orderType": "delivery",
+      "orderStatus": "confirmed",
+      "paymentStatus": "completed",
+      "totalAmount": "50400",
+      "createdAt": "2025-12-11 12:57:54"
+    },
+    {
+      "id": "150001",
+      "orderNumber": "TMMJ1DFKCFVS53",
+      "orderType": "delivery",
+      "orderStatus": "completed",
+      "paymentStatus": "completed",
+      "totalAmount": "48300",
+      "createdAt": "2025-12-11 11:45:01"
+    },
+    {
+      "id": "120002",
+      "orderNumber": "TMMJ1CUXRNR473",
+      "orderType": "delivery",
+      "orderStatus": "completed",
+      "paymentStatus": "completed",
+      "totalAmount": "54076",
+      "createdAt": "2025-12-11 11:28:59"
+    },
+    {
+      "id": "120001",
+      "orderNumber": "TMMJ1CS5E5VYAF",
+      "orderType": "delivery",
+      "orderStatus": "completed",
+      "paymentStatus": "completed",
+      "totalAmount": "41476",
+      "createdAt": "2025-12-11 11:26:49"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\torderNumber\torderType\torderStatus\tpaymentStatus\ttotalAmount\tcreatedAt\n270003\tTMMJ3WLN7AO96R\tdelivery\tpending\tpending\t106\t2025-12-13 06:17:10\n270002\tTMMJ3WLI15AUVK\tdelivery\tpending\tpending\t106\t2025-12-13 06:17:03\n270001\tTMMJ3WGTM9MHQP\tdelivery\tcompleted\tcompleted\t47776\t2025-12-13 06:13:25\n240001\tTMMJ3RKZRUAJ7I\tdelivery\tcompleted\tcompleted\t97650\t2025-12-13 03:56:42\n210001\tTMMJ2ZOMGHDC2H\tdelivery\tcompleted\tcompleted\t47776\t2025-12-12 14:55:42\n180001\tTMMJ1MKP9HAQNH\tdelivery\tcompleted\tcompleted\t56176\t2025-12-11 16:00:58\n150002\tTMMJ1G1AM09KES\tdelivery\tconfirmed\tcompleted\t50400\t2025-12-11 12:57:54\n150001\tTMMJ1DFKCFVS53\tdelivery\tcompleted\tcompleted\t48300\t2025-12-11 11:45:01\n120002\tTMMJ1CUXRNR473\tdelivery\tcompleted\tcompleted\t54076\t2025-12-11 11:28:59\n120001\tTMMJ1CS5E5VYAF\tdelivery\tcompleted\tcompleted\t41476\t2025-12-11 11:26:49\n",
+  "stderr": "",
+  "execution_time_ms": 122
+}

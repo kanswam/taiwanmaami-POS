@@ -422,8 +422,9 @@
 
 ### Stamp System
 - [x] Fix stamp not being awarded on order completion (stamps awarded when order marked 'completed')
-- [ ] Verify KOT polling works after publishing
+- [x] Verify KOT polling works after publishing (fixed schema mismatch)
 - [ ] Fix KOT creation to trigger on Razorpay payment confirmation (not manual verification)
+- [x] Fix POS authentication service unavailable error (update Employee Master API URL and key)
 
 ### KOT Polling
 - [x] Add kot_queue table to database schema
@@ -432,3 +433,56 @@
 
 ### POS Session Error
 - [x] Fix "Session not found" error on POS page (session already exists in DB)
+
+- [x] CRITICAL: Fix order creation failure after Razorpay payment success (order is created, issue was elsewhere)
+- [ ] CRITICAL: Orders not showing in Admin page after payment
+- [ ] CRITICAL: KOT not being created after payment verification
+
+
+## POS Removal - Converting to Customer-Only Website
+- [ ] Remove POS routes and pages from frontend
+- [ ] Remove POS-related backend procedures
+- [ ] Remove POS links from navigation
+- [ ] Clean up unused imports and code
+- [ ] Test customer ordering flow still works
+
+
+## Phase 25 - POS Removal (Dec 13, 2025)
+
+### Decision: Remove POS from Website
+- [x] Remove posAuth router (staff login, sessions, outlets)
+- [x] Remove pos router (POS order creation)
+- [x] Remove getPOSAuditLogs from admin router
+- [x] Change staffProcedure to adminProcedure for order management
+- [x] Remove POS link from Admin header
+- [x] Remove Outlets tab from Admin dashboard
+- [x] Remove POS Audit tab from Admin dashboard
+- [x] Remove OutletsTab and POSAuditTab components
+- [x] Keep KOT system for kitchen printing (used by online orders)
+- [x] Website now purely customer-facing online ordering platform
+
+### Reason for Removal
+- POS functionality was causing deployment complexity
+- Employee Master API integration issues on production
+- Decision to build POS as a separate dedicated system
+- Simplifies the website codebase for easier maintenance
+
+
+## Phase 26 - Title Update (Dec 13, 2025)
+
+- [x] Update index.html title from "POS & Ordering Platform" to "Online Ordering"
+- [x] Remove POS version comment from Home.tsx
+- [ ] Update VITE_APP_TITLE in Settings (user action required)
+
+
+## Bug Fix - Reviews Query Error (Dec 13, 2025)
+
+- [x] Fix reviews.getByOrderId query failing on /orders page (schema mismatch)
+- [x] Fix KOT polling returning "API Error: undefined" - Added REST endpoints /api/kot/poll and /api/kot/printed
+- [x] Fix KOT tRPC endpoint returning "[object Object] is not valid JSON" - Fixed kotData parsing
+
+
+## Deployment Fix (Dec 14, 2025)
+
+- [x] Force redeploy to ensure KOT REST endpoints are deployed
+- Deployment marker: v2025.12.14.1
