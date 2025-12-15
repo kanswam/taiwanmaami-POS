@@ -1,0 +1,20 @@
+{
+  "query": "SELECT * FROM payments WHERE orderId = 210001;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT * FROM payments WHERE orderId = 210001;",
+  "rows": [
+    {
+      "id": "210001",
+      "orderId": "210001",
+      "paymentMethod": "razorpay",
+      "amount": "0",
+      "paymentStatus": "success",
+      "razorpayPaymentId": "pay_Rqjz8rd6V3OA0i",
+      "razorpaySignature": "c695d1b9379965cea6775beee50ce42d35c77a4c020ff5b72a8df946b031e727",
+      "createdAt": "2025-12-12 14:56:31"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\torderId\tpaymentMethod\tamount\tpaymentStatus\trazorpayPaymentId\trazorpaySignature\tcreatedAt\n210001\t210001\trazorpay\t0\tsuccess\tpay_Rqjz8rd6V3OA0i\tc695d1b9379965cea6775beee50ce42d35c77a4c020ff5b72a8df946b031e727\t2025-12-12 14:56:31\n",
+  "stderr": "",
+  "execution_time_ms": 53
+}

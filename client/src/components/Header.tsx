@@ -91,13 +91,7 @@ export function Header() {
                     My Orders
                   </Button>
                 </Link>
-                {(user?.role === 'staff' || user?.role === 'admin') && (
-                  <Link href="/pos">
-                    <Button variant="outline" size="sm">
-                      POS
-                    </Button>
-                  </Link>
-                )}
+
                 {user?.role === 'admin' && (
                   <Link href="/admin">
                     <Button variant="outline" size="sm">
@@ -157,15 +151,7 @@ export function Header() {
                         <FileText className="w-5 h-5" />
                         My Orders
                       </Link>
-                      {(user?.role === 'staff' || user?.role === 'admin') && (
-                        <Link
-                          href="/pos"
-                          onClick={() => setMobileMenuOpen(false)}
-                          className="flex items-center gap-3 p-3 rounded-lg hover:bg-secondary"
-                        >
-                          POS Mode
-                        </Link>
-                      )}
+
                       {user?.role === 'admin' && (
                         <Link
                           href="/admin"
