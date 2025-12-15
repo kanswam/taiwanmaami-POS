@@ -1,5 +1,4 @@
 import { Link } from 'wouter';
-// Taiwan Maami Web Platform - Customer Ordering Website
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Header } from '@/components/Header';

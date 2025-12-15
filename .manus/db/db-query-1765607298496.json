@@ -1,9 +1,0 @@
-{
-  "query": "INSERT INTO kot_queue (orderId, outletId, orderNumber, kotData, isPrinted, createdAt) VALUES ('210001', 1, 'TMMJ2ZOMGHDC2H', '{\"orderId\":\"TMMJ2ZOMGHDC2H\",\"customerName\":\"Kannan Swamy\",\"customerPhone\":\"7845053909\",\"items\":[{\"productName\":\"Butterscotch Milk Oolong\",\"quantity\":1,\"price\":41500,\"size\":\"regular\",\"withBoba\":true,\"sugarLevel\":\"100%\",\"iceLevel\":\"Regular Ice\",\"addons\":[]}],\"totalAmount\":47776,\"createdAt\":\"2025-12-13T06:30:00.000Z\"}', 0, NOW());",
-  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute INSERT INTO kot_queue (orderId, outletId, orderNumber, kotData, isPrinted, createdAt) VALUES ('210001', 1, 'TMMJ2ZOMGHDC2H', '{\"orderId\":\"TMMJ2ZOMGHDC2H\",\"customerName\":\"Kannan Swamy\",\"customerPhone\":\"7845053909\",\"items\":[{\"productName\":\"Butterscotch Milk Oolong\",\"quantity\":1,\"price\":41500,\"size\":\"regular\",\"withBoba\":true,\"sugarLevel\":\"100%\",\"iceLevel\":\"Regular Ice\",\"addons\":[]}],\"totalAmount\":47776,\"createdAt\":\"2025-12-13T06:30:00.000Z\"}', 0, NOW());",
-  "rows": [],
-  "messages": [],
-  "stdout": "",
-  "stderr": "",
-  "execution_time_ms": 70
-}

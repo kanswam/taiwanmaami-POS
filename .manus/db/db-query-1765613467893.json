@@ -1,9 +1,0 @@
-{
-  "query": "CREATE TABLE `reviews` (\n  `id` int AUTO_INCREMENT NOT NULL,\n  `userId` int NOT NULL,\n  `orderId` int,\n  `rating` int NOT NULL,\n  `comment` text,\n  `customerName` varchar(200),\n  `status` enum('pending','approved','rejected') NOT NULL DEFAULT 'pending',\n  `adminResponse` text,\n  `createdAt` timestamp NOT NULL DEFAULT (now()),\n  `updatedAt` timestamp NOT NULL DEFAULT (now()) ON UPDATE CURRENT_TIMESTAMP,\n  CONSTRAINT `reviews_id` PRIMARY KEY(`id`)\n);",
-  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute CREATE TABLE `reviews` (\n  `id` int AUTO_INCREMENT NOT NULL,\n  `userId` int NOT NULL,\n  `orderId` int,\n  `rating` int NOT NULL,\n  `comment` text,\n  `customerName` varchar(200),\n  `status` enum('pending','approved','rejected') NOT NULL DEFAULT 'pending',\n  `adminResponse` text,\n  `createdAt` timestamp NOT NULL DEFAULT (now()),\n  `updatedAt` timestamp NOT NULL DEFAULT (now()) ON UPDATE CURRENT_TIMESTAMP,\n  CONSTRAINT `reviews_id` PRIMARY KEY(`id`)\n);",
-  "rows": [],
-  "messages": [],
-  "stdout": "",
-  "stderr": "",
-  "execution_time_ms": 214
-}

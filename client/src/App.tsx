@@ -18,6 +18,8 @@ import About from "./pages/About";
 import Terms from "./pages/Terms";
 import Privacy from "./pages/Privacy";
 import Refund from "./pages/Refund";
+import POS from "./pages/POS";
+import POSLogin from "./pages/POSLogin";
 import Admin from "./pages/Admin";
 import StaffOrders from "./pages/StaffOrders";
 import MenuCategories from "./pages/MenuCategories";
@@ -43,7 +45,9 @@ function Router() {
       <Route path="/privacy" component={Privacy} />
       <Route path="/refund" component={Refund} />
       
-      {/* Admin Routes */}
+      {/* Staff/Admin Routes */}
+      <Route path="/pos/login" component={POSLogin} />
+      <Route path="/pos" component={POS} />
       <Route path="/staff/orders" component={StaffOrders} />
       <Route path="/admin" component={Admin} />
       
