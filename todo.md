@@ -436,6 +436,7 @@
 
 - [x] CRITICAL: Fix order creation failure after Razorpay payment success (order is created, issue was elsewhere)
 - [ ] CRITICAL: Orders not showing in Admin page after payment
+- [x] Grant admin access to Theresa (theresa.hu.cy@taiwanmaami.com)
 - [ ] CRITICAL: KOT not being created after payment verification
 
 
@@ -490,3 +491,7 @@
 ## Bug Fix - Checkout Total Calculation (Dec 14, 2025)
 
 - [x] Fix checkout order summary - removed double GST calculation in displayTotal
+
+## Phase 29 - UI Improvements (Dec 16, 2025)
+
+- [x] Increase product photo upload size limit to 50MB
