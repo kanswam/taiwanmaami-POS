@@ -63,10 +63,14 @@ export default function Admin() {
 
       <div className="container py-6">
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-5 mb-6">
+          <TabsList className="grid w-full grid-cols-6 mb-6">
             <TabsTrigger value="products" className="gap-2">
               <Package className="w-4 h-4" />
               Products
+            </TabsTrigger>
+            <TabsTrigger value="categories" className="gap-2">
+              <ChevronDown className="w-4 h-4" />
+              Categories
             </TabsTrigger>
             <TabsTrigger value="orders" className="gap-2">
               <ShoppingCart className="w-4 h-4" />
@@ -88,6 +92,10 @@ export default function Admin() {
 
           <TabsContent value="products">
             <ProductsTab />
+          </TabsContent>
+
+          <TabsContent value="categories">
+            <CategoriesTab />
           </TabsContent>
 
           <TabsContent value="orders">
@@ -249,12 +257,14 @@ function ProductsTab() {
 // Product Edit Dialog
 function ProductEditDialog({ product, onUpdate }: { product: any; onUpdate: () => void }) {
   const [open, setOpen] = useState(false);
+  const { data: menuData } = trpc.menu.getFullMenu.useQuery({ isDelivery: false });
   const [formData, setFormData] = useState({
     name: product.name,
     chineseName: product.chineseName || '',
     description: product.description || '',
     instorePrice: product.instorePrice || 0,
     deliveryPrice: product.deliveryPrice || 0,
+    subcategoryId: product.subcategoryId,
   });
   const [imagePreview, setImagePreview] = useState<string | null>(product.imageUrl || null);
   const [uploading, setUploading] = useState(false);
@@ -310,6 +320,7 @@ function ProductEditDialog({ product, onUpdate }: { product: any; onUpdate: () =
       description: formData.description || null,
       instorePrice: formData.instorePrice,
       deliveryPrice: formData.deliveryPrice,
+      subcategoryId: formData.subcategoryId,
     });
   };
 
@@ -382,6 +393,31 @@ function ProductEditDialog({ product, onUpdate }: { product: any; onUpdate: () =
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
             />
           </div>
+          <div>
+            <Label>Category / Subcategory</Label>
+            <Select 
+              value={formData.subcategoryId?.toString()} 
+              onValueChange={(v) => setFormData({ ...formData, subcategoryId: Number(v) })}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select subcategory" />
+              </SelectTrigger>
+              <SelectContent>
+                {menuData?.categories.map((cat) => (
+                  <div key={cat.id}>
+                    <div className="px-2 py-1 text-xs font-semibold text-muted-foreground bg-secondary">{cat.name}</div>
+                    {menuData.subcategories
+                      .filter(sub => sub.categoryId === cat.id)
+                      .map(sub => (
+                        <SelectItem key={sub.id} value={sub.id.toString()}>
+                          {sub.name}
+                        </SelectItem>
+                      ))}
+                  </div>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label>In-Store Price (paise)</Label>
@@ -409,6 +445,210 @@ function ProductEditDialog({ product, onUpdate }: { product: any; onUpdate: () =
         </div>
       </DialogContent>
     </Dialog>
+  );
+}
+
+// Categories Tab
+function CategoriesTab() {
+  const { data: menuData, refetch } = trpc.menu.getFullMenu.useQuery({ isDelivery: false });
+  const [editingCategory, setEditingCategory] = useState<any>(null);
+  const [editingSubcategory, setEditingSubcategory] = useState<any>(null);
+  const [newCategoryName, setNewCategoryName] = useState('');
+  const [newSubcategoryData, setNewSubcategoryData] = useState({ name: '', categoryId: 0 });
+
+  const updateCategory = trpc.admin.updateCategory.useMutation({
+    onSuccess: () => { toast.success('Category updated'); refetch(); setEditingCategory(null); },
+    onError: (err) => toast.error(err.message),
+  });
+
+  const createCategory = trpc.admin.createCategory.useMutation({
+    onSuccess: () => { toast.success('Category created'); refetch(); setNewCategoryName(''); },
+    onError: (err) => toast.error(err.message),
+  });
+
+  const deleteCategory = trpc.admin.deleteCategory.useMutation({
+    onSuccess: () => { toast.success('Category deleted'); refetch(); },
+    onError: (err) => toast.error(err.message),
+  });
+
+  const updateSubcategory = trpc.admin.updateSubcategory.useMutation({
+    onSuccess: () => { toast.success('Subcategory updated'); refetch(); setEditingSubcategory(null); },
+    onError: (err) => toast.error(err.message),
+  });
+
+  const createSubcategory = trpc.admin.createSubcategory.useMutation({
+    onSuccess: () => { toast.success('Subcategory created'); refetch(); setNewSubcategoryData({ name: '', categoryId: 0 }); },
+    onError: (err) => toast.error(err.message),
+  });
+
+  const deleteSubcategory = trpc.admin.deleteSubcategory.useMutation({
+    onSuccess: () => { toast.success('Subcategory deleted'); refetch(); },
+    onError: (err) => toast.error(err.message),
+  });
+
+  const generateSlug = (name: string) => name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+
+  return (
+    <div className="space-y-6">
+      {/* Categories Section */}
+      <Card className="p-4">
+        <h3 className="font-semibold mb-4">Categories</h3>
+        <div className="space-y-2">
+          {menuData?.categories.map((cat) => (
+            <div key={cat.id} className="flex items-center justify-between p-3 bg-secondary rounded-lg">
+              {editingCategory?.id === cat.id ? (
+                <div className="flex items-center gap-2 flex-1">
+                  <Input
+                    value={editingCategory.name}
+                    onChange={(e) => setEditingCategory({ ...editingCategory, name: e.target.value })}
+                    className="flex-1"
+                  />
+                  <Button size="sm" onClick={() => updateCategory.mutate({ id: cat.id, name: editingCategory.name })}>
+                    <Check className="w-4 h-4" />
+                  </Button>
+                  <Button size="sm" variant="ghost" onClick={() => setEditingCategory(null)}>
+                    <X className="w-4 h-4" />
+                  </Button>
+                </div>
+              ) : (
+                <>
+                  <span className="font-medium">{cat.name}</span>
+                  <div className="flex gap-2">
+                    <Button size="sm" variant="ghost" onClick={() => setEditingCategory(cat)}>
+                      <Edit className="w-4 h-4" />
+                    </Button>
+                    <Button size="sm" variant="ghost" className="text-destructive" onClick={() => {
+                      if (confirm('Delete this category? All subcategories must be removed first.')) {
+                        deleteCategory.mutate({ id: cat.id });
+                      }
+                    }}>
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </>
+              )}
+            </div>
+          ))}
+          <div className="flex gap-2 mt-4">
+            <Input
+              placeholder="New category name"
+              value={newCategoryName}
+              onChange={(e) => setNewCategoryName(e.target.value)}
+            />
+            <Button onClick={() => {
+              if (newCategoryName) {
+                createCategory.mutate({ name: newCategoryName, slug: generateSlug(newCategoryName) });
+              }
+            }}>
+              <Plus className="w-4 h-4 mr-2" /> Add Category
+            </Button>
+          </div>
+        </div>
+      </Card>
+
+      {/* Subcategories Section */}
+      <Card className="p-4">
+        <h3 className="font-semibold mb-4">Subcategories</h3>
+        <div className="space-y-4">
+          {menuData?.categories.map((cat) => (
+            <div key={cat.id} className="border rounded-lg p-4">
+              <h4 className="font-medium text-sm text-muted-foreground mb-2">{cat.name}</h4>
+              <div className="space-y-2">
+                {menuData.subcategories
+                  .filter(sub => sub.categoryId === cat.id)
+                  .map((sub) => (
+                    <div key={sub.id} className="flex items-center justify-between p-2 bg-secondary/50 rounded">
+                      {editingSubcategory?.id === sub.id ? (
+                        <div className="flex items-center gap-2 flex-1">
+                          <Input
+                            value={editingSubcategory.name}
+                            onChange={(e) => setEditingSubcategory({ ...editingSubcategory, name: e.target.value })}
+                            className="flex-1"
+                          />
+                          <Select
+                            value={editingSubcategory.categoryId?.toString()}
+                            onValueChange={(v) => setEditingSubcategory({ ...editingSubcategory, categoryId: Number(v) })}
+                          >
+                            <SelectTrigger className="w-40">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {menuData.categories.map(c => (
+                                <SelectItem key={c.id} value={c.id.toString()}>{c.name}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <Button size="sm" onClick={() => updateSubcategory.mutate({
+                            id: sub.id,
+                            name: editingSubcategory.name,
+                            categoryId: editingSubcategory.categoryId,
+                          })}>
+                            <Check className="w-4 h-4" />
+                          </Button>
+                          <Button size="sm" variant="ghost" onClick={() => setEditingSubcategory(null)}>
+                            <X className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      ) : (
+                        <>
+                          <div>
+                            <span>{sub.name}</span>
+                            {sub.chineseName && <span className="text-xs text-muted-foreground ml-2">{sub.chineseName}</span>}
+                          </div>
+                          <div className="flex gap-2">
+                            <Button size="sm" variant="ghost" onClick={() => setEditingSubcategory(sub)}>
+                              <Edit className="w-4 h-4" />
+                            </Button>
+                            <Button size="sm" variant="ghost" className="text-destructive" onClick={() => {
+                              if (confirm('Delete this subcategory? All products must be moved first.')) {
+                                deleteSubcategory.mutate({ id: sub.id });
+                              }
+                            }}>
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  ))}
+              </div>
+            </div>
+          ))}
+          <div className="flex gap-2 mt-4">
+            <Input
+              placeholder="New subcategory name"
+              value={newSubcategoryData.name}
+              onChange={(e) => setNewSubcategoryData({ ...newSubcategoryData, name: e.target.value })}
+              className="flex-1"
+            />
+            <Select
+              value={newSubcategoryData.categoryId?.toString() || ''}
+              onValueChange={(v) => setNewSubcategoryData({ ...newSubcategoryData, categoryId: Number(v) })}
+            >
+              <SelectTrigger className="w-40">
+                <SelectValue placeholder="Category" />
+              </SelectTrigger>
+              <SelectContent>
+                {menuData?.categories.map(c => (
+                  <SelectItem key={c.id} value={c.id.toString()}>{c.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button onClick={() => {
+              if (newSubcategoryData.name && newSubcategoryData.categoryId) {
+                createSubcategory.mutate({
+                  name: newSubcategoryData.name,
+                  slug: generateSlug(newSubcategoryData.name),
+                  categoryId: newSubcategoryData.categoryId,
+                });
+              }
+            }}>
+              <Plus className="w-4 h-4 mr-2" /> Add Subcategory
+            </Button>
+          </div>
+        </div>
+      </Card>
+    </div>
   );
 }
 

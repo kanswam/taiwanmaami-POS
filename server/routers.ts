@@ -552,6 +552,69 @@ export const appRouter = router({
         return { success: true };
       }),
 
+    deleteCategory: adminProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        const dbInstance = await getDb();
+        if (!dbInstance) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
+        const subs = await dbInstance!.select().from(subcategories).where(eq(subcategories.categoryId, input.id));
+        if (subs.length > 0) {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: 'Cannot delete category with subcategories. Delete subcategories first.' });
+        }
+        await dbInstance!.delete(categories).where(eq(categories.id, input.id));
+        return { success: true };
+      }),
+
+    // Subcategory management
+    createSubcategory: adminProcedure
+      .input(z.object({
+        name: z.string(),
+        chineseName: z.string().nullable().optional(),
+        slug: z.string(),
+        categoryId: z.number(),
+        displayOrder: z.number().optional(),
+        hasSizeVariants: z.boolean().optional(),
+        hasBobaOption: z.boolean().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const dbInstance = await getDb();
+        if (!dbInstance) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
+        const [result] = await dbInstance!.insert(subcategories).values(input);
+        return { id: result.insertId };
+      }),
+
+    updateSubcategory: adminProcedure
+      .input(z.object({
+        id: z.number(),
+        name: z.string().optional(),
+        chineseName: z.string().nullable().optional(),
+        slug: z.string().optional(),
+        categoryId: z.number().optional(),
+        displayOrder: z.number().optional(),
+        hasSizeVariants: z.boolean().optional(),
+        hasBobaOption: z.boolean().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const dbInstance = await getDb();
+        if (!dbInstance) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
+        const { id, ...data } = input;
+        await dbInstance!.update(subcategories).set(data).where(eq(subcategories.id, id));
+        return { success: true };
+      }),
+
+    deleteSubcategory: adminProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        const dbInstance = await getDb();
+        if (!dbInstance) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
+        const prods = await dbInstance!.select().from(products).where(eq(products.subcategoryId, input.id));
+        if (prods.length > 0) {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: 'Cannot delete subcategory with products. Move or delete products first.' });
+        }
+        await dbInstance!.delete(subcategories).where(eq(subcategories.id, input.id));
+        return { success: true };
+      }),
+
     // Product management
     createProduct: adminProcedure
       .input(z.object({
@@ -592,6 +655,7 @@ export const appRouter = router({
         availableDelivery: z.boolean().optional(),
         displayOrder: z.number().optional(),
         isActive: z.boolean().optional(),
+        subcategoryId: z.number().optional(),
       }))
       .mutation(async ({ input }) => {
         const dbInstance = await getDb();

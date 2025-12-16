@@ -495,3 +495,6 @@
 ## Phase 29 - UI Improvements (Dec 16, 2025)
 
 - [x] Increase product photo upload size limit to 50MB
+- [x] Add category/subcategory dropdown to product edit dialog
+- [x] Add Categories management tab to Admin (create/edit/delete categories and subcategories)
+- [x] Allow moving products between categories/subcategories
