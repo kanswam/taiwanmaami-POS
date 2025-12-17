@@ -66,7 +66,7 @@ async function startServer() {
         kots: pendingKots.map(kot => ({
           id: kot.id,
           orderId: kot.orderId,
-          outletId: kot.outletId,
+          orderNumber: kot.orderNumber,
           kotData: kot.kotData,
           createdAt: kot.createdAt,
         }))

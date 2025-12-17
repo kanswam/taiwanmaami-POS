@@ -498,3 +498,27 @@
 - [x] Add category/subcategory dropdown to product edit dialog
 - [x] Add Categories management tab to Admin (create/edit/delete categories and subcategories)
 - [x] Allow moving products between categories/subcategories
+
+## Phase 30 - Full CMS Access for Theresa (Dec 16, 2025)
+
+- [x] Add "Add New Product" button and form to Products tab
+- [x] Add "Delete Product" functionality with confirmation
+- [x] Add "Site Settings" tab for editing homepage text/descriptions
+- [x] Enable editing of hero section title and description
+- [x] Homepage content editable via Site Settings tab
+
+## Phase 31 - Fix Category/Subcategory Editing (Dec 16, 2025)
+
+- [ ] Fix category editing dialog
+- [ ] Fix subcategory editing dialog
+- [ ] Test create/edit/delete for categories
+- [ ] Test create/edit/delete for subcategories
+
+## Phase 32 - Proper Site Settings Editing
+
+- [x] Add site_settings table to database schema (key-value pairs for all site content)
+- [x] Create tRPC procedures for getting/updating site settings
+- [x] Add editable category descriptions in Site Settings tab
+- [x] Add editable store information fields in Site Settings tab
+- [x] Add Save Settings button that actually saves to database
+- [x] Test all site settings editing functionality

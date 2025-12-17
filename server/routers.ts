@@ -436,9 +436,9 @@ export const appRouter = router({
           };
           
           await dbInstance!.insert(kotQueue).values({
-            orderId: String(input.orderId),
-            outletId: order.outletId || 1, // Default to outlet 1 if not set
-            kotData: kotData,
+            orderId: order.id,
+            orderNumber: order.orderNumber,
+            kotData: JSON.stringify(kotData),
             isPrinted: false,
           });
         }
@@ -869,6 +869,34 @@ export const appRouter = router({
         return { success: true };
       }),
     // POS Audit logs removed - POS functionality removed
+
+    // Site settings management
+    getSiteSettings: adminProcedure.query(async () => {
+      const dbInstance = await getDb();
+      if (!dbInstance) return [];
+      const { siteSettings } = await import('../drizzle/schema.js');
+      return dbInstance.select().from(siteSettings);
+    }),
+
+    updateSiteSetting: adminProcedure
+      .input(z.object({ key: z.string(), value: z.string() }))
+      .mutation(async ({ input }) => {
+        const dbInstance = await getDb();
+        if (!dbInstance) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
+        const { siteSettings } = await import('../drizzle/schema.js');
+        
+        // Check if setting exists
+        const existing = await dbInstance.select().from(siteSettings).where(eq(siteSettings.key, input.key));
+        
+        if (existing.length > 0) {
+          // Update existing
+          await dbInstance.update(siteSettings).set({ value: input.value }).where(eq(siteSettings.key, input.key));
+        } else {
+          // Insert new
+          await dbInstance.insert(siteSettings).values({ key: input.key, value: input.value });
+        }
+        return { success: true };
+      }),
   }),
 
   // POS functionality removed - posAuth and pos routers removed
@@ -1575,18 +1603,16 @@ export const appRouter = router({
         
         return pendingKots.map(kot => {
           // Parse kotData if it's a string, otherwise use as-is
-          let parsedKotData = kot.kotData;
-          if (typeof kot.kotData === 'string') {
-            try {
-              parsedKotData = JSON.parse(kot.kotData);
-            } catch (e) {
-              parsedKotData = { raw: kot.kotData };
-            }
+          let parsedKotData;
+          try {
+            parsedKotData = JSON.parse(kot.kotData);
+          } catch (e) {
+            parsedKotData = kot.kotData;
           }
           return {
             id: kot.id,
             orderId: kot.orderId,
-            outletId: kot.outletId,
+            orderNumber: kot.orderNumber,
             kotData: parsedKotData,
             createdAt: kot.createdAt,
           };

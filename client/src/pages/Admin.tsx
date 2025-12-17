@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Link, useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -63,7 +63,7 @@ export default function Admin() {
 
       <div className="container py-6">
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-6 mb-6">
+          <TabsList className="grid w-full grid-cols-7 mb-6">
             <TabsTrigger value="products" className="gap-2">
               <Package className="w-4 h-4" />
               Products
@@ -87,6 +87,10 @@ export default function Admin() {
             <TabsTrigger value="reviews" className="gap-2">
               <Star className="w-4 h-4" />
               Reviews
+            </TabsTrigger>
+            <TabsTrigger value="settings" className="gap-2">
+              <Edit className="w-4 h-4" />
+              Site Settings
             </TabsTrigger>
           </TabsList>
 
@@ -114,6 +118,10 @@ export default function Admin() {
 
           <TabsContent value="reviews">
             <ReviewsTab />
+          </TabsContent>
+
+          <TabsContent value="settings">
+            <SiteSettingsTab />
           </TabsContent>
         </Tabs>
       </div>
@@ -1209,6 +1217,222 @@ function ReviewsTab() {
           ))}
         </div>
       )}
+    </div>
+  );
+}
+
+
+// Site Settings Tab Component
+function SiteSettingsTab() {
+  const { data: settings, refetch } = trpc.admin.getSiteSettings.useQuery();
+  const updateSetting = trpc.admin.updateSiteSetting.useMutation();
+
+  const [heroTitle, setHeroTitle] = useState('');
+  const [heroDescription, setHeroDescription] = useState('');
+  const [qualityTitle, setQualityTitle] = useState('');
+  const [qualityDescription, setQualityDescription] = useState('');
+  const [freshnessTitle, setFreshnessTitle] = useState('');
+  const [freshnessDescription, setFreshnessDescription] = useState('');
+  const [deliveryTitle, setDeliveryTitle] = useState('');
+  const [deliveryDescription, setDeliveryDescription] = useState('');
+  const [storePhone, setStorePhone] = useState('');
+  const [storeEmail, setStoreEmail] = useState('');
+  const [storeAddress, setStoreAddress] = useState('');
+  const [saving, setSaving] = useState(false);
+
+  // Load settings on mount
+  useEffect(() => {
+    if (settings) {
+      const settingsMap = settings.reduce((acc: any, s: any) => {
+        acc[s.key] = s.value;
+        return acc;
+      }, {});
+
+      setHeroTitle(settingsMap.hero_title || 'Authentic Taiwanese\nBubble Tea');
+      setHeroDescription(settingsMap.hero_description || 'Crafted with imported tapioca pearls from Taiwan. Experience the true taste of premium bubble tea at Taiwan Maami.');
+      setQualityTitle(settingsMap.quality_title || 'Premium Quality');
+      setQualityDescription(settingsMap.quality_description || 'Imported ingredients from Taiwan');
+      setFreshnessTitle(settingsMap.freshness_title || 'Crafted Fresh');
+      setFreshnessDescription(settingsMap.freshness_description || 'Made to order, every time');
+      setDeliveryTitle(settingsMap.delivery_title || 'Quick Delivery');
+      setDeliveryDescription(settingsMap.delivery_description || 'Fast delivery across Chennai');
+      setStorePhone(settingsMap.store_phone || '+91 98765 43210');
+      setStoreEmail(settingsMap.store_email || 'info@taiwanmaami.com');
+      setStoreAddress(settingsMap.store_address || '34/8 Singarar Street, Triplicane, Chennai - 600005');
+    }
+  }, [settings]);
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      const updates = [
+        { key: 'hero_title', value: heroTitle },
+        { key: 'hero_description', value: heroDescription },
+        { key: 'quality_title', value: qualityTitle },
+        { key: 'quality_description', value: qualityDescription },
+        { key: 'freshness_title', value: freshnessTitle },
+        { key: 'freshness_description', value: freshnessDescription },
+        { key: 'delivery_title', value: deliveryTitle },
+        { key: 'delivery_description', value: deliveryDescription },
+        { key: 'store_phone', value: storePhone },
+        { key: 'store_email', value: storeEmail },
+        { key: 'store_address', value: storeAddress },
+      ];
+
+      for (const update of updates) {
+        await updateSetting.mutateAsync(update);
+      }
+
+      toast.success('Settings saved successfully!');
+      refetch();
+    } catch (error) {
+      toast.error('Failed to save settings');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-2xl font-bold mb-4">Site Settings</h2>
+        <p className="text-muted-foreground">Edit homepage content and site information</p>
+      </div>
+
+      <Card className="p-6">
+        <h3 className="text-lg font-semibold mb-4">Hero Section</h3>
+        <div className="space-y-4">
+          <div>
+            <Label>Hero Title</Label>
+            <Input
+              value={heroTitle}
+              onChange={(e) => setHeroTitle(e.target.value)}
+              placeholder="Authentic Taiwanese Bubble Tea"
+              className="mt-2"
+            />
+            <p className="text-xs text-muted-foreground mt-1">Use \n for line breaks</p>
+          </div>
+          <div>
+            <Label>Hero Description</Label>
+            <textarea
+              value={heroDescription}
+              onChange={(e) => setHeroDescription(e.target.value)}
+              placeholder="Crafted with imported tapioca pearls..."
+              className="w-full min-h-[100px] p-3 rounded-md border border-input bg-background mt-2"
+            />
+          </div>
+        </div>
+      </Card>
+
+      <Card className="p-6">
+        <h3 className="text-lg font-semibold mb-4">Feature Highlights</h3>
+        <div className="space-y-6">
+          <div className="space-y-3">
+            <h4 className="font-medium">Premium Quality</h4>
+            <div>
+              <Label className="text-sm">Title</Label>
+              <Input
+                value={qualityTitle}
+                onChange={(e) => setQualityTitle(e.target.value)}
+                className="mt-1"
+              />
+            </div>
+            <div>
+              <Label className="text-sm">Description</Label>
+              <Input
+                value={qualityDescription}
+                onChange={(e) => setQualityDescription(e.target.value)}
+                className="mt-1"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            <h4 className="font-medium">Crafted Fresh</h4>
+            <div>
+              <Label className="text-sm">Title</Label>
+              <Input
+                value={freshnessTitle}
+                onChange={(e) => setFreshnessTitle(e.target.value)}
+                className="mt-1"
+              />
+            </div>
+            <div>
+              <Label className="text-sm">Description</Label>
+              <Input
+                value={freshnessDescription}
+                onChange={(e) => setFreshnessDescription(e.target.value)}
+                className="mt-1"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            <h4 className="font-medium">Quick Delivery</h4>
+            <div>
+              <Label className="text-sm">Title</Label>
+              <Input
+                value={deliveryTitle}
+                onChange={(e) => setDeliveryTitle(e.target.value)}
+                className="mt-1"
+              />
+            </div>
+            <div>
+              <Label className="text-sm">Description</Label>
+              <Input
+                value={deliveryDescription}
+                onChange={(e) => setDeliveryDescription(e.target.value)}
+                className="mt-1"
+              />
+            </div>
+          </div>
+        </div>
+      </Card>
+
+      <Card className="p-6">
+        <h3 className="text-lg font-semibold mb-4">Store Information</h3>
+        <div className="space-y-4">
+          <div>
+            <Label>Phone Number</Label>
+            <Input
+              value={storePhone}
+              onChange={(e) => setStorePhone(e.target.value)}
+              placeholder="+91 98765 43210"
+              className="mt-2"
+            />
+          </div>
+          <div>
+            <Label>Email Address</Label>
+            <Input
+              value={storeEmail}
+              onChange={(e) => setStoreEmail(e.target.value)}
+              placeholder="info@taiwanmaami.com"
+              className="mt-2"
+            />
+          </div>
+          <div>
+            <Label>Store Address</Label>
+            <textarea
+              value={storeAddress}
+              onChange={(e) => setStoreAddress(e.target.value)}
+              placeholder="34/8 Singarar Street, Triplicane, Chennai - 600005"
+              className="w-full min-h-[80px] p-3 rounded-md border border-input bg-background mt-2"
+            />
+          </div>
+        </div>
+      </Card>
+
+      <div className="flex justify-end">
+        <Button onClick={handleSave} disabled={saving}>
+          {saving ? 'Saving...' : 'Save All Settings'}
+        </Button>
+      </div>
+
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <p className="text-sm text-blue-800">
+          <strong>Note:</strong> Changes are saved to the database and will be visible immediately on the homepage after saving.
+        </p>
+      </div>
     </div>
   );
 }

@@ -1,4 +1,5 @@
 import { Link } from 'wouter';
+import { useState, useEffect } from 'react';
 // Taiwan Maami Web Platform - Customer Ordering Website
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -8,6 +9,16 @@ import { ArrowRight, MapPin, Clock, Star, Sparkles, Instagram, Phone, Navigation
 
 export default function Home() {
   const { data: stores } = trpc.stores.getAll.useQuery();
+  const [heroTitle, setHeroTitle] = useState('Authentic Taiwanese\nBubble Tea');
+  const [heroDescription, setHeroDescription] = useState('Crafted with imported tapioca pearls from Taiwan. Experience the true taste of premium bubble tea at Taiwan Maami.');
+
+  // Load custom content from localStorage
+  useEffect(() => {
+    const savedTitle = localStorage.getItem('site_hero_title');
+    const savedDesc = localStorage.getItem('site_hero_description');
+    if (savedTitle) setHeroTitle(savedTitle);
+    if (savedDesc) setHeroDescription(savedDesc);
+  }, []);
 
   // Category cards with video backgrounds
   const menuCategories = [
@@ -87,12 +98,12 @@ export default function Home() {
           <div className="container">
             <div className="max-w-2xl">
               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-6">
-                Authentic Taiwanese
-                <span className="block">Bubble Tea</span>
+                {heroTitle.split('\n').map((line, i) => (
+                  <span key={i} className={i > 0 ? 'block' : ''}>{line}</span>
+                ))}
               </h1>
               <p className="text-lg sm:text-xl text-white/90 mb-8">
-                Crafted with imported tapioca pearls from Taiwan. 
-                Experience the true taste of premium bubble tea at Taiwan Maami.
+                {heroDescription}
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
                 <Link href="/menu">

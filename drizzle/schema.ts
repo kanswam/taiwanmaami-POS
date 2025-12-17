@@ -371,12 +371,20 @@ export const reviews = mysqlTable("reviews", {
 // KOT Queue for kitchen order tickets
 export const kotQueue = mysqlTable("kot_queue", {
   id: int("id").autoincrement().primaryKey(),
-  orderId: varchar("orderId", { length: 255 }).notNull(),
-  outletId: int("outletId").notNull(),
-  kotData: json("kotData").notNull(), // JSON with order details
+  orderId: int("orderId").notNull(),
+  orderNumber: varchar("orderNumber", { length: 50 }).notNull(),
+  kotData: text("kotData").notNull(), // JSON string with order details
   isPrinted: boolean("isPrinted").default(false).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   printedAt: timestamp("printedAt"),
+});
+
+// Site settings for CMS (key-value pairs for all editable site content)
+export const siteSettings = mysqlTable("site_settings", {
+  id: int("id").autoincrement().primaryKey(),
+  key: varchar("key", { length: 100 }).notNull().unique(),
+  value: text("value"),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
 
 // Type exports
@@ -400,3 +408,4 @@ export type StampTransaction = typeof stampTransactions.$inferSelect;
 export type GuestOrder = typeof guestOrders.$inferSelect;
 export type Review = typeof reviews.$inferSelect;
 export type KotQueue = typeof kotQueue.$inferSelect;
+export type SiteSettings = typeof siteSettings.$inferSelect;
