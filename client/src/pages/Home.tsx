@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Header } from '@/components/Header';
+import { LazyVideo } from '@/components/LazyVideo';
 import { trpc } from '@/lib/trpc';
 import { ArrowRight, MapPin, Clock, Star, Sparkles, Instagram, Phone, Navigation } from 'lucide-react';
 
@@ -82,6 +83,7 @@ export default function Home() {
             loop
             muted
             playsInline
+            preload="metadata"
             className="w-full h-full object-cover"
             poster="/images/interior2.jpg"
           >
@@ -174,16 +176,15 @@ export default function Home() {
             {menuCategories.map((category, index) => (
               <Link key={index} href={category.href}>
                 <Card className="group cursor-pointer overflow-hidden hover:shadow-2xl transition-all duration-300 relative aspect-[16/9]">
-                  {/* Video Background */}
-                  <video
+                  {/* Lazy Loaded Video Background */}
+                  <LazyVideo
+                    src={category.video}
+                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                     autoPlay
                     loop
                     muted
                     playsInline
-                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                  >
-                    <source src={category.video} type="video/mp4" />
-                  </video>
+                  />
                   
                   {/* Overlay */}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
@@ -230,17 +231,16 @@ export default function Home() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {locations.map((location, index) => (
               <Card key={index} className="group overflow-hidden hover:shadow-2xl transition-all duration-300 relative aspect-[4/3]">
-                {/* Video Background */}
-                <video
+                {/* Lazy Loaded Video Background */}
+                <LazyVideo
+                  src={location.video}
+                  poster="/images/shopfront.jpg"
+                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                   autoPlay
                   loop
                   muted
                   playsInline
-                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                  poster="/images/shopfront.jpg"
-                >
-                  <source src={location.video} type="video/mp4" />
-                </video>
+                />
                 
                 {/* Overlay */}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-black/20" />
