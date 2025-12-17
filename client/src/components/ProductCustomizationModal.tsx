@@ -16,6 +16,7 @@ interface ProductCustomizationModalProps {
     id: number;
     name: string;
     chineseName?: string | null;
+    description?: string | null;
     imageUrl?: string | null;
     instorePrice?: number | null;
     deliveryPrice?: number | null;
@@ -295,6 +296,9 @@ export function ProductCustomizationModal({
               <span className="text-lg">{product.name}</span>
               {product.chineseName && (
                 <span className="block text-sm text-muted-foreground">{product.chineseName}</span>
+              )}
+              {product.description && (
+                <p className="block text-sm text-muted-foreground mt-2 font-normal">{product.description}</p>
               )}
               {/* Mochi set indicator for delivery/pickup */}
               {isDelivery && isMochiProduct && (

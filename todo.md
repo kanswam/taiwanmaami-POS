@@ -522,3 +522,29 @@
 - [x] Add editable store information fields in Site Settings tab
 - [x] Add Save Settings button that actually saves to database
 - [x] Test all site settings editing functionality
+
+## Phase 33 - Core CMS Features (Dec 17, 2025)
+
+### Category/Subcategory Management
+- [x] Fix category editing dialog (enable name and description editing)
+- [x] Fix subcategory editing dialog (enable name, description, and base pricing editing)
+- [x] Test create new category
+- [x] Test edit existing category
+- [x] Test delete category
+- [x] Test create new subcategory
+- [x] Test edit existing subcategory
+- [x] Test delete subcategory
+
+### Product Descriptions
+- [x] Add description field to products table schema
+- [x] Update product creation form to include description textarea
+- [x] Update product editing to include description field
+- [x] Display product description in customization modal on website
+- [x] Display product description in POS product details
+
+### Customer Reviews Management
+- [x] Add moderate/approve button to Reviews tab
+- [x] Add delete review functionality
+- [x] Add reply to review functionality
+- [x] Show pending vs approved review status
+- [x] Filter reviews by status (all/pending/approved)

@@ -3,6 +3,7 @@ import { Link, useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
@@ -14,7 +15,7 @@ import { formatPrice, GST_RATE } from '@shared/types';
 import { 
   Home, Package, ShoppingCart, Tag, Upload, LogOut, 
   Plus, Edit, Trash2, ImageIcon, RefreshCw, Check, X, Search,
-  ChevronDown, ChevronUp, Eye, EyeOff, Star, MessageSquare
+  ChevronDown, ChevronUp, Eye, EyeOff, Star, MessageSquare, Reply
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -396,9 +397,11 @@ function ProductEditDialog({ product, onUpdate }: { product: any; onUpdate: () =
           </div>
           <div>
             <Label>Description</Label>
-            <Input
+            <Textarea
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              placeholder="Describe the product..."
+              rows={3}
             />
           </div>
           <div>
@@ -459,13 +462,11 @@ function ProductEditDialog({ product, onUpdate }: { product: any; onUpdate: () =
 // Categories Tab
 function CategoriesTab() {
   const { data: menuData, refetch } = trpc.menu.getFullMenu.useQuery({ isDelivery: false });
-  const [editingCategory, setEditingCategory] = useState<any>(null);
-  const [editingSubcategory, setEditingSubcategory] = useState<any>(null);
   const [newCategoryName, setNewCategoryName] = useState('');
   const [newSubcategoryData, setNewSubcategoryData] = useState({ name: '', categoryId: 0 });
 
   const updateCategory = trpc.admin.updateCategory.useMutation({
-    onSuccess: () => { toast.success('Category updated'); refetch(); setEditingCategory(null); },
+    onSuccess: () => { toast.success('Category updated'); refetch(); },
     onError: (err) => toast.error(err.message),
   });
 
@@ -480,7 +481,7 @@ function CategoriesTab() {
   });
 
   const updateSubcategory = trpc.admin.updateSubcategory.useMutation({
-    onSuccess: () => { toast.success('Subcategory updated'); refetch(); setEditingSubcategory(null); },
+    onSuccess: () => { toast.success('Subcategory updated'); refetch(); },
     onError: (err) => toast.error(err.message),
   });
 
@@ -504,37 +505,54 @@ function CategoriesTab() {
         <div className="space-y-2">
           {menuData?.categories.map((cat) => (
             <div key={cat.id} className="flex items-center justify-between p-3 bg-secondary rounded-lg">
-              {editingCategory?.id === cat.id ? (
-                <div className="flex items-center gap-2 flex-1">
-                  <Input
-                    value={editingCategory.name}
-                    onChange={(e) => setEditingCategory({ ...editingCategory, name: e.target.value })}
-                    className="flex-1"
-                  />
-                  <Button size="sm" onClick={() => updateCategory.mutate({ id: cat.id, name: editingCategory.name })}>
-                    <Check className="w-4 h-4" />
-                  </Button>
-                  <Button size="sm" variant="ghost" onClick={() => setEditingCategory(null)}>
-                    <X className="w-4 h-4" />
+              <>
+                <span className="font-medium">{cat.name}</span>
+                <div className="flex gap-2">
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button size="sm" variant="ghost">
+                        <Edit className="w-4 h-4" />
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Edit Category</DialogTitle>
+                      </DialogHeader>
+                      <div className="space-y-4">
+                        <div>
+                          <Label>Category Name</Label>
+                          <Input
+                            defaultValue={cat.name}
+                            id={`cat-name-${cat.id}`}
+                          />
+                        </div>
+                        <div>
+                          <Label>Description</Label>
+                          <Input
+                            defaultValue={cat.description || ''}
+                            id={`cat-desc-${cat.id}`}
+                            placeholder="Optional description"
+                          />
+                        </div>
+                        <Button onClick={() => {
+                          const name = (document.getElementById(`cat-name-${cat.id}`) as HTMLInputElement).value;
+                          const description = (document.getElementById(`cat-desc-${cat.id}`) as HTMLInputElement).value;
+                          updateCategory.mutate({ id: cat.id, name, description });
+                        }}>
+                          Save Changes
+                        </Button>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+                  <Button size="sm" variant="ghost" className="text-destructive" onClick={() => {
+                    if (confirm('Delete this category? All subcategories must be removed first.')) {
+                      deleteCategory.mutate({ id: cat.id });
+                    }
+                  }}>
+                    <Trash2 className="w-4 h-4" />
                   </Button>
                 </div>
-              ) : (
-                <>
-                  <span className="font-medium">{cat.name}</span>
-                  <div className="flex gap-2">
-                    <Button size="sm" variant="ghost" onClick={() => setEditingCategory(cat)}>
-                      <Edit className="w-4 h-4" />
-                    </Button>
-                    <Button size="sm" variant="ghost" className="text-destructive" onClick={() => {
-                      if (confirm('Delete this category? All subcategories must be removed first.')) {
-                        deleteCategory.mutate({ id: cat.id });
-                      }
-                    }}>
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </>
-              )}
+              </>
             </div>
           ))}
           <div className="flex gap-2 mt-4">
@@ -566,47 +584,123 @@ function CategoriesTab() {
                   .filter(sub => sub.categoryId === cat.id)
                   .map((sub) => (
                     <div key={sub.id} className="flex items-center justify-between p-2 bg-secondary/50 rounded">
-                      {editingSubcategory?.id === sub.id ? (
-                        <div className="flex items-center gap-2 flex-1">
-                          <Input
-                            value={editingSubcategory.name}
-                            onChange={(e) => setEditingSubcategory({ ...editingSubcategory, name: e.target.value })}
-                            className="flex-1"
-                          />
-                          <Select
-                            value={editingSubcategory.categoryId?.toString()}
-                            onValueChange={(v) => setEditingSubcategory({ ...editingSubcategory, categoryId: Number(v) })}
-                          >
-                            <SelectTrigger className="w-40">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {menuData.categories.map(c => (
-                                <SelectItem key={c.id} value={c.id.toString()}>{c.name}</SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <Button size="sm" onClick={() => updateSubcategory.mutate({
-                            id: sub.id,
-                            name: editingSubcategory.name,
-                            categoryId: editingSubcategory.categoryId,
-                          })}>
-                            <Check className="w-4 h-4" />
-                          </Button>
-                          <Button size="sm" variant="ghost" onClick={() => setEditingSubcategory(null)}>
-                            <X className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      ) : (
                         <>
                           <div>
                             <span>{sub.name}</span>
                             {sub.chineseName && <span className="text-xs text-muted-foreground ml-2">{sub.chineseName}</span>}
                           </div>
                           <div className="flex gap-2">
-                            <Button size="sm" variant="ghost" onClick={() => setEditingSubcategory(sub)}>
-                              <Edit className="w-4 h-4" />
-                            </Button>
+                            <Dialog>
+                              <DialogTrigger asChild>
+                                <Button size="sm" variant="ghost">
+                                  <Edit className="w-4 h-4" />
+                                </Button>
+                              </DialogTrigger>
+                              <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                                <DialogHeader>
+                                  <DialogTitle>Edit Subcategory: {sub.name}</DialogTitle>
+                                </DialogHeader>
+                                <div className="space-y-4">
+                                  <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                      <Label>Subcategory Name</Label>
+                                      <Input defaultValue={sub.name} id={`sub-name-${sub.id}`} />
+                                    </div>
+                                    <div>
+                                      <Label>Chinese Name (Optional)</Label>
+                                      <Input defaultValue={sub.chineseName || ''} id={`sub-chinese-${sub.id}`} />
+                                    </div>
+                                  </div>
+                                  <div>
+                                    <Label>Description (Optional)</Label>
+                                    <Input defaultValue={sub.description || ''} id={`sub-desc-${sub.id}`} />
+                                  </div>
+                                  <div className="border-t pt-4">
+                                    <h4 className="font-medium mb-3">In-Store Base Pricing (₹)</h4>
+                                    <div className="grid grid-cols-3 gap-3">
+                                      <div>
+                                        <Label className="text-xs">Petite + Boba</Label>
+                                        <Input type="number" step="0.01" defaultValue={(sub.basePricePetiteWithBoba || 0) / 100} id={`sub-petite-boba-${sub.id}`} />
+                                      </div>
+                                      <div>
+                                        <Label className="text-xs">Regular + Boba</Label>
+                                        <Input type="number" step="0.01" defaultValue={(sub.basePriceRegularWithBoba || 0) / 100} id={`sub-reg-boba-${sub.id}`} />
+                                      </div>
+                                      <div>
+                                        <Label className="text-xs">Large + Boba</Label>
+                                        <Input type="number" step="0.01" defaultValue={(sub.basePriceLargeWithBoba || 0) / 100} id={`sub-large-boba-${sub.id}`} />
+                                      </div>
+                                      <div>
+                                        <Label className="text-xs">Petite No Boba</Label>
+                                        <Input type="number" step="0.01" defaultValue={(sub.basePricePetiteNoBoba || 0) / 100} id={`sub-petite-no-${sub.id}`} />
+                                      </div>
+                                      <div>
+                                        <Label className="text-xs">Regular No Boba</Label>
+                                        <Input type="number" step="0.01" defaultValue={(sub.basePriceRegularNoBoba || 0) / 100} id={`sub-reg-no-${sub.id}`} />
+                                      </div>
+                                      <div>
+                                        <Label className="text-xs">Large No Boba</Label>
+                                        <Input type="number" step="0.01" defaultValue={(sub.basePriceLargeNoBoba || 0) / 100} id={`sub-large-no-${sub.id}`} />
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <div className="border-t pt-4">
+                                    <h4 className="font-medium mb-3">Delivery Base Pricing (₹)</h4>
+                                    <div className="grid grid-cols-2 gap-3">
+                                      <div>
+                                        <Label className="text-xs">Regular + Boba</Label>
+                                        <Input type="number" step="0.01" defaultValue={(sub.deliveryPriceRegularWithBoba || 0) / 100} id={`sub-del-reg-boba-${sub.id}`} />
+                                      </div>
+                                      <div>
+                                        <Label className="text-xs">Large + Boba</Label>
+                                        <Input type="number" step="0.01" defaultValue={(sub.deliveryPriceLargeWithBoba || 0) / 100} id={`sub-del-large-boba-${sub.id}`} />
+                                      </div>
+                                      <div>
+                                        <Label className="text-xs">Regular No Boba</Label>
+                                        <Input type="number" step="0.01" defaultValue={(sub.deliveryPriceRegularNoBoba || 0) / 100} id={`sub-del-reg-no-${sub.id}`} />
+                                      </div>
+                                      <div>
+                                        <Label className="text-xs">Large No Boba</Label>
+                                        <Input type="number" step="0.01" defaultValue={(sub.deliveryPriceLargeNoBoba || 0) / 100} id={`sub-del-large-no-${sub.id}`} />
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <Button onClick={() => {
+                                    const name = (document.getElementById(`sub-name-${sub.id}`) as HTMLInputElement).value;
+                                    const chineseName = (document.getElementById(`sub-chinese-${sub.id}`) as HTMLInputElement).value || null;
+                                    const description = (document.getElementById(`sub-desc-${sub.id}`) as HTMLInputElement).value || null;
+                                    const basePricePetiteWithBoba = Math.round(parseFloat((document.getElementById(`sub-petite-boba-${sub.id}`) as HTMLInputElement).value || '0') * 100);
+                                    const basePriceRegularWithBoba = Math.round(parseFloat((document.getElementById(`sub-reg-boba-${sub.id}`) as HTMLInputElement).value || '0') * 100);
+                                    const basePriceLargeWithBoba = Math.round(parseFloat((document.getElementById(`sub-large-boba-${sub.id}`) as HTMLInputElement).value || '0') * 100);
+                                    const basePricePetiteNoBoba = Math.round(parseFloat((document.getElementById(`sub-petite-no-${sub.id}`) as HTMLInputElement).value || '0') * 100);
+                                    const basePriceRegularNoBoba = Math.round(parseFloat((document.getElementById(`sub-reg-no-${sub.id}`) as HTMLInputElement).value || '0') * 100);
+                                    const basePriceLargeNoBoba = Math.round(parseFloat((document.getElementById(`sub-large-no-${sub.id}`) as HTMLInputElement).value || '0') * 100);
+                                    const deliveryPriceRegularWithBoba = Math.round(parseFloat((document.getElementById(`sub-del-reg-boba-${sub.id}`) as HTMLInputElement).value || '0') * 100);
+                                    const deliveryPriceLargeWithBoba = Math.round(parseFloat((document.getElementById(`sub-del-large-boba-${sub.id}`) as HTMLInputElement).value || '0') * 100);
+                                    const deliveryPriceRegularNoBoba = Math.round(parseFloat((document.getElementById(`sub-del-reg-no-${sub.id}`) as HTMLInputElement).value || '0') * 100);
+                                    const deliveryPriceLargeNoBoba = Math.round(parseFloat((document.getElementById(`sub-del-large-no-${sub.id}`) as HTMLInputElement).value || '0') * 100);
+                                    updateSubcategory.mutate({
+                                      id: sub.id,
+                                      name,
+                                      chineseName,
+                                      description,
+                                      basePricePetiteWithBoba,
+                                      basePriceRegularWithBoba,
+                                      basePriceLargeWithBoba,
+                                      basePricePetiteNoBoba,
+                                      basePriceRegularNoBoba,
+                                      basePriceLargeNoBoba,
+                                      deliveryPriceRegularWithBoba,
+                                      deliveryPriceLargeWithBoba,
+                                      deliveryPriceRegularNoBoba,
+                                      deliveryPriceLargeNoBoba,
+                                    } as any);
+                                  }}>
+                                    Save Changes
+                                  </Button>
+                                </div>
+                              </DialogContent>
+                            </Dialog>
                             <Button size="sm" variant="ghost" className="text-destructive" onClick={() => {
                               if (confirm('Delete this subcategory? All products must be moved first.')) {
                                 deleteSubcategory.mutate({ id: sub.id });
@@ -616,7 +710,6 @@ function CategoriesTab() {
                             </Button>
                           </div>
                         </>
-                      )}
                     </div>
                   ))}
               </div>
@@ -1088,6 +1181,8 @@ function BulkUploadTab() {
 function ReviewsTab() {
   const { data: reviews, refetch } = trpc.reviews.getAll.useQuery();
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [replyingTo, setReplyingTo] = useState<number | null>(null);
+  const [replyText, setReplyText] = useState('');
 
   const updateStatus = trpc.reviews.updateStatus.useMutation({
     onSuccess: () => {
@@ -1167,6 +1262,12 @@ function ReviewsTab() {
                   {review.comment && (
                     <p className="text-sm text-muted-foreground">{review.comment}</p>
                   )}
+                  {review.adminResponse && (
+                    <div className="mt-2 p-3 bg-secondary/50 rounded-lg border-l-2 border-primary">
+                      <p className="text-xs font-semibold text-primary mb-1">Admin Response:</p>
+                      <p className="text-sm">{review.adminResponse}</p>
+                    </div>
+                  )}
                   <p className="text-xs text-muted-foreground">
                     {new Date(review.createdAt).toLocaleDateString('en-IN', {
                       year: 'numeric',
@@ -1199,6 +1300,59 @@ function ReviewsTab() {
                       <EyeOff className="w-4 h-4" />
                     </Button>
                   )}
+                  <Dialog open={replyingTo === review.id} onOpenChange={(open) => { if (!open) { setReplyingTo(null); setReplyText(''); } }}>
+                    <DialogTrigger asChild>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="text-blue-600 hover:text-blue-700"
+                        onClick={() => {
+                          setReplyingTo(review.id);
+                          setReplyText(review.adminResponse || '');
+                        }}
+                      >
+                        <Reply className="w-4 h-4" />
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Reply to Review</DialogTitle>
+                      </DialogHeader>
+                      <div className="space-y-4">
+                        <div>
+                          <p className="text-sm text-muted-foreground mb-2">
+                            <strong>{review.customerName}</strong> rated {review.rating} stars
+                          </p>
+                          {review.comment && (
+                            <p className="text-sm italic border-l-2 border-muted pl-3">"{review.comment}"</p>
+                          )}
+                        </div>
+                        <div>
+                          <Label>Your Response</Label>
+                          <Textarea
+                            value={replyText}
+                            onChange={(e) => setReplyText(e.target.value)}
+                            placeholder="Thank you for your feedback..."
+                            rows={4}
+                          />
+                        </div>
+                        <Button
+                          onClick={() => {
+                            updateStatus.mutate({
+                              reviewId: review.id,
+                              status: review.status as 'pending' | 'approved' | 'rejected',
+                              adminResponse: replyText || undefined,
+                            });
+                            setReplyingTo(null);
+                            setReplyText('');
+                          }}
+                          disabled={!replyText.trim()}
+                        >
+                          Save Reply
+                        </Button>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
                   <Button
                     size="sm"
                     variant="outline"

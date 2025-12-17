@@ -588,11 +588,22 @@ export const appRouter = router({
         id: z.number(),
         name: z.string().optional(),
         chineseName: z.string().nullable().optional(),
+        description: z.string().nullable().optional(),
         slug: z.string().optional(),
         categoryId: z.number().optional(),
         displayOrder: z.number().optional(),
         hasSizeVariants: z.boolean().optional(),
         hasBobaOption: z.boolean().optional(),
+        basePricePetiteWithBoba: z.number().optional(),
+        basePricePetiteNoBoba: z.number().optional(),
+        basePriceRegularWithBoba: z.number().optional(),
+        basePriceRegularNoBoba: z.number().optional(),
+        basePriceLargeWithBoba: z.number().optional(),
+        basePriceLargeNoBoba: z.number().optional(),
+        deliveryPriceRegularWithBoba: z.number().optional(),
+        deliveryPriceRegularNoBoba: z.number().optional(),
+        deliveryPriceLargeWithBoba: z.number().optional(),
+        deliveryPriceLargeNoBoba: z.number().optional(),
       }))
       .mutation(async ({ input }) => {
         const dbInstance = await getDb();
@@ -638,7 +649,8 @@ export const appRouter = router({
         const dbInstance = await getDb();
         if (!dbInstance) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
         const [result] = await dbInstance!.insert(products).values(input);
-        return { id: result.insertId };
+        const [product] = await dbInstance!.select().from(products).where(eq(products.id, result.insertId));
+        return product;
       }),
 
     updateProduct: adminProcedure
