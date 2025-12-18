@@ -608,3 +608,13 @@
 - [x] Fix undefined product names in KOT output (handle JSON object)
 - [ ] User to restart printer client and test
 - [ ] Save checkpoint with fix
+
+## Phase 42 - KOT Improvements: Order Type & Reprint (Dec 18, 2025)
+
+- [x] Add order type (PICKUP/DELIVERY/INSTORE) to KOT data structure
+- [x] Update printer client to display order type prominently on tickets
+- [x] Create reprint KOT API endpoint (/api/kot/reprint)
+- [x] Add reprint button to admin Orders tab (printer icon)
+- [ ] User to test order type displays correctly on printed tickets
+- [ ] User to test reprint functionality from admin panel
+- [ ] Save checkpoint with both features

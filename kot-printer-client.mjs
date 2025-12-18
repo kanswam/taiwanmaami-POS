@@ -104,16 +104,26 @@ function formatKOT(kot) {
   output += PRINTER_COMMANDS.BOLD_ON;
   output += `Order #: ${kotData.orderId}\n`;
   output += PRINTER_COMMANDS.BOLD_OFF;
-  output += `Customer: ${kotData.customerName}\n`;
-  if (kotData.customerPhone) {
-    output += `Phone: ${kotData.customerPhone}\n`;
-  }
-  output += `Time: ${new Date(kotData.createdAt).toLocaleString('en-IN', { 
+  output += `Time: ${new Date().toLocaleString('en-IN', { 
     timeZone: 'Asia/Kolkata',
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
     hour: '2-digit',
     minute: '2-digit',
     hour12: true
   })}\n`;
+  output += `Customer: ${kotData.customerName}\n`;
+  if (kotData.customerPhone) {
+    output += `Phone: ${kotData.customerPhone}\n`;
+  }
+  
+  // Order type - prominent display
+  output += PRINTER_COMMANDS.BOLD_ON;
+  output += PRINTER_COMMANDS.DOUBLE_HEIGHT;
+  output += `Type: ${kotData.orderType || 'PICKUP'}\n`;
+  output += PRINTER_COMMANDS.NORMAL_SIZE;
+  output += PRINTER_COMMANDS.BOLD_OFF;
   output += PRINTER_COMMANDS.SEPARATOR;
   
   // Items

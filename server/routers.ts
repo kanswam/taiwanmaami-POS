@@ -413,6 +413,7 @@ export const appRouter = router({
           // Build KOT data
           const kotData = {
             orderId: order.orderNumber,
+            orderType: order.orderType.toUpperCase(), // PICKUP, DELIVERY, INSTORE
             customerName: order.customerName || 'Guest',
             customerPhone: order.customerPhone || '',
             items: items.map(item => {

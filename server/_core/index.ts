@@ -108,6 +108,78 @@ async function startServer() {
       return res.status(500).json({ error: 'Internal server error' });
     }
   });
+  
+  // Reprint KOT endpoint (for admin to reprint lost/damaged tickets)
+  app.post('/api/kot/reprint', async (req, res) => {
+    try {
+      const { secret, orderId } = req.body;
+      if (!secret || secret !== process.env.KOT_PRINT_SECRET) {
+        return res.status(401).json({ error: 'Invalid KOT secret' });
+      }
+      
+      const { getDb } = await import('../db');
+      const { kotQueue, orders, orderItems, orderItemAddons } = await import('../../drizzle/schema');
+      const { eq, sql } = await import('drizzle-orm');
+      
+      const dbInstance = await getDb();
+      if (!dbInstance) {
+        return res.status(500).json({ error: 'Database not available' });
+      }
+      
+      // Get order details
+      const [order] = await dbInstance.select().from(orders).where(eq(orders.id, orderId));
+      if (!order) {
+        return res.status(404).json({ error: 'Order not found' });
+      }
+      
+      // Get order items with details
+      const items = await dbInstance.select().from(orderItems).where(eq(orderItems.orderId, orderId));
+      const itemIds = items.map(i => i.id);
+      const itemAddons = itemIds.length > 0 
+        ? await dbInstance.select().from(orderItemAddons).where(sql`${orderItemAddons.orderItemId} IN (${sql.join(itemIds.map(id => sql`${id}`), sql`, `)})`)
+        : [];
+      
+      // Build KOT data (same structure as original KOT creation)
+      const kotData = {
+        orderId: order.orderNumber,
+        orderType: order.orderType.toUpperCase(),
+        customerName: order.customerName || 'Guest',
+        customerPhone: order.customerPhone || '',
+        items: items.map(item => {
+          const addons = itemAddons.filter(a => a.orderItemId === item.id);
+          return {
+            productName: item.productName,
+            quantity: item.quantity,
+            price: item.unitPrice,
+            size: item.size,
+            withBoba: item.withBoba,
+            sugarLevel: item.sugarLevel,
+            iceLevel: item.iceLevel,
+            addons: addons.map(a => ({
+              name: a.addonName,
+              price: a.addonPrice,
+            })),
+          };
+        }),
+        totalAmount: order.totalAmount,
+        createdAt: new Date().toISOString(),
+      };
+      
+      // Insert new KOT for reprinting
+      await dbInstance.insert(kotQueue).values({
+        orderId: order.id.toString(),
+        outletId: order.outletId || 1,
+        orderNumber: order.orderNumber,
+        kotData: kotData,
+        isPrinted: false,
+      });
+      
+      return res.json({ success: true, message: 'KOT queued for reprinting' });
+    } catch (error) {
+      console.error('KOT reprint error:', error);
+      return res.status(500).json({ error: 'Internal server error' });
+    }
+  });
   // tRPC API
   app.use(
     "/api/trpc",

@@ -15,7 +15,7 @@ import { formatPrice, GST_RATE } from '@shared/types';
 import { 
   Home, Package, ShoppingCart, Tag, Upload, LogOut, 
   Plus, Edit, Trash2, ImageIcon, RefreshCw, Check, X, Search,
-  ChevronDown, ChevronUp, Eye, EyeOff, Star, MessageSquare, Reply
+  ChevronDown, ChevronUp, Eye, EyeOff, Star, MessageSquare, Reply, Printer
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -855,26 +855,57 @@ function OrdersTab() {
                     {new Date(order.createdAt).toLocaleString()}
                   </td>
                   <td className="p-3 text-center">
-                    {getNextStatus(order.orderStatus, order.orderType) && (
-                      <Button
-                        size="sm"
-                        onClick={() => {
-                          const nextStatus = getNextStatus(order.orderStatus, order.orderType);
-                          if (nextStatus) {
-                            updateStatus.mutate({ orderId: order.id, status: nextStatus });
-                          }
-                        }}
-                        disabled={updateStatus.isPending}
-                      >
-                        {getNextStatusLabel(getNextStatus(order.orderStatus, order.orderType)!)}
-                      </Button>
-                    )}
-                    {order.orderStatus === 'completed' && (
-                      <span className="text-green-600 font-medium">✓ Done</span>
-                    )}
-                    {order.orderStatus === 'cancelled' && (
-                      <span className="text-red-600 font-medium">Cancelled</span>
-                    )}
+                    <div className="flex gap-2 justify-center">
+                      {getNextStatus(order.orderStatus, order.orderType) && (
+                        <Button
+                          size="sm"
+                          onClick={() => {
+                            const nextStatus = getNextStatus(order.orderStatus, order.orderType);
+                            if (nextStatus) {
+                              updateStatus.mutate({ orderId: order.id, status: nextStatus });
+                            }
+                          }}
+                          disabled={updateStatus.isPending}
+                        >
+                          {getNextStatusLabel(getNextStatus(order.orderStatus, order.orderType)!)}
+                        </Button>
+                      )}
+                      {order.orderStatus === 'completed' && (
+                        <span className="text-green-600 font-medium">✓ Done</span>
+                      )}
+                      {order.orderStatus === 'cancelled' && (
+                        <span className="text-red-600 font-medium">Cancelled</span>
+                      )}
+                      {/* Reprint KOT button */}
+                      {order.orderStatus !== 'cancelled' && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={async () => {
+                            try {
+                              const response = await fetch('/api/kot/reprint', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                  secret: import.meta.env.VITE_KOT_PRINT_SECRET || 'your-kot-secret',
+                                  orderId: order.id,
+                                }),
+                              });
+                              if (response.ok) {
+                                toast.success('KOT queued for reprinting');
+                              } else {
+                                toast.error('Failed to reprint KOT');
+                              }
+                            } catch (error) {
+                              toast.error('Failed to reprint KOT');
+                            }
+                          }}
+                          title="Reprint KOT"
+                        >
+                          <Printer className="w-4 h-4" />
+                        </Button>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))}
