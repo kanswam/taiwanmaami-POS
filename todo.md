@@ -574,3 +574,14 @@
 - [x] Test videos load from S3 on website
 - [ ] Save checkpoint with S3 URLs
 - [ ] Verify videos work on published production site
+
+## Phase 38 - KOT Printer Integration (Dec 18, 2025)
+
+- [x] Check Razorpay payment integration status
+- [x] Ensure KOT creation happens after payment success
+- [x] Create printer client app for Essae PR-55 (IP: 192.168.1.22, Port: 9100)
+- [x] Created kot-printer-client.mjs with ESC/POS formatting
+- [x] Verify KOT format is correct and readable
+- [x] Document printer client setup for outlet (KOT-PRINTER-SETUP.md)
+- [ ] Save checkpoint with working end-to-end flow
+- [ ] User to install printer client at outlet and test

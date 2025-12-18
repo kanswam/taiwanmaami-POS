@@ -1,0 +1,263 @@
+#!/usr/bin/env node
+/**
+ * Taiwan Maami KOT Printer Client
+ * 
+ * This application runs at the outlet and automatically prints KOTs
+ * to the Essae PR-55 thermal printer when customers complete payment.
+ * 
+ * Setup:
+ * 1. Install Node.js on outlet computer
+ * 2. Copy this file to outlet computer
+ * 3. Run: node kot-printer-client.mjs
+ * 4. Keep running in background (use PM2 or similar)
+ */
+
+import net from 'net';
+
+// Configuration
+const CONFIG = {
+  // Your website URL (change this to your published production URL)
+  serverUrl: 'https://taiwan-maami.manus.space',
+  
+  // KOT secret from your environment variables
+  kotSecret: process.env.KOT_PRINT_SECRET || 'your-kot-secret-here',
+  
+  // Printer settings
+  printerIp: '192.168.1.22',
+  printerPort: 9100,
+  
+  // Polling interval (milliseconds)
+  pollInterval: 5000, // Check every 5 seconds
+};
+
+// ESC/POS commands for Essae PR-55
+const ESC = '\x1B';
+const GS = '\x1D';
+
+const PRINTER_COMMANDS = {
+  INIT: `${ESC}@`,                    // Initialize printer
+  ALIGN_CENTER: `${ESC}a1`,           // Center align
+  ALIGN_LEFT: `${ESC}a0`,             // Left align
+  BOLD_ON: `${ESC}E1`,                // Bold on
+  BOLD_OFF: `${ESC}E0`,               // Bold off
+  DOUBLE_HEIGHT: `${GS}!0x11`,        // Double height text
+  NORMAL_SIZE: `${GS}!0x00`,          // Normal size text
+  CUT_PAPER: `${GS}V\x41\x03`,        // Cut paper
+  LINE_FEED: '\n',
+  SEPARATOR: '--------------------------------\n',
+};
+
+/**
+ * Send data to thermal printer
+ */
+async function printToThermal(data) {
+  return new Promise((resolve, reject) => {
+    const client = new net.Socket();
+    
+    client.connect(CONFIG.printerPort, CONFIG.printerIp, () => {
+      console.log(`Connected to printer at ${CONFIG.printerIp}:${CONFIG.printerPort}`);
+      client.write(data);
+      client.end();
+    });
+    
+    client.on('close', () => {
+      console.log('Printer connection closed');
+      resolve();
+    });
+    
+    client.on('error', (err) => {
+      console.error('Printer error:', err.message);
+      reject(err);
+    });
+    
+    // Timeout after 10 seconds
+    client.setTimeout(10000, () => {
+      client.destroy();
+      reject(new Error('Printer connection timeout'));
+    });
+  });
+}
+
+/**
+ * Format KOT data for thermal printer
+ */
+function formatKOT(kot) {
+  const kotData = JSON.parse(kot.kotData);
+  let output = '';
+  
+  // Initialize printer
+  output += PRINTER_COMMANDS.INIT;
+  
+  // Header
+  output += PRINTER_COMMANDS.ALIGN_CENTER;
+  output += PRINTER_COMMANDS.DOUBLE_HEIGHT;
+  output += PRINTER_COMMANDS.BOLD_ON;
+  output += 'TAIWAN MAAMI\n';
+  output += PRINTER_COMMANDS.NORMAL_SIZE;
+  output += 'KITCHEN ORDER TICKET\n';
+  output += PRINTER_COMMANDS.BOLD_OFF;
+  output += PRINTER_COMMANDS.SEPARATOR;
+  
+  // Order details
+  output += PRINTER_COMMANDS.ALIGN_LEFT;
+  output += PRINTER_COMMANDS.BOLD_ON;
+  output += `Order #: ${kotData.orderId}\n`;
+  output += PRINTER_COMMANDS.BOLD_OFF;
+  output += `Customer: ${kotData.customerName}\n`;
+  if (kotData.customerPhone) {
+    output += `Phone: ${kotData.customerPhone}\n`;
+  }
+  output += `Time: ${new Date(kotData.createdAt).toLocaleString('en-IN', { 
+    timeZone: 'Asia/Kolkata',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true
+  })}\n`;
+  output += PRINTER_COMMANDS.SEPARATOR;
+  
+  // Items
+  output += PRINTER_COMMANDS.BOLD_ON;
+  output += 'ITEMS:\n';
+  output += PRINTER_COMMANDS.BOLD_OFF;
+  
+  kotData.items.forEach((item, index) => {
+    output += `\n${index + 1}. ${item.productName}\n`;
+    output += `   Qty: ${item.quantity}\n`;
+    
+    if (item.size) {
+      output += `   Size: ${item.size}\n`;
+    }
+    
+    if (item.withBoba !== null && item.withBoba !== undefined) {
+      output += `   Boba: ${item.withBoba ? 'Yes' : 'No'}\n`;
+    }
+    
+    if (item.sugarLevel) {
+      output += `   Sugar: ${item.sugarLevel}\n`;
+    }
+    
+    if (item.iceLevel) {
+      output += `   Ice: ${item.iceLevel}\n`;
+    }
+    
+    if (item.addons && item.addons.length > 0) {
+      output += `   Add-ons:\n`;
+      item.addons.forEach(addon => {
+        output += `   - ${addon.name}\n`;
+      });
+    }
+  });
+  
+  output += PRINTER_COMMANDS.SEPARATOR;
+  
+  // Total
+  output += PRINTER_COMMANDS.BOLD_ON;
+  output += `Total: ₹${(kotData.totalAmount / 100).toFixed(2)}\n`;
+  output += PRINTER_COMMANDS.BOLD_OFF;
+  output += PRINTER_COMMANDS.SEPARATOR;
+  
+  // Footer
+  output += PRINTER_COMMANDS.ALIGN_CENTER;
+  output += `Printed: ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}\n`;
+  output += '\n\n\n';
+  
+  // Cut paper
+  output += PRINTER_COMMANDS.CUT_PAPER;
+  
+  return output;
+}
+
+/**
+ * Poll server for pending KOTs
+ */
+async function pollKOTs() {
+  try {
+    const response = await fetch(`${CONFIG.serverUrl}/api/kot/poll?secret=${CONFIG.kotSecret}`);
+    
+    if (!response.ok) {
+      if (response.status === 401) {
+        console.error('❌ Invalid KOT secret. Please check your configuration.');
+        return [];
+      }
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+    
+    const data = await response.json();
+    return data.kots || [];
+  } catch (error) {
+    console.error('Error polling KOTs:', error.message);
+    return [];
+  }
+}
+
+/**
+ * Mark KOT as printed
+ */
+async function markPrinted(kotId) {
+  try {
+    const response = await fetch(`${CONFIG.serverUrl}/api/kot/printed`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        secret: CONFIG.kotSecret,
+        kotId: kotId,
+      }),
+    });
+    
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error('Error marking KOT as printed:', error.message);
+    throw error;
+  }
+}
+
+/**
+ * Main polling loop
+ */
+async function startPolling() {
+  console.log('🖨️  Taiwan Maami KOT Printer Client');
+  console.log('=====================================');
+  console.log(`Server: ${CONFIG.serverUrl}`);
+  console.log(`Printer: ${CONFIG.printerIp}:${CONFIG.printerPort}`);
+  console.log(`Poll interval: ${CONFIG.pollInterval}ms`);
+  console.log('=====================================\n');
+  console.log('✅ Started polling for KOTs...\n');
+  
+  setInterval(async () => {
+    const kots = await pollKOTs();
+    
+    if (kots.length > 0) {
+      console.log(`📋 Found ${kots.length} pending KOT(s)`);
+      
+      for (const kot of kots) {
+        try {
+          console.log(`\n🖨️  Printing KOT #${kot.id} (Order: ${kot.orderNumber})...`);
+          
+          // Format and print
+          const printData = formatKOT(kot);
+          await printToThermal(printData);
+          
+          // Mark as printed
+          await markPrinted(kot.id);
+          
+          console.log(`✅ KOT #${kot.id} printed successfully`);
+        } catch (error) {
+          console.error(`❌ Failed to print KOT #${kot.id}:`, error.message);
+        }
+      }
+    }
+  }, CONFIG.pollInterval);
+}
+
+// Start the client
+startPolling();
+
+// Handle graceful shutdown
+process.on('SIGINT', () => {
+  console.log('\n\n👋 Shutting down KOT printer client...');
+  process.exit(0);
+});
