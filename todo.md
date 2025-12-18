@@ -585,3 +585,10 @@
 - [x] Document printer client setup for outlet (KOT-PRINTER-SETUP.md)
 - [ ] Save checkpoint with working end-to-end flow
 - [ ] User to install printer client at outlet and test
+
+## Phase 39 - Fix Homepage tRPC Error (Dec 18, 2025)
+
+- [x] Identify which tRPC query is failing on homepage (unused stores.getAll query)
+- [x] Fix the failing query (removed unused query)
+- [x] Test homepage loads without errors
+- [ ] Save checkpoint with fix

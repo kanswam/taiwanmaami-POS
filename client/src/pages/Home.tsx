@@ -9,7 +9,6 @@ import { trpc } from '@/lib/trpc';
 import { ArrowRight, MapPin, Clock, Star, Sparkles, Instagram, Phone, Navigation } from 'lucide-react';
 
 export default function Home() {
-  const { data: stores } = trpc.stores.getAll.useQuery();
   const [heroTitle, setHeroTitle] = useState('Authentic Taiwanese\nBubble Tea');
   const [heroDescription, setHeroDescription] = useState('Crafted with imported tapioca pearls from Taiwan. Experience the true taste of premium bubble tea at Taiwan Maami.');
 
