@@ -600,3 +600,11 @@
 - [x] Updated schema to match database (orderId varchar, outletId int, kotData json)
 - [ ] Test checkout creates KOT successfully
 - [ ] Save checkpoint with fix
+
+## Phase 41 - Fix KOT Printer Undefined Items (Dec 18, 2025)
+
+- [x] Investigate KOT data structure from database
+- [x] Check printer client formatting code (found JSON.parse issue)
+- [x] Fix undefined product names in KOT output (handle JSON object)
+- [ ] User to restart printer client and test
+- [ ] Save checkpoint with fix

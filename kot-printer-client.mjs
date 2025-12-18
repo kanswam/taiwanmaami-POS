@@ -82,7 +82,8 @@ async function printToThermal(data) {
  * Format KOT data for thermal printer
  */
 function formatKOT(kot) {
-  const kotData = JSON.parse(kot.kotData);
+  // kotData is already a JSON object from the database (not a string)
+  const kotData = typeof kot.kotData === 'string' ? JSON.parse(kot.kotData) : kot.kotData;
   let output = '';
   
   // Initialize printer
