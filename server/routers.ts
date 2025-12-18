@@ -436,9 +436,10 @@ export const appRouter = router({
           };
           
           await dbInstance!.insert(kotQueue).values({
-            orderId: order.id,
+            orderId: order.id.toString(),
+            outletId: order.outletId || 1, // Default to outlet 1 if not specified
             orderNumber: order.orderNumber,
-            kotData: JSON.stringify(kotData),
+            kotData: kotData, // JSON type, no need to stringify
             isPrinted: false,
           });
         }
@@ -1614,18 +1615,12 @@ export const appRouter = router({
           .orderBy(asc(kotQueue.createdAt));
         
         return pendingKots.map(kot => {
-          // Parse kotData if it's a string, otherwise use as-is
-          let parsedKotData;
-          try {
-            parsedKotData = JSON.parse(kot.kotData);
-          } catch (e) {
-            parsedKotData = kot.kotData;
-          }
+          // kotData is already a JSON object from the database
           return {
             id: kot.id,
             orderId: kot.orderId,
             orderNumber: kot.orderNumber,
-            kotData: parsedKotData,
+            kotData: kot.kotData,
             createdAt: kot.createdAt,
           };
         });

@@ -592,3 +592,11 @@
 - [x] Fix the failing query (removed unused query)
 - [x] Test homepage loads without errors
 - [ ] Save checkpoint with fix
+
+## Phase 40 - Fix KOT Queue Insertion Error (Dec 18, 2025)
+
+- [x] Investigate kot_queue table schema (missing outletId field)
+- [x] Fix database insertion error during checkout (added outletId, fixed JSON type)
+- [x] Updated schema to match database (orderId varchar, outletId int, kotData json)
+- [ ] Test checkout creates KOT successfully
+- [ ] Save checkpoint with fix
