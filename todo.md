@@ -558,3 +558,11 @@
 - [x] Add LazyVideo component with Intersection Observer
 - [x] Optimize hero video with preload="metadata"
 - [x] Test loading speed improvements
+
+## Phase 35 - Fix Video Loading Issue (Dec 18, 2025)
+
+- [x] Diagnose why LazyVideo component is not loading videos
+- [x] Check if video files are being served correctly
+- [x] Fix LazyVideo component implementation
+- [x] Test videos load properly when scrolled into view
+- [x] Verify all category and location videos display correctly

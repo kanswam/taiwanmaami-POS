@@ -21,7 +21,6 @@ export function LazyVideo({
 }: LazyVideoProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isInView, setIsInView] = useState(false);
-  const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
     const video = videoRef.current;
@@ -30,14 +29,13 @@ export function LazyVideo({
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
-          if (entry.isIntersecting && !isLoaded) {
+          if (entry.isIntersecting && !isInView) {
             setIsInView(true);
-            setIsLoaded(true);
           }
         });
       },
       {
-        rootMargin: '50px', // Start loading 50px before entering viewport
+        rootMargin: '100px', // Start loading 100px before entering viewport
       }
     );
 
@@ -46,18 +44,30 @@ export function LazyVideo({
     return () => {
       observer.disconnect();
     };
-  }, [isLoaded]);
+  }, [isInView]);
+
+  // Load and play video when it comes into view
+  useEffect(() => {
+    const video = videoRef.current;
+    if (isInView && video) {
+      video.load();
+      if (autoPlay) {
+        video.play().catch(() => {
+          // Autoplay was prevented, which is fine
+        });
+      }
+    }
+  }, [isInView, autoPlay]);
 
   return (
     <video
       ref={videoRef}
-      autoPlay={autoPlay && isInView}
       loop={loop}
       muted={muted}
       playsInline={playsInline}
       className={className}
       poster={poster}
-      preload={isInView ? 'auto' : 'none'}
+      preload="none"
     >
       {isInView && <source src={src} type="video/mp4" />}
       {poster && (
