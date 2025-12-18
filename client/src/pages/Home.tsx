@@ -26,25 +26,25 @@ export default function Home() {
     {
       name: 'Bubble Tea / Coffee',
       description: 'Authentic Taiwanese bubble tea & premium coffee',
-      video: '/videos/bubble-tea-coffee.mp4',
+      video: 'https://files.manuscdn.com/user_upload_by_module/session_file/114675165/ecZXiwJjoSwJdZrZ.mp4',
       href: '/category/bubble-tea-coffee',
     },
     {
       name: 'Hot Beverages',
       description: 'Warm & comforting traditional drinks',
-      video: '/videos/hot-beverages.mp4',
+      video: 'https://files.manuscdn.com/user_upload_by_module/session_file/114675165/OXrITxhITgHnggSH.mp4',
       href: '/category/hot-beverages',
     },
     {
       name: 'Asian Rice-Noodles-Bread',
       description: 'Savory Asian street food favorites',
-      video: '/videos/asian-food.mp4',
+      video: 'https://files.manuscdn.com/user_upload_by_module/session_file/114675165/bNweCHEHeGisBBOW.mp4',
       href: '/category/asian-food',
     },
     {
       name: 'Asian Sweet Bites',
       description: 'Delicious mochis & desserts',
-      video: '/videos/sweet-bites.mp4',
+      video: 'https://files.manuscdn.com/user_upload_by_module/session_file/114675165/SidroKXBRlTSURyD.mp4',
       href: '/category/sweet-bites',
     },
   ];
@@ -56,7 +56,7 @@ export default function Home() {
       subtitle: 'Palladium Mall',
       address: 'First Floor, Palladium Mall, Velachery',
       city: 'Chennai - 600042',
-      video: '/videos/palladium-outlet.mp4',
+      video: 'https://files.manuscdn.com/user_upload_by_module/session_file/114675165/tRoWoigbWbPFdWft.mp4',
       mapUrl: 'https://maps.google.com/?q=Palladium+Mall+Velachery+Chennai',
       phone: '+91 98765 43210',
     },
@@ -65,7 +65,7 @@ export default function Home() {
       subtitle: 'T Nagar',
       address: 'New No. 29, Burkit Road, T Nagar',
       city: 'Chennai - 600017',
-      video: '/videos/tnagar-outlet.mp4',
+      video: 'https://files.manuscdn.com/user_upload_by_module/session_file/114675165/bnVxigSNwrNZdrqE.mp4',
       mapUrl: 'https://maps.google.com/?q=29+Burkit+Road+TNagar+Chennai',
       phone: '+91 98765 43211',
     },
@@ -87,7 +87,7 @@ export default function Home() {
             className="w-full h-full object-cover"
             poster="/images/interior2.jpg"
           >
-            <source src="/videos/hero-banner.mp4" type="video/mp4" />
+            <source src="https://files.manuscdn.com/user_upload_by_module/session_file/114675165/SAlyoDRKJrESxVyv.mp4" type="video/mp4" />
             <img
               src="/images/interior2.jpg"
               alt="Taiwan Maami Interior"

@@ -566,3 +566,11 @@
 - [x] Fix LazyVideo component implementation
 - [x] Test videos load properly when scrolled into view
 - [x] Verify all category and location videos display correctly
+
+## Phase 37 - Upload Videos to S3 for Production (Dec 18, 2025)
+
+- [x] Upload all 7 videos to S3 storage (234MB total to CDN)
+- [x] Update Home.tsx with S3 video URLs
+- [x] Test videos load from S3 on website
+- [ ] Save checkpoint with S3 URLs
+- [ ] Verify videos work on published production site
