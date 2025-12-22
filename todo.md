@@ -618,3 +618,14 @@
 - [ ] User to test order type displays correctly on printed tickets
 - [ ] User to test reprint functionality from admin panel
 - [ ] Save checkpoint with both features
+
+## Phase 44 - Dual KOT Printer Setup & Auto-Start (Dec 22, 2025)
+
+- [ ] Fix header centering on KOT tickets
+- [ ] Create second printer client for kitchen printer
+- [ ] Configure bar printer (192.168.1.22)
+- [ ] Configure kitchen printer (need IP address)
+- [ ] Create Windows auto-start batch files
+- [ ] Create Windows Task Scheduler setup instructions
+- [ ] Test both printers printing simultaneously
+- [ ] Save checkpoint with dual printer setup

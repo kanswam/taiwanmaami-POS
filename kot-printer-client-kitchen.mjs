@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 /**
- * Taiwan Maami KOT Printer Client - BAR
+ * Taiwan Maami KOT Printer Client - KITCHEN
  * 
  * This application runs at the outlet and automatically prints KOTs
- * to the BAR thermal printer when customers complete payment.
+ * to the KITCHEN thermal printer when customers complete payment.
  */
 
 import net from 'net';
@@ -16,8 +16,8 @@ const CONFIG = {
   // KOT secret from your environment variables
   kotSecret: process.env.KOT_PRINT_SECRET || 'LqhbdPxvsm27rFoc2ImVqc9sZ8Rrme3a',
   
-  // BAR Printer settings
-  printerIp: '192.168.1.22',  // Bar printer IP
+  // KITCHEN Printer settings (UPDATE THIS IP ADDRESS)
+  printerIp: '192.168.1.23',  // ⚠️ CHANGE THIS TO YOUR KITCHEN PRINTER IP
   printerPort: 9100,
   
   // Polling interval (milliseconds)
@@ -48,25 +48,25 @@ async function printToThermal(data) {
     const client = new net.Socket();
     
     client.connect(CONFIG.printerPort, CONFIG.printerIp, () => {
-      console.log(`Connected to BAR printer at ${CONFIG.printerIp}:${CONFIG.printerPort}`);
+      console.log(`Connected to KITCHEN printer at ${CONFIG.printerIp}:${CONFIG.printerPort}`);
       client.write(data);
       client.end();
     });
     
     client.on('close', () => {
-      console.log('BAR printer connection closed');
+      console.log('KITCHEN printer connection closed');
       resolve();
     });
     
     client.on('error', (err) => {
-      console.error('BAR printer error:', err.message);
+      console.error('KITCHEN printer error:', err.message);
       reject(err);
     });
     
     // Timeout after 10 seconds
     client.setTimeout(10000, () => {
       client.destroy();
-      reject(new Error('BAR printer connection timeout'));
+      reject(new Error('KITCHEN printer connection timeout'));
     });
   });
 }
@@ -220,13 +220,13 @@ async function markPrinted(kotId) {
  * Main polling loop
  */
 async function startPolling() {
-  console.log('🖨️  Taiwan Maami KOT Printer Client - BAR');
+  console.log('🖨️  Taiwan Maami KOT Printer Client - KITCHEN');
   console.log('=====================================');
   console.log(`Server: ${CONFIG.serverUrl}`);
   console.log(`Printer: ${CONFIG.printerIp}:${CONFIG.printerPort}`);
   console.log(`Poll interval: ${CONFIG.pollInterval}ms`);
   console.log('=====================================\n');
-  console.log('✅ Started polling for KOTs (BAR)...\n');
+  console.log('✅ Started polling for KOTs (KITCHEN)...\n');
   
   setInterval(async () => {
     const kots = await pollKOTs();
@@ -236,18 +236,15 @@ async function startPolling() {
       
       for (const kot of kots) {
         try {
-          console.log(`\n🖨️  Printing KOT #${kot.id} to BAR (Order: ${kot.orderNumber})...`);
+          console.log(`\n🖨️  Printing KOT #${kot.id} to KITCHEN (Order: ${kot.orderNumber})...`);
           
           // Format and print
           const printData = formatKOT(kot);
           await printToThermal(printData);
           
-          // Mark as printed
-          await markPrinted(kot.id);
-          
-          console.log(`✅ KOT #${kot.id} printed to BAR successfully`);
+          console.log(`✅ KOT #${kot.id} printed to KITCHEN successfully`);
         } catch (error) {
-          console.error(`❌ Failed to print KOT #${kot.id} to BAR:`, error.message);
+          console.error(`❌ Failed to print KOT #${kot.id} to KITCHEN:`, error.message);
         }
       }
     }
@@ -259,6 +256,6 @@ startPolling();
 
 // Handle graceful shutdown
 process.on('SIGINT', () => {
-  console.log('\n\n👋 Shutting down BAR KOT printer client...');
+  console.log('\n\n👋 Shutting down KITCHEN KOT printer client...');
   process.exit(0);
 });
