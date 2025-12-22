@@ -629,3 +629,15 @@
 - [ ] Create Windows Task Scheduler setup instructions
 - [ ] Test both printers printing simultaneously
 - [ ] Save checkpoint with dual printer setup
+
+## Phase 45 - KOT Enhancements: Special Instructions, Sound Alerts, Reports (Dec 22, 2025)
+
+- [x] Swap printer IPs (Bar=192.168.1.23, Kitchen=192.168.1.22)
+- [x] Add special instructions field to KOT data structure
+- [x] Display special instructions prominently on KOT tickets
+- [x] Add sound alert system for new orders (beep on both printers)
+- [x] Create daily KOT summary report endpoint
+- [x] Add KOT Reports tab in Admin dashboard
+- [x] Show metrics: total KOTs, busiest hours, top items
+- [x] Test all features
+- [ ] Save checkpoint

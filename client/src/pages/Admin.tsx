@@ -64,7 +64,7 @@ export default function Admin() {
 
       <div className="container py-6">
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-7 mb-6">
+          <TabsList className="grid w-full grid-cols-8 mb-6">
             <TabsTrigger value="products" className="gap-2">
               <Package className="w-4 h-4" />
               Products
@@ -92,6 +92,10 @@ export default function Admin() {
             <TabsTrigger value="settings" className="gap-2">
               <Edit className="w-4 h-4" />
               Site Settings
+            </TabsTrigger>
+            <TabsTrigger value="kot-reports" className="gap-2">
+              <Printer className="w-4 h-4" />
+              KOT Reports
             </TabsTrigger>
           </TabsList>
 
@@ -123,6 +127,10 @@ export default function Admin() {
 
           <TabsContent value="settings">
             <SiteSettingsTab />
+          </TabsContent>
+
+          <TabsContent value="kot-reports">
+            <KOTReportsTab />
           </TabsContent>
         </Tabs>
       </div>
@@ -1618,6 +1626,112 @@ function SiteSettingsTab() {
           <strong>Note:</strong> Changes are saved to the database and will be visible immediately on the homepage after saving.
         </p>
       </div>
+    </div>
+  );
+}
+
+
+// KOT Reports Tab Component
+function KOTReportsTab() {
+  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+  const { data: summary, isLoading } = trpc.kot.getDailySummary.useQuery({ date: selectedDate });
+
+  return (
+    <div className="space-y-6">
+      <Card className="p-6">
+        <h2 className="text-2xl font-bold mb-4">Daily KOT Summary Report</h2>
+        
+        <div className="mb-6">
+          <Label>Select Date</Label>
+          <Input
+            type="date"
+            value={selectedDate}
+            onChange={(e) => setSelectedDate(e.target.value)}
+            className="max-w-xs mt-2"
+          />
+        </div>
+
+        {isLoading ? (
+          <div className="text-center py-8 text-muted-foreground">Loading report...</div>
+        ) : summary ? (
+          <div className="space-y-6">
+            {/* Summary Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <Card className="p-4 bg-blue-50 border-blue-200">
+                <div className="text-sm text-blue-600 font-medium">Total KOTs</div>
+                <div className="text-3xl font-bold text-blue-900 mt-2">{summary.totalKots}</div>
+                <div className="text-xs text-blue-600 mt-1">{summary.date}</div>
+              </Card>
+
+              <Card className="p-4 bg-green-50 border-green-200">
+                <div className="text-sm text-green-600 font-medium">Busiest Hour</div>
+                <div className="text-2xl font-bold text-green-900 mt-2">
+                  {summary.busiestHour || 'No data'}
+                </div>
+                <div className="text-xs text-green-600 mt-1">Peak order time</div>
+              </Card>
+
+              <Card className="p-4 bg-purple-50 border-purple-200">
+                <div className="text-sm text-purple-600 font-medium">Top Items</div>
+                <div className="text-2xl font-bold text-purple-900 mt-2">
+                  {summary.topItems.length}
+                </div>
+                <div className="text-xs text-purple-600 mt-1">Different products</div>
+              </Card>
+            </div>
+
+            {/* Top Selling Items Table */}
+            <Card className="p-6">
+              <h3 className="text-lg font-bold mb-4">Top Selling Items</h3>
+              {summary.topItems.length > 0 ? (
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b">
+                        <th className="text-left py-3 px-4 font-semibold">#</th>
+                        <th className="text-left py-3 px-4 font-semibold">Product Name</th>
+                        <th className="text-right py-3 px-4 font-semibold">Quantity Sold</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {summary.topItems.map((item, index) => (
+                        <tr key={index} className="border-b hover:bg-muted/50">
+                          <td className="py-3 px-4 text-muted-foreground">{index + 1}</td>
+                          <td className="py-3 px-4 font-medium">{item.productName}</td>
+                          <td className="py-3 px-4 text-right font-bold">{item.quantity}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <div className="text-center py-8 text-muted-foreground">
+                  No items sold on this date
+                </div>
+              )}
+            </Card>
+
+            {/* Insights */}
+            {summary.totalKots > 0 && (
+              <Card className="p-6 bg-amber-50 border-amber-200">
+                <h3 className="text-lg font-bold mb-2 text-amber-900">💡 Insights</h3>
+                <ul className="space-y-2 text-sm text-amber-800">
+                  <li>• {summary.totalKots} orders were processed on {summary.date}</li>
+                  {summary.busiestHour && (
+                    <li>• Peak ordering time was {summary.busiestHour} - consider extra staffing during this period</li>
+                  )}
+                  {summary.topItems[0] && (
+                    <li>• "{summary.topItems[0].productName}" was the most popular item with {summary.topItems[0].quantity} orders</li>
+                  )}
+                  <li>• Use this data for inventory planning and staff scheduling</li>
+                </ul>
+              </Card>
+            )}
+          </div>
+        ) : (
+          <div className="text-center py-8 text-muted-foreground">No data available</div>
+        )}
+      </Card>
     </div>
   );
 }

@@ -17,7 +17,7 @@ const CONFIG = {
   kotSecret: process.env.KOT_PRINT_SECRET || 'LqhbdPxvsm27rFoc2ImVqc9sZ8Rrme3a',
   
   // BAR Printer settings
-  printerIp: '192.168.1.22',  // Bar printer IP
+  printerIp: '192.168.1.23',  // Bar printer IP
   printerPort: 9100,
   
   // Polling interval (milliseconds)
@@ -114,6 +114,15 @@ function formatKOT(kot) {
   output += PRINTER_COMMANDS.BOLD_ON;
   output += `Type: ${kotData.orderType || 'PICKUP'}\n`;
   output += PRINTER_COMMANDS.BOLD_OFF;
+  
+  // Special instructions - if present
+  if (kotData.specialInstructions && kotData.specialInstructions.trim()) {
+    output += PRINTER_COMMANDS.BOLD_ON;
+    output += '*** SPECIAL INSTRUCTIONS ***\n';
+    output += PRINTER_COMMANDS.BOLD_OFF;
+    output += `${kotData.specialInstructions}\n`;
+  }
+  
   output += PRINTER_COMMANDS.SEPARATOR;
   
   // Items
@@ -233,6 +242,9 @@ async function startPolling() {
     
     if (kots.length > 0) {
       console.log(`📋 Found ${kots.length} pending KOT(s)`);
+      
+      // Play sound alert (Windows beep)
+      console.log('\x07'); // ASCII bell character - makes system beep
       
       for (const kot of kots) {
         try {

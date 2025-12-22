@@ -416,6 +416,7 @@ export const appRouter = router({
             orderType: order.orderType.toUpperCase(), // PICKUP, DELIVERY, INSTORE
             customerName: order.customerName || 'Guest',
             customerPhone: order.customerPhone || '',
+            specialInstructions: order.specialInstructions || '',
             items: items.map(item => {
               const addons = itemAddons.filter(a => a.orderItemId === item.id);
               return {
@@ -1651,6 +1652,69 @@ export const appRouter = router({
           .where(eq(kotQueue.id, input.kotId));
         
         return { success: true };
+      }),
+
+    // Get daily KOT summary report
+    getDailySummary: adminProcedure
+      .input(z.object({ 
+        date: z.string().optional() // YYYY-MM-DD format, defaults to today
+      }))
+      .query(async ({ input }) => {
+        const dbInstance = await getDb();
+        if (!dbInstance) return { totalKots: 0, busiestHour: null, topItems: [] };
+        
+        // Parse date or use today
+        const targetDate = input.date ? new Date(input.date) : new Date();
+        const startOfDay = new Date(targetDate.setHours(0, 0, 0, 0));
+        const endOfDay = new Date(targetDate.setHours(23, 59, 59, 999));
+        
+        // Get all KOTs for the day
+        const dailyKots = await dbInstance
+          .select()
+          .from(kotQueue)
+          .where(and(
+            sql`${kotQueue.createdAt} >= ${startOfDay.toISOString()}`,
+            sql`${kotQueue.createdAt} <= ${endOfDay.toISOString()}`
+          ));
+        
+        // Calculate busiest hour
+        const hourCounts: Record<number, number> = {};
+        dailyKots.forEach(kot => {
+          const hour = new Date(kot.createdAt).getHours();
+          hourCounts[hour] = (hourCounts[hour] || 0) + 1;
+        });
+        
+        let busiestHour = null;
+        let maxCount = 0;
+        Object.entries(hourCounts).forEach(([hour, count]) => {
+          if (count > maxCount) {
+            maxCount = count;
+            busiestHour = parseInt(hour);
+          }
+        });
+        
+        // Count items from KOT data
+        const itemCounts: Record<string, number> = {};
+        dailyKots.forEach(kot => {
+          const kotData = typeof kot.kotData === 'string' ? JSON.parse(kot.kotData) : kot.kotData;
+          kotData.items?.forEach((item: any) => {
+            const name = item.productName;
+            itemCounts[name] = (itemCounts[name] || 0) + (item.quantity || 1);
+          });
+        });
+        
+        // Get top 10 items
+        const topItems = Object.entries(itemCounts)
+          .sort(([, a], [, b]) => b - a)
+          .slice(0, 10)
+          .map(([name, count]) => ({ productName: name, quantity: count }));
+        
+        return {
+          totalKots: dailyKots.length,
+          busiestHour: busiestHour !== null ? `${busiestHour}:00 - ${busiestHour + 1}:00` : null,
+          topItems,
+          date: targetDate.toISOString().split('T')[0],
+        };
       }),
 
     // Get KOT status (for debugging)
