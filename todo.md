@@ -641,3 +641,14 @@
 - [x] Show metrics: total KOTs, busiest hours, top items
 - [x] Test all features
 - [ ] Save checkpoint
+
+## Phase 46 - Enhanced KOT Reports for Staffing & Operations (Dec 22, 2025)
+
+- [x] Add detailed KOT list view showing KOT ID, Order Number, Date/Time, Items, Order Type
+- [x] Create hourly breakdown chart showing order volume by hour
+- [x] Add order type distribution (Pickup vs Delivery vs Instore)
+- [x] Add peak hours identification with staffing recommendations
+- [x] Create comprehensive analytics dashboard
+- [x] Add date selector for daily reports
+- [x] Test all analytics features
+- [ ] Save checkpoint

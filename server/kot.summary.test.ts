@@ -47,11 +47,17 @@ describe('KOT Daily Summary', () => {
     
     expect(result).toBeDefined();
     expect(result).toHaveProperty('totalKots');
-    expect(result).toHaveProperty('busiestHour');
+    expect(result).toHaveProperty('orders');
+    expect(result).toHaveProperty('hourlyBreakdown');
+    expect(result).toHaveProperty('orderTypeBreakdown');
     expect(result).toHaveProperty('topItems');
+    expect(result).toHaveProperty('peakHours');
     expect(result).toHaveProperty('date');
     expect(typeof result.totalKots).toBe('number');
+    expect(Array.isArray(result.orders)).toBe(true);
+    expect(Array.isArray(result.hourlyBreakdown)).toBe(true);
     expect(Array.isArray(result.topItems)).toBe(true);
+    expect(Array.isArray(result.peakHours)).toBe(true);
   });
 
   it('should return daily summary for specific date', async () => {

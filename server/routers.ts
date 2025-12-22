@@ -1654,14 +1654,21 @@ export const appRouter = router({
         return { success: true };
       }),
 
-    // Get daily KOT summary report
+    // Get daily KOT summary report with detailed order-level data
     getDailySummary: adminProcedure
       .input(z.object({ 
         date: z.string().optional() // YYYY-MM-DD format, defaults to today
       }))
       .query(async ({ input }) => {
         const dbInstance = await getDb();
-        if (!dbInstance) return { totalKots: 0, busiestHour: null, topItems: [] };
+        if (!dbInstance) return { 
+          totalKots: 0, 
+          orders: [], 
+          hourlyBreakdown: [], 
+          orderTypeBreakdown: {},
+          topItems: [],
+          peakHours: [],
+        };
         
         // Parse date or use today
         const targetDate = input.date ? new Date(input.date) : new Date();
@@ -1675,22 +1682,70 @@ export const appRouter = router({
           .where(and(
             sql`${kotQueue.createdAt} >= ${startOfDay.toISOString()}`,
             sql`${kotQueue.createdAt} <= ${endOfDay.toISOString()}`
-          ));
+          ))
+          .orderBy(desc(kotQueue.createdAt));
         
-        // Calculate busiest hour
+        // Build detailed order list
+        const orders = dailyKots.map(kot => {
+          const kotData = typeof kot.kotData === 'string' ? JSON.parse(kot.kotData) : kot.kotData;
+          return {
+            kotId: kot.id,
+            orderNumber: kot.orderNumber,
+            orderType: kotData.orderType || 'PICKUP',
+            customerName: kotData.customerName || 'Guest',
+            items: kotData.items?.map((item: any) => ({
+              name: item.productName,
+              quantity: item.quantity || 1,
+              customizations: [
+                item.size ? `Size: ${item.size}` : null,
+                item.withBoba !== null && item.withBoba !== undefined ? `Boba: ${item.withBoba ? 'Yes' : 'No'}` : null,
+                item.sugarLevel ? `Sugar: ${item.sugarLevel}` : null,
+                item.iceLevel ? `Ice: ${item.iceLevel}` : null,
+              ].filter(Boolean).join(', '),
+            })) || [],
+            totalItems: kotData.items?.reduce((sum: number, item: any) => sum + (item.quantity || 1), 0) || 0,
+            createdAt: new Date(kot.createdAt).toISOString(),
+            isPrinted: kot.isPrinted,
+          };
+        });
+        
+        // Calculate hourly breakdown (0-23 hours)
         const hourCounts: Record<number, number> = {};
+        for (let i = 0; i < 24; i++) {
+          hourCounts[i] = 0;
+        }
+        
         dailyKots.forEach(kot => {
           const hour = new Date(kot.createdAt).getHours();
           hourCounts[hour] = (hourCounts[hour] || 0) + 1;
         });
         
-        let busiestHour = null;
-        let maxCount = 0;
-        Object.entries(hourCounts).forEach(([hour, count]) => {
-          if (count > maxCount) {
-            maxCount = count;
-            busiestHour = parseInt(hour);
-          }
+        const hourlyBreakdown = Object.entries(hourCounts)
+          .map(([hour, count]) => ({
+            hour: parseInt(hour),
+            hourLabel: `${hour.padStart(2, '0')}:00`,
+            count,
+          }))
+          .sort((a, b) => a.hour - b.hour);
+        
+        // Find peak hours (hours with above-average orders)
+        const avgOrdersPerHour = dailyKots.length / 24;
+        const peakHours = hourlyBreakdown
+          .filter(h => h.count > avgOrdersPerHour && h.count > 0)
+          .sort((a, b) => b.count - a.count)
+          .slice(0, 5)
+          .map(h => ({
+            hour: h.hourLabel,
+            orders: h.count,
+            recommendation: h.count > avgOrdersPerHour * 2 ? 'High volume - add extra staff' : 'Moderate volume - standard staffing',
+          }));
+        
+        // Order type breakdown
+        const orderTypeBreakdown: Record<string, number> = {};
+        dailyKots.forEach(kot => {
+          const kotData = typeof kot.kotData === 'string' ? JSON.parse(kot.kotData) : kot.kotData;
+          const type = kotData.orderType || 'PICKUP';
+          orderTypeBreakdown[type] = (orderTypeBreakdown[type] || 0) + 1;
         });
         
         // Count items from KOT data
@@ -1711,8 +1766,11 @@ export const appRouter = router({
         
         return {
           totalKots: dailyKots.length,
-          busiestHour: busiestHour !== null ? `${busiestHour}:00 - ${busiestHour + 1}:00` : null,
+          orders,
+          hourlyBreakdown,
+          orderTypeBreakdown,
           topItems,
+          peakHours,
           date: targetDate.toISOString().split('T')[0],
         };
       }),
