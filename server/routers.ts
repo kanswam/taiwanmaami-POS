@@ -260,20 +260,14 @@ export const appRouter = router({
           
           const isFirstOrder = (user?.lifetimeStamps || 0) === 0;
           let stampsEarned = Math.floor(orderTotal / 45000); // 1 stamp per ₹450
-          let bonusStamps = 0;
           let welcomeStamp = 0;
-          
-          // Bonus stamp for orders >= ₹900
-          if (orderTotal >= 90000) {
-            bonusStamps = 1;
-          }
           
           // Welcome stamp for first order
           if (isFirstOrder) {
             welcomeStamp = 1;
           }
           
-          const totalStamps = stampsEarned + bonusStamps + welcomeStamp;
+          const totalStamps = stampsEarned + welcomeStamp;
           
           if (totalStamps > 0) {
             // Update user stamps
@@ -293,7 +287,7 @@ export const appRouter = router({
             await dbInstance!.insert(stampTransactions).values({
               userId: order.userId,
               orderId: input.orderId,
-              action: isFirstOrder ? 'welcome' : (bonusStamps > 0 ? 'bonus' : 'earn'),
+              action: isFirstOrder ? 'welcome' : 'earn',
               stamps: totalStamps,
               orderTotal: orderTotal,
               description: `Earned ${totalStamps} stamp(s) from order #${order.orderNumber}`,
@@ -976,11 +970,6 @@ export const appRouter = router({
         const isFirstOrder = (user?.lifetimeStamps || 0) === 0;
         let stamps = Math.floor(input.orderTotal / 45000); // 1 stamp per ₹450
         
-        // Bonus stamp for orders ≥ ₹900
-        if (input.orderTotal >= 90000) {
-          stamps += 1;
-        }
-        
         // Welcome stamp for first order
         if (isFirstOrder) {
           stamps += 1;
@@ -989,7 +978,7 @@ export const appRouter = router({
         return {
           stampsToEarn: stamps,
           isFirstOrder,
-          hasBonus: input.orderTotal >= 90000,
+          hasBonus: false,
         };
       }),
 
@@ -1013,20 +1002,14 @@ export const appRouter = router({
         
         const isFirstOrder = (user?.lifetimeStamps || 0) === 0;
         let stampsEarned = Math.floor(input.orderTotal / 45000); // 1 stamp per ₹450
-        let bonusStamps = 0;
         let welcomeStamp = 0;
-        
-        // Bonus stamp for orders ≥ ₹900
-        if (input.orderTotal >= 90000) {
-          bonusStamps = 1;
-        }
         
         // Welcome stamp for first order
         if (isFirstOrder) {
           welcomeStamp = 1;
         }
         
-        const totalStamps = stampsEarned + bonusStamps + welcomeStamp;
+        const totalStamps = stampsEarned + welcomeStamp;
         
         if (totalStamps > 0) {
           // Update user stamps
@@ -1051,17 +1034,6 @@ export const appRouter = router({
               stamps: stampsEarned,
               orderTotal: input.orderTotal,
               description: `Earned ${stampsEarned} stamp(s) for order`,
-            });
-          }
-          
-          if (bonusStamps > 0) {
-            await dbInstance!.insert(stampTransactions).values({
-              userId: ctx.user.id,
-              orderId: input.orderId,
-              action: 'bonus',
-              stamps: bonusStamps,
-              orderTotal: input.orderTotal,
-              description: 'Bonus stamp for spending ₹900+',
             });
           }
           

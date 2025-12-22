@@ -652,3 +652,12 @@
 - [x] Add date selector for daily reports
 - [x] Test all analytics features
 - [ ] Save checkpoint
+
+## Phase 47 - Fix Loyalty Stamp & KOT Report Issues (Dec 22, 2025)
+
+- [x] Remove bonus stamp logic (only multiples of ₹450 should give stamps)
+- [x] Fix all 3 locations: updateStatus, previewStamps, awardStamps
+- [x] Fix empty KOT report page (Admin panel showing no data)
+- [x] Test stamp calculation with ₹935 (should give 2 stamps, not 3)
+- [x] Test KOT report displays data correctly
+- [ ] Save checkpoint
