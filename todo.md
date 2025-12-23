@@ -710,3 +710,24 @@
 - [x] Chevron indicator showing collapse state
 - [x] Maintain drag-and-drop reordering within groups
 - [x] Search and category filter still work with grouped view
+
+
+## Menu Page Navigation Redesign (Dec 23, 2025)
+
+- [ ] Clear top-level category tabs that are prominent and clickable
+- [ ] Subcategory cards appear when a category is selected
+- [ ] Product grid showing items within selected subcategory
+- [ ] Smart product recommendations after adding to cart (typical pairings)
+- [ ] Easy navigation back to main menu or categories (breadcrumbs)
+- [ ] Clear exit from product modal back to menu
+
+
+## Menu Page Navigation Redesign (Dec 23, 2025)
+
+- [x] Clear top-level category tabs that are prominent and clickable
+- [x] Category cards view on main menu page (Browse Categories)
+- [x] Subcategory cards that appear when a category is selected
+- [x] Product grid showing items within the selected subcategory
+- [x] Smart product recommendations after adding to cart (based on pairings)
+- [x] Easy breadcrumb navigation back to menu or categories
+- [x] Dismiss recommendations panel with X button

@@ -7,6 +7,7 @@ interface CartState {
   discountCode: string | null;
   discountAmount: number;
   loyaltyPointsUsed: number;
+  lastAddedItem: { productId: number; subcategoryId: number } | null;
 }
 
 type CartAction =
@@ -26,6 +27,7 @@ const initialState: CartState = {
   discountCode: null,
   discountAmount: 0,
   loyaltyPointsUsed: 0,
+  lastAddedItem: null,
 };
 
 function cartReducer(state: CartState, action: CartAction): CartState {
@@ -49,9 +51,17 @@ function cartReducer(state: CartState, action: CartAction): CartState {
           lineTotal: (newItems[existingIndex].quantity + action.payload.quantity) * 
             (newItems[existingIndex].unitPrice + newItems[existingIndex].addonsTotal),
         };
-        return { ...state, items: newItems };
+        return { 
+          ...state, 
+          items: newItems,
+          lastAddedItem: { productId: action.payload.productId, subcategoryId: action.payload.subcategoryId },
+        };
       }
-      return { ...state, items: [...state.items, action.payload] };
+      return { 
+        ...state, 
+        items: [...state.items, action.payload],
+        lastAddedItem: { productId: action.payload.productId, subcategoryId: action.payload.subcategoryId },
+      };
     }
     case 'REMOVE_ITEM':
       return { ...state, items: state.items.filter(item => item.id !== action.payload) };
@@ -122,6 +132,7 @@ interface CartContextValue {
   gst: { stateGst: number; centralGst: number; total: number };
   total: number;
   itemCount: number;
+  lastAddedItem: { productId: number; subcategoryId: number } | null;
 }
 
 const CartContext = createContext<CartContextValue | undefined>(undefined);
@@ -166,6 +177,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     gst,
     total,
     itemCount,
+    lastAddedItem: state.lastAddedItem,
   };
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
