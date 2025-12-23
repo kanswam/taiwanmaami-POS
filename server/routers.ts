@@ -726,48 +726,105 @@ export const appRouter = router({
         const dbInstance = await getDb();
         if (!dbInstance) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
         
-        // Build query based on scope
-        let query = dbInstance.select().from(products).where(eq(products.isActive, true));
+        // Round to nearest 5 rupees (500 paise)
+        const roundToNearest5 = (paise: number) => Math.round(paise / 500) * 500;
+        
+        const calculateNewPrice = (currentPrice: number | null) => {
+          if (!currentPrice || currentPrice === 0) return null;
+          let newPrice = currentPrice;
+          switch (input.updateMethod) {
+            case 'percentage_increase':
+              newPrice = currentPrice * (1 + input.value / 100);
+              break;
+            case 'percentage_decrease':
+              newPrice = currentPrice * (1 - input.value / 100);
+              break;
+            case 'fixed_increase':
+              newPrice = currentPrice + input.value;
+              break;
+            case 'fixed_decrease':
+              newPrice = currentPrice - input.value;
+              break;
+          }
+          return roundToNearest5(Math.max(0, newPrice));
+        };
+        
+        // Get subcategories based on scope
+        let allSubcategories;
+        if (input.scope === 'category' && input.categoryId) {
+          allSubcategories = await dbInstance.select().from(subcategories).where(eq(subcategories.categoryId, input.categoryId));
+        } else if (input.scope === 'subcategory' && input.subcategoryId) {
+          allSubcategories = await dbInstance.select().from(subcategories).where(eq(subcategories.id, input.subcategoryId));
+        } else {
+          allSubcategories = await dbInstance.select().from(subcategories);
+        }
+        
+        // Preview subcategory price changes (for bubble teas with base pricing)
+        const subcategoryPreviews = allSubcategories.map(s => {
+          const preview: {
+            id: number;
+            name: string;
+            type: 'subcategory';
+            oldInstorePrice: number | null;
+            newInstorePrice: number | null;
+            oldDeliveryPrice: number | null;
+            newDeliveryPrice: number | null;
+          } = {
+            id: s.id,
+            name: `[Subcategory] ${s.name}`,
+            type: 'subcategory',
+            oldInstorePrice: s.basePriceRegularWithBoba,
+            newInstorePrice: s.basePriceRegularWithBoba,
+            oldDeliveryPrice: s.deliveryPriceRegularWithBoba,
+            newDeliveryPrice: s.deliveryPriceRegularWithBoba,
+          };
+          
+          if (input.priceType === 'instore' || input.priceType === 'both') {
+            preview.newInstorePrice = calculateNewPrice(s.basePriceRegularWithBoba);
+          }
+          if (input.priceType === 'delivery' || input.priceType === 'both') {
+            preview.newDeliveryPrice = calculateNewPrice(s.deliveryPriceRegularWithBoba);
+          }
+          
+          return preview;
+        }).filter(p => p.oldInstorePrice || p.oldDeliveryPrice);
+        
+        // Get products with individual prices
+        let productsQuery = dbInstance.select().from(products).where(
+          and(
+            eq(products.isActive, true),
+            sql`(${products.instorePrice} IS NOT NULL AND ${products.instorePrice} > 0) OR (${products.deliveryPrice} IS NOT NULL AND ${products.deliveryPrice} > 0)`
+          )
+        );
         
         if (input.scope === 'category' && input.categoryId) {
           const subs = await dbInstance.select({ id: subcategories.id }).from(subcategories).where(eq(subcategories.categoryId, input.categoryId));
           const subIds = subs.map(s => s.id);
           if (subIds.length > 0) {
-            query = dbInstance.select().from(products).where(and(eq(products.isActive, true), sql`${products.subcategoryId} IN (${sql.join(subIds.map(id => sql`${id}`), sql`, `)})`));
+            productsQuery = dbInstance.select().from(products).where(
+              and(
+                eq(products.isActive, true),
+                sql`${products.subcategoryId} IN (${sql.join(subIds.map(id => sql`${id}`), sql`, `)})`,
+                sql`(${products.instorePrice} IS NOT NULL AND ${products.instorePrice} > 0) OR (${products.deliveryPrice} IS NOT NULL AND ${products.deliveryPrice} > 0)`
+              )
+            );
           }
         } else if (input.scope === 'subcategory' && input.subcategoryId) {
-          query = dbInstance.select().from(products).where(and(eq(products.isActive, true), eq(products.subcategoryId, input.subcategoryId)));
+          productsQuery = dbInstance.select().from(products).where(
+            and(
+              eq(products.isActive, true),
+              eq(products.subcategoryId, input.subcategoryId),
+              sql`(${products.instorePrice} IS NOT NULL AND ${products.instorePrice} > 0) OR (${products.deliveryPrice} IS NOT NULL AND ${products.deliveryPrice} > 0)`
+            )
+          );
         }
         
-        const allProducts = await query;
+        const allProducts = await productsQuery;
         
-        // Round to nearest 5 rupees (500 paise)
-        const roundToNearest5 = (paise: number) => Math.round(paise / 500) * 500;
-        
-        // Calculate new prices
-        const preview = allProducts.map(p => {
+        // Preview product price changes
+        const productPreviews = allProducts.map(p => {
           let newInstorePrice = p.instorePrice;
           let newDeliveryPrice = p.deliveryPrice;
-          
-          const calculateNewPrice = (currentPrice: number | null) => {
-            if (!currentPrice) return null;
-            let newPrice = currentPrice;
-            switch (input.updateMethod) {
-              case 'percentage_increase':
-                newPrice = currentPrice * (1 + input.value / 100);
-                break;
-              case 'percentage_decrease':
-                newPrice = currentPrice * (1 - input.value / 100);
-                break;
-              case 'fixed_increase':
-                newPrice = currentPrice + input.value;
-                break;
-              case 'fixed_decrease':
-                newPrice = currentPrice - input.value;
-                break;
-            }
-            return roundToNearest5(Math.max(0, newPrice));
-          };
           
           if (input.priceType === 'instore' || input.priceType === 'both') {
             newInstorePrice = calculateNewPrice(p.instorePrice);
@@ -779,6 +836,7 @@ export const appRouter = router({
           return {
             id: p.id,
             name: p.name,
+            type: 'product' as const,
             oldInstorePrice: p.instorePrice,
             newInstorePrice,
             oldDeliveryPrice: p.deliveryPrice,
@@ -786,7 +844,14 @@ export const appRouter = router({
           };
         });
         
-        return { products: preview, totalCount: preview.length };
+        const allPreviews = [...subcategoryPreviews, ...productPreviews];
+        
+        return { 
+          products: allPreviews, 
+          totalCount: allPreviews.length,
+          subcategoryCount: subcategoryPreviews.length,
+          productCount: productPreviews.length,
+        };
       }),
 
     // Apply bulk price update
@@ -794,25 +859,86 @@ export const appRouter = router({
       .input(z.object({
         updates: z.array(z.object({
           id: z.number(),
+          type: z.enum(['product', 'subcategory']),
           instorePrice: z.number().nullable().optional(),
           deliveryPrice: z.number().nullable().optional(),
         })),
+        priceType: z.enum(['instore', 'delivery', 'both']),
+        updateMethod: z.enum(['percentage_increase', 'percentage_decrease', 'fixed_increase', 'fixed_decrease']),
+        value: z.number(),
       }))
       .mutation(async ({ input }) => {
         const dbInstance = await getDb();
         if (!dbInstance) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
         
+        const roundToNearest5 = (paise: number) => Math.round(paise / 500) * 500;
+        
+        const calculateNewPrice = (currentPrice: number | null) => {
+          if (!currentPrice || currentPrice === 0) return currentPrice;
+          let newPrice = currentPrice;
+          switch (input.updateMethod) {
+            case 'percentage_increase':
+              newPrice = currentPrice * (1 + input.value / 100);
+              break;
+            case 'percentage_decrease':
+              newPrice = currentPrice * (1 - input.value / 100);
+              break;
+            case 'fixed_increase':
+              newPrice = currentPrice + input.value;
+              break;
+            case 'fixed_decrease':
+              newPrice = currentPrice - input.value;
+              break;
+          }
+          return roundToNearest5(Math.max(0, newPrice));
+        };
+        
+        let productCount = 0;
+        let subcategoryCount = 0;
+        
         for (const update of input.updates) {
-          const data: Record<string, number | null> = {};
-          if (update.instorePrice !== undefined) data.instorePrice = update.instorePrice;
-          if (update.deliveryPrice !== undefined) data.deliveryPrice = update.deliveryPrice;
-          
-          if (Object.keys(data).length > 0) {
-            await dbInstance.update(products).set(data).where(eq(products.id, update.id));
+          if (update.type === 'product') {
+            const data: Record<string, number | null> = {};
+            if (update.instorePrice !== undefined) data.instorePrice = update.instorePrice;
+            if (update.deliveryPrice !== undefined) data.deliveryPrice = update.deliveryPrice;
+            
+            if (Object.keys(data).length > 0) {
+              await dbInstance.update(products).set(data).where(eq(products.id, update.id));
+              productCount++;
+            }
+          } else if (update.type === 'subcategory') {
+            // Get current subcategory prices
+            const [sub] = await dbInstance.select().from(subcategories).where(eq(subcategories.id, update.id));
+            if (!sub) continue;
+            
+            const data: Record<string, number | null> = {};
+            
+            // Update all size variants for instore
+            if (input.priceType === 'instore' || input.priceType === 'both') {
+              if (sub.basePricePetiteWithBoba) data.basePricePetiteWithBoba = calculateNewPrice(sub.basePricePetiteWithBoba);
+              if (sub.basePricePetiteNoBoba) data.basePricePetiteNoBoba = calculateNewPrice(sub.basePricePetiteNoBoba);
+              if (sub.basePriceRegularWithBoba) data.basePriceRegularWithBoba = calculateNewPrice(sub.basePriceRegularWithBoba);
+              if (sub.basePriceRegularNoBoba) data.basePriceRegularNoBoba = calculateNewPrice(sub.basePriceRegularNoBoba);
+              if (sub.basePriceLargeWithBoba) data.basePriceLargeWithBoba = calculateNewPrice(sub.basePriceLargeWithBoba);
+              if (sub.basePriceLargeNoBoba) data.basePriceLargeNoBoba = calculateNewPrice(sub.basePriceLargeNoBoba);
+            }
+            
+            // Update all size variants for delivery
+            if (input.priceType === 'delivery' || input.priceType === 'both') {
+              if (sub.deliveryPriceRegularWithBoba) data.deliveryPriceRegularWithBoba = calculateNewPrice(sub.deliveryPriceRegularWithBoba);
+              if (sub.deliveryPriceRegularNoBoba) data.deliveryPriceRegularNoBoba = calculateNewPrice(sub.deliveryPriceRegularNoBoba);
+              if (sub.deliveryPriceLargeWithBoba) data.deliveryPriceLargeWithBoba = calculateNewPrice(sub.deliveryPriceLargeWithBoba);
+              if (sub.deliveryPriceLargeNoBoba) data.deliveryPriceLargeNoBoba = calculateNewPrice(sub.deliveryPriceLargeNoBoba);
+            }
+            
+            if (Object.keys(data).length > 0) {
+              await dbInstance.update(subcategories).set(data).where(eq(subcategories.id, update.id));
+              subcategoryCount++;
+            }
           }
         }
         
-        return { success: true, updatedCount: input.updates.length };
+        return { success: true, updatedCount: productCount + subcategoryCount, productCount, subcategoryCount };
       }),
 
     // Update product display order (for drag-and-drop)

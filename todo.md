@@ -674,3 +674,12 @@
 - [x] Grant Theresa full admin access
 - [x] Test all features
 - [ ] Save checkpoint
+
+## Phase 49 - Fix Bulk Pricing Preview & Clickable Categories (Dec 23, 2025)
+
+- [ ] Fix bulk pricing preview to show old prices (currently showing "-")
+- [ ] Show old vs new price comparison in preview table
+- [ ] Make categories clickable to expand/show subcategories
+- [ ] Make subcategories clickable to filter and show products
+- [ ] Test both features
+- [ ] Save checkpoint
