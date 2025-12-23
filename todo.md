@@ -731,3 +731,68 @@
 - [x] Smart product recommendations after adding to cart (based on pairings)
 - [x] Easy breadcrumb navigation back to menu or categories
 - [x] Dismiss recommendations panel with X button
+
+
+## Phase 30 - Product Management & Audit Trail (Dec 23, 2025)
+
+### Missing Products Investigation
+- [ ] Find Caramel Milk Tea and Rose Milk Tea in database
+- [ ] Identify why they disappeared (isActive or isInStock toggle)
+- [ ] Recover the missing products
+
+### Product Audit Trail Schema
+- [ ] Create product_audit_log table (productId, userId, action, oldValue, newValue, timestamp)
+- [ ] Track: create, update, deactivate, reactivate, stock changes
+- [ ] Store who made the change and when
+
+### Product Activation History
+- [ ] Add deactivatedAt and reactivatedAt fields to products table
+- [ ] Add deactivatedBy and reactivatedBy fields (userId)
+- [ ] Preserve product data for order history (soft delete only)
+
+### Admin Product Management
+- [ ] Add "Create New Product" functionality
+- [ ] Add "View Inactive Products" toggle in Admin
+- [ ] Add "Reactivate Product" button for inactive products
+- [ ] Show activation/deactivation history on product
+
+### Audit Report View
+- [ ] Create Audit tab in Admin dashboard
+- [ ] Show comprehensive change log with filters
+- [ ] Filter by: product, user, action type, date range
+- [ ] Export audit report capability
+
+
+## Phase 30 - Product Management & Audit Trail (Dec 23, 2025)
+
+### Missing Products Investigation
+- [x] Investigate missing products (Rose Milk Tea, Caramel Milk Tea) - Found: isInStock was false
+- [x] Recover missing products - Restored isInStock to true
+
+### Audit Trail System
+- [x] Create product_audit_log table in database
+- [x] Create category_audit_log table in database
+- [x] Add audit logging to createProduct mutation
+- [x] Add audit logging to updateProduct mutation
+- [x] Add audit logging to deleteProduct (deactivate) mutation
+- [x] Add audit logging to reactivateProduct mutation
+
+### Admin Audit Features
+- [x] Add Audit Log tab to Admin dashboard
+- [x] Display audit logs with filters (action type, date range)
+- [x] Show activity summary by user
+- [x] Show activity summary by action type
+- [x] Product history dialog showing all changes
+
+### Inactive Products Management
+- [x] Add "Show Inactive" toggle to Products tab
+- [x] Display inactive products in orange-highlighted section
+- [x] Add "Reactivate" button for inactive products
+- [x] Add getAllProducts procedure (includes inactive)
+- [x] Add reactivateProduct procedure with audit logging
+
+### Tests
+- [x] Write vitest tests for audit.getProductLogs
+- [x] Write vitest tests for audit.getSummary
+- [x] Write vitest tests for audit.getProductHistory
+- [x] Write vitest tests for admin.getAllProducts

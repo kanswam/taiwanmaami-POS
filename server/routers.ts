@@ -11,7 +11,7 @@ import { categories, subcategories, products, addons, orders, orderItems, orderI
 import { eq, and, desc, asc, sql } from "drizzle-orm";
 import { generateOrderNumber, calculateGst } from "@shared/types";
 // POS functionality removed - Employee Master import removed
-import { outletProducts, loyaltyRewards, stampTransactions, guestOrders, reviews, kotQueue } from "../drizzle/schema";
+import { outletProducts, loyaltyRewards, stampTransactions, guestOrders, reviews, kotQueue, productAuditLog, categoryAuditLog } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 // Admin procedure - only allows admin role
@@ -623,6 +623,14 @@ export const appRouter = router({
         return { success: true };
       }),
 
+    // Get all products including inactive ones
+    getAllProducts: adminProcedure.query(async () => {
+      const dbInstance = await getDb();
+      if (!dbInstance) return [];
+      const allProducts = await dbInstance.select().from(products).orderBy(asc(products.displayOrder));
+      return allProducts;
+    }),
+
     // Product management
     createProduct: adminProcedure
       .input(z.object({
@@ -642,11 +650,24 @@ export const appRouter = router({
         availableDelivery: z.boolean().default(true),
         displayOrder: z.number().default(0),
       }))
-      .mutation(async ({ input }) => {
+      .mutation(async ({ input, ctx }) => {
         const dbInstance = await getDb();
         if (!dbInstance) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
         const [result] = await dbInstance!.insert(products).values(input);
         const [product] = await dbInstance!.select().from(products).where(eq(products.id, result.insertId));
+        
+        // Create audit log for product creation
+        await dbInstance!.insert(productAuditLog).values({
+          productId: product.id,
+          productName: product.name,
+          userId: ctx.user?.id || null,
+          userName: ctx.user?.name || 'Unknown',
+          action: 'create',
+          fieldChanged: null,
+          oldValue: null,
+          newValue: JSON.stringify(product),
+        });
+        
         return product;
       }),
 
@@ -666,10 +687,45 @@ export const appRouter = router({
         isActive: z.boolean().optional(),
         subcategoryId: z.number().optional(),
       }))
-      .mutation(async ({ input }) => {
+      .mutation(async ({ input, ctx }) => {
         const dbInstance = await getDb();
         if (!dbInstance) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
         const { id, ...data } = input;
+        
+        // Get current product state for audit log
+        const [currentProduct] = await dbInstance!.select().from(products).where(eq(products.id, id));
+        if (!currentProduct) throw new TRPCError({ code: 'NOT_FOUND', message: 'Product not found' });
+        
+        // Determine action type based on changes
+        let action: 'update' | 'stock_in' | 'stock_out' | 'deactivate' | 'reactivate' | 'price_change' = 'update';
+        if (data.isInStock !== undefined && data.isInStock !== currentProduct.isInStock) {
+          action = data.isInStock ? 'stock_in' : 'stock_out';
+        } else if (data.isActive !== undefined && data.isActive !== currentProduct.isActive) {
+          action = data.isActive ? 'reactivate' : 'deactivate';
+        } else if (data.instorePrice !== undefined || data.deliveryPrice !== undefined) {
+          action = 'price_change';
+        }
+        
+        // Create audit log entries for each changed field
+        const changedFields = Object.keys(data).filter(key => {
+          const k = key as keyof typeof data;
+          return data[k] !== undefined && data[k] !== (currentProduct as any)[k];
+        });
+        
+        for (const field of changedFields) {
+          await dbInstance!.insert(productAuditLog).values({
+            productId: id,
+            productName: currentProduct.name,
+            userId: ctx.user?.id || null,
+            userName: ctx.user?.name || 'Unknown',
+            action,
+            fieldChanged: field,
+            oldValue: JSON.stringify((currentProduct as any)[field]),
+            newValue: JSON.stringify((data as any)[field]),
+          });
+        }
+        
+        // Update the product
         await dbInstance!.update(products).set(data).where(eq(products.id, id));
         return { success: true };
       }),
@@ -705,10 +761,54 @@ export const appRouter = router({
 
     deleteProduct: adminProcedure
       .input(z.object({ id: z.number() }))
-      .mutation(async ({ input }) => {
+      .mutation(async ({ input, ctx }) => {
         const dbInstance = await getDb();
         if (!dbInstance) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
+        
+        // Get product for audit log
+        const [product] = await dbInstance!.select().from(products).where(eq(products.id, input.id));
+        if (!product) throw new TRPCError({ code: 'NOT_FOUND', message: 'Product not found' });
+        
+        // Create audit log for deactivation (soft delete)
+        await dbInstance!.insert(productAuditLog).values({
+          productId: input.id,
+          productName: product.name,
+          userId: ctx.user?.id || null,
+          userName: ctx.user?.name || 'Unknown',
+          action: 'deactivate',
+          fieldChanged: 'isActive',
+          oldValue: 'true',
+          newValue: 'false',
+        });
+        
         await dbInstance!.update(products).set({ isActive: false }).where(eq(products.id, input.id));
+        return { success: true };
+      }),
+
+    // Reactivate a deactivated product
+    reactivateProduct: adminProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input, ctx }) => {
+        const dbInstance = await getDb();
+        if (!dbInstance) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
+        
+        // Get product for audit log
+        const [product] = await dbInstance!.select().from(products).where(eq(products.id, input.id));
+        if (!product) throw new TRPCError({ code: 'NOT_FOUND', message: 'Product not found' });
+        
+        // Create audit log for reactivation
+        await dbInstance!.insert(productAuditLog).values({
+          productId: input.id,
+          productName: product.name,
+          userId: ctx.user?.id || null,
+          userName: ctx.user?.name || 'Unknown',
+          action: 'reactivate',
+          fieldChanged: 'isActive',
+          oldValue: 'false',
+          newValue: 'true',
+        });
+        
+        await dbInstance!.update(products).set({ isActive: true }).where(eq(products.id, input.id));
         return { success: true };
       }),
 
@@ -1024,13 +1124,6 @@ export const appRouter = router({
 
     getAllDiscounts: adminProcedure.query(async () => {
       return db.getAllDiscounts();
-    }),
-
-    // Get all products for admin
-    getAllProducts: adminProcedure.query(async () => {
-      const dbInstance = await getDb();
-      if (!dbInstance) return [];
-      return dbInstance.select().from(products).orderBy(asc(products.subcategoryId), asc(products.displayOrder));
     }),
 
     // Get all subcategories for admin
@@ -2020,6 +2113,136 @@ export const appRouter = router({
           pending: Number(stats?.pending || 0),
           printed: Number(stats?.printed || 0),
         };
+      }),
+  }),
+
+  // Audit Log routes
+  audit: router({
+    // Get product audit logs
+    getProductLogs: adminProcedure
+      .input(z.object({
+        productId: z.number().optional(),
+        action: z.enum(['create', 'update', 'delete', 'deactivate', 'reactivate', 'stock_in', 'stock_out', 'price_change', 'image_change']).optional(),
+        userId: z.number().optional(),
+        startDate: z.string().optional(),
+        endDate: z.string().optional(),
+        limit: z.number().min(1).max(500).default(100),
+        offset: z.number().min(0).default(0),
+      }).optional())
+      .query(async ({ input }) => {
+        const dbInstance = await getDb();
+        if (!dbInstance) return { logs: [], total: 0 };
+        
+        const limit = input?.limit || 100;
+        const offset = input?.offset || 0;
+        
+        let conditions: any[] = [];
+        
+        if (input?.productId) {
+          conditions.push(eq(productAuditLog.productId, input.productId));
+        }
+        if (input?.action) {
+          conditions.push(eq(productAuditLog.action, input.action));
+        }
+        if (input?.userId) {
+          conditions.push(eq(productAuditLog.userId, input.userId));
+        }
+        if (input?.startDate) {
+          conditions.push(sql`${productAuditLog.createdAt} >= ${input.startDate}`);
+        }
+        if (input?.endDate) {
+          conditions.push(sql`${productAuditLog.createdAt} <= ${input.endDate}`);
+        }
+        
+        const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+        
+        const logs = await dbInstance
+          .select()
+          .from(productAuditLog)
+          .where(whereClause)
+          .orderBy(desc(productAuditLog.createdAt))
+          .limit(limit)
+          .offset(offset);
+        
+        const [countResult] = await dbInstance
+          .select({ count: sql<number>`COUNT(*)` })
+          .from(productAuditLog)
+          .where(whereClause);
+        
+        return {
+          logs,
+          total: Number(countResult?.count || 0),
+        };
+      }),
+
+    // Get audit summary stats
+    getSummary: adminProcedure
+      .input(z.object({
+        startDate: z.string().optional(),
+        endDate: z.string().optional(),
+      }).optional())
+      .query(async ({ input }) => {
+        const dbInstance = await getDb();
+        if (!dbInstance) return { byAction: [], byUser: [], recentChanges: [] };
+        
+        let dateConditions: any[] = [];
+        if (input?.startDate) {
+          dateConditions.push(sql`${productAuditLog.createdAt} >= ${input.startDate}`);
+        }
+        if (input?.endDate) {
+          dateConditions.push(sql`${productAuditLog.createdAt} <= ${input.endDate}`);
+        }
+        const whereClause = dateConditions.length > 0 ? and(...dateConditions) : undefined;
+        
+        // Count by action type
+        const byAction = await dbInstance
+          .select({
+            action: productAuditLog.action,
+            count: sql<number>`COUNT(*)`,
+          })
+          .from(productAuditLog)
+          .where(whereClause)
+          .groupBy(productAuditLog.action);
+        
+        // Count by user
+        const byUser = await dbInstance
+          .select({
+            userName: productAuditLog.userName,
+            userId: productAuditLog.userId,
+            count: sql<number>`COUNT(*)`,
+          })
+          .from(productAuditLog)
+          .where(whereClause)
+          .groupBy(productAuditLog.userName, productAuditLog.userId);
+        
+        // Recent changes (last 20)
+        const recentChanges = await dbInstance
+          .select()
+          .from(productAuditLog)
+          .orderBy(desc(productAuditLog.createdAt))
+          .limit(20);
+        
+        return {
+          byAction: byAction.map(a => ({ action: a.action, count: Number(a.count) })),
+          byUser: byUser.map(u => ({ userName: u.userName || 'Unknown', userId: u.userId, count: Number(u.count) })),
+          recentChanges,
+        };
+      }),
+
+    // Get product change history
+    getProductHistory: adminProcedure
+      .input(z.object({ productId: z.number() }))
+      .query(async ({ input }) => {
+        const dbInstance = await getDb();
+        if (!dbInstance) return [];
+        
+        const history = await dbInstance
+          .select()
+          .from(productAuditLog)
+          .where(eq(productAuditLog.productId, input.productId))
+          .orderBy(desc(productAuditLog.createdAt));
+        
+        return history;
       }),
   }),
 });

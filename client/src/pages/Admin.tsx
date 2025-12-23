@@ -15,7 +15,8 @@ import { formatPrice, GST_RATE } from '@shared/types';
 import { 
   Home, Package, ShoppingCart, Tag, Upload, LogOut, 
   Plus, Edit, Trash2, ImageIcon, RefreshCw, Check, X, Search,
-  ChevronDown, ChevronUp, Eye, EyeOff, Star, MessageSquare, Reply, Printer
+  ChevronDown, ChevronUp, Eye, EyeOff, Star, MessageSquare, Reply, Printer,
+  ClipboardList, RotateCcw, History, Filter
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -101,6 +102,10 @@ export default function Admin() {
               <Printer className="w-4 h-4" />
               KOT Reports
             </TabsTrigger>
+            <TabsTrigger value="audit" className="gap-2">
+              <ClipboardList className="w-4 h-4" />
+              Audit Log
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="products">
@@ -140,6 +145,10 @@ export default function Admin() {
           <TabsContent value="kot-reports">
             <KOTReportsTab />
           </TabsContent>
+
+          <TabsContent value="audit">
+            <AuditTab />
+          </TabsContent>
         </Tabs>
       </div>
     </div>
@@ -149,11 +158,13 @@ export default function Admin() {
 // Products Tab
 function ProductsTab() {
   const { data: menuData, refetch } = trpc.menu.getFullMenu.useQuery({ isDelivery: false });
+  const { data: allProductsData, refetch: refetchAll } = trpc.admin.getAllProducts.useQuery();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [draggedProduct, setDraggedProduct] = useState<number | null>(null);
   const [reorderMode, setReorderMode] = useState(false);
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
+  const [showInactive, setShowInactive] = useState(false);
 
   const toggleGroupCollapse = (groupKey: string) => {
     setCollapsedGroups(prev => {
@@ -188,6 +199,15 @@ function ProductsTab() {
     onSuccess: () => {
       toast.success('Product order updated');
       refetch();
+    },
+    onError: (err) => toast.error(err.message),
+  });
+
+  const reactivateProduct = trpc.admin.reactivateProduct.useMutation({
+    onSuccess: () => {
+      toast.success('Product reactivated');
+      refetch();
+      refetchAll();
     },
     onError: (err) => toast.error(err.message),
   });
@@ -324,6 +344,16 @@ function ProductsTab() {
             Collapse All
           </Button>
         </div>
+        <div className="flex items-center gap-2 px-3 py-2 bg-orange-50 border border-orange-200 rounded-lg">
+          <Switch
+            checked={showInactive}
+            onCheckedChange={setShowInactive}
+            id="show-inactive"
+          />
+          <Label htmlFor="show-inactive" className="text-sm font-medium text-orange-800 cursor-pointer">
+            Show Inactive ({allProductsData?.filter(p => !p.isActive).length || 0})
+          </Label>
+        </div>
       </div>
 
       {reorderMode && (
@@ -442,9 +472,87 @@ function ProductsTab() {
       </div>
 
       {/* Empty State */}
-      {Object.keys(groupedProducts).length === 0 && (
+      {Object.keys(groupedProducts).length === 0 && !showInactive && (
         <Card className="p-8 text-center">
           <p className="text-muted-foreground">No products found matching your search criteria.</p>
+        </Card>
+      )}
+
+      {/* Inactive Products Section */}
+      {showInactive && allProductsData && (
+        <Card className="mt-6 border-orange-200 bg-orange-50/50">
+          <div className="px-4 py-3 border-b border-orange-200 bg-orange-100/50">
+            <div className="flex items-center gap-2">
+              <EyeOff className="w-5 h-5 text-orange-600" />
+              <h3 className="font-semibold text-orange-800">Inactive Products</h3>
+              <span className="text-sm text-orange-600">({allProductsData.filter(p => !p.isActive).length} products)</span>
+            </div>
+            <p className="text-sm text-orange-700 mt-1">These products are hidden from customers. Click "Reactivate" to make them visible again.</p>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-orange-100/50">
+                <tr>
+                  <th className="text-left p-3 text-sm font-medium text-orange-800">Product</th>
+                  <th className="text-left p-3 text-sm font-medium text-orange-800">Category</th>
+                  <th className="text-right p-3 text-sm font-medium text-orange-800">In-Store</th>
+                  <th className="text-right p-3 text-sm font-medium text-orange-800">Delivery</th>
+                  <th className="text-center p-3 text-sm font-medium text-orange-800">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {allProductsData.filter(p => !p.isActive).map((product) => {
+                  const sub = menuData?.subcategories.find(s => s.id === product.subcategoryId);
+                  const cat = menuData?.categories.find(c => c.id === sub?.categoryId);
+                  return (
+                    <tr key={product.id} className="border-b border-orange-200 last:border-b-0 hover:bg-orange-100/30">
+                      <td className="p-3">
+                        <div className="flex items-center gap-3">
+                          {product.imageUrl ? (
+                            <img src={product.imageUrl} alt={product.name} className="w-10 h-10 rounded object-cover opacity-50" />
+                          ) : (
+                            <div className="w-10 h-10 rounded bg-orange-200 flex items-center justify-center">
+                              <ImageIcon className="w-5 h-5 text-orange-400" />
+                            </div>
+                          )}
+                          <div>
+                            <p className="font-medium text-orange-900">{product.name}</p>
+                            {product.chineseName && <p className="text-xs text-orange-600">{product.chineseName}</p>}
+                          </div>
+                        </div>
+                      </td>
+                      <td className="p-3 text-sm text-orange-700">
+                        {cat?.name || 'Unknown'} / {sub?.name || 'Unknown'}
+                      </td>
+                      <td className="p-3 text-right text-orange-800">
+                        {product.instorePrice ? formatPrice(product.instorePrice) : '-'}
+                      </td>
+                      <td className="p-3 text-right text-orange-800">
+                        {product.deliveryPrice ? formatPrice(product.deliveryPrice) : '-'}
+                      </td>
+                      <td className="p-3 text-center">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="gap-2 border-green-500 text-green-700 hover:bg-green-50"
+                          onClick={() => reactivateProduct.mutate({ id: product.id })}
+                          disabled={reactivateProduct.isPending}
+                        >
+                          <RotateCcw className="w-4 h-4" />
+                          Reactivate
+                        </Button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+          {allProductsData.filter(p => !p.isActive).length === 0 && (
+            <div className="p-8 text-center text-orange-600">
+              No inactive products found.
+            </div>
+          )}
         </Card>
       )}
     </div>
@@ -2386,6 +2494,291 @@ function KOTReportsTab() {
           <div className="text-center py-8 text-muted-foreground">No data available</div>
         )}
       </Card>
+    </div>
+  );
+}
+
+
+// Audit Log Tab Component
+function AuditTab() {
+  const [actionFilter, setActionFilter] = useState<string>('all');
+  const [dateRange, setDateRange] = useState<{ start: string; end: string }>({
+    start: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+    end: new Date().toISOString().split('T')[0],
+  });
+  const [selectedProductId, setSelectedProductId] = useState<number | null>(null);
+
+  const { data: auditLogs, isLoading } = trpc.audit.getProductLogs.useQuery({
+    action: actionFilter !== 'all' ? actionFilter as any : undefined,
+    startDate: dateRange.start,
+    endDate: dateRange.end + 'T23:59:59',
+    limit: 200,
+  });
+
+  const { data: summary } = trpc.audit.getSummary.useQuery({
+    startDate: dateRange.start,
+    endDate: dateRange.end + 'T23:59:59',
+  });
+
+  const { data: productHistory } = trpc.audit.getProductHistory.useQuery(
+    { productId: selectedProductId! },
+    { enabled: !!selectedProductId }
+  );
+
+  const formatDate = (date: Date | string) => {
+    return new Date(date).toLocaleString('en-IN', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true,
+    });
+  };
+
+  const getActionBadge = (action: string) => {
+    const colors: Record<string, string> = {
+      create: 'bg-green-100 text-green-800',
+      update: 'bg-blue-100 text-blue-800',
+      delete: 'bg-red-100 text-red-800',
+      deactivate: 'bg-orange-100 text-orange-800',
+      reactivate: 'bg-emerald-100 text-emerald-800',
+      stock_in: 'bg-teal-100 text-teal-800',
+      stock_out: 'bg-amber-100 text-amber-800',
+      price_change: 'bg-purple-100 text-purple-800',
+      image_change: 'bg-indigo-100 text-indigo-800',
+    };
+    return colors[action] || 'bg-gray-100 text-gray-800';
+  };
+
+  const getActionLabel = (action: string) => {
+    const labels: Record<string, string> = {
+      create: 'Created',
+      update: 'Updated',
+      delete: 'Deleted',
+      deactivate: 'Deactivated',
+      reactivate: 'Reactivated',
+      stock_in: 'Stock In',
+      stock_out: 'Stock Out',
+      price_change: 'Price Changed',
+      image_change: 'Image Changed',
+    };
+    return labels[action] || action;
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <Card className="p-4 bg-blue-50 border-blue-200">
+          <div className="text-sm text-blue-600 font-medium">Total Changes</div>
+          <div className="text-3xl font-bold text-blue-900 mt-2">{auditLogs?.total || 0}</div>
+          <div className="text-xs text-blue-600 mt-1">In selected period</div>
+        </Card>
+
+        <Card className="p-4 bg-green-50 border-green-200">
+          <div className="text-sm text-green-600 font-medium">Products Created</div>
+          <div className="text-3xl font-bold text-green-900 mt-2">
+            {summary?.byAction.find(a => a.action === 'create')?.count || 0}
+          </div>
+        </Card>
+
+        <Card className="p-4 bg-orange-50 border-orange-200">
+          <div className="text-sm text-orange-600 font-medium">Stock Changes</div>
+          <div className="text-3xl font-bold text-orange-900 mt-2">
+            {(summary?.byAction.find(a => a.action === 'stock_in')?.count || 0) +
+             (summary?.byAction.find(a => a.action === 'stock_out')?.count || 0)}
+          </div>
+        </Card>
+
+        <Card className="p-4 bg-purple-50 border-purple-200">
+          <div className="text-sm text-purple-600 font-medium">Price Changes</div>
+          <div className="text-3xl font-bold text-purple-900 mt-2">
+            {summary?.byAction.find(a => a.action === 'price_change')?.count || 0}
+          </div>
+        </Card>
+      </div>
+
+      {/* Filters */}
+      <Card className="p-4">
+        <div className="flex flex-wrap items-center gap-4">
+          <div className="flex items-center gap-2">
+            <Filter className="w-4 h-4 text-muted-foreground" />
+            <span className="font-medium">Filters:</span>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Label className="text-sm">Action:</Label>
+            <Select value={actionFilter} onValueChange={setActionFilter}>
+              <SelectTrigger className="w-40">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Actions</SelectItem>
+                <SelectItem value="create">Created</SelectItem>
+                <SelectItem value="update">Updated</SelectItem>
+                <SelectItem value="deactivate">Deactivated</SelectItem>
+                <SelectItem value="reactivate">Reactivated</SelectItem>
+                <SelectItem value="stock_in">Stock In</SelectItem>
+                <SelectItem value="stock_out">Stock Out</SelectItem>
+                <SelectItem value="price_change">Price Change</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Label className="text-sm">From:</Label>
+            <Input
+              type="date"
+              value={dateRange.start}
+              onChange={(e) => setDateRange(prev => ({ ...prev, start: e.target.value }))}
+              className="w-40"
+            />
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Label className="text-sm">To:</Label>
+            <Input
+              type="date"
+              value={dateRange.end}
+              onChange={(e) => setDateRange(prev => ({ ...prev, end: e.target.value }))}
+              className="w-40"
+            />
+          </div>
+        </div>
+      </Card>
+
+      {/* Activity by User */}
+      {summary?.byUser && summary.byUser.length > 0 && (
+        <Card className="p-4">
+          <h3 className="font-bold mb-4 flex items-center gap-2">
+            <History className="w-5 h-5" />
+            Activity by User
+          </h3>
+          <div className="flex flex-wrap gap-4">
+            {summary.byUser.map((user, idx) => (
+              <div key={idx} className="flex items-center gap-2 px-3 py-2 bg-muted rounded-lg">
+                <span className="font-medium">{user.userName}</span>
+                <span className="text-sm text-muted-foreground">({user.count} changes)</span>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
+
+      {/* Audit Log Table */}
+      <Card className="p-4">
+        <h3 className="font-bold mb-4 flex items-center gap-2">
+          <ClipboardList className="w-5 h-5" />
+          Change History
+        </h3>
+
+        {isLoading ? (
+          <div className="text-center py-8 text-muted-foreground">Loading audit logs...</div>
+        ) : auditLogs?.logs && auditLogs.logs.length > 0 ? (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b bg-muted/50">
+                  <th className="text-left py-3 px-4 font-medium">Date & Time</th>
+                  <th className="text-left py-3 px-4 font-medium">Product</th>
+                  <th className="text-left py-3 px-4 font-medium">Action</th>
+                  <th className="text-left py-3 px-4 font-medium">Field</th>
+                  <th className="text-left py-3 px-4 font-medium">Old Value</th>
+                  <th className="text-left py-3 px-4 font-medium">New Value</th>
+                  <th className="text-left py-3 px-4 font-medium">Changed By</th>
+                </tr>
+              </thead>
+              <tbody>
+                {auditLogs.logs.map((log) => (
+                  <tr key={log.id} className="border-b hover:bg-muted/50">
+                    <td className="py-3 px-4 text-muted-foreground whitespace-nowrap">
+                      {formatDate(log.createdAt)}
+                    </td>
+                    <td className="py-3 px-4">
+                      <button
+                        className="font-medium text-primary hover:underline"
+                        onClick={() => setSelectedProductId(log.productId)}
+                      >
+                        {log.productName}
+                      </button>
+                    </td>
+                    <td className="py-3 px-4">
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getActionBadge(log.action)}`}>
+                        {getActionLabel(log.action)}
+                      </span>
+                    </td>
+                    <td className="py-3 px-4 text-muted-foreground">
+                      {log.fieldChanged || '-'}
+                    </td>
+                    <td className="py-3 px-4 max-w-32 truncate" title={log.oldValue || ''}>
+                      {log.oldValue ? (
+                        <span className="text-red-600">{log.oldValue.replace(/"/g, '')}</span>
+                      ) : '-'}
+                    </td>
+                    <td className="py-3 px-4 max-w-32 truncate" title={log.newValue || ''}>
+                      {log.newValue ? (
+                        <span className="text-green-600">{log.newValue.replace(/"/g, '')}</span>
+                      ) : '-'}
+                    </td>
+                    <td className="py-3 px-4 font-medium">
+                      {log.userName || 'System'}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <div className="text-center py-8 text-muted-foreground">
+            No audit logs found for the selected filters
+          </div>
+        )}
+      </Card>
+
+      {/* Product History Dialog */}
+      <Dialog open={!!selectedProductId} onOpenChange={() => setSelectedProductId(null)}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <History className="w-5 h-5" />
+              Product Change History
+            </DialogTitle>
+          </DialogHeader>
+
+          {productHistory && productHistory.length > 0 ? (
+            <div className="space-y-3">
+              {productHistory.map((log) => (
+                <div key={log.id} className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg">
+                  <div className={`px-2 py-1 rounded-full text-xs font-medium ${getActionBadge(log.action)}`}>
+                    {getActionLabel(log.action)}
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium">{log.fieldChanged || 'Product'}</span>
+                      <span className="text-xs text-muted-foreground">{formatDate(log.createdAt)}</span>
+                    </div>
+                    {log.oldValue && log.newValue && (
+                      <div className="text-sm mt-1">
+                        <span className="text-red-600 line-through">{log.oldValue.replace(/"/g, '')}</span>
+                        <span className="mx-2">→</span>
+                        <span className="text-green-600">{log.newValue.replace(/"/g, '')}</span>
+                      </div>
+                    )}
+                    <div className="text-xs text-muted-foreground mt-1">
+                      by {log.userName || 'System'}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8 text-muted-foreground">
+              No history found for this product
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -388,6 +388,47 @@ export const siteSettings = mysqlTable("site_settings", {
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
 
+// Product audit log for tracking all changes
+export const productAuditLog = mysqlTable("product_audit_log", {
+  id: int("id").autoincrement().primaryKey(),
+  productId: int("productId").notNull(),
+  productName: varchar("productName", { length: 200 }).notNull(), // Store name at time of change
+  userId: int("userId"), // Who made the change (null for system changes)
+  userName: varchar("userName", { length: 200 }), // Store user name at time of change
+  action: mysqlEnum("action", [
+    "create",
+    "update",
+    "delete",
+    "deactivate",
+    "reactivate",
+    "stock_in",
+    "stock_out",
+    "price_change",
+    "image_change"
+  ]).notNull(),
+  fieldChanged: varchar("fieldChanged", { length: 100 }), // Which field was changed
+  oldValue: text("oldValue"), // Previous value (JSON for complex fields)
+  newValue: text("newValue"), // New value (JSON for complex fields)
+  ipAddress: varchar("ipAddress", { length: 45 }), // For additional security
+  userAgent: text("userAgent"), // Browser/device info
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+// Category audit log
+export const categoryAuditLog = mysqlTable("category_audit_log", {
+  id: int("id").autoincrement().primaryKey(),
+  entityType: mysqlEnum("entityType", ["category", "subcategory"]).notNull(),
+  entityId: int("entityId").notNull(),
+  entityName: varchar("entityName", { length: 200 }).notNull(),
+  userId: int("userId"),
+  userName: varchar("userName", { length: 200 }),
+  action: mysqlEnum("action", ["create", "update", "delete", "deactivate", "reactivate"]).notNull(),
+  fieldChanged: varchar("fieldChanged", { length: 100 }),
+  oldValue: text("oldValue"),
+  newValue: text("newValue"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
 // Type exports
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
@@ -410,3 +451,5 @@ export type GuestOrder = typeof guestOrders.$inferSelect;
 export type Review = typeof reviews.$inferSelect;
 export type KotQueue = typeof kotQueue.$inferSelect;
 export type SiteSettings = typeof siteSettings.$inferSelect;
+export type ProductAuditLog = typeof productAuditLog.$inferSelect;
+export type CategoryAuditLog = typeof categoryAuditLog.$inferSelect;
