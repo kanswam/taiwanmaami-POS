@@ -1,0 +1,38 @@
+# Current Category Structure (Dec 23, 2025)
+
+## Main Categories:
+1. Iced Beverages 凍飲 (54 products)
+2. Hot Beverages 熱飲 (6 products)
+3. Asian Sweet Bites 甜品 (9 products)
+4. Asian Rice • Noodle • Bread 主餐 (17 products)
+
+## Subcategories by Category:
+
+### Iced Beverages 凍飲:
+- Slush 冰沙 (8)
+- Iced Lavazza Coffee 冰咖啡 (4)
+- Organic Assam 原片有機紅茶 (10)
+- Organic Oolong 原片有機烏龍 (9)
+- Organic Green Tea 原片有機綠茶 (10)
+- Matcha Blend 抹茶特調 (7)
+- Taro Blend 香芋特調 (6)
+
+### Hot Beverages 熱飲:
+- Hot Chocolate 熱巧克力 (0)
+- Tea in Pot 熱茶 (0)
+- Hot Coffee 熱咖啡 (6)
+
+### Asian Sweet Bites 甜品:
+- Soufflé Pancake 舒芙蕾 (0)
+- Sweet Pillow Brioche 厚片吐司(甜) (0)
+- Boba Crème Caramel 粉圓布丁 (0)
+- Fruit Mochi 水果雪梅娘系列 (6)
+- Signature Mochi 招牌雪莓娘系列 (3)
+
+### Asian Rice • Noodle • Bread 主餐:
+- Saucy Noodles 拌麵 (1)
+- Rice 飯 (2)
+- Flat Bread 蔥油餅 (5)
+- Noodles Soup 湯麵 (3)
+- Savoury Pillow Brioche 厚片吐司(鹹) (4)
+- Omelette 日式奄列 (2)

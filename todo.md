@@ -690,3 +690,23 @@
 - [ ] Ensure "By Subcategory" scope properly filters products
 - [ ] Test with Fruit Mochi subcategory (should show only 6 products)
 - [ ] Save checkpoint
+
+## Phase 51 - Homepage Categories & Admin Products Organization (Dec 23, 2025)
+
+- [ ] Check current categories in database (Theresa's changes)
+- [ ] Update homepage video cards to match current categories
+- [ ] Reorganize Admin Products tab to group by Category → Subcategory
+- [ ] Test both changes
+- [ ] Save checkpoint
+
+
+## Admin Products Tab Reorganization (Dec 23, 2025)
+
+- [x] Group products by Category → Subcategory hierarchy
+- [x] Add collapsible sections for each category/subcategory group
+- [x] Add product count badge on each group header
+- [x] Add "Expand All" and "Collapse All" buttons
+- [x] Individual group collapse/expand by clicking header
+- [x] Chevron indicator showing collapse state
+- [x] Maintain drag-and-drop reordering within groups
+- [x] Search and category filter still work with grouped view

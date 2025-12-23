@@ -153,6 +153,28 @@ function ProductsTab() {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [draggedProduct, setDraggedProduct] = useState<number | null>(null);
   const [reorderMode, setReorderMode] = useState(false);
+  const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
+
+  const toggleGroupCollapse = (groupKey: string) => {
+    setCollapsedGroups(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(groupKey)) {
+        newSet.delete(groupKey);
+      } else {
+        newSet.add(groupKey);
+      }
+      return newSet;
+    });
+  };
+
+  const collapseAll = () => {
+    const allKeys = Object.keys(groupedProducts);
+    setCollapsedGroups(new Set(allKeys));
+  };
+
+  const expandAll = () => {
+    setCollapsedGroups(new Set());
+  };
 
   const updateProduct = trpc.admin.updateProduct.useMutation({
     onSuccess: () => {
@@ -170,9 +192,27 @@ function ProductsTab() {
     onError: (err) => toast.error(err.message),
   });
 
-  // Sort products by displayOrder when in reorder mode
+  // Sort products by Category -> Subcategory -> displayOrder for logical grouping
   const sortedProducts = menuData?.products
-    ? [...menuData.products].sort((a, b) => (a.displayOrder || 999) - (b.displayOrder || 999))
+    ? [...menuData.products].sort((a, b) => {
+        const subA = menuData?.subcategories.find(s => s.id === a.subcategoryId);
+        const subB = menuData?.subcategories.find(s => s.id === b.subcategoryId);
+        const catA = menuData?.categories.find(c => c.id === subA?.categoryId);
+        const catB = menuData?.categories.find(c => c.id === subB?.categoryId);
+        
+        // First sort by category displayOrder
+        const catOrderA = catA?.displayOrder || 999;
+        const catOrderB = catB?.displayOrder || 999;
+        if (catOrderA !== catOrderB) return catOrderA - catOrderB;
+        
+        // Then sort by subcategory displayOrder
+        const subOrderA = subA?.displayOrder || 999;
+        const subOrderB = subB?.displayOrder || 999;
+        if (subOrderA !== subOrderB) return subOrderA - subOrderB;
+        
+        // Finally sort by product displayOrder
+        return (a.displayOrder || 999) - (b.displayOrder || 999);
+      })
     : [];
 
   const filteredProducts = sortedProducts.filter(p => {
@@ -186,6 +226,20 @@ function ProductsTab() {
     }
     return true;
   }) || [];
+
+  // Group products by category and subcategory for display
+  const groupedProducts = filteredProducts.reduce((acc, product) => {
+    const sub = menuData?.subcategories.find(s => s.id === product.subcategoryId);
+    const cat = menuData?.categories.find(c => c.id === sub?.categoryId);
+    const catName = cat?.name || 'Uncategorized';
+    const subName = sub?.name || 'Uncategorized';
+    const key = `${catName}|||${subName}`;
+    if (!acc[key]) {
+      acc[key] = { category: catName, subcategory: subName, products: [] };
+    }
+    acc[key].products.push(product);
+    return acc;
+  }, {} as Record<string, { category: string; subcategory: string; products: typeof filteredProducts }>);
 
   const toggleStock = (productId: number, currentStatus: boolean) => {
     updateProduct.mutate({ id: productId, isInStock: !currentStatus });
@@ -262,6 +316,14 @@ function ProductsTab() {
           <ChevronDown className="w-4 h-4" />
           {reorderMode ? 'Done Reordering' : 'Reorder Products'}
         </Button>
+        <div className="flex gap-2">
+          <Button variant="ghost" size="sm" onClick={expandAll} className="text-xs">
+            Expand All
+          </Button>
+          <Button variant="ghost" size="sm" onClick={collapseAll} className="text-xs">
+            Collapse All
+          </Button>
+        </div>
       </div>
 
       {reorderMode && (
@@ -270,92 +332,121 @@ function ProductsTab() {
         </div>
       )}
 
-      <Card>
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-secondary">
-              <tr>
-                {reorderMode && <th className="w-12 p-3 text-sm font-medium">#</th>}
-                <th className="text-left p-3 text-sm font-medium">Product</th>
-                <th className="text-left p-3 text-sm font-medium">Category</th>
-                <th className="text-right p-3 text-sm font-medium">In-Store Price</th>
-                <th className="text-right p-3 text-sm font-medium">Delivery Price</th>
-                <th className="text-center p-3 text-sm font-medium">In Stock</th>
-                <th className="text-center p-3 text-sm font-medium">Active</th>
-                <th className="text-center p-3 text-sm font-medium">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredProducts.map((product, index) => {
-                const sub = menuData?.subcategories.find(s => s.id === product.subcategoryId);
-                const cat = menuData?.categories.find(c => c.id === sub?.categoryId);
-                return (
-                  <tr 
-                    key={product.id} 
-                    className={`border-b hover:bg-secondary/50 ${reorderMode ? 'cursor-move' : ''} ${draggedProduct === product.id ? 'opacity-50 bg-blue-100' : ''}`}
-                    draggable={reorderMode}
-                    onDragStart={(e) => reorderMode && handleDragStart(e, product.id)}
-                    onDragOver={handleDragOver}
-                    onDrop={(e) => reorderMode && handleDrop(e, product.id)}
-                    onDragEnd={() => setDraggedProduct(null)}
-                  >
-                    {reorderMode && (
-                      <td className="p-3 text-center text-muted-foreground">
-                        <div className="flex items-center justify-center gap-1">
-                          <span className="text-xs font-bold">{index + 1}</span>
-                        </div>
-                      </td>
-                    )}
-                    <td className="p-3">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded bg-secondary overflow-hidden">
-                          {product.imageUrl ? (
-                            <img src={product.imageUrl} alt="" className="w-full h-full object-cover" />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center">
-                              <ImageIcon className="w-4 h-4 text-muted-foreground" />
+      {/* Grouped Products Display */}
+      <div className="space-y-4">
+        {Object.entries(groupedProducts).map(([key, group]) => {
+          const [catName, subName] = key.split('|||');
+          const groupKey = `${catName}-${subName}`;
+          const isCollapsed = collapsedGroups.has(key);
+          return (
+            <Card key={groupKey} className="overflow-hidden">
+              {/* Category/Subcategory Header - Clickable */}
+              <div 
+                className="bg-gradient-to-r from-primary/10 to-primary/5 px-4 py-3 border-b cursor-pointer hover:from-primary/15 hover:to-primary/10 transition-colors"
+                onClick={() => toggleGroupCollapse(key)}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
+                      <span className="text-primary font-bold text-sm">{group.products.length}</span>
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-foreground">{catName}</h3>
+                      <p className="text-sm text-muted-foreground">{subName}</p>
+                    </div>
+                  </div>
+                  <ChevronDown className={`w-5 h-5 text-muted-foreground transition-transform ${isCollapsed ? '-rotate-90' : ''}`} />
+                </div>
+              </div>
+              
+              {/* Products Table - Collapsible */}
+              {!isCollapsed && (
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-secondary/50">
+                    <tr>
+                      {reorderMode && <th className="w-12 p-3 text-sm font-medium">#</th>}
+                      <th className="text-left p-3 text-sm font-medium">Product</th>
+                      <th className="text-right p-3 text-sm font-medium">In-Store</th>
+                      <th className="text-right p-3 text-sm font-medium">Delivery</th>
+                      <th className="text-center p-3 text-sm font-medium">Stock</th>
+                      <th className="text-center p-3 text-sm font-medium">Active</th>
+                      <th className="text-center p-3 text-sm font-medium">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {group.products.map((product, index) => (
+                      <tr 
+                        key={product.id} 
+                        className={`border-b last:border-b-0 hover:bg-secondary/30 ${reorderMode ? 'cursor-move' : ''} ${draggedProduct === product.id ? 'opacity-50 bg-blue-100' : ''}`}
+                        draggable={reorderMode}
+                        onDragStart={(e) => reorderMode && handleDragStart(e, product.id)}
+                        onDragOver={handleDragOver}
+                        onDrop={(e) => reorderMode && handleDrop(e, product.id)}
+                        onDragEnd={() => setDraggedProduct(null)}
+                      >
+                        {reorderMode && (
+                          <td className="p-3 text-center text-muted-foreground">
+                            <span className="text-xs font-bold">{index + 1}</span>
+                          </td>
+                        )}
+                        <td className="p-3">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded bg-secondary overflow-hidden flex-shrink-0">
+                              {product.imageUrl ? (
+                                <img src={product.imageUrl} alt="" className="w-full h-full object-cover" />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center">
+                                  <ImageIcon className="w-4 h-4 text-muted-foreground" />
+                                </div>
+                              )}
                             </div>
-                          )}
-                        </div>
-                        <div>
-                          <p className="font-medium">{product.name}</p>
-                          {product.chineseName && (
-                            <p className="text-xs text-muted-foreground">{product.chineseName}</p>
-                          )}
-                        </div>
-                      </div>
-                    </td>
-                    <td className="p-3 text-sm text-muted-foreground">
-                      {cat?.name} / {sub?.name}
-                    </td>
-                    <td className="p-3 text-right">
-                      {product.instorePrice ? formatPrice(product.instorePrice) : '-'}
-                    </td>
-                    <td className="p-3 text-right">
-                      {product.deliveryPrice ? formatPrice(product.deliveryPrice) : '-'}
-                    </td>
-                    <td className="p-3 text-center">
-                      <Switch
-                        checked={product.isInStock}
-                        onCheckedChange={() => toggleStock(product.id, product.isInStock)}
-                      />
-                    </td>
-                    <td className="p-3 text-center">
-                      <Switch
-                        checked={product.isActive}
-                        onCheckedChange={() => toggleActive(product.id, product.isActive)}
-                      />
-                    </td>
-                    <td className="p-3 text-center">
-                      <ProductEditDialog product={product} onUpdate={refetch} />
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      </Card>
+                            <div>
+                              <p className="font-medium">{product.name}</p>
+                              {product.chineseName && (
+                                <p className="text-xs text-muted-foreground">{product.chineseName}</p>
+                              )}
+                            </div>
+                          </div>
+                        </td>
+                        <td className="p-3 text-right text-sm">
+                          {product.instorePrice ? formatPrice(product.instorePrice) : '-'}
+                        </td>
+                        <td className="p-3 text-right text-sm">
+                          {product.deliveryPrice ? formatPrice(product.deliveryPrice) : '-'}
+                        </td>
+                        <td className="p-3 text-center">
+                          <Switch
+                            checked={product.isInStock}
+                            onCheckedChange={() => toggleStock(product.id, product.isInStock)}
+                          />
+                        </td>
+                        <td className="p-3 text-center">
+                          <Switch
+                            checked={product.isActive}
+                            onCheckedChange={() => toggleActive(product.id, product.isActive)}
+                          />
+                        </td>
+                        <td className="p-3 text-center">
+                          <ProductEditDialog product={product} onUpdate={refetch} />
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              )}
+            </Card>
+          );
+        })}
+      </div>
+
+      {/* Empty State */}
+      {Object.keys(groupedProducts).length === 0 && (
+        <Card className="p-8 text-center">
+          <p className="text-muted-foreground">No products found matching your search criteria.</p>
+        </Card>
+      )}
     </div>
   );
 }
