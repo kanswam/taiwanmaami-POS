@@ -23,7 +23,7 @@ export default function Home() {
   // Category cards with video backgrounds
   const menuCategories = [
     {
-      name: 'Bubble Tea / Coffee',
+      name: 'Iced Beverages',
       description: 'Authentic Taiwanese bubble tea & premium coffee',
       video: 'https://files.manuscdn.com/user_upload_by_module/session_file/114675165/ecZXiwJjoSwJdZrZ.mp4',
       href: '/category/bubble-tea-coffee',
