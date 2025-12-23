@@ -793,7 +793,7 @@ export const appRouter = router({
         let productsQuery = dbInstance.select().from(products).where(
           and(
             eq(products.isActive, true),
-            sql`(${products.instorePrice} IS NOT NULL AND ${products.instorePrice} > 0) OR (${products.deliveryPrice} IS NOT NULL AND ${products.deliveryPrice} > 0)`
+            sql`((${products.instorePrice} IS NOT NULL AND ${products.instorePrice} > 0) OR (${products.deliveryPrice} IS NOT NULL AND ${products.deliveryPrice} > 0))`
           )
         );
         
@@ -805,7 +805,7 @@ export const appRouter = router({
               and(
                 eq(products.isActive, true),
                 sql`${products.subcategoryId} IN (${sql.join(subIds.map(id => sql`${id}`), sql`, `)})`,
-                sql`(${products.instorePrice} IS NOT NULL AND ${products.instorePrice} > 0) OR (${products.deliveryPrice} IS NOT NULL AND ${products.deliveryPrice} > 0)`
+                sql`((${products.instorePrice} IS NOT NULL AND ${products.instorePrice} > 0) OR (${products.deliveryPrice} IS NOT NULL AND ${products.deliveryPrice} > 0))`
               )
             );
           }
@@ -814,7 +814,7 @@ export const appRouter = router({
             and(
               eq(products.isActive, true),
               eq(products.subcategoryId, input.subcategoryId),
-              sql`(${products.instorePrice} IS NOT NULL AND ${products.instorePrice} > 0) OR (${products.deliveryPrice} IS NOT NULL AND ${products.deliveryPrice} > 0)`
+              sql`((${products.instorePrice} IS NOT NULL AND ${products.instorePrice} > 0) OR (${products.deliveryPrice} IS NOT NULL AND ${products.deliveryPrice} > 0))`
             )
           );
         }

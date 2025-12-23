@@ -683,3 +683,10 @@
 - [ ] Make subcategories clickable to filter and show products
 - [ ] Test both features
 - [ ] Save checkpoint
+
+## Phase 50 - Fix Bulk Pricing Subcategory Filter Bug (Dec 23, 2025)
+
+- [ ] Fix subcategory filtering in bulk pricing preview (showing 26 instead of 6 for Fruit Mochi)
+- [ ] Ensure "By Subcategory" scope properly filters products
+- [ ] Test with Fruit Mochi subcategory (should show only 6 products)
+- [ ] Save checkpoint
