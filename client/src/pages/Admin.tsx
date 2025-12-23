@@ -64,7 +64,7 @@ export default function Admin() {
 
       <div className="container py-6">
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-8 mb-6">
+          <TabsList className="flex flex-wrap gap-1 w-full mb-6">
             <TabsTrigger value="products" className="gap-2">
               <Package className="w-4 h-4" />
               Products
@@ -80,6 +80,10 @@ export default function Admin() {
             <TabsTrigger value="discounts" className="gap-2">
               <Tag className="w-4 h-4" />
               Discounts
+            </TabsTrigger>
+            <TabsTrigger value="bulk-pricing" className="gap-2">
+              <RefreshCw className="w-4 h-4" />
+              Bulk Pricing
             </TabsTrigger>
             <TabsTrigger value="bulk-upload" className="gap-2">
               <Upload className="w-4 h-4" />
@@ -129,6 +133,10 @@ export default function Admin() {
             <SiteSettingsTab />
           </TabsContent>
 
+          <TabsContent value="bulk-pricing">
+            <BulkPricingTab />
+          </TabsContent>
+
           <TabsContent value="kot-reports">
             <KOTReportsTab />
           </TabsContent>
@@ -143,6 +151,8 @@ function ProductsTab() {
   const { data: menuData, refetch } = trpc.menu.getFullMenu.useQuery({ isDelivery: false });
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
+  const [draggedProduct, setDraggedProduct] = useState<number | null>(null);
+  const [reorderMode, setReorderMode] = useState(false);
 
   const updateProduct = trpc.admin.updateProduct.useMutation({
     onSuccess: () => {
@@ -152,10 +162,23 @@ function ProductsTab() {
     onError: (err) => toast.error(err.message),
   });
 
-  const filteredProducts = menuData?.products.filter(p => {
+  const updateProductOrder = trpc.admin.updateProductOrder.useMutation({
+    onSuccess: () => {
+      toast.success('Product order updated');
+      refetch();
+    },
+    onError: (err) => toast.error(err.message),
+  });
+
+  // Sort products by displayOrder when in reorder mode
+  const sortedProducts = menuData?.products
+    ? [...menuData.products].sort((a, b) => (a.displayOrder || 999) - (b.displayOrder || 999))
+    : [];
+
+  const filteredProducts = sortedProducts.filter(p => {
     if (selectedCategory !== 'all') {
-      const sub = menuData.subcategories.find(s => s.id === p.subcategoryId);
-      const cat = menuData.categories.find(c => c.id === sub?.categoryId);
+      const sub = menuData?.subcategories.find(s => s.id === p.subcategoryId);
+      const cat = menuData?.categories.find(c => c.id === sub?.categoryId);
       if (cat?.slug !== selectedCategory) return false;
     }
     if (searchQuery) {
@@ -170,6 +193,40 @@ function ProductsTab() {
 
   const toggleActive = (productId: number, currentStatus: boolean) => {
     updateProduct.mutate({ id: productId, isActive: !currentStatus });
+  };
+
+  const handleDragStart = (e: React.DragEvent, productId: number) => {
+    setDraggedProduct(productId);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  };
+
+  const handleDrop = (e: React.DragEvent, targetProductId: number) => {
+    e.preventDefault();
+    if (draggedProduct === null || draggedProduct === targetProductId) return;
+
+    const draggedIndex = filteredProducts.findIndex(p => p.id === draggedProduct);
+    const targetIndex = filteredProducts.findIndex(p => p.id === targetProductId);
+    
+    if (draggedIndex === -1 || targetIndex === -1) return;
+
+    // Create new order
+    const newOrder = [...filteredProducts];
+    const [removed] = newOrder.splice(draggedIndex, 1);
+    newOrder.splice(targetIndex, 0, removed);
+
+    // Update display orders
+    const productOrders = newOrder.map((p, idx) => ({
+      id: p.id,
+      displayOrder: idx + 1,
+    }));
+
+    updateProductOrder.mutate({ productOrders });
+    setDraggedProduct(null);
   };
 
   return (
@@ -195,13 +252,30 @@ function ProductsTab() {
             ))}
           </SelectContent>
         </Select>
+        <Button
+          variant={reorderMode ? 'default' : 'outline'}
+          size="sm"
+          onClick={() => setReorderMode(!reorderMode)}
+          className="gap-2"
+        >
+          <ChevronUp className="w-4 h-4" />
+          <ChevronDown className="w-4 h-4" />
+          {reorderMode ? 'Done Reordering' : 'Reorder Products'}
+        </Button>
       </div>
+
+      {reorderMode && (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm text-blue-800">
+          📌 <strong>Drag and drop</strong> products to reorder them. Changes are saved automatically.
+        </div>
+      )}
 
       <Card>
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead className="bg-secondary">
               <tr>
+                {reorderMode && <th className="w-12 p-3 text-sm font-medium">#</th>}
                 <th className="text-left p-3 text-sm font-medium">Product</th>
                 <th className="text-left p-3 text-sm font-medium">Category</th>
                 <th className="text-right p-3 text-sm font-medium">In-Store Price</th>
@@ -212,11 +286,26 @@ function ProductsTab() {
               </tr>
             </thead>
             <tbody>
-              {filteredProducts.map((product) => {
+              {filteredProducts.map((product, index) => {
                 const sub = menuData?.subcategories.find(s => s.id === product.subcategoryId);
                 const cat = menuData?.categories.find(c => c.id === sub?.categoryId);
                 return (
-                  <tr key={product.id} className="border-b hover:bg-secondary/50">
+                  <tr 
+                    key={product.id} 
+                    className={`border-b hover:bg-secondary/50 ${reorderMode ? 'cursor-move' : ''} ${draggedProduct === product.id ? 'opacity-50 bg-blue-100' : ''}`}
+                    draggable={reorderMode}
+                    onDragStart={(e) => reorderMode && handleDragStart(e, product.id)}
+                    onDragOver={handleDragOver}
+                    onDrop={(e) => reorderMode && handleDrop(e, product.id)}
+                    onDragEnd={() => setDraggedProduct(null)}
+                  >
+                    {reorderMode && (
+                      <td className="p-3 text-center text-muted-foreground">
+                        <div className="flex items-center justify-center gap-1">
+                          <span className="text-xs font-bold">{index + 1}</span>
+                        </div>
+                      </td>
+                    )}
                     <td className="p-3">
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded bg-secondary overflow-hidden">
@@ -1630,6 +1719,261 @@ function SiteSettingsTab() {
   );
 }
 
+// Bulk Pricing Tab Component
+function BulkPricingTab() {
+  const [scope, setScope] = useState<'all' | 'category' | 'subcategory'>('all');
+  const [categoryId, setCategoryId] = useState<number | undefined>();
+  const [subcategoryId, setSubcategoryId] = useState<number | undefined>();
+  const [priceType, setPriceType] = useState<'instore' | 'delivery' | 'both'>('both');
+  const [updateMethod, setUpdateMethod] = useState<'percentage_increase' | 'percentage_decrease' | 'fixed_increase' | 'fixed_decrease'>('percentage_increase');
+  const [value, setValue] = useState<number>(0);
+  const [showPreview, setShowPreview] = useState(false);
+  
+  const { data: categories } = trpc.menu.getCategories.useQuery();
+  const { data: subcategoriesData } = trpc.menu.getSubcategories.useQuery();
+  const utils = trpc.useUtils();
+  
+  const { data: preview, isLoading: previewLoading, refetch: refetchPreview } = trpc.admin.bulkPricePreview.useQuery(
+    {
+      scope,
+      categoryId,
+      subcategoryId,
+      priceType,
+      updateMethod,
+      value: updateMethod.includes('fixed') ? value * 100 : value, // Convert to paise for fixed amounts
+    },
+    { enabled: showPreview && value > 0 }
+  );
+  
+  const updateMutation = trpc.admin.bulkPriceUpdate.useMutation({
+    onSuccess: (data) => {
+      toast.success(`Successfully updated ${data.updatedCount} products`);
+      setShowPreview(false);
+      setValue(0);
+      utils.menu.getProducts.invalidate();
+    },
+    onError: (error) => {
+      toast.error(`Failed to update prices: ${error.message}`);
+    },
+  });
+  
+  const handlePreview = () => {
+    if (value <= 0) {
+      toast.error('Please enter a value greater than 0');
+      return;
+    }
+    setShowPreview(true);
+    refetchPreview();
+  };
+  
+  const handleApply = () => {
+    if (!preview?.products) return;
+    
+    const updates = preview.products.map(p => ({
+      id: p.id,
+      instorePrice: p.newInstorePrice,
+      deliveryPrice: p.newDeliveryPrice,
+    }));
+    
+    updateMutation.mutate({ updates });
+  };
+  
+  const filteredSubcategories = subcategoriesData?.filter(s => !categoryId || s.categoryId === categoryId) || [];
+  
+  return (
+    <div className="space-y-6">
+      <Card className="p-6">
+        <h2 className="text-xl font-bold mb-6">Bulk Price Update</h2>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+          {/* Scope Selection */}
+          <div>
+            <Label className="mb-2 block">Scope</Label>
+            <Select value={scope} onValueChange={(v: 'all' | 'category' | 'subcategory') => {
+              setScope(v);
+              setShowPreview(false);
+            }}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select scope" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Products</SelectItem>
+                <SelectItem value="category">By Category</SelectItem>
+                <SelectItem value="subcategory">By Subcategory</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
+          {/* Category Selection */}
+          {(scope === 'category' || scope === 'subcategory') && (
+            <div>
+              <Label className="mb-2 block">Category</Label>
+              <Select value={categoryId?.toString() || ''} onValueChange={(v) => {
+                setCategoryId(v ? Number(v) : undefined);
+                setSubcategoryId(undefined);
+                setShowPreview(false);
+              }}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select category" />
+                </SelectTrigger>
+                <SelectContent>
+                  {categories?.map(c => (
+                    <SelectItem key={c.id} value={c.id.toString()}>{c.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+          
+          {/* Subcategory Selection */}
+          {scope === 'subcategory' && categoryId && (
+            <div>
+              <Label className="mb-2 block">Subcategory</Label>
+              <Select value={subcategoryId?.toString() || ''} onValueChange={(v) => {
+                setSubcategoryId(v ? Number(v) : undefined);
+                setShowPreview(false);
+              }}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select subcategory" />
+                </SelectTrigger>
+                <SelectContent>
+                  {filteredSubcategories.map(s => (
+                    <SelectItem key={s.id} value={s.id.toString()}>{s.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+          
+          {/* Price Type */}
+          <div>
+            <Label className="mb-2 block">Price Type</Label>
+            <Select value={priceType} onValueChange={(v: 'instore' | 'delivery' | 'both') => {
+              setPriceType(v);
+              setShowPreview(false);
+            }}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select price type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="both">Both Prices</SelectItem>
+                <SelectItem value="instore">In-Store Only</SelectItem>
+                <SelectItem value="delivery">Delivery Only</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
+          {/* Update Method */}
+          <div>
+            <Label className="mb-2 block">Update Method</Label>
+            <Select value={updateMethod} onValueChange={(v: 'percentage_increase' | 'percentage_decrease' | 'fixed_increase' | 'fixed_decrease') => {
+              setUpdateMethod(v);
+              setShowPreview(false);
+            }}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select method" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="percentage_increase">Increase by %</SelectItem>
+                <SelectItem value="percentage_decrease">Decrease by %</SelectItem>
+                <SelectItem value="fixed_increase">Increase by ₹</SelectItem>
+                <SelectItem value="fixed_decrease">Decrease by ₹</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
+          {/* Value Input */}
+          <div>
+            <Label className="mb-2 block">
+              {updateMethod.includes('percentage') ? 'Percentage' : 'Amount (₹)'}
+            </Label>
+            <Input
+              type="number"
+              min="0"
+              step={updateMethod.includes('percentage') ? '0.5' : '5'}
+              value={value}
+              onChange={(e) => {
+                setValue(Number(e.target.value));
+                setShowPreview(false);
+              }}
+              placeholder={updateMethod.includes('percentage') ? 'e.g., 10 for 10%' : 'e.g., 50 for ₹50'}
+            />
+          </div>
+        </div>
+        
+        <div className="flex gap-4">
+          <Button onClick={handlePreview} disabled={value <= 0 || previewLoading}>
+            {previewLoading ? 'Loading...' : 'Preview Changes'}
+          </Button>
+          {showPreview && preview && preview.products.length > 0 && (
+            <Button 
+              onClick={handleApply} 
+              disabled={updateMutation.isPending}
+              className="bg-green-600 hover:bg-green-700"
+            >
+              {updateMutation.isPending ? 'Applying...' : `Apply to ${preview.totalCount} Products`}
+            </Button>
+          )}
+        </div>
+      </Card>
+      
+      {/* Preview Table */}
+      {showPreview && preview && (
+        <Card className="p-6">
+          <h3 className="text-lg font-bold mb-4">Preview ({preview.totalCount} products)</h3>
+          {preview.products.length === 0 ? (
+            <p className="text-muted-foreground">No products match the selected criteria</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b">
+                    <th className="text-left py-2 px-3">Product</th>
+                    <th className="text-right py-2 px-3">Old In-Store</th>
+                    <th className="text-right py-2 px-3">New In-Store</th>
+                    <th className="text-right py-2 px-3">Old Delivery</th>
+                    <th className="text-right py-2 px-3">New Delivery</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {preview.products.slice(0, 50).map(p => (
+                    <tr key={p.id} className="border-b hover:bg-muted/50">
+                      <td className="py-2 px-3">{p.name}</td>
+                      <td className="text-right py-2 px-3">
+                        {p.oldInstorePrice ? formatPrice(p.oldInstorePrice) : '-'}
+                      </td>
+                      <td className="text-right py-2 px-3 font-medium">
+                        {p.newInstorePrice ? (
+                          <span className={p.newInstorePrice !== p.oldInstorePrice ? 'text-green-600' : ''}>
+                            {formatPrice(p.newInstorePrice)}
+                          </span>
+                        ) : '-'}
+                      </td>
+                      <td className="text-right py-2 px-3">
+                        {p.oldDeliveryPrice ? formatPrice(p.oldDeliveryPrice) : '-'}
+                      </td>
+                      <td className="text-right py-2 px-3 font-medium">
+                        {p.newDeliveryPrice ? (
+                          <span className={p.newDeliveryPrice !== p.oldDeliveryPrice ? 'text-green-600' : ''}>
+                            {formatPrice(p.newDeliveryPrice)}
+                          </span>
+                        ) : '-'}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              {preview.products.length > 50 && (
+                <p className="text-sm text-muted-foreground mt-2">Showing first 50 of {preview.products.length} products</p>
+              )}
+            </div>
+          )}
+        </Card>
+      )}
+    </div>
+  );
+}
+
 // KOT Reports Tab Component
 function KOTReportsTab() {
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
@@ -1685,30 +2029,30 @@ function KOTReportsTab() {
               <Card className="p-4 bg-green-50 border-green-200">
                 <div className="text-sm text-green-600 font-medium">Pickup Orders</div>
                 <div className="text-3xl font-bold text-green-900 mt-2">
-                  {summary.orderTypeBreakdown.PICKUP || 0}
+                  {(summary.orderTypeBreakdown as Record<string, number>)['PICKUP'] || 0}
                 </div>
                 <div className="text-xs text-green-600 mt-1">
-                  {summary.totalKots > 0 ? Math.round(((summary.orderTypeBreakdown.PICKUP || 0) / summary.totalKots) * 100) : 0}% of total
+                  {summary.totalKots > 0 ? Math.round((((summary.orderTypeBreakdown as Record<string, number>)['PICKUP'] || 0) / summary.totalKots) * 100) : 0}% of total
                 </div>
               </Card>
 
               <Card className="p-4 bg-purple-50 border-purple-200">
                 <div className="text-sm text-purple-600 font-medium">Delivery Orders</div>
                 <div className="text-3xl font-bold text-purple-900 mt-2">
-                  {summary.orderTypeBreakdown.DELIVERY || 0}
+                  {(summary.orderTypeBreakdown as Record<string, number>)['DELIVERY'] || 0}
                 </div>
                 <div className="text-xs text-purple-600 mt-1">
-                  {summary.totalKots > 0 ? Math.round(((summary.orderTypeBreakdown.DELIVERY || 0) / summary.totalKots) * 100) : 0}% of total
+                  {summary.totalKots > 0 ? Math.round((((summary.orderTypeBreakdown as Record<string, number>)['DELIVERY'] || 0) / summary.totalKots) * 100) : 0}% of total
                 </div>
               </Card>
 
               <Card className="p-4 bg-amber-50 border-amber-200">
                 <div className="text-sm text-amber-600 font-medium">Dine-In Orders</div>
                 <div className="text-3xl font-bold text-amber-900 mt-2">
-                  {summary.orderTypeBreakdown.INSTORE || 0}
+                  {(summary.orderTypeBreakdown as Record<string, number>)['INSTORE'] || 0}
                 </div>
                 <div className="text-xs text-amber-600 mt-1">
-                  {summary.totalKots > 0 ? Math.round(((summary.orderTypeBreakdown.INSTORE || 0) / summary.totalKots) * 100) : 0}% of total
+                  {summary.totalKots > 0 ? Math.round((((summary.orderTypeBreakdown as Record<string, number>)['INSTORE'] || 0) / summary.totalKots) * 100) : 0}% of total
                 </div>
               </Card>
             </div>
@@ -1808,7 +2152,7 @@ function KOTReportsTab() {
                       {expandedOrders.has(order.kotId) && (
                         <div className="p-4 bg-background border-t">
                           <div className="space-y-2">
-                            {order.items.map((item, idx) => (
+                            {order.items.map((item: { quantity: number; name: string; customizations?: string }, idx: number) => (
                               <div key={idx} className="flex items-start gap-3 p-2 bg-muted/20 rounded">
                                 <div className="font-bold text-primary">{item.quantity}x</div>
                                 <div className="flex-1">
@@ -1883,7 +2227,7 @@ function KOTReportsTab() {
                   {summary.topItems[0] && (
                     <p>• "<strong>{summary.topItems[0].productName}</strong>" was the most popular item with {summary.topItems[0].quantity} orders - ensure adequate inventory</p>
                   )}
-                  <p>• Order type distribution: {summary.orderTypeBreakdown.PICKUP || 0} Pickup, {summary.orderTypeBreakdown.DELIVERY || 0} Delivery, {summary.orderTypeBreakdown.INSTORE || 0} Dine-in</p>
+                  <p>• Order type distribution: {(summary.orderTypeBreakdown as Record<string, number>)['PICKUP'] || 0} Pickup, {(summary.orderTypeBreakdown as Record<string, number>)['DELIVERY'] || 0} Delivery, {(summary.orderTypeBreakdown as Record<string, number>)['INSTORE'] || 0} Dine-in</p>
                   <p>• Use this data for inventory planning, staff scheduling, and operational optimization</p>
                 </div>
               </Card>

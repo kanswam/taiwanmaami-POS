@@ -661,3 +661,16 @@
 - [x] Test stamp calculation with ₹935 (should give 2 stamps, not 3)
 - [x] Test KOT report displays data correctly
 - [ ] Save checkpoint
+
+## Phase 48 - Admin Enhancements: Bulk Pricing & Product Ordering (Dec 23, 2025)
+
+- [x] Create mass price update tool in Admin panel
+- [x] Add category/subcategory filter for bulk updates
+- [x] Support percentage and fixed amount changes
+- [x] Round prices to nearest ₹5
+- [x] Add preview before applying changes
+- [x] Implement drag-and-drop product ordering
+- [x] Order products within each category
+- [x] Grant Theresa full admin access
+- [x] Test all features
+- [ ] Save checkpoint

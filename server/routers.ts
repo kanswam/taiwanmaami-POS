@@ -712,6 +712,128 @@ export const appRouter = router({
         return { success: true };
       }),
 
+    // Bulk price update with preview
+    bulkPricePreview: adminProcedure
+      .input(z.object({
+        scope: z.enum(['all', 'category', 'subcategory']),
+        categoryId: z.number().optional(),
+        subcategoryId: z.number().optional(),
+        priceType: z.enum(['instore', 'delivery', 'both']),
+        updateMethod: z.enum(['percentage_increase', 'percentage_decrease', 'fixed_increase', 'fixed_decrease']),
+        value: z.number(), // percentage (e.g., 10 for 10%) or fixed amount in paise
+      }))
+      .query(async ({ input }) => {
+        const dbInstance = await getDb();
+        if (!dbInstance) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
+        
+        // Build query based on scope
+        let query = dbInstance.select().from(products).where(eq(products.isActive, true));
+        
+        if (input.scope === 'category' && input.categoryId) {
+          const subs = await dbInstance.select({ id: subcategories.id }).from(subcategories).where(eq(subcategories.categoryId, input.categoryId));
+          const subIds = subs.map(s => s.id);
+          if (subIds.length > 0) {
+            query = dbInstance.select().from(products).where(and(eq(products.isActive, true), sql`${products.subcategoryId} IN (${sql.join(subIds.map(id => sql`${id}`), sql`, `)})`));
+          }
+        } else if (input.scope === 'subcategory' && input.subcategoryId) {
+          query = dbInstance.select().from(products).where(and(eq(products.isActive, true), eq(products.subcategoryId, input.subcategoryId)));
+        }
+        
+        const allProducts = await query;
+        
+        // Round to nearest 5 rupees (500 paise)
+        const roundToNearest5 = (paise: number) => Math.round(paise / 500) * 500;
+        
+        // Calculate new prices
+        const preview = allProducts.map(p => {
+          let newInstorePrice = p.instorePrice;
+          let newDeliveryPrice = p.deliveryPrice;
+          
+          const calculateNewPrice = (currentPrice: number | null) => {
+            if (!currentPrice) return null;
+            let newPrice = currentPrice;
+            switch (input.updateMethod) {
+              case 'percentage_increase':
+                newPrice = currentPrice * (1 + input.value / 100);
+                break;
+              case 'percentage_decrease':
+                newPrice = currentPrice * (1 - input.value / 100);
+                break;
+              case 'fixed_increase':
+                newPrice = currentPrice + input.value;
+                break;
+              case 'fixed_decrease':
+                newPrice = currentPrice - input.value;
+                break;
+            }
+            return roundToNearest5(Math.max(0, newPrice));
+          };
+          
+          if (input.priceType === 'instore' || input.priceType === 'both') {
+            newInstorePrice = calculateNewPrice(p.instorePrice);
+          }
+          if (input.priceType === 'delivery' || input.priceType === 'both') {
+            newDeliveryPrice = calculateNewPrice(p.deliveryPrice);
+          }
+          
+          return {
+            id: p.id,
+            name: p.name,
+            oldInstorePrice: p.instorePrice,
+            newInstorePrice,
+            oldDeliveryPrice: p.deliveryPrice,
+            newDeliveryPrice,
+          };
+        });
+        
+        return { products: preview, totalCount: preview.length };
+      }),
+
+    // Apply bulk price update
+    bulkPriceUpdate: adminProcedure
+      .input(z.object({
+        updates: z.array(z.object({
+          id: z.number(),
+          instorePrice: z.number().nullable().optional(),
+          deliveryPrice: z.number().nullable().optional(),
+        })),
+      }))
+      .mutation(async ({ input }) => {
+        const dbInstance = await getDb();
+        if (!dbInstance) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
+        
+        for (const update of input.updates) {
+          const data: Record<string, number | null> = {};
+          if (update.instorePrice !== undefined) data.instorePrice = update.instorePrice;
+          if (update.deliveryPrice !== undefined) data.deliveryPrice = update.deliveryPrice;
+          
+          if (Object.keys(data).length > 0) {
+            await dbInstance.update(products).set(data).where(eq(products.id, update.id));
+          }
+        }
+        
+        return { success: true, updatedCount: input.updates.length };
+      }),
+
+    // Update product display order (for drag-and-drop)
+    updateProductOrder: adminProcedure
+      .input(z.object({
+        productOrders: z.array(z.object({
+          id: z.number(),
+          displayOrder: z.number(),
+        })),
+      }))
+      .mutation(async ({ input }) => {
+        const dbInstance = await getDb();
+        if (!dbInstance) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
+        
+        for (const item of input.productOrders) {
+          await dbInstance.update(products).set({ displayOrder: item.displayOrder }).where(eq(products.id, item.id));
+        }
+        
+        return { success: true, updatedCount: input.productOrders.length };
+      }),
+
     // Bulk update product images
     bulkUpdateImages: adminProcedure
       .input(z.array(z.object({
