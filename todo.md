@@ -822,3 +822,8 @@
 - [x] Add CSV export button to Audit Log tab
 - [x] Export filtered audit logs to CSV file
 - [x] Include all relevant fields in export
+
+
+## Bug Fix - Homepage Category Navigation (Dec 24, 2025)
+- [x] Fix homepage category cards leading to 404 page
+- [x] Navigate to /menu with category pre-selected instead of /category/{slug}

@@ -20,31 +20,32 @@ export default function Home() {
     if (savedDesc) setHeroDescription(savedDesc);
   }, []);
 
-  // Category cards with video backgrounds
+  // Category cards with video backgrounds - links to /menu with category filter
+  // Using actual database slugs: bubble-tea, coffee, mochis, food
   const menuCategories = [
     {
       name: 'Iced Beverages',
       description: 'Authentic Taiwanese bubble tea & premium coffee',
       video: 'https://files.manuscdn.com/user_upload_by_module/session_file/114675165/ecZXiwJjoSwJdZrZ.mp4',
-      href: '/category/bubble-tea-coffee',
+      href: '/menu?category=bubble-tea',
     },
     {
       name: 'Hot Beverages',
       description: 'Warm & comforting traditional drinks',
       video: 'https://files.manuscdn.com/user_upload_by_module/session_file/114675165/OXrITxhITgHnggSH.mp4',
-      href: '/category/hot-beverages',
+      href: '/menu?category=coffee',
     },
     {
       name: 'Asian Rice-Noodles-Bread',
       description: 'Savory Asian street food favorites',
       video: 'https://files.manuscdn.com/user_upload_by_module/session_file/114675165/bNweCHEHeGisBBOW.mp4',
-      href: '/category/asian-food',
+      href: '/menu?category=food',
     },
     {
       name: 'Asian Sweet Bites',
       description: 'Delicious mochis & desserts',
       video: 'https://files.manuscdn.com/user_upload_by_module/session_file/114675165/SidroKXBRlTSURyD.mp4',
-      href: '/category/sweet-bites',
+      href: '/menu?category=mochis',
     },
   ];
 
