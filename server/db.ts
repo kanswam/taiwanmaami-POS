@@ -121,12 +121,17 @@ export async function getProductBySlug(slug: string) {
   return result[0];
 }
 
-export async function getProductsWithSubcategory(categoryId?: number, isDelivery = false) {
+export async function getProductsWithSubcategory(categoryId?: number, isDelivery = false, includeUnavailable = false) {
   const db = await getDb();
   if (!db) return [];
   
   const availabilityField = isDelivery ? products.availableDelivery : products.availableInstore;
-  let conditions = [eq(products.isActive, true), eq(availabilityField, true), eq(products.isInStock, true)];
+  
+  // If includeUnavailable is true, only filter by availability channel (not by isActive or isInStock)
+  // This allows showing inactive/out-of-stock items with visual indicators
+  let conditions = includeUnavailable 
+    ? [eq(availabilityField, true)]
+    : [eq(products.isActive, true), eq(availabilityField, true), eq(products.isInStock, true)];
   
   const result = await db.select({
     product: products,

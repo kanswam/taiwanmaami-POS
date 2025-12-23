@@ -157,6 +157,7 @@ export default function Admin() {
 
 // Products Tab
 function ProductsTab() {
+  const utils = trpc.useUtils();
   const { data: menuData, refetch } = trpc.menu.getFullMenu.useQuery({ isDelivery: false });
   const { data: allProductsData, refetch: refetchAll } = trpc.admin.getAllProducts.useQuery();
   const [searchQuery, setSearchQuery] = useState('');
@@ -191,6 +192,9 @@ function ProductsTab() {
     onSuccess: () => {
       toast.success('Product updated');
       refetch();
+      refetchAll();
+      // Invalidate menu cache so customer website reflects changes immediately
+      utils.menu.getFullMenu.invalidate();
     },
     onError: (err) => toast.error(err.message),
   });
@@ -208,6 +212,8 @@ function ProductsTab() {
       toast.success('Product reactivated');
       refetch();
       refetchAll();
+      // Invalidate menu cache so customer website reflects changes immediately
+      utils.menu.getFullMenu.invalidate();
     },
     onError: (err) => toast.error(err.message),
   });
@@ -354,6 +360,7 @@ function ProductsTab() {
             Show Inactive ({allProductsData?.filter(p => !p.isActive).length || 0})
           </Label>
         </div>
+        <CreateProductDialog subcategories={menuData?.subcategories || []} categories={menuData?.categories || []} onSuccess={refetch} />
       </div>
 
       {reorderMode && (
@@ -2566,6 +2573,38 @@ function AuditTab() {
     return labels[action] || action;
   };
 
+  // Export audit logs to CSV
+  const exportToCSV = () => {
+    if (!auditLogs?.logs || auditLogs.logs.length === 0) {
+      toast.error('No audit logs to export');
+      return;
+    }
+
+    const headers = ['Date', 'Product', 'Action', 'Field Changed', 'Old Value', 'New Value', 'Changed By'];
+    const rows = auditLogs.logs.map(log => [
+      formatDate(log.createdAt),
+      log.productName,
+      getActionLabel(log.action),
+      log.fieldChanged || '-',
+      log.oldValue?.replace(/"/g, '') || '-',
+      log.newValue?.replace(/"/g, '') || '-',
+      log.userName || 'System',
+    ]);
+
+    const csvContent = [
+      headers.join(','),
+      ...rows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `audit-log-${dateRange.start}-to-${dateRange.end}.csv`;
+    link.click();
+    URL.revokeObjectURL(link.href);
+    toast.success('Audit log exported successfully');
+  };
+
   return (
     <div className="space-y-6">
       {/* Summary Cards */}
@@ -2644,6 +2683,18 @@ function AuditTab() {
               onChange={(e) => setDateRange(prev => ({ ...prev, end: e.target.value }))}
               className="w-40"
             />
+          </div>
+
+          <div className="ml-auto">
+            <Button
+              variant="outline"
+              onClick={exportToCSV}
+              disabled={!auditLogs?.logs || auditLogs.logs.length === 0}
+              className="gap-2"
+            >
+              <Upload className="w-4 h-4" />
+              Export CSV
+            </Button>
           </div>
         </div>
       </Card>
@@ -2780,5 +2831,339 @@ function AuditTab() {
         </DialogContent>
       </Dialog>
     </div>
+  );
+}
+
+
+// Create Product Dialog
+function CreateProductDialog({ 
+  subcategories, 
+  categories,
+  onSuccess 
+}: { 
+  subcategories: any[]; 
+  categories: any[];
+  onSuccess: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [formData, setFormData] = useState({
+    name: '',
+    chineseName: '',
+    slug: '',
+    description: '',
+    subcategoryId: 0,
+    instorePrice: 0,
+    deliveryPrice: 0,
+    isVegetarian: true,
+    isVegan: false,
+    containsEgg: false,
+  });
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+
+  const utils = trpc.useUtils();
+
+  const createProduct = trpc.admin.createProduct.useMutation({
+    onSuccess: (data) => {
+      toast.success('Product created successfully!');
+      // Invalidate menu cache so changes reflect immediately
+      utils.menu.getFullMenu.invalidate();
+      onSuccess();
+      if (imagePreview && data.id) {
+        // Upload image after product is created
+        uploadImage.mutate({
+          productId: data.id,
+          imageBase64: imagePreview,
+          mimeType: 'image/jpeg',
+          fileName: `${formData.slug}.jpg`,
+        });
+      }
+      setOpen(false);
+      resetForm();
+    },
+    onError: (err) => toast.error(err.message),
+  });
+
+  const uploadImage = trpc.admin.uploadProductImage.useMutation({
+    onSuccess: () => {
+      toast.success('Image uploaded');
+      onSuccess();
+    },
+    onError: (err) => toast.error(`Image upload failed: ${err.message}`),
+  });
+
+  const resetForm = () => {
+    setFormData({
+      name: '',
+      chineseName: '',
+      slug: '',
+      description: '',
+      subcategoryId: 0,
+      instorePrice: 0,
+      deliveryPrice: 0,
+      isVegetarian: true,
+      isVegan: false,
+      containsEgg: false,
+    });
+    setImagePreview(null);
+  };
+
+  const generateSlug = (name: string) => {
+    return name
+      .toLowerCase()
+      .replace(/[^a-z0-9\s-]/g, '')
+      .replace(/\s+/g, '-')
+      .replace(/-+/g, '-')
+      .trim();
+  };
+
+  const handleNameChange = (name: string) => {
+    setFormData(prev => ({
+      ...prev,
+      name,
+      slug: generateSlug(name),
+    }));
+  };
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    if (file.size > 50 * 1024 * 1024) {
+      toast.error('Image must be less than 50MB');
+      return;
+    }
+    
+    setUploading(true);
+    const reader = new FileReader();
+    reader.onload = () => {
+      setImagePreview(reader.result as string);
+      setUploading(false);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleSubmit = () => {
+    if (!formData.name || !formData.subcategoryId) {
+      toast.error('Please fill in required fields (Name and Subcategory)');
+      return;
+    }
+    
+    createProduct.mutate({
+      name: formData.name,
+      chineseName: formData.chineseName || undefined,
+      slug: formData.slug || generateSlug(formData.name),
+      description: formData.description || undefined,
+      subcategoryId: formData.subcategoryId,
+      instorePrice: formData.instorePrice * 100, // Convert to paise
+      deliveryPrice: formData.deliveryPrice * 100, // Convert to paise
+      isVegetarian: formData.isVegetarian,
+      isVegan: formData.isVegan,
+      containsEgg: formData.containsEgg,
+    });
+  };
+
+  // Group subcategories by category for easier selection
+  const groupedSubcategories = categories.map(cat => ({
+    category: cat,
+    subcategories: subcategories.filter(sub => sub.categoryId === cat.id),
+  }));
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button className="gap-2 bg-green-600 hover:bg-green-700">
+          <Plus className="w-4 h-4" />
+          New Product
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Plus className="w-5 h-5" />
+            Create New Product
+          </DialogTitle>
+        </DialogHeader>
+
+        <div className="space-y-4 py-4">
+          {/* Image Upload */}
+          <div className="flex items-start gap-4">
+            <div className="w-32 h-32 border-2 border-dashed rounded-lg overflow-hidden flex items-center justify-center bg-secondary/20">
+              {imagePreview ? (
+                <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
+              ) : (
+                <div className="text-center text-muted-foreground">
+                  <ImageIcon className="w-8 h-8 mx-auto mb-1" />
+                  <span className="text-xs">No image</span>
+                </div>
+              )}
+            </div>
+            <div className="flex-1">
+              <Label>Product Image</Label>
+              <Input
+                type="file"
+                accept="image/*"
+                onChange={handleImageChange}
+                className="mt-1"
+                disabled={uploading}
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Recommended: Square image, max 50MB
+              </p>
+            </div>
+          </div>
+
+          {/* Name */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label>Product Name *</Label>
+              <Input
+                value={formData.name}
+                onChange={(e) => handleNameChange(e.target.value)}
+                placeholder="e.g., Taro Milk Tea"
+                className="mt-1"
+              />
+            </div>
+            <div>
+              <Label>Chinese Name</Label>
+              <Input
+                value={formData.chineseName}
+                onChange={(e) => setFormData(prev => ({ ...prev, chineseName: e.target.value }))}
+                placeholder="e.g., 芋頭奶茶"
+                className="mt-1"
+              />
+            </div>
+          </div>
+
+          {/* Slug */}
+          <div>
+            <Label>URL Slug</Label>
+            <Input
+              value={formData.slug}
+              onChange={(e) => setFormData(prev => ({ ...prev, slug: e.target.value }))}
+              placeholder="auto-generated-from-name"
+              className="mt-1"
+            />
+            <p className="text-xs text-muted-foreground mt-1">
+              Auto-generated from name. Used in URLs.
+            </p>
+          </div>
+
+          {/* Category/Subcategory */}
+          <div>
+            <Label>Subcategory *</Label>
+            <Select 
+              value={formData.subcategoryId ? String(formData.subcategoryId) : ''} 
+              onValueChange={(v) => setFormData(prev => ({ ...prev, subcategoryId: parseInt(v) }))}
+            >
+              <SelectTrigger className="mt-1">
+                <SelectValue placeholder="Select subcategory" />
+              </SelectTrigger>
+              <SelectContent>
+                {groupedSubcategories.map(group => (
+                  <div key={group.category.id}>
+                    <div className="px-2 py-1 text-xs font-semibold text-muted-foreground bg-secondary/50">
+                      {group.category.name}
+                    </div>
+                    {group.subcategories.map(sub => (
+                      <SelectItem key={sub.id} value={String(sub.id)}>
+                        {sub.name}
+                      </SelectItem>
+                    ))}
+                  </div>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Description */}
+          <div>
+            <Label>Description</Label>
+            <Textarea
+              value={formData.description}
+              onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+              placeholder="Brief description of the product..."
+              className="mt-1"
+              rows={2}
+            />
+          </div>
+
+          {/* Pricing */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label>In-Store Price (₹)</Label>
+              <Input
+                type="number"
+                value={formData.instorePrice || ''}
+                onChange={(e) => setFormData(prev => ({ ...prev, instorePrice: parseFloat(e.target.value) || 0 }))}
+                placeholder="0"
+                className="mt-1"
+              />
+            </div>
+            <div>
+              <Label>Delivery Price (₹)</Label>
+              <Input
+                type="number"
+                value={formData.deliveryPrice || ''}
+                onChange={(e) => setFormData(prev => ({ ...prev, deliveryPrice: parseFloat(e.target.value) || 0 }))}
+                placeholder="0"
+                className="mt-1"
+              />
+            </div>
+          </div>
+
+          {/* Dietary Options */}
+          <div className="flex flex-wrap gap-4">
+            <div className="flex items-center gap-2">
+              <Switch
+                checked={formData.isVegetarian}
+                onCheckedChange={(v) => setFormData(prev => ({ ...prev, isVegetarian: v }))}
+                id="create-vegetarian"
+              />
+              <Label htmlFor="create-vegetarian" className="cursor-pointer">Vegetarian</Label>
+            </div>
+            <div className="flex items-center gap-2">
+              <Switch
+                checked={formData.isVegan}
+                onCheckedChange={(v) => setFormData(prev => ({ ...prev, isVegan: v }))}
+                id="create-vegan"
+              />
+              <Label htmlFor="create-vegan" className="cursor-pointer">Vegan</Label>
+            </div>
+            <div className="flex items-center gap-2">
+              <Switch
+                checked={formData.containsEgg}
+                onCheckedChange={(v) => setFormData(prev => ({ ...prev, containsEgg: v }))}
+                id="create-egg"
+              />
+              <Label htmlFor="create-egg" className="cursor-pointer">Contains Egg</Label>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex justify-end gap-2 pt-4 border-t">
+          <Button variant="outline" onClick={() => setOpen(false)}>
+            Cancel
+          </Button>
+          <Button 
+            onClick={handleSubmit} 
+            disabled={createProduct.isPending || !formData.name || !formData.subcategoryId}
+            className="gap-2"
+          >
+            {createProduct.isPending ? (
+              <>
+                <RefreshCw className="w-4 h-4 animate-spin" />
+                Creating...
+              </>
+            ) : (
+              <>
+                <Plus className="w-4 h-4" />
+                Create Product
+              </>
+            )}
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }

@@ -18,6 +18,8 @@ interface ProductCardProps {
     isVegetarian?: boolean;
     isVegan?: boolean;
     containsEgg?: boolean;
+    isActive?: boolean;
+    isInStock?: boolean;
   };
   subcategory: {
     id: number;
@@ -45,6 +47,11 @@ interface ProductCardProps {
 
 export function ProductCard({ product, subcategory, category, isDelivery = false }: ProductCardProps) {
   const [showModal, setShowModal] = useState(false);
+
+  // Check availability status
+  const isOutOfStock = product.isInStock === false;
+  const isInactive = product.isActive === false;
+  const isUnavailable = isOutOfStock || isInactive;
 
   // Check if this is a mochi product (for delivery/pickup, mochis are sold as set of 2)
   const isMochiProduct = subcategory.name.toLowerCase().includes('mochi');
@@ -85,8 +92,8 @@ export function ProductCard({ product, subcategory, category, isDelivery = false
   return (
     <>
       <Card 
-        className="product-card cursor-pointer group"
-        onClick={() => setShowModal(true)}
+        className={`product-card group ${isUnavailable ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`}
+        onClick={() => !isUnavailable && setShowModal(true)}
       >
         {/* Image section - 60% height */}
         <div className="relative h-3/5 overflow-hidden bg-secondary">
@@ -120,10 +127,22 @@ export function ProductCard({ product, subcategory, category, isDelivery = false
             )}
           </div>
           {/* Mochi set indicator for delivery/pickup */}
-          {isDelivery && isMochiProduct && (
+          {isDelivery && isMochiProduct && !isUnavailable && (
             <div className="absolute top-2 right-2">
               <span className="bg-primary text-primary-foreground text-xs font-semibold px-2 py-1 rounded-full shadow-sm">
                 Set of 2
+              </span>
+            </div>
+          )}
+          {/* Out of Stock / Inactive overlay */}
+          {isUnavailable && (
+            <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+              <span className={`px-3 py-1.5 rounded-full text-sm font-bold shadow-lg ${
+                isInactive 
+                  ? 'bg-gray-600 text-white' 
+                  : 'bg-red-600 text-white'
+              }`}>
+                {isInactive ? 'Unavailable' : 'Out of Stock'}
               </span>
             </div>
           )}
@@ -142,21 +161,25 @@ export function ProductCard({ product, subcategory, category, isDelivery = false
 
           <div className="flex items-center justify-between mt-2">
             <div>
-              <span className="price-tag">{formatPrice(displayPrice)}</span>
-              {hasCustomization && (
+              <span className={`price-tag ${isUnavailable ? 'line-through text-muted-foreground' : ''}`}>
+                {formatPrice(displayPrice)}
+              </span>
+              {hasCustomization && !isUnavailable && (
                 <span className="text-xs text-muted-foreground ml-1">onwards</span>
               )}
             </div>
-            <Button
-              size="sm"
-              className="rounded-full w-8 h-8 p-0"
-              onClick={(e) => {
-                e.stopPropagation();
-                setShowModal(true);
-              }}
-            >
-              <Plus className="w-4 h-4" />
-            </Button>
+            {!isUnavailable && (
+              <Button
+                size="sm"
+                className="rounded-full w-8 h-8 p-0"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowModal(true);
+                }}
+              >
+                <Plus className="w-4 h-4" />
+              </Button>
+            )}
           </div>
         </div>
       </Card>

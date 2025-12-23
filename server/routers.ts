@@ -82,19 +82,20 @@ export const appRouter = router({
     }),
 
     getFullMenu: publicProcedure
-      .input(z.object({ isDelivery: z.boolean().default(false) }))
+      .input(z.object({ isDelivery: z.boolean().default(false), includeUnavailable: z.boolean().default(true) }))
       .query(async ({ input }) => {
         const dbInstance = await getDb();
         if (!dbInstance) return { categories: [], subcategories: [], products: [], addons: [] };
 
         const cats = await db.getCategories();
         const subs = await db.getSubcategories();
+        
+        // Include all products for the channel, showing inactive/out-of-stock with visual indicators
+        // Only filter by availability channel (delivery vs instore)
         const prods = await dbInstance!.select().from(products)
-          .where(and(
-            eq(products.isActive, true),
-            eq(products.isInStock, true),
+          .where(
             input.isDelivery ? eq(products.availableDelivery, true) : eq(products.availableInstore, true)
-          ))
+          )
           .orderBy(asc(products.displayOrder));
         const adds = await db.getAddons();
 

@@ -796,3 +796,29 @@
 - [x] Write vitest tests for audit.getSummary
 - [x] Write vitest tests for audit.getProductHistory
 - [x] Write vitest tests for admin.getAllProducts
+
+
+## Phase 31 - Product Management Enhancements (Dec 23, 2025)
+
+### Create New Product
+- [x] Add "Create New Product" button to Admin Products tab
+- [x] Create product creation dialog with all fields
+- [x] Include category/subcategory selection
+- [x] Include image upload capability
+
+### Cache Invalidation Fix
+- [x] Add menu.getFullMenu.invalidate() to updateProduct mutation
+- [x] Add menu.getFullMenu.invalidate() to createProduct mutation
+- [x] Add menu.getFullMenu.invalidate() to deleteProduct mutation
+- [x] Add menu.getFullMenu.invalidate() to reactivateProduct mutation
+
+### Show Out-of-Stock/Inactive Items
+- [x] Show out-of-stock items on menu with "Out of Stock" badge
+- [x] Show inactive items on menu with "Unavailable" badge (greyed out)
+- [x] Disable add-to-cart for out-of-stock/inactive items
+- [x] Keep items visible instead of hiding them
+
+### Audit Export
+- [x] Add CSV export button to Audit Log tab
+- [x] Export filtered audit logs to CSV file
+- [x] Include all relevant fields in export
