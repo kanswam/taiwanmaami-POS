@@ -58,8 +58,8 @@ export function ProductCustomizationModal({
   const { addItem } = useCart();
   const { data: addonsData } = trpc.menu.getAddons.useQuery();
 
-  // State for customization
-  const [size, setSize] = useState<Size>(isDelivery ? 'regular' : 'petite');
+  // State for customization (Petite size removed)
+  const [size, setSize] = useState<Size>('regular');
   const [withBoba, setWithBoba] = useState(true);
   
   // NEW BOBA FLOW: First choose Tapioca or Popping, then size/flavor
@@ -93,6 +93,13 @@ export function ProductCustomizationModal({
   // Coconut Cream Cap option for all Iced Beverages (not just lattes)
   const [wantCoconutCreamCap, setWantCoconutCreamCap] = useState(false);
   const isIcedBeverage = category?.slug === 'bubble-tea' || category?.name?.toLowerCase().includes('iced');
+  // Check if Coconut Cream Cap addon is active in database
+  const coconutCreamCapAddon = addonsData?.find(a => a.name.toLowerCase().includes('coconut'));
+  const isCoconutCreamCapAvailable = coconutCreamCapAddon?.isActive !== false;
+  // Exclude green tea products from coconut cream cap (doesn't pair well)
+  const isGreenTea = subcategory.name.toLowerCase().includes('green tea') || 
+                     product.name.toLowerCase().includes('green tea') ||
+                     product.name.toLowerCase().includes('matcha');
   
   // Food add-ons (Extra Egg, Extra Cheese)
   const [extraEggCount, setExtraEggCount] = useState(0); // 0, 1, 2, or 3 eggs
@@ -119,15 +126,14 @@ export function ProductCustomizationModal({
   const extraEggPrice = extraEggCount * extraEggPricePerUnit;
   // Extra Cheese price: ₹30 (3000 paise)
   const extraCheesePrice = 3000;
-  // Coconut Cream Cap price: ₹35-45 based on size
+  // Coconut Cream Cap price: ₹40-45 based on size
   const getCoconutCreamCapPrice = () => {
-    if (size === 'petite') return 3500;
     if (size === 'regular') return 4000;
-    return 4500;
+    return 4500; // large
   };
 
-  // Filter available sizes for delivery (no petite)
-  const availableSizes = isDelivery ? SIZES.filter(s => s.value !== 'petite') : SIZES;
+  // Available sizes (Regular and Large only)
+  const availableSizes = SIZES;
 
   // Get addons by type
   const bobaFlavorAddons = addonsData?.filter(a => a.type === 'boba_flavor') || [];
@@ -155,9 +161,8 @@ export function ProductCustomizationModal({
         return withBoba ? (subcategory.deliveryPriceLargeWithBoba || 0) : (subcategory.deliveryPriceLargeNoBoba || 0);
       }
     } else {
-      if (size === 'petite') {
-        return withBoba ? (subcategory.basePricePetiteWithBoba || 0) : (subcategory.basePricePetiteNoBoba || 0);
-      } else if (size === 'regular') {
+      // In-store pricing (Regular and Large only)
+      if (size === 'regular') {
         return withBoba ? (subcategory.basePriceRegularWithBoba || 0) : (subcategory.basePriceRegularNoBoba || 0);
       } else {
         return withBoba ? (subcategory.basePriceLargeWithBoba || 0) : (subcategory.basePriceLargeNoBoba || 0);
@@ -168,7 +173,6 @@ export function ProductCustomizationModal({
   // Calculate addon price based on size
   const getAddonPrice = (addon: NonNullable<typeof addonsData>[0]) => {
     if (addon.fixedPrice) return addon.fixedPrice;
-    if (size === 'petite') return addon.pricePetite || 0;
     if (size === 'regular') return addon.priceRegular || 0;
     return addon.priceLarge || 0;
   };
@@ -190,9 +194,8 @@ export function ProductCustomizationModal({
     
     // Base extra boba price by drink size
     let baseExtraPrice = 0;
-    if (size === 'petite') baseExtraPrice = 3000; // ₹30
-    else if (size === 'regular') baseExtraPrice = 4000; // ₹40
-    else baseExtraPrice = 5000; // ₹50
+    if (size === 'regular') baseExtraPrice = 4000; // ₹40
+    else baseExtraPrice = 5000; // ₹50 (large)
     
     // If extra boba is popping, add the popping boba upgrade price
     if (extraBobaType === 'popping') {
@@ -243,8 +246,7 @@ export function ProductCustomizationModal({
       if (!addon) return a;
       let newPrice = addon.fixedPrice || 0;
       if (!addon.fixedPrice) {
-        if (newSize === 'petite') newPrice = addon.pricePetite || 0;
-        else if (newSize === 'regular') newPrice = addon.priceRegular || 0;
+        if (newSize === 'regular') newPrice = addon.priceRegular || 0;
         else newPrice = addon.priceLarge || 0;
       }
       return { ...a, price: newPrice };
@@ -504,7 +506,7 @@ export function ProductCustomizationModal({
                   </div>
                 </div>
                 <span className="text-sm text-primary font-medium">
-                  +{formatPrice(size === 'petite' ? 3000 : size === 'regular' ? 4000 : 5000)}
+                  +{formatPrice(size === 'regular' ? 4000 : 5000)}
                 </span>
               </div>
 
@@ -626,8 +628,8 @@ export function ProductCustomizationModal({
             </div>
           )}
 
-          {/* Coconut Cream Cap - For all Iced Beverages */}
-          {isIcedBeverage && (
+          {/* Coconut Cream Cap - For all Iced Beverages (if addon is active, excluding green tea) */}
+          {isIcedBeverage && isCoconutCreamCapAvailable && !isGreenTea && (
             <div 
               className={`flex items-center justify-between p-3 rounded-lg border-2 cursor-pointer transition-colors ${wantCoconutCreamCap ? 'border-primary bg-primary/5' : 'border-muted hover:border-muted-foreground/50'}`}
               onClick={() => setWantCoconutCreamCap(!wantCoconutCreamCap)}

@@ -99,6 +99,13 @@
       "when": 1766890950217,
       "tag": "0013_pretty_jackal",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "5",
+      "when": 1766903742334,
+      "tag": "0014_curly_oracle",
+      "breakpoints": true
     }
   ]
 }

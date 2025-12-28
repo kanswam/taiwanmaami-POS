@@ -245,6 +245,14 @@ export default function Menu() {
       <h2 className="text-2xl font-bold">Browse Categories</h2>
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
         {menuData?.categories.map((category) => {
+          // Filter out categories not available for delivery/pickup
+          const isDeliveryOrPickup = state.orderType === 'delivery' || state.orderType === 'pickup';
+          if (isDeliveryOrPickup) {
+            const cat = category as any;
+            if (cat.availableDelivery === false && state.orderType === 'delivery') return null;
+            if (cat.availablePickup === false && state.orderType === 'pickup') return null;
+          }
+          
           const subcategories = menuData.subcategories.filter(s => s.categoryId === category.id);
           const productCount = menuData.products.filter(p => 
             subcategories.some(s => s.id === p.subcategoryId)
@@ -373,6 +381,8 @@ export default function Menu() {
                 product={{
                   ...product,
                   imageUrl: product.imageUrl || PRODUCT_IMAGES[product.slug] || null,
+                  imageUrl2: (product as any).imageUrl2 || null,
+                  imageUrl3: (product as any).imageUrl3 || null,
                 }}
                 subcategory={sub}
                 category={cat}
@@ -417,6 +427,8 @@ export default function Menu() {
                     product={{
                       ...product,
                       imageUrl: product.imageUrl || PRODUCT_IMAGES[product.slug] || null,
+                      imageUrl2: (product as any).imageUrl2 || null,
+                      imageUrl3: (product as any).imageUrl3 || null,
                     }}
                     subcategory={sub}
                     category={cat}
@@ -528,6 +540,8 @@ export default function Menu() {
                       product={{
                         ...product,
                         imageUrl: product.imageUrl || PRODUCT_IMAGES[product.slug] || null,
+                        imageUrl2: (product as any).imageUrl2 || null,
+                        imageUrl3: (product as any).imageUrl3 || null,
                       }}
                       subcategory={sub}
                       category={cat}

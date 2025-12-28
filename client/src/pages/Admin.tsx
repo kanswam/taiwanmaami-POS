@@ -986,11 +986,37 @@ function CategoriesTab() {
                             placeholder="Optional description"
                           />
                         </div>
+                        <div className="grid grid-cols-2 gap-4 p-3 bg-muted rounded-lg">
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="checkbox"
+                              id={`cat-delivery-${cat.id}`}
+                              defaultChecked={(cat as any).availableDelivery !== false}
+                              className="w-4 h-4"
+                            />
+                            <Label htmlFor={`cat-delivery-${cat.id}`} className="text-sm cursor-pointer">
+                              Available for Delivery
+                            </Label>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="checkbox"
+                              id={`cat-pickup-${cat.id}`}
+                              defaultChecked={(cat as any).availablePickup !== false}
+                              className="w-4 h-4"
+                            />
+                            <Label htmlFor={`cat-pickup-${cat.id}`} className="text-sm cursor-pointer">
+                              Available for Pickup
+                            </Label>
+                          </div>
+                        </div>
                         <Button onClick={async () => {
                           const name = (document.getElementById(`cat-name-${cat.id}`) as HTMLInputElement).value;
                           const description = (document.getElementById(`cat-desc-${cat.id}`) as HTMLInputElement).value;
                           const imageData = (document.getElementById(`cat-img-data-${cat.id}`) as HTMLInputElement)?.value;
-                          updateCategory.mutate({ id: cat.id, name, description, imageBase64: imageData || undefined });
+                          const availableDelivery = (document.getElementById(`cat-delivery-${cat.id}`) as HTMLInputElement)?.checked ?? true;
+                          const availablePickup = (document.getElementById(`cat-pickup-${cat.id}`) as HTMLInputElement)?.checked ?? true;
+                          updateCategory.mutate({ id: cat.id, name, description, imageBase64: imageData || undefined, availableDelivery, availablePickup } as any);
                         }}>
                           Save Changes
                         </Button>
@@ -1485,9 +1511,8 @@ function AddonsTab() {
                       <span>₹{(addon.fixedPrice / 100).toFixed(0)}</span>
                     ) : (
                       <span>
-                        P: ₹{addon.pricePetite ? (addon.pricePetite / 100).toFixed(0) : '-'} | 
-                        R: ₹{addon.priceRegular ? (addon.priceRegular / 100).toFixed(0) : '-'} | 
-                        L: ₹{addon.priceLarge ? (addon.priceLarge / 100).toFixed(0) : '-'}
+                        Regular: ₹{addon.priceRegular ? (addon.priceRegular / 100).toFixed(0) : '-'} | 
+                        Large: ₹{addon.priceLarge ? (addon.priceLarge / 100).toFixed(0) : '-'}
                       </span>
                     )}
                   </div>
@@ -1556,11 +1581,7 @@ function AddonsTab() {
                 <Input name="displayOrder" type="number" defaultValue="0" />
               </div>
             </div>
-            <div className="grid grid-cols-3 gap-2">
-              <div>
-                <Label>Petite (₹)</Label>
-                <Input name="pricePetite" type="number" placeholder="0" />
-              </div>
+            <div className="grid grid-cols-2 gap-2">
               <div>
                 <Label>Regular (₹)</Label>
                 <Input name="priceRegular" type="number" placeholder="0" />

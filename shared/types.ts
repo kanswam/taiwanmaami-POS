@@ -11,10 +11,9 @@ export const GST_RATE = 0.05; // 5% total
 export const STATE_GST_RATE = 0.025; // 2.5%
 export const CENTRAL_GST_RATE = 0.025; // 2.5%
 
-// Size options
-export type Size = "petite" | "regular" | "large";
+// Size options (Petite removed per business decision)
+export type Size = "regular" | "large";
 export const SIZES: { value: Size; label: string; volume: string }[] = [
-  { value: "petite", label: "Petite", volume: "350ml" },
   { value: "regular", label: "Regular", volume: "480ml" },
   { value: "large", label: "Large", volume: "700ml" },
 ];

@@ -960,3 +960,37 @@
 - [x] Test admin can manage add-ons
 - [x] Test price sync works
 - [x] Test image carousel displays properly
+
+
+## Phase 35 - Critical Bug Fixes (Dec 28, 2025)
+
+### 1. Remove Petite Size
+- [x] Remove Petite size option from menu completely
+- [x] Update size selection UI to only show Regular and Large
+
+### 2. Hot Beverages Delivery Restriction
+- [x] Disable delivery/pickup for hot beverages (especially hot tea in pot)
+- [x] Add category-level delivery availability flag
+
+### 3. Photo Upload Issues
+- [x] Fix category image upload (backend logic verified correct)
+- [x] Fix product carousel - Image 2 shows in Admin but not on customer page
+- [x] Ensure carousel effect works for customers
+
+### 4. Add-on Filtering Issues
+- [x] Fix Coconut Cream Cap still showing when marked out of stock
+- [x] Respect isActive status in add-on display
+
+### 5. Green Tea Coconut Cream Cap
+- [x] Exclude green tea products from coconut cream cap option
+- [ ] Add product-level add-on exclusions (future enhancement)
+
+### 6. Admin Add-on Control
+- [x] Add-ons tab with enable/disable toggle already exists
+- [x] Admins can create, edit, and toggle add-ons from Admin panel
+- [ ] Per-category add-on configuration (future enhancement)
+- [ ] Per-product add-on configuration (future enhancement)
+
+### 7. Price Format Sync
+- [ ] Align category and product price options
+- [ ] Ensure consistent price display across all levels
