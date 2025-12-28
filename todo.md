@@ -923,3 +923,40 @@
 - [x] Test Coconut Cream Cap shows for iced beverages
 - [x] Test all image uploads work
 - [ ] Test price sync works
+
+
+## Phase 34 - Add-on System Improvements (Dec 28, 2025)
+
+### 1. Fix Food Add-on Detection Logic
+- [x] Cheesy Corn Cong You Bing should show Extra Cheese (not egg)
+- [x] Egg Cheesy Cong You Bing should show BOTH Extra Egg AND Extra Cheese
+- [x] Fix detection to properly parse product names for cheese/egg content
+
+### 2. Egg Quantity Selection
+- [x] Allow customers to choose 1, 2, or 3 eggs as add-on
+- [x] Price scales with quantity (₹25 per egg)
+- [x] Update cart to show egg quantity
+
+### 3. Admin Add-on Management System
+- [x] Create Add-ons tab in Admin panel
+- [x] Allow admins to create new add-ons with name, price, type
+- [x] Allow admins to edit existing add-ons
+- [x] Add enable/disable toggle for each add-on (e.g., turn off Big Boba when out of stock)
+- [ ] Link add-ons to specific categories/subcategories (future enhancement)
+
+### 4. Subcategory Price Sync to Products
+- [x] When subcategory base price changes, auto-update products with useBasePrice=true
+- [x] Add confirmation checkbox before bulk price update
+- [x] Show count of affected products (via previewPriceSync API)
+
+### 5. Image Upload & Carousel
+- [ ] Optimize image upload speed (requires backend optimization)
+- [x] Add product image carousel on menu page
+- [x] Show all uploaded images in carousel format
+
+### 6. Test All Changes
+- [x] Test food add-ons show correctly based on product name
+- [x] Test egg quantity selection works
+- [x] Test admin can manage add-ons
+- [x] Test price sync works
+- [x] Test image carousel displays properly

@@ -625,11 +625,12 @@ export const appRouter = router({
         deliveryPriceRegularNoBoba: z.number().optional(),
         deliveryPriceLargeWithBoba: z.number().optional(),
         deliveryPriceLargeNoBoba: z.number().optional(),
+        syncProductPrices: z.boolean().optional(), // If true, update all products with useBasePrice=true
       }))
       .mutation(async ({ input }) => {
         const dbInstance = await getDb();
         if (!dbInstance) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
-        const { id, imageBase64, ...data } = input;
+        const { id, imageBase64, syncProductPrices, ...data } = input;
         
         // Handle image upload if base64 provided
         if (imageBase64) {
@@ -642,7 +643,45 @@ export const appRouter = router({
         }
         
         await dbInstance!.update(subcategories).set(data).where(eq(subcategories.id, id));
-        return { success: true };
+        
+        // Sync prices to products if requested
+        let syncedCount = 0;
+        if (syncProductPrices) {
+          // Get updated subcategory data
+          const [updatedSubcat] = await dbInstance!.select().from(subcategories).where(eq(subcategories.id, id));
+          if (updatedSubcat) {
+            // Find all products in this subcategory with useBasePrice=true
+            const productsToSync = await dbInstance!.select().from(products)
+              .where(and(eq(products.subcategoryId, id), eq(products.useBasePrice, true)));
+            
+            // Update each product's prices based on subcategory base prices
+            for (const product of productsToSync) {
+              await dbInstance!.update(products).set({
+                instorePrice: updatedSubcat.basePriceRegularWithBoba || updatedSubcat.basePriceRegularNoBoba || product.instorePrice,
+                deliveryPrice: updatedSubcat.deliveryPriceRegularWithBoba || updatedSubcat.deliveryPriceRegularNoBoba || product.deliveryPrice,
+              }).where(eq(products.id, product.id));
+              syncedCount++;
+            }
+          }
+        }
+        
+        return { success: true, syncedCount };
+      }),
+
+    // Preview price sync - shows how many products would be affected
+    previewPriceSync: adminProcedure
+      .input(z.object({ subcategoryId: z.number() }))
+      .query(async ({ input }) => {
+        const dbInstance = await getDb();
+        if (!dbInstance) return { count: 0, products: [] };
+        
+        const productsToSync = await dbInstance!.select().from(products)
+          .where(and(eq(products.subcategoryId, input.subcategoryId), eq(products.useBasePrice, true)));
+        
+        return {
+          count: productsToSync.length,
+          products: productsToSync.map(p => ({ id: p.id, name: p.name })),
+        };
       }),
 
     deleteSubcategory: adminProcedure
@@ -1177,6 +1216,84 @@ export const appRouter = router({
     getAllDiscounts: adminProcedure.query(async () => {
       return db.getAllDiscounts();
     }),
+
+    // Add-on management
+    getAllAddons: adminProcedure.query(async () => {
+      const dbInstance = await getDb();
+      if (!dbInstance) return [];
+      // Return all addons including inactive ones for admin
+      return dbInstance!.select().from(addons).orderBy(asc(addons.type), asc(addons.displayOrder));
+    }),
+
+    createAddon: adminProcedure
+      .input(z.object({
+        name: z.string(),
+        chineseName: z.string().optional(),
+        type: z.enum(['boba_flavor', 'boba_size', 'extra_boba', 'vegan_milk', 'food_addon']),
+        pricePetite: z.number().optional(),
+        priceRegular: z.number().optional(),
+        priceLarge: z.number().optional(),
+        fixedPrice: z.number().optional(),
+        displayOrder: z.number().default(0),
+      }))
+      .mutation(async ({ input }) => {
+        const dbInstance = await getDb();
+        if (!dbInstance) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
+        const [result] = await dbInstance!.insert(addons).values({
+          ...input,
+          isActive: true,
+        });
+        return { id: result.insertId, success: true };
+      }),
+
+    updateAddon: adminProcedure
+      .input(z.object({
+        id: z.number(),
+        name: z.string().optional(),
+        chineseName: z.string().optional(),
+        type: z.enum(['boba_flavor', 'boba_size', 'extra_boba', 'vegan_milk', 'food_addon']).optional(),
+        pricePetite: z.number().optional().nullable(),
+        priceRegular: z.number().optional().nullable(),
+        priceLarge: z.number().optional().nullable(),
+        fixedPrice: z.number().optional().nullable(),
+        isActive: z.boolean().optional(),
+        displayOrder: z.number().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const dbInstance = await getDb();
+        if (!dbInstance) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
+        const { id, ...updateData } = input;
+        // Filter out undefined values
+        const cleanData = Object.fromEntries(
+          Object.entries(updateData).filter(([_, v]) => v !== undefined)
+        );
+        if (Object.keys(cleanData).length > 0) {
+          await dbInstance!.update(addons).set(cleanData).where(eq(addons.id, id));
+        }
+        return { success: true };
+      }),
+
+    toggleAddonStatus: adminProcedure
+      .input(z.object({
+        id: z.number(),
+        isActive: z.boolean(),
+      }))
+      .mutation(async ({ input }) => {
+        const dbInstance = await getDb();
+        if (!dbInstance) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
+        await dbInstance!.update(addons).set({ isActive: input.isActive }).where(eq(addons.id, input.id));
+        return { success: true };
+      }),
+
+    deleteAddon: adminProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        const dbInstance = await getDb();
+        if (!dbInstance) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
+        // Soft delete by setting isActive to false
+        await dbInstance!.update(addons).set({ isActive: false }).where(eq(addons.id, input.id));
+        return { success: true };
+      }),
 
     // Get all subcategories for admin
     getAllSubcategories: adminProcedure.query(async () => {

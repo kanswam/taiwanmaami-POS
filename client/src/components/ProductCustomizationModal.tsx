@@ -95,16 +95,28 @@ export function ProductCustomizationModal({
   const isIcedBeverage = category?.slug === 'bubble-tea' || category?.name?.toLowerCase().includes('iced');
   
   // Food add-ons (Extra Egg, Extra Cheese)
-  const [wantExtraEgg, setWantExtraEgg] = useState(false);
+  const [extraEggCount, setExtraEggCount] = useState(0); // 0, 1, 2, or 3 eggs
   const [wantExtraCheese, setWantExtraCheese] = useState(false);
   const isFoodCategory = category?.slug === 'asian-rice-noodle-bread' || category?.name?.toLowerCase().includes('rice') || category?.name?.toLowerCase().includes('noodle') || category?.name?.toLowerCase().includes('bread');
   
   // Check if product contains egg or cheese (for relevant add-ons)
-  const productHasEgg = product.description?.toLowerCase().includes('egg') || product.name.toLowerCase().includes('egg');
-  const productHasCheese = product.description?.toLowerCase().includes('cheese') || product.name.toLowerCase().includes('cheese');
+  // Look for 'egg' in product name/description - but exclude 'cheesy' false positives
+  const productNameLower = product.name.toLowerCase();
+  const productDescLower = product.description?.toLowerCase() || '';
+  const productHasEgg = productNameLower.includes('egg') || productDescLower.includes('egg');
+  // Check for cheese/cheesy in product name
+  const productHasCheese = productNameLower.includes('cheese') || productNameLower.includes('cheesy') || 
+                           productDescLower.includes('cheese') || productDescLower.includes('cheesy');
   
-  // Extra Egg price: ₹25 (2500 paise)
-  const extraEggPrice = 2500;
+  // Show Extra Egg option for food items that don't already have egg, OR always show for Cong You Bing
+  const isCongYouBing = subcategory.name.toLowerCase().includes('cong you bing') || subcategory.name.toLowerCase().includes('flatbread');
+  const showExtraEgg = isFoodCategory && (isCongYouBing || !productHasCheese || productHasEgg);
+  // Show Extra Cheese for items with cheese in name OR Cong You Bing subcategory
+  const showExtraCheese = isFoodCategory && (productHasCheese || isCongYouBing);
+  
+  // Extra Egg price: ₹25 per egg (2500 paise)
+  const extraEggPricePerUnit = 2500;
+  const extraEggPrice = extraEggCount * extraEggPricePerUnit;
   // Extra Cheese price: ₹30 (3000 paise)
   const extraCheesePrice = 3000;
   // Coconut Cream Cap price: ₹35-45 based on size
@@ -200,7 +212,7 @@ export function ProductCustomizationModal({
   const poppingBobaPrice = (withBoba && bobaType === 'popping') ? getPoppingBobaUpgradePrice() : 0;
   const extraBobaPrice = getExtraBobaPrice();
   const milkAddonsTotal = selectedAddons.reduce((sum, a) => sum + a.price, 0);
-  const foodAddonsTotal = (wantExtraEgg ? extraEggPrice : 0) + (wantExtraCheese ? extraCheesePrice : 0);
+  const foodAddonsTotal = extraEggPrice + (wantExtraCheese ? extraCheesePrice : 0);
   const coconutCreamCapTotal = (wantCoconutCreamCap && isIcedBeverage) ? getCoconutCreamCapPrice() : 0;
   const addonsTotal = poppingBobaPrice + extraBobaPrice + milkAddonsTotal + foodAddonsTotal + coconutCreamCapTotal;
   const unitPrice = basePrice;
@@ -300,6 +312,10 @@ export function ProductCustomizationModal({
       sugarLevel: subcategory.hasSizeVariants ? sugarLevel : undefined,
       iceLevel: subcategory.hasSizeVariants ? iceLevel : undefined,
       addons: selectedAddons,
+      // Food add-ons
+      extraEggCount: extraEggCount > 0 ? extraEggCount : undefined,
+      extraCheese: wantExtraCheese || undefined,
+      coconutCreamCap: wantCoconutCreamCap || undefined,
       quantity,
       unitPrice,
       addonsTotal,
@@ -628,27 +644,43 @@ export function ProductCustomizationModal({
           )}
 
           {/* Food Add-ons - Extra Egg and Extra Cheese for food items */}
-          {isFoodCategory && (
+          {isFoodCategory && (showExtraEgg || showExtraCheese) && (
             <div>
               <h4 className="font-medium mb-3">Extra Toppings (Optional)</h4>
-              <div className="space-y-2">
-                {/* Extra Egg - show for all food items */}
-                <div 
-                  className={`flex items-center justify-between p-3 rounded-lg border-2 cursor-pointer transition-colors ${wantExtraEgg ? 'border-primary bg-primary/5' : 'border-muted hover:border-muted-foreground/50'}`}
-                  onClick={() => setWantExtraEgg(!wantExtraEgg)}
-                >
-                  <div className="flex items-center gap-3">
-                    <Checkbox checked={wantExtraEgg} />
-                    <div>
-                      <span className="font-medium">Extra Egg</span>
-                      <p className="text-xs text-muted-foreground">Add an extra egg to your dish</p>
+              <div className="space-y-3">
+                {/* Extra Egg - with quantity selection (1-3 eggs) */}
+                {showExtraEgg && (
+                  <div className="p-3 rounded-lg border-2 border-muted">
+                    <div className="flex items-center justify-between mb-2">
+                      <div>
+                        <span className="font-medium">Extra Egg</span>
+                        <p className="text-xs text-muted-foreground">{formatPrice(extraEggPricePerUnit)} per egg (max 3)</p>
+                      </div>
+                      {extraEggCount > 0 && (
+                        <span className="text-sm font-medium text-primary">+{formatPrice(extraEggPrice)}</span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {[0, 1, 2, 3].map((count) => (
+                        <button
+                          key={count}
+                          type="button"
+                          onClick={() => setExtraEggCount(count)}
+                          className={`flex-1 py-2 px-3 rounded-lg border-2 text-sm font-medium transition-colors ${
+                            extraEggCount === count
+                              ? 'border-primary bg-primary/10 text-primary'
+                              : 'border-muted hover:border-muted-foreground/50'
+                          }`}
+                        >
+                          {count === 0 ? 'None' : `${count} Egg${count > 1 ? 's' : ''}`}
+                        </button>
+                      ))}
                     </div>
                   </div>
-                  <span className="text-sm font-medium text-primary">+{formatPrice(extraEggPrice)}</span>
-                </div>
+                )}
                 
-                {/* Extra Cheese - show for items that have cheese or brioche/flatbread */}
-                {(productHasCheese || subcategory.name.toLowerCase().includes('brioche') || subcategory.name.toLowerCase().includes('flatbread')) && (
+                {/* Extra Cheese - show for items with cheese in name or Cong You Bing */}
+                {showExtraCheese && (
                   <div 
                     className={`flex items-center justify-between p-3 rounded-lg border-2 cursor-pointer transition-colors ${wantExtraCheese ? 'border-primary bg-primary/5' : 'border-muted hover:border-muted-foreground/50'}`}
                     onClick={() => setWantExtraCheese(!wantExtraCheese)}

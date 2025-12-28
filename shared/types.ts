@@ -77,6 +77,10 @@ export interface CartItem {
   sugarLevel?: string;
   iceLevel?: string;
   addons: { id: number; name: string; price: number }[];
+  // Food add-ons
+  extraEggCount?: number; // 0-3 eggs
+  extraCheese?: boolean;
+  coconutCreamCap?: boolean;
   quantity: number;
   unitPrice: number;
   addonsTotal: number;

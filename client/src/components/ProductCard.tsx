@@ -13,6 +13,8 @@ interface ProductCardProps {
     slug: string;
     description?: string | null;
     imageUrl?: string | null;
+    imageUrl2?: string | null;
+    imageUrl3?: string | null;
     instorePrice?: number | null;
     deliveryPrice?: number | null;
     isVegetarian?: boolean;
@@ -47,6 +49,11 @@ interface ProductCardProps {
 
 export function ProductCard({ product, subcategory, category, isDelivery = false }: ProductCardProps) {
   const [showModal, setShowModal] = useState(false);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
+  // Build array of available images
+  const images = [product.imageUrl, product.imageUrl2, product.imageUrl3].filter(Boolean) as string[];
+  const hasMultipleImages = images.length > 1;
 
   // Check availability status
   const isOutOfStock = product.isInStock === false;
@@ -87,7 +94,7 @@ export function ProductCard({ product, subcategory, category, isDelivery = false
   const hasCustomization = subcategory.hasSizeVariants || subcategory.hasBobaOption;
 
   // Default placeholder image
-  const imageUrl = product.imageUrl || '/placeholder-drink.jpg';
+  const currentImage = images[currentImageIndex] || product.imageUrl || '/placeholder-drink.jpg';
 
   return (
     <>
@@ -98,13 +105,34 @@ export function ProductCard({ product, subcategory, category, isDelivery = false
         {/* Image section - 60% height */}
         <div className="relative h-3/5 overflow-hidden bg-secondary">
           <img
-            src={imageUrl}
+            src={currentImage}
             alt={product.name}
             className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
             onError={(e) => {
               (e.target as HTMLImageElement).src = '/placeholder-drink.jpg';
             }}
           />
+          {/* Image carousel dots */}
+          {hasMultipleImages && (
+            <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
+              {images.map((_, idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setCurrentImageIndex(idx);
+                  }}
+                  className={`w-2 h-2 rounded-full transition-all ${
+                    idx === currentImageIndex
+                      ? 'bg-white scale-110 shadow-md'
+                      : 'bg-white/50 hover:bg-white/75'
+                  }`}
+                  aria-label={`View image ${idx + 1}`}
+                />
+              ))}
+            </div>
+          )}
           {/* Dietary badges */}
           <div className="absolute top-2 left-2 flex gap-1">
             {product.isVegan && (
