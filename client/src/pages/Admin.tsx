@@ -577,8 +577,16 @@ function ProductEditDialog({ product, onUpdate }: { product: any; onUpdate: () =
     instorePrice: product.instorePrice || 0,
     deliveryPrice: product.deliveryPrice || 0,
     subcategoryId: product.subcategoryId,
+    isVegetarian: product.isVegetarian ?? true,
+    isVegan: product.isVegan ?? false,
+    containsEgg: product.containsEgg ?? false,
   });
-  const [imagePreview, setImagePreview] = useState<string | null>(product.imageUrl || null);
+  // Multi-image support
+  const [images, setImages] = useState<(string | null)[]>([
+    product.imageUrl || null,
+    product.imageUrl2 || null,
+    product.imageUrl3 || null,
+  ]);
   const [uploading, setUploading] = useState(false);
 
   const updateProduct = trpc.admin.updateProduct.useMutation({
@@ -593,35 +601,30 @@ function ProductEditDialog({ product, onUpdate }: { product: any; onUpdate: () =
   const uploadImage = trpc.admin.uploadProductImage.useMutation({
     onSuccess: (data) => {
       toast.success('Image uploaded');
-      setImagePreview(data.imageUrl);
-      onUpdate();
     },
     onError: (err) => toast.error(err.message),
   });
 
-  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    
-    if (file.size > 50 * 1024 * 1024) {
-      toast.error('Image must be less than 50MB');
-      return;
-    }
-    
-    setUploading(true);
-    const reader = new FileReader();
-    reader.onload = async () => {
-      const base64 = reader.result as string;
-      setImagePreview(base64);
-      await uploadImage.mutateAsync({
-        productId: product.id,
-        imageBase64: base64,
-        mimeType: file.type,
-        fileName: file.name,
-      });
-      setUploading(false);
-    };
-    reader.readAsDataURL(file);
+  const handleImageUpload = async (file: File, index: number): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = async () => {
+        try {
+          const base64 = reader.result as string;
+          const result = await uploadImage.mutateAsync({
+            productId: product.id,
+            imageBase64: base64,
+            mimeType: file.type,
+            fileName: file.name,
+            imageIndex: index, // 0 = main, 1 = second, 2 = third
+          });
+          resolve(result.imageUrl);
+        } catch (err) {
+          reject(err);
+        }
+      };
+      reader.readAsDataURL(file);
+    });
   };
 
   const handleSubmit = () => {
@@ -633,6 +636,12 @@ function ProductEditDialog({ product, onUpdate }: { product: any; onUpdate: () =
       instorePrice: formData.instorePrice,
       deliveryPrice: formData.deliveryPrice,
       subcategoryId: formData.subcategoryId,
+      isVegetarian: formData.isVegetarian,
+      isVegan: formData.isVegan,
+      containsEgg: formData.containsEgg,
+      imageUrl: images[0] || null,
+      imageUrl2: images[1] || null,
+      imageUrl3: images[2] || null,
     });
   };
 
@@ -648,38 +657,117 @@ function ProductEditDialog({ product, onUpdate }: { product: any; onUpdate: () =
           <DialogTitle>Edit Product</DialogTitle>
         </DialogHeader>
         <div className="space-y-4 py-4">
-          {/* Image Upload */}
+          {/* Multi-Image Upload with Cropping */}
           <div>
-            <Label>Product Image</Label>
-            <div className="mt-2 flex items-center gap-4">
-              <div className="w-20 h-20 rounded-lg border-2 border-dashed border-border overflow-hidden bg-secondary flex items-center justify-center">
-                {imagePreview ? (
-                  <img src={imagePreview} alt="" className="w-full h-full object-cover" />
-                ) : (
-                  <ImageIcon className="w-8 h-8 text-muted-foreground" />
-                )}
-              </div>
-              <div className="flex-1">
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageChange}
-                  className="hidden"
-                  id={`image-upload-${product.id}`}
-                  disabled={uploading}
+            <Label>Product Images (up to 3)</Label>
+            <div className="mt-2 grid grid-cols-3 gap-3">
+              {[0, 1, 2].map((index) => (
+                <div key={index} className="relative aspect-square rounded-lg border-2 border-dashed border-border overflow-hidden bg-secondary flex items-center justify-center">
+                  {images[index] ? (
+                    <>
+                      <img src={images[index]!} alt="" className="w-full h-full object-cover" />
+                      <div className="absolute inset-0 bg-black/50 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center gap-1">
+                        <label className="cursor-pointer">
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={async (e) => {
+                              const file = e.target.files?.[0];
+                              if (file) {
+                                try {
+                                  const url = await handleImageUpload(file, index);
+                                  const newImages = [...images];
+                                  newImages[index] = url;
+                                  setImages(newImages);
+                                } catch (err) {
+                                  console.error(err);
+                                }
+                              }
+                            }}
+                          />
+                          <Button variant="secondary" size="icon" className="h-7 w-7" asChild>
+                            <span><Upload className="h-3 w-3" /></span>
+                          </Button>
+                        </label>
+                        <Button
+                          variant="destructive"
+                          size="icon"
+                          className="h-7 w-7"
+                          onClick={() => {
+                            const newImages = [...images];
+                            newImages[index] = null;
+                            setImages(newImages);
+                          }}
+                        >
+                          <X className="h-3 w-3" />
+                        </Button>
+                      </div>
+                      {index === 0 && <span className="absolute top-1 left-1 bg-primary text-primary-foreground text-[10px] px-1 rounded">Main</span>}
+                    </>
+                  ) : (
+                    <label className="cursor-pointer flex flex-col items-center justify-center w-full h-full text-muted-foreground hover:text-foreground transition-colors">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={async (e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            try {
+                              const url = await handleImageUpload(file, index);
+                              const newImages = [...images];
+                              newImages[index] = url;
+                              setImages(newImages);
+                            } catch (err) {
+                              console.error(err);
+                            }
+                          }
+                        }}
+                      />
+                      <ImageIcon className="h-5 w-5 mb-1" />
+                      <span className="text-[10px]">{index === 0 ? 'Main' : `Image ${index + 1}`}</span>
+                    </label>
+                  )}
+                </div>
+              ))}
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">First image is the main product image</p>
+          </div>
+
+          {/* Dietary Options */}
+          <div>
+            <Label>Dietary Information</Label>
+            <div className="mt-2 flex flex-wrap gap-4">
+              <div className="flex items-center gap-2">
+                <Switch
+                  checked={formData.isVegetarian}
+                  onCheckedChange={(checked) => setFormData({ ...formData, isVegetarian: checked })}
                 />
-                <label htmlFor={`image-upload-${product.id}`}>
-                  <Button variant="outline" size="sm" asChild disabled={uploading}>
-                    <span className="cursor-pointer">
-                      {uploading ? (
-                        <><RefreshCw className="w-4 h-4 mr-2 animate-spin" />Uploading...</>
-                      ) : (
-                        <><Upload className="w-4 h-4 mr-2" />Upload Image</>
-                      )}
-                    </span>
-                  </Button>
-                </label>
-                <p className="text-xs text-muted-foreground mt-1">Max 50MB. JPG, PNG, WebP</p>
+                <span className="text-sm flex items-center gap-1">
+                  <span className="w-3 h-3 rounded-full bg-green-500 border border-green-600"></span>
+                  Vegetarian
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Switch
+                  checked={formData.isVegan}
+                  onCheckedChange={(checked) => setFormData({ ...formData, isVegan: checked })}
+                />
+                <span className="text-sm flex items-center gap-1">
+                  <span className="w-3 h-3 rounded-full bg-green-600 border border-green-700">🌱</span>
+                  Vegan
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Switch
+                  checked={formData.containsEgg}
+                  onCheckedChange={(checked) => setFormData({ ...formData, containsEgg: checked })}
+                />
+                <span className="text-sm flex items-center gap-1">
+                  <span className="w-3 h-3 rounded-full bg-yellow-400 border-2 border-yellow-500"></span>
+                  Contains Egg
+                </span>
               </div>
             </div>
           </div>
@@ -839,6 +927,43 @@ function CategoriesTab() {
                       </DialogHeader>
                       <div className="space-y-4">
                         <div>
+                          <Label>Category Image</Label>
+                          <div className="mt-2 flex items-center gap-4">
+                            <div className="w-20 h-20 rounded-lg border-2 border-dashed border-border overflow-hidden bg-secondary flex items-center justify-center">
+                              {cat.imageUrl ? (
+                                <img src={cat.imageUrl} alt="" className="w-full h-full object-cover" id={`cat-img-preview-${cat.id}`} />
+                              ) : (
+                                <ImageIcon className="w-8 h-8 text-muted-foreground" />
+                              )}
+                            </div>
+                            <div>
+                              <input
+                                type="file"
+                                accept="image/*"
+                                className="hidden"
+                                id={`cat-img-upload-${cat.id}`}
+                                onChange={async (e) => {
+                                  const file = e.target.files?.[0];
+                                  if (!file) return;
+                                  const reader = new FileReader();
+                                  reader.onload = () => {
+                                    const preview = document.getElementById(`cat-img-preview-${cat.id}`) as HTMLImageElement;
+                                    if (preview) preview.src = reader.result as string;
+                                    (document.getElementById(`cat-img-data-${cat.id}`) as HTMLInputElement).value = reader.result as string;
+                                  };
+                                  reader.readAsDataURL(file);
+                                }}
+                              />
+                              <input type="hidden" id={`cat-img-data-${cat.id}`} />
+                              <label htmlFor={`cat-img-upload-${cat.id}`}>
+                                <Button variant="outline" size="sm" asChild>
+                                  <span className="cursor-pointer"><Upload className="w-4 h-4 mr-2" />Upload</span>
+                                </Button>
+                              </label>
+                            </div>
+                          </div>
+                        </div>
+                        <div>
                           <Label>Category Name</Label>
                           <Input
                             defaultValue={cat.name}
@@ -853,10 +978,11 @@ function CategoriesTab() {
                             placeholder="Optional description"
                           />
                         </div>
-                        <Button onClick={() => {
+                        <Button onClick={async () => {
                           const name = (document.getElementById(`cat-name-${cat.id}`) as HTMLInputElement).value;
                           const description = (document.getElementById(`cat-desc-${cat.id}`) as HTMLInputElement).value;
-                          updateCategory.mutate({ id: cat.id, name, description });
+                          const imageData = (document.getElementById(`cat-img-data-${cat.id}`) as HTMLInputElement)?.value;
+                          updateCategory.mutate({ id: cat.id, name, description, imageBase64: imageData || undefined });
                         }}>
                           Save Changes
                         </Button>

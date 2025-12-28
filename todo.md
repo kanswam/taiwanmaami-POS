@@ -827,3 +827,63 @@
 ## Bug Fix - Homepage Category Navigation (Dec 24, 2025)
 - [x] Fix homepage category cards leading to 404 page
 - [x] Navigate to /menu with category pre-selected instead of /category/{slug}
+
+
+## Phase 32 - Product Management Enhancements (Dec 28, 2025)
+
+### 1. Image Cropping and Repositioning
+- [x] Add react-image-crop library
+- [x] Create ImageCropper component
+- [x] Integrate cropper into product image upload
+- [x] Store cropped image to S3
+
+### 2. Multiple Photos per Product (3 photos)
+- [x] Add imageUrl2 and imageUrl3 columns to products table
+- [x] Update product form with 3 image upload slots
+- [ ] Display image gallery on product cards (future enhancement)
+
+### 3. Dietary Labels (Vegan/Veg/Egg)
+- [x] Create dietary badge components (CSS classes in index.css)
+- [x] Display badges on ProductCard (green Veg, yellow Egg, leaf Vegan)
+- [x] Add toggle switches in Admin product edit
+- [ ] Show labels on POS interface (future enhancement)
+
+### 4. Category and Subcategory Images
+- [x] imageUrl column already exists in categories table
+- [x] imageUrl column already exists in subcategories table
+- [x] Add image upload in Admin Categories tab
+- [x] Add image upload in Admin Subcategories section
+- [ ] Display images on menu navigation (using existing images)
+
+### 5. Price Sync Between Category and Products
+- [x] Add useBasePrice toggle to products schema
+- [x] Products with hasSizeVariants use subcategory base prices
+- [ ] Add confirmation dialog for bulk price updates (future enhancement)
+- [x] Price format consistency maintained
+
+### 6. New Add-ons
+- [x] Create Coconut Cream Cap addon for Iced Beverages (₹35-45 by size)
+- [x] Create Extra Egg addon for Food category (₹25)
+- [x] Create Extra Cheese addon for Food category (₹30)
+- [x] Link addons to specific categories via category_addons table
+- [ ] Show relevant addons in customization modal (future enhancement)
+
+### 7. Mochi Delivery Sets of 2
+- [x] Enforce quantity as multiples of 2 for mochi delivery (2, 4, 6...)
+- [x] Show message about delivery sets ("Mochis are sold in sets of 2 for delivery")
+- [x] Allow single mochi for in-store orders
+- [x] Update cart quantity controls (step by 2 for mochi delivery)
+
+### 8. Category Ranking Reflects on Products
+- [x] Products ordered by category displayOrder, then subcategory displayOrder, then product displayOrder
+- [x] Updated getFullMenu query with proper ordering
+- [ ] Add "Apply Category Order" button in Admin (future enhancement)
+
+### 9. Out of Stock Display
+- [x] Already implemented - items show with badge instead of hiding
+
+### 10. Fix Grilled Mochi Subcategory
+- [x] Verified subcategory exists in database
+- [x] Confirmed categoryId and isActive are correct
+- [x] Issue: No products assigned to Grilled Mochi subcategory
+- [ ] Theresa needs to create products or move existing ones to this subcategory

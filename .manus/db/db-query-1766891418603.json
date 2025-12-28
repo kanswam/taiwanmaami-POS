@@ -1,0 +1,9 @@
+{
+  "query": "INSERT INTO category_addons (categoryId, addonId) \nSELECT c.id, a.id FROM categories c, addons a \nWHERE c.slug = 'bubble-tea' AND a.name = 'Coconut Cream Cap';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute INSERT INTO category_addons (categoryId, addonId) \nSELECT c.id, a.id FROM categories c, addons a \nWHERE c.slug = 'bubble-tea' AND a.name = 'Coconut Cream Cap';",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 1536
+}

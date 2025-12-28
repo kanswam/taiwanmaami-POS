@@ -650,14 +650,18 @@ export function ProductCustomizationModal({
             <h4 className="font-medium mb-3">Quantity</h4>
             {isDelivery && isMochiProduct && (
               <p className="text-sm text-muted-foreground mb-2">
-                Mochis are sold in pairs for delivery orders (minimum 2)
+                Mochis are sold in sets of 2 for delivery (2, 4, 6...)
               </p>
             )}
             <div className="flex items-center gap-4">
               <Button
                 variant="outline"
                 size="icon"
-                onClick={() => setQuantity(Math.max(minQuantity, quantity - 1))}
+                onClick={() => {
+                  // For mochi delivery, decrement by 2 (sets of 2)
+                  const step = (isDelivery && isMochiProduct) ? 2 : 1;
+                  setQuantity(Math.max(minQuantity, quantity - step));
+                }}
                 disabled={quantity <= minQuantity}
               >
                 <Minus className="w-4 h-4" />
@@ -666,7 +670,11 @@ export function ProductCustomizationModal({
               <Button
                 variant="outline"
                 size="icon"
-                onClick={() => setQuantity(quantity + 1)}
+                onClick={() => {
+                  // For mochi delivery, increment by 2 (sets of 2)
+                  const step = (isDelivery && isMochiProduct) ? 2 : 1;
+                  setQuantity(quantity + step);
+                }}
               >
                 <Plus className="w-4 h-4" />
               </Button>

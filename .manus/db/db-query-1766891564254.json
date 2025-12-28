@@ -1,0 +1,15 @@
+{
+  "query": "SELECT c.id, c.name, c.slug FROM categories c WHERE c.name LIKE '%Sweet%' OR c.slug LIKE '%sweet%' OR c.slug LIKE '%mochi%';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT c.id, c.name, c.slug FROM categories c WHERE c.name LIKE '%Sweet%' OR c.slug LIKE '%sweet%' OR c.slug LIKE '%mochi%';",
+  "rows": [
+    {
+      "id": "3",
+      "name": "Asian Sweet Bites 甜品",
+      "slug": "mochis"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\tslug\n3\tAsian Sweet Bites 甜品\tmochis\n",
+  "stderr": "",
+  "execution_time_ms": 1490
+}

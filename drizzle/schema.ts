@@ -84,6 +84,10 @@ export const products = mysqlTable("products", {
   slug: varchar("slug", { length: 200 }).notNull().unique(),
   description: text("description"),
   imageUrl: text("imageUrl"),
+  imageUrl2: text("imageUrl2"), // Second product image
+  imageUrl3: text("imageUrl3"), // Third product image
+  // Image crop data (JSON: {x, y, width, height, zoom})
+  imageCropData: json("imageCropData"),
   // For items with fixed pricing (food, mochis)
   instorePrice: int("instorePrice"),
   deliveryPrice: int("deliveryPrice"),
@@ -96,6 +100,8 @@ export const products = mysqlTable("products", {
   isVegetarian: boolean("isVegetarian").default(true).notNull(),
   isVegan: boolean("isVegan").default(false).notNull(),
   containsEgg: boolean("containsEgg").default(false).notNull(),
+  // Price inheritance
+  useBasePrice: boolean("useBasePrice").default(true).notNull(), // If true, inherit price from subcategory
   // Availability
   isInStock: boolean("isInStock").default(true).notNull(),
   availableInstore: boolean("availableInstore").default(true).notNull(),
@@ -128,6 +134,22 @@ export const productAddons = mysqlTable("product_addons", {
   id: int("id").autoincrement().primaryKey(),
   productId: int("productId").notNull(),
   addonId: int("addonId").notNull(),
+});
+
+// Junction table for category-specific add-ons
+export const categoryAddons = mysqlTable("category_addons", {
+  id: int("id").autoincrement().primaryKey(),
+  categoryId: int("categoryId").notNull(),
+  addonId: int("addonId").notNull(),
+  isDefault: boolean("isDefault").default(false).notNull(), // Show by default for all products in category
+});
+
+// Junction table for subcategory-specific add-ons
+export const subcategoryAddons = mysqlTable("subcategory_addons", {
+  id: int("id").autoincrement().primaryKey(),
+  subcategoryId: int("subcategoryId").notNull(),
+  addonId: int("addonId").notNull(),
+  isDefault: boolean("isDefault").default(false).notNull(),
 });
 
 // Free customization options (sugar level, ice level)
@@ -436,6 +458,8 @@ export type Category = typeof categories.$inferSelect;
 export type Subcategory = typeof subcategories.$inferSelect;
 export type Product = typeof products.$inferSelect;
 export type Addon = typeof addons.$inferSelect;
+export type CategoryAddon = typeof categoryAddons.$inferSelect;
+export type SubcategoryAddon = typeof subcategoryAddons.$inferSelect;
 export type Order = typeof orders.$inferSelect;
 export type OrderItem = typeof orderItems.$inferSelect;
 export type Discount = typeof discounts.$inferSelect;

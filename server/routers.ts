@@ -92,11 +92,20 @@ export const appRouter = router({
         
         // Include all products for the channel, showing inactive/out-of-stock with visual indicators
         // Only filter by availability channel (delivery vs instore)
-        const prods = await dbInstance!.select().from(products)
+        // Order by subcategory (which inherits category order), then product displayOrder
+        const prods = await dbInstance!.select()
+          .from(products)
+          .leftJoin(subcategories, eq(products.subcategoryId, subcategories.id))
+          .leftJoin(categories, eq(subcategories.categoryId, categories.id))
           .where(
             input.isDelivery ? eq(products.availableDelivery, true) : eq(products.availableInstore, true)
           )
-          .orderBy(asc(products.displayOrder));
+          .orderBy(
+            asc(categories.displayOrder),
+            asc(subcategories.displayOrder),
+            asc(products.displayOrder)
+          )
+          .then(rows => rows.map(r => r.products));
         const adds = await db.getAddons();
 
         return { categories: cats, subcategories: subs, products: prods, addons: adds };
@@ -539,13 +548,25 @@ export const appRouter = router({
         name: z.string().optional(),
         description: z.string().optional(),
         imageUrl: z.string().optional(),
+        imageBase64: z.string().optional(), // For uploading new image
         displayOrder: z.number().optional(),
         isActive: z.boolean().optional(),
       }))
       .mutation(async ({ input }) => {
         const dbInstance = await getDb();
         if (!dbInstance) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
-        const { id, ...data } = input;
+        const { id, imageBase64, ...data } = input;
+        
+        // Handle image upload if base64 provided
+        if (imageBase64) {
+          const { storagePut } = await import('./storage');
+          const base64Data = imageBase64.replace(/^data:[^;]+;base64,/, '');
+          const buffer = Buffer.from(base64Data, 'base64');
+          const fileKey = `categories/${id}-${Date.now()}.jpg`;
+          const { url } = await storagePut(fileKey, buffer, 'image/jpeg');
+          (data as any).imageUrl = url;
+        }
+        
         await dbInstance!.update(categories).set(data).where(eq(categories.id, id));
         return { success: true };
       }),
@@ -592,6 +613,8 @@ export const appRouter = router({
         displayOrder: z.number().optional(),
         hasSizeVariants: z.boolean().optional(),
         hasBobaOption: z.boolean().optional(),
+        imageUrl: z.string().optional(),
+        imageBase64: z.string().optional(), // For uploading new image
         basePricePetiteWithBoba: z.number().optional(),
         basePricePetiteNoBoba: z.number().optional(),
         basePriceRegularWithBoba: z.number().optional(),
@@ -606,7 +629,18 @@ export const appRouter = router({
       .mutation(async ({ input }) => {
         const dbInstance = await getDb();
         if (!dbInstance) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
-        const { id, ...data } = input;
+        const { id, imageBase64, ...data } = input;
+        
+        // Handle image upload if base64 provided
+        if (imageBase64) {
+          const { storagePut } = await import('./storage');
+          const base64Data = imageBase64.replace(/^data:[^;]+;base64,/, '');
+          const buffer = Buffer.from(base64Data, 'base64');
+          const fileKey = `subcategories/${id}-${Date.now()}.jpg`;
+          const { url } = await storagePut(fileKey, buffer, 'image/jpeg');
+          (data as any).imageUrl = url;
+        }
+        
         await dbInstance!.update(subcategories).set(data).where(eq(subcategories.id, id));
         return { success: true };
       }),
@@ -679,6 +713,8 @@ export const appRouter = router({
         chineseName: z.string().nullable().optional(),
         description: z.string().nullable().optional(),
         imageUrl: z.string().nullable().optional(),
+        imageUrl2: z.string().nullable().optional(),
+        imageUrl3: z.string().nullable().optional(),
         instorePrice: z.number().optional(),
         deliveryPrice: z.number().optional(),
         isInStock: z.boolean().optional(),
@@ -687,6 +723,10 @@ export const appRouter = router({
         displayOrder: z.number().optional(),
         isActive: z.boolean().optional(),
         subcategoryId: z.number().optional(),
+        isVegetarian: z.boolean().optional(),
+        isVegan: z.boolean().optional(),
+        containsEgg: z.boolean().optional(),
+        useBasePrice: z.boolean().optional(),
       }))
       .mutation(async ({ input, ctx }) => {
         const dbInstance = await getDb();
@@ -737,6 +777,7 @@ export const appRouter = router({
         imageBase64: z.string(),
         mimeType: z.string(),
         fileName: z.string(),
+        imageIndex: z.number().optional(), // 0 = main, 1 = second, 2 = third
       }))
       .mutation(async ({ input }) => {
         const { storagePut } = await import('./storage');
@@ -749,13 +790,23 @@ export const appRouter = router({
         
         // Generate unique file key
         const ext = input.fileName.split('.').pop() || 'jpg';
-        const fileKey = `products/${input.productId}-${Date.now()}.${ext}`;
+        const imageIndex = input.imageIndex ?? 0;
+        const fileKey = `products/${input.productId}-img${imageIndex + 1}-${Date.now()}.${ext}`;
         
         // Upload to S3
         const { url } = await storagePut(fileKey, buffer, input.mimeType);
         
-        // Update product with new image URL
-        await dbInstance!.update(products).set({ imageUrl: url }).where(eq(products.id, input.productId));
+        // Update product with new image URL based on index
+        const updateData: Record<string, string> = {};
+        if (imageIndex === 0) {
+          updateData.imageUrl = url;
+        } else if (imageIndex === 1) {
+          updateData.imageUrl2 = url;
+        } else if (imageIndex === 2) {
+          updateData.imageUrl3 = url;
+        }
+        
+        await dbInstance!.update(products).set(updateData).where(eq(products.id, input.productId));
         
         return { success: true, imageUrl: url };
       }),

@@ -1,0 +1,37 @@
+{
+  "query": "SELECT s.*, c.name as categoryName FROM subcategories s LEFT JOIN categories c ON s.categoryId = c.id WHERE s.name LIKE '%Grill%' OR s.slug LIKE '%grill%';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT s.*, c.name as categoryName FROM subcategories s LEFT JOIN categories c ON s.categoryId = c.id WHERE s.name LIKE '%Grill%' OR s.slug LIKE '%grill%';",
+  "rows": [
+    {
+      "id": "180001",
+      "categoryId": "3",
+      "name": "Grilled Mochi   ",
+      "chineseName": "烤麻糬 ",
+      "slug": "grilled-mochi",
+      "description": "Soft, chewy rice cake lightly grilled to a golden crisp on the outside and tender inside. Gently smoky, and satisfying, it’s a comforting treat that’s delicious paired with either sweet or savoury sauces and toppings.",
+      "imageUrl": "NULL",
+      "basePricePetiteWithBoba": "0",
+      "basePricePetiteNoBoba": "0",
+      "basePriceRegularWithBoba": "0",
+      "basePriceRegularNoBoba": "0",
+      "basePriceLargeWithBoba": "0",
+      "basePriceLargeNoBoba": "0",
+      "deliveryPriceRegularWithBoba": "0",
+      "deliveryPriceRegularNoBoba": "0",
+      "deliveryPriceLargeWithBoba": "0",
+      "deliveryPriceLargeNoBoba": "0",
+      "hasSizeVariants": "1",
+      "hasBobaOption": "1",
+      "availableInstore": "1",
+      "availableDelivery": "1",
+      "displayOrder": "0",
+      "isActive": "1",
+      "createdAt": "2025-12-27 22:06:37",
+      "categoryName": "Asian Sweet Bites 甜品"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tcategoryId\tname\tchineseName\tslug\tdescription\timageUrl\tbasePricePetiteWithBoba\tbasePricePetiteNoBoba\tbasePriceRegularWithBoba\tbasePriceRegularNoBoba\tbasePriceLargeWithBoba\tbasePriceLargeNoBoba\tdeliveryPriceRegularWithBoba\tdeliveryPriceRegularNoBoba\tdeliveryPriceLargeWithBoba\tdeliveryPriceLargeNoBoba\thasSizeVariants\thasBobaOption\tavailableInstore\tavailableDelivery\tdisplayOrder\tisActive\tcreatedAt\tcategoryName\n180001\t3\tGrilled Mochi   \t烤麻糬 \tgrilled-mochi\tSoft, chewy rice cake lightly grilled to a golden crisp on the outside and tender inside. Gently smoky, and satisfying, it’s a comforting treat that’s delicious paired with either sweet or savoury sauces and toppings.\tNULL\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t1\t1\t1\t1\t0\t1\t2025-12-27 22:06:37\tAsian Sweet Bites 甜品\n",
+  "stderr": "",
+  "execution_time_ms": 1520
+}

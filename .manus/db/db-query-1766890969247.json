@@ -1,0 +1,9 @@
+{
+  "query": "ALTER TABLE products \nADD COLUMN IF NOT EXISTS imageUrl2 TEXT,\nADD COLUMN IF NOT EXISTS imageUrl3 TEXT,\nADD COLUMN IF NOT EXISTS imageCropData JSON,\nADD COLUMN IF NOT EXISTS useBasePrice BOOLEAN DEFAULT TRUE NOT NULL;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute ALTER TABLE products \nADD COLUMN IF NOT EXISTS imageUrl2 TEXT,\nADD COLUMN IF NOT EXISTS imageUrl3 TEXT,\nADD COLUMN IF NOT EXISTS imageCropData JSON,\nADD COLUMN IF NOT EXISTS useBasePrice BOOLEAN DEFAULT TRUE NOT NULL;",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 2724
+}
