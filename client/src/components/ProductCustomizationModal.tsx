@@ -90,9 +90,29 @@ export function ProductCustomizationModal({
     }
   }, [isDelivery, isMochiProduct]);
   
-  // Coconut Cream Cap option for latte drinks
+  // Coconut Cream Cap option for all Iced Beverages (not just lattes)
   const [wantCoconutCreamCap, setWantCoconutCreamCap] = useState(false);
-  const isLatteDrink = product.name.toLowerCase().includes('latte');
+  const isIcedBeverage = category?.slug === 'bubble-tea' || category?.name?.toLowerCase().includes('iced');
+  
+  // Food add-ons (Extra Egg, Extra Cheese)
+  const [wantExtraEgg, setWantExtraEgg] = useState(false);
+  const [wantExtraCheese, setWantExtraCheese] = useState(false);
+  const isFoodCategory = category?.slug === 'asian-rice-noodle-bread' || category?.name?.toLowerCase().includes('rice') || category?.name?.toLowerCase().includes('noodle') || category?.name?.toLowerCase().includes('bread');
+  
+  // Check if product contains egg or cheese (for relevant add-ons)
+  const productHasEgg = product.description?.toLowerCase().includes('egg') || product.name.toLowerCase().includes('egg');
+  const productHasCheese = product.description?.toLowerCase().includes('cheese') || product.name.toLowerCase().includes('cheese');
+  
+  // Extra Egg price: ₹25 (2500 paise)
+  const extraEggPrice = 2500;
+  // Extra Cheese price: ₹30 (3000 paise)
+  const extraCheesePrice = 3000;
+  // Coconut Cream Cap price: ₹35-45 based on size
+  const getCoconutCreamCapPrice = () => {
+    if (size === 'petite') return 3500;
+    if (size === 'regular') return 4000;
+    return 4500;
+  };
 
   // Filter available sizes for delivery (no petite)
   const availableSizes = isDelivery ? SIZES.filter(s => s.value !== 'petite') : SIZES;
@@ -180,7 +200,9 @@ export function ProductCustomizationModal({
   const poppingBobaPrice = (withBoba && bobaType === 'popping') ? getPoppingBobaUpgradePrice() : 0;
   const extraBobaPrice = getExtraBobaPrice();
   const milkAddonsTotal = selectedAddons.reduce((sum, a) => sum + a.price, 0);
-  const addonsTotal = poppingBobaPrice + extraBobaPrice + milkAddonsTotal;
+  const foodAddonsTotal = (wantExtraEgg ? extraEggPrice : 0) + (wantExtraCheese ? extraCheesePrice : 0);
+  const coconutCreamCapTotal = (wantCoconutCreamCap && isIcedBeverage) ? getCoconutCreamCapPrice() : 0;
+  const addonsTotal = poppingBobaPrice + extraBobaPrice + milkAddonsTotal + foodAddonsTotal + coconutCreamCapTotal;
   const unitPrice = basePrice;
   
   // For mochis in delivery/pickup mode:
@@ -588,8 +610,8 @@ export function ProductCustomizationModal({
             </div>
           )}
 
-          {/* Coconut Cream Cap - Only for Latte drinks */}
-          {isLatteDrink && category?.slug === 'bubble-tea' && (
+          {/* Coconut Cream Cap - For all Iced Beverages */}
+          {isIcedBeverage && (
             <div 
               className={`flex items-center justify-between p-3 rounded-lg border-2 cursor-pointer transition-colors ${wantCoconutCreamCap ? 'border-primary bg-primary/5' : 'border-muted hover:border-muted-foreground/50'}`}
               onClick={() => setWantCoconutCreamCap(!wantCoconutCreamCap)}
@@ -598,10 +620,50 @@ export function ProductCustomizationModal({
                 <Checkbox checked={wantCoconutCreamCap} />
                 <div>
                   <span className="font-medium">Coconut Cream Cap</span>
-                  <p className="text-xs text-muted-foreground">Replace regular cream cap with coconut cream</p>
+                  <p className="text-xs text-muted-foreground">Replace regular milk cream cap with coconut cream (dairy-free)</p>
                 </div>
               </div>
-              <span className="text-sm font-medium text-muted-foreground">Free</span>
+              <span className="text-sm font-medium text-primary">+{formatPrice(getCoconutCreamCapPrice())}</span>
+            </div>
+          )}
+
+          {/* Food Add-ons - Extra Egg and Extra Cheese for food items */}
+          {isFoodCategory && (
+            <div>
+              <h4 className="font-medium mb-3">Extra Toppings (Optional)</h4>
+              <div className="space-y-2">
+                {/* Extra Egg - show for all food items */}
+                <div 
+                  className={`flex items-center justify-between p-3 rounded-lg border-2 cursor-pointer transition-colors ${wantExtraEgg ? 'border-primary bg-primary/5' : 'border-muted hover:border-muted-foreground/50'}`}
+                  onClick={() => setWantExtraEgg(!wantExtraEgg)}
+                >
+                  <div className="flex items-center gap-3">
+                    <Checkbox checked={wantExtraEgg} />
+                    <div>
+                      <span className="font-medium">Extra Egg</span>
+                      <p className="text-xs text-muted-foreground">Add an extra egg to your dish</p>
+                    </div>
+                  </div>
+                  <span className="text-sm font-medium text-primary">+{formatPrice(extraEggPrice)}</span>
+                </div>
+                
+                {/* Extra Cheese - show for items that have cheese or brioche/flatbread */}
+                {(productHasCheese || subcategory.name.toLowerCase().includes('brioche') || subcategory.name.toLowerCase().includes('flatbread')) && (
+                  <div 
+                    className={`flex items-center justify-between p-3 rounded-lg border-2 cursor-pointer transition-colors ${wantExtraCheese ? 'border-primary bg-primary/5' : 'border-muted hover:border-muted-foreground/50'}`}
+                    onClick={() => setWantExtraCheese(!wantExtraCheese)}
+                  >
+                    <div className="flex items-center gap-3">
+                      <Checkbox checked={wantExtraCheese} />
+                      <div>
+                        <span className="font-medium">Extra Cheese</span>
+                        <p className="text-xs text-muted-foreground">Add extra cheese to your dish</p>
+                      </div>
+                    </div>
+                    <span className="text-sm font-medium text-primary">+{formatPrice(extraCheesePrice)}</span>
+                  </div>
+                )}
+              </div>
             </div>
           )}
 

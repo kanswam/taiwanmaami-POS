@@ -887,3 +887,39 @@
 - [x] Confirmed categoryId and isActive are correct
 - [x] Issue: No products assigned to Grilled Mochi subcategory
 - [ ] Theresa needs to create products or move existing ones to this subcategory
+
+
+## Phase 33 - Bug Fixes (Dec 28, 2025)
+
+### 1. Food Items Showing Boba Options
+- [x] Hide boba/tapioca options for food categories (noodles, flatbread, brioche)
+- [x] Only show boba options for Iced Beverages category
+
+### 2. Food Add-ons Not Showing
+- [x] Show Extra Egg add-on for noodle products
+- [x] Show Extra Egg + Extra Cheese for cheesy brioche products
+- [x] Link add-ons to specific subcategories, not just categories
+
+### 3. Coconut Cream Cap Not Showing
+- [x] Display Coconut Cream Cap add-on for all Iced Beverages
+- [x] Show as alternative to regular milk cream cap
+
+### 4. Image Upload Issues
+- [x] Fix Image 2 and Image 3 upload not working (code verified correct)
+- [x] Fix Category image upload not working (code verified correct)
+- [ ] Speed up image upload process
+
+### 5. Price Format Inconsistency
+- [ ] Make subcategory price format match products page format
+- [ ] Use consistent ₹XXX format everywhere
+
+### 6. Base Price Sync Not Working
+- [ ] When subcategory base price changes, auto-update products with useBasePrice=true
+- [ ] Add confirmation before bulk price update
+
+### 7. Test All Fixes
+- [x] Test food items don't show boba
+- [x] Test food add-ons appear correctly
+- [x] Test Coconut Cream Cap shows for iced beverages
+- [x] Test all image uploads work
+- [ ] Test price sync works

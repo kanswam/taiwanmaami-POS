@@ -1,0 +1,58 @@
+{
+  "query": "SELECT s.id, s.name, c.name as catName, s.hasBobaOption \nFROM subcategories s \nJOIN categories c ON s.categoryId = c.id \nWHERE s.hasBobaOption = 1;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT s.id, s.name, c.name as catName, s.hasBobaOption \nFROM subcategories s \nJOIN categories c ON s.categoryId = c.id \nWHERE s.hasBobaOption = 1;",
+  "rows": [
+    {
+      "id": "1",
+      "name": "Updated Subcategory",
+      "catName": "Updated Category",
+      "hasBobaOption": "1"
+    },
+    {
+      "id": "2",
+      "name": "Organic Oolong",
+      "catName": "Updated Category",
+      "hasBobaOption": "1"
+    },
+    {
+      "id": "3",
+      "name": "Organic Green Tea",
+      "catName": "Updated Category",
+      "hasBobaOption": "1"
+    },
+    {
+      "id": "4",
+      "name": "Matcha Blend",
+      "catName": "Updated Category",
+      "hasBobaOption": "1"
+    },
+    {
+      "id": "5",
+      "name": "Taro Blend",
+      "catName": "Updated Category",
+      "hasBobaOption": "1"
+    },
+    {
+      "id": "30003",
+      "name": "Slush",
+      "catName": "Updated Category",
+      "hasBobaOption": "1"
+    },
+    {
+      "id": "30004",
+      "name": "Iced Lavazza Coffee",
+      "catName": "Updated Category",
+      "hasBobaOption": "1"
+    },
+    {
+      "id": "210001",
+      "name": "Test Subcategory",
+      "catName": "Updated Category",
+      "hasBobaOption": "1"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\tcatName\thasBobaOption\n1\tUpdated Subcategory\tUpdated Category\t1\n2\tOrganic Oolong\tUpdated Category\t1\n3\tOrganic Green Tea\tUpdated Category\t1\n4\tMatcha Blend\tUpdated Category\t1\n5\tTaro Blend\tUpdated Category\t1\n30003\tSlush\tUpdated Category\t1\n30004\tIced Lavazza Coffee\tUpdated Category\t1\n210001\tTest Subcategory\tUpdated Category\t1\n",
+  "stderr": "",
+  "execution_time_ms": 1515
+}

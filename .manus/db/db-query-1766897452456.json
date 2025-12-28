@@ -1,0 +1,138 @@
+{
+  "query": "SELECT s.id, s.name, c.name as categoryName, s.hasBobaOption \nFROM subcategories s \nJOIN categories c ON s.categoryId = c.id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT s.id, s.name, c.name as categoryName, s.hasBobaOption \nFROM subcategories s \nJOIN categories c ON s.categoryId = c.id;",
+  "rows": [
+    {
+      "id": "1",
+      "name": "Updated Subcategory",
+      "categoryName": "Updated Category",
+      "hasBobaOption": "1"
+    },
+    {
+      "id": "2",
+      "name": "Organic Oolong",
+      "categoryName": "Updated Category",
+      "hasBobaOption": "1"
+    },
+    {
+      "id": "3",
+      "name": "Organic Green Tea",
+      "categoryName": "Updated Category",
+      "hasBobaOption": "1"
+    },
+    {
+      "id": "4",
+      "name": "Matcha Blend",
+      "categoryName": "Updated Category",
+      "hasBobaOption": "1"
+    },
+    {
+      "id": "5",
+      "name": "Taro Blend",
+      "categoryName": "Updated Category",
+      "hasBobaOption": "1"
+    },
+    {
+      "id": "7",
+      "name": "Hot Coffee & Cocoa ",
+      "categoryName": "Hot Beverages 熱飲",
+      "hasBobaOption": "0"
+    },
+    {
+      "id": "8",
+      "name": "Fruit Mochi",
+      "categoryName": "Asian Sweet Bites 甜品",
+      "hasBobaOption": "0"
+    },
+    {
+      "id": "9",
+      "name": "Signature Mochi",
+      "categoryName": "Asian Sweet Bites 甜品",
+      "hasBobaOption": "0"
+    },
+    {
+      "id": "10",
+      "name": "Rice",
+      "categoryName": "Asian Rice • Noodle • Bread 主餐",
+      "hasBobaOption": "0"
+    },
+    {
+      "id": "11",
+      "name": "Flat Bread",
+      "categoryName": "Asian Rice • Noodle • Bread 主餐",
+      "hasBobaOption": "0"
+    },
+    {
+      "id": "12",
+      "name": "Noodles Soup",
+      "categoryName": "Asian Rice • Noodle • Bread 主餐",
+      "hasBobaOption": "0"
+    },
+    {
+      "id": "13",
+      "name": "Savoury Pillow Brioche",
+      "categoryName": "Asian Rice • Noodle • Bread 主餐",
+      "hasBobaOption": "0"
+    },
+    {
+      "id": "14",
+      "name": "Omelette ",
+      "categoryName": "Asian Rice • Noodle • Bread 主餐",
+      "hasBobaOption": "0"
+    },
+    {
+      "id": "30003",
+      "name": "Slush",
+      "categoryName": "Updated Category",
+      "hasBobaOption": "1"
+    },
+    {
+      "id": "30004",
+      "name": "Iced Lavazza Coffee",
+      "categoryName": "Updated Category",
+      "hasBobaOption": "1"
+    },
+    {
+      "id": "60002",
+      "name": "Boba Crème Caramel",
+      "categoryName": "Asian Sweet Bites 甜品",
+      "hasBobaOption": "1"
+    },
+    {
+      "id": "60003",
+      "name": "Sweet Pillow Brioche ",
+      "categoryName": "Asian Sweet Bites 甜品",
+      "hasBobaOption": "1"
+    },
+    {
+      "id": "60004",
+      "name": "Saucy Noodles",
+      "categoryName": "Asian Rice • Noodle • Bread 主餐",
+      "hasBobaOption": "1"
+    },
+    {
+      "id": "120001",
+      "name": "Soufflé Pancake ",
+      "categoryName": "Asian Sweet Bites 甜品",
+      "hasBobaOption": "1"
+    },
+    {
+      "id": "180001",
+      "name": "Grilled Mochi   ",
+      "categoryName": "Asian Sweet Bites 甜品",
+      "hasBobaOption": "1"
+    },
+    {
+      "id": "210001",
+      "name": "Test Subcategory",
+      "categoryName": "Updated Category",
+      "hasBobaOption": "1"
+    }
+  ],
+  "messages": [
+    "6\tTea in Pot\t\tHot Beverages 熱飲\t1"
+  ],
+  "stdout": "id\tname\tcategoryName\thasBobaOption\n1\tUpdated Subcategory\tUpdated Category\t1\n2\tOrganic Oolong\tUpdated Category\t1\n3\tOrganic Green Tea\tUpdated Category\t1\n4\tMatcha Blend\tUpdated Category\t1\n5\tTaro Blend\tUpdated Category\t1\n6\tTea in Pot\t\tHot Beverages 熱飲\t1\n7\tHot Coffee & Cocoa \tHot Beverages 熱飲\t0\n8\tFruit Mochi\tAsian Sweet Bites 甜品\t0\n9\tSignature Mochi\tAsian Sweet Bites 甜品\t0\n10\tRice\tAsian Rice • Noodle • Bread 主餐\t0\n11\tFlat Bread\tAsian Rice • Noodle • Bread 主餐\t0\n12\tNoodles Soup\tAsian Rice • Noodle • Bread 主餐\t0\n13\tSavoury Pillow Brioche\tAsian Rice • Noodle • Bread 主餐\t0\n14\tOmelette \tAsian Rice • Noodle • Bread 主餐\t0\n30003\tSlush\tUpdated Category\t1\n30004\tIced Lavazza Coffee\tUpdated Category\t1\n60002\tBoba Crème Caramel\tAsian Sweet Bites 甜品\t1\n60003\tSweet Pillow Brioche \tAsian Sweet Bites 甜品\t1\n60004\tSaucy Noodles\tAsian Rice • Noodle • Bread 主餐\t1\n120001\tSoufflé Pancake \tAsian Sweet Bites 甜品\t1\n180001\tGrilled Mochi   \tAsian Sweet Bites 甜品\t1\n210001\tTest Subcategory\tUpdated Category\t1\n",
+  "stderr": "",
+  "execution_time_ms": 1600
+}
