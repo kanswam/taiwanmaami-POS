@@ -1103,163 +1103,7 @@ function CategoriesTab() {
                                 <DialogHeader>
                                   <DialogTitle>Edit Subcategory: {sub.name}</DialogTitle>
                                 </DialogHeader>
-                                <div className="space-y-4">
-                                  {/* Subcategory Image Upload */}
-                                  <div>
-                                    <Label>Subcategory Image</Label>
-                                    <div className="flex items-center gap-4 mt-2">
-                                      <div className="w-24 h-24 rounded-lg border-2 border-dashed border-muted-foreground/25 flex items-center justify-center overflow-hidden bg-muted">
-                                        {sub.imageUrl ? (
-                                          <img src={sub.imageUrl} alt="" className="w-full h-full object-cover" id={`sub-img-preview-${sub.id}`} />
-                                        ) : (
-                                          <ImageIcon className="w-8 h-8 text-muted-foreground" />
-                                        )}
-                                      </div>
-                                      <div>
-                                        <input
-                                          type="file"
-                                          accept="image/*"
-                                          className="hidden"
-                                          id={`sub-img-upload-${sub.id}`}
-                                          onChange={async (e) => {
-                                            const file = e.target.files?.[0];
-                                            if (!file) return;
-                                            const reader = new FileReader();
-                                            reader.onload = () => {
-                                              const preview = document.getElementById(`sub-img-preview-${sub.id}`) as HTMLImageElement;
-                                              if (preview) {
-                                                preview.src = reader.result as string;
-                                              } else {
-                                                // Create preview if it doesn't exist
-                                                const container = document.getElementById(`sub-img-upload-${sub.id}`)?.parentElement?.previousElementSibling;
-                                                if (container) {
-                                                  container.innerHTML = `<img src="${reader.result}" alt="" class="w-full h-full object-cover" id="sub-img-preview-${sub.id}" />`;
-                                                }
-                                              }
-                                              (document.getElementById(`sub-img-data-${sub.id}`) as HTMLInputElement).value = reader.result as string;
-                                            };
-                                            reader.readAsDataURL(file);
-                                          }}
-                                        />
-                                        <input type="hidden" id={`sub-img-data-${sub.id}`} />
-                                        <label htmlFor={`sub-img-upload-${sub.id}`}>
-                                          <Button variant="outline" size="sm" asChild>
-                                            <span className="cursor-pointer"><Upload className="w-4 h-4 mr-2" />Upload Image</span>
-                                          </Button>
-                                        </label>
-                                        <p className="text-xs text-muted-foreground mt-1">Recommended: 400x300px</p>
-                                      </div>
-                                    </div>
-                                  </div>
-                                  <div className="grid grid-cols-2 gap-4">
-                                    <div>
-                                      <Label>Subcategory Name</Label>
-                                      <Input defaultValue={sub.name} id={`sub-name-${sub.id}`} />
-                                    </div>
-                                    <div>
-                                      <Label>Chinese Name (Optional)</Label>
-                                      <Input defaultValue={sub.chineseName || ''} id={`sub-chinese-${sub.id}`} />
-                                    </div>
-                                  </div>
-                                  <div>
-                                    <Label>Description (Optional)</Label>
-                                    <Input defaultValue={sub.description || ''} id={`sub-desc-${sub.id}`} />
-                                  </div>
-                                  <div className="border-t pt-4">
-                                    <h4 className="font-medium mb-3">In-Store Base Pricing (₹)</h4>
-                                    <div className="grid grid-cols-3 gap-3">
-                                      <div>
-                                        <Label className="text-xs">Petite + Boba</Label>
-                                        <Input type="number" step="0.01" defaultValue={(sub.basePricePetiteWithBoba || 0) / 100} id={`sub-petite-boba-${sub.id}`} />
-                                      </div>
-                                      <div>
-                                        <Label className="text-xs">Regular + Boba</Label>
-                                        <Input type="number" step="0.01" defaultValue={(sub.basePriceRegularWithBoba || 0) / 100} id={`sub-reg-boba-${sub.id}`} />
-                                      </div>
-                                      <div>
-                                        <Label className="text-xs">Large + Boba</Label>
-                                        <Input type="number" step="0.01" defaultValue={(sub.basePriceLargeWithBoba || 0) / 100} id={`sub-large-boba-${sub.id}`} />
-                                      </div>
-                                      <div>
-                                        <Label className="text-xs">Petite No Boba</Label>
-                                        <Input type="number" step="0.01" defaultValue={(sub.basePricePetiteNoBoba || 0) / 100} id={`sub-petite-no-${sub.id}`} />
-                                      </div>
-                                      <div>
-                                        <Label className="text-xs">Regular No Boba</Label>
-                                        <Input type="number" step="0.01" defaultValue={(sub.basePriceRegularNoBoba || 0) / 100} id={`sub-reg-no-${sub.id}`} />
-                                      </div>
-                                      <div>
-                                        <Label className="text-xs">Large No Boba</Label>
-                                        <Input type="number" step="0.01" defaultValue={(sub.basePriceLargeNoBoba || 0) / 100} id={`sub-large-no-${sub.id}`} />
-                                      </div>
-                                    </div>
-                                  </div>
-                                  <div className="border-t pt-4">
-                                    <h4 className="font-medium mb-3">Delivery Base Pricing (₹)</h4>
-                                    <div className="grid grid-cols-2 gap-3">
-                                      <div>
-                                        <Label className="text-xs">Regular + Boba</Label>
-                                        <Input type="number" step="0.01" defaultValue={(sub.deliveryPriceRegularWithBoba || 0) / 100} id={`sub-del-reg-boba-${sub.id}`} />
-                                      </div>
-                                      <div>
-                                        <Label className="text-xs">Large + Boba</Label>
-                                        <Input type="number" step="0.01" defaultValue={(sub.deliveryPriceLargeWithBoba || 0) / 100} id={`sub-del-large-boba-${sub.id}`} />
-                                      </div>
-                                      <div>
-                                        <Label className="text-xs">Regular No Boba</Label>
-                                        <Input type="number" step="0.01" defaultValue={(sub.deliveryPriceRegularNoBoba || 0) / 100} id={`sub-del-reg-no-${sub.id}`} />
-                                      </div>
-                                      <div>
-                                        <Label className="text-xs">Large No Boba</Label>
-                                        <Input type="number" step="0.01" defaultValue={(sub.deliveryPriceLargeNoBoba || 0) / 100} id={`sub-del-large-no-${sub.id}`} />
-                                      </div>
-                                    </div>
-                                  </div>
-                                  <div className="flex items-center gap-2 p-3 bg-amber-50 border border-amber-200 rounded-lg">
-                                    <input type="checkbox" id={`sub-sync-prices-${sub.id}`} className="w-4 h-4" />
-                                    <Label htmlFor={`sub-sync-prices-${sub.id}`} className="text-sm cursor-pointer">
-                                      <span className="font-medium">Sync prices to products</span>
-                                      <span className="text-muted-foreground block text-xs">Update all products using base pricing in this subcategory</span>
-                                    </Label>
-                                  </div>
-                                  <Button onClick={() => {
-                                    const name = (document.getElementById(`sub-name-${sub.id}`) as HTMLInputElement).value;
-                                    const chineseName = (document.getElementById(`sub-chinese-${sub.id}`) as HTMLInputElement).value || null;
-                                    const description = (document.getElementById(`sub-desc-${sub.id}`) as HTMLInputElement).value || null;
-                                    const imageData = (document.getElementById(`sub-img-data-${sub.id}`) as HTMLInputElement)?.value || null;
-                                    const basePricePetiteWithBoba = Math.round(parseFloat((document.getElementById(`sub-petite-boba-${sub.id}`) as HTMLInputElement).value || '0') * 100);
-                                    const basePriceRegularWithBoba = Math.round(parseFloat((document.getElementById(`sub-reg-boba-${sub.id}`) as HTMLInputElement).value || '0') * 100);
-                                    const basePriceLargeWithBoba = Math.round(parseFloat((document.getElementById(`sub-large-boba-${sub.id}`) as HTMLInputElement).value || '0') * 100);
-                                    const basePricePetiteNoBoba = Math.round(parseFloat((document.getElementById(`sub-petite-no-${sub.id}`) as HTMLInputElement).value || '0') * 100);
-                                    const basePriceRegularNoBoba = Math.round(parseFloat((document.getElementById(`sub-reg-no-${sub.id}`) as HTMLInputElement).value || '0') * 100);
-                                    const basePriceLargeNoBoba = Math.round(parseFloat((document.getElementById(`sub-large-no-${sub.id}`) as HTMLInputElement).value || '0') * 100);
-                                    const deliveryPriceRegularWithBoba = Math.round(parseFloat((document.getElementById(`sub-del-reg-boba-${sub.id}`) as HTMLInputElement).value || '0') * 100);
-                                    const deliveryPriceLargeWithBoba = Math.round(parseFloat((document.getElementById(`sub-del-large-boba-${sub.id}`) as HTMLInputElement).value || '0') * 100);
-                                    const deliveryPriceRegularNoBoba = Math.round(parseFloat((document.getElementById(`sub-del-reg-no-${sub.id}`) as HTMLInputElement).value || '0') * 100);
-                                    const deliveryPriceLargeNoBoba = Math.round(parseFloat((document.getElementById(`sub-del-large-no-${sub.id}`) as HTMLInputElement).value || '0') * 100);
-                                    const syncPrices = (document.getElementById(`sub-sync-prices-${sub.id}`) as HTMLInputElement)?.checked || false;
-                                    updateSubcategory.mutate({
-                                      id: sub.id,
-                                      name,
-                                      chineseName,
-                                      description,
-                                      imageData,
-                                      basePricePetiteWithBoba,
-                                      basePriceRegularWithBoba,
-                                      basePriceLargeWithBoba,
-                                      basePricePetiteNoBoba,
-                                      basePriceRegularNoBoba,
-                                      basePriceLargeNoBoba,
-                                      deliveryPriceRegularWithBoba,
-                                      deliveryPriceLargeWithBoba,
-                                      deliveryPriceRegularNoBoba,
-                                      deliveryPriceLargeNoBoba,
-                                      syncProductPrices: syncPrices,
-                                    } as any);
-                                  }}>
-                                    Save Changes
-                                  </Button>
-                                </div>
+                                <SubcategoryEditForm sub={sub} updateSubcategory={updateSubcategory} />
                               </DialogContent>
                             </Dialog>
                             <Button size="sm" variant="ghost" className="text-destructive" onClick={() => {
@@ -1719,6 +1563,166 @@ function AddonsTab() {
           )}
         </DialogContent>
       </Dialog>
+    </div>
+  );
+}
+
+// Subcategory Edit Form Component
+function SubcategoryEditForm({ sub, updateSubcategory }: { sub: any; updateSubcategory: any }) {
+  const [imagePreview, setImagePreview] = useState<string | null>(sub.imageUrl || null);
+  const [imageData, setImageData] = useState<string | null>(null);
+  const [name, setName] = useState(sub.name);
+  const [chineseName, setChineseName] = useState(sub.chineseName || '');
+  const [description, setDescription] = useState(sub.description || '');
+  const [basePricePetiteWithBoba, setBasePricePetiteWithBoba] = useState((sub.basePricePetiteWithBoba || 0) / 100);
+  const [basePriceRegularWithBoba, setBasePriceRegularWithBoba] = useState((sub.basePriceRegularWithBoba || 0) / 100);
+  const [basePriceLargeWithBoba, setBasePriceLargeWithBoba] = useState((sub.basePriceLargeWithBoba || 0) / 100);
+  const [basePricePetiteNoBoba, setBasePricePetiteNoBoba] = useState((sub.basePricePetiteNoBoba || 0) / 100);
+  const [basePriceRegularNoBoba, setBasePriceRegularNoBoba] = useState((sub.basePriceRegularNoBoba || 0) / 100);
+  const [basePriceLargeNoBoba, setBasePriceLargeNoBoba] = useState((sub.basePriceLargeNoBoba || 0) / 100);
+  const [deliveryPriceRegularWithBoba, setDeliveryPriceRegularWithBoba] = useState((sub.deliveryPriceRegularWithBoba || 0) / 100);
+  const [deliveryPriceLargeWithBoba, setDeliveryPriceLargeWithBoba] = useState((sub.deliveryPriceLargeWithBoba || 0) / 100);
+  const [deliveryPriceRegularNoBoba, setDeliveryPriceRegularNoBoba] = useState((sub.deliveryPriceRegularNoBoba || 0) / 100);
+  const [deliveryPriceLargeNoBoba, setDeliveryPriceLargeNoBoba] = useState((sub.deliveryPriceLargeNoBoba || 0) / 100);
+  const [syncPrices, setSyncPrices] = useState(false);
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = reader.result as string;
+      setImagePreview(result);
+      setImageData(result);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleSave = () => {
+    updateSubcategory.mutate({
+      id: sub.id,
+      name,
+      chineseName: chineseName || null,
+      description: description || null,
+      imageData,
+      basePricePetiteWithBoba: Math.round(basePricePetiteWithBoba * 100),
+      basePriceRegularWithBoba: Math.round(basePriceRegularWithBoba * 100),
+      basePriceLargeWithBoba: Math.round(basePriceLargeWithBoba * 100),
+      basePricePetiteNoBoba: Math.round(basePricePetiteNoBoba * 100),
+      basePriceRegularNoBoba: Math.round(basePriceRegularNoBoba * 100),
+      basePriceLargeNoBoba: Math.round(basePriceLargeNoBoba * 100),
+      deliveryPriceRegularWithBoba: Math.round(deliveryPriceRegularWithBoba * 100),
+      deliveryPriceLargeWithBoba: Math.round(deliveryPriceLargeWithBoba * 100),
+      deliveryPriceRegularNoBoba: Math.round(deliveryPriceRegularNoBoba * 100),
+      deliveryPriceLargeNoBoba: Math.round(deliveryPriceLargeNoBoba * 100),
+      syncProductPrices: syncPrices,
+    } as any);
+  };
+
+  return (
+    <div className="space-y-4">
+      {/* Subcategory Image Upload */}
+      <div>
+        <Label>Subcategory Image</Label>
+        <div className="flex items-center gap-4 mt-2">
+          <div className="w-24 h-24 rounded-lg border-2 border-dashed border-muted-foreground/25 flex items-center justify-center overflow-hidden bg-muted">
+            {imagePreview ? (
+              <img src={imagePreview} alt="" className="w-full h-full object-cover" />
+            ) : (
+              <ImageIcon className="w-8 h-8 text-muted-foreground" />
+            )}
+          </div>
+          <div>
+            <input
+              type="file"
+              accept="image/*"
+              className="hidden"
+              id={`sub-img-upload-form-${sub.id}`}
+              onChange={handleImageUpload}
+            />
+            <label htmlFor={`sub-img-upload-form-${sub.id}`}>
+              <Button variant="outline" size="sm" asChild>
+                <span className="cursor-pointer"><Upload className="w-4 h-4 mr-2" />Upload Image</span>
+              </Button>
+            </label>
+            <p className="text-xs text-muted-foreground mt-1">Recommended: 400x300px</p>
+          </div>
+        </div>
+      </div>
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <Label>Subcategory Name</Label>
+          <Input value={name} onChange={(e) => setName(e.target.value)} />
+        </div>
+        <div>
+          <Label>Chinese Name (Optional)</Label>
+          <Input value={chineseName} onChange={(e) => setChineseName(e.target.value)} />
+        </div>
+      </div>
+      <div>
+        <Label>Description (Optional)</Label>
+        <Input value={description} onChange={(e) => setDescription(e.target.value)} />
+      </div>
+      <div className="border-t pt-4">
+        <h4 className="font-medium mb-3">In-Store Base Pricing (₹)</h4>
+        <div className="grid grid-cols-3 gap-3">
+          <div>
+            <Label className="text-xs">Petite + Boba</Label>
+            <Input type="number" step="0.01" value={basePricePetiteWithBoba} onChange={(e) => setBasePricePetiteWithBoba(parseFloat(e.target.value) || 0)} />
+          </div>
+          <div>
+            <Label className="text-xs">Regular + Boba</Label>
+            <Input type="number" step="0.01" value={basePriceRegularWithBoba} onChange={(e) => setBasePriceRegularWithBoba(parseFloat(e.target.value) || 0)} />
+          </div>
+          <div>
+            <Label className="text-xs">Large + Boba</Label>
+            <Input type="number" step="0.01" value={basePriceLargeWithBoba} onChange={(e) => setBasePriceLargeWithBoba(parseFloat(e.target.value) || 0)} />
+          </div>
+          <div>
+            <Label className="text-xs">Petite No Boba</Label>
+            <Input type="number" step="0.01" value={basePricePetiteNoBoba} onChange={(e) => setBasePricePetiteNoBoba(parseFloat(e.target.value) || 0)} />
+          </div>
+          <div>
+            <Label className="text-xs">Regular No Boba</Label>
+            <Input type="number" step="0.01" value={basePriceRegularNoBoba} onChange={(e) => setBasePriceRegularNoBoba(parseFloat(e.target.value) || 0)} />
+          </div>
+          <div>
+            <Label className="text-xs">Large No Boba</Label>
+            <Input type="number" step="0.01" value={basePriceLargeNoBoba} onChange={(e) => setBasePriceLargeNoBoba(parseFloat(e.target.value) || 0)} />
+          </div>
+        </div>
+      </div>
+      <div className="border-t pt-4">
+        <h4 className="font-medium mb-3">Delivery Base Pricing (₹)</h4>
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <Label className="text-xs">Regular + Boba</Label>
+            <Input type="number" step="0.01" value={deliveryPriceRegularWithBoba} onChange={(e) => setDeliveryPriceRegularWithBoba(parseFloat(e.target.value) || 0)} />
+          </div>
+          <div>
+            <Label className="text-xs">Large + Boba</Label>
+            <Input type="number" step="0.01" value={deliveryPriceLargeWithBoba} onChange={(e) => setDeliveryPriceLargeWithBoba(parseFloat(e.target.value) || 0)} />
+          </div>
+          <div>
+            <Label className="text-xs">Regular No Boba</Label>
+            <Input type="number" step="0.01" value={deliveryPriceRegularNoBoba} onChange={(e) => setDeliveryPriceRegularNoBoba(parseFloat(e.target.value) || 0)} />
+          </div>
+          <div>
+            <Label className="text-xs">Large No Boba</Label>
+            <Input type="number" step="0.01" value={deliveryPriceLargeNoBoba} onChange={(e) => setDeliveryPriceLargeNoBoba(parseFloat(e.target.value) || 0)} />
+          </div>
+        </div>
+      </div>
+      <div className="flex items-center gap-2 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+        <input type="checkbox" checked={syncPrices} onChange={(e) => setSyncPrices(e.target.checked)} className="w-4 h-4" />
+        <Label className="text-sm cursor-pointer">
+          <span className="font-medium">Sync prices to products</span>
+          <span className="text-muted-foreground block text-xs">Update all products using base pricing in this subcategory</span>
+        </Label>
+      </div>
+      <Button onClick={handleSave}>
+        Save Changes
+      </Button>
     </div>
   );
 }

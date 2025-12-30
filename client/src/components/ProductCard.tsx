@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Plus, Leaf, Egg } from 'lucide-react';
@@ -54,6 +54,17 @@ export function ProductCard({ product, subcategory, category, isDelivery = false
   // Build array of available images
   const images = [product.imageUrl, product.imageUrl2, product.imageUrl3].filter(Boolean) as string[];
   const hasMultipleImages = images.length > 1;
+
+  // Auto-rotate carousel every 2 seconds
+  useEffect(() => {
+    if (!hasMultipleImages) return;
+    
+    const interval = setInterval(() => {
+      setCurrentImageIndex((prev) => (prev + 1) % images.length);
+    }, 2000);
+    
+    return () => clearInterval(interval);
+  }, [hasMultipleImages, images.length]);
 
   // Check availability status
   const isOutOfStock = product.isInStock === false;

@@ -1002,3 +1002,21 @@
 - [x] Add image preview section to subcategory edit dialog
 - [x] Add file upload input for subcategory images
 - [x] Connect to backend updateSubcategory mutation with imageData
+
+
+## Phase 36b - Fix Subcategory Image Upload Bug (Dec 30, 2025)
+
+### 1. Fix Image Upload Not Saving
+- [x] Debug why subcategory images are not being saved
+- [x] Fix the image upload flow in Admin panel (rewrote as React state-based form)
+- [x] Verify images persist after save
+
+### 2. Add Image Cropping and Positioning
+- [ ] Add image cropper component for centering/cropping
+- [ ] Allow drag to reposition images
+- [ ] Apply to subcategory, category, and product images
+
+
+### 3. Fix Product Image Carousel Timing
+- [x] Add auto-rotate feature to product image carousel
+- [x] Set rotation interval to 2 seconds

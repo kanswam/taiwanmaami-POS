@@ -635,18 +635,24 @@ export const appRouter = router({
         if (!dbInstance) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
         const { id, imageBase64, imageData, syncProductPrices, ...data } = input;
         
+        console.log('[updateSubcategory] Input received:', { id, hasImageData: !!imageData, hasImageBase64: !!imageBase64, imageDataLength: imageData?.length });
+        
         // Handle image upload if base64 provided (support both imageBase64 and imageData)
         const base64ToUpload = imageData || imageBase64;
         if (base64ToUpload) {
+          console.log('[updateSubcategory] Uploading image, base64 length:', base64ToUpload.length);
           const { storagePut } = await import('./storage');
           const base64Data = base64ToUpload.replace(/^data:[^;]+;base64,/, '');
           const buffer = Buffer.from(base64Data, 'base64');
           const fileKey = `subcategories/${id}-${Date.now()}.jpg`;
           const { url } = await storagePut(fileKey, buffer, 'image/jpeg');
+          console.log('[updateSubcategory] Image uploaded successfully:', url);
           (data as any).imageUrl = url;
         }
         
+        console.log('[updateSubcategory] Data to update:', { ...data, imageUrl: (data as any).imageUrl });
         await dbInstance!.update(subcategories).set(data).where(eq(subcategories.id, id));
+        console.log('[updateSubcategory] Database updated successfully');
         
         // Sync prices to products if requested
         let syncedCount = 0;
