@@ -616,7 +616,8 @@ export const appRouter = router({
         hasSizeVariants: z.boolean().optional(),
         hasBobaOption: z.boolean().optional(),
         imageUrl: z.string().optional(),
-        imageBase64: z.string().optional(), // For uploading new image
+        imageBase64: z.string().optional(), // For uploading new image (legacy)
+        imageData: z.string().nullable().optional(), // For uploading new image (base64 data URL)
         basePricePetiteWithBoba: z.number().optional(),
         basePricePetiteNoBoba: z.number().optional(),
         basePriceRegularWithBoba: z.number().optional(),
@@ -632,12 +633,13 @@ export const appRouter = router({
       .mutation(async ({ input }) => {
         const dbInstance = await getDb();
         if (!dbInstance) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
-        const { id, imageBase64, syncProductPrices, ...data } = input;
+        const { id, imageBase64, imageData, syncProductPrices, ...data } = input;
         
-        // Handle image upload if base64 provided
-        if (imageBase64) {
+        // Handle image upload if base64 provided (support both imageBase64 and imageData)
+        const base64ToUpload = imageData || imageBase64;
+        if (base64ToUpload) {
           const { storagePut } = await import('./storage');
-          const base64Data = imageBase64.replace(/^data:[^;]+;base64,/, '');
+          const base64Data = base64ToUpload.replace(/^data:[^;]+;base64,/, '');
           const buffer = Buffer.from(base64Data, 'base64');
           const fileKey = `subcategories/${id}-${Date.now()}.jpg`;
           const { url } = await storagePut(fileKey, buffer, 'image/jpeg');

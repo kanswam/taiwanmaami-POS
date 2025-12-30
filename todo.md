@@ -994,3 +994,11 @@
 ### 7. Price Format Sync
 - [ ] Align category and product price options
 - [ ] Ensure consistent price display across all levels
+
+
+## Phase 36 - Subcategory Image Upload (Dec 30, 2025)
+
+### 1. Add Image Upload to Subcategory Edit Dialog
+- [x] Add image preview section to subcategory edit dialog
+- [x] Add file upload input for subcategory images
+- [x] Connect to backend updateSubcategory mutation with imageData

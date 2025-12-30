@@ -1104,6 +1104,53 @@ function CategoriesTab() {
                                   <DialogTitle>Edit Subcategory: {sub.name}</DialogTitle>
                                 </DialogHeader>
                                 <div className="space-y-4">
+                                  {/* Subcategory Image Upload */}
+                                  <div>
+                                    <Label>Subcategory Image</Label>
+                                    <div className="flex items-center gap-4 mt-2">
+                                      <div className="w-24 h-24 rounded-lg border-2 border-dashed border-muted-foreground/25 flex items-center justify-center overflow-hidden bg-muted">
+                                        {sub.imageUrl ? (
+                                          <img src={sub.imageUrl} alt="" className="w-full h-full object-cover" id={`sub-img-preview-${sub.id}`} />
+                                        ) : (
+                                          <ImageIcon className="w-8 h-8 text-muted-foreground" />
+                                        )}
+                                      </div>
+                                      <div>
+                                        <input
+                                          type="file"
+                                          accept="image/*"
+                                          className="hidden"
+                                          id={`sub-img-upload-${sub.id}`}
+                                          onChange={async (e) => {
+                                            const file = e.target.files?.[0];
+                                            if (!file) return;
+                                            const reader = new FileReader();
+                                            reader.onload = () => {
+                                              const preview = document.getElementById(`sub-img-preview-${sub.id}`) as HTMLImageElement;
+                                              if (preview) {
+                                                preview.src = reader.result as string;
+                                              } else {
+                                                // Create preview if it doesn't exist
+                                                const container = document.getElementById(`sub-img-upload-${sub.id}`)?.parentElement?.previousElementSibling;
+                                                if (container) {
+                                                  container.innerHTML = `<img src="${reader.result}" alt="" class="w-full h-full object-cover" id="sub-img-preview-${sub.id}" />`;
+                                                }
+                                              }
+                                              (document.getElementById(`sub-img-data-${sub.id}`) as HTMLInputElement).value = reader.result as string;
+                                            };
+                                            reader.readAsDataURL(file);
+                                          }}
+                                        />
+                                        <input type="hidden" id={`sub-img-data-${sub.id}`} />
+                                        <label htmlFor={`sub-img-upload-${sub.id}`}>
+                                          <Button variant="outline" size="sm" asChild>
+                                            <span className="cursor-pointer"><Upload className="w-4 h-4 mr-2" />Upload Image</span>
+                                          </Button>
+                                        </label>
+                                        <p className="text-xs text-muted-foreground mt-1">Recommended: 400x300px</p>
+                                      </div>
+                                    </div>
+                                  </div>
                                   <div className="grid grid-cols-2 gap-4">
                                     <div>
                                       <Label>Subcategory Name</Label>
@@ -1179,6 +1226,7 @@ function CategoriesTab() {
                                     const name = (document.getElementById(`sub-name-${sub.id}`) as HTMLInputElement).value;
                                     const chineseName = (document.getElementById(`sub-chinese-${sub.id}`) as HTMLInputElement).value || null;
                                     const description = (document.getElementById(`sub-desc-${sub.id}`) as HTMLInputElement).value || null;
+                                    const imageData = (document.getElementById(`sub-img-data-${sub.id}`) as HTMLInputElement)?.value || null;
                                     const basePricePetiteWithBoba = Math.round(parseFloat((document.getElementById(`sub-petite-boba-${sub.id}`) as HTMLInputElement).value || '0') * 100);
                                     const basePriceRegularWithBoba = Math.round(parseFloat((document.getElementById(`sub-reg-boba-${sub.id}`) as HTMLInputElement).value || '0') * 100);
                                     const basePriceLargeWithBoba = Math.round(parseFloat((document.getElementById(`sub-large-boba-${sub.id}`) as HTMLInputElement).value || '0') * 100);
@@ -1195,6 +1243,7 @@ function CategoriesTab() {
                                       name,
                                       chineseName,
                                       description,
+                                      imageData,
                                       basePricePetiteWithBoba,
                                       basePriceRegularWithBoba,
                                       basePriceLargeWithBoba,
