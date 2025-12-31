@@ -1,0 +1,17 @@
+{
+  "query": "SELECT id, name, slug, availableDelivery, availablePickup FROM categories WHERE slug LIKE '%hot%' OR name LIKE '%Hot%'",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT id, name, slug, availableDelivery, availablePickup FROM categories WHERE slug LIKE '%hot%' OR name LIKE '%Hot%'",
+  "rows": [
+    {
+      "id": "2",
+      "name": "Hot Beverages 熱飲",
+      "slug": "coffee",
+      "availableDelivery": "0",
+      "availablePickup": "0"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\tslug\tavailableDelivery\tavailablePickup\n2\tHot Beverages 熱飲\tcoffee\t0\t0\n",
+  "stderr": "",
+  "execution_time_ms": 1603
+}

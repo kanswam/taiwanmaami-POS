@@ -1055,3 +1055,27 @@
 - [x] Fix image upload to S3 and database update (confirmed working)
 - [x] Test and verify images persist after save (Slush imageUrl confirmed in DB)
 - [x] Fix Menu.tsx to use database imageUrl instead of hardcoded mapping
+
+
+## Phase 39 - Image Cropping & Hot Beverages Fix (Dec 31, 2025)
+
+### 1. Fix Hot Beverages Delivery Restriction
+- [ ] Verify hot beverages category has availableDelivery = false
+- [ ] Verify hot beverages category has availablePickup = false
+- [ ] Test that hot beverages don't appear in delivery/pickup mode
+
+### 2. Add Image Cropping and Positioning
+- [ ] Add image cropper component with drag/center functionality
+- [ ] Integrate cropper into subcategory image upload
+- [ ] Integrate cropper into product image upload
+- [ ] Integrate cropper into category image upload
+
+
+## Phase 37 - Hot Beverages Delivery Restriction UI (Dec 31, 2025)
+
+- [x] Update ProductCard to accept orderType prop for availability checking
+- [x] Add "In-store Only" badge (amber color) for products not available for delivery/pickup
+- [x] Show Hot Beverages category on menu but mark products as disabled
+- [x] Update category cards to show "In-store Only" badge for restricted categories
+- [x] Pass orderType to all ProductCard instances in Menu.tsx
+- [x] Write vitest tests for hot beverages delivery restriction logic

@@ -43,11 +43,14 @@ interface ProductCardProps {
     id: number;
     name: string;
     slug: string;
+    availableDelivery?: boolean;
+    availablePickup?: boolean;
   };
   isDelivery?: boolean;
+  orderType?: 'instore' | 'delivery' | 'pickup';
 }
 
-export function ProductCard({ product, subcategory, category, isDelivery = false }: ProductCardProps) {
+export function ProductCard({ product, subcategory, category, isDelivery = false, orderType = 'instore' }: ProductCardProps) {
   const [showModal, setShowModal] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
@@ -69,7 +72,16 @@ export function ProductCard({ product, subcategory, category, isDelivery = false
   // Check availability status
   const isOutOfStock = product.isInStock === false;
   const isInactive = product.isActive === false;
-  const isUnavailable = isOutOfStock || isInactive;
+  
+  // Check if category is available for current order type
+  const isNotAvailableForOrderType = (() => {
+    if (!category) return false;
+    if (orderType === 'delivery' && category.availableDelivery === false) return true;
+    if (orderType === 'pickup' && category.availablePickup === false) return true;
+    return false;
+  })();
+  
+  const isUnavailable = isOutOfStock || isInactive || isNotAvailableForOrderType;
 
   // Check if this is a mochi product (for delivery/pickup, mochis are sold as set of 2)
   const isMochiProduct = subcategory.name.toLowerCase().includes('mochi');
@@ -173,15 +185,21 @@ export function ProductCard({ product, subcategory, category, isDelivery = false
               </span>
             </div>
           )}
-          {/* Out of Stock / Inactive overlay */}
+          {/* Out of Stock / Inactive / In-store Only overlay */}
           {isUnavailable && (
             <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
               <span className={`px-3 py-1.5 rounded-full text-sm font-bold shadow-lg ${
-                isInactive 
-                  ? 'bg-gray-600 text-white' 
-                  : 'bg-red-600 text-white'
+                isNotAvailableForOrderType
+                  ? 'bg-amber-600 text-white'
+                  : isInactive 
+                    ? 'bg-gray-600 text-white' 
+                    : 'bg-red-600 text-white'
               }`}>
-                {isInactive ? 'Unavailable' : 'Out of Stock'}
+                {isNotAvailableForOrderType 
+                  ? 'In-store Only' 
+                  : isInactive 
+                    ? 'Unavailable' 
+                    : 'Out of Stock'}
               </span>
             </div>
           )}

@@ -245,13 +245,13 @@ export default function Menu() {
       <h2 className="text-2xl font-bold">Browse Categories</h2>
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
         {menuData?.categories.map((category) => {
-          // Filter out categories not available for delivery/pickup
-          const isDeliveryOrPickup = state.orderType === 'delivery' || state.orderType === 'pickup';
-          if (isDeliveryOrPickup) {
-            const cat = category as any;
-            if (cat.availableDelivery === false && state.orderType === 'delivery') return null;
-            if (cat.availablePickup === false && state.orderType === 'pickup') return null;
-          }
+          // Check if category is available for current order type
+          // Note: We show the category but mark products as disabled with "In-store Only" badge
+          const cat = category as any;
+          const isNotAvailableForOrderType = (
+            (state.orderType === 'delivery' && cat.availableDelivery === false) ||
+            (state.orderType === 'pickup' && cat.availablePickup === false)
+          );
           
           const subcategories = menuData.subcategories.filter(s => s.categoryId === category.id);
           const productCount = menuData.products.filter(p => 
@@ -268,7 +268,7 @@ export default function Menu() {
             <button
               key={category.id}
               onClick={() => handleCategoryClick(category.slug)}
-              className="group relative overflow-hidden rounded-2xl bg-card border-2 border-border hover:border-primary transition-all duration-300 hover:shadow-xl text-left"
+              className={`group relative overflow-hidden rounded-2xl bg-card border-2 border-border hover:border-primary transition-all duration-300 hover:shadow-xl text-left ${isNotAvailableForOrderType ? 'opacity-75' : ''}`}
             >
               <div className="aspect-[4/3] overflow-hidden">
                 <img
@@ -280,6 +280,14 @@ export default function Menu() {
                   }}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+                {/* In-store Only badge for categories not available for delivery/pickup */}
+                {isNotAvailableForOrderType && (
+                  <div className="absolute top-3 left-3">
+                    <span className="bg-amber-600 text-white text-xs font-bold px-2 py-1 rounded-full shadow-lg">
+                      In-store Only
+                    </span>
+                  </div>
+                )}
               </div>
               <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
                 <h3 className="font-bold text-lg leading-tight">{category.name}</h3>
@@ -387,6 +395,7 @@ export default function Menu() {
                 subcategory={sub}
                 category={cat}
                 isDelivery={state.orderType !== 'instore'}
+                orderType={state.orderType}
               />
             );
           })}
@@ -433,6 +442,7 @@ export default function Menu() {
                     subcategory={sub}
                     category={cat}
                     isDelivery={state.orderType !== 'instore'}
+                    orderType={state.orderType}
                   />
                 </div>
               );
@@ -546,6 +556,7 @@ export default function Menu() {
                       subcategory={sub}
                       category={cat}
                       isDelivery={state.orderType !== 'instore'}
+                      orderType={state.orderType}
                     />
                   );
                 })}
