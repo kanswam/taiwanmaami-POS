@@ -1020,3 +1020,28 @@
 ### 3. Fix Product Image Carousel Timing
 - [x] Add auto-rotate feature to product image carousel
 - [x] Set rotation interval to 2 seconds
+
+
+## Phase 37 - Delivery Platform Integration Research (Dec 31, 2025)
+
+### 1. Porter API Research
+- [x] Find Porter Business API documentation
+- [x] Document API endpoints for delivery booking
+- [x] Identify authentication requirements
+- [x] Note pricing structure and webhook support
+
+### 2. Rapido API Research
+- [x] Find Rapido Business/B2B API documentation (Ownly platform)
+- [x] Document API endpoints for delivery booking
+- [x] Identify authentication requirements
+- [x] Note pricing structure and webhook support
+
+### 3. Integration Documentation
+- [x] Create comprehensive integration guide
+- [x] Document data flow between Taiwan Maami and delivery platforms
+- [x] Outline implementation steps
+
+### 4. Future Phases (Planning Only)
+- [ ] Google Analytics 4 integration plan
+- [ ] Financial comparison dashboard design
+- [ ] Marketing/SEO optimization strategy

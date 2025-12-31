@@ -883,8 +883,15 @@ function CategoriesTab() {
   });
 
   const updateSubcategory = trpc.admin.updateSubcategory.useMutation({
-    onSuccess: () => { toast.success('Subcategory updated'); refetch(); },
-    onError: (err) => toast.error(err.message),
+    onSuccess: (data) => { 
+      console.log('[updateSubcategory] Success:', data);
+      toast.success('Subcategory updated successfully'); 
+      refetch(); 
+    },
+    onError: (err) => {
+      console.error('[updateSubcategory] Error:', err);
+      toast.error(err.message);
+    },
   });
 
   const createSubcategory = trpc.admin.createSubcategory.useMutation({
@@ -1720,8 +1727,8 @@ function SubcategoryEditForm({ sub, updateSubcategory }: { sub: any; updateSubca
           <span className="text-muted-foreground block text-xs">Update all products using base pricing in this subcategory</span>
         </Label>
       </div>
-      <Button onClick={handleSave}>
-        Save Changes
+      <Button onClick={handleSave} disabled={updateSubcategory.isPending}>
+        {updateSubcategory.isPending ? 'Saving...' : 'Save Changes'}
       </Button>
     </div>
   );
