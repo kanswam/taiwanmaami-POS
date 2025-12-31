@@ -1045,3 +1045,13 @@
 - [ ] Google Analytics 4 integration plan
 - [ ] Financial comparison dashboard design
 - [ ] Marketing/SEO optimization strategy
+
+
+## Phase 38 - Fix Subcategory Image Upload (Dec 31, 2025)
+
+### Bug: Image shows in preview but not saved to database
+- [x] Debug backend updateSubcategory mutation (was working correctly)
+- [x] Verify image data is being sent from frontend (confirmed working)
+- [x] Fix image upload to S3 and database update (confirmed working)
+- [x] Test and verify images persist after save (Slush imageUrl confirmed in DB)
+- [x] Fix Menu.tsx to use database imageUrl instead of hardcoded mapping

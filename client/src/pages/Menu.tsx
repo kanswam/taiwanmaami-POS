@@ -262,7 +262,7 @@ export default function Menu() {
 
           // Get a representative image from the first subcategory
           const firstSub = subcategories[0];
-          const imageUrl = firstSub ? (SUBCATEGORY_IMAGES[firstSub.slug] || '/images/shopfront.jpg') : '/images/shopfront.jpg';
+          const imageUrl = firstSub?.imageUrl || SUBCATEGORY_IMAGES[firstSub?.slug] || '/images/shopfront.jpg';
 
           return (
             <button
@@ -317,7 +317,7 @@ export default function Menu() {
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
           {visibleSubcategories.map((subcategory) => {
             const productCount = menuData?.products.filter(p => p.subcategoryId === subcategory.id).length || 0;
-            const imageUrl = SUBCATEGORY_IMAGES[subcategory.slug] || '/images/shopfront.jpg';
+            const imageUrl = subcategory.imageUrl || SUBCATEGORY_IMAGES[subcategory.slug] || '/images/shopfront.jpg';
             
             return (
               <button

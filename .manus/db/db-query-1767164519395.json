@@ -1,0 +1,15 @@
+{
+  "query": "SELECT id, name, imageUrl FROM subcategories WHERE name = 'Slush';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT id, name, imageUrl FROM subcategories WHERE name = 'Slush';",
+  "rows": [
+    {
+      "id": "30003",
+      "name": "Slush",
+      "imageUrl": "https://d2xsxph8kpxj0f.cloudfront.net/114675165/7xKVuVPoe4TavcqcxPZkpC/subcategories/30003-1767164271393.jpg"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\timageUrl\n30003\tSlush\thttps://d2xsxph8kpxj0f.cloudfront.net/114675165/7xKVuVPoe4TavcqcxPZkpC/subcategories/30003-1767164271393.jpg\n",
+  "stderr": "",
+  "execution_time_ms": 1511
+}
