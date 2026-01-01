@@ -866,9 +866,15 @@ function CategoriesTab() {
   const [newSubcategoryData, setNewSubcategoryData] = useState({ name: '', categoryId: 0 });
   const [expandedCategory, setExpandedCategory] = useState<number | null>(null);
   const [expandedSubcategory, setExpandedSubcategory] = useState<number | null>(null);
+  const [editingCategoryId, setEditingCategoryId] = useState<number | null>(null);
+  const [editingSubcategoryId, setEditingSubcategoryId] = useState<number | null>(null);
 
   const updateCategory = trpc.admin.updateCategory.useMutation({
-    onSuccess: () => { toast.success('Category updated'); refetch(); },
+    onSuccess: () => { 
+      toast.success('Category updated'); 
+      setEditingCategoryId(null); // Close dialog on success
+      refetch(); 
+    },
     onError: (err) => toast.error(err.message),
   });
 
@@ -886,6 +892,7 @@ function CategoriesTab() {
     onSuccess: (data) => { 
       console.log('[updateSubcategory] Success:', data);
       toast.success('Subcategory updated successfully'); 
+      setEditingSubcategoryId(null); // Close dialog on success
       refetch(); 
     },
     onError: (err) => {
@@ -930,9 +937,9 @@ function CategoriesTab() {
                 <span className="text-xs text-muted-foreground">({categoryProducts.length} products)</span>
               </div>
                 <div className="flex gap-2">
-                  <Dialog>
+                  <Dialog open={editingCategoryId === cat.id} onOpenChange={(open) => setEditingCategoryId(open ? cat.id : null)}>
                     <DialogTrigger asChild>
-                      <Button size="sm" variant="ghost">
+                      <Button size="sm" variant="ghost" onClick={(e) => { e.stopPropagation(); setEditingCategoryId(cat.id); }}>
                         <Edit className="w-4 h-4" />
                       </Button>
                     </DialogTrigger>
@@ -1100,9 +1107,9 @@ function CategoriesTab() {
                           <span className="text-xs text-muted-foreground">({subProducts.length})</span>
                         </div>
                           <div className="flex gap-2">
-                            <Dialog>
+                            <Dialog open={editingSubcategoryId === sub.id} onOpenChange={(open) => setEditingSubcategoryId(open ? sub.id : null)}>
                               <DialogTrigger asChild>
-                                <Button size="sm" variant="ghost">
+                                <Button size="sm" variant="ghost" onClick={(e) => { e.stopPropagation(); setEditingSubcategoryId(sub.id); }}>
                                   <Edit className="w-4 h-4" />
                                 </Button>
                               </DialogTrigger>
@@ -1110,7 +1117,7 @@ function CategoriesTab() {
                                 <DialogHeader>
                                   <DialogTitle>Edit Subcategory: {sub.name}</DialogTitle>
                                 </DialogHeader>
-                                <SubcategoryEditForm sub={sub} updateSubcategory={updateSubcategory} />
+                                <SubcategoryEditForm sub={sub} updateSubcategory={updateSubcategory} onClose={() => setEditingSubcategoryId(null)} />
                               </DialogContent>
                             </Dialog>
                             <Button size="sm" variant="ghost" className="text-destructive" onClick={() => {
@@ -1575,7 +1582,7 @@ function AddonsTab() {
 }
 
 // Subcategory Edit Form Component
-function SubcategoryEditForm({ sub, updateSubcategory }: { sub: any; updateSubcategory: any }) {
+function SubcategoryEditForm({ sub, updateSubcategory, onClose }: { sub: any; updateSubcategory: any; onClose?: () => void }) {
   const [imagePreview, setImagePreview] = useState<string | null>(sub.imageUrl || null);
   const [imageData, setImageData] = useState<string | null>(null);
   const [name, setName] = useState(sub.name);

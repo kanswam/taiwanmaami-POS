@@ -1079,3 +1079,10 @@
 - [x] Update category cards to show "In-store Only" badge for restricted categories
 - [x] Pass orderType to all ProductCard instances in Menu.tsx
 - [x] Write vitest tests for hot beverages delivery restriction logic
+
+
+## Phase 38 - Admin Dialog Auto-Close on Save (Jan 1, 2026)
+
+- [x] Fix product edit dialog to auto-close after successful save
+- [x] Fix category edit dialog to auto-close after successful save
+- [x] Fix subcategory edit dialog to auto-close after successful save
