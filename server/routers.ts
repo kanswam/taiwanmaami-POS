@@ -551,6 +551,7 @@ export const appRouter = router({
         imageBase64: z.string().optional(), // For uploading new image
         displayOrder: z.number().optional(),
         isActive: z.boolean().optional(),
+        availableInstore: z.boolean().optional(),
         availableDelivery: z.boolean().optional(),
         availablePickup: z.boolean().optional(),
       }))

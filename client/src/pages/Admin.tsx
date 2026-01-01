@@ -1000,39 +1000,54 @@ function CategoriesTab() {
                             placeholder="Optional description"
                           />
                         </div>
-                        <div className="grid grid-cols-2 gap-4 p-3 bg-muted rounded-lg">
-                          <div className="flex items-center gap-2">
-                            <input
-                              type="checkbox"
-                              id={`cat-delivery-${cat.id}`}
-                              defaultChecked={(cat as any).availableDelivery !== false}
-                              className="w-4 h-4"
-                            />
-                            <Label htmlFor={`cat-delivery-${cat.id}`} className="text-sm cursor-pointer">
-                              Available for Delivery
-                            </Label>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <input
-                              type="checkbox"
-                              id={`cat-pickup-${cat.id}`}
-                              defaultChecked={(cat as any).availablePickup !== false}
-                              className="w-4 h-4"
-                            />
-                            <Label htmlFor={`cat-pickup-${cat.id}`} className="text-sm cursor-pointer">
-                              Available for Pickup
-                            </Label>
+                        <div className="space-y-3 p-3 bg-muted rounded-lg">
+                          <p className="text-xs font-medium text-muted-foreground">Menu Availability</p>
+                          <div className="grid grid-cols-3 gap-3">
+                            <div className="flex items-center gap-2">
+                              <input
+                                type="checkbox"
+                                id={`cat-instore-${cat.id}`}
+                                defaultChecked={(cat as any).availableInstore !== false}
+                                className="w-4 h-4"
+                              />
+                              <Label htmlFor={`cat-instore-${cat.id}`} className="text-sm cursor-pointer">
+                                In-store
+                              </Label>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <input
+                                type="checkbox"
+                                id={`cat-delivery-${cat.id}`}
+                                defaultChecked={(cat as any).availableDelivery !== false}
+                                className="w-4 h-4"
+                              />
+                              <Label htmlFor={`cat-delivery-${cat.id}`} className="text-sm cursor-pointer">
+                                Delivery
+                              </Label>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <input
+                                type="checkbox"
+                                id={`cat-pickup-${cat.id}`}
+                                defaultChecked={(cat as any).availablePickup !== false}
+                                className="w-4 h-4"
+                              />
+                              <Label htmlFor={`cat-pickup-${cat.id}`} className="text-sm cursor-pointer">
+                                Pickup
+                              </Label>
+                            </div>
                           </div>
                         </div>
                         <Button onClick={async () => {
                           const name = (document.getElementById(`cat-name-${cat.id}`) as HTMLInputElement).value;
                           const description = (document.getElementById(`cat-desc-${cat.id}`) as HTMLInputElement).value;
                           const imageData = (document.getElementById(`cat-img-data-${cat.id}`) as HTMLInputElement)?.value;
+                          const availableInstore = (document.getElementById(`cat-instore-${cat.id}`) as HTMLInputElement)?.checked ?? true;
                           const availableDelivery = (document.getElementById(`cat-delivery-${cat.id}`) as HTMLInputElement)?.checked ?? true;
                           const availablePickup = (document.getElementById(`cat-pickup-${cat.id}`) as HTMLInputElement)?.checked ?? true;
-                          updateCategory.mutate({ id: cat.id, name, description, imageBase64: imageData || undefined, availableDelivery, availablePickup } as any);
-                        }}>
-                          Save Changes
+                          updateCategory.mutate({ id: cat.id, name, description, imageBase64: imageData || undefined, availableInstore, availableDelivery, availablePickup } as any);
+                        }} disabled={updateCategory.isPending}>
+                          {updateCategory.isPending ? 'Saving...' : 'Save Changes'}
                         </Button>
                       </div>
                     </DialogContent>

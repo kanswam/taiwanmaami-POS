@@ -43,6 +43,7 @@ interface ProductCardProps {
     id: number;
     name: string;
     slug: string;
+    availableInstore?: boolean;
     availableDelivery?: boolean;
     availablePickup?: boolean;
   };
@@ -76,6 +77,7 @@ export function ProductCard({ product, subcategory, category, isDelivery = false
   // Check if category is available for current order type
   const isNotAvailableForOrderType = (() => {
     if (!category) return false;
+    if (orderType === 'instore' && category.availableInstore === false) return true;
     if (orderType === 'delivery' && category.availableDelivery === false) return true;
     if (orderType === 'pickup' && category.availablePickup === false) return true;
     return false;

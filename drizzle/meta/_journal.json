@@ -106,6 +106,13 @@
       "when": 1766903742334,
       "tag": "0014_curly_oracle",
       "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "5",
+      "when": 1767240041756,
+      "tag": "0015_same_misty_knight",
+      "breakpoints": true
     }
   ]
 }

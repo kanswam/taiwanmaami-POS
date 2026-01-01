@@ -1086,3 +1086,13 @@
 - [x] Fix product edit dialog to auto-close after successful save
 - [x] Fix category edit dialog to auto-close after successful save
 - [x] Fix subcategory edit dialog to auto-close after successful save
+
+
+## Phase 39 - Category Improvements (Jan 1, 2026)
+
+- [x] Add availableInstore column to categories table
+- [x] Fix category image upload to properly save to S3
+- [x] Add In-store toggle in Admin category edit dialog
+- [x] Update menu filtering to respect availableInstore flag
+- [x] Ensure Hot Beverages shows for in-store orders
+- [x] Verify separate in-store vs delivery price controls work correctly

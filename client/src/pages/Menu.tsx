@@ -246,9 +246,10 @@ export default function Menu() {
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
         {menuData?.categories.map((category) => {
           // Check if category is available for current order type
-          // Note: We show the category but mark products as disabled with "In-store Only" badge
+          // Note: We show the category but mark products as disabled with appropriate badge
           const cat = category as any;
           const isNotAvailableForOrderType = (
+            (state.orderType === 'instore' && cat.availableInstore === false) ||
             (state.orderType === 'delivery' && cat.availableDelivery === false) ||
             (state.orderType === 'pickup' && cat.availablePickup === false)
           );

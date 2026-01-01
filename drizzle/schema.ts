@@ -42,6 +42,7 @@ export const categories = mysqlTable("categories", {
   imageUrl: text("imageUrl"),
   displayOrder: int("displayOrder").default(0).notNull(),
   isActive: boolean("isActive").default(true).notNull(),
+  availableInstore: boolean("availableInstore").default(true).notNull(), // All items available in-store including hot beverages
   availableDelivery: boolean("availableDelivery").default(true).notNull(), // For hot beverages = false
   availablePickup: boolean("availablePickup").default(true).notNull(), // For hot beverages = false
   createdAt: timestamp("createdAt").defaultNow().notNull(),
