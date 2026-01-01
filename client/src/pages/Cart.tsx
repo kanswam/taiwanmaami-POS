@@ -138,6 +138,9 @@ export default function Cart() {
                           Add-ons: {item.addons.map(a => a.name).join(', ')}
                         </div>
                       )}
+                      {item.extraEspresso && (
+                        <span className="text-xs"> • Extra Espresso Shot</span>
+                      )}
                       {item.specialInstructions && (
                         <div className="text-xs text-orange-600 mt-1">
                           Note: {item.specialInstructions}

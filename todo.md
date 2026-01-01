@@ -1105,3 +1105,11 @@
 - [x] Add In-store order type button to customer menu alongside Delivery/Pickup
 - [x] Add product delete option for products without order history
 - [x] Keep products with order history as disable-only (no delete)
+
+
+## Phase 41 - Hot Beverages Customization Fix (Jan 1, 2026)
+
+- [x] Remove size variants (Regular/Large) from Hot Beverages - single size only
+- [x] Remove ice level options from Hot Beverages (tied to hasSizeVariants=false)
+- [x] Remove sugar percentage options for Hot Beverages (tied to hasSizeVariants=false)
+- [x] Add "Extra Shot of Espresso" addon for Latte and Cappuccino products

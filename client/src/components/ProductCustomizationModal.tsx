@@ -106,6 +106,13 @@ export function ProductCustomizationModal({
   const [wantExtraCheese, setWantExtraCheese] = useState(false);
   const isFoodCategory = category?.slug === 'asian-rice-noodle-bread' || category?.name?.toLowerCase().includes('rice') || category?.name?.toLowerCase().includes('noodle') || category?.name?.toLowerCase().includes('bread');
   
+  // Hot beverages detection
+  const isHotBeverage = category?.name?.toLowerCase().includes('hot') || category?.slug === 'coffee';
+  // Extra espresso shot for Latte and Cappuccino
+  const [wantExtraEspresso, setWantExtraEspresso] = useState(false);
+  const isLatteOrCappuccino = product.name.toLowerCase().includes('latte') || product.name.toLowerCase().includes('cappuccino');
+  const extraEspressoPrice = 4000; // ₹40 per extra shot
+  
   // Check if product contains egg or cheese (for relevant add-ons)
   // Look for 'egg' in product name/description - but exclude 'cheesy' false positives
   const productNameLower = product.name.toLowerCase();
@@ -217,7 +224,8 @@ export function ProductCustomizationModal({
   const milkAddonsTotal = selectedAddons.reduce((sum, a) => sum + a.price, 0);
   const foodAddonsTotal = extraEggPrice + (wantExtraCheese ? extraCheesePrice : 0);
   const coconutCreamCapTotal = (wantCoconutCreamCap && isIcedBeverage) ? getCoconutCreamCapPrice() : 0;
-  const addonsTotal = poppingBobaPrice + extraBobaPrice + milkAddonsTotal + foodAddonsTotal + coconutCreamCapTotal;
+  const extraEspressoTotal = (wantExtraEspresso && isLatteOrCappuccino) ? extraEspressoPrice : 0;
+  const addonsTotal = poppingBobaPrice + extraBobaPrice + milkAddonsTotal + foodAddonsTotal + coconutCreamCapTotal + extraEspressoTotal;
   const unitPrice = basePrice;
   
   // For mochis in delivery/pickup mode:
@@ -318,6 +326,8 @@ export function ProductCustomizationModal({
       extraEggCount: extraEggCount > 0 ? extraEggCount : undefined,
       extraCheese: wantExtraCheese || undefined,
       coconutCreamCap: wantCoconutCreamCap || undefined,
+      // Hot beverage add-ons
+      extraEspresso: wantExtraEspresso || undefined,
       quantity,
       unitPrice,
       addonsTotal,
@@ -698,6 +708,23 @@ export function ProductCustomizationModal({
                   </div>
                 )}
               </div>
+            </div>
+          )}
+
+          {/* Extra Espresso Shot - For Latte and Cappuccino */}
+          {isHotBeverage && isLatteOrCappuccino && (
+            <div 
+              className={`flex items-center justify-between p-3 rounded-lg border-2 cursor-pointer transition-colors ${wantExtraEspresso ? 'border-primary bg-primary/5' : 'border-muted hover:border-muted-foreground/50'}`}
+              onClick={() => setWantExtraEspresso(!wantExtraEspresso)}
+            >
+              <div className="flex items-center gap-3">
+                <Checkbox checked={wantExtraEspresso} />
+                <div>
+                  <span className="font-medium">Extra Shot of Espresso</span>
+                  <p className="text-xs text-muted-foreground">Add an extra shot for a stronger coffee</p>
+                </div>
+              </div>
+              <span className="text-sm font-medium text-primary">+{formatPrice(extraEspressoPrice)}</span>
             </div>
           )}
 

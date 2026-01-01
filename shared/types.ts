@@ -80,6 +80,8 @@ export interface CartItem {
   extraEggCount?: number; // 0-3 eggs
   extraCheese?: boolean;
   coconutCreamCap?: boolean;
+  // Hot beverage add-ons
+  extraEspresso?: boolean;
   quantity: number;
   unitPrice: number;
   addonsTotal: number;
