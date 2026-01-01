@@ -1,0 +1,39 @@
+{
+  "query": "SELECT * FROM products WHERE name LIKE '%Imo Coconut%' LIMIT 1;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT * FROM products WHERE name LIKE '%Imo Coconut%' LIMIT 1;",
+  "rows": [
+    {
+      "id": "420001",
+      "subcategoryId": "10",
+      "name": "Imo Coconut Katsu Curry",
+      "chineseName": "NULL",
+      "slug": "imo-coconut-katsu-curry",
+      "description": "Coconut Katsu Curry",
+      "imageUrl": "https://d2xsxph8kpxj0f.cloudfront.net/114675165/7xKVuVPoe4TavcqcxPZkpC/products/420001-img1-1767240849840.jpg",
+      "instorePrice": "0",
+      "deliveryPrice": "0",
+      "deliveryUnitMultiplier": "1",
+      "mochiPrice1pc": "NULL",
+      "mochiPrice2pc": "NULL",
+      "mochiPrice3pc": "NULL",
+      "isVegetarian": "1",
+      "isVegan": "0",
+      "containsEgg": "0",
+      "isInStock": "1",
+      "availableInstore": "1",
+      "availableDelivery": "1",
+      "displayOrder": "0",
+      "isActive": "1",
+      "createdAt": "2026-01-01 04:14:07",
+      "updatedAt": "2026-01-01 04:14:10",
+      "imageUrl2": "NULL",
+      "imageUrl3": "NULL",
+      "imageCropData": "NULL",
+      "useBasePrice": "1"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tsubcategoryId\tname\tchineseName\tslug\tdescription\timageUrl\tinstorePrice\tdeliveryPrice\tdeliveryUnitMultiplier\tmochiPrice1pc\tmochiPrice2pc\tmochiPrice3pc\tisVegetarian\tisVegan\tcontainsEgg\tisInStock\tavailableInstore\tavailableDelivery\tdisplayOrder\tisActive\tcreatedAt\tupdatedAt\timageUrl2\timageUrl3\timageCropData\tuseBasePrice\n420001\t10\tImo Coconut Katsu Curry\tNULL\timo-coconut-katsu-curry\tCoconut Katsu Curry\thttps://d2xsxph8kpxj0f.cloudfront.net/114675165/7xKVuVPoe4TavcqcxPZkpC/products/420001-img1-1767240849840.jpg\t0\t0\t1\tNULL\tNULL\tNULL\t1\t0\t0\t1\t1\t1\t0\t1\t2026-01-01 04:14:07\t2026-01-01 04:14:10\tNULL\tNULL\tNULL\t1\n",
+  "stderr": "",
+  "execution_time_ms": 1603
+}

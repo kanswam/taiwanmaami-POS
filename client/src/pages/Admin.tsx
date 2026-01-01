@@ -577,7 +577,9 @@ function ProductsTab() {
 // Product Edit Dialog
 function ProductEditDialog({ product, onUpdate }: { product: any; onUpdate: () => void }) {
   const [open, setOpen] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const { data: menuData } = trpc.menu.getFullMenu.useQuery({ isDelivery: false });
+  const { data: canDeleteData } = trpc.admin.canDeleteProduct.useQuery({ id: product.id }, { enabled: open });
   const [formData, setFormData] = useState({
     name: product.name,
     chineseName: product.chineseName || '',
@@ -596,6 +598,15 @@ function ProductEditDialog({ product, onUpdate }: { product: any; onUpdate: () =
     product.imageUrl3 || null,
   ]);
   const [uploading, setUploading] = useState(false);
+
+  const permanentlyDeleteProduct = trpc.admin.permanentlyDeleteProduct.useMutation({
+    onSuccess: () => {
+      toast.success('Product permanently deleted');
+      setOpen(false);
+      onUpdate();
+    },
+    onError: (err) => toast.error(err.message),
+  });
 
   const updateProduct = trpc.admin.updateProduct.useMutation({
     onSuccess: () => {
@@ -847,11 +858,51 @@ function ProductEditDialog({ product, onUpdate }: { product: any; onUpdate: () =
             </div>
           </div>
         </div>
-        <div className="flex justify-end gap-2">
-          <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
-          <Button onClick={handleSubmit} disabled={updateProduct.isPending}>
-            {updateProduct.isPending ? 'Saving...' : 'Save Changes'}
-          </Button>
+        <div className="flex justify-between">
+          {/* Delete button - only show if product can be deleted (no order history) */}
+          <div>
+            {canDeleteData?.canDelete ? (
+              showDeleteConfirm ? (
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-destructive">Delete permanently?</span>
+                  <Button 
+                    variant="destructive" 
+                    size="sm"
+                    onClick={() => permanentlyDeleteProduct.mutate({ id: product.id })}
+                    disabled={permanentlyDeleteProduct.isPending}
+                  >
+                    {permanentlyDeleteProduct.isPending ? 'Deleting...' : 'Yes, Delete'}
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => setShowDeleteConfirm(false)}
+                  >
+                    No
+                  </Button>
+                </div>
+              ) : (
+                <Button 
+                  variant="ghost" 
+                  className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                  onClick={() => setShowDeleteConfirm(true)}
+                >
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  Delete
+                </Button>
+              )
+            ) : canDeleteData ? (
+              <span className="text-xs text-muted-foreground">
+                Cannot delete - has {canDeleteData.orderCount} order(s)
+              </span>
+            ) : null}
+          </div>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
+            <Button onClick={handleSubmit} disabled={updateProduct.isPending}>
+              {updateProduct.isPending ? 'Saving...' : 'Save Changes'}
+            </Button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
@@ -952,11 +1003,13 @@ function CategoriesTab() {
                           <Label>Category Image</Label>
                           <div className="mt-2 flex items-center gap-4">
                             <div className="w-20 h-20 rounded-lg border-2 border-dashed border-border overflow-hidden bg-secondary flex items-center justify-center">
-                              {cat.imageUrl ? (
-                                <img src={cat.imageUrl} alt="" className="w-full h-full object-cover" id={`cat-img-preview-${cat.id}`} />
-                              ) : (
-                                <ImageIcon className="w-8 h-8 text-muted-foreground" />
-                              )}
+                              <img 
+                                src={cat.imageUrl || ''} 
+                                alt="" 
+                                className={`w-full h-full object-cover ${!cat.imageUrl ? 'hidden' : ''}`} 
+                                id={`cat-img-preview-${cat.id}`} 
+                              />
+                              {!cat.imageUrl && <ImageIcon className="w-8 h-8 text-muted-foreground" id={`cat-img-placeholder-${cat.id}`} />}
                             </div>
                             <div>
                               <input
@@ -970,8 +1023,14 @@ function CategoriesTab() {
                                   const reader = new FileReader();
                                   reader.onload = () => {
                                     const preview = document.getElementById(`cat-img-preview-${cat.id}`) as HTMLImageElement;
-                                    if (preview) preview.src = reader.result as string;
-                                    (document.getElementById(`cat-img-data-${cat.id}`) as HTMLInputElement).value = reader.result as string;
+                                    const placeholder = document.getElementById(`cat-img-placeholder-${cat.id}`);
+                                    if (preview) {
+                                      preview.src = reader.result as string;
+                                      preview.classList.remove('hidden');
+                                    }
+                                    if (placeholder) placeholder.classList.add('hidden');
+                                    const dataInput = document.getElementById(`cat-img-data-${cat.id}`) as HTMLInputElement;
+                                    if (dataInput) dataInput.value = reader.result as string;
                                   };
                                   reader.readAsDataURL(file);
                                 }}

@@ -7,7 +7,7 @@ import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
 import * as db from "./db";
 import { getDb } from "./db";
 import { seedDatabase } from "./seed";
-import { categories, subcategories, products, addons, orders, orderItems, orderItemAddons, payments, discounts, addresses, storeLocations, deliveryAreas, users } from "../drizzle/schema";
+import { categories, subcategories, products, addons, orders, orderItems as orderItemsTable, orderItemAddons, payments, discounts, addresses, storeLocations, deliveryAreas, users } from "../drizzle/schema";
 import { eq, and, desc, asc, sql } from "drizzle-orm";
 import { generateOrderNumber, calculateGst } from "@shared/types";
 // POS functionality removed - Employee Master import removed
@@ -197,7 +197,7 @@ export const appRouter = router({
 
         // Create order items
         for (const item of input.items) {
-          const [itemResult] = await dbInstance!.insert(orderItems).values({
+          const [itemResult] = await dbInstance!.insert(orderItemsTable).values({
             orderId,
             productId: item.productId,
             productName: item.productName,
@@ -407,7 +407,7 @@ export const appRouter = router({
         const [order] = await dbInstance!.select().from(orders).where(eq(orders.id, input.orderId));
         if (order) {
           // Get order items with details
-          const items = await dbInstance!.select().from(orderItems).where(eq(orderItems.orderId, input.orderId));
+          const items = await dbInstance!.select().from(orderItemsTable).where(eq(orderItemsTable.orderId, input.orderId));
           // Get all item addons for this order's items
           const itemIds = items.map(i => i.id);
           const itemAddons = itemIds.length > 0 
@@ -561,16 +561,30 @@ export const appRouter = router({
         const { id, imageBase64, ...data } = input;
         
         // Handle image upload if base64 provided
-        if (imageBase64) {
-          const { storagePut } = await import('./storage');
-          const base64Data = imageBase64.replace(/^data:[^;]+;base64,/, '');
-          const buffer = Buffer.from(base64Data, 'base64');
-          const fileKey = `categories/${id}-${Date.now()}.jpg`;
-          const { url } = await storagePut(fileKey, buffer, 'image/jpeg');
-          (data as any).imageUrl = url;
+        if (imageBase64 && imageBase64.length > 0) {
+          try {
+            const { storagePut } = await import('./storage');
+            const base64Data = imageBase64.replace(/^data:[^;]+;base64,/, '');
+            const buffer = Buffer.from(base64Data, 'base64');
+            // Detect image type from base64 header
+            const mimeMatch = imageBase64.match(/^data:([^;]+);base64,/);
+            const mimeType = mimeMatch ? mimeMatch[1] : 'image/jpeg';
+            const ext = mimeType.includes('png') ? 'png' : mimeType.includes('webp') ? 'webp' : 'jpg';
+            const fileKey = `categories/${id}-${Date.now()}.${ext}`;
+            console.log('[updateCategory] Uploading image:', fileKey, 'size:', buffer.length);
+            const { url } = await storagePut(fileKey, buffer, mimeType);
+            console.log('[updateCategory] Image uploaded:', url);
+            (data as any).imageUrl = url;
+          } catch (err) {
+            console.error('[updateCategory] Image upload failed:', err);
+            throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to upload image' });
+          }
         }
         
-        await dbInstance!.update(categories).set(data).where(eq(categories.id, id));
+        // Only update if there's data to update
+        if (Object.keys(data).length > 0) {
+          await dbInstance!.update(categories).set(data).where(eq(categories.id, id));
+        }
         return { success: true };
       }),
 
@@ -884,6 +898,55 @@ export const appRouter = router({
         });
         
         await dbInstance!.update(products).set({ isActive: false }).where(eq(products.id, input.id));
+        return { success: true };
+      }),
+
+    // Check if product can be permanently deleted (no order history)
+    canDeleteProduct: adminProcedure
+      .input(z.object({ id: z.number() }))
+      .query(async ({ input }) => {
+        const dbInstance = await getDb();
+        if (!dbInstance) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
+        
+        // Check if product has any order history
+        const orderItems = await dbInstance!.select({ count: sql<number>`COUNT(*)` })
+          .from(orderItemsTable)
+          .where(eq(orderItemsTable.productId, input.id));
+        
+        const hasOrderHistory = (orderItems[0]?.count || 0) > 0;
+        return { canDelete: !hasOrderHistory, orderCount: orderItems[0]?.count || 0 };
+      }),
+
+    // Permanently delete a product (only if no order history)
+    permanentlyDeleteProduct: adminProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input, ctx }) => {
+        const dbInstance = await getDb();
+        if (!dbInstance) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
+        
+        // Get product
+        const [product] = await dbInstance!.select().from(products).where(eq(products.id, input.id));
+        if (!product) throw new TRPCError({ code: 'NOT_FOUND', message: 'Product not found' });
+        
+        // Check if product has any order history
+        const orderItems = await dbInstance!.select({ count: sql<number>`COUNT(*)` })
+          .from(orderItemsTable)
+          .where(eq(orderItemsTable.productId, input.id));
+        
+        if ((orderItems[0]?.count || 0) > 0) {
+          throw new TRPCError({ 
+            code: 'BAD_REQUEST', 
+            message: 'Cannot permanently delete product with order history. Use disable instead.' 
+          });
+        }
+        
+        // Delete audit logs for this product first
+        await dbInstance!.delete(productAuditLog).where(eq(productAuditLog.productId, input.id));
+        
+        // Permanently delete the product
+        await dbInstance!.delete(products).where(eq(products.id, input.id));
+        
+        console.log(`[permanentlyDeleteProduct] Product ${input.id} (${product.name}) permanently deleted by ${ctx.user?.name}`);
         return { success: true };
       }),
 
@@ -1808,7 +1871,7 @@ export const appRouter = router({
           const addonsTotal = item.addons.reduce((sum, a) => sum + a.price, 0);
           const lineTotal = (item.unitPrice + addonsTotal) * item.quantity;
           
-          const [itemResult] = await dbInstance!.insert(orderItems).values({
+          const [itemResult] = await dbInstance!.insert(orderItemsTable).values({
             orderId,
             productId: item.productId,
             productName: item.productName,
@@ -1882,8 +1945,8 @@ export const appRouter = router({
         // Get order items
         const items = await dbInstance!
           .select()
-          .from(orderItems)
-          .where(eq(orderItems.orderId, order.id));
+          .from(orderItemsTable)
+          .where(eq(orderItemsTable.orderId, order.id));
         
         return {
           ...order,

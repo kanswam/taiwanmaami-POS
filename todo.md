@@ -1096,3 +1096,12 @@
 - [x] Update menu filtering to respect availableInstore flag
 - [x] Ensure Hot Beverages shows for in-store orders
 - [x] Verify separate in-store vs delivery price controls work correctly
+
+
+## Phase 40 - Bug Fixes & Product Deletion (Jan 1, 2026)
+
+- [x] Delete "Imo Coconut Katsu Curry" mistaken product
+- [x] Fix category photo upload (not saving to S3)
+- [x] Add In-store order type button to customer menu alongside Delivery/Pickup
+- [x] Add product delete option for products without order history
+- [x] Keep products with order history as disable-only (no delete)

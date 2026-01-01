@@ -467,7 +467,11 @@ export default function Menu() {
               onValueChange={(v) => setOrderType(v as 'delivery' | 'pickup' | 'instore')}
               className="w-full sm:w-auto"
             >
-              <TabsList className="grid w-full sm:w-auto grid-cols-2">
+              <TabsList className="grid w-full sm:w-auto grid-cols-3">
+                <TabsTrigger value="instore" className="gap-2">
+                  <Home className="w-4 h-4" />
+                  In-store
+                </TabsTrigger>
                 <TabsTrigger value="delivery" className="gap-2">
                   <Truck className="w-4 h-4" />
                   Delivery
