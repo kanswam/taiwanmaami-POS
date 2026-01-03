@@ -1122,3 +1122,12 @@
 - [x] Add subcategory reorder functionality within categories
 - [x] Fix current category display order (Slush should be last)
 - [x] Fix breadcrumb order (Sweet Bites/desserts should come after Food)
+
+
+## Phase 43 - Drag-and-Drop Category Reordering (Jan 3, 2026)
+
+- [x] Install @dnd-kit/core and @dnd-kit/sortable for drag-and-drop
+- [x] Implement drag-and-drop reordering for categories in Admin
+- [x] Implement drag-and-drop reordering for subcategories within each category
+- [x] Fix Asian Sweet Bites reorder issue (displayOrder was correct)
+- [x] Remove arrow buttons - replaced with drag handles

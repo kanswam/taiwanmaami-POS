@@ -19,6 +19,22 @@ import {
   ClipboardList, RotateCcw, History, Filter
 } from 'lucide-react';
 import { toast } from 'sonner';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import { SortableCategory, SortableSubcategory } from '@/components/SortableCategory';
 
 export default function Admin() {
   const [, navigate] = useLocation();
@@ -974,6 +990,44 @@ function CategoriesTab() {
 
   const generateSlug = (name: string) => name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
 
+  // Drag and drop sensors
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  );
+
+  // Handle category drag end
+  const handleCategoryDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id || !menuData?.categories) return;
+
+    const sortedCategories = [...menuData.categories].sort((a, b) => a.displayOrder - b.displayOrder);
+    const oldIndex = sortedCategories.findIndex(c => c.id === active.id);
+    const newIndex = sortedCategories.findIndex(c => c.id === over.id);
+
+    if (oldIndex !== -1 && newIndex !== -1) {
+      const reordered = arrayMove(sortedCategories, oldIndex, newIndex);
+      const newOrders = reordered.map((c, i) => ({ id: c.id, displayOrder: i + 1 }));
+      updateCategoryOrder.mutate({ categoryOrders: newOrders });
+    }
+  };
+
+  // Handle subcategory drag end
+  const handleSubcategoryDragEnd = (categoryId: number) => (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id || !menuData?.subcategories) return;
+
+    const categorySubs = menuData.subcategories.filter(s => s.categoryId === categoryId).sort((a, b) => a.displayOrder - b.displayOrder);
+    const oldIndex = categorySubs.findIndex(s => s.id === active.id);
+    const newIndex = categorySubs.findIndex(s => s.id === over.id);
+
+    if (oldIndex !== -1 && newIndex !== -1) {
+      const reordered = arrayMove(categorySubs, oldIndex, newIndex);
+      const newOrders = reordered.map((s, i) => ({ id: s.id, displayOrder: i + 1 }));
+      updateSubcategoryOrder.mutate({ subcategoryOrders: newOrders });
+    }
+  };
+
   // Move category up or down
   const moveCategoryOrder = (catId: number, direction: 'up' | 'down') => {
     if (!menuData?.categories) return;
@@ -1014,35 +1068,32 @@ function CategoriesTab() {
     <div className="space-y-6">
       {/* Categories Section */}
       <Card className="p-4">
-        <h3 className="font-semibold mb-4">Categories</h3>
-        <div className="space-y-2">
-          {menuData?.categories.map((cat) => {
-            const categoryProducts = allProducts?.filter(p => {
-              const sub = menuData?.subcategories.find(s => s.id === p.subcategoryId);
-              return sub?.categoryId === cat.id;
-            }) || [];
-            const isExpanded = expandedCategory === cat.id;
-            return (
-            <div key={cat.id} className="bg-secondary rounded-lg overflow-hidden">
-              <div 
-                className="flex items-center justify-between p-3 cursor-pointer hover:bg-secondary/80"
-                onClick={() => setExpandedCategory(isExpanded ? null : cat.id)}
-              >
-              <div className="flex items-center gap-2">
-                <ChevronDown className={`w-4 h-4 transition-transform ${isExpanded ? 'rotate-0' : '-rotate-90'}`} />
-                <span className="font-medium">{cat.name}</span>
-                <span className="text-xs text-muted-foreground">({categoryProducts.length} products)</span>
-              </div>
-                <div className="flex gap-2">
-                  {/* Reorder buttons */}
-                  <div className="flex flex-col gap-0.5">
-                    <Button size="sm" variant="ghost" className="h-4 w-6 p-0" onClick={(e) => { e.stopPropagation(); moveCategoryOrder(cat.id, 'up'); }} disabled={updateCategoryOrder.isPending}>
-                      <ChevronUp className="w-3 h-3" />
-                    </Button>
-                    <Button size="sm" variant="ghost" className="h-4 w-6 p-0" onClick={(e) => { e.stopPropagation(); moveCategoryOrder(cat.id, 'down'); }} disabled={updateCategoryOrder.isPending}>
-                      <ChevronDown className="w-3 h-3" />
-                    </Button>
-                  </div>
+        <h3 className="font-semibold mb-4">Categories <span className="text-xs font-normal text-muted-foreground">(drag to reorder)</span></h3>
+        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleCategoryDragEnd}>
+          <SortableContext items={menuData?.categories.map(c => c.id).sort((a, b) => {
+            const catA = menuData?.categories.find(c => c.id === a);
+            const catB = menuData?.categories.find(c => c.id === b);
+            return (catA?.displayOrder || 0) - (catB?.displayOrder || 0);
+          }) || []} strategy={verticalListSortingStrategy}>
+            <div className="space-y-2">
+              {[...menuData?.categories || []].sort((a, b) => a.displayOrder - b.displayOrder).map((cat) => {
+                const categoryProducts = allProducts?.filter(p => {
+                  const sub = menuData?.subcategories.find(s => s.id === p.subcategoryId);
+                  return sub?.categoryId === cat.id;
+                }) || [];
+                const isExpanded = expandedCategory === cat.id;
+                return (
+                  <SortableCategory key={cat.id} id={cat.id}>
+                    <div 
+                      className="flex items-center justify-between p-3 cursor-pointer hover:bg-secondary/80"
+                      onClick={() => setExpandedCategory(isExpanded ? null : cat.id)}
+                    >
+                      <div className="flex items-center gap-2">
+                        <ChevronDown className={`w-4 h-4 transition-transform ${isExpanded ? 'rotate-0' : '-rotate-90'}`} />
+                        <span className="font-medium">{cat.name}</span>
+                        <span className="text-xs text-muted-foreground">({categoryProducts.length} products)</span>
+                      </div>
+                      <div className="flex gap-2">
                   <Dialog open={editingCategoryId === cat.id} onOpenChange={(open) => setEditingCategoryId(open ? cat.id : null)}>
                     <DialogTrigger asChild>
                       <Button size="sm" variant="ghost" onClick={(e) => { e.stopPropagation(); setEditingCategoryId(cat.id); }}>
@@ -1173,78 +1224,73 @@ function CategoriesTab() {
                   }}>
                     <Trash2 className="w-4 h-4" />
                   </Button>
-                </div>
-              </div>
-              {isExpanded && categoryProducts.length > 0 && (
-                <div className="border-t bg-background/50 p-3">
-                  <div className="text-xs font-medium text-muted-foreground mb-2">Products in this category:</div>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                    {categoryProducts.slice(0, 12).map(p => (
-                      <div key={p.id} className="text-sm p-2 bg-background rounded border">
-                        {p.name}
                       </div>
-                    ))}
-                    {categoryProducts.length > 12 && (
-                      <div className="text-sm p-2 text-muted-foreground">+{categoryProducts.length - 12} more...</div>
+                    </div>
+                    {isExpanded && categoryProducts.length > 0 && (
+                      <div className="border-t bg-background/50 p-3">
+                        <div className="text-xs font-medium text-muted-foreground mb-2">Products in this category:</div>
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                          {categoryProducts.slice(0, 12).map(p => (
+                            <div key={p.id} className="text-sm p-2 bg-background rounded border">
+                              {p.name}
+                            </div>
+                          ))}
+                          {categoryProducts.length > 12 && (
+                            <div className="text-sm p-2 text-muted-foreground">+{categoryProducts.length - 12} more...</div>
+                          )}
+                        </div>
+                      </div>
                     )}
-                  </div>
-                </div>
-              )}
+                  </SortableCategory>
+                );
+              })}
             </div>
-          );
-          })}
-          <div className="flex gap-2 mt-4">
-            <Input
-              placeholder="New category name"
-              value={newCategoryName}
-              onChange={(e) => setNewCategoryName(e.target.value)}
-            />
-            <Button onClick={() => {
-              if (newCategoryName) {
-                createCategory.mutate({ name: newCategoryName, slug: generateSlug(newCategoryName) });
-              }
-            }}>
-              <Plus className="w-4 h-4 mr-2" /> Add Category
-            </Button>
-          </div>
+          </SortableContext>
+        </DndContext>
+        <div className="flex gap-2 mt-4">
+          <Input
+            placeholder="New category name"
+            value={newCategoryName}
+            onChange={(e) => setNewCategoryName(e.target.value)}
+          />
+          <Button onClick={() => {
+            if (newCategoryName) {
+              createCategory.mutate({ name: newCategoryName, slug: generateSlug(newCategoryName) });
+            }
+          }}>
+            <Plus className="w-4 h-4 mr-2" /> Add Category
+          </Button>
         </div>
       </Card>
 
       {/* Subcategories Section */}
       <Card className="p-4">
-        <h3 className="font-semibold mb-4">Subcategories</h3>
+        <h3 className="font-semibold mb-4">Subcategories <span className="text-xs font-normal text-muted-foreground">(drag to reorder within category)</span></h3>
         <div className="space-y-4">
-          {menuData?.categories.map((cat) => (
-            <div key={cat.id} className="border rounded-lg p-4">
-              <h4 className="font-medium text-sm text-muted-foreground mb-2">{cat.name}</h4>
-              <div className="space-y-2">
-                {menuData.subcategories
-                  .filter(sub => sub.categoryId === cat.id)
-                  .map((sub) => {
-                    const subProducts = allProducts?.filter(p => p.subcategoryId === sub.id) || [];
-                    const isSubExpanded = expandedSubcategory === sub.id;
-                    return (
-                    <div key={sub.id} className="bg-secondary/50 rounded overflow-hidden">
-                      <div 
-                        className="flex items-center justify-between p-2 cursor-pointer hover:bg-secondary/70"
-                        onClick={() => setExpandedSubcategory(isSubExpanded ? null : sub.id)}
-                      >
-                        <div className="flex items-center gap-2">
-                          <ChevronDown className={`w-3 h-3 transition-transform ${isSubExpanded ? 'rotate-0' : '-rotate-90'}`} />
-                          <span>{sub.name}</span>
-                          {sub.chineseName && <span className="text-xs text-muted-foreground ml-2">{sub.chineseName}</span>}
-                          <span className="text-xs text-muted-foreground">({subProducts.length})</span>
-                        </div>
-                          <div className="flex gap-2">
-                            {/* Reorder buttons */}
-                            <div className="flex flex-col gap-0.5">
-                              <Button size="sm" variant="ghost" className="h-3 w-5 p-0" onClick={(e) => { e.stopPropagation(); moveSubcategoryOrder(sub.id, cat.id, 'up'); }} disabled={updateSubcategoryOrder.isPending}>
-                                <ChevronUp className="w-2.5 h-2.5" />
-                              </Button>
-                              <Button size="sm" variant="ghost" className="h-3 w-5 p-0" onClick={(e) => { e.stopPropagation(); moveSubcategoryOrder(sub.id, cat.id, 'down'); }} disabled={updateSubcategoryOrder.isPending}>
-                                <ChevronDown className="w-2.5 h-2.5" />
-                              </Button>
-                            </div>
+          {[...menuData?.categories || []].sort((a, b) => a.displayOrder - b.displayOrder).map((cat) => {
+            const categorySubs = menuData?.subcategories.filter(sub => sub.categoryId === cat.id).sort((a, b) => a.displayOrder - b.displayOrder) || [];
+            return (
+              <div key={cat.id} className="border rounded-lg p-4">
+                <h4 className="font-medium text-sm text-muted-foreground mb-2">{cat.name}</h4>
+                <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleSubcategoryDragEnd(cat.id)}>
+                  <SortableContext items={categorySubs.map(s => s.id)} strategy={verticalListSortingStrategy}>
+                    <div className="space-y-2">
+                      {categorySubs.map((sub) => {
+                        const subProducts = allProducts?.filter(p => p.subcategoryId === sub.id) || [];
+                        const isSubExpanded = expandedSubcategory === sub.id;
+                        return (
+                          <SortableSubcategory key={sub.id} id={sub.id}>
+                            <div 
+                              className="flex items-center justify-between p-2 cursor-pointer hover:bg-secondary/70"
+                              onClick={() => setExpandedSubcategory(isSubExpanded ? null : sub.id)}
+                            >
+                              <div className="flex items-center gap-2">
+                                <ChevronDown className={`w-3 h-3 transition-transform ${isSubExpanded ? 'rotate-0' : '-rotate-90'}`} />
+                                <span>{sub.name}</span>
+                                {sub.chineseName && <span className="text-xs text-muted-foreground ml-2">{sub.chineseName}</span>}
+                                <span className="text-xs text-muted-foreground">({subProducts.length})</span>
+                              </div>
+                              <div className="flex gap-2">
                             <Dialog open={editingSubcategoryId === sub.id} onOpenChange={(open) => setEditingSubcategoryId(open ? sub.id : null)}>
                               <DialogTrigger asChild>
                                 <Button size="sm" variant="ghost" onClick={(e) => { e.stopPropagation(); setEditingSubcategoryId(sub.id); }}>
@@ -1265,25 +1311,28 @@ function CategoriesTab() {
                             }}>
                               <Trash2 className="w-4 h-4" />
                             </Button>
-                          </div>
-                      </div>
-                      {isSubExpanded && subProducts.length > 0 && (
-                        <div className="border-t bg-background/50 p-2">
-                          <div className="grid grid-cols-2 md:grid-cols-3 gap-1">
-                            {subProducts.map(p => (
-                              <div key={p.id} className="text-xs p-1.5 bg-background rounded border truncate">
-                                {p.name}
                               </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
+                            </div>
+                            {isSubExpanded && subProducts.length > 0 && (
+                              <div className="border-t bg-background/50 p-2">
+                                <div className="grid grid-cols-2 md:grid-cols-3 gap-1">
+                                  {subProducts.map(p => (
+                                    <div key={p.id} className="text-xs p-1.5 bg-background rounded border truncate">
+                                      {p.name}
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                          </SortableSubcategory>
+                        );
+                      })}
                     </div>
-                  );
-                  })}
+                  </SortableContext>
+                </DndContext>
               </div>
-            </div>
-          ))}
+            );
+          })}
           <div className="flex gap-2 mt-4">
             <Input
               placeholder="New subcategory name"
