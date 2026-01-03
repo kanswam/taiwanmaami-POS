@@ -1206,6 +1206,44 @@ export const appRouter = router({
         return { success: true, updatedCount: productCount + subcategoryCount, productCount, subcategoryCount };
       }),
 
+    // Update category display order (for reordering)
+    updateCategoryOrder: adminProcedure
+      .input(z.object({
+        categoryOrders: z.array(z.object({
+          id: z.number(),
+          displayOrder: z.number(),
+        })),
+      }))
+      .mutation(async ({ input }) => {
+        const dbInstance = await getDb();
+        if (!dbInstance) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
+        
+        for (const item of input.categoryOrders) {
+          await dbInstance.update(categories).set({ displayOrder: item.displayOrder }).where(eq(categories.id, item.id));
+        }
+        
+        return { success: true, updatedCount: input.categoryOrders.length };
+      }),
+
+    // Update subcategory display order (for reordering)
+    updateSubcategoryOrder: adminProcedure
+      .input(z.object({
+        subcategoryOrders: z.array(z.object({
+          id: z.number(),
+          displayOrder: z.number(),
+        })),
+      }))
+      .mutation(async ({ input }) => {
+        const dbInstance = await getDb();
+        if (!dbInstance) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
+        
+        for (const item of input.subcategoryOrders) {
+          await dbInstance.update(subcategories).set({ displayOrder: item.displayOrder }).where(eq(subcategories.id, item.id));
+        }
+        
+        return { success: true, updatedCount: input.subcategoryOrders.length };
+      }),
+
     // Update product display order (for drag-and-drop)
     updateProductOrder: adminProcedure
       .input(z.object({

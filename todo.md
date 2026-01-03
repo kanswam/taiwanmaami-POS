@@ -1113,3 +1113,12 @@
 - [x] Remove ice level options from Hot Beverages (tied to hasSizeVariants=false)
 - [x] Remove sugar percentage options for Hot Beverages (tied to hasSizeVariants=false)
 - [x] Add "Extra Shot of Espresso" addon for Latte and Cappuccino products
+
+
+## Phase 42 - Admin Panel Fixes & Category Reordering (Jan 1, 2026)
+
+- [x] Hide boba/size variant options in Admin for food and mochi categories
+- [x] Add category reorder functionality (move up/down buttons)
+- [x] Add subcategory reorder functionality within categories
+- [x] Fix current category display order (Slush should be last)
+- [x] Fix breadcrumb order (Sweet Bites/desserts should come after Food)

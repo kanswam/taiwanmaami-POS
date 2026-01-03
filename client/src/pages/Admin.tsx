@@ -962,7 +962,53 @@ function CategoriesTab() {
     onError: (err) => toast.error(err.message),
   });
 
+  const updateCategoryOrder = trpc.admin.updateCategoryOrder.useMutation({
+    onSuccess: () => { toast.success('Category order updated'); refetch(); },
+    onError: (err) => toast.error(err.message),
+  });
+
+  const updateSubcategoryOrder = trpc.admin.updateSubcategoryOrder.useMutation({
+    onSuccess: () => { toast.success('Subcategory order updated'); refetch(); },
+    onError: (err) => toast.error(err.message),
+  });
+
   const generateSlug = (name: string) => name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+
+  // Move category up or down
+  const moveCategoryOrder = (catId: number, direction: 'up' | 'down') => {
+    if (!menuData?.categories) return;
+    const sorted = [...menuData.categories].sort((a, b) => a.displayOrder - b.displayOrder);
+    const idx = sorted.findIndex(c => c.id === catId);
+    if (idx === -1) return;
+    if (direction === 'up' && idx === 0) return;
+    if (direction === 'down' && idx === sorted.length - 1) return;
+    const swapIdx = direction === 'up' ? idx - 1 : idx + 1;
+    // Swap display orders
+    const newOrders = sorted.map((c, i) => {
+      if (i === idx) return { id: c.id, displayOrder: sorted[swapIdx].displayOrder };
+      if (i === swapIdx) return { id: c.id, displayOrder: sorted[idx].displayOrder };
+      return { id: c.id, displayOrder: c.displayOrder };
+    });
+    updateCategoryOrder.mutate({ categoryOrders: newOrders });
+  };
+
+  // Move subcategory up or down within its category
+  const moveSubcategoryOrder = (subId: number, categoryId: number, direction: 'up' | 'down') => {
+    if (!menuData?.subcategories) return;
+    const categorySubs = menuData.subcategories.filter(s => s.categoryId === categoryId).sort((a, b) => a.displayOrder - b.displayOrder);
+    const idx = categorySubs.findIndex(s => s.id === subId);
+    if (idx === -1) return;
+    if (direction === 'up' && idx === 0) return;
+    if (direction === 'down' && idx === categorySubs.length - 1) return;
+    const swapIdx = direction === 'up' ? idx - 1 : idx + 1;
+    // Swap display orders
+    const newOrders = categorySubs.map((s, i) => {
+      if (i === idx) return { id: s.id, displayOrder: categorySubs[swapIdx].displayOrder };
+      if (i === swapIdx) return { id: s.id, displayOrder: categorySubs[idx].displayOrder };
+      return { id: s.id, displayOrder: s.displayOrder };
+    });
+    updateSubcategoryOrder.mutate({ subcategoryOrders: newOrders });
+  };
 
   return (
     <div className="space-y-6">
@@ -988,6 +1034,15 @@ function CategoriesTab() {
                 <span className="text-xs text-muted-foreground">({categoryProducts.length} products)</span>
               </div>
                 <div className="flex gap-2">
+                  {/* Reorder buttons */}
+                  <div className="flex flex-col gap-0.5">
+                    <Button size="sm" variant="ghost" className="h-4 w-6 p-0" onClick={(e) => { e.stopPropagation(); moveCategoryOrder(cat.id, 'up'); }} disabled={updateCategoryOrder.isPending}>
+                      <ChevronUp className="w-3 h-3" />
+                    </Button>
+                    <Button size="sm" variant="ghost" className="h-4 w-6 p-0" onClick={(e) => { e.stopPropagation(); moveCategoryOrder(cat.id, 'down'); }} disabled={updateCategoryOrder.isPending}>
+                      <ChevronDown className="w-3 h-3" />
+                    </Button>
+                  </div>
                   <Dialog open={editingCategoryId === cat.id} onOpenChange={(open) => setEditingCategoryId(open ? cat.id : null)}>
                     <DialogTrigger asChild>
                       <Button size="sm" variant="ghost" onClick={(e) => { e.stopPropagation(); setEditingCategoryId(cat.id); }}>
@@ -1181,6 +1236,15 @@ function CategoriesTab() {
                           <span className="text-xs text-muted-foreground">({subProducts.length})</span>
                         </div>
                           <div className="flex gap-2">
+                            {/* Reorder buttons */}
+                            <div className="flex flex-col gap-0.5">
+                              <Button size="sm" variant="ghost" className="h-3 w-5 p-0" onClick={(e) => { e.stopPropagation(); moveSubcategoryOrder(sub.id, cat.id, 'up'); }} disabled={updateSubcategoryOrder.isPending}>
+                                <ChevronUp className="w-2.5 h-2.5" />
+                              </Button>
+                              <Button size="sm" variant="ghost" className="h-3 w-5 p-0" onClick={(e) => { e.stopPropagation(); moveSubcategoryOrder(sub.id, cat.id, 'down'); }} disabled={updateSubcategoryOrder.isPending}>
+                                <ChevronDown className="w-2.5 h-2.5" />
+                              </Button>
+                            </div>
                             <Dialog open={editingSubcategoryId === sub.id} onOpenChange={(open) => setEditingSubcategoryId(open ? sub.id : null)}>
                               <DialogTrigger asChild>
                                 <Button size="sm" variant="ghost" onClick={(e) => { e.stopPropagation(); setEditingSubcategoryId(sub.id); }}>
@@ -1191,7 +1255,7 @@ function CategoriesTab() {
                                 <DialogHeader>
                                   <DialogTitle>Edit Subcategory: {sub.name}</DialogTitle>
                                 </DialogHeader>
-                                <SubcategoryEditForm sub={sub} updateSubcategory={updateSubcategory} onClose={() => setEditingSubcategoryId(null)} />
+                                <SubcategoryEditForm sub={sub} category={cat} updateSubcategory={updateSubcategory} onClose={() => setEditingSubcategoryId(null)} />
                               </DialogContent>
                             </Dialog>
                             <Button size="sm" variant="ghost" className="text-destructive" onClick={() => {
@@ -1656,7 +1720,11 @@ function AddonsTab() {
 }
 
 // Subcategory Edit Form Component
-function SubcategoryEditForm({ sub, updateSubcategory, onClose }: { sub: any; updateSubcategory: any; onClose?: () => void }) {
+function SubcategoryEditForm({ sub, category, updateSubcategory, onClose }: { sub: any; category?: any; updateSubcategory: any; onClose?: () => void }) {
+  // Determine if this is a beverage category (show size/boba pricing)
+  const isBeverageCategory = category?.slug === 'bubble-tea' || category?.slug === 'coffee' || 
+    category?.name?.toLowerCase().includes('beverage') || category?.name?.toLowerCase().includes('tea') ||
+    category?.name?.toLowerCase().includes('coffee');
   const [imagePreview, setImagePreview] = useState<string | null>(sub.imageUrl || null);
   const [imageData, setImageData] = useState<string | null>(null);
   const [name, setName] = useState(sub.name);
@@ -1751,63 +1819,75 @@ function SubcategoryEditForm({ sub, updateSubcategory, onClose }: { sub: any; up
         <Label>Description (Optional)</Label>
         <Input value={description} onChange={(e) => setDescription(e.target.value)} />
       </div>
-      <div className="border-t pt-4">
-        <h4 className="font-medium mb-3">In-Store Base Pricing (₹)</h4>
-        <div className="grid grid-cols-3 gap-3">
-          <div>
-            <Label className="text-xs">Petite + Boba</Label>
-            <Input type="number" step="0.01" value={basePricePetiteWithBoba} onChange={(e) => setBasePricePetiteWithBoba(parseFloat(e.target.value) || 0)} />
+      {/* Only show size/boba pricing for beverage categories */}
+      {isBeverageCategory && (
+        <>
+          <div className="border-t pt-4">
+            <h4 className="font-medium mb-3">In-Store Base Pricing (₹)</h4>
+            <div className="grid grid-cols-3 gap-3">
+              <div>
+                <Label className="text-xs">Petite + Boba</Label>
+                <Input type="number" step="0.01" value={basePricePetiteWithBoba} onChange={(e) => setBasePricePetiteWithBoba(parseFloat(e.target.value) || 0)} />
+              </div>
+              <div>
+                <Label className="text-xs">Regular + Boba</Label>
+                <Input type="number" step="0.01" value={basePriceRegularWithBoba} onChange={(e) => setBasePriceRegularWithBoba(parseFloat(e.target.value) || 0)} />
+              </div>
+              <div>
+                <Label className="text-xs">Large + Boba</Label>
+                <Input type="number" step="0.01" value={basePriceLargeWithBoba} onChange={(e) => setBasePriceLargeWithBoba(parseFloat(e.target.value) || 0)} />
+              </div>
+              <div>
+                <Label className="text-xs">Petite No Boba</Label>
+                <Input type="number" step="0.01" value={basePricePetiteNoBoba} onChange={(e) => setBasePricePetiteNoBoba(parseFloat(e.target.value) || 0)} />
+              </div>
+              <div>
+                <Label className="text-xs">Regular No Boba</Label>
+                <Input type="number" step="0.01" value={basePriceRegularNoBoba} onChange={(e) => setBasePriceRegularNoBoba(parseFloat(e.target.value) || 0)} />
+              </div>
+              <div>
+                <Label className="text-xs">Large No Boba</Label>
+                <Input type="number" step="0.01" value={basePriceLargeNoBoba} onChange={(e) => setBasePriceLargeNoBoba(parseFloat(e.target.value) || 0)} />
+              </div>
+            </div>
           </div>
-          <div>
-            <Label className="text-xs">Regular + Boba</Label>
-            <Input type="number" step="0.01" value={basePriceRegularWithBoba} onChange={(e) => setBasePriceRegularWithBoba(parseFloat(e.target.value) || 0)} />
+          <div className="border-t pt-4">
+            <h4 className="font-medium mb-3">Delivery Base Pricing (₹)</h4>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label className="text-xs">Regular + Boba</Label>
+                <Input type="number" step="0.01" value={deliveryPriceRegularWithBoba} onChange={(e) => setDeliveryPriceRegularWithBoba(parseFloat(e.target.value) || 0)} />
+              </div>
+              <div>
+                <Label className="text-xs">Large + Boba</Label>
+                <Input type="number" step="0.01" value={deliveryPriceLargeWithBoba} onChange={(e) => setDeliveryPriceLargeWithBoba(parseFloat(e.target.value) || 0)} />
+              </div>
+              <div>
+                <Label className="text-xs">Regular No Boba</Label>
+                <Input type="number" step="0.01" value={deliveryPriceRegularNoBoba} onChange={(e) => setDeliveryPriceRegularNoBoba(parseFloat(e.target.value) || 0)} />
+              </div>
+              <div>
+                <Label className="text-xs">Large No Boba</Label>
+                <Input type="number" step="0.01" value={deliveryPriceLargeNoBoba} onChange={(e) => setDeliveryPriceLargeNoBoba(parseFloat(e.target.value) || 0)} />
+              </div>
+            </div>
           </div>
-          <div>
-            <Label className="text-xs">Large + Boba</Label>
-            <Input type="number" step="0.01" value={basePriceLargeWithBoba} onChange={(e) => setBasePriceLargeWithBoba(parseFloat(e.target.value) || 0)} />
+          <div className="flex items-center gap-2 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+            <input type="checkbox" checked={syncPrices} onChange={(e) => setSyncPrices(e.target.checked)} className="w-4 h-4" />
+            <Label className="text-sm cursor-pointer">
+              <span className="font-medium">Sync prices to products</span>
+              <span className="text-muted-foreground block text-xs">Update all products using base pricing in this subcategory</span>
+            </Label>
           </div>
-          <div>
-            <Label className="text-xs">Petite No Boba</Label>
-            <Input type="number" step="0.01" value={basePricePetiteNoBoba} onChange={(e) => setBasePricePetiteNoBoba(parseFloat(e.target.value) || 0)} />
-          </div>
-          <div>
-            <Label className="text-xs">Regular No Boba</Label>
-            <Input type="number" step="0.01" value={basePriceRegularNoBoba} onChange={(e) => setBasePriceRegularNoBoba(parseFloat(e.target.value) || 0)} />
-          </div>
-          <div>
-            <Label className="text-xs">Large No Boba</Label>
-            <Input type="number" step="0.01" value={basePriceLargeNoBoba} onChange={(e) => setBasePriceLargeNoBoba(parseFloat(e.target.value) || 0)} />
-          </div>
+        </>
+      )}
+      
+      {/* For non-beverage categories, show a simple note */}
+      {!isBeverageCategory && (
+        <div className="border-t pt-4">
+          <p className="text-sm text-muted-foreground">This category uses fixed product pricing. Edit individual products to set prices.</p>
         </div>
-      </div>
-      <div className="border-t pt-4">
-        <h4 className="font-medium mb-3">Delivery Base Pricing (₹)</h4>
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <Label className="text-xs">Regular + Boba</Label>
-            <Input type="number" step="0.01" value={deliveryPriceRegularWithBoba} onChange={(e) => setDeliveryPriceRegularWithBoba(parseFloat(e.target.value) || 0)} />
-          </div>
-          <div>
-            <Label className="text-xs">Large + Boba</Label>
-            <Input type="number" step="0.01" value={deliveryPriceLargeWithBoba} onChange={(e) => setDeliveryPriceLargeWithBoba(parseFloat(e.target.value) || 0)} />
-          </div>
-          <div>
-            <Label className="text-xs">Regular No Boba</Label>
-            <Input type="number" step="0.01" value={deliveryPriceRegularNoBoba} onChange={(e) => setDeliveryPriceRegularNoBoba(parseFloat(e.target.value) || 0)} />
-          </div>
-          <div>
-            <Label className="text-xs">Large No Boba</Label>
-            <Input type="number" step="0.01" value={deliveryPriceLargeNoBoba} onChange={(e) => setDeliveryPriceLargeNoBoba(parseFloat(e.target.value) || 0)} />
-          </div>
-        </div>
-      </div>
-      <div className="flex items-center gap-2 p-3 bg-amber-50 border border-amber-200 rounded-lg">
-        <input type="checkbox" checked={syncPrices} onChange={(e) => setSyncPrices(e.target.checked)} className="w-4 h-4" />
-        <Label className="text-sm cursor-pointer">
-          <span className="font-medium">Sync prices to products</span>
-          <span className="text-muted-foreground block text-xs">Update all products using base pricing in this subcategory</span>
-        </Label>
-      </div>
+      )}
       <Button onClick={handleSave} disabled={updateSubcategory.isPending}>
         {updateSubcategory.isPending ? 'Saving...' : 'Save Changes'}
       </Button>
