@@ -1138,3 +1138,11 @@
 - [x] Make orders clickable in Admin Orders tab
 - [x] Add order details dialog showing all items, quantities, and customizations
 - [x] Display customer info, order total, and status in the details view
+
+
+## Phase 45 - Slush Delivery Availability (Jan 3, 2026)
+
+- [x] Update Slush subcategory to disable delivery (availableDelivery = false)
+- [x] Verify Admin panel category availability toggles (In-store, Delivery, Pickup) work correctly
+- [x] Add availability toggles to SubcategoryEditForm for granular control
+- [x] Ensure menu filtering respects category availability settings

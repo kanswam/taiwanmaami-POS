@@ -1895,6 +1895,8 @@ function SubcategoryEditForm({ sub, category, updateSubcategory, onClose }: { su
   const [deliveryPriceRegularNoBoba, setDeliveryPriceRegularNoBoba] = useState((sub.deliveryPriceRegularNoBoba || 0) / 100);
   const [deliveryPriceLargeNoBoba, setDeliveryPriceLargeNoBoba] = useState((sub.deliveryPriceLargeNoBoba || 0) / 100);
   const [syncPrices, setSyncPrices] = useState(false);
+  const [availableInstore, setAvailableInstore] = useState(sub.availableInstore !== false);
+  const [availableDelivery, setAvailableDelivery] = useState(sub.availableDelivery !== false);
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -1926,6 +1928,8 @@ function SubcategoryEditForm({ sub, category, updateSubcategory, onClose }: { su
       deliveryPriceRegularNoBoba: Math.round(deliveryPriceRegularNoBoba * 100),
       deliveryPriceLargeNoBoba: Math.round(deliveryPriceLargeNoBoba * 100),
       syncProductPrices: syncPrices,
+      availableInstore,
+      availableDelivery,
     } as any);
   };
 
@@ -1959,6 +1963,45 @@ function SubcategoryEditForm({ sub, category, updateSubcategory, onClose }: { su
           </div>
         </div>
       </div>
+      
+      {/* Availability Toggles */}
+      <div className="p-3 bg-secondary rounded-lg">
+        <Label className="text-sm font-medium mb-2 block">Availability</Label>
+        <div className="flex flex-wrap gap-4">
+          <div className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              id={`sub-avail-instore-${sub.id}`}
+              checked={availableInstore}
+              onChange={(e) => setAvailableInstore(e.target.checked)}
+              className="w-4 h-4"
+            />
+            <Label htmlFor={`sub-avail-instore-${sub.id}`} className="text-sm cursor-pointer">In-store</Label>
+          </div>
+          <div className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              id={`sub-avail-delivery-${sub.id}`}
+              checked={availableDelivery}
+              onChange={(e) => setAvailableDelivery(e.target.checked)}
+              className="w-4 h-4"
+            />
+            <Label htmlFor={`sub-avail-delivery-${sub.id}`} className="text-sm cursor-pointer">Delivery</Label>
+          </div>
+          <div className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              id={`sub-avail-pickup-${sub.id}`}
+              checked={availableInstore}
+              onChange={(e) => setAvailableInstore(e.target.checked)}
+              className="w-4 h-4"
+              disabled
+            />
+            <Label htmlFor={`sub-avail-pickup-${sub.id}`} className="text-sm cursor-pointer text-muted-foreground">Pickup (same as In-store)</Label>
+          </div>
+        </div>
+      </div>
+      
       <div className="grid grid-cols-2 gap-4">
         <div>
           <Label>Subcategory Name</Label>
