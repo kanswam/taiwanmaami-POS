@@ -1156,3 +1156,9 @@
 - [x] Verify Slush has availableDelivery=false in database
 - [x] Set Hot Beverages subcategories to availableDelivery=false, availablePickup=false
 - [x] Test menu filtering shows correct items for each order type
+
+
+## Phase 47 - Remove Petite Size from Admin (Jan 3, 2026)
+
+- [x] Remove Petite size pricing fields from SubcategoryEditForm
+- [x] Keep only Regular and Large size options for beverages

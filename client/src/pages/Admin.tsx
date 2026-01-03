@@ -2023,11 +2023,7 @@ function SubcategoryEditForm({ sub, category, updateSubcategory, onClose }: { su
         <>
           <div className="border-t pt-4">
             <h4 className="font-medium mb-3">In-Store Base Pricing (₹)</h4>
-            <div className="grid grid-cols-3 gap-3">
-              <div>
-                <Label className="text-xs">Petite + Boba</Label>
-                <Input type="number" step="0.01" value={basePricePetiteWithBoba} onChange={(e) => setBasePricePetiteWithBoba(parseFloat(e.target.value) || 0)} />
-              </div>
+            <div className="grid grid-cols-2 gap-3">
               <div>
                 <Label className="text-xs">Regular + Boba</Label>
                 <Input type="number" step="0.01" value={basePriceRegularWithBoba} onChange={(e) => setBasePriceRegularWithBoba(parseFloat(e.target.value) || 0)} />
@@ -2035,10 +2031,6 @@ function SubcategoryEditForm({ sub, category, updateSubcategory, onClose }: { su
               <div>
                 <Label className="text-xs">Large + Boba</Label>
                 <Input type="number" step="0.01" value={basePriceLargeWithBoba} onChange={(e) => setBasePriceLargeWithBoba(parseFloat(e.target.value) || 0)} />
-              </div>
-              <div>
-                <Label className="text-xs">Petite No Boba</Label>
-                <Input type="number" step="0.01" value={basePricePetiteNoBoba} onChange={(e) => setBasePricePetiteNoBoba(parseFloat(e.target.value) || 0)} />
               </div>
               <div>
                 <Label className="text-xs">Regular No Boba</Label>
