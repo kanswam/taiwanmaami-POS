@@ -1131,3 +1131,10 @@
 - [x] Implement drag-and-drop reordering for subcategories within each category
 - [x] Fix Asian Sweet Bites reorder issue (displayOrder was correct)
 - [x] Remove arrow buttons - replaced with drag handles
+
+
+## Phase 44 - Admin Order Details View (Jan 3, 2026)
+
+- [x] Make orders clickable in Admin Orders tab
+- [x] Add order details dialog showing all items, quantities, and customizations
+- [x] Display customer info, order total, and status in the details view

@@ -341,6 +341,33 @@ export const appRouter = router({
         return db.getRecentOrders(input?.limit || 50);
       }),
 
+    getById: adminProcedure
+      .input(z.object({ orderId: z.number() }))
+      .query(async ({ input }) => {
+        const dbInstance = await getDb();
+        if (!dbInstance) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
+        
+        // Get order
+        const [order] = await dbInstance.select().from(orders).where(eq(orders.id, input.orderId));
+        if (!order) throw new TRPCError({ code: 'NOT_FOUND', message: 'Order not found' });
+        
+        // Get order items with product details
+        const items = await dbInstance
+          .select()
+          .from(orderItemsTable)
+          .where(eq(orderItemsTable.orderId, input.orderId));
+        
+        // Get product details for each item
+        const itemsWithProducts = await Promise.all(
+          items.map(async (item) => {
+            const [product] = await dbInstance.select().from(products).where(eq(products.id, item.productId));
+            return { ...item, product };
+          })
+        );
+        
+        return { ...order, items: itemsWithProducts };
+      }),
+
     // Razorpay payment procedures
     createPaymentOrder: publicProcedure
       .input(z.object({

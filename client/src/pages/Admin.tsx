@@ -1374,6 +1374,11 @@ function CategoriesTab() {
 // Orders Tab
 function OrdersTab() {
   const { data: orders, refetch } = trpc.orders.getRecent.useQuery({ limit: 100 });
+  const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null);
+  const { data: orderDetails } = trpc.orders.getById.useQuery(
+    { orderId: selectedOrderId! },
+    { enabled: !!selectedOrderId }
+  );
   
   const updateStatus = trpc.orders.updateStatus.useMutation({
     onSuccess: () => {
@@ -1442,8 +1447,12 @@ function OrdersTab() {
             </thead>
             <tbody>
               {orders?.map((order) => (
-                <tr key={order.id} className="border-b hover:bg-secondary/50">
-                  <td className="p-3 font-medium">{order.orderNumber}</td>
+                <tr 
+                  key={order.id} 
+                  className="border-b hover:bg-secondary/50 cursor-pointer"
+                  onClick={() => setSelectedOrderId(order.id)}
+                >
+                  <td className="p-3 font-medium text-primary underline">{order.orderNumber}</td>
                   <td className="p-3">
                     <p>{order.customerName || 'Guest'}</p>
                     {order.customerPhone && (
@@ -1531,6 +1540,102 @@ function OrdersTab() {
           </table>
         </div>
       </Card>
+
+      {/* Order Details Dialog */}
+      <Dialog open={!!selectedOrderId} onOpenChange={(open) => !open && setSelectedOrderId(null)}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Order #{orderDetails?.orderNumber}</DialogTitle>
+          </DialogHeader>
+          {orderDetails ? (
+            <div className="space-y-4">
+              {/* Customer Info */}
+              <div className="grid grid-cols-2 gap-4 p-4 bg-secondary rounded-lg">
+                <div>
+                  <p className="text-sm text-muted-foreground">Customer</p>
+                  <p className="font-medium">{orderDetails.customerName || 'Guest'}</p>
+                  {orderDetails.customerPhone && <p className="text-sm">{orderDetails.customerPhone}</p>}
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Order Type</p>
+                  <p className="font-medium capitalize">{orderDetails.orderType}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Status</p>
+                  <p className="font-medium capitalize">{orderDetails.orderStatus}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Payment</p>
+                  <p className="font-medium capitalize">{(orderDetails as any).paymentMethod || 'N/A'} - {orderDetails.paymentStatus}</p>
+                </div>
+                <div className="col-span-2">
+                  <p className="text-sm text-muted-foreground">Order Time</p>
+                  <p className="font-medium">{new Date(orderDetails.createdAt).toLocaleString()}</p>
+                </div>
+                {orderDetails.deliveryAddress && (
+                  <div className="col-span-2">
+                    <p className="text-sm text-muted-foreground">Delivery Address</p>
+                    <p className="font-medium">{orderDetails.deliveryAddress}</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Order Items */}
+              <div>
+                <h4 className="font-semibold mb-2">Order Items</h4>
+                <div className="space-y-2">
+                  {orderDetails.items?.map((item: any, idx: number) => (
+                    <div key={idx} className="flex justify-between items-start p-3 bg-secondary/50 rounded-lg">
+                      <div className="flex-1">
+                        <p className="font-medium">{item.product?.name || item.productName || 'Unknown Product'}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {item.size && `Size: ${item.size}`}
+                          {item.bobaType && ` • Boba: ${item.bobaType}`}
+                          {item.sugarLevel && ` • Sugar: ${item.sugarLevel}`}
+                          {item.iceLevel && ` • Ice: ${item.iceLevel}`}
+                        </p>
+                        {item.addons && (
+                          <p className="text-sm text-muted-foreground">Add-ons: {item.addons}</p>
+                        )}
+                        {item.specialInstructions && (
+                          <p className="text-sm text-amber-600">Note: {item.specialInstructions}</p>
+                        )}
+                      </div>
+                      <div className="text-right">
+                        <p className="font-medium">{formatPrice(item.totalPrice || item.unitPrice * item.quantity)}</p>
+                        <p className="text-sm text-muted-foreground">x{item.quantity}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Order Total */}
+              <div className="border-t pt-4">
+                <div className="flex justify-between items-center text-lg font-semibold">
+                  <span>Total</span>
+                  <span>{formatPrice(orderDetails.totalAmount)}</span>
+                </div>
+                {(orderDetails as any).gstAmount > 0 && (
+                  <p className="text-sm text-muted-foreground text-right">Includes GST: {formatPrice((orderDetails as any).gstAmount)}</p>
+                )}
+              </div>
+
+              {/* Special Instructions */}
+              {orderDetails.specialInstructions && (
+                <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                  <p className="text-sm font-medium text-amber-800">Special Instructions:</p>
+                  <p className="text-amber-700">{orderDetails.specialInstructions}</p>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="flex items-center justify-center py-8">
+              <RefreshCw className="w-6 h-6 animate-spin" />
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
