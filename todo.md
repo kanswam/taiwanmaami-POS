@@ -1146,3 +1146,13 @@
 - [x] Verify Admin panel category availability toggles (In-store, Delivery, Pickup) work correctly
 - [x] Add availability toggles to SubcategoryEditForm for granular control
 - [x] Ensure menu filtering respects category availability settings
+
+
+## Phase 46 - Critical Fixes (Jan 3, 2026)
+
+- [x] Fix Tea in Pot subcategory - hasSizeVariants=false, hasBobaOption=false already set
+- [x] Add separate availablePickup toggle to subcategories (independent from In-store)
+- [x] Update SubcategoryEditForm to show all three toggles: In-store, Delivery, Pickup
+- [x] Verify Slush has availableDelivery=false in database
+- [x] Set Hot Beverages subcategories to availableDelivery=false, availablePickup=false
+- [x] Test menu filtering shows correct items for each order type

@@ -306,10 +306,18 @@ export default function Menu() {
 
   // Render subcategory cards
   const renderSubcategoryCards = () => {
-    // Filter out subcategories with 0 products in current mode
+    // Filter out subcategories with 0 products in current mode and check availability
     const visibleSubcategories = categorySubcategories.filter(sub => {
       const count = menuData?.products.filter(p => p.subcategoryId === sub.id).length || 0;
-      return count > 0;
+      if (count === 0) return false;
+      
+      // Check subcategory availability based on order type
+      const subAny = sub as any;
+      if (state.orderType === 'delivery' && subAny.availableDelivery === false) return false;
+      if (state.orderType === 'pickup' && subAny.availablePickup === false) return false;
+      if (state.orderType === 'instore' && subAny.availableInstore === false) return false;
+      
+      return true;
     });
     
     return (

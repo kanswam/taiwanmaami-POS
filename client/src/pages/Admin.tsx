@@ -1875,10 +1875,11 @@ function AddonsTab() {
 
 // Subcategory Edit Form Component
 function SubcategoryEditForm({ sub, category, updateSubcategory, onClose }: { sub: any; category?: any; updateSubcategory: any; onClose?: () => void }) {
-  // Determine if this is a beverage category (show size/boba pricing)
-  const isBeverageCategory = category?.slug === 'bubble-tea' || category?.slug === 'coffee' || 
-    category?.name?.toLowerCase().includes('beverage') || category?.name?.toLowerCase().includes('tea') ||
-    category?.name?.toLowerCase().includes('coffee');
+  // Determine if this subcategory has size/boba variants based on its own flags, not category name
+  // Hot beverages like Tea in Pot have hasSizeVariants=false even though they're in a beverage category
+  const hasSizeVariants = sub.hasSizeVariants !== false;
+  const hasBobaOption = sub.hasBobaOption !== false;
+  const showBeveragePricing = hasSizeVariants; // Only show beverage pricing if subcategory has size variants
   const [imagePreview, setImagePreview] = useState<string | null>(sub.imageUrl || null);
   const [imageData, setImageData] = useState<string | null>(null);
   const [name, setName] = useState(sub.name);
@@ -1897,6 +1898,7 @@ function SubcategoryEditForm({ sub, category, updateSubcategory, onClose }: { su
   const [syncPrices, setSyncPrices] = useState(false);
   const [availableInstore, setAvailableInstore] = useState(sub.availableInstore !== false);
   const [availableDelivery, setAvailableDelivery] = useState(sub.availableDelivery !== false);
+  const [availablePickup, setAvailablePickup] = useState(sub.availablePickup !== false);
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -1930,6 +1932,7 @@ function SubcategoryEditForm({ sub, category, updateSubcategory, onClose }: { su
       syncProductPrices: syncPrices,
       availableInstore,
       availableDelivery,
+      availablePickup,
     } as any);
   };
 
@@ -1992,12 +1995,11 @@ function SubcategoryEditForm({ sub, category, updateSubcategory, onClose }: { su
             <input
               type="checkbox"
               id={`sub-avail-pickup-${sub.id}`}
-              checked={availableInstore}
-              onChange={(e) => setAvailableInstore(e.target.checked)}
+              checked={availablePickup}
+              onChange={(e) => setAvailablePickup(e.target.checked)}
               className="w-4 h-4"
-              disabled
             />
-            <Label htmlFor={`sub-avail-pickup-${sub.id}`} className="text-sm cursor-pointer text-muted-foreground">Pickup (same as In-store)</Label>
+            <Label htmlFor={`sub-avail-pickup-${sub.id}`} className="text-sm cursor-pointer">Pickup</Label>
           </div>
         </div>
       </div>
@@ -2016,8 +2018,8 @@ function SubcategoryEditForm({ sub, category, updateSubcategory, onClose }: { su
         <Label>Description (Optional)</Label>
         <Input value={description} onChange={(e) => setDescription(e.target.value)} />
       </div>
-      {/* Only show size/boba pricing for beverage categories */}
-      {isBeverageCategory && (
+      {/* Only show size/boba pricing for subcategories with size variants */}
+      {showBeveragePricing && (
         <>
           <div className="border-t pt-4">
             <h4 className="font-medium mb-3">In-Store Base Pricing (₹)</h4>
@@ -2079,8 +2081,8 @@ function SubcategoryEditForm({ sub, category, updateSubcategory, onClose }: { su
         </>
       )}
       
-      {/* For non-beverage categories, show a simple note */}
-      {!isBeverageCategory && (
+      {/* For subcategories without size variants, show a simple note */}
+      {!showBeveragePricing && (
         <div className="border-t pt-4">
           <p className="text-sm text-muted-foreground">This category uses fixed product pricing. Edit individual products to set prices.</p>
         </div>
