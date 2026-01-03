@@ -145,6 +145,7 @@ async function startServer() {
         orderType: order.orderType.toUpperCase(),
         customerName: order.customerName || 'Guest',
         customerPhone: order.customerPhone || '',
+        specialInstructions: order.specialInstructions || '',
         items: items.map(item => {
           const addons = itemAddons.filter(a => a.orderItemId === item.id);
           return {
@@ -155,6 +156,7 @@ async function startServer() {
             withBoba: item.withBoba,
             sugarLevel: item.sugarLevel,
             iceLevel: item.iceLevel,
+            specialInstructions: item.specialInstructions || '',
             addons: addons.map(a => ({
               name: a.addonName,
               price: a.addonPrice,

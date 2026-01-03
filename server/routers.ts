@@ -465,6 +465,7 @@ export const appRouter = router({
                 withBoba: item.withBoba,
                 sugarLevel: item.sugarLevel,
                 iceLevel: item.iceLevel,
+                specialInstructions: item.specialInstructions || '',
                 addons: addons.map(a => ({
                   name: a.addonName,
                   price: a.addonPrice,

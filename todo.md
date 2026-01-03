@@ -1173,3 +1173,10 @@
 - [x] Update cart to store selected add-ons with quantities
 - [x] Update order processing to include add-ons in order items
 - [x] Test with Katsu Curry + Egg add-on example
+
+
+## Phase 49 - Cleanup & Special Instructions (Jan 3, 2026)
+
+- [x] Delete duplicate Extra Egg addon records from database
+- [x] Verify product-level special instructions are saved to order items
+- [x] Add product-level special instructions to KOT data for each item
