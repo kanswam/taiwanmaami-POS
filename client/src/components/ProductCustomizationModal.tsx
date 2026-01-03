@@ -57,6 +57,10 @@ export function ProductCustomizationModal({
 }: ProductCustomizationModalProps) {
   const { addItem } = useCart();
   const { data: addonsData } = trpc.menu.getAddons.useQuery();
+  // Fetch product-specific addons (e.g., Egg for Katsu Curry)
+  const { data: productSpecificAddons } = trpc.menu.getProductAddons.useQuery({ productId: product.id });
+  // State for product-specific addon quantities (e.g., { addonId: quantity })
+  const [productAddonQuantities, setProductAddonQuantities] = useState<Record<number, number>>({});
 
   // State for customization (Petite size removed)
   const [size, setSize] = useState<Size>('regular');
@@ -217,6 +221,13 @@ export function ProductCustomizationModal({
     return baseExtraPrice;
   };
 
+  // Calculate product-specific addon total (e.g., 2 eggs = 2 × egg price)
+  const productAddonsTotal = Object.entries(productAddonQuantities).reduce((sum, [addonId, qty]) => {
+    if (qty <= 0) return sum;
+    const addon = productSpecificAddons?.find(a => a.id === Number(addonId));
+    return sum + (addon?.fixedPrice || 0) * qty;
+  }, 0);
+
   // Calculate totals
   const basePrice = getBasePrice();
   const poppingBobaPrice = (withBoba && bobaType === 'popping') ? getPoppingBobaUpgradePrice() : 0;
@@ -225,7 +236,7 @@ export function ProductCustomizationModal({
   const foodAddonsTotal = extraEggPrice + (wantExtraCheese ? extraCheesePrice : 0);
   const coconutCreamCapTotal = (wantCoconutCreamCap && isIcedBeverage) ? getCoconutCreamCapPrice() : 0;
   const extraEspressoTotal = (wantExtraEspresso && isLatteOrCappuccino) ? extraEspressoPrice : 0;
-  const addonsTotal = poppingBobaPrice + extraBobaPrice + milkAddonsTotal + foodAddonsTotal + coconutCreamCapTotal + extraEspressoTotal;
+  const addonsTotal = poppingBobaPrice + extraBobaPrice + milkAddonsTotal + foodAddonsTotal + coconutCreamCapTotal + extraEspressoTotal + productAddonsTotal;
   const unitPrice = basePrice;
   
   // For mochis in delivery/pickup mode:
@@ -328,6 +339,19 @@ export function ProductCustomizationModal({
       coconutCreamCap: wantCoconutCreamCap || undefined,
       // Hot beverage add-ons
       extraEspresso: wantExtraEspresso || undefined,
+      // Product-specific addons (e.g., eggs for Katsu Curry)
+      productAddons: Object.entries(productAddonQuantities)
+        .filter(([_, qty]) => qty > 0)
+        .map(([addonId, qty]) => {
+          const addon = productSpecificAddons?.find(a => a.id === Number(addonId));
+          return {
+            id: Number(addonId),
+            name: addon?.name || '',
+            quantity: qty,
+            pricePerUnit: addon?.fixedPrice || 0,
+            totalPrice: (addon?.fixedPrice || 0) * qty,
+          };
+        }),
       quantity,
       unitPrice,
       addonsTotal,
@@ -707,6 +731,48 @@ export function ProductCustomizationModal({
                     <span className="text-sm font-medium text-primary">+{formatPrice(extraCheesePrice)}</span>
                   </div>
                 )}
+              </div>
+            </div>
+          )}
+
+          {/* Product-Specific Add-ons (e.g., Extra Egg for Katsu Curry) */}
+          {productSpecificAddons && productSpecificAddons.length > 0 && (
+            <div>
+              <h4 className="font-medium mb-3">Add-ons (Optional)</h4>
+              <div className="space-y-3">
+                {productSpecificAddons.map((addon) => {
+                  const currentQty = productAddonQuantities[addon.id] || 0;
+                  const maxQty = addon.maxQuantity || 3;
+                  return (
+                    <div key={addon.id} className="p-3 rounded-lg border-2 border-muted">
+                      <div className="flex items-center justify-between mb-2">
+                        <div>
+                          <span className="font-medium">{addon.name}</span>
+                          <p className="text-xs text-muted-foreground">{formatPrice(addon.fixedPrice || 0)} each (max {maxQty})</p>
+                        </div>
+                        {currentQty > 0 && (
+                          <span className="text-sm font-medium text-primary">+{formatPrice((addon.fixedPrice || 0) * currentQty)}</span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {Array.from({ length: maxQty + 1 }, (_, i) => i).map((count) => (
+                          <button
+                            key={count}
+                            type="button"
+                            onClick={() => setProductAddonQuantities(prev => ({ ...prev, [addon.id]: count }))}
+                            className={`flex-1 py-2 px-3 rounded-lg border-2 text-sm font-medium transition-colors ${
+                              currentQty === count
+                                ? 'border-primary bg-primary/10 text-primary'
+                                : 'border-muted hover:border-muted-foreground/50'
+                            }`}
+                          >
+                            {count === 0 ? 'None' : count}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           )}

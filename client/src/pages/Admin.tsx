@@ -873,6 +873,9 @@ function ProductEditDialog({ product, onUpdate }: { product: any; onUpdate: () =
               />
             </div>
           </div>
+
+          {/* Add-ons Section */}
+          <ProductAddonsSection productId={product.id} />
         </div>
         <div className="flex justify-between">
           {/* Delete button - only show if product can be deleted (no order history) */}
@@ -922,6 +925,75 @@ function ProductEditDialog({ product, onUpdate }: { product: any; onUpdate: () =
         </div>
       </DialogContent>
     </Dialog>
+  );
+}
+
+// Product Add-ons Section Component
+function ProductAddonsSection({ productId }: { productId: number }) {
+  const { data: productAddons, refetch: refetchProductAddons } = trpc.admin.getProductAddons.useQuery({ productId });
+  const { data: allAddons } = trpc.admin.getAllAddons.useQuery();
+  const linkAddon = trpc.admin.linkAddonToProduct.useMutation({
+    onSuccess: () => { toast.success('Add-on linked'); refetchProductAddons(); },
+    onError: (err) => toast.error(err.message),
+  });
+  const unlinkAddon = trpc.admin.unlinkAddonFromProduct.useMutation({
+    onSuccess: () => { toast.success('Add-on removed'); refetchProductAddons(); },
+    onError: (err) => toast.error(err.message),
+  });
+
+  // Filter to show only food_addon type
+  const foodAddons = allAddons?.filter(a => a.type === 'food_addon' && a.isActive) || [];
+  const linkedAddonIds = productAddons?.map(a => a.id) || [];
+
+  return (
+    <div className="border-t pt-4">
+      <Label className="text-sm font-medium">Product Add-ons (e.g., Extra Egg)</Label>
+      <div className="mt-2 space-y-2">
+        {/* Currently linked addons */}
+        {productAddons && productAddons.length > 0 && (
+          <div className="flex flex-wrap gap-2 mb-2">
+            {productAddons.map(addon => (
+              <div key={addon.id} className="flex items-center gap-1 bg-primary/10 text-primary px-2 py-1 rounded-full text-sm">
+                <span>{addon.name} (₹{((addon.fixedPrice || 0) / 100).toFixed(0)})</span>
+                <button
+                  onClick={() => unlinkAddon.mutate({ productId, addonId: addon.id })}
+                  className="ml-1 hover:text-destructive"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+        {/* Add new addon dropdown */}
+        {foodAddons.length > 0 && (
+          <Select
+            onValueChange={(v) => {
+              const addonId = Number(v);
+              if (addonId && !linkedAddonIds.includes(addonId)) {
+                linkAddon.mutate({ productId, addonId });
+              }
+            }}
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Add an add-on option..." />
+            </SelectTrigger>
+            <SelectContent>
+              {foodAddons
+                .filter(a => !linkedAddonIds.includes(a.id))
+                .map(addon => (
+                  <SelectItem key={addon.id} value={addon.id.toString()}>
+                    {addon.name} - ₹{((addon.fixedPrice || 0) / 100).toFixed(0)}
+                  </SelectItem>
+                ))}
+            </SelectContent>
+          </Select>
+        )}
+        {foodAddons.length === 0 && (
+          <p className="text-xs text-muted-foreground">No food add-ons available. Create them in the Add-ons tab first.</p>
+        )}
+      </div>
+    </div>
   );
 }
 

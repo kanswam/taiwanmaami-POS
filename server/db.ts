@@ -157,6 +157,19 @@ export async function getAddons(type?: string) {
   return db.select().from(addons).where(eq(addons.isActive, true)).orderBy(asc(addons.displayOrder));
 }
 
+// Get addons linked to a specific product
+export async function getProductAddonsForProduct(productId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  const links = await db.select().from(productAddons).where(eq(productAddons.productId, productId));
+  if (links.length === 0) return [];
+  const addonIds = links.map(l => l.addonId);
+  return db.select().from(addons).where(and(
+    eq(addons.isActive, true),
+    sql`${addons.id} IN (${sql.join(addonIds.map(id => sql`${id}`), sql`, `)})`
+  )).orderBy(asc(addons.displayOrder));
+}
+
 // Order functions
 export async function createOrder(orderData: typeof orders.$inferInsert) {
   const db = await getDb();

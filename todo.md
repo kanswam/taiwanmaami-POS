@@ -1162,3 +1162,14 @@
 
 - [x] Remove Petite size pricing fields from SubcategoryEditForm
 - [x] Keep only Regular and Large size options for beverages
+
+
+## Phase 48 - Product Add-ons System (Jan 3, 2026)
+
+- [x] Create productAddons table in database schema (already exists)
+- [x] Create backend API for CRUD operations on product add-ons
+- [x] Add Admin UI section for managing add-ons per product
+- [x] Update ProductCustomizationModal to display add-ons with quantity selection
+- [x] Update cart to store selected add-ons with quantities
+- [x] Update order processing to include add-ons in order items
+- [x] Test with Katsu Curry + Egg add-on example

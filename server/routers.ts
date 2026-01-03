@@ -7,7 +7,7 @@ import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
 import * as db from "./db";
 import { getDb } from "./db";
 import { seedDatabase } from "./seed";
-import { categories, subcategories, products, addons, orders, orderItems as orderItemsTable, orderItemAddons, payments, discounts, addresses, storeLocations, deliveryAreas, users } from "../drizzle/schema";
+import { categories, subcategories, products, addons, orders, orderItems as orderItemsTable, orderItemAddons, payments, discounts, addresses, storeLocations, deliveryAreas, users, productAddons } from "../drizzle/schema";
 import { eq, and, desc, asc, sql } from "drizzle-orm";
 import { generateOrderNumber, calculateGst } from "@shared/types";
 // POS functionality removed - Employee Master import removed
@@ -80,6 +80,13 @@ export const appRouter = router({
     getCustomizationOptions: publicProcedure.query(async () => {
       return db.getCustomizationOptions();
     }),
+
+    // Get addons linked to a specific product
+    getProductAddons: publicProcedure
+      .input(z.object({ productId: z.number() }))
+      .query(async ({ input }) => {
+        return db.getProductAddonsForProduct(input.productId);
+      }),
 
     getFullMenu: publicProcedure
       .input(z.object({ isDelivery: z.boolean().default(false), includeUnavailable: z.boolean().default(true) }))
@@ -1439,6 +1446,50 @@ export const appRouter = router({
         if (!dbInstance) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
         // Soft delete by setting isActive to false
         await dbInstance!.update(addons).set({ isActive: false }).where(eq(addons.id, input.id));
+        return { success: true };
+      }),
+
+    // Get addons for a specific product
+    getProductAddons: adminProcedure
+      .input(z.object({ productId: z.number() }))
+      .query(async ({ input }) => {
+        const dbInstance = await getDb();
+        if (!dbInstance) return [];
+        const links = await dbInstance!.select().from(productAddons).where(eq(productAddons.productId, input.productId));
+        const addonIds = links.map(l => l.addonId);
+        if (addonIds.length === 0) return [];
+        const addonList = await dbInstance!.select().from(addons).where(sql`${addons.id} IN (${sql.join(addonIds.map(id => sql`${id}`), sql`, `)})`);
+        return addonList;
+      }),
+
+    // Link an addon to a product
+    linkAddonToProduct: adminProcedure
+      .input(z.object({
+        productId: z.number(),
+        addonId: z.number(),
+      }))
+      .mutation(async ({ input }) => {
+        const dbInstance = await getDb();
+        if (!dbInstance) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
+        // Check if link already exists
+        const existing = await dbInstance!.select().from(productAddons)
+          .where(and(eq(productAddons.productId, input.productId), eq(productAddons.addonId, input.addonId)));
+        if (existing.length > 0) return { success: true, message: 'Already linked' };
+        await dbInstance!.insert(productAddons).values(input);
+        return { success: true };
+      }),
+
+    // Unlink an addon from a product
+    unlinkAddonFromProduct: adminProcedure
+      .input(z.object({
+        productId: z.number(),
+        addonId: z.number(),
+      }))
+      .mutation(async ({ input }) => {
+        const dbInstance = await getDb();
+        if (!dbInstance) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
+        await dbInstance!.delete(productAddons)
+          .where(and(eq(productAddons.productId, input.productId), eq(productAddons.addonId, input.addonId)));
         return { success: true };
       }),
 

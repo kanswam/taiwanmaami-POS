@@ -141,6 +141,13 @@ export default function Cart() {
                       {item.extraEspresso && (
                         <span className="text-xs"> • Extra Espresso Shot</span>
                       )}
+                      {item.productAddons && item.productAddons.length > 0 && (
+                        <div className="text-xs">
+                          {item.productAddons.map(addon => (
+                            <span key={addon.id}> • {addon.quantity}x {addon.name}</span>
+                          ))}
+                        </div>
+                      )}
                       {item.specialInstructions && (
                         <div className="text-xs text-orange-600 mt-1">
                           Note: {item.specialInstructions}

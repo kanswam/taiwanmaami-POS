@@ -82,6 +82,8 @@ export interface CartItem {
   coconutCreamCap?: boolean;
   // Hot beverage add-ons
   extraEspresso?: boolean;
+  // Product-specific addons (e.g., eggs for Katsu Curry)
+  productAddons?: { id: number; name: string; quantity: number; pricePerUnit: number; totalPrice: number }[];
   quantity: number;
   unitPrice: number;
   addonsTotal: number;

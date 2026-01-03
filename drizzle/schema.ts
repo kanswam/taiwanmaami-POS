@@ -128,6 +128,8 @@ export const addons = mysqlTable("addons", {
   priceLarge: int("priceLarge"),
   // Fixed price for food add-ons
   fixedPrice: int("fixedPrice"),
+  // Maximum quantity for quantity-based addons (e.g., max 3 eggs)
+  maxQuantity: int("maxQuantity").default(3),
   isActive: boolean("isActive").default(true).notNull(),
   displayOrder: int("displayOrder").default(0).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
