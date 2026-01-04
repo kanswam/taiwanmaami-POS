@@ -1283,7 +1283,7 @@
 - [ ] Create discount authorization API - admins can apply directly, staff need admin PIN approval
 - [ ] Build manual discount UI in checkout page for in-store orders only
 - [ ] Add discount type selector (fixed amount or percentage)
-- [ ] Add reason field for audit trail
+- [x] Add reason field for audit trail
 - [ ] Implement admin PIN verification for staff-initiated discounts
 - [ ] Log all manual discounts for reporting
 
@@ -1294,3 +1294,11 @@
 - [x] Update existing orders to new format
 - [x] Add "Collect Payment" button for in-store orders with pending payment
 - [x] Update order number generation logic in routers.ts
+
+## Apply Discount to Existing Orders (Jan 4, 2026)
+
+- [x] Add applyManualDiscount API endpoint
+- [x] Build Apply Discount dialog in Admin Orders tab
+- [x] Support both percentage and fixed amount discounts
+- [x] Add reason field for audit trail
+- [x] Recalculate order total after discount

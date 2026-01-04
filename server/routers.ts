@@ -464,6 +464,66 @@ export const appRouter = router({
         return { success: true };
       }),
 
+    // Apply manual discount to existing order
+    applyManualDiscount: adminProcedure
+      .input(z.object({
+        orderId: z.number(),
+        discountType: z.enum(['fixed', 'percentage']),
+        discountValue: z.number().min(0), // Amount in paise for fixed, percentage value for percentage
+        reason: z.string().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const dbInstance = await getDb();
+        if (!dbInstance) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
+        
+        // Get current order
+        const [order] = await dbInstance.select().from(orders).where(eq(orders.id, input.orderId));
+        if (!order) throw new TRPCError({ code: 'NOT_FOUND', message: 'Order not found' });
+        
+        // Calculate discount amount
+        let discountAmount: number;
+        if (input.discountType === 'percentage') {
+          // Calculate percentage of subtotal (before GST)
+          discountAmount = Math.round(order.subtotal * (input.discountValue / 100));
+        } else {
+          // Fixed amount (already in paise)
+          discountAmount = input.discountValue;
+        }
+        
+        // Ensure discount doesn't exceed subtotal
+        if (discountAmount > order.subtotal) {
+          discountAmount = order.subtotal;
+        }
+        
+        // Recalculate totals
+        const newSubtotalAfterDiscount = order.subtotal - discountAmount;
+        const newStateGst = Math.round(newSubtotalAfterDiscount * 0.025);
+        const newCentralGst = Math.round(newSubtotalAfterDiscount * 0.025);
+        const newTotalAmount = newSubtotalAfterDiscount + newStateGst + newCentralGst + order.deliveryCharge;
+        
+        // Update order with discount
+        await dbInstance
+          .update(orders)
+          .set({
+            manualDiscountAmount: discountAmount,
+            manualDiscountType: input.discountType,
+            manualDiscountPercent: input.discountType === 'percentage' ? input.discountValue : null,
+            manualDiscountReason: input.reason || null,
+            manualDiscountApprovedBy: ctx.user.id,
+            discountAmount: discountAmount,
+            stateGst: newStateGst,
+            centralGst: newCentralGst,
+            totalAmount: newTotalAmount,
+          })
+          .where(eq(orders.id, input.orderId));
+        
+        return { 
+          success: true, 
+          discountAmount,
+          newTotalAmount,
+        };
+      }),
+
     getById: adminProcedure
       .input(z.object({ orderId: z.number() }))
       .query(async ({ input }) => {

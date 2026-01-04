@@ -1464,6 +1464,13 @@ function OrdersTab() {
     { enabled: !!selectedOrderId }
   );
   
+  // Apply Discount state
+  const [discountDialogOpen, setDiscountDialogOpen] = useState(false);
+  const [discountOrderId, setDiscountOrderId] = useState<number | null>(null);
+  const [discountType, setDiscountType] = useState<'fixed' | 'percentage'>('percentage');
+  const [discountValue, setDiscountValue] = useState('');
+  const [discountReason, setDiscountReason] = useState('');
+  
   const updateStatus = trpc.orders.updateStatus.useMutation({
     onSuccess: () => {
       toast.success('Order status updated');
@@ -1479,6 +1486,34 @@ function OrdersTab() {
     },
     onError: (err) => toast.error(err.message),
   });
+
+  const applyDiscount = trpc.orders.applyManualDiscount.useMutation({
+    onSuccess: (data) => {
+      toast.success(`Discount applied! New total: ${formatPrice(data.newTotalAmount)}`);
+      setDiscountDialogOpen(false);
+      setDiscountValue('');
+      setDiscountReason('');
+      refetch();
+    },
+    onError: (err) => toast.error(err.message),
+  });
+
+  const handleApplyDiscount = () => {
+    if (!discountOrderId || !discountValue) return;
+    
+    const value = parseFloat(discountValue);
+    if (isNaN(value) || value <= 0) {
+      toast.error('Please enter a valid discount value');
+      return;
+    }
+    
+    applyDiscount.mutate({
+      orderId: discountOrderId,
+      discountType,
+      discountValue: discountType === 'fixed' ? Math.round(value * 100) : value, // Convert to paise for fixed
+      reason: discountReason || undefined,
+    });
+  };
 
   const statusOptions = ['pending', 'confirmed', 'preparing', 'ready', 'out_for_delivery', 'completed', 'cancelled'];
   const statusColors: Record<string, string> = {
@@ -1575,14 +1610,32 @@ function OrdersTab() {
                   </td>
                   <td className="p-3 text-center">
                     <div className="flex gap-2 justify-center flex-wrap">
+                      {/* Apply Discount button for orders with pending payment */}
+                      {order.paymentStatus === 'pending' && !order.manualDiscountAmount && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="border-amber-500 text-amber-600 hover:bg-amber-50"
+                          onClick={() => {
+                            setDiscountOrderId(order.id);
+                            setDiscountDialogOpen(true);
+                          }}
+                        >
+                          🏷️ Discount
+                        </Button>
+                      )}
+                      {/* Show applied discount */}
+                      {(order.manualDiscountAmount ?? 0) > 0 && (
+                        <span className="text-amber-600 text-xs font-medium">
+                          -{formatPrice(order.manualDiscountAmount ?? 0)} off
+                        </span>
+                      )}
                       {/* Collect Payment button for in-store orders with pending payment */}
                       {order.orderType === 'instore' && order.paymentStatus === 'pending' && (
                         <Button
                           size="sm"
-                          variant="default"
-                          className="bg-green-600 hover:bg-green-700"
-                          onClick={(e) => {
-                            e.stopPropagation();
+                          className="bg-green-600 hover:bg-green-700 text-white"
+                          onClick={() => {
                             updatePaymentStatus.mutate({ orderId: order.id, paymentStatus: 'completed' });
                           }}
                           disabled={updatePaymentStatus.isPending}
@@ -1741,6 +1794,60 @@ function OrdersTab() {
               <RefreshCw className="w-6 h-6 animate-spin" />
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Apply Discount Dialog */}
+      <Dialog open={discountDialogOpen} onOpenChange={setDiscountDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Apply Discount</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label>Discount Type</Label>
+              <Select value={discountType} onValueChange={(v) => setDiscountType(v as 'fixed' | 'percentage')}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="percentage">Percentage (%)</SelectItem>
+                  <SelectItem value="fixed">Fixed Amount (₹)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>{discountType === 'percentage' ? 'Discount Percentage' : 'Discount Amount (₹)'}</Label>
+              <Input
+                type="number"
+                placeholder={discountType === 'percentage' ? 'e.g., 10 for 10%' : 'e.g., 100 for ₹100'}
+                value={discountValue}
+                onChange={(e) => setDiscountValue(e.target.value)}
+                min="0"
+                max={discountType === 'percentage' ? '100' : undefined}
+              />
+            </div>
+            <div>
+              <Label>Reason (optional)</Label>
+              <Input
+                placeholder="e.g., Customer complaint, Loyalty, Manager approval"
+                value={discountReason}
+                onChange={(e) => setDiscountReason(e.target.value)}
+              />
+            </div>
+            <div className="flex gap-2 justify-end">
+              <Button variant="outline" onClick={() => setDiscountDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button 
+                onClick={handleApplyDiscount}
+                disabled={!discountValue || applyDiscount.isPending}
+                className="bg-amber-600 hover:bg-amber-700"
+              >
+                {applyDiscount.isPending ? 'Applying...' : 'Apply Discount'}
+              </Button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
     </div>
