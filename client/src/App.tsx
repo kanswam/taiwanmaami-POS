@@ -22,6 +22,7 @@ import Admin from "./pages/Admin";
 import StaffOrders from "./pages/StaffOrders";
 import MenuCategories from "./pages/MenuCategories";
 import CategorySubcategories from "./pages/CategorySubcategories";
+import Analytics from "./pages/Analytics";
 
 function Router() {
   return (
@@ -46,6 +47,7 @@ function Router() {
       {/* Admin Routes */}
       <Route path="/staff/orders" component={StaffOrders} />
       <Route path="/admin" component={Admin} />
+      <Route path="/admin/analytics" component={Analytics} />
       
       {/* Fallback */}
       <Route path="/404" component={NotFound} />

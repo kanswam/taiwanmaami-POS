@@ -16,7 +16,7 @@ import {
   Home, Package, ShoppingCart, Tag, Upload, LogOut, 
   Plus, Edit, Trash2, ImageIcon, RefreshCw, Check, X, Search,
   ChevronDown, ChevronUp, Eye, EyeOff, Star, MessageSquare, Reply, Printer,
-  ClipboardList, RotateCcw, History, Filter
+  ClipboardList, RotateCcw, History, Filter, BarChart3
 } from 'lucide-react';
 import { toast } from 'sonner';
 import {
@@ -125,6 +125,10 @@ export default function Admin() {
             <TabsTrigger value="audit" className="gap-2">
               <ClipboardList className="w-4 h-4" />
               Audit Log
+            </TabsTrigger>
+            <TabsTrigger value="analytics" className="gap-2" onClick={() => navigate('/admin/analytics')}>
+              <BarChart3 className="w-4 h-4" />
+              Analytics
             </TabsTrigger>
           </TabsList>
 

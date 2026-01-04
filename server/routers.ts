@@ -2613,6 +2613,493 @@ export const appRouter = router({
         return history;
       }),
   }),
+
+  // Analytics routes
+  analytics: router({
+    // Sales Overview
+    getSalesOverview: adminProcedure
+      .input(z.object({
+        startDate: z.string().optional(),
+        endDate: z.string().optional(),
+        orderType: z.enum(['all', 'instore', 'delivery', 'pickup']).default('all'),
+        categoryId: z.number().optional(),
+        subcategoryId: z.number().optional(),
+      }).optional())
+      .query(async ({ input }) => {
+        const dbInstance = await getDb();
+        if (!dbInstance) return { totalRevenue: 0, totalOrders: 0, avgOrderValue: 0, totalGst: 0 };
+
+        let conditions: any[] = [sql`${orders.orderStatus} != 'cancelled'`];
+        if (input?.startDate) conditions.push(sql`${orders.createdAt} >= ${input.startDate}`);
+        if (input?.endDate) conditions.push(sql`${orders.createdAt} <= ${input.endDate} 23:59:59`);
+        if (input?.orderType && input.orderType !== 'all') conditions.push(eq(orders.orderType, input.orderType));
+
+        const whereClause = and(...conditions);
+        const matchingOrders = await dbInstance.select().from(orders).where(whereClause);
+
+        let totalRevenue = 0;
+        let totalGst = 0;
+        matchingOrders.forEach(order => {
+          totalRevenue += order.totalAmount;
+          totalGst += (order.stateGst + order.centralGst);
+        });
+
+        return {
+          totalRevenue,
+          totalOrders: matchingOrders.length,
+          avgOrderValue: matchingOrders.length > 0 ? Math.round(totalRevenue / matchingOrders.length) : 0,
+          totalGst,
+        };
+      }),
+
+    // Sales by Category
+    getSalesByCategory: adminProcedure
+      .input(z.object({
+        startDate: z.string().optional(),
+        endDate: z.string().optional(),
+        orderType: z.enum(['all', 'instore', 'delivery', 'pickup']).default('all'),
+      }).optional())
+      .query(async ({ input }) => {
+        const dbInstance = await getDb();
+        if (!dbInstance) return [];
+
+        let conditions: any[] = [sql`${orders.orderStatus} != 'cancelled'`];
+        if (input?.startDate) conditions.push(sql`${orders.createdAt} >= ${input.startDate}`);
+        if (input?.endDate) conditions.push(sql`${orders.createdAt} <= ${input.endDate} 23:59:59`);
+        if (input?.orderType && input.orderType !== 'all') conditions.push(eq(orders.orderType, input.orderType));
+
+        const whereClause = and(...conditions);
+        const matchingOrders = await dbInstance.select().from(orders).where(whereClause);
+        const orderIds = matchingOrders.map(o => o.id);
+
+        if (orderIds.length === 0) return [];
+
+        const items = await dbInstance
+          .select({
+            orderId: orderItemsTable.orderId,
+            quantity: orderItemsTable.quantity,
+            totalPrice: orderItemsTable.lineTotal,
+            subcategoryId: products.subcategoryId,
+          })
+          .from(orderItemsTable)
+          .innerJoin(products, eq(orderItemsTable.productId, products.id))
+          .where(sql`${orderItemsTable.orderId} IN (${sql.join(orderIds, sql`, `)})`);
+
+        const allCategories = await dbInstance.select().from(categories);
+        const allSubcategories = await dbInstance.select().from(subcategories);
+        const subcatToCat: Record<number, number> = {};
+        allSubcategories.forEach(s => { subcatToCat[s.id] = s.categoryId; });
+
+        const categoryStats: Record<number, { revenue: number; quantity: number; orders: Set<number> }> = {};
+        items.forEach(item => {
+          const catId = subcatToCat[item.subcategoryId];
+          if (!categoryStats[catId]) categoryStats[catId] = { revenue: 0, quantity: 0, orders: new Set() };
+          categoryStats[catId].revenue += item.totalPrice;
+          categoryStats[catId].quantity += item.quantity;
+          categoryStats[catId].orders.add(item.orderId);
+        });
+
+        return allCategories.map(cat => ({
+          id: cat.id,
+          name: cat.name,
+          revenue: categoryStats[cat.id]?.revenue || 0,
+          quantity: categoryStats[cat.id]?.quantity || 0,
+          orderCount: categoryStats[cat.id]?.orders.size || 0,
+        })).sort((a, b) => b.revenue - a.revenue);
+      }),
+
+    // Sales by Subcategory
+    getSalesBySubcategory: adminProcedure
+      .input(z.object({
+        startDate: z.string().optional(),
+        endDate: z.string().optional(),
+        categoryId: z.number().optional(),
+        orderType: z.enum(['all', 'instore', 'delivery', 'pickup']).default('all'),
+      }).optional())
+      .query(async ({ input }) => {
+        const dbInstance = await getDb();
+        if (!dbInstance) return [];
+
+        let conditions: any[] = [sql`${orders.orderStatus} != 'cancelled'`];
+        if (input?.startDate) conditions.push(sql`${orders.createdAt} >= ${input.startDate}`);
+        if (input?.endDate) conditions.push(sql`${orders.createdAt} <= ${input.endDate} 23:59:59`);
+        if (input?.orderType && input.orderType !== 'all') conditions.push(eq(orders.orderType, input.orderType));
+
+        const whereClause = and(...conditions);
+        const matchingOrders = await dbInstance.select().from(orders).where(whereClause);
+        const orderIds = matchingOrders.map(o => o.id);
+
+        if (orderIds.length === 0) return [];
+
+        const items = await dbInstance
+          .select({
+            orderId: orderItemsTable.orderId,
+            quantity: orderItemsTable.quantity,
+            totalPrice: orderItemsTable.lineTotal,
+            subcategoryId: products.subcategoryId,
+          })
+          .from(orderItemsTable)
+          .innerJoin(products, eq(orderItemsTable.productId, products.id))
+          .where(sql`${orderItemsTable.orderId} IN (${sql.join(orderIds, sql`, `)})`);
+
+        const allSubcategories = await dbInstance.select().from(subcategories);
+        let filteredSubcategories = allSubcategories;
+        if (input?.categoryId) {
+          filteredSubcategories = allSubcategories.filter(s => s.categoryId === input.categoryId);
+        }
+
+        const subcatStats: Record<number, { revenue: number; quantity: number; orders: Set<number> }> = {};
+        items.forEach(item => {
+          if (!subcatStats[item.subcategoryId]) subcatStats[item.subcategoryId] = { revenue: 0, quantity: 0, orders: new Set() };
+          subcatStats[item.subcategoryId].revenue += item.totalPrice;
+          subcatStats[item.subcategoryId].quantity += item.quantity;
+          subcatStats[item.subcategoryId].orders.add(item.orderId);
+        });
+
+        return filteredSubcategories.map(sub => ({
+          id: sub.id,
+          name: sub.name,
+          categoryId: sub.categoryId,
+          revenue: subcatStats[sub.id]?.revenue || 0,
+          quantity: subcatStats[sub.id]?.quantity || 0,
+          orderCount: subcatStats[sub.id]?.orders.size || 0,
+        })).filter(s => s.revenue > 0).sort((a, b) => b.revenue - a.revenue);
+      }),
+
+    // Product Performance (Top/Bottom)
+    getProductPerformance: adminProcedure
+      .input(z.object({
+        startDate: z.string().optional(),
+        endDate: z.string().optional(),
+        categoryId: z.number().optional(),
+        subcategoryId: z.number().optional(),
+        orderType: z.enum(['all', 'instore', 'delivery', 'pickup']).default('all'),
+        sortBy: z.enum(['revenue', 'quantity']).default('revenue'),
+        limit: z.number().default(20),
+        order: z.enum(['top', 'bottom']).default('top'),
+      }).optional())
+      .query(async ({ input }) => {
+        const dbInstance = await getDb();
+        if (!dbInstance) return [];
+
+        let conditions: any[] = [sql`${orders.orderStatus} != 'cancelled'`];
+        if (input?.startDate) conditions.push(sql`${orders.createdAt} >= ${input.startDate}`);
+        if (input?.endDate) conditions.push(sql`${orders.createdAt} <= ${input.endDate} 23:59:59`);
+        if (input?.orderType && input.orderType !== 'all') conditions.push(eq(orders.orderType, input.orderType));
+
+        const whereClause = and(...conditions);
+        const matchingOrders = await dbInstance.select().from(orders).where(whereClause);
+        const orderIds = matchingOrders.map(o => o.id);
+
+        if (orderIds.length === 0) return [];
+
+        const items = await dbInstance
+          .select({
+            productId: orderItemsTable.productId,
+            productName: orderItemsTable.productName,
+            quantity: orderItemsTable.quantity,
+            totalPrice: orderItemsTable.lineTotal,
+            subcategoryId: products.subcategoryId,
+          })
+          .from(orderItemsTable)
+          .innerJoin(products, eq(orderItemsTable.productId, products.id))
+          .where(sql`${orderItemsTable.orderId} IN (${sql.join(orderIds, sql`, `)})`);
+
+        let filteredItems = items;
+        if (input?.subcategoryId) {
+          filteredItems = items.filter(i => i.subcategoryId === input.subcategoryId);
+        } else if (input?.categoryId) {
+          const allSubcategories = await dbInstance.select().from(subcategories);
+          const subcatIds = allSubcategories.filter(s => s.categoryId === input.categoryId).map(s => s.id);
+          filteredItems = items.filter(i => subcatIds.includes(i.subcategoryId));
+        }
+
+        const productStats: Record<number, { name: string; revenue: number; quantity: number }> = {};
+        filteredItems.forEach(item => {
+          if (!productStats[item.productId]) productStats[item.productId] = { name: item.productName, revenue: 0, quantity: 0 };
+          productStats[item.productId].revenue += item.totalPrice;
+          productStats[item.productId].quantity += item.quantity;
+        });
+
+        let result = Object.entries(productStats).map(([id, stats]) => ({
+          id: Number(id),
+          name: stats.name,
+          revenue: stats.revenue,
+          quantity: stats.quantity,
+        }));
+
+        const sortKey = input?.sortBy || 'revenue';
+        result.sort((a, b) => input?.order === 'bottom' ? a[sortKey] - b[sortKey] : b[sortKey] - a[sortKey]);
+
+        return result.slice(0, input?.limit || 20);
+      }),
+
+    // Customer Analytics
+    getCustomerAnalytics: adminProcedure
+      .input(z.object({
+        startDate: z.string().optional(),
+        endDate: z.string().optional(),
+      }).optional())
+      .query(async ({ input }) => {
+        const dbInstance = await getDb();
+        if (!dbInstance) return { totalCustomers: 0, repeatCustomers: 0, repeatRate: 0, avgOrdersPerCustomer: 0, avgLifetimeValue: 0 };
+
+        let conditions: any[] = [sql`${orders.orderStatus} != 'cancelled'`];
+        if (input?.startDate) conditions.push(sql`${orders.createdAt} >= ${input.startDate}`);
+        if (input?.endDate) conditions.push(sql`${orders.createdAt} <= ${input.endDate} 23:59:59`);
+
+        const whereClause = and(...conditions);
+        const matchingOrders = await dbInstance.select().from(orders).where(whereClause);
+
+        const customerStats: Record<string, { orders: number; totalSpent: number }> = {};
+        matchingOrders.forEach(order => {
+          const key = order.customerPhone || `user_${order.userId}`;
+          if (!customerStats[key]) customerStats[key] = { orders: 0, totalSpent: 0 };
+          customerStats[key].orders += 1;
+          customerStats[key].totalSpent += order.totalAmount;
+        });
+
+        const customers = Object.values(customerStats);
+        const totalCustomers = customers.length;
+        const repeatCustomers = customers.filter(c => c.orders > 1).length;
+        const totalOrders = customers.reduce((sum, c) => sum + c.orders, 0);
+        const totalSpent = customers.reduce((sum, c) => sum + c.totalSpent, 0);
+
+        return {
+          totalCustomers,
+          repeatCustomers,
+          repeatRate: totalCustomers > 0 ? (repeatCustomers / totalCustomers) * 100 : 0,
+          avgOrdersPerCustomer: totalCustomers > 0 ? totalOrders / totalCustomers : 0,
+          avgLifetimeValue: totalCustomers > 0 ? Math.round(totalSpent / totalCustomers) : 0,
+        };
+      }),
+
+    // Top Customers
+    getTopCustomers: adminProcedure
+      .input(z.object({
+        startDate: z.string().optional(),
+        endDate: z.string().optional(),
+        limit: z.number().default(10),
+        sortBy: z.enum(['totalSpent', 'orders']).default('totalSpent'),
+      }).optional())
+      .query(async ({ input }) => {
+        const dbInstance = await getDb();
+        if (!dbInstance) return [];
+
+        let conditions: any[] = [sql`${orders.orderStatus} != 'cancelled'`];
+        if (input?.startDate) conditions.push(sql`${orders.createdAt} >= ${input.startDate}`);
+        if (input?.endDate) conditions.push(sql`${orders.createdAt} <= ${input.endDate} 23:59:59`);
+
+        const whereClause = and(...conditions);
+        const matchingOrders = await dbInstance.select().from(orders).where(whereClause);
+
+        const customerStats: Record<string, { name: string; phone: string; orders: number; totalSpent: number }> = {};
+        matchingOrders.forEach(order => {
+          const key = order.customerPhone || `user_${order.userId}`;
+          if (!customerStats[key]) customerStats[key] = { 
+            name: order.customerName || 'Guest', 
+            phone: order.customerPhone || '', 
+            orders: 0, 
+            totalSpent: 0 
+          };
+          customerStats[key].orders += 1;
+          customerStats[key].totalSpent += order.totalAmount;
+        });
+
+        let result = Object.values(customerStats);
+        const sortKey = input?.sortBy || 'totalSpent';
+        result.sort((a, b) => b[sortKey] - a[sortKey]);
+
+        return result.slice(0, input?.limit || 10);
+      }),
+
+    // Day of Week Analysis
+    getDayOfWeekAnalysis: adminProcedure
+      .input(z.object({
+        startDate: z.string().optional(),
+        endDate: z.string().optional(),
+        categoryId: z.number().optional(),
+        subcategoryId: z.number().optional(),
+      }).optional())
+      .query(async ({ input }) => {
+        const dbInstance = await getDb();
+        if (!dbInstance) return [];
+
+        let conditions: any[] = [sql`${orders.orderStatus} != 'cancelled'`];
+        if (input?.startDate) conditions.push(sql`${orders.createdAt} >= ${input.startDate}`);
+        if (input?.endDate) conditions.push(sql`${orders.createdAt} <= ${input.endDate} 23:59:59`);
+
+        const whereClause = and(...conditions);
+        const matchingOrders = await dbInstance.select().from(orders).where(whereClause);
+
+        const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+        const dayStats: Record<number, { revenue: number; orders: number }> = {};
+        for (let i = 0; i < 7; i++) dayStats[i] = { revenue: 0, orders: 0 };
+
+        matchingOrders.forEach(order => {
+          const dayOfWeek = new Date(order.createdAt).getDay();
+          dayStats[dayOfWeek].revenue += order.totalAmount;
+          dayStats[dayOfWeek].orders += 1;
+        });
+
+        return dayNames.map((name, idx) => ({
+          day: name,
+          dayIndex: idx,
+          revenue: dayStats[idx].revenue,
+          orders: dayStats[idx].orders,
+          avgOrderValue: dayStats[idx].orders > 0 ? Math.round(dayStats[idx].revenue / dayStats[idx].orders) : 0,
+        }));
+      }),
+
+    // Peak Hours Analysis
+    getPeakHoursAnalysis: adminProcedure
+      .input(z.object({
+        startDate: z.string().optional(),
+        endDate: z.string().optional(),
+      }).optional())
+      .query(async ({ input }) => {
+        const dbInstance = await getDb();
+        if (!dbInstance) return [];
+
+        let conditions: any[] = [sql`${orders.orderStatus} != 'cancelled'`];
+        if (input?.startDate) conditions.push(sql`${orders.createdAt} >= ${input.startDate}`);
+        if (input?.endDate) conditions.push(sql`${orders.createdAt} <= ${input.endDate} 23:59:59`);
+
+        const whereClause = and(...conditions);
+        const matchingOrders = await dbInstance.select().from(orders).where(whereClause);
+
+        const hourStats: Record<number, { revenue: number; orders: number }> = {};
+        for (let i = 0; i < 24; i++) hourStats[i] = { revenue: 0, orders: 0 };
+
+        matchingOrders.forEach(order => {
+          const hour = new Date(order.createdAt).getHours();
+          hourStats[hour].revenue += order.totalAmount;
+          hourStats[hour].orders += 1;
+        });
+
+        return Object.entries(hourStats).map(([hour, stats]) => ({
+          hour: parseInt(hour),
+          hourLabel: `${hour.padStart(2, '0')}:00 - ${String((parseInt(hour) + 1) % 24).padStart(2, '0')}:00`,
+          revenue: stats.revenue,
+          orders: stats.orders,
+        }));
+      }),
+
+    // Daily Sales Trend
+    getDailySalesTrend: adminProcedure
+      .input(z.object({
+        startDate: z.string(),
+        endDate: z.string(),
+        categoryId: z.number().optional(),
+        subcategoryId: z.number().optional(),
+        orderType: z.enum(['all', 'instore', 'delivery', 'pickup']).default('all'),
+      }))
+      .query(async ({ input }) => {
+        const dbInstance = await getDb();
+        if (!dbInstance) return [];
+
+        let conditions: any[] = [
+          sql`${orders.orderStatus} != 'cancelled'`,
+          sql`${orders.createdAt} >= ${input.startDate}`,
+          sql`${orders.createdAt} <= ${input.endDate} 23:59:59`,
+        ];
+        if (input.orderType && input.orderType !== 'all') conditions.push(eq(orders.orderType, input.orderType));
+
+        const whereClause = and(...conditions);
+        const matchingOrders = await dbInstance.select().from(orders).where(whereClause);
+
+        const dailyStats: Record<string, { revenue: number; orders: number }> = {};
+        
+        // Initialize all dates in range
+        const start = new Date(input.startDate);
+        const end = new Date(input.endDate);
+        for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+          const dateStr = d.toISOString().split('T')[0];
+          dailyStats[dateStr] = { revenue: 0, orders: 0 };
+        }
+
+        matchingOrders.forEach(order => {
+          const dateStr = new Date(order.createdAt).toISOString().split('T')[0];
+          if (dailyStats[dateStr]) {
+            dailyStats[dateStr].revenue += order.totalAmount;
+            dailyStats[dateStr].orders += 1;
+          }
+        });
+
+        return Object.entries(dailyStats).map(([date, stats]) => ({
+          date,
+          revenue: stats.revenue,
+          orders: stats.orders,
+        })).sort((a, b) => a.date.localeCompare(b.date));
+      }),
+
+    // GST Report
+    getGstReport: adminProcedure
+      .input(z.object({
+        startDate: z.string(),
+        endDate: z.string(),
+        groupBy: z.enum(['daily', 'weekly', 'monthly']).default('daily'),
+      }))
+      .query(async ({ input }) => {
+        const dbInstance = await getDb();
+        if (!dbInstance) return { summary: { totalTaxableValue: 0, totalCgst: 0, totalSgst: 0, totalGst: 0 }, details: [] };
+
+        const matchingOrders = await dbInstance
+          .select()
+          .from(orders)
+          .where(and(
+            sql`${orders.orderStatus} != 'cancelled'`,
+            sql`${orders.createdAt} >= ${input.startDate}`,
+            sql`${orders.createdAt} <= ${input.endDate} 23:59:59`,
+          ));
+
+        // Group by period
+        const periodStats: Record<string, { taxableValue: number; gst: number; cgst: number; sgst: number; orderCount: number }> = {};
+        
+        matchingOrders.forEach(order => {
+          let period: string;
+          const orderDate = new Date(order.createdAt);
+          
+          if (input.groupBy === 'daily') {
+            period = orderDate.toISOString().split('T')[0];
+          } else if (input.groupBy === 'weekly') {
+            const weekStart = new Date(orderDate);
+            weekStart.setDate(orderDate.getDate() - orderDate.getDay());
+            period = `Week of ${weekStart.toISOString().split('T')[0]}`;
+          } else {
+            period = `${orderDate.getFullYear()}-${String(orderDate.getMonth() + 1).padStart(2, '0')}`;
+          }
+
+          if (!periodStats[period]) periodStats[period] = { taxableValue: 0, gst: 0, cgst: 0, sgst: 0, orderCount: 0 };
+          
+          const gstAmount = order.stateGst + order.centralGst;
+          const taxableValue = order.totalAmount - gstAmount;
+          periodStats[period].taxableValue += taxableValue;
+          periodStats[period].gst += gstAmount;
+          periodStats[period].cgst += order.centralGst;
+          periodStats[period].sgst += order.stateGst;
+          periodStats[period].orderCount += 1;
+        });
+
+        const details = Object.entries(periodStats).map(([period, stats]) => ({
+          period,
+          taxableValue: stats.taxableValue,
+          cgst: stats.cgst,
+          sgst: stats.sgst,
+          gst: stats.gst,
+          orderCount: stats.orderCount,
+        })).sort((a, b) => a.period.localeCompare(b.period));
+
+        const summary = {
+          totalTaxableValue: details.reduce((sum, d) => sum + d.taxableValue, 0),
+          totalCgst: details.reduce((sum, d) => sum + d.cgst, 0),
+          totalSgst: details.reduce((sum, d) => sum + d.sgst, 0),
+          totalGst: details.reduce((sum, d) => sum + d.gst, 0),
+        };
+
+        return { summary, details };
+      }),
+  }),
 });
 
 export type AppRouter = typeof appRouter;

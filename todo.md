@@ -1193,3 +1193,21 @@
 
 - [x] Make product edit dialog content scrollable
 - [x] Ensure Save button is always accessible at the bottom
+
+
+## Analytics Dashboard (Jan 4, 2026)
+
+- [x] Create analytics router with comprehensive procedures
+- [x] Sales Overview (total revenue, orders, avg order value, GST)
+- [x] Sales by Category breakdown
+- [x] Sales by Subcategory breakdown
+- [x] Product Performance (top/bottom products by revenue/quantity)
+- [x] Customer Analytics (total customers, repeat rate, lifetime value)
+- [x] Top Customers list
+- [x] Day of Week Analysis
+- [x] Peak Hours Analysis
+- [x] Daily Sales Trend
+- [x] GST Report with daily/weekly/monthly grouping
+- [x] Add Analytics page with date range filters
+- [x] Add Analytics tab to Admin navigation
+- [x] Add vitest tests for analytics calculations
