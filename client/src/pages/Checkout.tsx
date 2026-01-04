@@ -161,6 +161,7 @@ export default function Checkout() {
           withBoba: item.withBoba,
           sugarLevel: item.sugarLevel,
           iceLevel: item.iceLevel,
+          specialInstructions: item.specialInstructions || undefined,
           addons: item.addons,
           quantity: item.quantity,
           unitPrice: item.unitPrice,
@@ -238,6 +239,7 @@ export default function Checkout() {
           withBoba: item.withBoba,
           sugarLevel: item.sugarLevel,
           iceLevel: item.iceLevel,
+          specialInstructions: item.specialInstructions || undefined,
           quantity: item.quantity,
           unitPrice: item.unitPrice,
           addons: item.addons.map(a => ({ id: a.id, name: a.name, price: a.price })),
@@ -248,6 +250,7 @@ export default function Checkout() {
         pincode: formData.pincode || undefined,
         pickupTime: formData.scheduledTime || undefined,
         storeLocationId: formData.selectedStoreId || undefined,
+        specialInstructions: formData.notes || undefined,
         paymentMethod: state.orderType === 'delivery' ? 'online' : (paymentMethod === 'online' ? 'online' : 'cash_at_pickup'),
       });
 

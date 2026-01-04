@@ -2063,6 +2063,8 @@ export const appRouter = router({
         // Pickup details
         pickupTime: z.string().optional(),
         storeLocationId: z.number().optional(),
+        // Special instructions for the entire order
+        specialInstructions: z.string().optional(),
         // Payment
         paymentMethod: z.enum(['online', 'cash_at_pickup']),
       }))
@@ -2100,6 +2102,8 @@ export const appRouter = router({
           // Pickup
           scheduledTime: input.pickupTime ? new Date(`1970-01-01T${input.pickupTime}:00`) : undefined,
           outletId: input.storeLocationId,
+          // Special instructions
+          specialInstructions: input.specialInstructions,
         });
         
         const orderId = orderResult.insertId;
@@ -2153,7 +2157,7 @@ export const appRouter = router({
             tableNumber: input.tableNumber || '',
             customerName: input.guestName,
             customerPhone: input.guestPhone,
-            specialInstructions: '',
+            specialInstructions: input.specialInstructions || '',
             items: input.items.map(item => ({
               productName: item.productName,
               quantity: item.quantity,

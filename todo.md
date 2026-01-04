@@ -1257,3 +1257,9 @@
 - [x] Trigger KOT printing immediately for in-store "Pay at Counter" orders (not wait for payment)
 - [x] Add createKotForInstore procedure to orders router
 - [x] Update Checkout.tsx to call KOT creation after placing in-store cash orders
+
+
+## KOT Special Instructions Fix (Jan 4, 2026)
+
+- [x] Include product-level special instructions in KOT data
+- [x] Include order-level special instructions in KOT data

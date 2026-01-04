@@ -43,6 +43,7 @@ function cartReducer(state: CartState, action: CartAction): CartState {
           item.withBoba === action.payload.withBoba &&
           item.sugarLevel === action.payload.sugarLevel &&
           item.iceLevel === action.payload.iceLevel &&
+          item.specialInstructions === action.payload.specialInstructions &&
           JSON.stringify(item.addons) === JSON.stringify(action.payload.addons)
       );
 
