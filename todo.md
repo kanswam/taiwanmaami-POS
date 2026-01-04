@@ -1187,3 +1187,9 @@
 - [x] Remove duplicate egg option (removed hardcoded Extra Toppings section)
 - [x] Rename "Extra Toppings" to "Add-ons" in UI (now uses product-specific addons only)
 - [x] Remove egg addon from Yaki Onigiri product (was never linked)
+
+
+## Phase 51 - Fix Product Edit Dialog Scrollability (Jan 4, 2026)
+
+- [x] Make product edit dialog content scrollable
+- [x] Ensure Save button is always accessible at the bottom

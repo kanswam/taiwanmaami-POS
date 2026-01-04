@@ -687,11 +687,11 @@ function ProductEditDialog({ product, onUpdate }: { product: any; onUpdate: () =
           <Edit className="w-4 h-4" />
         </Button>
       </DialogTrigger>
-      <DialogContent>
+      <DialogContent className="max-h-[90vh] flex flex-col">
         <DialogHeader>
           <DialogTitle>Edit Product</DialogTitle>
         </DialogHeader>
-        <div className="space-y-4 py-4">
+        <div className="space-y-4 py-4 overflow-y-auto flex-1">
           {/* Multi-Image Upload with Cropping */}
           <div>
             <Label>Product Images (up to 3)</Label>
