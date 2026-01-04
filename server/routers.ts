@@ -178,7 +178,12 @@ export const appRouter = router({
         }
 
         const totalAmount = subtotal + gst.total + deliveryCharge - discountAmount - input.loyaltyPointsUsed;
-        const orderNumber = generateOrderNumber();
+        
+        // Generate sequential 5-digit order number
+        const [maxOrderResult] = await dbInstance!.execute(sql`SELECT MAX(CAST(orderNumber AS UNSIGNED)) as maxNum FROM orders WHERE orderNumber REGEXP '^[0-9]+$'`);
+        const maxNum = (maxOrderResult as any)[0]?.maxNum || 0;
+        const nextNum = maxNum + 1;
+        const orderNumber = String(nextNum).padStart(5, '0');
 
         // Create order
         const [orderResult] = await dbInstance!.insert(orders).values({
@@ -2082,7 +2087,11 @@ export const appRouter = router({
         const deliveryCharge = input.orderType === 'delivery' ? 5000 : 0; // ₹50 delivery
         const totalAmount = subtotal + deliveryCharge;
         
-        const orderNumber = generateOrderNumber();
+        // Generate sequential 5-digit order number
+        const [maxOrderResult] = await dbInstance!.execute(sql`SELECT MAX(CAST(orderNumber AS UNSIGNED)) as maxNum FROM orders WHERE orderNumber REGEXP '^[0-9]+$'`);
+        const maxNum = (maxOrderResult as any)[0]?.maxNum || 0;
+        const nextNum = maxNum + 1;
+        const orderNumber = String(nextNum).padStart(5, '0');
         
         // Create order (userId = null for guest)
         const [orderResult] = await dbInstance!.insert(orders).values({

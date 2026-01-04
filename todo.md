@@ -1275,3 +1275,22 @@
 - [x] Remove GST from menu/product card price display (show base prices only)
 - [x] Ensure GST (5%) is added only at cart/checkout
 - [x] Update all price display locations (Menu, ProductCard, ProductCustomizationModal, Cart, Checkout)
+
+
+## Manual Discount for In-Store Orders (Jan 4, 2026)
+
+- [ ] Add manual discount fields to orders table (manualDiscountAmount, manualDiscountReason, manualDiscountApprovedBy)
+- [ ] Create discount authorization API - admins can apply directly, staff need admin PIN approval
+- [ ] Build manual discount UI in checkout page for in-store orders only
+- [ ] Add discount type selector (fixed amount or percentage)
+- [ ] Add reason field for audit trail
+- [ ] Implement admin PIN verification for staff-initiated discounts
+- [ ] Log all manual discounts for reporting
+
+
+## Order Number Format & Payment Collection (Jan 4, 2026)
+
+- [x] Change order number format to 5-digit numerical (00001, 00002, etc.)
+- [x] Update existing orders to new format
+- [x] Add "Collect Payment" button for in-store orders with pending payment
+- [x] Update order number generation logic in routers.ts

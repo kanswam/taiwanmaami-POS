@@ -1472,6 +1472,14 @@ function OrdersTab() {
     onError: (err) => toast.error(err.message),
   });
 
+  const updatePaymentStatus = trpc.orders.updatePaymentStatus.useMutation({
+    onSuccess: () => {
+      toast.success('Payment collected successfully!');
+      refetch();
+    },
+    onError: (err) => toast.error(err.message),
+  });
+
   const statusOptions = ['pending', 'confirmed', 'preparing', 'ready', 'out_for_delivery', 'completed', 'cancelled'];
   const statusColors: Record<string, string> = {
     pending: 'bg-yellow-100 text-yellow-800',
@@ -1566,7 +1574,22 @@ function OrdersTab() {
                     {new Date(order.createdAt).toLocaleString()}
                   </td>
                   <td className="p-3 text-center">
-                    <div className="flex gap-2 justify-center">
+                    <div className="flex gap-2 justify-center flex-wrap">
+                      {/* Collect Payment button for in-store orders with pending payment */}
+                      {order.orderType === 'instore' && order.paymentStatus === 'pending' && (
+                        <Button
+                          size="sm"
+                          variant="default"
+                          className="bg-green-600 hover:bg-green-700"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            updatePaymentStatus.mutate({ orderId: order.id, paymentStatus: 'completed' });
+                          }}
+                          disabled={updatePaymentStatus.isPending}
+                        >
+                          💰 Collect Payment
+                        </Button>
+                      )}
                       {getNextStatus(order.orderStatus, order.orderType) && (
                         <Button
                           size="sm"

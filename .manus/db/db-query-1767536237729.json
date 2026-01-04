@@ -1,0 +1,37 @@
+{
+  "query": "SELECT id, orderNumber, customerName, totalAmount, orderStatus, orderType, createdAt FROM orders;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT id, orderNumber, customerName, totalAmount, orderStatus, orderType, createdAt FROM orders;",
+  "rows": [
+    {
+      "id": "630001",
+      "orderNumber": "TMMJYG8SV9QUF2",
+      "customerName": "NULL",
+      "totalAmount": "126500",
+      "orderStatus": "completed",
+      "orderType": "delivery",
+      "createdAt": "2026-01-03 15:20:08"
+    },
+    {
+      "id": "660008",
+      "orderNumber": "TMMJZS1NDHH15B",
+      "customerName": "Kannan Swamy",
+      "totalAmount": "140176",
+      "orderStatus": "cancelled",
+      "orderType": "instore",
+      "createdAt": "2026-01-04 13:38:16"
+    },
+    {
+      "id": "660009",
+      "orderNumber": "TMMJZSYUCZRS6N",
+      "customerName": "Kannan Swamy",
+      "totalAmount": "118126",
+      "orderStatus": "cancelled",
+      "orderType": "instore",
+      "createdAt": "2026-01-04 14:04:05"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\torderNumber\tcustomerName\ttotalAmount\torderStatus\torderType\tcreatedAt\n630001\tTMMJYG8SV9QUF2\tNULL\t126500\tcompleted\tdelivery\t2026-01-03 15:20:08\n660008\tTMMJZS1NDHH15B\tKannan Swamy\t140176\tcancelled\tinstore\t2026-01-04 13:38:16\n660009\tTMMJZSYUCZRS6N\tKannan Swamy\t118126\tcancelled\tinstore\t2026-01-04 14:04:05\n",
+  "stderr": "",
+  "execution_time_ms": 1558
+}

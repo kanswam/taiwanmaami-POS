@@ -134,6 +134,13 @@
       "when": 1767528930913,
       "tag": "0018_dry_slapstick",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "5",
+      "when": 1767541856160,
+      "tag": "0019_short_whiplash",
+      "breakpoints": true
     }
   ]
 }

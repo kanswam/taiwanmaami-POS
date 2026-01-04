@@ -141,9 +141,10 @@ export const CHENNAI_AREAS = [
   { area: "Kotturpuram", pincode: "600085" },
 ];
 
-// Generate order number
+// Generate order number - will be replaced with actual sequential number from database
+// This generates a temporary placeholder that gets replaced during order creation
 export function generateOrderNumber(): string {
-  const timestamp = Date.now().toString(36).toUpperCase();
-  const random = Math.random().toString(36).substring(2, 6).toUpperCase();
-  return `TM${timestamp}${random}`;
+  // This is a placeholder - the actual sequential number is generated in routers.ts
+  // by querying the max order number and incrementing
+  return 'TEMP';
 }

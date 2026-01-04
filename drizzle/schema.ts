@@ -201,6 +201,12 @@ export const orders = mysqlTable("orders", {
   posSessionId: int("posSessionId"), // Link to POS session for audit
   specialInstructions: text("specialInstructions"),
   discountCode: varchar("discountCode", { length: 50 }),
+  // Manual discount (for in-store orders)
+  manualDiscountAmount: int("manualDiscountAmount").default(0), // Amount in paise
+  manualDiscountType: mysqlEnum("manualDiscountType", ["fixed", "percentage"]), // Type of discount
+  manualDiscountPercent: int("manualDiscountPercent"), // If percentage type, the percent value
+  manualDiscountReason: text("manualDiscountReason"), // Reason for discount
+  manualDiscountApprovedBy: int("manualDiscountApprovedBy"), // Admin user ID who approved
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
   completedAt: timestamp("completedAt"),
