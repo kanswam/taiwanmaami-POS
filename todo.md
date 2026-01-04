@@ -1180,3 +1180,10 @@
 - [x] Delete duplicate Extra Egg addon records from database
 - [x] Verify product-level special instructions are saved to order items
 - [x] Add product-level special instructions to KOT data for each item
+
+
+## Phase 50 - Fix Duplicate Egg Add-ons (Jan 4, 2026)
+
+- [x] Remove duplicate egg option (removed hardcoded Extra Toppings section)
+- [x] Rename "Extra Toppings" to "Add-ons" in UI (now uses product-specific addons only)
+- [x] Remove egg addon from Yaki Onigiri product (was never linked)

@@ -679,62 +679,6 @@ export function ProductCustomizationModal({
             </div>
           )}
 
-          {/* Food Add-ons - Extra Egg and Extra Cheese for food items */}
-          {isFoodCategory && (showExtraEgg || showExtraCheese) && (
-            <div>
-              <h4 className="font-medium mb-3">Extra Toppings (Optional)</h4>
-              <div className="space-y-3">
-                {/* Extra Egg - with quantity selection (1-3 eggs) */}
-                {showExtraEgg && (
-                  <div className="p-3 rounded-lg border-2 border-muted">
-                    <div className="flex items-center justify-between mb-2">
-                      <div>
-                        <span className="font-medium">Extra Egg</span>
-                        <p className="text-xs text-muted-foreground">{formatPrice(extraEggPricePerUnit)} per egg (max 3)</p>
-                      </div>
-                      {extraEggCount > 0 && (
-                        <span className="text-sm font-medium text-primary">+{formatPrice(extraEggPrice)}</span>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {[0, 1, 2, 3].map((count) => (
-                        <button
-                          key={count}
-                          type="button"
-                          onClick={() => setExtraEggCount(count)}
-                          className={`flex-1 py-2 px-3 rounded-lg border-2 text-sm font-medium transition-colors ${
-                            extraEggCount === count
-                              ? 'border-primary bg-primary/10 text-primary'
-                              : 'border-muted hover:border-muted-foreground/50'
-                          }`}
-                        >
-                          {count === 0 ? 'None' : `${count} Egg${count > 1 ? 's' : ''}`}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-                
-                {/* Extra Cheese - show for items with cheese in name or Cong You Bing */}
-                {showExtraCheese && (
-                  <div 
-                    className={`flex items-center justify-between p-3 rounded-lg border-2 cursor-pointer transition-colors ${wantExtraCheese ? 'border-primary bg-primary/5' : 'border-muted hover:border-muted-foreground/50'}`}
-                    onClick={() => setWantExtraCheese(!wantExtraCheese)}
-                  >
-                    <div className="flex items-center gap-3">
-                      <Checkbox checked={wantExtraCheese} />
-                      <div>
-                        <span className="font-medium">Extra Cheese</span>
-                        <p className="text-xs text-muted-foreground">Add extra cheese to your dish</p>
-                      </div>
-                    </div>
-                    <span className="text-sm font-medium text-primary">+{formatPrice(extraCheesePrice)}</span>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
           {/* Product-Specific Add-ons (e.g., Extra Egg for Katsu Curry) */}
           {productSpecificAddons && productSpecificAddons.length > 0 && (
             <div>
