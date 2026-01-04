@@ -1,0 +1,18 @@
+{
+  "query": "SELECT id, orderNumber, orderStatus, totalAmount, customerName, createdAt FROM orders",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT id, orderNumber, orderStatus, totalAmount, customerName, createdAt FROM orders",
+  "rows": [
+    {
+      "id": "630001",
+      "orderNumber": "TMMJYG8SV9QUF2",
+      "orderStatus": "completed",
+      "totalAmount": "126500",
+      "customerName": "NULL",
+      "createdAt": "2026-01-03 15:20:08"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\torderNumber\torderStatus\ttotalAmount\tcustomerName\tcreatedAt\n630001\tTMMJYG8SV9QUF2\tcompleted\t126500\tNULL\t2026-01-03 15:20:08\n",
+  "stderr": "",
+  "execution_time_ms": 1550
+}

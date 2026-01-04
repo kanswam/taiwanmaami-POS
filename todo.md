@@ -1211,3 +1211,11 @@
 - [x] Add Analytics page with date range filters
 - [x] Add Analytics tab to Admin navigation
 - [x] Add vitest tests for analytics calculations
+
+
+## Bug Fixes (Jan 4, 2026)
+
+- [x] Fix analytics date filtering SQL syntax (endDate concatenation issue)
+- [x] Delete all test orders from database (kept only TMMJYG8SV9QUF2)
+- [x] Verify legitimate order appears in analytics dashboard
+- [x] GST Report now shows correct data with CGST/SGST breakdown

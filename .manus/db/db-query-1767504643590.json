@@ -1,0 +1,41 @@
+{
+  "query": "SELECT * FROM orders WHERE orderNumber LIKE 'TMMJYG8SV9QUF2%'",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT * FROM orders WHERE orderNumber LIKE 'TMMJYG8SV9QUF2%'",
+  "rows": [
+    {
+      "id": "630001",
+      "orderNumber": "TMMJYG8SV9QUF2",
+      "userId": "0",
+      "customerName": "NULL",
+      "customerPhone": "NULL",
+      "orderType": "delivery",
+      "orderStatus": "completed",
+      "paymentStatus": "completed",
+      "subtotal": "121500",
+      "stateGst": "3038",
+      "centralGst": "3038",
+      "deliveryCharge": "5000",
+      "discountAmount": "0",
+      "loyaltyPointsUsed": "0",
+      "totalAmount": "126500",
+      "deliveryAddressId": "NULL",
+      "deliveryAddress": "13 first main rd , Kotturgardens , Kotturpuram, Chennai - 600085",
+      "scheduledTime": "NULL",
+      "razorpayOrderId": "NULL",
+      "razorpayPaymentId": "NULL",
+      "porterOrderId": "NULL",
+      "staffId": "NULL",
+      "outletId": "1",
+      "posSessionId": "NULL",
+      "specialInstructions": "NULL",
+      "discountCode": "NULL",
+      "createdAt": "2026-01-03 15:20:08",
+      "updatedAt": "2026-01-03 16:44:00",
+      "completedAt": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\torderNumber\tuserId\tcustomerName\tcustomerPhone\torderType\torderStatus\tpaymentStatus\tsubtotal\tstateGst\tcentralGst\tdeliveryCharge\tdiscountAmount\tloyaltyPointsUsed\ttotalAmount\tdeliveryAddressId\tdeliveryAddress\tscheduledTime\trazorpayOrderId\trazorpayPaymentId\tporterOrderId\tstaffId\toutletId\tposSessionId\tspecialInstructions\tdiscountCode\tcreatedAt\tupdatedAt\tcompletedAt\n630001\tTMMJYG8SV9QUF2\t0\tNULL\tNULL\tdelivery\tcompleted\tcompleted\t121500\t3038\t3038\t5000\t0\t0\t126500\tNULL\t13 first main rd , Kotturgardens , Kotturpuram, Chennai - 600085\tNULL\tNULL\tNULL\tNULL\tNULL\t1\tNULL\tNULL\tNULL\t2026-01-03 15:20:08\t2026-01-03 16:44:00\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 1826
+}

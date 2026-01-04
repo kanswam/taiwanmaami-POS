@@ -2631,7 +2631,7 @@ export const appRouter = router({
 
         let conditions: any[] = [sql`${orders.orderStatus} != 'cancelled'`];
         if (input?.startDate) conditions.push(sql`${orders.createdAt} >= ${input.startDate}`);
-        if (input?.endDate) conditions.push(sql`${orders.createdAt} <= ${input.endDate} 23:59:59`);
+        if (input?.endDate) conditions.push(sql`${orders.createdAt} <= ${input.endDate + ' 23:59:59'}`);
         if (input?.orderType && input.orderType !== 'all') conditions.push(eq(orders.orderType, input.orderType));
 
         const whereClause = and(...conditions);
@@ -2665,7 +2665,7 @@ export const appRouter = router({
 
         let conditions: any[] = [sql`${orders.orderStatus} != 'cancelled'`];
         if (input?.startDate) conditions.push(sql`${orders.createdAt} >= ${input.startDate}`);
-        if (input?.endDate) conditions.push(sql`${orders.createdAt} <= ${input.endDate} 23:59:59`);
+        if (input?.endDate) conditions.push(sql`${orders.createdAt} <= ${input.endDate + ' 23:59:59'}`);
         if (input?.orderType && input.orderType !== 'all') conditions.push(eq(orders.orderType, input.orderType));
 
         const whereClause = and(...conditions);
@@ -2722,7 +2722,7 @@ export const appRouter = router({
 
         let conditions: any[] = [sql`${orders.orderStatus} != 'cancelled'`];
         if (input?.startDate) conditions.push(sql`${orders.createdAt} >= ${input.startDate}`);
-        if (input?.endDate) conditions.push(sql`${orders.createdAt} <= ${input.endDate} 23:59:59`);
+        if (input?.endDate) conditions.push(sql`${orders.createdAt} <= ${input.endDate + ' 23:59:59'}`);
         if (input?.orderType && input.orderType !== 'all') conditions.push(eq(orders.orderType, input.orderType));
 
         const whereClause = and(...conditions);
@@ -2784,7 +2784,7 @@ export const appRouter = router({
 
         let conditions: any[] = [sql`${orders.orderStatus} != 'cancelled'`];
         if (input?.startDate) conditions.push(sql`${orders.createdAt} >= ${input.startDate}`);
-        if (input?.endDate) conditions.push(sql`${orders.createdAt} <= ${input.endDate} 23:59:59`);
+        if (input?.endDate) conditions.push(sql`${orders.createdAt} <= ${input.endDate + ' 23:59:59'}`);
         if (input?.orderType && input.orderType !== 'all') conditions.push(eq(orders.orderType, input.orderType));
 
         const whereClause = and(...conditions);
@@ -2846,7 +2846,7 @@ export const appRouter = router({
 
         let conditions: any[] = [sql`${orders.orderStatus} != 'cancelled'`];
         if (input?.startDate) conditions.push(sql`${orders.createdAt} >= ${input.startDate}`);
-        if (input?.endDate) conditions.push(sql`${orders.createdAt} <= ${input.endDate} 23:59:59`);
+        if (input?.endDate) conditions.push(sql`${orders.createdAt} <= ${input.endDate + ' 23:59:59'}`);
 
         const whereClause = and(...conditions);
         const matchingOrders = await dbInstance.select().from(orders).where(whereClause);
@@ -2888,7 +2888,7 @@ export const appRouter = router({
 
         let conditions: any[] = [sql`${orders.orderStatus} != 'cancelled'`];
         if (input?.startDate) conditions.push(sql`${orders.createdAt} >= ${input.startDate}`);
-        if (input?.endDate) conditions.push(sql`${orders.createdAt} <= ${input.endDate} 23:59:59`);
+        if (input?.endDate) conditions.push(sql`${orders.createdAt} <= ${input.endDate + ' 23:59:59'}`);
 
         const whereClause = and(...conditions);
         const matchingOrders = await dbInstance.select().from(orders).where(whereClause);
@@ -2927,7 +2927,7 @@ export const appRouter = router({
 
         let conditions: any[] = [sql`${orders.orderStatus} != 'cancelled'`];
         if (input?.startDate) conditions.push(sql`${orders.createdAt} >= ${input.startDate}`);
-        if (input?.endDate) conditions.push(sql`${orders.createdAt} <= ${input.endDate} 23:59:59`);
+        if (input?.endDate) conditions.push(sql`${orders.createdAt} <= ${input.endDate + ' 23:59:59'}`);
 
         const whereClause = and(...conditions);
         const matchingOrders = await dbInstance.select().from(orders).where(whereClause);
@@ -2963,7 +2963,7 @@ export const appRouter = router({
 
         let conditions: any[] = [sql`${orders.orderStatus} != 'cancelled'`];
         if (input?.startDate) conditions.push(sql`${orders.createdAt} >= ${input.startDate}`);
-        if (input?.endDate) conditions.push(sql`${orders.createdAt} <= ${input.endDate} 23:59:59`);
+        if (input?.endDate) conditions.push(sql`${orders.createdAt} <= ${input.endDate + ' 23:59:59'}`);
 
         const whereClause = and(...conditions);
         const matchingOrders = await dbInstance.select().from(orders).where(whereClause);
@@ -3001,7 +3001,7 @@ export const appRouter = router({
         let conditions: any[] = [
           sql`${orders.orderStatus} != 'cancelled'`,
           sql`${orders.createdAt} >= ${input.startDate}`,
-          sql`${orders.createdAt} <= ${input.endDate} 23:59:59`,
+          sql`${orders.createdAt} <= ${input.endDate + ' 23:59:59'}`,
         ];
         if (input.orderType && input.orderType !== 'all') conditions.push(eq(orders.orderType, input.orderType));
 
@@ -3050,7 +3050,7 @@ export const appRouter = router({
           .where(and(
             sql`${orders.orderStatus} != 'cancelled'`,
             sql`${orders.createdAt} >= ${input.startDate}`,
-            sql`${orders.createdAt} <= ${input.endDate} 23:59:59`,
+            sql`${orders.createdAt} <= ${input.endDate + ' 23:59:59'}`,
           ));
 
         // Group by period
