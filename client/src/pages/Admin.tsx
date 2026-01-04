@@ -1471,6 +1471,11 @@ function OrdersTab() {
   const [discountValue, setDiscountValue] = useState('');
   const [discountReason, setDiscountReason] = useState('');
   
+  // Add Items state
+  const [addItemsDialogOpen, setAddItemsDialogOpen] = useState(false);
+  const [addItemsOrderId, setAddItemsOrderId] = useState<number | null>(null);
+  const [addItemsOrderNumber, setAddItemsOrderNumber] = useState<string>('');
+  
   const updateStatus = trpc.orders.updateStatus.useMutation({
     onSuccess: () => {
       toast.success('Order status updated');
@@ -1645,6 +1650,21 @@ function OrdersTab() {
                         <span className="text-amber-600 text-xs font-medium">
                           -{formatPrice(order.manualDiscountAmount ?? 0)} off
                         </span>
+                      )}
+                      {/* Add Items button for in-store orders with pending payment */}
+                      {order.orderType === 'instore' && order.paymentStatus === 'pending' && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="border-blue-500 text-blue-600 hover:bg-blue-50"
+                          onClick={() => {
+                            setAddItemsOrderId(order.id);
+                            setAddItemsOrderNumber(order.orderNumber);
+                            setAddItemsDialogOpen(true);
+                          }}
+                        >
+                          ➕ Add Items
+                        </Button>
                       )}
                       {/* Collect Payment button for in-store orders with pending payment */}
                       {order.orderType === 'instore' && order.paymentStatus === 'pending' && (
@@ -1890,6 +1910,208 @@ function OrdersTab() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Add Items Dialog */}
+      <Dialog open={addItemsDialogOpen} onOpenChange={setAddItemsDialogOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Add Items to Order #{addItemsOrderNumber}</DialogTitle>
+          </DialogHeader>
+          {addItemsOrderId && (
+            <AddItemsToOrderForm 
+              orderId={addItemsOrderId} 
+              orderNumber={addItemsOrderNumber}
+              onSuccess={() => {
+                setAddItemsDialogOpen(false);
+                setAddItemsOrderId(null);
+                refetch();
+              }}
+              onCancel={() => setAddItemsDialogOpen(false)}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
+// Add Items to Order Form Component
+function AddItemsToOrderForm({ orderId, orderNumber, onSuccess, onCancel }: {
+  orderId: number;
+  orderNumber: string;
+  onSuccess: () => void;
+  onCancel: () => void;
+}) {
+  const { data: categories } = trpc.menu.getCategories.useQuery();
+  const { data: allProducts } = trpc.menu.getProducts.useQuery({});
+  const [selectedItems, setSelectedItems] = useState<Array<{
+    productId: number;
+    productName: string;
+    size?: 'petite' | 'regular' | 'large';
+    withBoba?: boolean;
+    sugarLevel?: string;
+    iceLevel?: string;
+    quantity: number;
+    unitPrice: number;
+    addonsTotal: number;
+    lineTotal: number;
+    addons: Array<{ id: number; name: string; price: number }>;
+    specialInstructions?: string;
+  }>>([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  
+  const addItemsToOrder = trpc.orders.addItemsToOrder.useMutation({
+    onSuccess: (data) => {
+      toast.success(`Added ${data.itemsAdded} item(s). New total: ${formatPrice(data.newTotalAmount)}`);
+      onSuccess();
+    },
+    onError: (err) => toast.error(err.message),
+  });
+  
+  const filteredProducts = allProducts?.filter(p => {
+    const name = 'product' in p ? p.product.name : p.name;
+    const subcatName = 'subcategory' in p ? p.subcategory?.name : '';
+    return name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+           (subcatName?.toLowerCase().includes(searchTerm.toLowerCase()) ?? false);
+  }) || [];
+  
+  const addProduct = (productData: any) => {
+    const product = 'product' in productData ? productData.product : productData;
+    const basePrice = product.instorePrice ?? 0;
+    setSelectedItems(prev => [...prev, {
+      productId: product.id,
+      productName: product.name,
+      size: product.hasSizes ? 'regular' : undefined,
+      withBoba: product.hasBobaOption ? true : undefined,
+      sugarLevel: product.hasSugarOptions ? '100%' : undefined,
+      iceLevel: product.hasIceOptions ? 'Regular' : undefined,
+      quantity: 1,
+      unitPrice: basePrice,
+      addonsTotal: 0,
+      lineTotal: basePrice,
+      addons: [],
+      specialInstructions: '',
+    }]);
+  };
+  
+  const updateItem = (index: number, updates: Partial<typeof selectedItems[0]>) => {
+    setSelectedItems(prev => prev.map((item, i) => {
+      if (i !== index) return item;
+      const updated = { ...item, ...updates };
+      updated.lineTotal = (updated.unitPrice + updated.addonsTotal) * updated.quantity;
+      return updated;
+    }));
+  };
+  
+  const removeItem = (index: number) => {
+    setSelectedItems(prev => prev.filter((_, i) => i !== index));
+  };
+  
+  const totalAmount = selectedItems.reduce((sum, item) => sum + item.lineTotal, 0);
+  
+  const handleSubmit = () => {
+    if (selectedItems.length === 0) {
+      toast.error('Please add at least one item');
+      return;
+    }
+    addItemsToOrder.mutate({ orderId, items: selectedItems });
+  };
+  
+  return (
+    <div className="space-y-4">
+      {/* Search Products */}
+      <div>
+        <Input
+          placeholder="Search products..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="w-full"
+        />
+      </div>
+      
+      {/* Product Grid */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 max-h-48 overflow-y-auto border rounded-lg p-2">
+        {filteredProducts.slice(0, 20).map(productData => {
+          const product = 'product' in productData ? productData.product : productData;
+          return (
+            <Button
+              key={product.id}
+              variant="outline"
+              size="sm"
+              className="h-auto py-2 px-3 text-left justify-start"
+              onClick={() => addProduct(productData)}
+            >
+              <div>
+                <div className="font-medium text-xs truncate">{product.name}</div>
+                <div className="text-xs text-muted-foreground">{formatPrice(product.instorePrice ?? 0)}</div>
+              </div>
+            </Button>
+          );
+        })}
+      </div>
+      
+      {/* Selected Items */}
+      {selectedItems.length > 0 && (
+        <div className="border rounded-lg p-3 space-y-2">
+          <h4 className="font-semibold text-sm">Items to Add:</h4>
+          {selectedItems.map((item, index) => (
+            <div key={index} className="flex items-center gap-2 p-2 bg-secondary rounded">
+              <div className="flex-1">
+                <div className="font-medium text-sm">{item.productName}</div>
+                <div className="text-xs text-muted-foreground">
+                  {item.size && `${item.size} `}
+                  {formatPrice(item.unitPrice)} x {item.quantity} = {formatPrice(item.lineTotal)}
+                </div>
+              </div>
+              <div className="flex items-center gap-1">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-7 w-7 p-0"
+                  onClick={() => updateItem(index, { quantity: Math.max(1, item.quantity - 1) })}
+                >
+                  -
+                </Button>
+                <span className="w-6 text-center text-sm">{item.quantity}</span>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-7 w-7 p-0"
+                  onClick={() => updateItem(index, { quantity: item.quantity + 1 })}
+                >
+                  +
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="h-7 w-7 p-0 text-red-500"
+                  onClick={() => removeItem(index)}
+                >
+                  <X className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+          ))}
+          <div className="flex justify-between items-center pt-2 border-t">
+            <span className="font-semibold">Subtotal:</span>
+            <span className="font-semibold">{formatPrice(totalAmount)}</span>
+          </div>
+        </div>
+      )}
+      
+      {/* Actions */}
+      <div className="flex gap-2 justify-end">
+        <Button variant="outline" onClick={onCancel}>
+          Cancel
+        </Button>
+        <Button 
+          onClick={handleSubmit}
+          disabled={selectedItems.length === 0 || addItemsToOrder.isPending}
+          className="bg-blue-600 hover:bg-blue-700"
+        >
+          {addItemsToOrder.isPending ? 'Adding...' : `Add ${selectedItems.length} Item(s)`}
+        </Button>
+      </div>
     </div>
   );
 }

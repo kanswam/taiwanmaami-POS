@@ -524,6 +524,158 @@ export const appRouter = router({
         };
       }),
 
+    // Add items to existing order (for in-store customers adding more items)
+    addItemsToOrder: adminProcedure
+      .input(z.object({
+        orderId: z.number(),
+        items: z.array(z.object({
+          productId: z.number(),
+          productName: z.string(),
+          size: z.enum(['petite', 'regular', 'large']).optional(),
+          withBoba: z.boolean().optional(),
+          sugarLevel: z.string().optional(),
+          iceLevel: z.string().optional(),
+          quantity: z.number().min(1),
+          unitPrice: z.number(),
+          addonsTotal: z.number(),
+          lineTotal: z.number(),
+          addons: z.array(z.object({
+            id: z.number(),
+            name: z.string(),
+            price: z.number(),
+          })),
+          specialInstructions: z.string().optional(),
+        })),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const dbInstance = await getDb();
+        if (!dbInstance) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
+        
+        // Get current order
+        const [order] = await dbInstance.select().from(orders).where(eq(orders.id, input.orderId));
+        if (!order) throw new TRPCError({ code: 'NOT_FOUND', message: 'Order not found' });
+        
+        // Only allow adding items to pending payment orders
+        if (order.paymentStatus !== 'pending') {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: 'Cannot add items to paid orders' });
+        }
+        
+        // Calculate new items total
+        const newItemsSubtotal = input.items.reduce((sum, item) => sum + item.lineTotal, 0);
+        
+        // Insert new order items
+        const newOrderItems = [];
+        for (const item of input.items) {
+          const [insertedItem] = await dbInstance.insert(orderItemsTable).values({
+            orderId: input.orderId,
+            productId: item.productId,
+            productName: item.productName,
+            size: item.size || null,
+            withBoba: item.withBoba ?? null,
+            sugarLevel: item.sugarLevel || null,
+            iceLevel: item.iceLevel || null,
+            quantity: item.quantity,
+            unitPrice: item.unitPrice,
+            addonsTotal: item.addonsTotal,
+            lineTotal: item.lineTotal,
+            specialInstructions: item.specialInstructions || null,
+          }).$returningId();
+          
+          // Insert add-ons for this item
+          for (const addon of item.addons) {
+            await dbInstance.insert(orderItemAddons).values({
+              orderItemId: insertedItem.id,
+              addonId: addon.id,
+              addonName: addon.name,
+              addonPrice: addon.price,
+            });
+          }
+          
+          newOrderItems.push({ ...item, id: insertedItem.id });
+        }
+        
+        // Recalculate order totals
+        const newSubtotal = order.subtotal + newItemsSubtotal;
+        const discountedSubtotal = newSubtotal - (order.discountAmount || 0);
+        const newStateGst = Math.round(discountedSubtotal * 0.025);
+        const newCentralGst = Math.round(discountedSubtotal * 0.025);
+        const newTotalAmount = discountedSubtotal + newStateGst + newCentralGst + order.deliveryCharge;
+        
+        // Update order totals
+        await dbInstance
+          .update(orders)
+          .set({
+            subtotal: newSubtotal,
+            stateGst: newStateGst,
+            centralGst: newCentralGst,
+            totalAmount: newTotalAmount,
+          })
+          .where(eq(orders.id, input.orderId));
+        
+        // Queue supplementary KOT for new items only
+        const kotData = {
+          orderId: order.orderNumber,
+          orderType: order.orderType.toUpperCase(),
+          customerName: order.customerName || 'Guest',
+          customerPhone: order.customerPhone || '',
+          tableNumber: order.tableNumber || '',
+          specialInstructions: '',
+          isAddition: true, // Flag to indicate this is additional items
+          items: newOrderItems.map(item => ({
+            productName: item.productName,
+            quantity: item.quantity,
+            price: item.unitPrice,
+            size: item.size,
+            withBoba: item.withBoba,
+            sugarLevel: item.sugarLevel,
+            iceLevel: item.iceLevel,
+            specialInstructions: item.specialInstructions || '',
+            addons: item.addons.map(a => ({ name: a.name, price: a.price })),
+          })),
+          totalAmount: newItemsSubtotal,
+          createdAt: new Date().toISOString(),
+        };
+        
+        await dbInstance.insert(kotQueue).values({
+          orderId: order.id.toString(),
+          outletId: order.outletId || 1,
+          orderNumber: order.orderNumber,
+          kotData: kotData,
+          isPrinted: false,
+        });
+        
+        return { 
+          success: true, 
+          newSubtotal,
+          newTotalAmount,
+          itemsAdded: newOrderItems.length,
+        };
+      }),
+
+    // Get active order for a table (for customer add-to-order flow)
+    getActiveOrderForTable: publicProcedure
+      .input(z.object({ tableNumber: z.string() }))
+      .query(async ({ input }) => {
+        const dbInstance = await getDb();
+        if (!dbInstance) return null;
+        
+        // Find active (unpaid) order for this table
+        const [activeOrder] = await dbInstance
+          .select()
+          .from(orders)
+          .where(
+            and(
+              eq(orders.tableNumber, input.tableNumber),
+              eq(orders.orderType, 'instore'),
+              eq(orders.paymentStatus, 'pending')
+            )
+          )
+          .orderBy(desc(orders.createdAt))
+          .limit(1);
+        
+        return activeOrder || null;
+      }),
+
     getById: adminProcedure
       .input(z.object({ orderId: z.number() }))
       .query(async ({ input }) => {

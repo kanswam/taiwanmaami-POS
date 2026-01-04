@@ -1313,8 +1313,8 @@
 
 ## Add to Order Feature (Jan 4, 2026)
 
-- [ ] Add API endpoint for adding items to existing orders
-- [ ] Print supplementary KOT for added items only
-- [ ] Staff-side: Add Items button in Admin Orders tab
-- [ ] Customer-side: Detect active order and show "Add to Order" option
-- [ ] Update order total and GST when items are added
+- [x] Add API endpoint for adding items to existing orders
+- [x] Print supplementary KOT for added items only
+- [x] Staff-side: Add Items button in Admin Orders tab
+- [x] Customer-side: Detect active order and show "Add to Order" option
+- [x] Update order total and GST when items are added

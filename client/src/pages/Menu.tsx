@@ -56,11 +56,32 @@ export default function Menu() {
   const params = new URLSearchParams(searchString);
   const initialCategory = params.get('category') || 'all';
   const initialSubcategory = params.get('subcategory') || null;
+  const tableFromUrl = params.get('table');
+  const outletFromUrl = params.get('outlet');
 
   const [selectedCategory, setSelectedCategory] = useState(initialCategory);
   const [selectedSubcategory, setSelectedSubcategory] = useState<string | null>(initialSubcategory);
   const [searchQuery, setSearchQuery] = useState('');
+  const [showAddToOrderBanner, setShowAddToOrderBanner] = useState(false);
   const { state, setOrderType, setTableNumber, tableNumber, itemCount, total } = useCart();
+  
+  // Check for active order if table number is in URL
+  const { data: activeOrder } = trpc.orders.getActiveOrderForTable.useQuery(
+    { tableNumber: tableFromUrl || '' },
+    { enabled: !!tableFromUrl }
+  );
+  
+  // Auto-set order type and table number from URL params
+  useEffect(() => {
+    if (tableFromUrl) {
+      setOrderType('instore');
+      setTableNumber(tableFromUrl);
+      // Show banner if there's an active order for this table
+      if (activeOrder) {
+        setShowAddToOrderBanner(true);
+      }
+    }
+  }, [tableFromUrl, activeOrder, setOrderType, setTableNumber]);
 
 
   const { data: menuData, isLoading } = trpc.menu.getFullMenu.useQuery({
@@ -328,6 +349,36 @@ export default function Menu() {
   return (
     <div className="min-h-screen bg-background pb-24">
       <Header />
+
+      {/* Active Order Banner - shown when customer scans table QR and there's an existing order */}
+      {showAddToOrderBanner && activeOrder && (
+        <div className="bg-blue-600 text-white py-3">
+          <div className="container">
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <div className="flex items-center gap-2">
+                <span className="text-lg">📋</span>
+                <div>
+                  <p className="font-semibold">Table {tableFromUrl} has an active order</p>
+                  <p className="text-sm text-blue-100">Order #{activeOrder.orderNumber} • {formatPrice(activeOrder.totalAmount)}</p>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  className="bg-white text-blue-600 hover:bg-blue-50"
+                  onClick={() => setShowAddToOrderBanner(false)}
+                >
+                  Start New Order
+                </Button>
+              </div>
+            </div>
+            <p className="text-sm text-blue-100 mt-2">
+              Add more items to your cart and they'll be added to your existing order when you checkout.
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Order Type Toggle & Search */}
       <div className="sticky top-16 z-40 bg-background border-b border-border">
