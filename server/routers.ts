@@ -234,7 +234,77 @@ export const appRouter = router({
           }
         }
 
+        // For in-store orders with cash payment, create KOT immediately
+        // This is handled on the frontend by checking if paymentMethod is 'cash'
+        // The KOT will be created when the order is placed without going through Razorpay
+        
         return { orderId, orderNumber, totalAmount };
+      }),
+
+    // Create KOT for in-store orders that skip payment
+    createKotForInstore: publicProcedure
+      .input(z.object({
+        orderId: z.number(),
+        orderNumber: z.string(),
+      }))
+      .mutation(async ({ input }) => {
+        const dbInstance = await getDb();
+        if (!dbInstance) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
+        
+        // Get order details
+        const [order] = await dbInstance.select().from(orders).where(eq(orders.id, input.orderId));
+        if (!order) throw new TRPCError({ code: 'NOT_FOUND', message: 'Order not found' });
+        
+        // Only create KOT for in-store orders
+        if (order.orderType !== 'instore') {
+          return { success: false, message: 'KOT only created for in-store orders' };
+        }
+        
+        // Get order items
+        const items = await dbInstance.select().from(orderItemsTable).where(eq(orderItemsTable.orderId, input.orderId));
+        const itemIds = items.map(i => i.id);
+        const itemAddons = itemIds.length > 0 
+          ? await dbInstance.select().from(orderItemAddons).where(sql`${orderItemAddons.orderItemId} IN (${sql.join(itemIds.map(id => sql`${id}`), sql`, `)})`)
+          : [];
+        
+        // Build KOT data
+        const kotData = {
+          orderId: order.orderNumber,
+          orderType: 'INSTORE',
+          tableNumber: order.tableNumber || '',
+          customerName: order.customerName || 'Guest',
+          customerPhone: order.customerPhone || '',
+          specialInstructions: order.specialInstructions || '',
+          items: items.map(item => {
+            const addons = itemAddons.filter(a => a.orderItemId === item.id);
+            return {
+              productName: item.productName,
+              quantity: item.quantity,
+              price: item.unitPrice,
+              size: item.size,
+              withBoba: item.withBoba,
+              sugarLevel: item.sugarLevel,
+              iceLevel: item.iceLevel,
+              specialInstructions: item.specialInstructions || '',
+              addons: addons.map(a => ({
+                name: a.addonName,
+                price: a.addonPrice,
+              })),
+            };
+          }),
+          totalAmount: order.totalAmount,
+          createdAt: new Date().toISOString(),
+        };
+        
+        await dbInstance.insert(kotQueue).values({
+          orderId: order.id.toString(),
+          outletId: order.outletId || 1,
+          orderNumber: order.orderNumber,
+          kotData: kotData,
+          isPrinted: false,
+        });
+        
+        return { success: true };
       }),
 
     getByNumber: publicProcedure
@@ -2072,6 +2142,44 @@ export const appRouter = router({
           guestPhone: input.guestPhone,
           guestEmail: input.guestEmail,
         });
+        
+        // For in-store "Pay at Counter" orders, create KOT immediately
+        // Kitchen needs to start preparing right away since customer is present
+        if (input.orderType === 'instore' && input.paymentMethod === 'cash_at_pickup') {
+          // Build KOT data
+          const kotData = {
+            orderId: orderNumber,
+            orderType: 'INSTORE',
+            tableNumber: input.tableNumber || '',
+            customerName: input.guestName,
+            customerPhone: input.guestPhone,
+            specialInstructions: '',
+            items: input.items.map(item => ({
+              productName: item.productName,
+              quantity: item.quantity,
+              price: item.unitPrice,
+              size: item.size,
+              withBoba: item.withBoba,
+              sugarLevel: item.sugarLevel,
+              iceLevel: item.iceLevel,
+              specialInstructions: item.specialInstructions || '',
+              addons: item.addons.map(a => ({
+                name: a.name,
+                price: a.price,
+              })),
+            })),
+            totalAmount,
+            createdAt: new Date().toISOString(),
+          };
+          
+          await dbInstance!.insert(kotQueue).values({
+            orderId: orderId.toString(),
+            outletId: input.storeLocationId || 1,
+            orderNumber,
+            kotData: kotData,
+            isPrinted: false,
+          });
+        }
         
         return {
           orderId,

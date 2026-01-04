@@ -1245,3 +1245,15 @@
 - [x] Payment status tracking (paid/unpaid)
 - [x] Table status dashboard for staff with Mark as Paid functionality
 - [x] Razorpay integration available for customers who want to pay online
+
+
+## KOT Printing Fix (Jan 4, 2026)
+
+- [ ] Trigger KOT printing immediately for in-store "Pay at Counter" orders (not wait for payment)
+
+
+## KOT Printing Fix (Jan 4, 2026)
+
+- [x] Trigger KOT printing immediately for in-store "Pay at Counter" orders (not wait for payment)
+- [x] Add createKotForInstore procedure to orders router
+- [x] Update Checkout.tsx to call KOT creation after placing in-store cash orders
