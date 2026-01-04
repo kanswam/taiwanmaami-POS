@@ -1,0 +1,9 @@
+{
+  "query": "DELETE FROM order_item_addons WHERE orderItemId IN (SELECT id FROM order_items WHERE orderId IN (SELECT id FROM orders WHERE orderNumber != 'TMMJYG8SV9QUF2'))",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute DELETE FROM order_item_addons WHERE orderItemId IN (SELECT id FROM order_items WHERE orderId IN (SELECT id FROM orders WHERE orderNumber != 'TMMJYG8SV9QUF2'))",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 1597
+}

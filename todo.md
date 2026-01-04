@@ -1224,3 +1224,24 @@
 ## UI Improvements (Jan 4, 2026)
 
 - [x] Remove suggested drinks/food feature from ordering flow
+
+
+## POS System Enhancements (Jan 4, 2026)
+
+- [ ] Add table number field to database schema and orders
+- [ ] Create table selection UI for in-store orders
+- [ ] Add bill generation with GST breakdown
+- [ ] Add payment status tracking for orders
+- [ ] Create table status dashboard for staff
+- [ ] Test POS features end-to-end
+- [ ] Clean up test data
+
+
+## POS System Enhancements (Jan 4, 2026)
+
+- [x] Table number assignment for in-store orders
+- [x] Pay at Counter option for in-store orders (no Razorpay required)
+- [x] Bill generation with GST breakdown and Print Bill button
+- [x] Payment status tracking (paid/unpaid)
+- [x] Table status dashboard for staff with Mark as Paid functionality
+- [x] Razorpay integration available for customers who want to pay online

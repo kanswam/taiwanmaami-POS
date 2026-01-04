@@ -4,6 +4,7 @@ import { CartItem, calculateGst, GST_RATE } from '@shared/types';
 interface CartState {
   items: CartItem[];
   orderType: 'instore' | 'delivery' | 'pickup';
+  tableNumber: string | null; // For in-store orders
   discountCode: string | null;
   discountAmount: number;
   loyaltyPointsUsed: number;
@@ -16,6 +17,7 @@ type CartAction =
   | { type: 'UPDATE_QUANTITY'; payload: { id: string; quantity: number } }
   | { type: 'CLEAR_CART' }
   | { type: 'SET_ORDER_TYPE'; payload: 'instore' | 'delivery' | 'pickup' }
+  | { type: 'SET_TABLE_NUMBER'; payload: string | null }
   | { type: 'APPLY_DISCOUNT'; payload: { code: string; amount: number } }
   | { type: 'REMOVE_DISCOUNT' }
   | { type: 'USE_LOYALTY_POINTS'; payload: number }
@@ -24,6 +26,7 @@ type CartAction =
 const initialState: CartState = {
   items: [],
   orderType: 'delivery',
+  tableNumber: null,
   discountCode: null,
   discountAmount: 0,
   loyaltyPointsUsed: 0,
@@ -105,6 +108,8 @@ function cartReducer(state: CartState, action: CartAction): CartState {
       }
       return { ...state, orderType: newOrderType };
     }
+    case 'SET_TABLE_NUMBER':
+      return { ...state, tableNumber: action.payload };
     case 'APPLY_DISCOUNT':
       return { ...state, discountCode: action.payload.code, discountAmount: action.payload.amount };
     case 'REMOVE_DISCOUNT':
@@ -125,6 +130,7 @@ interface CartContextValue {
   updateQuantity: (id: string, quantity: number) => void;
   clearCart: () => void;
   setOrderType: (type: 'instore' | 'delivery' | 'pickup') => void;
+  setTableNumber: (tableNumber: string | null) => void;
   applyDiscount: (code: string, amount: number) => void;
   removeDiscount: () => void;
   useLoyaltyPoints: (points: number) => void;
@@ -132,6 +138,7 @@ interface CartContextValue {
   gst: { stateGst: number; centralGst: number; total: number };
   total: number;
   itemCount: number;
+  tableNumber: string | null;
   lastAddedItem: { productId: number; subcategoryId: number } | null;
 }
 
@@ -170,6 +177,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     updateQuantity: (id, quantity) => dispatch({ type: 'UPDATE_QUANTITY', payload: { id, quantity } }),
     clearCart: () => dispatch({ type: 'CLEAR_CART' }),
     setOrderType: (type) => dispatch({ type: 'SET_ORDER_TYPE', payload: type }),
+    setTableNumber: (tableNumber) => dispatch({ type: 'SET_TABLE_NUMBER', payload: tableNumber }),
     applyDiscount: (code, amount) => dispatch({ type: 'APPLY_DISCOUNT', payload: { code, amount } }),
     removeDiscount: () => dispatch({ type: 'REMOVE_DISCOUNT' }),
     useLoyaltyPoints: (points) => dispatch({ type: 'USE_LOYALTY_POINTS', payload: points }),
@@ -177,6 +185,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     gst,
     total,
     itemCount,
+    tableNumber: state.tableNumber,
     lastAddedItem: state.lastAddedItem,
   };
 

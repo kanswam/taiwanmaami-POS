@@ -175,6 +175,7 @@ export const orders = mysqlTable("orders", {
   customerName: varchar("customerName", { length: 200 }),
   customerPhone: varchar("customerPhone", { length: 20 }),
   orderType: mysqlEnum("orderType", ["instore", "delivery", "pickup"]).notNull(),
+  tableNumber: varchar("tableNumber", { length: 10 }), // For in-store orders - table number
   orderStatus: mysqlEnum("orderStatus", ["pending", "confirmed", "preparing", "ready", "out_for_delivery", "completed", "cancelled"]).default("pending").notNull(),
   paymentStatus: mysqlEnum("paymentStatus", ["pending", "partial", "completed", "refunded"]).default("pending").notNull(),
   // Amounts in paise

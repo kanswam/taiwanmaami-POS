@@ -27,7 +27,7 @@ declare global {
 export default function Checkout() {
   const [, navigate] = useLocation();
   const { isAuthenticated, user } = useAuth();
-  const { state, subtotal, gst, total, clearCart, itemCount } = useCart();
+  const { state, subtotal, gst, total, clearCart, itemCount, tableNumber, setTableNumber } = useCart();
   const { data: stores } = trpc.stores.getAll.useQuery();
 
   const [paymentMethod, setPaymentMethod] = useState<'online' | 'cash'>('online');
@@ -151,7 +151,8 @@ export default function Checkout() {
     try {
       // Create order first
       const orderData = await createOrder.mutateAsync({
-        orderType: state.orderType === 'instore' ? 'pickup' : state.orderType,
+        orderType: state.orderType,
+        tableNumber: state.orderType === 'instore' ? tableNumber || undefined : undefined,
         items: state.items.map(item => ({
           productId: item.productId,
           productName: item.productName,
@@ -182,7 +183,7 @@ export default function Checkout() {
       } else {
         // Cash at pickup - go directly to confirmation
         clearCart();
-        toast.success('Order placed! Pay at pickup.');
+        toast.success(state.orderType === 'instore' ? 'Order placed! Pay at counter.' : 'Order placed! Pay at pickup.');
         navigate(`/order-confirmation/${orderData.orderNumber}`);
       }
     } catch (err: any) {
@@ -224,7 +225,8 @@ export default function Checkout() {
         guestName: formData.name,
         guestPhone: formData.phone,
         guestEmail: formData.email || undefined,
-        orderType: state.orderType === 'instore' ? 'pickup' : state.orderType,
+        orderType: state.orderType,
+        tableNumber: state.orderType === 'instore' ? tableNumber || undefined : undefined,
         items: state.items.map(item => ({
           productId: item.productId,
           productName: item.productName,
@@ -250,7 +252,7 @@ export default function Checkout() {
         await handleRazorpayPayment(orderData.orderId, orderData.orderNumber, displayTotal);
       } else {
         clearCart();
-        toast.success('Order placed! Pay at pickup.');
+        toast.success(state.orderType === 'instore' ? 'Order placed! Pay at counter.' : 'Order placed! Pay at pickup.');
         navigate(`/order-confirmation/${orderData.orderNumber}`);
       }
     } catch (err: any) {
@@ -492,8 +494,8 @@ export default function Checkout() {
                   </Card>
                 )}
 
-                {/* Payment Method (only for pickup) */}
-                {state.orderType === 'pickup' && (
+                {/* Payment Method (for pickup and in-store) */}
+                {(state.orderType === 'pickup' || state.orderType === 'instore') && (
                   <Card className="p-6">
                     <h2 className="text-lg font-semibold mb-4">Payment Method</h2>
                     <RadioGroup
@@ -759,8 +761,8 @@ export default function Checkout() {
                 </div>
               </Card>
 
-              {/* Payment Method - Only show for pickup orders */}
-              {state.orderType === 'pickup' && (
+              {/* Payment Method - Only show for pickup and in-store orders */}
+              {(state.orderType === 'pickup' || state.orderType === 'instore') && (
               <Card className="p-6">
                 <h2 className="text-lg font-semibold mb-4">Payment Method</h2>
                 <RadioGroup
@@ -778,7 +780,7 @@ export default function Checkout() {
                     <RadioGroupItem value="cash" id="payment-cash" />
                     <Label htmlFor="payment-cash" className="flex items-center gap-2 cursor-pointer">
                       <Banknote className="w-5 h-5" />
-                      Pay at Pickup
+                      {state.orderType === 'instore' ? 'Pay at Counter' : 'Pay at Pickup'}
                     </Label>
                   </div>
                 </RadioGroup>

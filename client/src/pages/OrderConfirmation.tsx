@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { trpc } from '@/lib/trpc';
 import { formatPrice } from '@shared/types';
-import { CheckCircle, Clock, MapPin, Phone, ArrowRight, RefreshCw } from 'lucide-react';
+import { CheckCircle, Clock, MapPin, Phone, ArrowRight, RefreshCw, Printer, UtensilsCrossed } from 'lucide-react';
 import { OrderTracker } from '@/components/OrderTracker';
 
 export default function OrderConfirmation() {
@@ -108,10 +108,17 @@ export default function OrderConfirmation() {
               <div className="flex items-center gap-2">
                 {order.orderType === 'delivery' ? (
                   <MapPin className="w-5 h-5 text-muted-foreground" />
+                ) : order.orderType === 'instore' ? (
+                  <UtensilsCrossed className="w-5 h-5 text-muted-foreground" />
                 ) : (
                   <Clock className="w-5 h-5 text-muted-foreground" />
                 )}
-                <span className="font-medium capitalize">{order.orderType}</span>
+                <span className="font-medium capitalize">{order.orderType === 'instore' ? 'Dine-in' : order.orderType}</span>
+                {order.tableNumber && (
+                  <span className="ml-2 px-2 py-0.5 bg-primary/10 text-primary rounded font-bold">
+                    Table {order.tableNumber}
+                  </span>
+                )}
               </div>
               {order.scheduledTime && (
                 <span className="text-sm text-muted-foreground">
@@ -185,6 +192,14 @@ export default function OrderConfirmation() {
 
           {/* Actions */}
           <div className="flex flex-col sm:flex-row gap-4">
+            <Button 
+              variant="outline" 
+              className="flex-1"
+              onClick={() => window.print()}
+            >
+              <Printer className="w-4 h-4 mr-2" />
+              Print Bill
+            </Button>
             <Link href="/orders" className="flex-1">
               <Button variant="outline" className="w-full">
                 View All Orders

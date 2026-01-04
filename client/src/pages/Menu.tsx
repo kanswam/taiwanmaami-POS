@@ -60,7 +60,7 @@ export default function Menu() {
   const [selectedCategory, setSelectedCategory] = useState(initialCategory);
   const [selectedSubcategory, setSelectedSubcategory] = useState<string | null>(initialSubcategory);
   const [searchQuery, setSearchQuery] = useState('');
-  const { state, setOrderType, itemCount, total } = useCart();
+  const { state, setOrderType, setTableNumber, tableNumber, itemCount, total } = useCart();
 
 
   const { data: menuData, isLoading } = trpc.menu.getFullMenu.useQuery({
@@ -353,6 +353,20 @@ export default function Menu() {
                 </TabsTrigger>
               </TabsList>
             </Tabs>
+
+            {/* Table Number for In-store */}
+            {state.orderType === 'instore' && (
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium text-muted-foreground">Table:</span>
+                <Input
+                  placeholder="#"
+                  value={tableNumber || ''}
+                  onChange={(e) => setTableNumber(e.target.value || null)}
+                  className="w-16 text-center font-bold"
+                  maxLength={3}
+                />
+              </div>
+            )}
 
             {/* Search */}
             <div className="relative w-full sm:w-64">

@@ -1,0 +1,25 @@
+{
+  "query": "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'order_item_addons'",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'order_item_addons'",
+  "rows": [
+    {
+      "COLUMN_NAME": "id"
+    },
+    {
+      "COLUMN_NAME": "orderItemId"
+    },
+    {
+      "COLUMN_NAME": "addonId"
+    },
+    {
+      "COLUMN_NAME": "addonName"
+    },
+    {
+      "COLUMN_NAME": "addonPrice"
+    }
+  ],
+  "messages": [],
+  "stdout": "COLUMN_NAME\nid\norderItemId\naddonId\naddonName\naddonPrice\n",
+  "stderr": "",
+  "execution_time_ms": 1641
+}

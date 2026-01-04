@@ -124,6 +124,7 @@ export const appRouter = router({
     create: publicProcedure
       .input(z.object({
         orderType: z.enum(['instore', 'delivery', 'pickup']),
+        tableNumber: z.string().optional(), // For in-store orders
         customerName: z.string().optional(),
         customerPhone: z.string().optional(),
         items: z.array(z.object({
@@ -186,6 +187,7 @@ export const appRouter = router({
           customerName: input.customerName,
           customerPhone: input.customerPhone,
           orderType: input.orderType,
+          tableNumber: input.orderType === 'instore' ? input.tableNumber : null,
           subtotal,
           stateGst: gst.stateGst,
           centralGst: gst.centralGst,
@@ -346,6 +348,45 @@ export const appRouter = router({
       .input(z.object({ limit: z.number().default(50) }).optional())
       .query(async ({ input }) => {
         return db.getRecentOrders(input?.limit || 50);
+      }),
+
+    // Get active in-store orders for table dashboard
+    getActiveInstoreOrders: adminProcedure
+      .query(async () => {
+        const dbInstance = await getDb();
+        if (!dbInstance) return [];
+        
+        // Get in-store orders that are not completed or cancelled
+        const activeOrders = await dbInstance
+          .select()
+          .from(orders)
+          .where(
+            and(
+              eq(orders.orderType, 'instore'),
+              sql`${orders.orderStatus} NOT IN ('completed', 'cancelled')`
+            )
+          )
+          .orderBy(desc(orders.createdAt));
+        
+        return activeOrders;
+      }),
+
+    // Update payment status
+    updatePaymentStatus: adminProcedure
+      .input(z.object({ 
+        orderId: z.number(), 
+        paymentStatus: z.enum(['pending', 'partial', 'completed', 'refunded']) 
+      }))
+      .mutation(async ({ input }) => {
+        const dbInstance = await getDb();
+        if (!dbInstance) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
+        
+        await dbInstance
+          .update(orders)
+          .set({ paymentStatus: input.paymentStatus })
+          .where(eq(orders.id, input.orderId));
+        
+        return { success: true };
       }),
 
     getById: adminProcedure
@@ -1922,7 +1963,8 @@ export const appRouter = router({
         guestName: z.string().min(2),
         guestPhone: z.string().min(10),
         guestEmail: z.string().email().optional(),
-        orderType: z.enum(['delivery', 'pickup']),
+        orderType: z.enum(['instore', 'delivery', 'pickup']),
+        tableNumber: z.string().optional(), // For in-store orders
         items: z.array(z.object({
           productId: z.number(),
           productName: z.string(),
@@ -1975,6 +2017,7 @@ export const appRouter = router({
           orderNumber,
           userId: 0, // Guest order marker
           orderType: input.orderType,
+          tableNumber: input.orderType === 'instore' ? input.tableNumber : null,
           orderStatus: 'pending',
           paymentStatus: input.paymentMethod === 'cash_at_pickup' ? 'pending' : 'pending',
           subtotal,
