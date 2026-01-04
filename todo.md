@@ -1219,3 +1219,8 @@
 - [x] Delete all test orders from database (kept only TMMJYG8SV9QUF2)
 - [x] Verify legitimate order appears in analytics dashboard
 - [x] GST Report now shows correct data with CGST/SGST breakdown
+
+
+## UI Improvements (Jan 4, 2026)
+
+- [x] Remove suggested drinks/food feature from ordering flow

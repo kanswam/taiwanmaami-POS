@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { trpc } from '@/lib/trpc';
 import { useCart } from '@/contexts/CartContext';
-import { Search, ShoppingCart, Truck, Store, ChevronRight, ArrowLeft, Home, Sparkles, X } from 'lucide-react';
+import { Search, ShoppingCart, Truck, Store, ChevronRight, ArrowLeft, Home } from 'lucide-react';
 import { Link } from 'wouter';
 import { formatPrice } from '@shared/types';
 
@@ -51,42 +51,6 @@ const SUBCATEGORY_IMAGES: Record<string, string> = {
   'fruit-slush': '/images/popping-boba.jpg',
 };
 
-// Product pairing recommendations based on typical order patterns
-const PRODUCT_PAIRINGS: Record<string, string[]> = {
-  // Bubble tea pairs well with mochi
-  'iced-beverages': ['asian-sweet-bites'],
-  'hot-beverages': ['asian-sweet-bites'],
-  // Mochi pairs well with bubble tea
-  'asian-sweet-bites': ['iced-beverages'],
-  // Food pairs well with drinks
-  'asian-rice-noodle-bread': ['iced-beverages', 'hot-beverages'],
-};
-
-// Subcategory-level pairings for more specific recommendations
-// Using actual database slugs from API
-const SUBCATEGORY_PAIRINGS: Record<string, string[]> = {
-  // Iced tea subcategories pair with mochi
-  'black-tea': ['fruit-mochi', 'boba-cr-me-caramel'],
-  'oolong-tea': ['fruit-mochi', 'boba-cr-me-caramel'],
-  'green-tea': ['fruit-mochi', 'souffle-pancake'],
-  'matcha': ['fruit-mochi', 'boba-cr-me-caramel'],
-  'taro': ['fruit-mochi', 'boba-cr-me-caramel'],
-  'slush': ['fruit-mochi'],
-  'iced-lavazza-coffee': ['boba-cr-me-caramel', 'sweet-pillow-brioche'],
-  // Hot beverages pair with mochi
-  'iced-coffee': ['fruit-mochi', 'boba-cr-me-caramel'],
-  'hot-coffee': ['souffle-pancake', 'sweet-pillow-brioche'],
-  // Mochi pairs with bubble tea
-  'fruit-mochi': ['black-tea', 'oolong-tea', 'matcha'],
-  'boba-cr-me-caramel': ['black-tea', 'taro', 'iced-lavazza-coffee'],
-  'souffle-pancake': ['green-tea', 'hot-coffee'],
-  'sweet-pillow-brioche': ['iced-lavazza-coffee', 'hot-coffee'],
-  // Food pairs with drinks
-  'flat-bread': ['green-tea', 'iced-lavazza-coffee'],
-  'saucy-noodles': ['hot-coffee', 'iced-coffee'],
-  'onigiri': ['green-tea'],
-};
-
 export default function Menu() {
   const searchString = useSearch();
   const params = new URLSearchParams(searchString);
@@ -96,9 +60,8 @@ export default function Menu() {
   const [selectedCategory, setSelectedCategory] = useState(initialCategory);
   const [selectedSubcategory, setSelectedSubcategory] = useState<string | null>(initialSubcategory);
   const [searchQuery, setSearchQuery] = useState('');
-  const { state, setOrderType, itemCount, total, lastAddedItem } = useCart();
-  const [showRecommendations, setShowRecommendations] = useState(false);
-  const [recommendedProducts, setRecommendedProducts] = useState<any[]>([]);
+  const { state, setOrderType, itemCount, total } = useCart();
+
 
   const { data: menuData, isLoading } = trpc.menu.getFullMenu.useQuery({
     isDelivery: state.orderType === 'delivery',
@@ -129,57 +92,6 @@ export default function Menu() {
       p.chineseName?.toLowerCase().includes(query)
     );
   }, [menuData, searchQuery]);
-
-  // Generate recommendations when item is added to cart
-  useEffect(() => {
-    if (lastAddedItem && menuData) {
-      const addedSubcategory = menuData.subcategories.find(s => s.id === lastAddedItem.subcategoryId);
-      if (addedSubcategory) {
-        // Get paired subcategory slugs
-        const pairedSubcategorySlugs = SUBCATEGORY_PAIRINGS[addedSubcategory.slug] || [];
-        
-        // If no specific pairing, try category-level pairing
-        let pairedCategorySlugs: string[] = [];
-        if (pairedSubcategorySlugs.length === 0) {
-          const addedCategory = menuData.categories.find(c => c.id === addedSubcategory.categoryId);
-          if (addedCategory) {
-            pairedCategorySlugs = PRODUCT_PAIRINGS[addedCategory.slug] || [];
-          }
-        }
-
-        // Get recommended products from paired subcategories
-        let recommendations: any[] = [];
-        
-        if (pairedSubcategorySlugs.length > 0) {
-          const pairedSubs = menuData.subcategories.filter(s => pairedSubcategorySlugs.includes(s.slug));
-          pairedSubs.forEach(sub => {
-            const products = menuData.products.filter(p => p.subcategoryId === sub.id);
-            recommendations.push(...products.slice(0, 2)); // Take 2 from each paired subcategory
-          });
-        } else if (pairedCategorySlugs.length > 0) {
-          const pairedCats = menuData.categories.filter(c => pairedCategorySlugs.includes(c.slug));
-          pairedCats.forEach(cat => {
-            const catSubs = menuData.subcategories.filter(s => s.categoryId === cat.id);
-            catSubs.forEach(sub => {
-              const products = menuData.products.filter(p => p.subcategoryId === sub.id);
-              recommendations.push(...products.slice(0, 1)); // Take 1 from each subcategory
-            });
-          });
-        }
-
-        // Limit to 4 recommendations and shuffle
-        recommendations = recommendations
-          .filter(p => p.id !== lastAddedItem.productId) // Don't recommend the same product
-          .sort(() => Math.random() - 0.5)
-          .slice(0, 4);
-
-        if (recommendations.length > 0) {
-          setRecommendedProducts(recommendations);
-          setShowRecommendations(true);
-        }
-      }
-    }
-  }, [lastAddedItem, menuData]);
 
   // Get subcategory info
   const getSubcategory = (slug: string) => menuData?.subcategories.find(s => s.slug === slug);
@@ -413,55 +325,6 @@ export default function Menu() {
     );
   };
 
-  // Render recommendations panel
-  const renderRecommendations = () => {
-    if (!showRecommendations || recommendedProducts.length === 0) return null;
-
-    return (
-      <div className="fixed bottom-20 left-4 right-4 z-40 animate-in slide-in-from-bottom-4 duration-300">
-        <Card className="p-4 bg-card/95 backdrop-blur-sm border-primary/20 shadow-xl">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-primary" />
-              <span className="font-semibold">Goes well with your order</span>
-            </div>
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              className="h-8 w-8 p-0"
-              onClick={() => setShowRecommendations(false)}
-            >
-              <X className="w-4 h-4" />
-            </Button>
-          </div>
-          <div className="flex gap-3 overflow-x-auto pb-2">
-            {recommendedProducts.map((product) => {
-              const sub = getSubcategoryById(product.subcategoryId);
-              if (!sub) return null;
-              const cat = getCategoryById(sub.categoryId);
-              return (
-                <div key={product.id} className="flex-shrink-0 w-32">
-                  <ProductCard
-                    product={{
-                      ...product,
-                      imageUrl: product.imageUrl || PRODUCT_IMAGES[product.slug] || null,
-                      imageUrl2: (product as any).imageUrl2 || null,
-                      imageUrl3: (product as any).imageUrl3 || null,
-                    }}
-                    subcategory={sub}
-                    category={cat}
-                    isDelivery={state.orderType !== 'instore'}
-                    orderType={state.orderType}
-                  />
-                </div>
-              );
-            })}
-          </div>
-        </Card>
-      </div>
-    );
-  };
-
   return (
     <div className="min-h-screen bg-background pb-24">
       <Header />
@@ -587,9 +450,6 @@ export default function Menu() {
           renderSubcategoryCards()
         )}
       </main>
-
-      {/* Recommendations Panel */}
-      {renderRecommendations()}
 
       {/* Floating Cart Button */}
       {itemCount > 0 && (
