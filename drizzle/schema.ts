@@ -415,6 +415,18 @@ export const kotQueue = mysqlTable("kot_queue", {
   printedAt: timestamp("printedAt"),
 });
 
+// Receipt Queue for customer receipts
+export const receiptQueue = mysqlTable("receipt_queue", {
+  id: int("id").autoincrement().primaryKey(),
+  orderId: int("orderId").notNull(),
+  outletId: int("outletId"),
+  orderNumber: varchar("orderNumber", { length: 50 }).notNull(),
+  receiptData: json("receiptData").notNull(), // JSON object with receipt details
+  isPrinted: boolean("isPrinted").default(false).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  printedAt: timestamp("printedAt"),
+});
+
 // Site settings for CMS (key-value pairs for all editable site content)
 export const siteSettings = mysqlTable("site_settings", {
   id: int("id").autoincrement().primaryKey(),

@@ -1480,8 +1480,24 @@ function OrdersTab() {
   });
 
   const updatePaymentStatus = trpc.orders.updatePaymentStatus.useMutation({
-    onSuccess: () => {
+    onSuccess: async (_, variables) => {
       toast.success('Payment collected successfully!');
+      
+      // Queue receipt for printing
+      try {
+        await fetch('/api/receipt/queue', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            secret: import.meta.env.VITE_KOT_PRINT_SECRET || 'tmm-kot-print-2024-secure',
+            orderId: variables.orderId,
+          }),
+        });
+        toast.success('Receipt queued for printing');
+      } catch (error) {
+        console.error('Failed to queue receipt:', error);
+      }
+      
       refetch();
     },
     onError: (err) => toast.error(err.message),
@@ -1641,6 +1657,30 @@ function OrdersTab() {
                           disabled={updatePaymentStatus.isPending}
                         >
                           💰 Collect Payment
+                        </Button>
+                      )}
+                      {/* Print Receipt button for completed orders */}
+                      {order.paymentStatus === 'completed' && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={async () => {
+                            try {
+                              await fetch('/api/receipt/queue', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                  secret: import.meta.env.VITE_KOT_PRINT_SECRET || 'tmm-kot-print-2024-secure',
+                                  orderId: order.id,
+                                }),
+                              });
+                              toast.success('Receipt queued for printing');
+                            } catch (error) {
+                              toast.error('Failed to queue receipt');
+                            }
+                          }}
+                        >
+                          🧾 Print Receipt
                         </Button>
                       )}
                       {getNextStatus(order.orderStatus, order.orderType) && (

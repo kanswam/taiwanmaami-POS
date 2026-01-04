@@ -1302,3 +1302,19 @@
 - [x] Support both percentage and fixed amount discounts
 - [x] Add reason field for audit trail
 - [x] Recalculate order total after discount
+
+## Receipt Printing Feature (Jan 4, 2026)
+
+- [x] Create receipt_queue table in database
+- [x] Add receipt queue API endpoints (queue, poll, mark printed)
+- [x] Create receipt printer client script (similar to KOT)
+- [x] Auto-queue receipt when Collect Payment is clicked
+- [x] Add manual "Print Receipt" button in Orders tab
+
+## Add to Order Feature (Jan 4, 2026)
+
+- [ ] Add API endpoint for adding items to existing orders
+- [ ] Print supplementary KOT for added items only
+- [ ] Staff-side: Add Items button in Admin Orders tab
+- [ ] Customer-side: Detect active order and show "Add to Order" option
+- [ ] Update order total and GST when items are added
