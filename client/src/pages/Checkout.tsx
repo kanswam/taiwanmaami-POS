@@ -10,7 +10,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useCart } from '@/contexts/CartContext';
 import { useAuth } from '@/_core/hooks/useAuth';
 import { trpc } from '@/lib/trpc';
-import { formatPrice, GST_RATE, CHENNAI_AREAS } from '@shared/types';
+import { formatPrice, CHENNAI_AREAS } from '@shared/types';
 import { ArrowLeft, MapPin, Clock, CreditCard, Banknote, Loader2, Gift, User, Stamp } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
@@ -818,7 +818,7 @@ export default function Checkout() {
                         {item.quantity}x {item.productName}
                         {item.size && ` (${item.size})`}
                       </span>
-                      <span>{formatPrice(Math.round(item.lineTotal * (1 + GST_RATE)))}</span>
+                      <span>{formatPrice(item.lineTotal)}</span>
                     </div>
                   ))}
                 </div>

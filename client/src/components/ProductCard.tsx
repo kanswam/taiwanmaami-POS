@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Plus, Leaf, Egg } from 'lucide-react';
-import { formatPrice, GST_RATE } from '@shared/types';
+import { formatPrice } from '@shared/types';
 import { ProductCustomizationModal } from './ProductCustomizationModal';
 
 interface ProductCardProps {
@@ -88,29 +88,24 @@ export function ProductCard({ product, subcategory, category, isDelivery = false
   // Check if this is a mochi product (for delivery/pickup, mochis are sold as set of 2)
   const isMochiProduct = subcategory.name.toLowerCase().includes('mochi');
 
-  // Calculate display price (with GST)
+  // Calculate display price (base price without GST - GST added at checkout)
   const getDisplayPrice = () => {
     if (subcategory.hasSizeVariants) {
       // For drinks with size variants, show starting price (Regular with Boba for delivery, Petite with Boba for in-store)
       if (isDelivery) {
-        const basePrice = subcategory.deliveryPriceRegularWithBoba || subcategory.basePriceRegularWithBoba || 0;
-        return Math.round(basePrice * (1 + GST_RATE));
+        return subcategory.deliveryPriceRegularWithBoba || subcategory.basePriceRegularWithBoba || 0;
       } else {
-        const basePrice = subcategory.basePricePetiteWithBoba || subcategory.basePriceRegularWithBoba || 0;
-        return Math.round(basePrice * (1 + GST_RATE));
+        return subcategory.basePricePetiteWithBoba || subcategory.basePriceRegularWithBoba || 0;
       }
     } else {
       // For fixed price items (mochis, food, etc.)
       // For mochis in delivery/pickup mode, use deliveryPrice (which is the set of 2 price)
       if (isDelivery && isMochiProduct) {
-        const basePrice = product.deliveryPrice || product.instorePrice || 0;
-        return Math.round(basePrice * (1 + GST_RATE));
+        return product.deliveryPrice || product.instorePrice || 0;
       } else if (isDelivery) {
-        const basePrice = product.deliveryPrice || product.instorePrice || 0;
-        return Math.round(basePrice * (1 + GST_RATE));
+        return product.deliveryPrice || product.instorePrice || 0;
       } else {
-        const basePrice = product.instorePrice || 0;
-        return Math.round(basePrice * (1 + GST_RATE));
+        return product.instorePrice || 0;
       }
     }
   };

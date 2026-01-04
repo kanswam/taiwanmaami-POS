@@ -5,7 +5,7 @@ import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { useCart } from '@/contexts/CartContext';
 import { trpc } from '@/lib/trpc';
-import { formatPrice, GST_RATE } from '@shared/types';
+import { formatPrice } from '@shared/types';
 import { Minus, Plus, Trash2, ArrowLeft, ShoppingBag, Tag } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
@@ -177,7 +177,7 @@ export default function Cart() {
                         </Button>
                       </div>
                       <span className="font-semibold">
-                        {formatPrice(Math.round(item.lineTotal * (1 + GST_RATE)))}
+                        {formatPrice(item.lineTotal)}
                       </span>
                     </div>
                   </div>
@@ -258,7 +258,7 @@ export default function Cart() {
               </Link>
 
               <p className="text-xs text-muted-foreground text-center mt-4">
-                Prices include GST. Delivery charges may apply.
+                5% GST will be added at checkout. Delivery charges may apply.
               </p>
             </Card>
           </div>

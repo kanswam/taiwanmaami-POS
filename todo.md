@@ -1268,3 +1268,10 @@
 ## KOT Printer Special Instructions Bug (Jan 4, 2026)
 
 - [x] Fix KOT printer output to display product-level special instructions (e.g., "Extra hot, no ice cubes")
+
+
+## Pricing Display Update (Jan 4, 2026)
+
+- [x] Remove GST from menu/product card price display (show base prices only)
+- [x] Ensure GST (5%) is added only at cart/checkout
+- [x] Update all price display locations (Menu, ProductCard, ProductCustomizationModal, Cart, Checkout)

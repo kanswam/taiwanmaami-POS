@@ -29,8 +29,8 @@ export default function Terms() {
               <h2 className="text-xl font-semibold text-foreground mt-8 mb-4">2. Orders and Payments</h2>
               <p>
                 When you place an order through our website, you agree to provide accurate and complete 
-                information. All prices displayed include applicable GST (5% - comprising 2.5% State GST 
-                and 2.5% Central GST).
+                information. All prices displayed are base prices. GST (5% - comprising 2.5% State GST 
+                and 2.5% Central GST) is added at checkout.
               </p>
               <p>
                 We accept payments through Razorpay payment gateway. By making a payment, you agree to 

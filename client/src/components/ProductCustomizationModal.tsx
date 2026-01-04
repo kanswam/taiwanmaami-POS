@@ -8,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Minus, Plus } from 'lucide-react';
 import { useCart } from '@/contexts/CartContext';
 import { trpc } from '@/lib/trpc';
-import { formatPrice, GST_RATE, SIZES, SUGAR_LEVELS, ICE_LEVELS, Size } from '@shared/types';
+import { formatPrice, SIZES, SUGAR_LEVELS, ICE_LEVELS, Size } from '@shared/types';
 import { nanoid } from 'nanoid';
 
 interface ProductCustomizationModalProps {
@@ -245,7 +245,8 @@ export function ProductCustomizationModal({
   // - So we calculate: (price per set) × (quantity / 2) = total for all sets
   const effectiveQuantity = (isDelivery && isMochiProduct) ? (quantity / 2) : quantity;
   const lineTotal = (unitPrice + addonsTotal) * effectiveQuantity;
-  const displayTotal = Math.round(lineTotal * (1 + GST_RATE));
+  // Display base price without GST - GST added at checkout
+  const displayTotal = Math.round(lineTotal);
 
   // Toggle addon selection
   const toggleAddon = (addon: NonNullable<typeof addonsData>[0]) => {
