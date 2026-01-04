@@ -1,0 +1,97 @@
+{
+  "query": "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'orders' LIMIT 50",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'orders' LIMIT 50",
+  "rows": [
+    {
+      "COLUMN_NAME": "id"
+    },
+    {
+      "COLUMN_NAME": "orderNumber"
+    },
+    {
+      "COLUMN_NAME": "userId"
+    },
+    {
+      "COLUMN_NAME": "customerName"
+    },
+    {
+      "COLUMN_NAME": "customerPhone"
+    },
+    {
+      "COLUMN_NAME": "orderType"
+    },
+    {
+      "COLUMN_NAME": "orderStatus"
+    },
+    {
+      "COLUMN_NAME": "paymentStatus"
+    },
+    {
+      "COLUMN_NAME": "subtotal"
+    },
+    {
+      "COLUMN_NAME": "stateGst"
+    },
+    {
+      "COLUMN_NAME": "centralGst"
+    },
+    {
+      "COLUMN_NAME": "deliveryCharge"
+    },
+    {
+      "COLUMN_NAME": "discountAmount"
+    },
+    {
+      "COLUMN_NAME": "loyaltyPointsUsed"
+    },
+    {
+      "COLUMN_NAME": "totalAmount"
+    },
+    {
+      "COLUMN_NAME": "deliveryAddressId"
+    },
+    {
+      "COLUMN_NAME": "deliveryAddress"
+    },
+    {
+      "COLUMN_NAME": "scheduledTime"
+    },
+    {
+      "COLUMN_NAME": "razorpayOrderId"
+    },
+    {
+      "COLUMN_NAME": "razorpayPaymentId"
+    },
+    {
+      "COLUMN_NAME": "porterOrderId"
+    },
+    {
+      "COLUMN_NAME": "staffId"
+    },
+    {
+      "COLUMN_NAME": "outletId"
+    },
+    {
+      "COLUMN_NAME": "posSessionId"
+    },
+    {
+      "COLUMN_NAME": "specialInstructions"
+    },
+    {
+      "COLUMN_NAME": "discountCode"
+    },
+    {
+      "COLUMN_NAME": "createdAt"
+    },
+    {
+      "COLUMN_NAME": "updatedAt"
+    },
+    {
+      "COLUMN_NAME": "completedAt"
+    }
+  ],
+  "messages": [],
+  "stdout": "COLUMN_NAME\nid\norderNumber\nuserId\ncustomerName\ncustomerPhone\norderType\norderStatus\npaymentStatus\nsubtotal\nstateGst\ncentralGst\ndeliveryCharge\ndiscountAmount\nloyaltyPointsUsed\ntotalAmount\ndeliveryAddressId\ndeliveryAddress\nscheduledTime\nrazorpayOrderId\nrazorpayPaymentId\nporterOrderId\nstaffId\noutletId\nposSessionId\nspecialInstructions\ndiscountCode\ncreatedAt\nupdatedAt\ncompletedAt\n",
+  "stderr": "",
+  "execution_time_ms": 1566
+}
