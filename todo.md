@@ -1263,3 +1263,8 @@
 
 - [x] Include product-level special instructions in KOT data
 - [x] Include order-level special instructions in KOT data
+
+
+## KOT Printer Special Instructions Bug (Jan 4, 2026)
+
+- [x] Fix KOT printer output to display product-level special instructions (e.g., "Extra hot, no ice cubes")

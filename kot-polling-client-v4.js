@@ -121,6 +121,14 @@ function generateReceipt(kot) {
         const addonsStr = item.addons.join(', ').replace(/[^\x20-\x7E,]/g, '');
         parts.push(Buffer.from(`   Add-ons: ${addonsStr}\n`, 'ascii'));
       }
+      // Product-level special instructions
+      if (item.specialInstructions) {
+        const safeInstructions = item.specialInstructions.replace(/[^\x20-\x7E]/g, '');
+        parts.push(CMD_BOLD_ON);
+        parts.push(Buffer.from(`   *** ITEM NOTE ***\n`, 'ascii'));
+        parts.push(CMD_BOLD_OFF);
+        parts.push(Buffer.from(`   ${safeInstructions}\n`, 'ascii'));
+      }
     });
   }
   

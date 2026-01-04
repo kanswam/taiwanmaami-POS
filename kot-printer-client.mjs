@@ -156,6 +156,14 @@ function formatKOT(kot) {
       });
     }
     
+    // Product-level special instructions
+    if (item.specialInstructions && item.specialInstructions.trim()) {
+      output += PRINTER_COMMANDS.BOLD_ON;
+      output += `   *** ITEM NOTE ***\n`;
+      output += PRINTER_COMMANDS.BOLD_OFF;
+      output += `   ${item.specialInstructions}\n`;
+    }
+    
     output += PRINTER_COMMANDS.SEPARATOR;
   });
   
