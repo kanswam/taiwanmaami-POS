@@ -1645,3 +1645,51 @@
 - [x] Remove "Taiwan Maami" text from header
 - [x] Make logo bigger
 - [x] Use new logo image provided by user
+
+
+## Phase 35 - Header, Footer, Social Links Updates
+
+### Header Updates
+- [ ] Make logo twice as big
+- [ ] Make nav links (Menu, About Us, Locations) bolder
+- [ ] Remove "Find Us" button from hero section
+
+### Footer Restructure
+- [ ] Remove logo and "Taiwan Maami" name from footer
+- [ ] Remove "Authentic bubble tea..." tagline
+- [ ] Add 5 social media buttons (Instagram, Threads, Facebook, X, YouTube)
+- [ ] Consolidate Quick Links + Legal into one section
+- [ ] Remove Customer Reviews link
+- [ ] Remove Submit Feedback link
+- [ ] Update contact email to hello@taiwanmaami.com
+
+### Social Media Links
+- Instagram: https://www.instagram.com/taiwan_maami/
+- Threads: https://www.threads.com/@taiwan_maami
+- Facebook: https://www.facebook.com/Taiwanmaami
+- X: https://x.com/taiwanmaami
+- YouTube: https://youtube.com/@theresahucy
+
+### About Us Page
+- [ ] Add Follow Us section with social media links
+- [ ] Fix Locations link to scroll to outlets section on homepage
+
+### CMS for Content Pages
+- [ ] Add CMS editing for all Quick Links pages (Terms, Privacy, Refund Policy, FAQ)
+
+- [ ] Add Franchise Opportunity page (CMS editable by Theresa)
+
+
+## Phase 36 - Menu Restrictions by Outlet
+
+### Palladium Outlet Restrictions
+- [ ] Hide Food category for Palladium (instore, delivery, pickup)
+- [ ] Hide Hot Beverages category for Palladium (instore, delivery, pickup)
+- [ ] Only show these categories at T Nagar outlet
+
+
+### Subcategory Outlet Availability
+- [x] Add availableAtPalladium and availableAtTnagar fields to subcategories table
+- [x] Add toggle switches in Admin Menu for each subcategory's outlet availability
+- [x] Filter menu items based on subcategory outlet availability
+- [x] Apply to instore, delivery, and pickup orders

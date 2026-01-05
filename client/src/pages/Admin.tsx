@@ -2677,6 +2677,8 @@ function SubcategoryEditForm({ sub, category, updateSubcategory, onClose }: { su
   const [availableInstore, setAvailableInstore] = useState(sub.availableInstore !== false);
   const [availableDelivery, setAvailableDelivery] = useState(sub.availableDelivery !== false);
   const [availablePickup, setAvailablePickup] = useState(sub.availablePickup !== false);
+  const [availableAtPalladium, setAvailableAtPalladium] = useState((sub as any).availableAtPalladium !== false);
+  const [availableAtTnagar, setAvailableAtTnagar] = useState((sub as any).availableAtTnagar !== false);
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -2711,6 +2713,8 @@ function SubcategoryEditForm({ sub, category, updateSubcategory, onClose }: { su
       availableInstore,
       availableDelivery,
       availablePickup,
+      availableAtPalladium,
+      availableAtTnagar,
     } as any);
   };
 
@@ -2778,6 +2782,31 @@ function SubcategoryEditForm({ sub, category, updateSubcategory, onClose }: { su
               className="w-4 h-4"
             />
             <Label htmlFor={`sub-avail-pickup-${sub.id}`} className="text-sm cursor-pointer">Pickup</Label>
+          </div>
+        </div>
+        <div className="mt-3 pt-3 border-t border-muted-foreground/20">
+          <Label className="text-xs text-muted-foreground mb-2 block">Outlet Availability</Label>
+          <div className="flex flex-wrap gap-4">
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                id={`sub-avail-palladium-${sub.id}`}
+                checked={availableAtPalladium}
+                onChange={(e) => setAvailableAtPalladium(e.target.checked)}
+                className="w-4 h-4"
+              />
+              <Label htmlFor={`sub-avail-palladium-${sub.id}`} className="text-sm cursor-pointer">Palladium</Label>
+            </div>
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                id={`sub-avail-tnagar-${sub.id}`}
+                checked={availableAtTnagar}
+                onChange={(e) => setAvailableAtTnagar(e.target.checked)}
+                className="w-4 h-4"
+              />
+              <Label htmlFor={`sub-avail-tnagar-${sub.id}`} className="text-sm cursor-pointer">T Nagar</Label>
+            </div>
           </div>
         </div>
       </div>

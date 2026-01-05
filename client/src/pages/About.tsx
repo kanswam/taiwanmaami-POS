@@ -2,7 +2,7 @@ import { Header } from '@/components/Header';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Link } from 'wouter';
-import { MapPin, Clock, Phone, Instagram, ArrowRight } from 'lucide-react';
+import { MapPin, Clock, Phone, Instagram, ArrowRight, Facebook, Twitter, Youtube } from 'lucide-react';
 
 export default function About() {
   return (
@@ -157,15 +157,55 @@ export default function About() {
         <div className="container text-center">
           <h2 className="text-2xl font-bold mb-4">Follow Us</h2>
           <p className="mb-6 opacity-90">Stay updated with our latest offerings and promotions</p>
-          <a 
-            href="https://www.instagram.com/taiwan_maami/" 
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 bg-white text-primary px-6 py-3 rounded-lg font-medium hover:bg-white/90 transition-colors"
-          >
-            <Instagram className="w-5 h-5" />
-            @taiwan_maami
-          </a>
+          <div className="flex justify-center gap-4 flex-wrap">
+            <a 
+              href="https://www.instagram.com/taiwan_maami/" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 bg-white text-primary px-5 py-3 rounded-lg font-medium hover:bg-white/90 transition-colors"
+            >
+              <Instagram className="w-5 h-5" />
+              Instagram
+            </a>
+            <a 
+              href="https://www.threads.net/@taiwan_maami" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 bg-white text-primary px-5 py-3 rounded-lg font-medium hover:bg-white/90 transition-colors"
+            >
+              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12.186 24h-.007c-3.581-.024-6.334-1.205-8.184-3.509C2.35 18.44 1.5 15.586 1.472 12.01v-.017c.03-3.579.879-6.43 2.525-8.482C5.845 1.205 8.6.024 12.18 0h.014c2.746.02 5.043.725 6.826 2.098 1.677 1.29 2.858 3.13 3.509 5.467l-2.04.569c-1.104-3.96-3.898-5.984-8.304-6.015-2.91.022-5.11.936-6.54 2.717C4.307 6.504 3.616 8.914 3.589 12c.027 3.086.718 5.496 2.057 7.164 1.43 1.783 3.631 2.698 6.54 2.717 2.623-.02 4.358-.631 5.8-2.045 1.647-1.613 1.618-3.593 1.09-4.798-.31-.71-.873-1.3-1.634-1.75-.192 1.352-.622 2.446-1.284 3.272-.886 1.102-2.14 1.704-3.73 1.79-1.202.065-2.361-.218-3.259-.801-1.063-.689-1.685-1.74-1.752-2.96-.065-1.182.408-2.256 1.33-3.022.88-.73 2.108-1.152 3.457-1.187 1.357-.035 2.56.269 3.476.765.034-.996-.04-1.872-.293-2.609l1.903-.576c.37 1.074.476 2.39.353 3.908.838.477 1.55 1.09 2.104 1.822.758 1.003 1.14 2.164 1.14 3.455 0 .655-.088 1.327-.264 2.005-.52 2.005-1.756 3.67-3.68 4.95-1.795 1.197-4.08 1.855-6.604 1.903zm1.07-8.852c-.095-.003-.189-.003-.283 0-1.17.03-2.099.313-2.688.817-.477.408-.67.882-.645 1.334.028.506.282.932.716 1.2.53.327 1.261.468 2.06.396 1.063-.06 1.876-.453 2.416-1.168.417-.552.678-1.292.782-2.202-.71-.262-1.53-.396-2.358-.377z"/>
+              </svg>
+              Threads
+            </a>
+            <a 
+              href="https://www.facebook.com/Taiwanmaami" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 bg-white text-primary px-5 py-3 rounded-lg font-medium hover:bg-white/90 transition-colors"
+            >
+              <Facebook className="w-5 h-5" />
+              Facebook
+            </a>
+            <a 
+              href="https://x.com/taiwanmaami" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 bg-white text-primary px-5 py-3 rounded-lg font-medium hover:bg-white/90 transition-colors"
+            >
+              <Twitter className="w-5 h-5" />
+              X
+            </a>
+            <a 
+              href="https://youtube.com/@theresahucy" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 bg-white text-primary px-5 py-3 rounded-lg font-medium hover:bg-white/90 transition-colors"
+            >
+              <Youtube className="w-5 h-5" />
+              YouTube
+            </a>
+          </div>
         </div>
       </section>
 

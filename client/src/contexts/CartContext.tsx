@@ -6,6 +6,7 @@ interface CartState {
   orderType: 'instore' | 'delivery' | 'pickup';
   tableNumber: string | null; // For in-store orders
   pickupOutlet: 'palladium' | 'tnagar' | null; // For pickup orders
+  instoreOutlet: 'palladium' | 'tnagar' | null; // For in-store orders
   discountCode: string | null;
   discountAmount: number;
   loyaltyPointsUsed: number;
@@ -20,6 +21,7 @@ type CartAction =
   | { type: 'SET_ORDER_TYPE'; payload: 'instore' | 'delivery' | 'pickup' }
   | { type: 'SET_TABLE_NUMBER'; payload: string | null }
   | { type: 'SET_PICKUP_OUTLET'; payload: 'palladium' | 'tnagar' | null }
+  | { type: 'SET_INSTORE_OUTLET'; payload: 'palladium' | 'tnagar' | null }
   | { type: 'APPLY_DISCOUNT'; payload: { code: string; amount: number } }
   | { type: 'REMOVE_DISCOUNT' }
   | { type: 'USE_LOYALTY_POINTS'; payload: number }
@@ -30,6 +32,7 @@ const initialState: CartState = {
   orderType: 'delivery',
   tableNumber: null,
   pickupOutlet: null,
+  instoreOutlet: null,
   discountCode: null,
   discountAmount: 0,
   loyaltyPointsUsed: 0,
@@ -116,6 +119,8 @@ function cartReducer(state: CartState, action: CartAction): CartState {
       return { ...state, tableNumber: action.payload };
     case 'SET_PICKUP_OUTLET':
       return { ...state, pickupOutlet: action.payload };
+    case 'SET_INSTORE_OUTLET':
+      return { ...state, instoreOutlet: action.payload };
     case 'APPLY_DISCOUNT':
       return { ...state, discountCode: action.payload.code, discountAmount: action.payload.amount };
     case 'REMOVE_DISCOUNT':
@@ -138,6 +143,7 @@ interface CartContextValue {
   setOrderType: (type: 'instore' | 'delivery' | 'pickup') => void;
   setTableNumber: (tableNumber: string | null) => void;
   setPickupOutlet: (outlet: 'palladium' | 'tnagar' | null) => void;
+  setInstoreOutlet: (outlet: 'palladium' | 'tnagar' | null) => void;
   applyDiscount: (code: string, amount: number) => void;
   removeDiscount: () => void;
   useLoyaltyPoints: (points: number) => void;
@@ -147,6 +153,7 @@ interface CartContextValue {
   itemCount: number;
   tableNumber: string | null;
   pickupOutlet: 'palladium' | 'tnagar' | null;
+  instoreOutlet: 'palladium' | 'tnagar' | null;
   lastAddedItem: { productId: number; subcategoryId: number } | null;
 }
 
@@ -187,6 +194,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     setOrderType: (type) => dispatch({ type: 'SET_ORDER_TYPE', payload: type }),
     setTableNumber: (tableNumber) => dispatch({ type: 'SET_TABLE_NUMBER', payload: tableNumber }),
     setPickupOutlet: (outlet) => dispatch({ type: 'SET_PICKUP_OUTLET', payload: outlet }),
+    setInstoreOutlet: (outlet) => dispatch({ type: 'SET_INSTORE_OUTLET', payload: outlet }),
     applyDiscount: (code, amount) => dispatch({ type: 'APPLY_DISCOUNT', payload: { code, amount } }),
     removeDiscount: () => dispatch({ type: 'REMOVE_DISCOUNT' }),
     useLoyaltyPoints: (points) => dispatch({ type: 'USE_LOYALTY_POINTS', payload: points }),
@@ -196,6 +204,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     itemCount,
     tableNumber: state.tableNumber,
     pickupOutlet: state.pickupOutlet,
+    instoreOutlet: state.instoreOutlet,
     lastAddedItem: state.lastAddedItem,
   };
 

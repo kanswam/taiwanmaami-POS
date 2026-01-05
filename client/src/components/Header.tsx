@@ -25,13 +25,13 @@ export function Header() {
   return (
     <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border shadow-sm">
       <div className="container">
-        <div className="flex items-center justify-between h-18 md:h-20">
+        <div className="flex items-center justify-between h-20 md:h-24">
           {/* Logo */}
           <Link href="/" className="flex items-center">
             <img 
               src="/taiwan-maami-logo-full.png" 
               alt="Taiwan Maami" 
-              className="h-12 md:h-16 w-auto"
+              className="h-16 md:h-24 w-auto"
               onError={(e) => {
                 (e.target as HTMLImageElement).style.display = 'none';
               }}
@@ -48,7 +48,7 @@ export function Header() {
                   onClick={(e) => {
                     e.preventDefault();
                     const hash = link.href.split('#')[1];
-                    if (location === '/') {
+                    if (window.location.pathname === '/') {
                       // Already on home page, just scroll
                       document.getElementById(hash)?.scrollIntoView({ behavior: 'smooth' });
                     } else {
@@ -56,7 +56,7 @@ export function Header() {
                       window.location.href = link.href;
                     }
                   }}
-                  className={`text-sm font-medium transition-colors hover:text-primary text-muted-foreground cursor-pointer`}
+                  className={`text-base font-semibold transition-colors hover:text-primary text-foreground cursor-pointer`}
                 >
                   {link.label}
                 </a>
@@ -64,7 +64,7 @@ export function Header() {
                 <Link
                   key={link.href}
                   href={link.href}
-                  className={`text-sm font-medium transition-colors hover:text-primary ${
+                  className={`text-base font-semibold transition-colors hover:text-primary ${
                     isActive(link.href) ? 'text-primary' : 'text-muted-foreground'
                   }`}
                 >

@@ -78,6 +78,8 @@ export const subcategories = mysqlTable("subcategories", {
   availableInstore: boolean("availableInstore").default(true).notNull(),
   availableDelivery: boolean("availableDelivery").default(true).notNull(),
   availablePickup: boolean("availablePickup").default(true).notNull(),
+  availableAtPalladium: boolean("availableAtPalladium").default(true).notNull(),
+  availableAtTnagar: boolean("availableAtTnagar").default(true).notNull(),
   displayOrder: int("displayOrder").default(0).notNull(),
   isActive: boolean("isActive").default(true).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),

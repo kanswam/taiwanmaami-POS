@@ -25,6 +25,7 @@ import CategorySubcategories from "./pages/CategorySubcategories";
 import Analytics from "./pages/Analytics";
 import Complaint from "./pages/Complaint";
 import Testimonials from "./pages/Testimonials";
+import Franchise from "./pages/Franchise";
 
 function Router() {
   return (
@@ -47,6 +48,7 @@ function Router() {
       <Route path="/refund" component={Refund} />
       <Route path="/complaint" component={Complaint} />
       <Route path="/testimonials" component={Testimonials} />
+      <Route path="/franchise" component={Franchise} />
       
       {/* Admin Routes */}
       <Route path="/staff/orders" component={StaffOrders} />

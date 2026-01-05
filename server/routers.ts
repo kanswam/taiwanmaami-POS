@@ -1073,11 +1073,13 @@ export const appRouter = router({
         availableInstore: z.boolean().optional(),
         availableDelivery: z.boolean().optional(),
         availablePickup: z.boolean().optional(),
+        availableAtPalladium: z.boolean().optional(),
+        availableAtTnagar: z.boolean().optional(),
       }))
       .mutation(async ({ input }) => {
         const dbInstance = await getDb();
         if (!dbInstance) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
-        const { id, imageBase64, imageData, syncProductPrices, availableInstore, availableDelivery, availablePickup, ...data } = input;
+        const { id, imageBase64, imageData, syncProductPrices, availableInstore, availableDelivery, availablePickup, availableAtPalladium, availableAtTnagar, ...data } = input;
         
         console.log('[updateSubcategory] Input received:', { id, hasImageData: !!imageData, hasImageBase64: !!imageBase64, imageDataLength: imageData?.length });
         
@@ -1098,6 +1100,8 @@ export const appRouter = router({
         if (availableInstore !== undefined) (data as any).availableInstore = availableInstore;
         if (availableDelivery !== undefined) (data as any).availableDelivery = availableDelivery;
         if (availablePickup !== undefined) (data as any).availablePickup = availablePickup;
+        if (availableAtPalladium !== undefined) (data as any).availableAtPalladium = availableAtPalladium;
+        if (availableAtTnagar !== undefined) (data as any).availableAtTnagar = availableAtTnagar;
         
         console.log('[updateSubcategory] Data to update:', { ...data, imageUrl: (data as any).imageUrl });
         await dbInstance!.update(subcategories).set(data).where(eq(subcategories.id, id));

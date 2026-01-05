@@ -176,6 +176,13 @@
       "when": 1767618227640,
       "tag": "0024_smiling_stone_men",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "5",
+      "when": 1767622807091,
+      "tag": "0025_nostalgic_korvac",
+      "breakpoints": true
     }
   ]
 }

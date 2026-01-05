@@ -64,7 +64,7 @@ export default function Menu() {
   const [selectedSubcategory, setSelectedSubcategory] = useState<string | null>(initialSubcategory);
   const [searchQuery, setSearchQuery] = useState('');
   const [showAddToOrderBanner, setShowAddToOrderBanner] = useState(false);
-  const { state, setOrderType, setTableNumber, tableNumber, setPickupOutlet, pickupOutlet, itemCount, total } = useCart();
+  const { state, setOrderType, setTableNumber, tableNumber, setPickupOutlet, pickupOutlet, setInstoreOutlet, instoreOutlet, itemCount, total } = useCart();
   
   // Check for active order if table number is in URL
   const { data: activeOrder } = trpc.orders.getActiveOrderForTable.useQuery(
@@ -88,12 +88,16 @@ export default function Menu() {
     if (tableFromUrl) {
       setOrderType('instore');
       setTableNumber(tableFromUrl);
+      // Set instore outlet from URL if provided
+      if (outletFromUrl === 'palladium' || outletFromUrl === 'tnagar') {
+        setInstoreOutlet(outletFromUrl);
+      }
       // Show banner if there's an active order for this table
       if (activeOrder) {
         setShowAddToOrderBanner(true);
       }
     }
-  }, [tableFromUrl, activeOrder, setOrderType, setTableNumber]);
+  }, [tableFromUrl, outletFromUrl, activeOrder, setOrderType, setTableNumber, setInstoreOutlet]);
 
 
   const { data: menuData, isLoading } = trpc.menu.getFullMenu.useQuery({
@@ -105,13 +109,27 @@ export default function Menu() {
   const deliveryRadius = deliverySettings?.deliveryRadius || 15;
   const deliveryEnabled = deliverySettings?.deliveryEnabled !== false;
 
-  // Get subcategories for selected category
+  // Determine current outlet for filtering
+  const currentOutlet = useMemo(() => {
+    if (state.orderType === 'instore') return instoreOutlet || outletFromUrl;
+    if (state.orderType === 'pickup') return pickupOutlet;
+    return null; // delivery - no outlet restriction
+  }, [state.orderType, instoreOutlet, outletFromUrl, pickupOutlet]);
+
+  // Get subcategories for selected category (filtered by outlet availability)
   const categorySubcategories = useMemo(() => {
     if (!menuData || selectedCategory === 'all') return [];
     const category = menuData.categories.find(c => c.slug === selectedCategory);
     if (!category) return [];
-    return menuData.subcategories.filter(s => s.categoryId === category.id);
-  }, [menuData, selectedCategory]);
+    return menuData.subcategories.filter(s => {
+      if (s.categoryId !== category.id) return false;
+      // Filter by outlet availability
+      const sub = s as any;
+      if (currentOutlet === 'palladium' && sub.availableAtPalladium === false) return false;
+      if (currentOutlet === 'tnagar' && sub.availableAtTnagar === false) return false;
+      return true;
+    });
+  }, [menuData, selectedCategory, currentOutlet]);
 
   // Get products for selected subcategory
   const subcategoryProducts = useMemo(() => {
@@ -204,12 +222,20 @@ export default function Menu() {
             (state.orderType === 'pickup' && cat.availablePickup === false)
           );
           
-          const subcategories = menuData.subcategories.filter(s => s.categoryId === category.id);
+          // Filter subcategories by outlet availability
+          const subcategories = menuData.subcategories.filter(s => {
+            if (s.categoryId !== category.id) return false;
+            const sub = s as any;
+            if (currentOutlet === 'palladium' && sub.availableAtPalladium === false) return false;
+            if (currentOutlet === 'tnagar' && sub.availableAtTnagar === false) return false;
+            return true;
+          });
           const productCount = menuData.products.filter(p => 
             subcategories.some(s => s.id === p.subcategoryId)
           ).length;
           
-          if (productCount === 0) return null;
+          // Hide category if no subcategories available at this outlet
+          if (subcategories.length === 0 || productCount === 0) return null;
 
           // Get a representative image from the first subcategory
           const firstSub = subcategories[0];
