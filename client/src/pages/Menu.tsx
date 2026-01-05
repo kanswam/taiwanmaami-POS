@@ -58,6 +58,7 @@ export default function Menu() {
   const initialSubcategory = params.get('subcategory') || null;
   const tableFromUrl = params.get('table');
   const outletFromUrl = params.get('outlet');
+  const orderTypeFromUrl = params.get('type'); // instore, delivery, pickup
 
   const [selectedCategory, setSelectedCategory] = useState(initialCategory);
   const [selectedSubcategory, setSelectedSubcategory] = useState<string | null>(initialSubcategory);
@@ -71,6 +72,15 @@ export default function Menu() {
     { enabled: !!tableFromUrl }
   );
   
+  // Auto-set order type from URL params
+  useEffect(() => {
+    if (orderTypeFromUrl) {
+      if (orderTypeFromUrl === 'instore') setOrderType('instore');
+      else if (orderTypeFromUrl === 'delivery') setOrderType('delivery');
+      else if (orderTypeFromUrl === 'pickup') setOrderType('pickup');
+    }
+  }, [orderTypeFromUrl, setOrderType]);
+
   // Auto-set order type and table number from URL params
   useEffect(() => {
     if (tableFromUrl) {

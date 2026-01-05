@@ -1452,3 +1452,28 @@
 - [x] Add notes field to users table
 - [x] Add notes textarea to customer edit dialog
 - [x] Store special preferences, delivery instructions, etc.
+
+
+## Phase 45 - Order Guidance, Alerts & Privacy (Jan 5, 2026)
+
+### Fix Moutan Branding (Still Showing)
+- [x] Moutan was already removed in code - issue was with published version
+- [x] Code confirmed to have Taiwan Maami only
+
+### Order Type Guidance
+- [x] Add clear order type selector on homepage ("How Would You Like to Order?")
+- [x] Guide customers to choose: In-store, Delivery, or Pickup
+- [x] Make the three options prominent with icons and descriptions
+- [x] Link each option to menu with pre-selected order type
+
+### New Order Email Alerts
+- [x] Send notification when new order is placed via Razorpay payment
+- [x] Send notification for in-store guest orders (cash at counter)
+- [x] Include order details: customer name, phone, amount, items
+- [x] Uses built-in notifyOwner function to alert owner
+
+### Privacy Policy Verification
+- [x] Added Section 3 "Your Consent" with explicit consent language
+- [x] Confirmed language about not sharing with external parties
+- [x] Added mention of occasional promotional offers
+- [x] Added "Our Promise" box about data storage and no spam

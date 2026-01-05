@@ -6,7 +6,7 @@ import { Card } from '@/components/ui/card';
 import { Header } from '@/components/Header';
 import { LazyVideo } from '@/components/LazyVideo';
 import { trpc } from '@/lib/trpc';
-import { ArrowRight, MapPin, Clock, Star, Sparkles, Instagram, Phone, Navigation } from 'lucide-react';
+import { ArrowRight, MapPin, Clock, Star, Sparkles, Instagram, Phone, Navigation, Store, Truck, ShoppingBag } from 'lucide-react';
 
 export default function Home() {
   const [heroTitle, setHeroTitle] = useState('Authentic Taiwanese\nBubble Tea');
@@ -161,6 +161,68 @@ export default function Home() {
                 <p className="text-sm text-muted-foreground">Fast delivery across Chennai</p>
               </div>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* How to Order Section */}
+      <section className="py-16 bg-background">
+        <div className="container">
+          <div className="text-center mb-10">
+            <h2 className="text-3xl font-bold mb-4">How Would You Like to Order?</h2>
+            <p className="text-muted-foreground max-w-2xl mx-auto">
+              Choose the option that works best for you
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+            {/* In-Store */}
+            <Link href="/menu?type=instore">
+              <Card className="p-6 text-center hover:shadow-lg transition-all duration-300 cursor-pointer group border-2 hover:border-primary">
+                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-colors">
+                  <Store className="w-8 h-8 text-primary group-hover:text-white" />
+                </div>
+                <h3 className="font-bold text-xl mb-2">Dine In-Store</h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Visit our outlets in Palladium Mall or T Nagar and enjoy freshly made bubble tea
+                </p>
+                <div className="text-primary font-medium flex items-center justify-center gap-2">
+                  Order In-Store <ArrowRight className="w-4 h-4" />
+                </div>
+              </Card>
+            </Link>
+
+            {/* Delivery */}
+            <Link href="/menu?type=delivery">
+              <Card className="p-6 text-center hover:shadow-lg transition-all duration-300 cursor-pointer group border-2 hover:border-primary">
+                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-colors">
+                  <Truck className="w-8 h-8 text-primary group-hover:text-white" />
+                </div>
+                <h3 className="font-bold text-xl mb-2">Home Delivery</h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Get your favorites delivered to your doorstep from our T Nagar outlet
+                </p>
+                <div className="text-primary font-medium flex items-center justify-center gap-2">
+                  Order Delivery <ArrowRight className="w-4 h-4" />
+                </div>
+              </Card>
+            </Link>
+
+            {/* Pickup */}
+            <Link href="/menu?type=pickup">
+              <Card className="p-6 text-center hover:shadow-lg transition-all duration-300 cursor-pointer group border-2 hover:border-primary">
+                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-colors">
+                  <ShoppingBag className="w-8 h-8 text-primary group-hover:text-white" />
+                </div>
+                <h3 className="font-bold text-xl mb-2">Quick Pickup</h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Order ahead and pick up at your convenience from either outlet
+                </p>
+                <div className="text-primary font-medium flex items-center justify-center gap-2">
+                  Order Pickup <ArrowRight className="w-4 h-4" />
+                </div>
+              </Card>
+            </Link>
           </div>
         </div>
       </section>
