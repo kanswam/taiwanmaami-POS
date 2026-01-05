@@ -9,16 +9,37 @@ import { trpc } from '@/lib/trpc';
 import { ArrowRight, MapPin, Clock, Star, Sparkles, Instagram, Phone, Navigation, Store, Truck, ShoppingBag } from 'lucide-react';
 
 export default function Home() {
+  // Fetch site settings from database
+  const { data: siteSettings } = trpc.admin.getSiteSettings.useQuery();
+  
+  // Default values
   const [heroTitle, setHeroTitle] = useState('Authentic Taiwanese\nBubble Tea');
   const [heroDescription, setHeroDescription] = useState('Crafted with imported tapioca pearls from Taiwan. Experience the true taste of premium bubble tea at Taiwan Maami.');
+  const [qualityTitle, setQualityTitle] = useState('Premium Quality');
+  const [qualityDescription, setQualityDescription] = useState('Imported ingredients from Taiwan');
+  const [freshnessTitle, setFreshnessTitle] = useState('Crafted Fresh');
+  const [freshnessDescription, setFreshnessDescription] = useState('Made to order, every time');
+  const [deliveryTitle, setDeliveryTitle] = useState('Quick Delivery');
+  const [deliveryDescription, setDeliveryDescription] = useState('Fast delivery across Chennai');
 
-  // Load custom content from localStorage
+  // Load settings from database when available
   useEffect(() => {
-    const savedTitle = localStorage.getItem('site_hero_title');
-    const savedDesc = localStorage.getItem('site_hero_description');
-    if (savedTitle) setHeroTitle(savedTitle);
-    if (savedDesc) setHeroDescription(savedDesc);
-  }, []);
+    if (siteSettings) {
+      const settingsMap = siteSettings.reduce((acc: any, s: any) => {
+        acc[s.key] = s.value;
+        return acc;
+      }, {});
+      
+      if (settingsMap.hero_title) setHeroTitle(settingsMap.hero_title);
+      if (settingsMap.hero_description) setHeroDescription(settingsMap.hero_description);
+      if (settingsMap.quality_title) setQualityTitle(settingsMap.quality_title);
+      if (settingsMap.quality_description) setQualityDescription(settingsMap.quality_description);
+      if (settingsMap.freshness_title) setFreshnessTitle(settingsMap.freshness_title);
+      if (settingsMap.freshness_description) setFreshnessDescription(settingsMap.freshness_description);
+      if (settingsMap.delivery_title) setDeliveryTitle(settingsMap.delivery_title);
+      if (settingsMap.delivery_description) setDeliveryDescription(settingsMap.delivery_description);
+    }
+  }, [siteSettings]);
 
   // Category cards with video backgrounds - links to /menu with category filter
   // Using actual database slugs: bubble-tea, coffee, mochis, food
@@ -143,8 +164,8 @@ export default function Home() {
                 <Star className="w-6 h-6 text-primary" />
               </div>
               <div>
-                <h3 className="font-semibold">Premium Quality</h3>
-                <p className="text-sm text-muted-foreground">Imported ingredients from Taiwan</p>
+                <h3 className="font-semibold">{qualityTitle}</h3>
+                <p className="text-sm text-muted-foreground">{qualityDescription}</p>
               </div>
             </div>
             <div className="flex items-center gap-4 p-4">
@@ -152,8 +173,8 @@ export default function Home() {
                 <Sparkles className="w-6 h-6 text-primary" />
               </div>
               <div>
-                <h3 className="font-semibold">Crafted Fresh</h3>
-                <p className="text-sm text-muted-foreground">Made to order, every time</p>
+                <h3 className="font-semibold">{freshnessTitle}</h3>
+                <p className="text-sm text-muted-foreground">{freshnessDescription}</p>
               </div>
             </div>
             <div className="flex items-center gap-4 p-4">
@@ -161,8 +182,8 @@ export default function Home() {
                 <Clock className="w-6 h-6 text-primary" />
               </div>
               <div>
-                <h3 className="font-semibold">Quick Delivery</h3>
-                <p className="text-sm text-muted-foreground">Fast delivery across Chennai</p>
+                <h3 className="font-semibold">{deliveryTitle}</h3>
+                <p className="text-sm text-muted-foreground">{deliveryDescription}</p>
               </div>
             </div>
           </div>
