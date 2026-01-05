@@ -1,22 +1,40 @@
 #!/usr/bin/env node
 /**
  * Taiwan Maami - KOT & Receipt Printer Client
+ * Version 2.1 - ESC/POS Thermal Printer Support
  * 
- * SIMPLE SETUP:
- * 1. Install Node.js from https://nodejs.org
- * 2. Edit the CONFIG section below with your printer name
- * 3. Double-click this file to run (or run: node taiwan-maami-printer.js)
+ * SETUP:
+ * 1. Install Node.js from https://nodejs.org (v18 or higher)
+ * 2. Open Command Prompt in this folder
+ * 3. Run: npm install node-thermal-printer
+ * 4. Edit the CONFIG section below with your printer name
+ * 5. Run: node taiwan-maami-printer.js
  * 
  * To find your printer name:
  * - Windows: Control Panel → Devices and Printers → Right-click printer → Properties
- * - Mac: System Preferences → Printers & Scanners
  */
 
 const https = require('https');
-const { exec } = require('child_process');
 const fs = require('fs');
 const path = require('path');
-const os = require('os');
+
+// Try to load thermal printer library
+let ThermalPrinter, PrinterTypes;
+try {
+  const thermalPrinter = require('node-thermal-printer');
+  ThermalPrinter = thermalPrinter.printer;
+  PrinterTypes = thermalPrinter.types;
+} catch (e) {
+  console.log('');
+  console.log('╔════════════════════════════════════════════════════════════╗');
+  console.log('║  SETUP REQUIRED: Install thermal printer library           ║');
+  console.log('║                                                            ║');
+  console.log('║  Run this command in the printer folder:                   ║');
+  console.log('║  npm install node-thermal-printer                          ║');
+  console.log('╚════════════════════════════════════════════════════════════╝');
+  console.log('');
+  process.exit(1);
+}
 
 // ╔════════════════════════════════════════════════════════════════╗
 // ║                    CONFIGURATION                                ║
@@ -24,7 +42,7 @@ const os = require('os');
 // ╚════════════════════════════════════════════════════════════════╝
 
 const CONFIG = {
-  // Your printer name (MUST match exactly as shown in system settings)
+  // Your printer name (MUST match exactly as shown in Windows)
   PRINTER_NAME: 'EPSON TM-T82 Receipt',
   
   // Secret key for authentication (DO NOT SHARE THIS)
@@ -33,8 +51,11 @@ const CONFIG = {
   // How often to check for new orders (in seconds)
   POLL_INTERVAL_SECONDS: 10,
   
-  // Website URL (don't change unless instructed)
+  // Website URL
   API_BASE_URL: 'https://www.taiwanmaami.com',
+  
+  // Paper width in characters (48 for 80mm paper, 32 for 58mm paper)
+  PAPER_WIDTH: 48,
 };
 
 // ╔════════════════════════════════════════════════════════════════╗
@@ -46,7 +67,7 @@ const LOG_FILE = path.join(__dirname, 'printer-log.txt');
 
 // Logging
 function log(message, type = 'INFO') {
-  const timestamp = new Date().toLocaleString();
+  const timestamp = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
   const logLine = `[${timestamp}] [${type}] ${message}`;
   console.log(logLine);
   try {
@@ -54,7 +75,7 @@ function log(message, type = 'INFO') {
   } catch (e) {}
 }
 
-// HTTP request helper with better error handling
+// HTTP request helper
 function apiRequest(endpoint, method = 'GET', body = null) {
   return new Promise((resolve, reject) => {
     const url = new URL(endpoint, CONFIG.API_BASE_URL);
@@ -66,9 +87,9 @@ function apiRequest(endpoint, method = 'GET', body = null) {
       method: method,
       headers: {
         'Content-Type': 'application/json',
-        'User-Agent': 'TaiwanMaami-Printer/2.0'
+        'User-Agent': 'TaiwanMaami-Printer/2.1'
       },
-      timeout: 30000 // 30 second timeout
+      timeout: 30000
     };
 
     const req = https.request(options, (res) => {
@@ -76,26 +97,20 @@ function apiRequest(endpoint, method = 'GET', body = null) {
       res.on('data', chunk => data += chunk);
       res.on('end', () => {
         if (res.statusCode !== 200) {
-          log(`API Error: Status ${res.statusCode} - ${data}`, 'ERROR');
-          reject(new Error(`HTTP ${res.statusCode}: ${data}`));
+          log(`API Error: Status ${res.statusCode}`, 'ERROR');
+          reject(new Error(`HTTP ${res.statusCode}`));
           return;
         }
         try {
           resolve(JSON.parse(data));
         } catch (e) {
-          log(`API Parse Error: ${e.message}`, 'ERROR');
-          reject(new Error(`JSON parse error: ${e.message}`));
+          reject(new Error('JSON parse error'));
         }
       });
     });
 
-    req.on('error', (error) => {
-      log(`API Network Error: ${error.message}`, 'ERROR');
-      reject(error);
-    });
-    
+    req.on('error', reject);
     req.on('timeout', () => {
-      log('API Request Timeout', 'ERROR');
       req.destroy();
       reject(new Error('Request timeout'));
     });
@@ -107,184 +122,238 @@ function apiRequest(endpoint, method = 'GET', body = null) {
   });
 }
 
-// Print to thermal printer
-function printText(text, filename) {
-  return new Promise((resolve, reject) => {
-    const tempDir = os.tmpdir();
-    const tempFile = path.join(tempDir, `${filename}.txt`);
-    
-    fs.writeFileSync(tempFile, text, 'utf8');
-    
-    let printCmd;
-    if (process.platform === 'win32') {
-      // Windows - use notepad for printing (more reliable)
-      printCmd = `notepad /p "${tempFile}"`;
-    } else if (process.platform === 'darwin') {
-      // macOS
-      printCmd = `lpr -P "${CONFIG.PRINTER_NAME}" "${tempFile}"`;
-    } else {
-      // Linux
-      printCmd = `lpr -P "${CONFIG.PRINTER_NAME}" "${tempFile}"`;
+// Create thermal printer instance
+function createPrinter() {
+  return new ThermalPrinter({
+    type: PrinterTypes.EPSON,
+    interface: `printer:${CONFIG.PRINTER_NAME}`,
+    characterSet: 'PC437_USA',
+    removeSpecialCharacters: false,
+    lineCharacter: '-',
+    options: {
+      timeout: 5000
     }
+  });
+}
+
+// Print KOT using thermal printer
+async function printKOT(kot) {
+  const printer = createPrinter();
+  const width = CONFIG.PAPER_WIDTH;
+  
+  try {
+    // Header
+    printer.alignCenter();
+    printer.setTextDoubleHeight();
+    printer.bold(true);
+    printer.println('KITCHEN ORDER TICKET');
+    printer.bold(false);
+    printer.setTextNormal();
+    printer.drawLine();
     
-    exec(printCmd, (error, stdout, stderr) => {
-      // Clean up temp file after a delay
-      setTimeout(() => {
-        try { fs.unlinkSync(tempFile); } catch (e) {}
-      }, 5000);
-      
-      if (error) {
-        reject(error);
-      } else {
-        resolve();
-      }
+    // Order info
+    printer.alignLeft();
+    printer.setTextDoubleHeight();
+    printer.bold(true);
+    printer.println(`Order #: ${kot.orderNumber}`);
+    printer.setTextNormal();
+    printer.bold(false);
+    
+    const orderType = kot.kotData?.orderType || 'N/A';
+    printer.println(`Type: ${orderType}`);
+    
+    const time = new Date(kot.createdAt).toLocaleString('en-IN', { 
+      timeZone: 'Asia/Kolkata',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true
     });
-  });
+    printer.println(`Time: ${time}`);
+    
+    const customer = kot.kotData?.customerName || 'Guest';
+    printer.println(`Customer: ${customer}`);
+    
+    if (kot.kotData?.customerPhone) {
+      printer.println(`Phone: ${kot.kotData.customerPhone}`);
+    }
+    
+    if (kot.kotData?.tableNumber) {
+      printer.bold(true);
+      printer.println(`Table: ${kot.kotData.tableNumber}`);
+      printer.bold(false);
+    }
+    
+    printer.drawLine();
+    printer.newLine();
+    
+    // Items
+    const items = kot.kotData?.items || [];
+    items.forEach((item, idx) => {
+      // Product name and quantity - bold and larger
+      printer.setTextDoubleHeight();
+      printer.bold(true);
+      printer.println(`${idx + 1}. ${item.productName}`);
+      printer.println(`   x${item.quantity}`);
+      printer.setTextNormal();
+      printer.bold(false);
+      
+      // Customizations
+      if (item.size && item.size !== 'Regular') {
+        printer.println(`   Size: ${item.size}`);
+      }
+      if (item.withBoba) {
+        printer.println(`   Boba: ${item.withBoba}`);
+      }
+      if (item.sugarLevel) {
+        printer.println(`   Sugar: ${item.sugarLevel}`);
+      }
+      if (item.iceLevel) {
+        printer.println(`   Ice: ${item.iceLevel}`);
+      }
+      if (item.addons && item.addons.length > 0) {
+        const addonStr = item.addons.map(a => 
+          a.quantity > 1 ? `${a.name} x${a.quantity}` : a.name
+        ).join(', ');
+        printer.println(`   Add-ons: ${addonStr}`);
+      }
+      
+      // Special instructions - highlighted
+      if (item.specialInstructions) {
+        printer.bold(true);
+        printer.println(`   *** NOTE: ${item.specialInstructions}`);
+        printer.bold(false);
+      }
+      
+      printer.newLine();
+    });
+    
+    // Order-level special instructions
+    if (kot.kotData?.specialInstructions) {
+      printer.drawLine();
+      printer.bold(true);
+      printer.println('ORDER NOTES:');
+      printer.println(kot.kotData.specialInstructions);
+      printer.bold(false);
+    }
+    
+    // Footer
+    printer.drawLine();
+    printer.newLine();
+    printer.newLine();
+    printer.cut();
+    
+    // Execute print
+    await printer.execute();
+    return true;
+  } catch (error) {
+    log(`Thermal print error: ${error.message}`, 'ERROR');
+    throw error;
+  }
 }
 
-// Format KOT for printing
-function formatKOT(kot) {
-  const width = 42;
-  const lines = [];
-  
-  lines.push('='.repeat(width));
-  lines.push(centerText('KITCHEN ORDER TICKET', width));
-  lines.push('='.repeat(width));
-  lines.push('');
-  lines.push(`Order #: ${kot.orderNumber}`);
-  lines.push(`Type: ${kot.kotData?.orderType || 'N/A'}`);
-  lines.push(`Time: ${new Date(kot.createdAt).toLocaleString()}`);
-  lines.push(`Customer: ${kot.kotData?.customerName || 'Guest'}`);
-  if (kot.kotData?.customerPhone) {
-    lines.push(`Phone: ${kot.kotData.customerPhone}`);
-  }
-  lines.push('');
-  lines.push('-'.repeat(width));
-  lines.push('');
-  
-  // Items
-  const items = kot.kotData?.items || [];
-  items.forEach((item, idx) => {
-    lines.push(`${idx + 1}. ${item.productName} x${item.quantity}`);
-    if (item.size && item.size !== 'Regular') {
-      lines.push(`   Size: ${item.size}`);
-    }
-    if (item.withBoba) {
-      lines.push(`   Boba: ${item.withBoba}`);
-    }
-    if (item.sugarLevel) {
-      lines.push(`   Sugar: ${item.sugarLevel}`);
-    }
-    if (item.iceLevel) {
-      lines.push(`   Ice: ${item.iceLevel}`);
-    }
-    if (item.addons && item.addons.length > 0) {
-      lines.push(`   Add-ons: ${item.addons.map(a => a.name).join(', ')}`);
-    }
-    if (item.specialInstructions) {
-      lines.push(`   Note: ${item.specialInstructions}`);
-    }
-    lines.push('');
-  });
-  
-  if (kot.kotData?.specialInstructions) {
-    lines.push('-'.repeat(width));
-    lines.push(`ORDER NOTES: ${kot.kotData.specialInstructions}`);
-  }
-  
-  lines.push('');
-  lines.push('='.repeat(width));
-  lines.push('');
-  lines.push('');
-  lines.push('');
-  
-  return lines.join('\n');
-}
-
-// Format Receipt/Invoice for printing
-function formatReceipt(receipt) {
-  const width = 42;
-  const lines = [];
+// Print Receipt using thermal printer
+async function printReceipt(receipt) {
+  const printer = createPrinter();
   const data = receipt.receiptData || {};
   
-  lines.push(centerText('TAIWAN MAAMI', width));
-  lines.push(centerText('Authentic Taiwanese Bubble Tea', width));
-  lines.push('');
-  lines.push('='.repeat(width));
-  lines.push(centerText('TAX INVOICE', width));
-  lines.push('='.repeat(width));
-  lines.push('');
-  lines.push(`Order #: ${receipt.orderNumber}`);
-  lines.push(`Date: ${new Date(receipt.createdAt).toLocaleString()}`);
-  lines.push(`Type: ${data.orderType || 'N/A'}`);
-  lines.push('');
-  
-  if (data.customerName) {
-    lines.push(`Customer: ${data.customerName}`);
-  }
-  if (data.customerPhone) {
-    lines.push(`Phone: ${data.customerPhone}`);
-  }
-  
-  lines.push('');
-  lines.push('-'.repeat(width));
-  lines.push('');
-  
-  // Items
-  const items = data.items || [];
-  items.forEach(item => {
-    const itemTotal = (item.price * item.quantity / 100).toFixed(2);
-    lines.push(`${item.name || item.productName}`);
-    lines.push(`  ${item.quantity} x ₹${(item.price / 100).toFixed(2)}    ₹${itemTotal}`);
-    if (item.addons && item.addons.length > 0) {
-      item.addons.forEach(addon => {
-        lines.push(`  + ${addon.name}    ₹${(addon.price / 100).toFixed(2)}`);
-      });
+  try {
+    // Header
+    printer.alignCenter();
+    printer.setTextDoubleHeight();
+    printer.bold(true);
+    printer.println('TAIWAN MAAMI');
+    printer.setTextNormal();
+    printer.bold(false);
+    printer.println('Authentic Taiwanese Bubble Tea');
+    printer.newLine();
+    printer.drawLine();
+    printer.bold(true);
+    printer.println('TAX INVOICE');
+    printer.bold(false);
+    printer.drawLine();
+    printer.newLine();
+    
+    // Order info
+    printer.alignLeft();
+    printer.println(`Order #: ${receipt.orderNumber}`);
+    
+    const date = new Date(receipt.createdAt).toLocaleString('en-IN', { 
+      timeZone: 'Asia/Kolkata'
+    });
+    printer.println(`Date: ${date}`);
+    printer.println(`Type: ${data.orderType || 'N/A'}`);
+    
+    if (data.customerName) {
+      printer.println(`Customer: ${data.customerName}`);
     }
-  });
-  
-  lines.push('');
-  lines.push('-'.repeat(width));
-  
-  // Totals
-  if (data.subtotal) {
-    lines.push(rightAlign(`Subtotal: ₹${(data.subtotal / 100).toFixed(2)}`, width));
+    if (data.customerPhone) {
+      printer.println(`Phone: ${data.customerPhone}`);
+    }
+    
+    printer.newLine();
+    printer.drawLine();
+    printer.newLine();
+    
+    // Items
+    const items = data.items || [];
+    items.forEach(item => {
+      const name = item.name || item.productName;
+      const qty = item.quantity;
+      const price = (item.price / 100).toFixed(2);
+      const total = ((item.price * qty) / 100).toFixed(2);
+      
+      printer.println(name);
+      printer.println(`  ${qty} x Rs.${price}    Rs.${total}`);
+      
+      if (item.addons && item.addons.length > 0) {
+        item.addons.forEach(addon => {
+          printer.println(`  + ${addon.name}    Rs.${(addon.price / 100).toFixed(2)}`);
+        });
+      }
+    });
+    
+    printer.newLine();
+    printer.drawLine();
+    
+    // Totals
+    printer.alignRight();
+    if (data.subtotal) {
+      printer.println(`Subtotal: Rs.${(data.subtotal / 100).toFixed(2)}`);
+    }
+    if (data.sgst) {
+      printer.println(`SGST (2.5%): Rs.${(data.sgst / 100).toFixed(2)}`);
+    }
+    if (data.cgst) {
+      printer.println(`CGST (2.5%): Rs.${(data.cgst / 100).toFixed(2)}`);
+    }
+    if (data.discount) {
+      printer.println(`Discount: -Rs.${(data.discount / 100).toFixed(2)}`);
+    }
+    
+    printer.drawLine();
+    printer.bold(true);
+    printer.println(`TOTAL: Rs.${(data.total / 100).toFixed(2)}`);
+    printer.bold(false);
+    printer.drawLine();
+    
+    // Footer
+    printer.newLine();
+    printer.alignCenter();
+    printer.println('Thank you for your order!');
+    printer.println('Visit us again');
+    printer.newLine();
+    printer.println('Thamarai Foods & Trading Pvt Ltd');
+    printer.println('GSTIN: 33AAKCT4782H1Z1');
+    printer.newLine();
+    printer.newLine();
+    printer.cut();
+    
+    await printer.execute();
+    return true;
+  } catch (error) {
+    log(`Receipt print error: ${error.message}`, 'ERROR');
+    throw error;
   }
-  if (data.sgst) {
-    lines.push(rightAlign(`SGST (2.5%): ₹${(data.sgst / 100).toFixed(2)}`, width));
-  }
-  if (data.cgst) {
-    lines.push(rightAlign(`CGST (2.5%): ₹${(data.cgst / 100).toFixed(2)}`, width));
-  }
-  if (data.discount) {
-    lines.push(rightAlign(`Discount: -₹${(data.discount / 100).toFixed(2)}`, width));
-  }
-  
-  lines.push('-'.repeat(width));
-  lines.push(rightAlign(`TOTAL: ₹${(data.total / 100).toFixed(2)}`, width));
-  lines.push('='.repeat(width));
-  
-  lines.push('');
-  lines.push(centerText('Thank you for your order!', width));
-  lines.push(centerText('Visit us again', width));
-  lines.push('');
-  lines.push(centerText('Thamarai Foods & Trading Pvt Ltd', width));
-  lines.push(centerText('GSTIN: 33AAKCT4782H1Z1', width));
-  lines.push('');
-  lines.push('');
-  lines.push('');
-  
-  return lines.join('\n');
-}
-
-function centerText(text, width) {
-  const padding = Math.max(0, Math.floor((width - text.length) / 2));
-  return ' '.repeat(padding) + text;
-}
-
-function rightAlign(text, width) {
-  const padding = Math.max(0, width - text.length);
-  return ' '.repeat(padding) + text;
 }
 
 // Poll for KOTs
@@ -297,8 +366,7 @@ async function pollKOT() {
       
       for (const kot of response.kots) {
         try {
-          const kotText = formatKOT(kot);
-          await printText(kotText, `kot_${kot.id}`);
+          await printKOT(kot);
           
           // Mark as printed
           await apiRequest('/api/kot/printed', 'POST', {
@@ -327,8 +395,7 @@ async function pollReceipt() {
       
       for (const receipt of response.receipts) {
         try {
-          const receiptText = formatReceipt(receipt);
-          await printText(receiptText, `receipt_${receipt.id}`);
+          await printReceipt(receipt);
           
           // Mark as printed
           await apiRequest('/api/receipt/printed', 'POST', {
@@ -353,28 +420,75 @@ async function poll() {
   await pollReceipt();
 }
 
+// Test printer connection
+async function testPrinter() {
+  log('Testing printer connection...');
+  const printer = createPrinter();
+  
+  try {
+    printer.alignCenter();
+    printer.bold(true);
+    printer.println('PRINTER TEST');
+    printer.bold(false);
+    printer.drawLine();
+    printer.alignLeft();
+    printer.println(`Date: ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}`);
+    printer.println(`Printer: ${CONFIG.PRINTER_NAME}`);
+    printer.newLine();
+    printer.println('If you can read this, the printer');
+    printer.println('is working correctly!');
+    printer.drawLine();
+    printer.newLine();
+    printer.newLine();
+    printer.cut();
+    
+    await printer.execute();
+    log('✓ Test print successful');
+    return true;
+  } catch (error) {
+    log(`✗ Test print failed: ${error.message}`, 'ERROR');
+    return false;
+  }
+}
+
 // Startup
-console.log('');
-console.log('╔════════════════════════════════════════════════════════════╗');
-console.log('║         Taiwan Maami - KOT & Receipt Printer               ║');
-console.log('╚════════════════════════════════════════════════════════════╝');
-console.log('');
-log(`Starting printer client...`);
-log(`Printer: ${CONFIG.PRINTER_NAME}`);
-log(`Polling every ${CONFIG.POLL_INTERVAL_SECONDS} seconds`);
-log(`Log file: ${LOG_FILE}`);
-console.log('');
-console.log('Press Ctrl+C to stop');
-console.log('');
-
-// Initial poll
-poll();
-
-// Set up interval
-setInterval(poll, POLL_INTERVAL);
+async function startup() {
+  console.log('');
+  console.log('╔════════════════════════════════════════════════════════════╗');
+  console.log('║         Taiwan Maami - KOT & Receipt Printer               ║');
+  console.log('║                    Version 2.1                              ║');
+  console.log('╚════════════════════════════════════════════════════════════╝');
+  console.log('');
+  log(`Starting printer client...`);
+  log(`Printer: ${CONFIG.PRINTER_NAME}`);
+  log(`API URL: ${CONFIG.API_BASE_URL}`);
+  log(`Polling every ${CONFIG.POLL_INTERVAL_SECONDS} seconds`);
+  log(`Log file: ${LOG_FILE}`);
+  console.log('');
+  
+  // Test printer
+  await testPrinter();
+  
+  console.log('');
+  console.log('Press Ctrl+C to stop');
+  console.log('');
+  
+  // Initial poll
+  poll();
+  
+  // Set up interval
+  setInterval(poll, POLL_INTERVAL);
+}
 
 // Handle exit
 process.on('SIGINT', () => {
   log('Printer client stopped');
   process.exit(0);
 });
+
+process.on('uncaughtException', (error) => {
+  log(`Uncaught exception: ${error.message}`, 'ERROR');
+});
+
+// Start
+startup();

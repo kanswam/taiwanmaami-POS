@@ -3,6 +3,7 @@
 ## What You Need
 1. A computer connected to your thermal printer
 2. Node.js installed (download from https://nodejs.org - click the LTS version)
+3. Thermal printer library (installed in Step 2)
 
 ## Quick Setup (5 minutes)
 
@@ -13,6 +14,18 @@ Create a folder on your computer called `TaiwanMaami` (e.g., on your Desktop)
 Copy these 2 files into that folder:
 - `taiwan-maami-printer.js` (the main script)
 - `Start-Printer.bat` (Windows) or `Start-Printer.command` (Mac)
+
+### Step 2b: Install the printer library
+1. Open Command Prompt (Windows) or Terminal (Mac)
+2. Navigate to your folder:
+   ```
+   cd C:\Users\YourName\Desktop\TaiwanMaami
+   ```
+3. Run this command:
+   ```
+   npm install node-thermal-printer
+   ```
+4. Wait for it to finish (you'll see a `node_modules` folder appear)
 
 ### Step 3: Find your printer name
 **Windows:**
@@ -64,6 +77,9 @@ Polling every 10 seconds
 
 **"node is not recognized"**
 - Node.js is not installed. Download from https://nodejs.org and install it, then restart your computer.
+
+**"Cannot find module 'node-thermal-printer'"**
+- Run `npm install node-thermal-printer` in the printer folder
 
 **Printer not printing**
 - Make sure the printer name matches EXACTLY (including spaces and capitalization)

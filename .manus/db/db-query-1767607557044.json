@@ -1,0 +1,17 @@
+{
+  "query": "SELECT id, name, email, role, openId FROM users WHERE name LIKE '%Theresa%' OR name LIKE '%theresa%';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT id, name, email, role, openId FROM users WHERE name LIKE '%Theresa%' OR name LIKE '%theresa%';",
+  "rows": [
+    {
+      "id": "15510362",
+      "name": "Theresa Hu Cy",
+      "email": "theresa.hu.cy@taiwanmaami.com",
+      "role": "admin",
+      "openId": "aBSwjn4ihCJfeceTfz4kEX"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\temail\trole\topenId\n15510362\tTheresa Hu Cy\ttheresa.hu.cy@taiwanmaami.com\tadmin\taBSwjn4ihCJfeceTfz4kEX\n",
+  "stderr": "",
+  "execution_time_ms": 1480
+}

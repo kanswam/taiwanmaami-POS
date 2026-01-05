@@ -1556,3 +1556,17 @@
 - [x] Root cause: verifyPayment only created KOT, not receipt
 - [x] Fixed: Added receipt queueing to verifyPayment procedure
 - [x] Receipt now queues automatically alongside KOT after successful payment
+
+
+## Phase 31 - Printer Script Fix & Admin Access (Jan 5, 2026)
+
+### Admin Access
+- [x] Grant Theresa Hu Cy (theresa.hu.cy@taiwanmaami.com) full admin access
+
+### KOT Printer Script Fix
+- [x] Fix API URL (changed from taiwanmaami.com to www.taiwanmaami.com)
+- [x] Update secret key to correct value
+- [x] Upgrade to ESC/POS thermal printer commands for proper formatting
+- [x] Add node-thermal-printer library support for compact printing
+- [x] Update setup documentation with new installation steps
+- [x] Update Start-Printer.bat to auto-install printer library
