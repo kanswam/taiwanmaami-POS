@@ -1341,3 +1341,15 @@
 - [ ] Build admin review approval interface
 - [ ] Create public testimonials/endorsement page
 - [ ] Display approved reviews on endorsement page
+
+## Bug Fixes & New Features (Jan 5)
+- [x] Fix discount deletion - add delete endpoint and wire to UI
+- [x] Delete test review from database
+- [ ] Exclude guest orders from repeat customers in analytics
+- [x] Build customer database in admin (view registered + guests, manual add)
+- [ ] Update T&Cs with company details, allergen disclaimer
+- [ ] Update Privacy Policy with correct details
+- [ ] Update Refund Policy with delivery terms
+- [x] Add 15km delivery restriction from T Nagar
+- [ ] Show delivery restriction message to customers
+- [ ] Hide/disable delivery option for Palladium outlet

@@ -415,6 +415,9 @@ export default function Checkout() {
                       <MapPin className="w-5 h-5" />
                       Delivery Address
                     </h2>
+                    <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-800">
+                      🚗 Delivery available within 15km of our T Nagar location, Chennai.
+                    </div>
                     <div className="space-y-4">
                       <div>
                         <Label htmlFor="guest-address1">Address Line 1 *</Label>

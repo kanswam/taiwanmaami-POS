@@ -419,6 +419,14 @@ export default function Menu() {
               </div>
             )}
 
+            {/* Delivery radius notice */}
+            {state.orderType === 'delivery' && (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Truck className="w-4 h-4" />
+                <span>Delivery from T Nagar (within 15km)</span>
+              </div>
+            )}
+
             {/* Search */}
             <div className="relative w-full sm:w-64">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />

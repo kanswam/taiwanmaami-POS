@@ -205,3 +205,65 @@ export function isOrderingAvailable(timezone: string = 'Asia/Kolkata'): { availa
   
   return { available: true, message: '' };
 }
+
+// Delivery Configuration
+export const DELIVERY_CONFIG = {
+  // T Nagar location coordinates (delivery hub)
+  hubLocation: {
+    lat: 13.0418,
+    lng: 80.2341,
+    name: 'T Nagar',
+  },
+  // Maximum delivery radius in kilometers
+  maxRadiusKm: 15,
+  // Message to show customers
+  radiusMessage: 'Delivery available within 15km of T Nagar, Chennai',
+} as const;
+
+// Haversine formula to calculate distance between two coordinates
+export function calculateDistanceKm(
+  lat1: number,
+  lng1: number,
+  lat2: number,
+  lng2: number
+): number {
+  const R = 6371; // Earth's radius in kilometers
+  const dLat = (lat2 - lat1) * (Math.PI / 180);
+  const dLng = (lng2 - lng1) * (Math.PI / 180);
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * (Math.PI / 180)) *
+      Math.cos(lat2 * (Math.PI / 180)) *
+      Math.sin(dLng / 2) *
+      Math.sin(dLng / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
+
+// Check if delivery address is within service area
+export function isWithinDeliveryRadius(lat: number, lng: number): {
+  withinRadius: boolean;
+  distanceKm: number;
+  message: string;
+} {
+  const distance = calculateDistanceKm(
+    DELIVERY_CONFIG.hubLocation.lat,
+    DELIVERY_CONFIG.hubLocation.lng,
+    lat,
+    lng
+  );
+  
+  if (distance <= DELIVERY_CONFIG.maxRadiusKm) {
+    return {
+      withinRadius: true,
+      distanceKm: Math.round(distance * 10) / 10,
+      message: `Delivery available (${Math.round(distance * 10) / 10}km from T Nagar)`,
+    };
+  }
+  
+  return {
+    withinRadius: false,
+    distanceKm: Math.round(distance * 10) / 10,
+    message: `Sorry, your location is ${Math.round(distance * 10) / 10}km away. We currently deliver within ${DELIVERY_CONFIG.maxRadiusKm}km of our T Nagar location.`,
+  };
+}

@@ -101,7 +101,7 @@ describe('KOT Daily Summary', () => {
         openId: 'test-user',
         name: 'Test User',
         email: 'user@test.com',
-        role: 'user' as const, // Non-admin
+        role: 'customer' as const, // Non-admin
         stampCount: 0,
       },
       req: {} as any,

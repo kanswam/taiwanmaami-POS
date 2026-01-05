@@ -122,6 +122,10 @@ export default function Admin() {
               <AlertCircle className="w-4 h-4" />
               Complaints
             </TabsTrigger>
+            <TabsTrigger value="customers" className="gap-2">
+              <Users className="w-4 h-4" />
+              Customers
+            </TabsTrigger>
             <TabsTrigger value="settings" className="gap-2">
               <Edit className="w-4 h-4" />
               Site Settings
@@ -176,6 +180,10 @@ export default function Admin() {
 
           <TabsContent value="complaints">
             <ComplaintsTab />
+          </TabsContent>
+
+          <TabsContent value="customers">
+            <CustomersTab />
           </TabsContent>
 
           <TabsContent value="settings">
@@ -2730,6 +2738,14 @@ function SubcategoryEditForm({ sub, category, updateSubcategory, onClose }: { su
 function DiscountsTab() {
   const { data: discounts, refetch } = trpc.admin.getAllDiscounts.useQuery();
   const [showCreate, setShowCreate] = useState(false);
+  
+  const deleteDiscount = trpc.admin.deleteDiscount.useMutation({
+    onSuccess: () => {
+      toast.success('Discount deleted');
+      refetch();
+    },
+    onError: (err) => toast.error(err.message),
+  });
 
   return (
     <div className="space-y-4">
@@ -2752,6 +2768,7 @@ function DiscountsTab() {
                 <th className="text-right p-3 text-sm font-medium">Min Order</th>
                 <th className="text-center p-3 text-sm font-medium">Usage</th>
                 <th className="text-center p-3 text-sm font-medium">Active</th>
+                <th className="text-center p-3 text-sm font-medium">Action</th>
               </tr>
             </thead>
             <tbody>
@@ -2774,6 +2791,20 @@ function DiscountsTab() {
                     ) : (
                       <X className="w-4 h-4 text-red-600 mx-auto" />
                     )}
+                  </td>
+                  <td className="p-3 text-center">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                      onClick={() => {
+                        if (confirm(`Delete discount code "${discount.code}"?`)) {
+                          deleteDiscount.mutate({ id: discount.id });
+                        }
+                      }}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
                   </td>
                 </tr>
               ))}
@@ -3547,6 +3578,165 @@ function ComplaintsTab() {
           ))}
         </div>
       )}
+    </div>
+  );
+}
+
+// Customers Tab Component
+function CustomersTab() {
+  const { data: customersData, refetch } = trpc.customers.getAll.useQuery();
+  const [searchTerm, setSearchTerm] = useState('');
+  const [typeFilter, setTypeFilter] = useState<'all' | 'registered' | 'guest'>('all');
+  const [showAddDialog, setShowAddDialog] = useState(false);
+  const [newCustomer, setNewCustomer] = useState({ name: '', phone: '', email: '' });
+
+  const createCustomer = trpc.customers.create.useMutation({
+    onSuccess: () => {
+      toast.success('Customer added successfully');
+      setShowAddDialog(false);
+      setNewCustomer({ name: '', phone: '', email: '' });
+      refetch();
+    },
+    onError: (err) => toast.error(err.message),
+  });
+
+  const filteredCustomers = customersData?.customers?.filter(customer => {
+    const matchesSearch = !searchTerm || 
+      customer.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      customer.phone?.includes(searchTerm) ||
+      customer.email?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesType = typeFilter === 'all' || customer.type === typeFilter;
+    return matchesSearch && matchesType;
+  }) || [];
+
+  return (
+    <div className="space-y-4">
+      <div className="flex justify-between items-center">
+        <h2 className="text-lg font-semibold">Customer Database</h2>
+        <Button onClick={() => setShowAddDialog(true)}>
+          <Plus className="w-4 h-4 mr-2" />
+          Add Customer
+        </Button>
+      </div>
+
+      <div className="flex gap-4 items-center">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input
+            placeholder="Search by name, phone, or email..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10"
+          />
+        </div>
+        <Select value={typeFilter} onValueChange={(v) => setTypeFilter(v as any)}>
+          <SelectTrigger className="w-40">
+            <SelectValue placeholder="Filter by type" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Customers</SelectItem>
+            <SelectItem value="registered">Registered</SelectItem>
+            <SelectItem value="guest">Guests</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      <Card>
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-secondary">
+              <tr>
+                <th className="text-left p-3 text-sm font-medium">Name</th>
+                <th className="text-left p-3 text-sm font-medium">Phone</th>
+                <th className="text-left p-3 text-sm font-medium">Email</th>
+                <th className="text-center p-3 text-sm font-medium">Type</th>
+                <th className="text-right p-3 text-sm font-medium">Orders</th>
+                <th className="text-right p-3 text-sm font-medium">Total Spent</th>
+                <th className="text-right p-3 text-sm font-medium">Store Credit</th>
+                <th className="text-left p-3 text-sm font-medium">Last Order</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredCustomers.map((customer: any) => (
+                <tr key={customer.id} className="border-b hover:bg-secondary/50">
+                  <td className="p-3 font-medium">{customer.name || 'N/A'}</td>
+                  <td className="p-3">{customer.phone || 'N/A'}</td>
+                  <td className="p-3">{customer.email || 'N/A'}</td>
+                  <td className="p-3 text-center">
+                    <span className={`px-2 py-1 rounded-full text-xs ${customer.type === 'registered' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'}`}>
+                      {customer.type === 'registered' ? 'Registered' : 'Guest'}
+                    </span>
+                  </td>
+                  <td className="p-3 text-right">{customer.totalOrders}</td>
+                  <td className="p-3 text-right">{formatPrice(customer.totalSpent)}</td>
+                  <td className="p-3 text-right">{formatPrice(customer.storeCredit)}</td>
+                  <td className="p-3">
+                    {customer.lastOrderDate 
+                      ? new Date(customer.lastOrderDate).toLocaleDateString()
+                      : 'N/A'
+                    }
+                  </td>
+                </tr>
+              ))}
+              {filteredCustomers.length === 0 && (
+                <tr>
+                  <td colSpan={8} className="p-8 text-center text-muted-foreground">
+                    No customers found
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </Card>
+
+      <div className="text-sm text-muted-foreground">
+        Showing {filteredCustomers.length} of {customersData?.total || 0} customers
+      </div>
+
+      {/* Add Customer Dialog */}
+      <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add New Customer</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div>
+              <Label>Name *</Label>
+              <Input
+                value={newCustomer.name}
+                onChange={(e) => setNewCustomer({ ...newCustomer, name: e.target.value })}
+                placeholder="Customer name"
+              />
+            </div>
+            <div>
+              <Label>Phone *</Label>
+              <Input
+                value={newCustomer.phone}
+                onChange={(e) => setNewCustomer({ ...newCustomer, phone: e.target.value })}
+                placeholder="10-digit phone number"
+              />
+            </div>
+            <div>
+              <Label>Email (Optional)</Label>
+              <Input
+                value={newCustomer.email}
+                onChange={(e) => setNewCustomer({ ...newCustomer, email: e.target.value })}
+                placeholder="customer@email.com"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowAddDialog(false)}>Cancel</Button>
+            <Button
+              disabled={!newCustomer.name.trim() || !newCustomer.phone.trim()}
+              onClick={() => createCustomer.mutate(newCustomer)}
+            >
+              Add Customer
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

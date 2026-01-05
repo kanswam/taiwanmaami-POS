@@ -153,7 +153,7 @@ describe('Reviews Router', () => {
   describe('getAll (admin)', () => {
     it('should require admin role', async () => {
       const caller = appRouter.createCaller({
-        user: { id: 1, role: 'user', name: 'Test User', openId: 'test123' },
+        user: { id: 1, role: 'customer', name: 'Test User', openId: 'test123' },
         req: {} as any,
         res: {} as any,
       });
@@ -165,7 +165,7 @@ describe('Reviews Router', () => {
   describe('updateStatus (admin)', () => {
     it('should require admin role', async () => {
       const caller = appRouter.createCaller({
-        user: { id: 1, role: 'user', name: 'Test User', openId: 'test123' },
+        user: { id: 1, role: 'customer', name: 'Test User', openId: 'test123' },
         req: {} as any,
         res: {} as any,
       });
@@ -182,7 +182,7 @@ describe('Reviews Router', () => {
   describe('delete (admin)', () => {
     it('should require admin role', async () => {
       const caller = appRouter.createCaller({
-        user: { id: 1, role: 'user', name: 'Test User', openId: 'test123' },
+        user: { id: 1, role: 'customer', name: 'Test User', openId: 'test123' },
         req: {} as any,
         res: {} as any,
       });

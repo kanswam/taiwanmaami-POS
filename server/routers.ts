@@ -1700,6 +1700,15 @@ export const appRouter = router({
       return db.getAllDiscounts();
     }),
 
+    deleteDiscount: adminProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        const dbInstance = await getDb();
+        if (!dbInstance) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
+        await dbInstance!.delete(discounts).where(eq(discounts.id, input.id));
+        return { success: true };
+      }),
+
     // Add-on management
     getAllAddons: adminProcedure.query(async () => {
       const dbInstance = await getDb();
@@ -3419,7 +3428,10 @@ export const appRouter = router({
 
         const customerStats: Record<string, { orders: number; totalSpent: number }> = {};
         matchingOrders.forEach(order => {
-          const key = order.customerPhone || `user_${order.userId}`;
+          // Only count registered users (userId > 0) for repeat customer metrics
+          // Guest orders (userId = 0 or null) are excluded from repeat customer calculation
+          if (!order.userId || order.userId === 0) return;
+          const key = `user_${order.userId}`;
           if (!customerStats[key]) customerStats[key] = { orders: 0, totalSpent: 0 };
           customerStats[key].orders += 1;
           customerStats[key].totalSpent += order.totalAmount;
@@ -3664,6 +3676,210 @@ export const appRouter = router({
         };
 
         return { summary, details };
+      }),
+  }),
+
+  // Customer management routes
+  customers: router({
+    // Get all customers (registered users + aggregated guest data)
+    getAll: adminProcedure
+      .input(z.object({
+        search: z.string().optional(),
+        type: z.enum(['all', 'registered', 'guest']).default('all'),
+        limit: z.number().default(100),
+        offset: z.number().default(0),
+      }).optional())
+      .query(async ({ input }) => {
+        const dbInstance = await getDb();
+        if (!dbInstance) return { customers: [], total: 0 };
+
+        // Get registered users
+        let registeredUsers: any[] = [];
+        if (input?.type !== 'guest') {
+          let userQuery = dbInstance.select().from(users);
+          if (input?.search) {
+            userQuery = userQuery.where(
+              or(
+                sql`${users.name} LIKE ${`%${input.search}%`}`,
+                sql`${users.phone} LIKE ${`%${input.search}%`}`,
+                sql`${users.email} LIKE ${`%${input.search}%`}`
+              )
+            ) as any;
+          }
+          registeredUsers = await userQuery;
+        }
+
+        // Get order stats for registered users
+        const userOrderStats: Record<number, { orders: number; totalSpent: number; lastOrder: Date | null }> = {};
+        const allOrders = await dbInstance.select().from(orders).where(sql`${orders.orderStatus} != 'cancelled'`);
+        
+        allOrders.forEach(order => {
+          if (order.userId && order.userId > 0) {
+            if (!userOrderStats[order.userId]) {
+              userOrderStats[order.userId] = { orders: 0, totalSpent: 0, lastOrder: null };
+            }
+            userOrderStats[order.userId].orders += 1;
+            userOrderStats[order.userId].totalSpent += order.totalAmount;
+            if (!userOrderStats[order.userId].lastOrder || new Date(order.createdAt) > userOrderStats[order.userId].lastOrder!) {
+              userOrderStats[order.userId].lastOrder = new Date(order.createdAt);
+            }
+          }
+        });
+
+        // Build registered customer list
+        const registeredCustomers = registeredUsers.map(user => ({
+          id: user.id,
+          type: 'registered' as const,
+          name: user.name,
+          email: user.email,
+          phone: user.phone,
+          role: user.role,
+          storeCredit: user.storeCredit || 0,
+          loyaltyPoints: user.loyaltyPoints || 0,
+          stampCount: user.stampCount || 0,
+          totalOrders: userOrderStats[user.id]?.orders || 0,
+          totalSpent: userOrderStats[user.id]?.totalSpent || 0,
+          lastOrderDate: userOrderStats[user.id]?.lastOrder?.toISOString() || null,
+          createdAt: user.createdAt,
+        }));
+
+        // Get guest customers (aggregated from orders)
+        let guestCustomers: any[] = [];
+        if (input?.type !== 'registered') {
+          const guestStats: Record<string, { name: string; phone: string; orders: number; totalSpent: number; lastOrder: Date | null }> = {};
+          
+          allOrders.forEach(order => {
+            if ((!order.userId || order.userId === 0) && order.customerPhone) {
+              const key = order.customerPhone;
+              if (!guestStats[key]) {
+                guestStats[key] = { 
+                  name: order.customerName || 'Guest', 
+                  phone: order.customerPhone,
+                  orders: 0, 
+                  totalSpent: 0,
+                  lastOrder: null
+                };
+              }
+              guestStats[key].orders += 1;
+              guestStats[key].totalSpent += order.totalAmount;
+              if (order.customerName && guestStats[key].name === 'Guest') {
+                guestStats[key].name = order.customerName;
+              }
+              if (!guestStats[key].lastOrder || new Date(order.createdAt) > guestStats[key].lastOrder!) {
+                guestStats[key].lastOrder = new Date(order.createdAt);
+              }
+            }
+          });
+
+          guestCustomers = Object.entries(guestStats)
+            .filter(([phone]) => !input?.search || phone.includes(input.search) || guestStats[phone].name.toLowerCase().includes(input.search.toLowerCase()))
+            .map(([phone, stats]) => ({
+              id: `guest_${phone}`,
+              type: 'guest' as const,
+              name: stats.name,
+              email: null,
+              phone: stats.phone,
+              role: null,
+              storeCredit: 0,
+              loyaltyPoints: 0,
+              stampCount: 0,
+              totalOrders: stats.orders,
+              totalSpent: stats.totalSpent,
+              lastOrderDate: stats.lastOrder?.toISOString() || null,
+              createdAt: null,
+            }));
+        }
+
+        // Combine and sort
+        let allCustomers = [...registeredCustomers, ...guestCustomers];
+        allCustomers.sort((a, b) => b.totalSpent - a.totalSpent);
+
+        const total = allCustomers.length;
+        const customers = allCustomers.slice(input?.offset || 0, (input?.offset || 0) + (input?.limit || 100));
+
+        return { customers, total };
+      }),
+
+    // Add a new customer manually
+    create: adminProcedure
+      .input(z.object({
+        name: z.string(),
+        phone: z.string(),
+        email: z.string().optional(),
+        notes: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const dbInstance = await getDb();
+        if (!dbInstance) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
+
+        // Check if phone already exists
+        const existing = await dbInstance.select().from(users).where(eq(users.phone, input.phone));
+        if (existing.length > 0) {
+          throw new TRPCError({ code: 'CONFLICT', message: 'A customer with this phone number already exists' });
+        }
+
+        // Create a new user with a placeholder openId
+        const [result] = await dbInstance.insert(users).values({
+          openId: `manual_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+          name: input.name,
+          phone: input.phone,
+          email: input.email || null,
+          loginMethod: 'manual',
+          role: 'customer',
+        });
+
+        return { success: true, customerId: result.insertId };
+      }),
+
+    // Update customer details
+    update: adminProcedure
+      .input(z.object({
+        id: z.number(),
+        name: z.string().optional(),
+        phone: z.string().optional(),
+        email: z.string().optional(),
+        storeCredit: z.number().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const dbInstance = await getDb();
+        if (!dbInstance) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
+
+        const { id, ...updateData } = input;
+        const cleanData = Object.fromEntries(
+          Object.entries(updateData).filter(([_, v]) => v !== undefined)
+        );
+
+        if (Object.keys(cleanData).length > 0) {
+          await dbInstance.update(users).set(cleanData).where(eq(users.id, id));
+        }
+
+        return { success: true };
+      }),
+
+    // Get customer order history
+    getOrderHistory: adminProcedure
+      .input(z.object({
+        customerId: z.number().optional(),
+        customerPhone: z.string().optional(),
+      }))
+      .query(async ({ input }) => {
+        const dbInstance = await getDb();
+        if (!dbInstance) return [];
+
+        let customerOrders;
+        if (input.customerId) {
+          customerOrders = await dbInstance.select().from(orders)
+            .where(eq(orders.userId, input.customerId))
+            .orderBy(desc(orders.createdAt));
+        } else if (input.customerPhone) {
+          customerOrders = await dbInstance.select().from(orders)
+            .where(eq(orders.customerPhone, input.customerPhone))
+            .orderBy(desc(orders.createdAt));
+        } else {
+          return [];
+        }
+
+        return customerOrders;
       }),
   }),
 });
