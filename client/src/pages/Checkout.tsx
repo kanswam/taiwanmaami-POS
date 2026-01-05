@@ -566,15 +566,20 @@ export default function Checkout() {
                       <span>{formatPrice(gst.stateGst)}</span>
                     </div>
                     {state.orderType === 'delivery' && (
-                      <div className="flex justify-between">
-                        <span>Delivery</span>
-                        <span>{formatPrice(5000)}</span>
-                      </div>
+                      <>
+                        <div className="flex justify-between">
+                          <span>Delivery (via Porter)</span>
+                          <span className="text-muted-foreground">Actual charges</span>
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Delivery will be booked through Porter. Actual delivery charges will be added to your bill (no GST on delivery).
+                        </p>
+                      </>
                     )}
                     <div className="border-t pt-2 mt-2">
                       <div className="flex justify-between font-semibold text-lg">
                         <span>Total</span>
-                        <span>{formatPrice(displayTotal + (state.orderType === 'delivery' ? 5000 : 0))}</span>
+                        <span>{formatPrice(displayTotal)}{state.orderType === 'delivery' && ' + Delivery'}</span>
                       </div>
                     </div>
                   </div>
@@ -879,10 +884,21 @@ export default function Checkout() {
                       <span>-{formatPrice(state.discountAmount)}</span>
                     </div>
                   )}
+                  {state.orderType === 'delivery' && (
+                    <>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Delivery (via Porter)</span>
+                        <span className="text-muted-foreground">Actual charges</span>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        Delivery booked via Porter. Actual charges added to bill (no GST).
+                      </p>
+                    </>
+                  )}
                   <hr />
                   <div className="flex justify-between text-lg font-semibold">
                     <span>Total</span>
-                    <span>{formatPrice(displayTotal)}</span>
+                    <span>{formatPrice(displayTotal)}{state.orderType === 'delivery' && ' + Delivery'}</span>
                   </div>
                 </div>
 

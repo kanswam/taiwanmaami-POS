@@ -87,7 +87,11 @@ export default function Admin() {
             {/* Menu Management Group */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant={['products', 'categories', 'addons'].includes(activeTab) ? 'default' : 'ghost'} size="sm" className="gap-2">
+                <Button 
+                  variant={['products', 'categories', 'addons'].includes(activeTab) ? 'default' : 'outline'} 
+                  size="sm" 
+                  className={`gap-2 ${!['products', 'categories', 'addons'].includes(activeTab) ? 'border-transparent hover:bg-accent' : ''}`}
+                >
                   <Package className="w-4 h-4" />
                   Menu
                   <ChevronDown className="w-3 h-3" />
@@ -109,7 +113,11 @@ export default function Admin() {
             {/* Orders & Operations */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant={['orders', 'tables', 'kot-reports'].includes(activeTab) ? 'default' : 'ghost'} size="sm" className="gap-2">
+                <Button 
+                  variant={['orders', 'tables', 'kot-reports'].includes(activeTab) ? 'default' : 'outline'} 
+                  size="sm" 
+                  className={`gap-2 ${!['orders', 'tables', 'kot-reports'].includes(activeTab) ? 'border-transparent hover:bg-accent' : ''}`}
+                >
                   <ShoppingCart className="w-4 h-4" />
                   Orders
                   <ChevronDown className="w-3 h-3" />
@@ -131,7 +139,11 @@ export default function Admin() {
             {/* Pricing & Promotions */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant={['discounts', 'bulk-pricing'].includes(activeTab) ? 'default' : 'ghost'} size="sm" className="gap-2">
+                <Button 
+                  variant={['discounts', 'bulk-pricing'].includes(activeTab) ? 'default' : 'outline'} 
+                  size="sm" 
+                  className={`gap-2 ${!['discounts', 'bulk-pricing'].includes(activeTab) ? 'border-transparent hover:bg-accent' : ''}`}
+                >
                   <Tag className="w-4 h-4" />
                   Pricing
                   <ChevronDown className="w-3 h-3" />
@@ -150,7 +162,11 @@ export default function Admin() {
             {/* Customers & Feedback */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant={['customers', 'reviews', 'complaints'].includes(activeTab) ? 'default' : 'ghost'} size="sm" className="gap-2">
+                <Button 
+                  variant={['customers', 'reviews', 'complaints'].includes(activeTab) ? 'default' : 'outline'} 
+                  size="sm" 
+                  className={`gap-2 ${!['customers', 'reviews', 'complaints'].includes(activeTab) ? 'border-transparent hover:bg-accent' : ''}`}
+                >
                   <Users className="w-4 h-4" />
                   Customers
                   <ChevronDown className="w-3 h-3" />
@@ -172,7 +188,11 @@ export default function Admin() {
             {/* Reports & Analytics */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant={['analytics', 'audit'].includes(activeTab) ? 'default' : 'ghost'} size="sm" className="gap-2">
+                <Button 
+                  variant={['analytics', 'audit'].includes(activeTab) ? 'default' : 'outline'} 
+                  size="sm" 
+                  className={`gap-2 ${!['analytics', 'audit'].includes(activeTab) ? 'border-transparent hover:bg-accent' : ''}`}
+                >
                   <TrendingUp className="w-4 h-4" />
                   Reports
                   <ChevronDown className="w-3 h-3" />
@@ -191,7 +211,11 @@ export default function Admin() {
             {/* Settings & Tools */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant={['settings', 'bulk-upload'].includes(activeTab) ? 'default' : 'ghost'} size="sm" className="gap-2">
+                <Button 
+                  variant={['settings', 'bulk-upload'].includes(activeTab) ? 'default' : 'outline'} 
+                  size="sm" 
+                  className={`gap-2 ${!['settings', 'bulk-upload'].includes(activeTab) ? 'border-transparent hover:bg-accent' : ''}`}
+                >
                   <Settings className="w-4 h-4" />
                   Settings
                   <ChevronDown className="w-3 h-3" />

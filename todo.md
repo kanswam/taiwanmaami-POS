@@ -1522,3 +1522,22 @@
 - [x] Dine In: 10-30 mins, Delivery: 30-60 mins, Pickup: 10-30 mins
 - [x] Show specific estimate at checkout based on cart items
 - [x] Drinks only = 10-15 mins, Food = 20-30 mins, Delivery adds time
+
+
+## Phase 50 - Order Type Selector, Delivery Charges & Admin Tab Fix (Jan 5, 2026)
+
+### Order Type Selector Fix
+- [x] Make Dine In/Delivery/Pickup buttons clickable on menu page
+- [x] Allow customers to change order type before checkout
+- [x] Fixed useEffect overriding user selection from URL parameter
+
+### Delivery Charges
+- [x] Add delivery charge field to checkout for delivery orders
+- [x] Delivery charges are actual Porter charges (no GST added)
+- [x] Show message: "Delivery via Porter - charges will be added to your bill"
+- [x] Updated both guest and logged-in checkout views
+
+### Admin Tab Highlight Bug
+- [x] Fix Menu dropdown staying highlighted when other tabs are selected
+- [x] Ensure correct tab is highlighted based on active selection
+- [x] Changed all dropdown buttons to use outline variant with transparent border

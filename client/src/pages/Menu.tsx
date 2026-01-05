@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { useSearch } from 'wouter';
 import { Header } from '@/components/Header';
 import { ProductCard } from '@/components/ProductCard';
@@ -72,9 +72,11 @@ export default function Menu() {
     { enabled: !!tableFromUrl }
   );
   
-  // Auto-set order type from URL params
+  // Auto-set order type from URL params - only on initial mount
+  const initialOrderTypeSet = useRef(false);
   useEffect(() => {
-    if (orderTypeFromUrl) {
+    if (orderTypeFromUrl && !initialOrderTypeSet.current) {
+      initialOrderTypeSet.current = true;
       if (orderTypeFromUrl === 'instore') setOrderType('instore');
       else if (orderTypeFromUrl === 'delivery') setOrderType('delivery');
       else if (orderTypeFromUrl === 'pickup') setOrderType('pickup');
