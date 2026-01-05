@@ -1506,3 +1506,19 @@
 - [x] Show icons for In-Store, Delivery, Pickup with selected state
 - [x] Allow customers to switch order type from menu page
 - [x] Added prominent styling with scale effect on selected option
+
+
+## Phase 49 - Palladium Pickup Restrictions & Prep Time (Jan 5, 2026)
+
+### Palladium Pickup Availability
+- [x] Add availableAtPalladium boolean field to products table
+- [x] Add outlet selector when Pickup is chosen (Palladium vs T Nagar)
+- [x] Grey out unavailable products at Palladium with "Not at Palladium" overlay
+- [x] Add admin toggle in Products tab to control Palladium availability
+- [x] Default: Iced Beverages, Mochis, Boba Crème Caramel = available; Food = not available
+
+### Preparation Time Display
+- [x] Show estimated times on order type selector cards
+- [x] Dine In: 10-30 mins, Delivery: 30-60 mins, Pickup: 10-30 mins
+- [x] Show specific estimate at checkout based on cart items
+- [x] Drinks only = 10-15 mins, Food = 20-30 mins, Delivery adds time

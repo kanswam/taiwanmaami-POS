@@ -114,6 +114,7 @@ export const products = mysqlTable("products", {
   isInStock: boolean("isInStock").default(true).notNull(),
   availableInstore: boolean("availableInstore").default(true).notNull(),
   availableDelivery: boolean("availableDelivery").default(true).notNull(),
+  availableAtPalladium: boolean("availableAtPalladium").default(true).notNull(), // For pickup at Palladium outlet
   displayOrder: int("displayOrder").default(0).notNull(),
   isActive: boolean("isActive").default(true).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),

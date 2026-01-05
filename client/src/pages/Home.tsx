@@ -187,9 +187,13 @@ export default function Home() {
                   <Store className="w-8 h-8 text-primary group-hover:text-white" />
                 </div>
                 <h3 className="font-bold text-xl mb-2">Dine In-Store</h3>
-                <p className="text-sm text-muted-foreground mb-4 flex-grow">
+                <p className="text-sm text-muted-foreground mb-2 flex-grow">
                   Visit our outlets and enjoy freshly made bubble tea
                 </p>
+                <div className="flex items-center justify-center gap-1 text-xs text-muted-foreground mb-3">
+                  <Clock className="w-3 h-3" />
+                  <span>Ready in 10-30 mins</span>
+                </div>
                 <div className="text-primary font-medium flex items-center justify-center gap-2 mt-auto">
                   Order In-Store <ArrowRight className="w-4 h-4" />
                 </div>
@@ -203,9 +207,13 @@ export default function Home() {
                   <Truck className="w-8 h-8 text-primary group-hover:text-white" />
                 </div>
                 <h3 className="font-bold text-xl mb-2">Home Delivery</h3>
-                <p className="text-sm text-muted-foreground mb-4 flex-grow">
+                <p className="text-sm text-muted-foreground mb-2 flex-grow">
                   Get your favorites delivered to your doorstep
                 </p>
+                <div className="flex items-center justify-center gap-1 text-xs text-muted-foreground mb-3">
+                  <Clock className="w-3 h-3" />
+                  <span>30-60 mins (varies by distance)</span>
+                </div>
                 <div className="text-primary font-medium flex items-center justify-center gap-2 mt-auto">
                   Order Delivery <ArrowRight className="w-4 h-4" />
                 </div>
@@ -219,9 +227,13 @@ export default function Home() {
                   <ShoppingBag className="w-8 h-8 text-primary group-hover:text-white" />
                 </div>
                 <h3 className="font-bold text-xl mb-2">Quick Pickup</h3>
-                <p className="text-sm text-muted-foreground mb-4 flex-grow">
+                <p className="text-sm text-muted-foreground mb-2 flex-grow">
                   Order ahead and pick up at your convenience
                 </p>
+                <div className="flex items-center justify-center gap-1 text-xs text-muted-foreground mb-3">
+                  <Clock className="w-3 h-3" />
+                  <span>Ready in 10-30 mins</span>
+                </div>
                 <div className="text-primary font-medium flex items-center justify-center gap-2 mt-auto">
                   Order Pickup <ArrowRight className="w-4 h-4" />
                 </div>

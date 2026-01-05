@@ -162,6 +162,13 @@
       "when": 1767590215524,
       "tag": "0022_yellow_nightshade",
       "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "5",
+      "when": 1767594306903,
+      "tag": "0023_ordinary_loki",
+      "breakpoints": true
     }
   ]
 }

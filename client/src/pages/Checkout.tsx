@@ -886,6 +886,33 @@ export default function Checkout() {
                   </div>
                 </div>
 
+                {/* Estimated Preparation Time */}
+                <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                  <div className="flex items-center gap-2 text-sm">
+                    <Clock className="w-4 h-4 text-blue-600" />
+                    <span className="text-blue-800 font-medium">
+                      Estimated Time: {(() => {
+                        // Check if order has food items (typically in food category)
+                        const hasFoodItems = state.items.some(item => 
+                          item.productName.toLowerCase().includes('rice') ||
+                          item.productName.toLowerCase().includes('noodle') ||
+                          item.productName.toLowerCase().includes('bread') ||
+                          item.productName.toLowerCase().includes('omelette')
+                        );
+                        if (state.orderType === 'delivery') {
+                          return hasFoodItems ? '45-75 mins' : '30-60 mins';
+                        }
+                        return hasFoodItems ? '20-30 mins' : '10-15 mins';
+                      })()}
+                    </span>
+                  </div>
+                  <p className="text-xs text-blue-600 mt-1">
+                    {state.orderType === 'delivery' 
+                      ? 'Includes preparation + delivery time' 
+                      : 'Preparation time (may vary during busy hours)'}
+                  </p>
+                </div>
+
                 {/* Stamp Card Preview for logged-in users */}
                 {isAuthenticated && (
                   <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">

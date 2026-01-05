@@ -1,0 +1,30 @@
+{
+  "query": "SELECT c.id, c.name, COUNT(p.id) as product_count \nFROM categories c \nLEFT JOIN subcategories s ON s.categoryId = c.id \nLEFT JOIN products p ON p.subcategoryId = s.id \nGROUP BY c.id, c.name;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT c.id, c.name, COUNT(p.id) as product_count \nFROM categories c \nLEFT JOIN subcategories s ON s.categoryId = c.id \nLEFT JOIN products p ON p.subcategoryId = s.id \nGROUP BY c.id, c.name;",
+  "rows": [
+    {
+      "id": "2",
+      "name": "Hot Beverages 熱飲",
+      "product_count": "12"
+    },
+    {
+      "id": "4",
+      "name": "Asian Rice • Noodle • Bread 主餐",
+      "product_count": "19"
+    },
+    {
+      "id": "3",
+      "name": "Asian Sweet Bites 甜品",
+      "product_count": "20"
+    },
+    {
+      "id": "1",
+      "name": "Iced Beverages",
+      "product_count": "65"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\tproduct_count\n2\tHot Beverages 熱飲\t12\n4\tAsian Rice • Noodle • Bread 主餐\t19\n3\tAsian Sweet Bites 甜品\t20\n1\tIced Beverages\t65\n",
+  "stderr": "",
+  "execution_time_ms": 1548
+}

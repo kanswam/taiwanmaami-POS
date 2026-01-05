@@ -1187,6 +1187,7 @@ export const appRouter = router({
         isInStock: z.boolean().optional(),
         availableInstore: z.boolean().optional(),
         availableDelivery: z.boolean().optional(),
+        availableAtPalladium: z.boolean().optional(),
         displayOrder: z.number().optional(),
         isActive: z.boolean().optional(),
         subcategoryId: z.number().optional(),

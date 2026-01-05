@@ -5,6 +5,7 @@ interface CartState {
   items: CartItem[];
   orderType: 'instore' | 'delivery' | 'pickup';
   tableNumber: string | null; // For in-store orders
+  pickupOutlet: 'palladium' | 'tnagar' | null; // For pickup orders
   discountCode: string | null;
   discountAmount: number;
   loyaltyPointsUsed: number;
@@ -18,6 +19,7 @@ type CartAction =
   | { type: 'CLEAR_CART' }
   | { type: 'SET_ORDER_TYPE'; payload: 'instore' | 'delivery' | 'pickup' }
   | { type: 'SET_TABLE_NUMBER'; payload: string | null }
+  | { type: 'SET_PICKUP_OUTLET'; payload: 'palladium' | 'tnagar' | null }
   | { type: 'APPLY_DISCOUNT'; payload: { code: string; amount: number } }
   | { type: 'REMOVE_DISCOUNT' }
   | { type: 'USE_LOYALTY_POINTS'; payload: number }
@@ -27,6 +29,7 @@ const initialState: CartState = {
   items: [],
   orderType: 'delivery',
   tableNumber: null,
+  pickupOutlet: null,
   discountCode: null,
   discountAmount: 0,
   loyaltyPointsUsed: 0,
@@ -111,6 +114,8 @@ function cartReducer(state: CartState, action: CartAction): CartState {
     }
     case 'SET_TABLE_NUMBER':
       return { ...state, tableNumber: action.payload };
+    case 'SET_PICKUP_OUTLET':
+      return { ...state, pickupOutlet: action.payload };
     case 'APPLY_DISCOUNT':
       return { ...state, discountCode: action.payload.code, discountAmount: action.payload.amount };
     case 'REMOVE_DISCOUNT':
@@ -132,6 +137,7 @@ interface CartContextValue {
   clearCart: () => void;
   setOrderType: (type: 'instore' | 'delivery' | 'pickup') => void;
   setTableNumber: (tableNumber: string | null) => void;
+  setPickupOutlet: (outlet: 'palladium' | 'tnagar' | null) => void;
   applyDiscount: (code: string, amount: number) => void;
   removeDiscount: () => void;
   useLoyaltyPoints: (points: number) => void;
@@ -140,6 +146,7 @@ interface CartContextValue {
   total: number;
   itemCount: number;
   tableNumber: string | null;
+  pickupOutlet: 'palladium' | 'tnagar' | null;
   lastAddedItem: { productId: number; subcategoryId: number } | null;
 }
 
@@ -179,6 +186,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     clearCart: () => dispatch({ type: 'CLEAR_CART' }),
     setOrderType: (type) => dispatch({ type: 'SET_ORDER_TYPE', payload: type }),
     setTableNumber: (tableNumber) => dispatch({ type: 'SET_TABLE_NUMBER', payload: tableNumber }),
+    setPickupOutlet: (outlet) => dispatch({ type: 'SET_PICKUP_OUTLET', payload: outlet }),
     applyDiscount: (code, amount) => dispatch({ type: 'APPLY_DISCOUNT', payload: { code, amount } }),
     removeDiscount: () => dispatch({ type: 'REMOVE_DISCOUNT' }),
     useLoyaltyPoints: (points) => dispatch({ type: 'USE_LOYALTY_POINTS', payload: points }),
@@ -187,6 +195,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     total,
     itemCount,
     tableNumber: state.tableNumber,
+    pickupOutlet: state.pickupOutlet,
     lastAddedItem: state.lastAddedItem,
   };
 

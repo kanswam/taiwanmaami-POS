@@ -698,6 +698,7 @@ function ProductEditDialog({ product, onUpdate }: { product: any; onUpdate: () =
     isVegetarian: product.isVegetarian ?? true,
     isVegan: product.isVegan ?? false,
     containsEgg: product.containsEgg ?? false,
+    availableAtPalladium: product.availableAtPalladium ?? true,
   });
   // Multi-image support
   const [images, setImages] = useState<(string | null)[]>([
@@ -766,6 +767,7 @@ function ProductEditDialog({ product, onUpdate }: { product: any; onUpdate: () =
       isVegetarian: formData.isVegetarian,
       isVegan: formData.isVegan,
       containsEgg: formData.containsEgg,
+      availableAtPalladium: formData.availableAtPalladium,
       imageUrl: images[0] || null,
       imageUrl2: images[1] || null,
       imageUrl3: images[2] || null,
@@ -896,6 +898,24 @@ function ProductEditDialog({ product, onUpdate }: { product: any; onUpdate: () =
                   Contains Egg
                 </span>
               </div>
+            </div>
+          </div>
+
+          {/* Outlet Availability */}
+          <div>
+            <Label>Outlet Availability</Label>
+            <div className="mt-2 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+              <div className="flex items-center gap-2">
+                <Switch
+                  checked={formData.availableAtPalladium}
+                  onCheckedChange={(checked) => setFormData({ ...formData, availableAtPalladium: checked })}
+                />
+                <span className="text-sm font-medium">Available at Palladium Mall</span>
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                When disabled, this product will be greyed out for Palladium pickup orders.
+                T Nagar has all products available.
+              </p>
             </div>
           </div>
 

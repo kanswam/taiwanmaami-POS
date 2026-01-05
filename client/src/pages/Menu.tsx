@@ -64,7 +64,7 @@ export default function Menu() {
   const [selectedSubcategory, setSelectedSubcategory] = useState<string | null>(initialSubcategory);
   const [searchQuery, setSearchQuery] = useState('');
   const [showAddToOrderBanner, setShowAddToOrderBanner] = useState(false);
-  const { state, setOrderType, setTableNumber, tableNumber, itemCount, total } = useCart();
+  const { state, setOrderType, setTableNumber, tableNumber, setPickupOutlet, pickupOutlet, itemCount, total } = useCart();
   
   // Check for active order if table number is in URL
   const { data: activeOrder } = trpc.orders.getActiveOrderForTable.useQuery(
@@ -323,6 +323,15 @@ export default function Menu() {
   const renderProductGrid = (products: typeof subcategoryProducts) => {
     const subcategory = selectedSubcategory ? getSubcategory(selectedSubcategory) : null;
     
+    // Check if product is available at selected pickup outlet
+    const isProductAvailableAtOutlet = (product: typeof products[0]) => {
+      if (state.orderType !== 'pickup') return true;
+      if (!pickupOutlet) return true; // No outlet selected yet, show all
+      if (pickupOutlet === 'tnagar') return true; // All products available at T Nagar
+      // Palladium - check availableAtPalladium field
+      return (product as any).availableAtPalladium !== false;
+    };
+    
     return (
       <div className="space-y-6">
         {renderBreadcrumb()}
@@ -334,26 +343,47 @@ export default function Menu() {
             )}
           </div>
         )}
+        
+        {/* Palladium availability notice */}
+        {state.orderType === 'pickup' && pickupOutlet === 'palladium' && (
+          <div className="flex items-center gap-2 px-4 py-3 bg-amber-50 border border-amber-200 rounded-lg">
+            <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0" />
+            <span className="text-sm text-amber-800">
+              <strong>Palladium Mall:</strong> Only iced beverages, mochis, and boba crème caramel are available for pickup. Hot beverages and food items are greyed out.
+            </span>
+          </div>
+        )}
+        
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
           {products.map((product) => {
             const sub = getSubcategoryById(product.subcategoryId);
             if (!sub) return null;
             // Find the category for this product's subcategory
             const cat = menuData?.categories.find(c => c.id === sub.categoryId);
+            const isAvailable = isProductAvailableAtOutlet(product);
+            
             return (
-              <ProductCard
-                key={product.id}
-                product={{
-                  ...product,
-                  imageUrl: product.imageUrl || PRODUCT_IMAGES[product.slug] || null,
-                  imageUrl2: (product as any).imageUrl2 || null,
-                  imageUrl3: (product as any).imageUrl3 || null,
-                }}
-                subcategory={sub}
-                category={cat}
-                isDelivery={state.orderType !== 'instore'}
-                orderType={state.orderType}
-              />
+              <div key={product.id} className={`relative ${!isAvailable ? 'opacity-50 pointer-events-none' : ''}`}>
+                <ProductCard
+                  product={{
+                    ...product,
+                    imageUrl: product.imageUrl || PRODUCT_IMAGES[product.slug] || null,
+                    imageUrl2: (product as any).imageUrl2 || null,
+                    imageUrl3: (product as any).imageUrl3 || null,
+                  }}
+                  subcategory={sub}
+                  category={cat}
+                  isDelivery={state.orderType !== 'instore'}
+                  orderType={state.orderType}
+                />
+                {!isAvailable && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/20 rounded-xl">
+                    <span className="bg-white/90 text-xs font-medium px-2 py-1 rounded text-muted-foreground">
+                      Not at Palladium
+                    </span>
+                  </div>
+                )}
+              </div>
             );
           })}
         </div>
@@ -454,6 +484,35 @@ export default function Menu() {
               </div>
             )}
 
+            {/* Pickup outlet selector */}
+            {state.orderType === 'pickup' && (
+              <div className="flex items-center gap-3">
+                <span className="text-sm font-medium text-muted-foreground">Pickup from:</span>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setPickupOutlet('palladium')}
+                    className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
+                      pickupOutlet === 'palladium'
+                        ? 'bg-primary text-white shadow-md'
+                        : 'bg-white border border-border hover:border-primary/50 text-muted-foreground hover:text-primary'
+                    }`}
+                  >
+                    Palladium Mall
+                  </button>
+                  <button
+                    onClick={() => setPickupOutlet('tnagar')}
+                    className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
+                      pickupOutlet === 'tnagar'
+                        ? 'bg-primary text-white shadow-md'
+                        : 'bg-white border border-border hover:border-primary/50 text-muted-foreground hover:text-primary'
+                    }`}
+                  >
+                    T Nagar
+                  </button>
+                </div>
+              </div>
+            )}
+
             {/* Delivery radius notice */}
             {state.orderType === 'delivery' && (
               deliveryEnabled ? (
@@ -535,20 +594,30 @@ export default function Menu() {
                   const sub = getSubcategoryById(product.subcategoryId);
                   if (!sub) return null;
                   const cat = getCategoryById(sub.categoryId);
+                  // Check Palladium availability for search results too
+                  const isAvailable = state.orderType !== 'pickup' || !pickupOutlet || pickupOutlet === 'tnagar' || (product as any).availableAtPalladium !== false;
                   return (
-                    <ProductCard
-                      key={product.id}
-                      product={{
-                        ...product,
-                        imageUrl: product.imageUrl || PRODUCT_IMAGES[product.slug] || null,
-                        imageUrl2: (product as any).imageUrl2 || null,
-                        imageUrl3: (product as any).imageUrl3 || null,
-                      }}
-                      subcategory={sub}
-                      category={cat}
-                      isDelivery={state.orderType !== 'instore'}
-                      orderType={state.orderType}
-                    />
+                    <div key={product.id} className={`relative ${!isAvailable ? 'opacity-50 pointer-events-none' : ''}`}>
+                      <ProductCard
+                        product={{
+                          ...product,
+                          imageUrl: product.imageUrl || PRODUCT_IMAGES[product.slug] || null,
+                          imageUrl2: (product as any).imageUrl2 || null,
+                          imageUrl3: (product as any).imageUrl3 || null,
+                        }}
+                        subcategory={sub}
+                        category={cat}
+                        isDelivery={state.orderType !== 'instore'}
+                        orderType={state.orderType}
+                      />
+                      {!isAvailable && (
+                        <div className="absolute inset-0 flex items-center justify-center bg-black/20 rounded-xl">
+                          <span className="bg-white/90 text-xs font-medium px-2 py-1 rounded text-muted-foreground">
+                            Not at Palladium
+                          </span>
+                        </div>
+                      )}
+                    </div>
                   );
                 })}
               </div>
