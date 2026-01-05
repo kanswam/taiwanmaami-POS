@@ -398,27 +398,47 @@ export default function Menu() {
       {/* Order Type Toggle & Search */}
       <div className="sticky top-16 z-40 bg-background border-b border-border">
         <div className="container py-3">
+          {/* Order Type Selector - Prominent with icons */}
+          <div className="mb-4 p-3 bg-primary/5 border border-primary/20 rounded-xl">
+            <p className="text-xs font-medium text-muted-foreground mb-2 text-center">Ordering for:</p>
+            <div className="flex gap-2 justify-center">
+              <button
+                onClick={() => setOrderType('instore')}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
+                  state.orderType === 'instore'
+                    ? 'bg-primary text-white shadow-md scale-105'
+                    : 'bg-white border border-border hover:border-primary/50 text-muted-foreground hover:text-primary'
+                }`}
+              >
+                <Home className="w-5 h-5" />
+                <span>Dine In</span>
+              </button>
+              <button
+                onClick={() => setOrderType('delivery')}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
+                  state.orderType === 'delivery'
+                    ? 'bg-primary text-white shadow-md scale-105'
+                    : 'bg-white border border-border hover:border-primary/50 text-muted-foreground hover:text-primary'
+                }`}
+              >
+                <Truck className="w-5 h-5" />
+                <span>Delivery</span>
+              </button>
+              <button
+                onClick={() => setOrderType('pickup')}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
+                  state.orderType === 'pickup'
+                    ? 'bg-primary text-white shadow-md scale-105'
+                    : 'bg-white border border-border hover:border-primary/50 text-muted-foreground hover:text-primary'
+                }`}
+              >
+                <Store className="w-5 h-5" />
+                <span>Pickup</span>
+              </button>
+            </div>
+          </div>
+
           <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-            <Tabs
-              value={state.orderType}
-              onValueChange={(v) => setOrderType(v as 'delivery' | 'pickup' | 'instore')}
-              className="w-full sm:w-auto"
-            >
-              <TabsList className="grid w-full sm:w-auto grid-cols-3">
-                <TabsTrigger value="instore" className="gap-2">
-                  <Home className="w-4 h-4" />
-                  In-store
-                </TabsTrigger>
-                <TabsTrigger value="delivery" className="gap-2">
-                  <Truck className="w-4 h-4" />
-                  Delivery
-                </TabsTrigger>
-                <TabsTrigger value="pickup" className="gap-2">
-                  <Store className="w-4 h-4" />
-                  Pickup
-                </TabsTrigger>
-              </TabsList>
-            </Tabs>
 
             {/* Table Number for In-store */}
             {state.orderType === 'instore' && (

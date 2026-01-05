@@ -1497,3 +1497,12 @@
 - [x] Change "Order Now" button to scroll to order options section
 - [x] Update Menu link in header to show order options first (/#order-options)
 - [x] Ensure customers see the three options before menu
+
+
+## Phase 48 - Order Type Indicator on Menu (Jan 5, 2026)
+
+### Order Type Visual Indicator
+- [x] Add order type selector/indicator at top of menu page
+- [x] Show icons for In-Store, Delivery, Pickup with selected state
+- [x] Allow customers to switch order type from menu page
+- [x] Added prominent styling with scale effect on selected option
