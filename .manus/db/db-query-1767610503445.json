@@ -1,0 +1,25 @@
+{
+  "query": "SELECT id, orderNumber, orderStatus FROM orders ORDER BY id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT id, orderNumber, orderStatus FROM orders ORDER BY id;",
+  "rows": [
+    {
+      "id": "630001",
+      "orderNumber": "00001",
+      "orderStatus": "completed"
+    },
+    {
+      "id": "660010",
+      "orderNumber": "00002",
+      "orderStatus": "completed"
+    },
+    {
+      "id": "660011",
+      "orderNumber": "00003",
+      "orderStatus": "completed"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\torderNumber\torderStatus\n630001\t00001\tcompleted\n660010\t00002\tcompleted\n660011\t00003\tcompleted\n",
+  "stderr": "",
+  "execution_time_ms": 1522
+}

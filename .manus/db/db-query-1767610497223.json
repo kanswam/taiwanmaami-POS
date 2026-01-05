@@ -1,0 +1,15 @@
+{
+  "query": "SELECT COUNT(*) as total_orders, MIN(orderNumber) as first_order, MAX(orderNumber) as last_order FROM orders;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT COUNT(*) as total_orders, MIN(orderNumber) as first_order, MAX(orderNumber) as last_order FROM orders;",
+  "rows": [
+    {
+      "total_orders": "3",
+      "first_order": "00001",
+      "last_order": "00003"
+    }
+  ],
+  "messages": [],
+  "stdout": "total_orders\tfirst_order\tlast_order\n3\t00001\t00003\n",
+  "stderr": "",
+  "execution_time_ms": 1525
+}

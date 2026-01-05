@@ -3958,6 +3958,248 @@ export const appRouter = router({
         return customerOrders;
       }),
   }),
+
+  // CMS (Content Management System) routes for editable content pages
+  cms: router({
+    // Get page content by key
+    getContent: publicProcedure
+      .input(z.object({ key: z.string() }))
+      .query(async ({ input }) => {
+        const dbInstance = await getDb();
+        if (!dbInstance) return null;
+        const { siteSettings } = await import('../drizzle/schema.js');
+        const [content] = await dbInstance.select().from(siteSettings).where(eq(siteSettings.key, `cms_${input.key}`));
+        return content?.value || null;
+      }),
+
+    // Get all CMS content
+    getAllContent: adminProcedure.query(async () => {
+      const dbInstance = await getDb();
+      if (!dbInstance) return [];
+      const { siteSettings } = await import('../drizzle/schema.js');
+      const allSettings = await dbInstance.select().from(siteSettings).where(sql`${siteSettings.key} LIKE 'cms_%'`);
+      return allSettings.map(s => ({ key: s.key.replace('cms_', ''), value: s.value, updatedAt: s.updatedAt }));
+    }),
+
+    // Update page content
+    updateContent: adminProcedure
+      .input(z.object({ key: z.string(), value: z.string() }))
+      .mutation(async ({ input }) => {
+        const dbInstance = await getDb();
+        if (!dbInstance) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
+        const { siteSettings } = await import('../drizzle/schema.js');
+        const fullKey = `cms_${input.key}`;
+        
+        const [existing] = await dbInstance.select().from(siteSettings).where(eq(siteSettings.key, fullKey));
+        if (existing) {
+          await dbInstance.update(siteSettings).set({ value: input.value }).where(eq(siteSettings.key, fullKey));
+        } else {
+          await dbInstance.insert(siteSettings).values({ key: fullKey, value: input.value });
+        }
+        return { success: true };
+      }),
+  }),
+
+  // Admin PIN management for discount authorization
+  adminPin: router({
+    // Check if current admin has a PIN set
+    hasPin: protectedProcedure.query(async ({ ctx }) => {
+      if (ctx.user.role !== 'admin') return false;
+      const dbInstance = await getDb();
+      if (!dbInstance) return false;
+      const { adminPins } = await import('../drizzle/schema.js');
+      const [pin] = await dbInstance.select().from(adminPins).where(and(eq(adminPins.userId, ctx.user.id), eq(adminPins.isActive, true)));
+      return !!pin;
+    }),
+
+    // Set or update admin PIN
+    setPin: adminProcedure
+      .input(z.object({ pin: z.string().length(4).regex(/^\d{4}$/) }))
+      .mutation(async ({ ctx, input }) => {
+        const dbInstance = await getDb();
+        if (!dbInstance) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
+        const { adminPins } = await import('../drizzle/schema.js');
+        const crypto = await import('crypto');
+        const pinHash = crypto.createHash('sha256').update(input.pin).digest('hex');
+        
+        // Deactivate existing PINs
+        await dbInstance.update(adminPins).set({ isActive: false }).where(eq(adminPins.userId, ctx.user.id));
+        
+        // Create new PIN
+        await dbInstance.insert(adminPins).values({ userId: ctx.user.id, pinHash, isActive: true });
+        return { success: true };
+      }),
+
+    // Verify PIN for discount authorization
+    verifyPin: publicProcedure
+      .input(z.object({ adminId: z.number(), pin: z.string() }))
+      .mutation(async ({ input }) => {
+        const dbInstance = await getDb();
+        if (!dbInstance) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
+        const { adminPins } = await import('../drizzle/schema.js');
+        const crypto = await import('crypto');
+        const pinHash = crypto.createHash('sha256').update(input.pin).digest('hex');
+        
+        const [pin] = await dbInstance.select().from(adminPins).where(
+          and(eq(adminPins.userId, input.adminId), eq(adminPins.pinHash, pinHash), eq(adminPins.isActive, true))
+        );
+        
+        if (!pin) {
+          throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Invalid PIN' });
+        }
+        return { success: true };
+      }),
+
+    // Get list of admins (for PIN selection)
+    getAdmins: publicProcedure.query(async () => {
+      const dbInstance = await getDb();
+      if (!dbInstance) return [];
+      const { adminPins } = await import('../drizzle/schema.js');
+      
+      const admins = await dbInstance.select({ id: users.id, name: users.name }).from(users).where(eq(users.role, 'admin'));
+      const pinsSet = await dbInstance.select({ userId: adminPins.userId }).from(adminPins).where(eq(adminPins.isActive, true));
+      const adminIdsWithPin = new Set(pinsSet.map(p => p.userId));
+      
+      return admins.filter(a => adminIdsWithPin.has(a.id)).map(a => ({ id: a.id, name: a.name || 'Admin' }));
+    }),
+
+    // Log discount authorization
+    logAuthorization: publicProcedure
+      .input(z.object({
+        orderId: z.number().optional(),
+        orderNumber: z.string().optional(),
+        discountAmount: z.number(),
+        discountReason: z.string().optional(),
+        authorizedBy: z.number(),
+        authorizedByName: z.string(),
+        requestedBy: z.number().optional(),
+        requestedByName: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const dbInstance = await getDb();
+        if (!dbInstance) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
+        const { discountAuthorizations } = await import('../drizzle/schema.js');
+        
+        await dbInstance.insert(discountAuthorizations).values(input);
+        return { success: true };
+      }),
+  }),
+
+  // Refund approval workflow
+  refunds: router({
+    // Staff: Request a refund
+    requestRefund: protectedProcedure
+      .input(z.object({
+        orderId: z.number(),
+        orderNumber: z.string(),
+        refundAmount: z.number(),
+        refundReason: z.string(),
+        refundType: z.enum(['full', 'partial', 'store_credit']),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const dbInstance = await getDb();
+        if (!dbInstance) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
+        const { refundRequests } = await import('../drizzle/schema.js');
+        
+        const [request] = await dbInstance.insert(refundRequests).values({
+          orderId: input.orderId,
+          orderNumber: input.orderNumber,
+          refundAmount: input.refundAmount,
+          refundReason: input.refundReason,
+          refundType: input.refundType,
+          requestedBy: ctx.user.id,
+          requestedByName: ctx.user.name || 'Staff',
+          status: 'pending',
+        }).$returningId();
+        
+        // Notify admins
+        try {
+          await notifyOwner({
+            title: '🔔 Refund Request Pending',
+            content: `Order #${input.orderNumber}\nAmount: ₹${(input.refundAmount / 100).toFixed(2)}\nType: ${input.refundType}\nReason: ${input.refundReason}\nRequested by: ${ctx.user.name || 'Staff'}\n\nPlease review in the admin panel.`
+          });
+        } catch (e) {}
+        
+        return { success: true, requestId: request.id };
+      }),
+
+    // Admin: Get pending refund requests
+    getPending: adminProcedure.query(async () => {
+      const dbInstance = await getDb();
+      if (!dbInstance) return [];
+      const { refundRequests } = await import('../drizzle/schema.js');
+      
+      return dbInstance.select().from(refundRequests).where(eq(refundRequests.status, 'pending')).orderBy(desc(refundRequests.createdAt));
+    }),
+
+    // Admin: Get all refund requests
+    getAll: adminProcedure
+      .input(z.object({
+        status: z.enum(['pending', 'approved', 'rejected']).optional(),
+        limit: z.number().default(50),
+      }).optional())
+      .query(async ({ input }) => {
+        const dbInstance = await getDb();
+        if (!dbInstance) return [];
+        const { refundRequests } = await import('../drizzle/schema.js');
+        
+        let query = dbInstance.select().from(refundRequests);
+        if (input?.status) {
+          query = query.where(eq(refundRequests.status, input.status)) as any;
+        }
+        return query.orderBy(desc(refundRequests.createdAt)).limit(input?.limit || 50);
+      }),
+
+    // Admin: Approve or reject refund
+    review: adminProcedure
+      .input(z.object({
+        requestId: z.number(),
+        action: z.enum(['approve', 'reject']),
+        reviewNotes: z.string().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const dbInstance = await getDb();
+        if (!dbInstance) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
+        const { refundRequests } = await import('../drizzle/schema.js');
+        
+        // Get the request
+        const [request] = await dbInstance.select().from(refundRequests).where(eq(refundRequests.id, input.requestId));
+        if (!request) throw new TRPCError({ code: 'NOT_FOUND', message: 'Refund request not found' });
+        if (request.status !== 'pending') throw new TRPCError({ code: 'BAD_REQUEST', message: 'Request already processed' });
+        
+        const newStatus = input.action === 'approve' ? 'approved' : 'rejected';
+        
+        await dbInstance.update(refundRequests).set({
+          status: newStatus,
+          reviewedBy: ctx.user.id,
+          reviewedByName: ctx.user.name || 'Admin',
+          reviewedAt: new Date(),
+          reviewNotes: input.reviewNotes || null,
+        }).where(eq(refundRequests.id, input.requestId));
+        
+        // If approved and store_credit, add to user's balance
+        if (input.action === 'approve' && request.refundType === 'store_credit') {
+          const [order] = await dbInstance.select().from(orders).where(eq(orders.id, request.orderId));
+          if (order?.userId) {
+            await dbInstance.update(users).set({
+              storeCredit: sql`${users.storeCredit} + ${request.refundAmount}`,
+            }).where(eq(users.id, order.userId));
+          }
+        }
+        
+        return { success: true, status: newStatus };
+      }),
+
+    // Get pending count for badge
+    getPendingCount: adminProcedure.query(async () => {
+      const dbInstance = await getDb();
+      if (!dbInstance) return 0;
+      const { refundRequests } = await import('../drizzle/schema.js');
+      
+      const [result] = await dbInstance.select({ count: sql<number>`COUNT(*)` }).from(refundRequests).where(eq(refundRequests.status, 'pending'));
+      return Number(result?.count || 0);
+    }),
+  }),
 });
 
 export type AppRouter = typeof appRouter;

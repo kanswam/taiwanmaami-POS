@@ -516,6 +516,49 @@ export const complaints = mysqlTable("complaints", {
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
 
+// Admin PINs for discount authorization
+export const adminPins = mysqlTable("admin_pins", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  pinHash: varchar("pinHash", { length: 255 }).notNull(), // Hashed PIN
+  isActive: boolean("isActive").default(true).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+// Discount authorization log
+export const discountAuthorizations = mysqlTable("discount_authorizations", {
+  id: int("id").autoincrement().primaryKey(),
+  orderId: int("orderId"),
+  orderNumber: varchar("orderNumber", { length: 50 }),
+  discountAmount: int("discountAmount").notNull(), // In paise
+  discountReason: text("discountReason"),
+  authorizedBy: int("authorizedBy").notNull(), // Admin user ID
+  authorizedByName: varchar("authorizedByName", { length: 200 }),
+  requestedBy: int("requestedBy"), // Staff user ID
+  requestedByName: varchar("requestedByName", { length: 200 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+// Refund requests for approval workflow
+export const refundRequests = mysqlTable("refund_requests", {
+  id: int("id").autoincrement().primaryKey(),
+  orderId: int("orderId").notNull(),
+  orderNumber: varchar("orderNumber", { length: 50 }).notNull(),
+  refundAmount: int("refundAmount").notNull(), // In paise
+  refundReason: text("refundReason").notNull(),
+  refundType: mysqlEnum("refundType", ["full", "partial", "store_credit"]).notNull(),
+  status: mysqlEnum("status", ["pending", "approved", "rejected"]).default("pending").notNull(),
+  requestedBy: int("requestedBy").notNull(), // Staff user ID
+  requestedByName: varchar("requestedByName", { length: 200 }),
+  reviewedBy: int("reviewedBy"), // Admin user ID
+  reviewedByName: varchar("reviewedByName", { length: 200 }),
+  reviewedAt: timestamp("reviewedAt"),
+  reviewNotes: text("reviewNotes"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
 // Type exports
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
@@ -544,3 +587,6 @@ export type ProductAuditLog = typeof productAuditLog.$inferSelect;
 export type CategoryAuditLog = typeof categoryAuditLog.$inferSelect;
 export type Complaint = typeof complaints.$inferSelect;
 export type InsertComplaint = typeof complaints.$inferInsert;
+export type AdminPin = typeof adminPins.$inferSelect;
+export type DiscountAuthorization = typeof discountAuthorizations.$inferSelect;
+export type RefundRequest = typeof refundRequests.$inferSelect;

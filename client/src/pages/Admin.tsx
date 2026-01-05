@@ -212,9 +212,9 @@ export default function Admin() {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button 
-                  variant={['settings', 'bulk-upload'].includes(activeTab) ? 'default' : 'outline'} 
+                  variant={['settings', 'bulk-upload', 'cms', 'admin-pin', 'refunds'].includes(activeTab) ? 'default' : 'outline'} 
                   size="sm" 
-                  className={`gap-2 ${!['settings', 'bulk-upload'].includes(activeTab) ? 'border-transparent hover:bg-accent' : ''}`}
+                  className={`gap-2 ${!['settings', 'bulk-upload', 'cms', 'admin-pin', 'refunds'].includes(activeTab) ? 'border-transparent hover:bg-accent' : ''}`}
                 >
                   <Settings className="w-4 h-4" />
                   Settings
@@ -225,6 +225,16 @@ export default function Admin() {
                 <DropdownMenuItem onClick={() => setActiveTab('settings')} className={activeTab === 'settings' ? 'bg-accent' : ''}>
                   <Settings className="w-4 h-4 mr-2" /> Site Settings
                 </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setActiveTab('cms')} className={activeTab === 'cms' ? 'bg-accent' : ''}>
+                  <FileText className="w-4 h-4 mr-2" /> Content Pages
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setActiveTab('admin-pin')} className={activeTab === 'admin-pin' ? 'bg-accent' : ''}>
+                  <CreditCard className="w-4 h-4 mr-2" /> Admin PIN
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setActiveTab('refunds')} className={activeTab === 'refunds' ? 'bg-accent' : ''}>
+                  <RotateCcw className="w-4 h-4 mr-2" /> Refund Requests
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => setActiveTab('bulk-upload')} className={activeTab === 'bulk-upload' ? 'bg-accent' : ''}>
                   <Upload className="w-4 h-4 mr-2" /> Bulk Upload
                 </DropdownMenuItem>
@@ -288,6 +298,18 @@ export default function Admin() {
 
           <TabsContent value="audit">
             <AuditTab />
+          </TabsContent>
+
+          <TabsContent value="cms">
+            <CMSTab />
+          </TabsContent>
+
+          <TabsContent value="admin-pin">
+            <AdminPinTab />
+          </TabsContent>
+
+          <TabsContent value="refunds">
+            <RefundsTab />
           </TabsContent>
         </Tabs>
       </div>
@@ -5439,5 +5461,393 @@ function CreateProductDialog({
         </div>
       </DialogContent>
     </Dialog>
+  );
+}
+
+
+// CMS Tab - Content Management System for editable pages
+function CMSTab() {
+  const { data: cmsContent, refetch } = trpc.cms.getAllContent.useQuery();
+  const updateContent = trpc.cms.updateContent.useMutation({
+    onSuccess: () => {
+      toast.success('Content saved successfully!');
+      refetch();
+    },
+    onError: (err) => toast.error(err.message),
+  });
+
+  const [aboutUs, setAboutUs] = useState('');
+  const [termsConditions, setTermsConditions] = useState('');
+  const [privacyPolicy, setPrivacyPolicy] = useState('');
+  const [refundPolicy, setRefundPolicy] = useState('');
+  const [faq, setFaq] = useState('');
+  const [saving, setSaving] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (cmsContent) {
+      const contentMap = cmsContent.reduce((acc: any, c: any) => {
+        acc[c.key] = c.value;
+        return acc;
+      }, {});
+      setAboutUs(contentMap.about_us || '');
+      setTermsConditions(contentMap.terms_conditions || '');
+      setPrivacyPolicy(contentMap.privacy_policy || '');
+      setRefundPolicy(contentMap.refund_policy || '');
+      setFaq(contentMap.faq || '');
+    }
+  }, [cmsContent]);
+
+  const handleSave = async (key: string, value: string) => {
+    setSaving(key);
+    try {
+      await updateContent.mutateAsync({ key, value });
+    } finally {
+      setSaving(null);
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-2xl font-bold mb-2">Content Pages</h2>
+        <p className="text-muted-foreground">Edit content for About Us, Terms & Conditions, Privacy Policy, and other pages. Changes take effect immediately.</p>
+      </div>
+
+      <Card className="p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold">About Us</h3>
+          <Button onClick={() => handleSave('about_us', aboutUs)} disabled={saving === 'about_us'} size="sm">
+            {saving === 'about_us' ? 'Saving...' : 'Save'}
+          </Button>
+        </div>
+        <Textarea
+          value={aboutUs}
+          onChange={(e) => setAboutUs(e.target.value)}
+          placeholder="Tell your story... Who is Taiwan Maami? What makes your bubble tea special?"
+          className="min-h-[200px]"
+        />
+        <p className="text-xs text-muted-foreground mt-2">Supports basic HTML tags for formatting.</p>
+      </Card>
+
+      <Card className="p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold">Terms & Conditions</h3>
+          <Button onClick={() => handleSave('terms_conditions', termsConditions)} disabled={saving === 'terms_conditions'} size="sm">
+            {saving === 'terms_conditions' ? 'Saving...' : 'Save'}
+          </Button>
+        </div>
+        <Textarea
+          value={termsConditions}
+          onChange={(e) => setTermsConditions(e.target.value)}
+          placeholder="Your terms and conditions for using the website and ordering..."
+          className="min-h-[200px]"
+        />
+      </Card>
+
+      <Card className="p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold">Privacy Policy</h3>
+          <Button onClick={() => handleSave('privacy_policy', privacyPolicy)} disabled={saving === 'privacy_policy'} size="sm">
+            {saving === 'privacy_policy' ? 'Saving...' : 'Save'}
+          </Button>
+        </div>
+        <Textarea
+          value={privacyPolicy}
+          onChange={(e) => setPrivacyPolicy(e.target.value)}
+          placeholder="How you collect, use, and protect customer data..."
+          className="min-h-[200px]"
+        />
+      </Card>
+
+      <Card className="p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold">Refund Policy</h3>
+          <Button onClick={() => handleSave('refund_policy', refundPolicy)} disabled={saving === 'refund_policy'} size="sm">
+            {saving === 'refund_policy' ? 'Saving...' : 'Save'}
+          </Button>
+        </div>
+        <Textarea
+          value={refundPolicy}
+          onChange={(e) => setRefundPolicy(e.target.value)}
+          placeholder="Your refund and cancellation policy..."
+          className="min-h-[200px]"
+        />
+      </Card>
+
+      <Card className="p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold">FAQ</h3>
+          <Button onClick={() => handleSave('faq', faq)} disabled={saving === 'faq'} size="sm">
+            {saving === 'faq' ? 'Saving...' : 'Save'}
+          </Button>
+        </div>
+        <Textarea
+          value={faq}
+          onChange={(e) => setFaq(e.target.value)}
+          placeholder="Frequently asked questions and answers..."
+          className="min-h-[200px]"
+        />
+        <p className="text-xs text-muted-foreground mt-2">Format: Q: Question? A: Answer. (One Q&A per line)</p>
+      </Card>
+    </div>
+  );
+}
+
+// Admin PIN Tab - Set up PIN for discount authorization
+function AdminPinTab() {
+  const { data: hasPin, refetch: refetchHasPin } = trpc.adminPin.hasPin.useQuery();
+  const setPin = trpc.adminPin.setPin.useMutation({
+    onSuccess: () => {
+      toast.success('PIN set successfully!');
+      refetchHasPin();
+      setNewPin('');
+      setConfirmPin('');
+    },
+    onError: (err) => toast.error(err.message),
+  });
+
+  const [newPin, setNewPin] = useState('');
+  const [confirmPin, setConfirmPin] = useState('');
+
+  const handleSetPin = () => {
+    if (newPin.length !== 4 || !/^\d{4}$/.test(newPin)) {
+      toast.error('PIN must be exactly 4 digits');
+      return;
+    }
+    if (newPin !== confirmPin) {
+      toast.error('PINs do not match');
+      return;
+    }
+    setPin.mutate({ pin: newPin });
+  };
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-2xl font-bold mb-2">Admin PIN</h2>
+        <p className="text-muted-foreground">Set up a 4-digit PIN for authorizing discounts. Staff will need this PIN to apply discounts to orders.</p>
+      </div>
+
+      <Card className="p-6 max-w-md">
+        <div className="space-y-4">
+          <div className={`p-4 rounded-lg ${hasPin ? 'bg-green-50 border border-green-200' : 'bg-amber-50 border border-amber-200'}`}>
+            <p className={`font-medium ${hasPin ? 'text-green-800' : 'text-amber-800'}`}>
+              {hasPin ? '✓ PIN is set' : '⚠️ No PIN set - discounts cannot be authorized'}
+            </p>
+          </div>
+
+          <div>
+            <Label>{hasPin ? 'Change PIN' : 'Set New PIN'}</Label>
+            <Input
+              type="password"
+              maxLength={4}
+              value={newPin}
+              onChange={(e) => setNewPin(e.target.value.replace(/\D/g, ''))}
+              placeholder="Enter 4-digit PIN"
+              className="mt-2 text-center text-2xl tracking-widest"
+            />
+          </div>
+
+          <div>
+            <Label>Confirm PIN</Label>
+            <Input
+              type="password"
+              maxLength={4}
+              value={confirmPin}
+              onChange={(e) => setConfirmPin(e.target.value.replace(/\D/g, ''))}
+              placeholder="Confirm PIN"
+              className="mt-2 text-center text-2xl tracking-widest"
+            />
+          </div>
+
+          <Button 
+            onClick={handleSetPin} 
+            disabled={setPin.isPending || newPin.length !== 4 || confirmPin.length !== 4}
+            className="w-full"
+          >
+            {setPin.isPending ? 'Setting PIN...' : hasPin ? 'Update PIN' : 'Set PIN'}
+          </Button>
+        </div>
+      </Card>
+
+      <Card className="p-6">
+        <h3 className="text-lg font-semibold mb-4">How it works</h3>
+        <ul className="space-y-2 text-sm text-muted-foreground">
+          <li>• When staff apply a discount, they must enter an admin's PIN</li>
+          <li>• Each admin can set their own PIN</li>
+          <li>• All discount authorizations are logged for audit purposes</li>
+          <li>• PINs are securely hashed and never stored in plain text</li>
+        </ul>
+      </Card>
+    </div>
+  );
+}
+
+// Refunds Tab - Approve/Reject refund requests
+function RefundsTab() {
+  const { data: pendingRefunds, refetch: refetchPending } = trpc.refunds.getPending.useQuery();
+  const { data: allRefunds, refetch: refetchAll } = trpc.refunds.getAll.useQuery();
+  const reviewRefund = trpc.refunds.review.useMutation({
+    onSuccess: (data) => {
+      toast.success(`Refund ${data.status}!`);
+      refetchPending();
+      refetchAll();
+    },
+    onError: (err) => toast.error(err.message),
+  });
+
+  const [selectedRefund, setSelectedRefund] = useState<any>(null);
+  const [reviewNotes, setReviewNotes] = useState('');
+  const [activeView, setActiveView] = useState<'pending' | 'all'>('pending');
+
+  const handleReview = (action: 'approve' | 'reject') => {
+    if (!selectedRefund) return;
+    reviewRefund.mutate({
+      requestId: selectedRefund.id,
+      action,
+      reviewNotes,
+    });
+    setSelectedRefund(null);
+    setReviewNotes('');
+  };
+
+  const formatDate = (date: any) => {
+    return new Date(date).toLocaleString('en-IN', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  };
+
+  const refundsToShow = activeView === 'pending' ? pendingRefunds : allRefunds;
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold mb-2">Refund Requests</h2>
+          <p className="text-muted-foreground">Review and approve/reject refund requests from staff</p>
+        </div>
+        <div className="flex gap-2">
+          <Button 
+            variant={activeView === 'pending' ? 'default' : 'outline'} 
+            onClick={() => setActiveView('pending')}
+            size="sm"
+          >
+            Pending ({pendingRefunds?.length || 0})
+          </Button>
+          <Button 
+            variant={activeView === 'all' ? 'default' : 'outline'} 
+            onClick={() => setActiveView('all')}
+            size="sm"
+          >
+            All Requests
+          </Button>
+        </div>
+      </div>
+
+      {(!refundsToShow || refundsToShow.length === 0) ? (
+        <Card className="p-8 text-center">
+          <p className="text-muted-foreground">
+            {activeView === 'pending' ? 'No pending refund requests' : 'No refund requests yet'}
+          </p>
+        </Card>
+      ) : (
+        <div className="space-y-4">
+          {refundsToShow.map((refund: any) => (
+            <Card key={refund.id} className="p-4">
+              <div className="flex items-start justify-between">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <span className="font-semibold">Order #{refund.orderNumber}</span>
+                    <span className={`px-2 py-0.5 rounded text-xs font-medium ${
+                      refund.status === 'pending' ? 'bg-amber-100 text-amber-800' :
+                      refund.status === 'approved' ? 'bg-green-100 text-green-800' :
+                      'bg-red-100 text-red-800'
+                    }`}>
+                      {refund.status.toUpperCase()}
+                    </span>
+                    <span className={`px-2 py-0.5 rounded text-xs ${
+                      refund.refundType === 'full' ? 'bg-blue-100 text-blue-800' :
+                      refund.refundType === 'partial' ? 'bg-purple-100 text-purple-800' :
+                      'bg-teal-100 text-teal-800'
+                    }`}>
+                      {refund.refundType === 'store_credit' ? 'Store Credit' : refund.refundType}
+                    </span>
+                  </div>
+                  <p className="text-lg font-bold text-primary">₹{(refund.refundAmount / 100).toFixed(2)}</p>
+                  <p className="text-sm text-muted-foreground">{refund.refundReason}</p>
+                  <p className="text-xs text-muted-foreground">
+                    Requested by {refund.requestedByName} on {formatDate(refund.createdAt)}
+                  </p>
+                  {refund.reviewedByName && (
+                    <p className="text-xs text-muted-foreground">
+                      {refund.status === 'approved' ? 'Approved' : 'Rejected'} by {refund.reviewedByName} on {formatDate(refund.reviewedAt)}
+                    </p>
+                  )}
+                  {refund.reviewNotes && (
+                    <p className="text-sm italic mt-2">Notes: {refund.reviewNotes}</p>
+                  )}
+                </div>
+                {refund.status === 'pending' && (
+                  <Button onClick={() => setSelectedRefund(refund)} size="sm">
+                    Review
+                  </Button>
+                )}
+              </div>
+            </Card>
+          ))}
+        </div>
+      )}
+
+      {/* Review Dialog */}
+      <Dialog open={!!selectedRefund} onOpenChange={(open) => !open && setSelectedRefund(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Review Refund Request</DialogTitle>
+          </DialogHeader>
+          {selectedRefund && (
+            <div className="space-y-4">
+              <div className="bg-muted p-4 rounded-lg space-y-2">
+                <p><strong>Order:</strong> #{selectedRefund.orderNumber}</p>
+                <p><strong>Amount:</strong> ₹{(selectedRefund.refundAmount / 100).toFixed(2)}</p>
+                <p><strong>Type:</strong> {selectedRefund.refundType === 'store_credit' ? 'Store Credit' : selectedRefund.refundType}</p>
+                <p><strong>Reason:</strong> {selectedRefund.refundReason}</p>
+                <p><strong>Requested by:</strong> {selectedRefund.requestedByName}</p>
+              </div>
+              <div>
+                <Label>Review Notes (optional)</Label>
+                <Textarea
+                  value={reviewNotes}
+                  onChange={(e) => setReviewNotes(e.target.value)}
+                  placeholder="Add any notes about this decision..."
+                  className="mt-2"
+                />
+              </div>
+            </div>
+          )}
+          <DialogFooter className="flex gap-2">
+            <Button variant="outline" onClick={() => setSelectedRefund(null)}>
+              Cancel
+            </Button>
+            <Button 
+              variant="destructive" 
+              onClick={() => handleReview('reject')}
+              disabled={reviewRefund.isPending}
+            >
+              Reject
+            </Button>
+            <Button 
+              onClick={() => handleReview('approve')}
+              disabled={reviewRefund.isPending}
+            >
+              Approve
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
   );
 }

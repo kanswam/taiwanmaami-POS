@@ -1575,3 +1575,31 @@
 - [x] Update printer script to support multiple KOT printers
 - [x] Configure Main Bill KOT (front) and Kitchen KOT (kitchen) printers
 - [x] Print same KOT to both printers simultaneously
+
+
+## Phase 32 - CMS, Staff Access & Approval Workflows (Jan 5, 2026)
+
+### Content Management System
+- [ ] Create CMS section in### CMS Content Management
+- [x] Add CMS section in Admin panel
+- [x] Add editable content for About Us
+- [x] Add editable content for Terms & Conditions
+- [x] Add editable content for Privacy Policy
+- [x] Add editable content for Refund Policy
+
+### Staff Access Controls
+- [x] Test Employee Master API connection
+- [x] Verify staff login via mobile number
+- [x] Staff can take orders and collect payments
+- [x] Staff can update order status
+
+### Discount Authorization
+- [x] Require admin PIN to apply discounts
+- [x] Create PIN management for admins
+- [x] Log discount authorizations
+
+### Refund Approval Workflow
+- [x] Staff can request refund (pending approval)
+- [x] Admin sees pending refund requests
+- [x] Admin can approve/reject refunds
+- [x] Notify staff of approval decision

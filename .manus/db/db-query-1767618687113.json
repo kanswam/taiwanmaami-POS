@@ -1,0 +1,124 @@
+{
+  "query": "SHOW TABLES",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SHOW TABLES",
+  "rows": [
+    {
+      "Tables_in_7xKVuVPoe4TavcqcxPZkpC": "__drizzle_migrations"
+    },
+    {
+      "Tables_in_7xKVuVPoe4TavcqcxPZkpC": "addons"
+    },
+    {
+      "Tables_in_7xKVuVPoe4TavcqcxPZkpC": "addresses"
+    },
+    {
+      "Tables_in_7xKVuVPoe4TavcqcxPZkpC": "adminPins"
+    },
+    {
+      "Tables_in_7xKVuVPoe4TavcqcxPZkpC": "admin_pins"
+    },
+    {
+      "Tables_in_7xKVuVPoe4TavcqcxPZkpC": "categories"
+    },
+    {
+      "Tables_in_7xKVuVPoe4TavcqcxPZkpC": "category_addons"
+    },
+    {
+      "Tables_in_7xKVuVPoe4TavcqcxPZkpC": "category_audit_log"
+    },
+    {
+      "Tables_in_7xKVuVPoe4TavcqcxPZkpC": "complaints"
+    },
+    {
+      "Tables_in_7xKVuVPoe4TavcqcxPZkpC": "customization_options"
+    },
+    {
+      "Tables_in_7xKVuVPoe4TavcqcxPZkpC": "delivery_areas"
+    },
+    {
+      "Tables_in_7xKVuVPoe4TavcqcxPZkpC": "discountAuthorizations"
+    },
+    {
+      "Tables_in_7xKVuVPoe4TavcqcxPZkpC": "discount_authorizations"
+    },
+    {
+      "Tables_in_7xKVuVPoe4TavcqcxPZkpC": "discounts"
+    },
+    {
+      "Tables_in_7xKVuVPoe4TavcqcxPZkpC": "guest_orders"
+    },
+    {
+      "Tables_in_7xKVuVPoe4TavcqcxPZkpC": "kot_queue"
+    },
+    {
+      "Tables_in_7xKVuVPoe4TavcqcxPZkpC": "loyalty_rewards"
+    },
+    {
+      "Tables_in_7xKVuVPoe4TavcqcxPZkpC": "loyalty_transactions"
+    },
+    {
+      "Tables_in_7xKVuVPoe4TavcqcxPZkpC": "order_item_addons"
+    },
+    {
+      "Tables_in_7xKVuVPoe4TavcqcxPZkpC": "order_items"
+    },
+    {
+      "Tables_in_7xKVuVPoe4TavcqcxPZkpC": "orders"
+    },
+    {
+      "Tables_in_7xKVuVPoe4TavcqcxPZkpC": "outlet_products"
+    },
+    {
+      "Tables_in_7xKVuVPoe4TavcqcxPZkpC": "payments"
+    },
+    {
+      "Tables_in_7xKVuVPoe4TavcqcxPZkpC": "pos_audit_log"
+    },
+    {
+      "Tables_in_7xKVuVPoe4TavcqcxPZkpC": "pos_sessions"
+    },
+    {
+      "Tables_in_7xKVuVPoe4TavcqcxPZkpC": "product_addons"
+    },
+    {
+      "Tables_in_7xKVuVPoe4TavcqcxPZkpC": "product_audit_log"
+    },
+    {
+      "Tables_in_7xKVuVPoe4TavcqcxPZkpC": "products"
+    },
+    {
+      "Tables_in_7xKVuVPoe4TavcqcxPZkpC": "receipt_queue"
+    },
+    {
+      "Tables_in_7xKVuVPoe4TavcqcxPZkpC": "refundRequests"
+    },
+    {
+      "Tables_in_7xKVuVPoe4TavcqcxPZkpC": "refund_requests"
+    },
+    {
+      "Tables_in_7xKVuVPoe4TavcqcxPZkpC": "reviews"
+    },
+    {
+      "Tables_in_7xKVuVPoe4TavcqcxPZkpC": "site_settings"
+    },
+    {
+      "Tables_in_7xKVuVPoe4TavcqcxPZkpC": "stamp_transactions"
+    },
+    {
+      "Tables_in_7xKVuVPoe4TavcqcxPZkpC": "store_locations"
+    },
+    {
+      "Tables_in_7xKVuVPoe4TavcqcxPZkpC": "subcategories"
+    },
+    {
+      "Tables_in_7xKVuVPoe4TavcqcxPZkpC": "subcategory_addons"
+    },
+    {
+      "Tables_in_7xKVuVPoe4TavcqcxPZkpC": "users"
+    }
+  ],
+  "messages": [],
+  "stdout": "Tables_in_7xKVuVPoe4TavcqcxPZkpC\n__drizzle_migrations\naddons\naddresses\nadminPins\nadmin_pins\ncategories\ncategory_addons\ncategory_audit_log\ncomplaints\ncustomization_options\ndelivery_areas\ndiscountAuthorizations\ndiscount_authorizations\ndiscounts\nguest_orders\nkot_queue\nloyalty_rewards\nloyalty_transactions\norder_item_addons\norder_items\norders\noutlet_products\npayments\npos_audit_log\npos_sessions\nproduct_addons\nproduct_audit_log\nproducts\nreceipt_queue\nrefundRequests\nrefund_requests\nreviews\nsite_settings\nstamp_transactions\nstore_locations\nsubcategories\nsubcategory_addons\nusers\n",
+  "stderr": "",
+  "execution_time_ms": 1724
+}
