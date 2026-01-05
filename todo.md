@@ -1741,3 +1741,15 @@
 - [x] LazyVideo component uses IntersectionObserver for lazy loading
 - [x] Videos only load when within 100px of viewport
 - [x] Hero video uses preload="metadata" for faster initial load
+
+
+## Phase 50 - Critical Bug Fix: OAuth Redirect for Public Visitors (Jan 5, 2026)
+
+### Root Cause
+- [x] Identified: Home.tsx was calling `trpc.admin.getSiteSettings.useQuery()` which requires admin authentication
+- [x] This caused public visitors to be redirected to Manus OAuth when loading the homepage
+
+### Fix Applied
+- [x] Created new public endpoint `trpc.menu.getPublicSiteSettings.useQuery()` in routers.ts
+- [x] Updated Home.tsx to use the public endpoint instead of admin endpoint
+- [x] Verified fix works in dev preview - homepage loads without OAuth redirect

@@ -107,6 +107,14 @@ export const appRouter = router({
         return db.getProductAddonsForProduct(input.productId);
       }),
 
+    // Public site settings for homepage CMS content (no auth required)
+    getPublicSiteSettings: publicProcedure.query(async () => {
+      const dbInstance = await getDb();
+      if (!dbInstance) return [];
+      const { siteSettings } = await import('../drizzle/schema.js');
+      return dbInstance.select().from(siteSettings);
+    }),
+
     getFullMenu: publicProcedure
       .input(z.object({ isDelivery: z.boolean().default(false), includeUnavailable: z.boolean().default(true) }))
       .query(async ({ input }) => {

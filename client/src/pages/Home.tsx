@@ -9,8 +9,8 @@ import { trpc } from '@/lib/trpc';
 import { ArrowRight, MapPin, Clock, Star, Sparkles, Instagram, Phone, Navigation, Store, Truck, ShoppingBag, Facebook, Twitter, Youtube } from 'lucide-react';
 
 export default function Home() {
-  // Fetch site settings from database
-  const { data: siteSettings } = trpc.admin.getSiteSettings.useQuery();
+  // Fetch site settings from database (public endpoint - no auth required)
+  const { data: siteSettings } = trpc.menu.getPublicSiteSettings.useQuery();
   
   // Default values
   const [heroTitle, setHeroTitle] = useState('Authentic Taiwanese\nBubble Tea');
