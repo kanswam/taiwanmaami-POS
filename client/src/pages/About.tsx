@@ -106,40 +106,40 @@ export default function About() {
                 <div className="flex items-start gap-3">
                   <MapPin className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
                   <p className="text-muted-foreground">
-                    Palladium Mall, 4th Floor, Food Court<br />
+                    First Floor, Palladium Mall<br />
                     Velachery Main Road, Velachery<br />
                     Chennai - 600042
                   </p>
                 </div>
                 <div className="flex items-center gap-3">
                   <Clock className="w-5 h-5 text-primary flex-shrink-0" />
-                  <p className="text-muted-foreground">11:00 AM - 10:00 PM (All days)</p>
+                  <p className="text-muted-foreground">10:00 AM - 10:00 PM (All days)</p>
                 </div>
                 <div className="flex items-center gap-3">
                   <Phone className="w-5 h-5 text-primary flex-shrink-0" />
-                  <p className="text-muted-foreground">+91 98765 43210</p>
+                  <p className="text-muted-foreground">+91 89259 14303</p>
                 </div>
               </div>
             </Card>
 
             <Card className="p-6">
-              <h3 className="font-semibold text-lg mb-4">T Nagar</h3>
+              <h3 className="font-semibold text-lg mb-4">T Nagar (Moutan)</h3>
               <div className="space-y-3 text-sm">
                 <div className="flex items-start gap-3">
                   <MapPin className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
                   <p className="text-muted-foreground">
-                    Ground Floor, Shop No. 5<br />
-                    Usman Road, T Nagar<br />
+                    New No. 29, Burkit Road<br />
+                    T Nagar<br />
                     Chennai - 600017
                   </p>
                 </div>
                 <div className="flex items-center gap-3">
                   <Clock className="w-5 h-5 text-primary flex-shrink-0" />
-                  <p className="text-muted-foreground">11:00 AM - 10:00 PM (All days)</p>
+                  <p className="text-muted-foreground">12:00 PM - 12:00 AM (All days)</p>
                 </div>
                 <div className="flex items-center gap-3">
                   <Phone className="w-5 h-5 text-primary flex-shrink-0" />
-                  <p className="text-muted-foreground">+91 98765 43211</p>
+                  <p className="text-muted-foreground">+91 91505 70557</p>
                 </div>
               </div>
               <div className="mt-4 pt-4 border-t">

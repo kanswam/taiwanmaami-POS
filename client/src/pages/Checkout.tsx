@@ -10,7 +10,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useCart } from '@/contexts/CartContext';
 import { useAuth } from '@/_core/hooks/useAuth';
 import { trpc } from '@/lib/trpc';
-import { formatPrice, CHENNAI_AREAS } from '@shared/types';
+import { formatPrice, CHENNAI_AREAS, isOrderingAvailable } from '@shared/types';
 import { ArrowLeft, MapPin, Clock, CreditCard, Banknote, Loader2, Gift, User, Stamp } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
@@ -56,6 +56,10 @@ export default function Checkout() {
   const createPaymentOrder = trpc.orders.createPaymentOrder.useMutation();
   const verifyPayment = trpc.orders.verifyPayment.useMutation();
   const createKotForInstore = trpc.orders.createKotForInstore.useMutation();
+
+  // Check ordering hours (skip for in-store orders)
+  const orderingStatus = isOrderingAvailable();
+  const isOutsideOrderingHours = state.orderType !== 'instore' && !orderingStatus.available;
 
   // Load Razorpay script
   useEffect(() => {
@@ -351,6 +355,19 @@ export default function Checkout() {
             <h1 className="text-2xl font-bold">Guest Checkout</h1>
           </div>
 
+          {/* Ordering Hours Banner */}
+          {isOutsideOrderingHours && (
+            <Card className="p-4 mb-6 bg-amber-50 border-amber-200">
+              <div className="flex items-center gap-3">
+                <Clock className="w-5 h-5 text-amber-600 flex-shrink-0" />
+                <div>
+                  <p className="font-medium text-amber-800">Online Ordering Closed</p>
+                  <p className="text-sm text-amber-700">{orderingStatus.message}</p>
+                </div>
+              </div>
+            </Card>
+          )}
+
           <form onSubmit={handleGuestSubmit}>
             <div className="grid lg:grid-cols-3 gap-6">
               <div className="lg:col-span-2 space-y-6">
@@ -563,10 +580,12 @@ export default function Checkout() {
                     type="submit" 
                     className="w-full mt-6" 
                     size="lg"
-                    disabled={isSubmitting}
+                    disabled={isSubmitting || isOutsideOrderingHours}
                   >
                     {isSubmitting ? (
                       <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Processing...</>
+                    ) : isOutsideOrderingHours ? (
+                      'Ordering Closed'
                     ) : (
                       state.orderType === 'delivery' || paymentMethod === 'online' 
                         ? 'Pay Now' 
@@ -601,6 +620,19 @@ export default function Checkout() {
           </Link>
           <h1 className="text-2xl font-bold">Checkout</h1>
         </div>
+
+        {/* Ordering Hours Banner */}
+        {isOutsideOrderingHours && (
+          <Card className="p-4 mb-6 bg-amber-50 border-amber-200">
+            <div className="flex items-center gap-3">
+              <Clock className="w-5 h-5 text-amber-600 flex-shrink-0" />
+              <div>
+                <p className="font-medium text-amber-800">Online Ordering Closed</p>
+                <p className="text-sm text-amber-700">{orderingStatus.message}</p>
+              </div>
+            </div>
+          </Card>
+        )}
 
         <form onSubmit={handleSubmit}>
           <div className="grid lg:grid-cols-3 gap-6">
@@ -867,9 +899,9 @@ export default function Checkout() {
                 <Button
                   type="submit"
                   className="w-full mt-6 h-12 text-lg"
-                  disabled={isSubmitting || itemCount === 0}
+                  disabled={isSubmitting || itemCount === 0 || isOutsideOrderingHours}
                 >
-                  {isSubmitting ? 'Processing...' : `Place Order - ${formatPrice(displayTotal)}`}
+                  {isSubmitting ? 'Processing...' : isOutsideOrderingHours ? 'Ordering Closed' : `Place Order - ${formatPrice(displayTotal)}`}
                 </Button>
               </Card>
             </div>

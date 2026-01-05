@@ -1318,3 +1318,13 @@
 - [x] Staff-side: Add Items button in Admin Orders tab
 - [x] Customer-side: Detect active order and show "Add to Order" option
 - [x] Update order total and GST when items are added
+
+## Contact Details & Operating Hours Update (Jan 5, 2026)
+- [x] Update email to hello@taiwanmaami.com
+- [x] Update Palladium mobile to 8925914303
+- [x] Update T Nagar mobile to 9150570557
+- [x] Update Palladium hours to 10am-10pm
+- [x] Update T Nagar hours to 12noon-12midnight
+- [x] Implement order time restrictions (no orders before 12noon or after 11:45pm)
+- [x] Prepare full code and infrastructure documentation
+- [x] Add proprietary rights notice for Thamarai Foods and Trading Private Limited

@@ -97,9 +97,9 @@ export default function Privacy() {
                 For any privacy-related questions or concerns, please contact us:
               </p>
               <ul className="list-disc pl-6 mt-2">
-                <li>Email: privacy@taiwanmaami.com</li>
-                <li>Phone: +91 98765 43210</li>
-                <li>Address: Palladium Mall, Velachery, Chennai - 600042</li>
+                <li>Email: hello@taiwanmaami.com</li>
+                <li>Phone: +91 89259 14303</li>
+                <li>Address: First Floor, Palladium Mall, Velachery, Chennai - 600042</li>
               </ul>
             </section>
           </div>

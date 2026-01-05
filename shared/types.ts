@@ -148,3 +148,60 @@ export function generateOrderNumber(): string {
   // by querying the max order number and incrementing
   return 'TEMP';
 }
+
+// Operating Hours Configuration
+export const OUTLET_HOURS = {
+  palladium: {
+    name: 'Palladium Mall',
+    openHour: 10, // 10:00 AM
+    openMinute: 0,
+    closeHour: 22, // 10:00 PM
+    closeMinute: 0,
+    lastOrderMinutesBefore: 15, // Last order 15 minutes before closing
+  },
+  tnagar: {
+    name: 'T Nagar (Moutan)',
+    openHour: 12, // 12:00 PM (noon)
+    openMinute: 0,
+    closeHour: 24, // 12:00 AM (midnight)
+    closeMinute: 0,
+    lastOrderMinutesBefore: 15, // Last order 15 minutes before closing (11:45 PM)
+  },
+} as const;
+
+// Global ordering hours (most restrictive for delivery which can go to either outlet)
+export const GLOBAL_ORDER_HOURS = {
+  openHour: 12, // 12:00 PM - latest opening time
+  openMinute: 0,
+  closeHour: 23, // 11:00 PM
+  closeMinute: 45, // 11:45 PM - earliest last order time
+};
+
+// Check if ordering is currently available
+export function isOrderingAvailable(timezone: string = 'Asia/Kolkata'): { available: boolean; message: string } {
+  const now = new Date();
+  // Convert to IST
+  const istTime = new Date(now.toLocaleString('en-US', { timeZone: timezone }));
+  const currentHour = istTime.getHours();
+  const currentMinute = istTime.getMinutes();
+  const currentTimeInMinutes = currentHour * 60 + currentMinute;
+  
+  const openTimeInMinutes = GLOBAL_ORDER_HOURS.openHour * 60 + GLOBAL_ORDER_HOURS.openMinute;
+  const closeTimeInMinutes = GLOBAL_ORDER_HOURS.closeHour * 60 + GLOBAL_ORDER_HOURS.closeMinute;
+  
+  if (currentTimeInMinutes < openTimeInMinutes) {
+    return {
+      available: false,
+      message: `Online ordering opens at 12:00 PM. Please try again after noon.`,
+    };
+  }
+  
+  if (currentTimeInMinutes >= closeTimeInMinutes) {
+    return {
+      available: false,
+      message: `Online ordering is closed for today. Last order is at 11:45 PM. Please try again tomorrow after 12:00 PM.`,
+    };
+  }
+  
+  return { available: true, message: '' };
+}

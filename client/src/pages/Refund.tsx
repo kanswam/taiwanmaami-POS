@@ -94,8 +94,8 @@ export default function Refund() {
                 For refund requests or questions about this policy:
               </p>
               <ul className="list-disc pl-6 mt-2">
-                <li>Email: support@taiwanmaami.com</li>
-                <li>Phone: +91 98765 43210</li>
+                <li>Email: hello@taiwanmaami.com</li>
+                <li>Phone: +91 89259 14303 (Palladium) / +91 91505 70557 (T Nagar)</li>
                 <li>Store: Visit us at Palladium Mall or T Nagar outlet</li>
               </ul>
             </section>

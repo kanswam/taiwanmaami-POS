@@ -58,7 +58,8 @@ export default function Home() {
       city: 'Chennai - 600042',
       video: 'https://files.manuscdn.com/user_upload_by_module/session_file/114675165/tRoWoigbWbPFdWft.mp4',
       mapUrl: 'https://maps.google.com/?q=Palladium+Mall+Velachery+Chennai',
-      phone: '+91 98765 43210',
+      phone: '+91 89259 14303',
+      hours: '10:00 AM - 10:00 PM',
     },
     {
       name: 'Taiwan Maami (Moutan)',
@@ -67,7 +68,8 @@ export default function Home() {
       city: 'Chennai - 600017',
       video: 'https://files.manuscdn.com/user_upload_by_module/session_file/114675165/bnVxigSNwrNZdrqE.mp4',
       mapUrl: 'https://maps.google.com/?q=29+Burkit+Road+TNagar+Chennai',
-      phone: '+91 98765 43211',
+      phone: '+91 91505 70557',
+      hours: '12:00 PM - 12:00 AM',
     },
   ];
 
@@ -264,6 +266,10 @@ export default function Home() {
                     <p className="text-white/80 text-sm flex items-center gap-2">
                       <Phone className="w-4 h-4" />
                       {location.phone}
+                    </p>
+                    <p className="text-white/80 text-sm flex items-center gap-2">
+                      <Clock className="w-4 h-4" />
+                      {location.hours}
                     </p>
                   </div>
                   
