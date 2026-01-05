@@ -81,14 +81,22 @@ export const appRouter = router({
       return db.getCustomizationOptions();
     }),
 
-    // Get public delivery settings (radius, etc.)
+    // Get public delivery settings (radius, enabled status, etc.)
     getDeliverySettings: publicProcedure.query(async () => {
       const dbInstance = await getDb();
-      if (!dbInstance) return { deliveryRadius: 15 };
+      if (!dbInstance) return { deliveryRadius: 15, deliveryEnabled: true };
       const { siteSettings } = await import('../drizzle/schema.js');
-      const settings = await dbInstance.select().from(siteSettings).where(eq(siteSettings.key, 'delivery_radius'));
-      const radius = settings.length > 0 && settings[0].value ? parseInt(settings[0].value) || 15 : 15;
-      return { deliveryRadius: radius };
+      const settings = await dbInstance.select().from(siteSettings).where(
+        or(
+          eq(siteSettings.key, 'delivery_radius'),
+          eq(siteSettings.key, 'delivery_enabled')
+        )
+      );
+      const settingsMap: Record<string, string> = {};
+      settings.forEach(s => { if (s.value) settingsMap[s.key] = s.value; });
+      const radius = settingsMap.delivery_radius ? parseInt(settingsMap.delivery_radius) || 15 : 15;
+      const enabled = settingsMap.delivery_enabled !== 'false';
+      return { deliveryRadius: radius, deliveryEnabled: enabled };
     }),
 
     // Get addons linked to a specific product
@@ -3849,6 +3857,7 @@ export const appRouter = router({
         phone: z.string().optional(),
         email: z.string().optional(),
         storeCredit: z.number().optional(),
+        notes: z.string().optional(),
       }))
       .mutation(async ({ input }) => {
         const dbInstance = await getDb();

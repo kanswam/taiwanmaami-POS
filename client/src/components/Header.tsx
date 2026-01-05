@@ -27,7 +27,7 @@ export function Header() {
       <div className="container">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2">
+          <Link href="/" className="flex items-center gap-3">
             <img 
               src="/logo.png" 
               alt="Taiwan Maami" 
@@ -36,17 +36,7 @@ export function Header() {
                 (e.target as HTMLImageElement).style.display = 'none';
               }}
             />
-            <span className="font-bold text-xl text-primary hidden sm:block">Taiwan Maami</span>
-            <span className="text-muted-foreground hidden sm:block">×</span>
-            <img 
-              src="/images/moutan-logo.png" 
-              alt="Moutan" 
-              className="h-8 w-auto hidden sm:block"
-              onError={(e) => {
-                (e.target as HTMLImageElement).style.display = 'none';
-              }}
-            />
-            <span className="font-bold text-xl text-primary hidden sm:block">Moutan</span>
+            <span className="font-bold text-xl text-primary">Taiwan Maami</span>
           </Link>
 
           {/* Desktop Navigation */}

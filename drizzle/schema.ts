@@ -16,6 +16,8 @@ export const users = mysqlTable("users", {
   stampCount: int("stampCount").default(0).notNull(),
   lifetimeStamps: int("lifetimeStamps").default(0).notNull(),
   lastStampDate: timestamp("lastStampDate"),
+  // Admin notes for customer
+  notes: text("notes"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
   lastSignedIn: timestamp("lastSignedIn").defaultNow().notNull(),

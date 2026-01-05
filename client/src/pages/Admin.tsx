@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/_core/hooks/useAuth';
 import { trpc } from '@/lib/trpc';
 import { formatPrice, GST_RATE } from '@shared/types';
@@ -16,7 +17,8 @@ import {
   Home, Package, ShoppingCart, Tag, Upload, LogOut, 
   Plus, Edit, Trash2, ImageIcon, RefreshCw, Check, X, Search,
   ChevronDown, ChevronUp, Eye, EyeOff, Star, MessageSquare, Reply, Printer,
-  ClipboardList, RotateCcw, History, Filter, BarChart3, UtensilsCrossed, AlertCircle, DollarSign, CreditCard, Users
+  ClipboardList, RotateCcw, History, Filter, BarChart3, UtensilsCrossed, AlertCircle, DollarSign, CreditCard, Users,
+  Settings, Layers, FileText, TrendingUp
 } from 'lucide-react';
 import { toast } from 'sonner';
 import {
@@ -81,67 +83,129 @@ export default function Admin() {
 
       <div className="container py-6">
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="flex flex-wrap gap-1 w-full mb-6">
-            <TabsTrigger value="products" className="gap-2">
-              <Package className="w-4 h-4" />
-              Products
-            </TabsTrigger>
-            <TabsTrigger value="categories" className="gap-2">
-              <ChevronDown className="w-4 h-4" />
-              Categories
-            </TabsTrigger>
-            <TabsTrigger value="orders" className="gap-2">
-              <ShoppingCart className="w-4 h-4" />
-              Orders
-            </TabsTrigger>
-            <TabsTrigger value="tables" className="gap-2">
-              <UtensilsCrossed className="w-4 h-4" />
-              Tables
-            </TabsTrigger>
-            <TabsTrigger value="addons" className="gap-2">
-              <Plus className="w-4 h-4" />
-              Add-ons
-            </TabsTrigger>
-            <TabsTrigger value="discounts" className="gap-2">
-              <Tag className="w-4 h-4" />
-              Discounts
-            </TabsTrigger>
-            <TabsTrigger value="bulk-pricing" className="gap-2">
-              <RefreshCw className="w-4 h-4" />
-              Bulk Pricing
-            </TabsTrigger>
-            <TabsTrigger value="bulk-upload" className="gap-2">
-              <Upload className="w-4 h-4" />
-              Bulk Upload
-            </TabsTrigger>
-            <TabsTrigger value="reviews" className="gap-2">
-              <Star className="w-4 h-4" />
-              Reviews
-            </TabsTrigger>
-            <TabsTrigger value="complaints" className="gap-2">
-              <AlertCircle className="w-4 h-4" />
-              Complaints
-            </TabsTrigger>
-            <TabsTrigger value="customers" className="gap-2">
-              <Users className="w-4 h-4" />
-              Customers
-            </TabsTrigger>
-            <TabsTrigger value="settings" className="gap-2">
-              <Edit className="w-4 h-4" />
-              Site Settings
-            </TabsTrigger>
-            <TabsTrigger value="kot-reports" className="gap-2">
-              <Printer className="w-4 h-4" />
-              KOT Reports
-            </TabsTrigger>
-            <TabsTrigger value="audit" className="gap-2">
-              <ClipboardList className="w-4 h-4" />
-              Audit Log
-            </TabsTrigger>
-            <TabsTrigger value="analytics" className="gap-2" onClick={() => navigate('/admin/analytics')}>
-              <BarChart3 className="w-4 h-4" />
-              Analytics
-            </TabsTrigger>
+          <TabsList className="flex flex-wrap gap-1 w-full mb-6 h-auto p-1">
+            {/* Menu Management Group */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant={['products', 'categories', 'addons'].includes(activeTab) ? 'default' : 'ghost'} size="sm" className="gap-2">
+                  <Package className="w-4 h-4" />
+                  Menu
+                  <ChevronDown className="w-3 h-3" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start">
+                <DropdownMenuItem onClick={() => setActiveTab('products')} className={activeTab === 'products' ? 'bg-accent' : ''}>
+                  <Package className="w-4 h-4 mr-2" /> Products
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setActiveTab('categories')} className={activeTab === 'categories' ? 'bg-accent' : ''}>
+                  <Layers className="w-4 h-4 mr-2" /> Categories
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setActiveTab('addons')} className={activeTab === 'addons' ? 'bg-accent' : ''}>
+                  <Plus className="w-4 h-4 mr-2" /> Add-ons
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            {/* Orders & Operations */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant={['orders', 'tables', 'kot-reports'].includes(activeTab) ? 'default' : 'ghost'} size="sm" className="gap-2">
+                  <ShoppingCart className="w-4 h-4" />
+                  Orders
+                  <ChevronDown className="w-3 h-3" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start">
+                <DropdownMenuItem onClick={() => setActiveTab('orders')} className={activeTab === 'orders' ? 'bg-accent' : ''}>
+                  <ShoppingCart className="w-4 h-4 mr-2" /> All Orders
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setActiveTab('tables')} className={activeTab === 'tables' ? 'bg-accent' : ''}>
+                  <UtensilsCrossed className="w-4 h-4 mr-2" /> Tables
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setActiveTab('kot-reports')} className={activeTab === 'kot-reports' ? 'bg-accent' : ''}>
+                  <Printer className="w-4 h-4 mr-2" /> KOT Reports
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            {/* Pricing & Promotions */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant={['discounts', 'bulk-pricing'].includes(activeTab) ? 'default' : 'ghost'} size="sm" className="gap-2">
+                  <Tag className="w-4 h-4" />
+                  Pricing
+                  <ChevronDown className="w-3 h-3" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start">
+                <DropdownMenuItem onClick={() => setActiveTab('discounts')} className={activeTab === 'discounts' ? 'bg-accent' : ''}>
+                  <Tag className="w-4 h-4 mr-2" /> Discounts
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setActiveTab('bulk-pricing')} className={activeTab === 'bulk-pricing' ? 'bg-accent' : ''}>
+                  <DollarSign className="w-4 h-4 mr-2" /> Bulk Pricing
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            {/* Customers & Feedback */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant={['customers', 'reviews', 'complaints'].includes(activeTab) ? 'default' : 'ghost'} size="sm" className="gap-2">
+                  <Users className="w-4 h-4" />
+                  Customers
+                  <ChevronDown className="w-3 h-3" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start">
+                <DropdownMenuItem onClick={() => setActiveTab('customers')} className={activeTab === 'customers' ? 'bg-accent' : ''}>
+                  <Users className="w-4 h-4 mr-2" /> Customer List
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setActiveTab('reviews')} className={activeTab === 'reviews' ? 'bg-accent' : ''}>
+                  <Star className="w-4 h-4 mr-2" /> Reviews
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setActiveTab('complaints')} className={activeTab === 'complaints' ? 'bg-accent' : ''}>
+                  <AlertCircle className="w-4 h-4 mr-2" /> Complaints
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            {/* Reports & Analytics */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant={['analytics', 'audit'].includes(activeTab) ? 'default' : 'ghost'} size="sm" className="gap-2">
+                  <TrendingUp className="w-4 h-4" />
+                  Reports
+                  <ChevronDown className="w-3 h-3" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start">
+                <DropdownMenuItem onClick={() => navigate('/admin/analytics')}>
+                  <BarChart3 className="w-4 h-4 mr-2" /> Analytics
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setActiveTab('audit')} className={activeTab === 'audit' ? 'bg-accent' : ''}>
+                  <ClipboardList className="w-4 h-4 mr-2" /> Audit Log
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            {/* Settings & Tools */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant={['settings', 'bulk-upload'].includes(activeTab) ? 'default' : 'ghost'} size="sm" className="gap-2">
+                  <Settings className="w-4 h-4" />
+                  Settings
+                  <ChevronDown className="w-3 h-3" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start">
+                <DropdownMenuItem onClick={() => setActiveTab('settings')} className={activeTab === 'settings' ? 'bg-accent' : ''}>
+                  <Settings className="w-4 h-4 mr-2" /> Site Settings
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setActiveTab('bulk-upload')} className={activeTab === 'bulk-upload' ? 'bg-accent' : ''}>
+                  <Upload className="w-4 h-4 mr-2" /> Bulk Upload
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </TabsList>
 
           <TabsContent value="products">
@@ -3590,7 +3654,7 @@ function CustomersTab() {
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [newCustomer, setNewCustomer] = useState({ name: '', phone: '', email: '' });
-  const [editingCustomer, setEditingCustomer] = useState<{ id: number; name: string; phone: string; email: string } | null>(null);
+  const [editingCustomer, setEditingCustomer] = useState<{ id: number; name: string; phone: string; email: string; storeCredit: number; notes: string } | null>(null);
 
   const createCustomer = trpc.customers.create.useMutation({
     onSuccess: () => {
@@ -3710,6 +3774,8 @@ function CustomersTab() {
                             name: customer.name || '',
                             phone: customer.phone || '',
                             email: customer.email || '',
+                            storeCredit: customer.storeCredit || 0,
+                            notes: customer.notes || '',
                           });
                           setShowEditDialog(true);
                         }}
@@ -3815,6 +3881,26 @@ function CustomersTab() {
                   placeholder="customer@email.com"
                 />
               </div>
+              <div>
+                <Label>Store Credit (₹)</Label>
+                <Input
+                  type="number"
+                  min="0"
+                  value={editingCustomer.storeCredit}
+                  onChange={(e) => setEditingCustomer({ ...editingCustomer, storeCredit: parseFloat(e.target.value) || 0 })}
+                  placeholder="0"
+                />
+                <p className="text-xs text-muted-foreground mt-1">Adjust store credit balance for this customer</p>
+              </div>
+              <div>
+                <Label>Notes</Label>
+                <Textarea
+                  value={editingCustomer.notes}
+                  onChange={(e) => setEditingCustomer({ ...editingCustomer, notes: e.target.value })}
+                  placeholder="Special preferences, delivery instructions, etc."
+                  rows={3}
+                />
+              </div>
             </div>
           )}
           <DialogFooter>
@@ -3831,6 +3917,8 @@ function CustomersTab() {
                     name: editingCustomer.name,
                     phone: editingCustomer.phone,
                     email: editingCustomer.email || undefined,
+                    storeCredit: editingCustomer.storeCredit,
+                    notes: editingCustomer.notes || undefined,
                   });
                 }
               }}
@@ -3861,6 +3949,7 @@ function SiteSettingsTab() {
   const [storeEmail, setStoreEmail] = useState('');
   const [storeAddress, setStoreAddress] = useState('');
   const [deliveryRadius, setDeliveryRadius] = useState('15');
+  const [deliveryEnabled, setDeliveryEnabled] = useState(true);
   const [saving, setSaving] = useState(false);
 
   // Load settings on mount
@@ -3883,6 +3972,7 @@ function SiteSettingsTab() {
       setStoreEmail(settingsMap.store_email || 'info@taiwanmaami.com');
       setStoreAddress(settingsMap.store_address || '34/8 Singarar Street, Triplicane, Chennai - 600005');
       setDeliveryRadius(settingsMap.delivery_radius || '15');
+      setDeliveryEnabled(settingsMap.delivery_enabled !== 'false');
     }
   }, [settings]);
 
@@ -3902,6 +3992,7 @@ function SiteSettingsTab() {
         { key: 'store_email', value: storeEmail },
         { key: 'store_address', value: storeAddress },
         { key: 'delivery_radius', value: deliveryRadius },
+        { key: 'delivery_enabled', value: deliveryEnabled ? 'true' : 'false' },
       ];
 
       for (const update of updates) {
@@ -4050,6 +4141,29 @@ function SiteSettingsTab() {
       <Card className="p-6">
         <h3 className="text-lg font-semibold mb-4">Delivery Settings</h3>
         <div className="space-y-4">
+          {/* Quick Delivery Toggle */}
+          <div className={`p-4 rounded-lg border-2 ${deliveryEnabled ? 'bg-green-50 border-green-300' : 'bg-red-50 border-red-300'}`}>
+            <div className="flex items-center justify-between">
+              <div>
+                <Label className="text-base font-semibold">Delivery Service</Label>
+                <p className="text-sm text-muted-foreground mt-1">
+                  {deliveryEnabled 
+                    ? 'Delivery is currently ENABLED for customers' 
+                    : 'Delivery is currently DISABLED - customers cannot place delivery orders'}
+                </p>
+              </div>
+              <Switch
+                checked={deliveryEnabled}
+                onCheckedChange={setDeliveryEnabled}
+              />
+            </div>
+            {!deliveryEnabled && (
+              <p className="text-sm text-red-700 mt-2 font-medium">
+                ⚠️ Use this to temporarily disable deliveries during bad weather, staff shortages, or high demand.
+              </p>
+            )}
+          </div>
+
           <div>
             <Label>Delivery Radius (km)</Label>
             <div className="flex items-center gap-4 mt-2">
@@ -4060,6 +4174,7 @@ function SiteSettingsTab() {
                 value={deliveryRadius}
                 onChange={(e) => setDeliveryRadius(e.target.value)}
                 className="w-32"
+                disabled={!deliveryEnabled}
               />
               <span className="text-muted-foreground">kilometers from T Nagar outlet</span>
             </div>
@@ -4070,7 +4185,7 @@ function SiteSettingsTab() {
           </div>
           <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
             <p className="text-sm text-amber-800">
-              <strong>Current setting:</strong> Delivery available within {deliveryRadius}km of T Nagar outlet.
+              <strong>Current setting:</strong> {deliveryEnabled ? `Delivery available within ${deliveryRadius}km of T Nagar outlet.` : 'Delivery is currently disabled.'}
               Palladium outlet is pickup/in-store only.
             </p>
           </div>

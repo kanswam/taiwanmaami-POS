@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { trpc } from '@/lib/trpc';
 import { useCart } from '@/contexts/CartContext';
-import { Search, ShoppingCart, Truck, Store, ChevronRight, ArrowLeft, Home } from 'lucide-react';
+import { Search, ShoppingCart, Truck, Store, ChevronRight, ArrowLeft, Home, AlertCircle } from 'lucide-react';
 import { Link } from 'wouter';
 import { formatPrice } from '@shared/types';
 
@@ -88,9 +88,10 @@ export default function Menu() {
     isDelivery: state.orderType === 'delivery',
   });
 
-  // Get delivery settings (radius)
+  // Get delivery settings (radius and enabled status)
   const { data: deliverySettings } = trpc.menu.getDeliverySettings.useQuery();
   const deliveryRadius = deliverySettings?.deliveryRadius || 15;
+  const deliveryEnabled = deliverySettings?.deliveryEnabled !== false;
 
   // Get subcategories for selected category
   const categorySubcategories = useMemo(() => {
@@ -425,10 +426,17 @@ export default function Menu() {
 
             {/* Delivery radius notice */}
             {state.orderType === 'delivery' && (
-              <div className="flex items-center gap-2 px-3 py-2 bg-primary/10 border border-primary/20 rounded-lg">
-                <Truck className="w-5 h-5 text-primary" />
-                <span className="font-semibold text-primary">Delivery from T Nagar (within {deliveryRadius}km)</span>
-              </div>
+              deliveryEnabled ? (
+                <div className="flex items-center gap-2 px-3 py-2 bg-primary/10 border border-primary/20 rounded-lg">
+                  <Truck className="w-5 h-5 text-primary" />
+                  <span className="font-semibold text-primary">Delivery from T Nagar (within {deliveryRadius}km)</span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 px-4 py-3 bg-red-100 border-2 border-red-300 rounded-lg">
+                  <AlertCircle className="w-5 h-5 text-red-600" />
+                  <span className="font-bold text-red-700">Delivery is temporarily unavailable. Please choose In-store or Pickup.</span>
+                </div>
+              )
             )}
 
             {/* Search */}

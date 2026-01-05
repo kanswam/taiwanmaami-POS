@@ -1394,3 +1394,61 @@
 ### Delivery Message Styling
 - [x] Make "Delivery from T Nagar" message bolder
 - [x] Improve visibility and prominence of delivery info (added background, border, larger icon)
+
+
+## Phase 44 - Branding, Admin Reorganization, New Features (Jan 5, 2026)
+
+### Remove Moutan Branding
+- [ ] Remove Moutan name and logo from header
+- [ ] Remove Moutan from footer
+- [ ] Display Taiwan Maami prominently throughout
+
+### Admin Panel Reorganization
+- [ ] Group related tabs into logical categories
+- [ ] Create dropdown/submenu structure for cleaner navigation
+- [ ] Reduce visual clutter in admin interface
+
+### Store Credit Adjustment
+- [ ] Add store credit field to customer edit dialog
+- [ ] Allow admin to add/deduct store credit manually
+
+### Quick Delivery Toggle
+- [ ] Add one-click toggle in Site Settings to enable/disable all deliveries
+- [ ] Useful for bad weather or staff shortages
+
+### Customer Notes Field
+- [ ] Add notes field to users table in database
+- [ ] Add notes field to customer edit dialog
+- [ ] Store special preferences or delivery instructions
+
+
+## Phase 44 - Branding, Admin Reorganization & Customer Features (Jan 5, 2026)
+
+### Remove Moutan Branding
+- [x] Remove Moutan logo and name from header
+- [x] Remove Moutan from footer
+- [x] Keep only Taiwan Maami brand prominently displayed
+
+### Reorganize Admin Panel
+- [x] Group related tabs into dropdown menus
+- [x] Menu group: Products, Categories, Add-ons
+- [x] Orders group: All Orders, Tables, KOT Reports
+- [x] Pricing group: Discounts, Bulk Pricing
+- [x] Customers group: Customer List, Reviews, Complaints
+- [x] Reports group: Analytics, Audit Log
+- [x] Settings group: Site Settings, Bulk Upload
+
+### Store Credit Adjustment
+- [x] Add store credit field to customer edit dialog
+- [x] Allow admin to manually add/deduct store credit
+
+### Quick Delivery Toggle
+- [x] Add on/off switch for delivery in Site Settings
+- [x] Show prominent warning when delivery is disabled
+- [x] Disable delivery radius input when delivery is off
+- [x] Menu page shows "Delivery temporarily unavailable" when disabled
+
+### Customer Notes
+- [x] Add notes field to users table
+- [x] Add notes textarea to customer edit dialog
+- [x] Store special preferences, delivery instructions, etc.
