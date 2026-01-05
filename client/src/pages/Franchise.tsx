@@ -7,10 +7,10 @@ import { ArrowRight, Mail } from 'lucide-react';
 
 export default function Franchise() {
   // Fetch CMS content from database
-  const { data: content } = trpc.cms.getContent.useQuery({ key: 'franchise' });
+  const { data: content } = trpc.cms.getContent.useQuery({ key: 'franchise_opportunity' });
   
   // Default content if not set in CMS
-  const pageContent = (typeof content === 'string' ? content : '') || `
+  const pageContent = ((content as any)?.value || '') || `
 # Franchise Opportunity
 
 ## Join the Taiwan Maami Family

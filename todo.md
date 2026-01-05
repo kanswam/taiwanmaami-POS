@@ -1699,3 +1699,10 @@
 - [x] Add Shipping Policy to footer Quick Links
 - [x] Add Shipping Policy page (CMS editable)
 - [x] Fix Locations link on About Us page to scroll directly to outlets section
+
+
+## Phase 38 - FAQ & Franchise CMS
+- [x] Add FAQ to footer Quick Links
+- [x] Add Franchise Opportunity to CMS Content Pages in Admin
+- [x] Add Shipping Policy to CMS Content Pages in Admin
+- [x] Ensure Theresa can edit all content pages from Admin

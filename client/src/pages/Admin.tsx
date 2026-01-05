@@ -5690,6 +5690,8 @@ function CMSTab() {
   const [privacyPolicy, setPrivacyPolicy] = useState('');
   const [refundPolicy, setRefundPolicy] = useState('');
   const [faq, setFaq] = useState('');
+  const [franchiseOpportunity, setFranchiseOpportunity] = useState('');
+  const [shippingPolicy, setShippingPolicy] = useState('');
   const [saving, setSaving] = useState<string | null>(null);
 
   useEffect(() => {
@@ -5703,6 +5705,8 @@ function CMSTab() {
       setPrivacyPolicy(contentMap.privacy_policy || '');
       setRefundPolicy(contentMap.refund_policy || '');
       setFaq(contentMap.faq || '');
+      setFranchiseOpportunity(contentMap.franchise_opportunity || '');
+      setShippingPolicy(contentMap.shipping_policy || '');
     }
   }, [cmsContent]);
 
@@ -5796,7 +5800,39 @@ function CMSTab() {
           placeholder="Frequently asked questions and answers..."
           className="min-h-[200px]"
         />
-        <p className="text-xs text-muted-foreground mt-2">Format: Q: Question? A: Answer. (One Q&A per line)</p>
+        <p className="text-xs text-muted-foreground mt-2">Use ## for question headers and regular text for answers.</p>
+      </Card>
+
+      <Card className="p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold">Shipping Policy</h3>
+          <Button onClick={() => handleSave('shipping_policy', shippingPolicy)} disabled={saving === 'shipping_policy'} size="sm">
+            {saving === 'shipping_policy' ? 'Saving...' : 'Save'}
+          </Button>
+        </div>
+        <Textarea
+          value={shippingPolicy}
+          onChange={(e) => setShippingPolicy(e.target.value)}
+          placeholder="Your shipping and delivery policy... Include delivery areas, times, and charges."
+          className="min-h-[200px]"
+        />
+        <p className="text-xs text-muted-foreground mt-2">Use # for main title, ## for sections, - for bullet points.</p>
+      </Card>
+
+      <Card className="p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold">Franchise Opportunity</h3>
+          <Button onClick={() => handleSave('franchise_opportunity', franchiseOpportunity)} disabled={saving === 'franchise_opportunity'} size="sm">
+            {saving === 'franchise_opportunity' ? 'Saving...' : 'Save'}
+          </Button>
+        </div>
+        <Textarea
+          value={franchiseOpportunity}
+          onChange={(e) => setFranchiseOpportunity(e.target.value)}
+          placeholder="Information about franchise opportunities... Include requirements, investment details, and contact information."
+          className="min-h-[200px]"
+        />
+        <p className="text-xs text-muted-foreground mt-2">Use # for main title, ## for sections, - for bullet points.</p>
       </Card>
     </div>
   );
