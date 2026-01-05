@@ -81,6 +81,21 @@ export default function Home() {
     }
   }, [siteSettings]);
 
+  // Handle scroll to section from other pages (via sessionStorage)
+  useEffect(() => {
+    const scrollToSection = sessionStorage.getItem('scrollToSection');
+    if (scrollToSection) {
+      sessionStorage.removeItem('scrollToSection');
+      // Wait for page to fully render
+      setTimeout(() => {
+        const element = document.getElementById(scrollToSection);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth' });
+        }
+      }, 300);
+    }
+  }, []);
+
   // Category cards with video backgrounds - links to /menu with category filter
   // Using actual database slugs: bubble-tea, coffee, mochis, food
   const menuCategories = [

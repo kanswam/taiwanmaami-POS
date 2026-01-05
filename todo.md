@@ -1706,3 +1706,7 @@
 - [x] Add Franchise Opportunity to CMS Content Pages in Admin
 - [x] Add Shipping Policy to CMS Content Pages in Admin
 - [x] Ensure Theresa can edit all content pages from Admin
+
+
+## Phase 39 - Fix Locations Link
+- [x] Fix Locations link on About Us page to scroll directly to outlets section

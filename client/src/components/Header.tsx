@@ -55,8 +55,9 @@ export function Header() {
                         element.scrollIntoView({ behavior: 'smooth' });
                       }
                     } else {
-                      // Navigate to home page with hash - browser will handle scroll
-                      window.location.href = '/#' + hash;
+                      // Store the hash in sessionStorage and navigate to home
+                      sessionStorage.setItem('scrollToSection', hash);
+                      window.location.href = '/';
                     }
                   }}
                   className={`text-base font-semibold transition-colors hover:text-primary text-foreground cursor-pointer`}
@@ -149,8 +150,9 @@ export function Header() {
                               element.scrollIntoView({ behavior: 'smooth' });
                             }
                           } else {
-                            // Navigate to home page with hash - browser will handle scroll
-                            window.location.href = '/#' + hash;
+                            // Store the hash in sessionStorage and navigate to home
+                            sessionStorage.setItem('scrollToSection', hash);
+                            window.location.href = '/';
                           }
                         }}
                         className="flex items-center gap-3 p-3 rounded-lg transition-colors hover:bg-secondary cursor-pointer"
