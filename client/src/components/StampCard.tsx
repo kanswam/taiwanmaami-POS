@@ -121,7 +121,6 @@ export function StampCard({ compact = false }: { compact?: boolean }) {
           <p className="text-xs text-muted-foreground mb-2 font-medium">How it works:</p>
           <ul className="text-xs text-muted-foreground space-y-1">
             <li>• Earn 1 stamp for every ₹450 spent</li>
-            <li>• Bonus stamp when you spend ₹900+</li>
             <li>• Collect 10 stamps = 1 FREE Large Bubble Tea</li>
           </ul>
         </div>

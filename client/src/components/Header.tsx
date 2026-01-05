@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
@@ -17,7 +17,7 @@ export function Header() {
   const navLinks = [
     { href: '/menu', label: 'Menu' },
     { href: '/about', label: 'About Us' },
-    { href: '/locations', label: 'Locations' },
+    { href: '/#outlets', label: 'Locations' },
   ];
 
   const isActive = (href: string) => location === href;
@@ -52,15 +52,36 @@ export function Header() {
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-6">
             {navLinks.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className={`text-sm font-medium transition-colors hover:text-primary ${
-                  isActive(link.href) ? 'text-primary' : 'text-muted-foreground'
-                }`}
-              >
-                {link.label}
-              </Link>
+              link.href.startsWith('/#') ? (
+                <a
+                  key={link.href}
+                  href={link.href}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    const hash = link.href.split('#')[1];
+                    if (location === '/') {
+                      // Already on home page, just scroll
+                      document.getElementById(hash)?.scrollIntoView({ behavior: 'smooth' });
+                    } else {
+                      // Navigate to home then scroll
+                      window.location.href = link.href;
+                    }
+                  }}
+                  className={`text-sm font-medium transition-colors hover:text-primary text-muted-foreground cursor-pointer`}
+                >
+                  {link.label}
+                </a>
+              ) : (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className={`text-sm font-medium transition-colors hover:text-primary ${
+                    isActive(link.href) ? 'text-primary' : 'text-muted-foreground'
+                  }`}
+                >
+                  {link.label}
+                </Link>
+              )
             ))}
           </nav>
 
@@ -122,21 +143,41 @@ export function Header() {
               <SheetContent side="right" className="w-[280px]">
                 <div className="flex flex-col gap-4 mt-8">
                   {navLinks.map((link) => (
-                    <Link
-                      key={link.href}
-                      href={link.href}
-                      onClick={() => setMobileMenuOpen(false)}
-                      className={`flex items-center gap-3 p-3 rounded-lg transition-colors ${
-                        isActive(link.href)
-                          ? 'bg-primary text-primary-foreground'
-                          : 'hover:bg-secondary'
-                      }`}
-                    >
-                      {link.href === '/menu' && <Menu className="w-5 h-5" />}
-                      {link.href === '/about' && <Info className="w-5 h-5" />}
-                      {link.href === '/locations' && <MapPin className="w-5 h-5" />}
-                      {link.label}
-                    </Link>
+                    link.href.startsWith('/#') ? (
+                      <a
+                        key={link.href}
+                        href={link.href}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          setMobileMenuOpen(false);
+                          const hash = link.href.split('#')[1];
+                          if (location === '/') {
+                            document.getElementById(hash)?.scrollIntoView({ behavior: 'smooth' });
+                          } else {
+                            window.location.href = link.href;
+                          }
+                        }}
+                        className="flex items-center gap-3 p-3 rounded-lg transition-colors hover:bg-secondary cursor-pointer"
+                      >
+                        {link.href.includes('outlets') && <MapPin className="w-5 h-5" />}
+                        {link.label}
+                      </a>
+                    ) : (
+                      <Link
+                        key={link.href}
+                        href={link.href}
+                        onClick={() => setMobileMenuOpen(false)}
+                        className={`flex items-center gap-3 p-3 rounded-lg transition-colors ${
+                          isActive(link.href)
+                            ? 'bg-primary text-primary-foreground'
+                            : 'hover:bg-secondary'
+                        }`}
+                      >
+                        {link.href === '/menu' && <Menu className="w-5 h-5" />}
+                        {link.href === '/about' && <Info className="w-5 h-5" />}
+                        {link.label}
+                      </Link>
+                    )
                   ))}
 
                   <hr className="my-2" />

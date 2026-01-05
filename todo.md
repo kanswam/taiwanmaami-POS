@@ -1353,3 +1353,27 @@
 - [x] Add 15km delivery restriction from T Nagar
 - [ ] Show delivery restriction message to customers
 - [ ] Hide/disable delivery option for Palladium outlet
+
+
+## Phase 42 - Delivery Distance Setting, Loyalty Stamps, Locations Fix (Jan 5, 2026)
+
+### Delivery Distance Admin Setting
+- [x] Add delivery_settings table or use existing settings mechanism
+- [x] Create admin UI to adjust delivery radius (currently 15km)
+- [x] Allow admin to change distance based on weather/traffic/partner availability
+
+### Loyalty Stamps Visibility
+- [x] Verify stamps are being awarded correctly (1 stamp per ₹450 spent)
+- [x] Add stamp count display in Admin Customers tab
+- [x] Verify My Orders page shows stamp card for customers
+
+### Locations Navigation Fix
+- [x] Fix Locations link in header (currently 404)
+- [x] Navigate to homepage outlets section with videos
+- [x] Add smooth scroll to outlets section
+
+### Store Timings Display
+- [x] Add store timings to locations section on homepage
+- [x] Palladium: 10am - 10pm
+- [x] T Nagar: 12pm - 12am
+- [x] Added service types (In-store, Pickup, Delivery)

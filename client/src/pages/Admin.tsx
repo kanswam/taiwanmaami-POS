@@ -3653,6 +3653,7 @@ function CustomersTab() {
                 <th className="text-right p-3 text-sm font-medium">Orders</th>
                 <th className="text-right p-3 text-sm font-medium">Total Spent</th>
                 <th className="text-right p-3 text-sm font-medium">Store Credit</th>
+                <th className="text-center p-3 text-sm font-medium">Stamps</th>
                 <th className="text-left p-3 text-sm font-medium">Last Order</th>
               </tr>
             </thead>
@@ -3670,6 +3671,15 @@ function CustomersTab() {
                   <td className="p-3 text-right">{customer.totalOrders}</td>
                   <td className="p-3 text-right">{formatPrice(customer.totalSpent)}</td>
                   <td className="p-3 text-right">{formatPrice(customer.storeCredit)}</td>
+                  <td className="p-3 text-center">
+                    {customer.type === 'registered' ? (
+                      <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-amber-100 text-amber-700 text-xs font-medium">
+                        ⭐ {customer.stampCount || 0}/10
+                      </span>
+                    ) : (
+                      <span className="text-muted-foreground">-</span>
+                    )}
+                  </td>
                   <td className="p-3">
                     {customer.lastOrderDate 
                       ? new Date(customer.lastOrderDate).toLocaleDateString()
@@ -3680,7 +3690,7 @@ function CustomersTab() {
               ))}
               {filteredCustomers.length === 0 && (
                 <tr>
-                  <td colSpan={8} className="p-8 text-center text-muted-foreground">
+                  <td colSpan={9} className="p-8 text-center text-muted-foreground">
                     No customers found
                   </td>
                 </tr>
@@ -3757,6 +3767,7 @@ function SiteSettingsTab() {
   const [storePhone, setStorePhone] = useState('');
   const [storeEmail, setStoreEmail] = useState('');
   const [storeAddress, setStoreAddress] = useState('');
+  const [deliveryRadius, setDeliveryRadius] = useState('15');
   const [saving, setSaving] = useState(false);
 
   // Load settings on mount
@@ -3778,6 +3789,7 @@ function SiteSettingsTab() {
       setStorePhone(settingsMap.store_phone || '+91 98765 43210');
       setStoreEmail(settingsMap.store_email || 'info@taiwanmaami.com');
       setStoreAddress(settingsMap.store_address || '34/8 Singarar Street, Triplicane, Chennai - 600005');
+      setDeliveryRadius(settingsMap.delivery_radius || '15');
     }
   }, [settings]);
 
@@ -3796,6 +3808,7 @@ function SiteSettingsTab() {
         { key: 'store_phone', value: storePhone },
         { key: 'store_email', value: storeEmail },
         { key: 'store_address', value: storeAddress },
+        { key: 'delivery_radius', value: deliveryRadius },
       ];
 
       for (const update of updates) {
@@ -3937,6 +3950,36 @@ function SiteSettingsTab() {
               placeholder="34/8 Singarar Street, Triplicane, Chennai - 600005"
               className="w-full min-h-[80px] p-3 rounded-md border border-input bg-background mt-2"
             />
+          </div>
+        </div>
+      </Card>
+
+      <Card className="p-6">
+        <h3 className="text-lg font-semibold mb-4">Delivery Settings</h3>
+        <div className="space-y-4">
+          <div>
+            <Label>Delivery Radius (km)</Label>
+            <div className="flex items-center gap-4 mt-2">
+              <Input
+                type="number"
+                min="1"
+                max="50"
+                value={deliveryRadius}
+                onChange={(e) => setDeliveryRadius(e.target.value)}
+                className="w-32"
+              />
+              <span className="text-muted-foreground">kilometers from T Nagar outlet</span>
+            </div>
+            <p className="text-sm text-muted-foreground mt-2">
+              Adjust based on weather conditions, traffic, or delivery partner availability.
+              Customers outside this radius will see a notice that delivery is not available to their area.
+            </p>
+          </div>
+          <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+            <p className="text-sm text-amber-800">
+              <strong>Current setting:</strong> Delivery available within {deliveryRadius}km of T Nagar outlet.
+              Palladium outlet is pickup/in-store only.
+            </p>
           </div>
         </div>
       </Card>

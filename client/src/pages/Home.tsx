@@ -60,6 +60,7 @@ export default function Home() {
       mapUrl: 'https://maps.google.com/?q=Palladium+Mall+Velachery+Chennai',
       phone: '+91 89259 14303',
       hours: '10:00 AM - 10:00 PM',
+      services: 'In-store & Pickup only',
     },
     {
       name: 'Taiwan Maami (Moutan)',
@@ -70,6 +71,7 @@ export default function Home() {
       mapUrl: 'https://maps.google.com/?q=29+Burkit+Road+TNagar+Chennai',
       phone: '+91 91505 70557',
       hours: '12:00 PM - 12:00 AM',
+      services: 'In-store, Pickup & Delivery',
     },
   ];
 
@@ -221,7 +223,7 @@ export default function Home() {
       </section>
 
       {/* Visit Our Outlets - Location Video Cards */}
-      <section className="py-16 bg-secondary/30">
+      <section id="outlets" className="py-16 bg-secondary/30 scroll-mt-20">
         <div className="container">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold mb-4">Visit Our Outlets</h2>
@@ -270,6 +272,9 @@ export default function Home() {
                     <p className="text-white/80 text-sm flex items-center gap-2">
                       <Clock className="w-4 h-4" />
                       {location.hours}
+                    </p>
+                    <p className="text-amber-300 text-xs font-medium mt-1">
+                      {location.services}
                     </p>
                   </div>
                   
