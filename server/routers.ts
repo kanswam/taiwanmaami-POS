@@ -11,7 +11,7 @@ import { categories, subcategories, products, addons, orders, orderItems as orde
 import { eq, and, desc, asc, sql, or } from "drizzle-orm";
 import { generateOrderNumber, calculateGst } from "@shared/types";
 // POS functionality removed - Employee Master import removed
-import { outletProducts, loyaltyRewards, stampTransactions, guestOrders, reviews, kotQueue, productAuditLog, categoryAuditLog, complaints } from "../drizzle/schema";
+import { outletProducts, loyaltyRewards, stampTransactions, guestOrders, reviews, kotQueue, receiptQueue, productAuditLog, categoryAuditLog, complaints } from "../drizzle/schema";
 import { ENV } from './_core/env';
 import { notifyOwner } from './_core/notification';
 
@@ -828,6 +828,37 @@ export const appRouter = router({
             outletId: order.outletId || 1, // Default to outlet 1 if not specified
             orderNumber: order.orderNumber,
             kotData: kotData, // JSON type, no need to stringify
+            isPrinted: false,
+          });
+          
+          // Queue receipt for printing
+          const receiptData = {
+            orderNumber: order.orderNumber,
+            orderType: order.orderType.toUpperCase(),
+            customerName: order.customerName || 'Guest',
+            customerPhone: order.customerPhone || '',
+            items: items.map(item => {
+              const addons = itemAddons.filter(a => a.orderItemId === item.id);
+              return {
+                name: item.productName,
+                quantity: item.quantity,
+                price: item.unitPrice,
+                addons: addons.map(a => ({ name: a.addonName, price: a.addonPrice })),
+              };
+            }),
+            subtotal: order.subtotal,
+            sgst: order.stateGst,
+            cgst: order.centralGst,
+            discount: order.discountAmount || 0,
+            total: order.totalAmount,
+            createdAt: new Date().toISOString(),
+          };
+          
+          await dbInstance!.insert(receiptQueue).values({
+            orderId: order.id,
+            outletId: order.outletId || 1,
+            orderNumber: order.orderNumber,
+            receiptData: receiptData,
             isPrinted: false,
           });
           

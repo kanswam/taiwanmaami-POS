@@ -1541,3 +1541,18 @@
 - [x] Fix Menu dropdown staying highlighted when other tabs are selected
 - [x] Ensure correct tab is highlighted based on active selection
 - [x] Changed all dropdown buttons to use outline variant with transparent border
+
+
+## Phase 51 - KOT Polling Automation & Invoice Printing Fix (Jan 5, 2026)
+
+### KOT Polling Automation Script
+- [x] Create standalone KOT polling script for Windows/Mac (taiwan-maami-printer.js)
+- [x] Created simple batch/shell scripts (Start-Printer.bat, Start-Printer.command)
+- [x] Created PRINTER-SETUP-SIMPLE.md with easy instructions
+- [x] Script polls both KOT and Receipt queues
+
+### Invoice Printing Issue
+- [x] Investigated - receipt queue was NOT being populated after payment
+- [x] Root cause: verifyPayment only created KOT, not receipt
+- [x] Fixed: Added receipt queueing to verifyPayment procedure
+- [x] Receipt now queues automatically alongside KOT after successful payment
