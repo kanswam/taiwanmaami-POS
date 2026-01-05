@@ -1753,3 +1753,26 @@
 - [x] Created new public endpoint `trpc.menu.getPublicSiteSettings.useQuery()` in routers.ts
 - [x] Updated Home.tsx to use the public endpoint instead of admin endpoint
 - [x] Verified fix works in dev preview - homepage loads without OAuth redirect
+
+
+## Phase 51 - SEO Improvements (Jan 5, 2026)
+
+### Meta Descriptions
+- [x] Add meta description to homepage
+- [x] Add meta description to menu page
+- [x] Add meta description to about page
+- [x] Add meta description to other public pages
+
+### Robots.txt
+- [x] Create robots.txt file
+- [x] Block admin and staff pages from indexing
+- [x] Allow all public pages
+
+### Sitemap.xml
+- [x] Create sitemap.xml with all public pages
+- [x] Include homepage, menu, about, terms, privacy, etc.
+
+### Structured Data (LocalBusiness Schema)
+- [x] Add JSON-LD LocalBusiness schema for both outlets
+- [x] Include address, phone, hours, cuisine type
+- [x] Add Restaurant schema with menu link
