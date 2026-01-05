@@ -127,6 +127,8 @@ export function ProductCard({ product, subcategory, category, isDelivery = false
           <img
             src={currentImage}
             alt={product.name}
+            loading="lazy"
+            decoding="async"
             className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
             onError={(e) => {
               (e.target as HTMLImageElement).src = '/placeholder-drink.jpg';

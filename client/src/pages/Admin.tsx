@@ -593,7 +593,7 @@ function ProductsTab() {
                           <div className="flex items-center gap-3">
                             <div className="w-10 h-10 rounded bg-secondary overflow-hidden flex-shrink-0">
                               {product.imageUrl ? (
-                                <img src={product.imageUrl} alt="" className="w-full h-full object-cover" />
+                                <img src={product.imageUrl} alt="" loading="lazy" decoding="async" className="w-full h-full object-cover" />
                               ) : (
                                 <div className="w-full h-full flex items-center justify-center">
                                   <ImageIcon className="w-4 h-4 text-muted-foreground" />
@@ -678,7 +678,7 @@ function ProductsTab() {
                       <td className="p-3">
                         <div className="flex items-center gap-3">
                           {product.imageUrl ? (
-                            <img src={product.imageUrl} alt={product.name} className="w-10 h-10 rounded object-cover opacity-50" />
+                            <img src={product.imageUrl} alt={product.name} loading="lazy" decoding="async" className="w-10 h-10 rounded object-cover opacity-50" />
                           ) : (
                             <div className="w-10 h-10 rounded bg-orange-200 flex items-center justify-center">
                               <ImageIcon className="w-5 h-5 text-orange-400" />
@@ -840,7 +840,7 @@ function ProductEditDialog({ product, onUpdate }: { product: any; onUpdate: () =
                 <div key={index} className="relative aspect-square rounded-lg border-2 border-dashed border-border overflow-hidden bg-secondary flex items-center justify-center">
                   {images[index] ? (
                     <>
-                      <img src={images[index]!} alt="" className="w-full h-full object-cover" />
+                      <img src={images[index]!} alt="" loading="lazy" decoding="async" className="w-full h-full object-cover" />
                       <div className="absolute inset-0 bg-black/50 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center gap-1">
                         <label className="cursor-pointer">
                           <input
@@ -1342,6 +1342,8 @@ function CategoriesTab() {
                               <img 
                                 src={cat.imageUrl || ''} 
                                 alt="" 
+                                loading="lazy"
+                                decoding="async"
                                 className={`w-full h-full object-cover ${!cat.imageUrl ? 'hidden' : ''}`} 
                                 id={`cat-img-preview-${cat.id}`} 
                               />
@@ -2726,7 +2728,7 @@ function SubcategoryEditForm({ sub, category, updateSubcategory, onClose }: { su
         <div className="flex items-center gap-4 mt-2">
           <div className="w-24 h-24 rounded-lg border-2 border-dashed border-muted-foreground/25 flex items-center justify-center overflow-hidden bg-muted">
             {imagePreview ? (
-              <img src={imagePreview} alt="" className="w-full h-full object-cover" />
+              <img src={imagePreview} alt="" loading="lazy" decoding="async" className="w-full h-full object-cover" />
             ) : (
               <ImageIcon className="w-8 h-8 text-muted-foreground" />
             )}
@@ -5495,7 +5497,7 @@ function CreateProductDialog({
           <div className="flex items-start gap-4">
             <div className="w-32 h-32 border-2 border-dashed rounded-lg overflow-hidden flex items-center justify-center bg-secondary/20">
               {imagePreview ? (
-                <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
+                <img src={imagePreview} alt="Preview" loading="lazy" decoding="async" className="w-full h-full object-cover" />
               ) : (
                 <div className="text-center text-muted-foreground">
                   <ImageIcon className="w-8 h-8 mx-auto mb-1" />

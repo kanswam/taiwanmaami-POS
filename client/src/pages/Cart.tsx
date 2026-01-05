@@ -97,6 +97,8 @@ export default function Cart() {
                     <img
                       src={item.imageUrl || '/placeholder-drink.jpg'}
                       alt={item.productName}
+                      loading="lazy"
+                      decoding="async"
                       className="w-full h-full object-cover"
                       onError={(e) => {
                         (e.target as HTMLImageElement).src = '/placeholder-drink.jpg';

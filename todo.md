@@ -1715,3 +1715,29 @@
 ## Phase 40 - Cache Control
 - [x] Add cache-busting headers to HTML pages
 - [x] Ensure browsers always fetch latest version
+
+
+## Phase 41 - Performance Optimization
+- [ ] Add lazy loading to all images
+- [ ] Add lazy loading to videos
+- [ ] Optimize image sizes with responsive srcset
+- [ ] Add preload hints for critical resources
+- [ ] Improve CDN caching headers
+
+
+## Phase 49 - Performance Optimization: Lazy Loading (Jan 5, 2026)
+
+### Image Lazy Loading
+- [x] Add loading="lazy" and decoding="async" to Menu.tsx category images
+- [x] Add loading="lazy" and decoding="async" to Menu.tsx subcategory images
+- [x] Add loading="lazy" and decoding="async" to Cart.tsx cart item images
+- [x] Add loading="lazy" and decoding="async" to Home.tsx CTA section image
+- [x] Add loading="lazy" and decoding="async" to Admin.tsx product images
+- [x] Add loading="lazy" and decoding="async" to MultiImageUpload.tsx
+- [x] Add fetchPriority="high" to Header.tsx logo (above fold)
+- [x] ProductCard.tsx already has lazy loading
+
+### Video Lazy Loading
+- [x] LazyVideo component uses IntersectionObserver for lazy loading
+- [x] Videos only load when within 100px of viewport
+- [x] Hero video uses preload="metadata" for faster initial load

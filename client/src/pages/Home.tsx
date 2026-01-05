@@ -450,6 +450,8 @@ export default function Home() {
               <img
                 src="/images/popping-boba.jpg"
                 alt="Popping Boba"
+                loading="lazy"
+                decoding="async"
                 className="w-full h-full object-cover opacity-20"
               />
               <div className="absolute inset-0 gradient-primary opacity-90" />

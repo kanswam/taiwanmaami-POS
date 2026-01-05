@@ -31,6 +31,7 @@ export function Header() {
             <img 
               src="/taiwan-maami-logo-full.png" 
               alt="Taiwan Maami" 
+              fetchPriority="high"
               className="h-16 md:h-24 w-auto"
               onError={(e) => {
                 (e.target as HTMLImageElement).style.display = 'none';
