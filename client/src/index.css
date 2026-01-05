@@ -70,8 +70,8 @@
   
   --radius: 0.65rem;
   
-  /* Background: Light tan/cream based on #d2b48c */
-  --background: #f5efe6;
+  /* Background: Warm beige RGB(210, 180, 140) */
+  --background: rgb(210, 180, 140);
   --foreground: #3d2c24;
   
   /* Card: Warm white */
