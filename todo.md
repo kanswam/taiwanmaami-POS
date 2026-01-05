@@ -1710,3 +1710,8 @@
 
 ## Phase 39 - Fix Locations Link
 - [x] Fix Locations link on About Us page to scroll directly to outlets section
+
+
+## Phase 40 - Cache Control
+- [x] Add cache-busting headers to HTML pages
+- [x] Ensure browsers always fetch latest version
