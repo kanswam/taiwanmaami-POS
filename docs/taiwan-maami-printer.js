@@ -1,17 +1,17 @@
 #!/usr/bin/env node
 /**
  * Taiwan Maami - KOT & Receipt Printer Client
- * Version 2.1 - ESC/POS Thermal Printer Support
+ * Version 2.2 - Dual KOT Printer Support
  * 
  * SETUP:
  * 1. Install Node.js from https://nodejs.org (v18 or higher)
  * 2. Open Command Prompt in this folder
  * 3. Run: npm install node-thermal-printer
- * 4. Edit the CONFIG section below with your printer name
+ * 4. Edit the CONFIG section below with your printer names
  * 5. Run: node taiwan-maami-printer.js
  * 
- * To find your printer name:
- * - Windows: Control Panel → Devices and Printers → Right-click printer → Properties
+ * To find your printer names:
+ * - Windows: Control Panel → Devices and Printers
  */
 
 const https = require('https');
@@ -42,8 +42,14 @@ try {
 // ╚════════════════════════════════════════════════════════════════╝
 
 const CONFIG = {
-  // Your printer name (MUST match exactly as shown in Windows)
-  PRINTER_NAME: 'EPSON TM-T82 Receipt',
+  // KOT Printers - KOTs will print to ALL printers in this list
+  KOT_PRINTERS: [
+    'Main Bill KOT',    // Front/Bar printer
+    'Kitchen KOT',      // Kitchen printer
+  ],
+  
+  // Receipt Printer (for customer receipts)
+  RECEIPT_PRINTER: 'Main Bill KOT',
   
   // Secret key for authentication (DO NOT SHARE THIS)
   KOT_PRINT_SECRET: 'LqhbdPxvsm27rFoc2ImVqc9sZ8Rrme3a',
@@ -87,7 +93,7 @@ function apiRequest(endpoint, method = 'GET', body = null) {
       method: method,
       headers: {
         'Content-Type': 'application/json',
-        'User-Agent': 'TaiwanMaami-Printer/2.1'
+        'User-Agent': 'TaiwanMaami-Printer/2.2'
       },
       timeout: 30000
     };
@@ -122,11 +128,11 @@ function apiRequest(endpoint, method = 'GET', body = null) {
   });
 }
 
-// Create thermal printer instance
-function createPrinter() {
+// Create thermal printer instance for a specific printer
+function createPrinter(printerName) {
   return new ThermalPrinter({
     type: PrinterTypes.EPSON,
-    interface: `printer:${CONFIG.PRINTER_NAME}`,
+    interface: `printer:${printerName}`,
     characterSet: 'PC437_USA',
     removeSpecialCharacters: false,
     lineCharacter: '-',
@@ -136,10 +142,9 @@ function createPrinter() {
   });
 }
 
-// Print KOT using thermal printer
-async function printKOT(kot) {
-  const printer = createPrinter();
-  const width = CONFIG.PAPER_WIDTH;
+// Print KOT to a single printer
+async function printKOTToPrinter(kot, printerName) {
+  const printer = createPrinter(printerName);
   
   try {
     // Header
@@ -246,14 +251,33 @@ async function printKOT(kot) {
     await printer.execute();
     return true;
   } catch (error) {
-    log(`Thermal print error: ${error.message}`, 'ERROR');
+    log(`Print error on ${printerName}: ${error.message}`, 'ERROR');
     throw error;
   }
 }
 
+// Print KOT to ALL configured KOT printers
+async function printKOT(kot) {
+  const results = [];
+  
+  for (const printerName of CONFIG.KOT_PRINTERS) {
+    try {
+      await printKOTToPrinter(kot, printerName);
+      log(`✓ KOT printed to: ${printerName}`);
+      results.push({ printer: printerName, success: true });
+    } catch (error) {
+      log(`✗ Failed to print KOT to ${printerName}: ${error.message}`, 'ERROR');
+      results.push({ printer: printerName, success: false, error: error.message });
+    }
+  }
+  
+  // Return true if at least one printer succeeded
+  return results.some(r => r.success);
+}
+
 // Print Receipt using thermal printer
 async function printReceipt(receipt) {
-  const printer = createPrinter();
+  const printer = createPrinter(CONFIG.RECEIPT_PRINTER);
   const data = receipt.receiptData || {};
   
   try {
@@ -366,17 +390,21 @@ async function pollKOT() {
       
       for (const kot of response.kots) {
         try {
-          await printKOT(kot);
+          const printed = await printKOT(kot);
           
-          // Mark as printed
-          await apiRequest('/api/kot/printed', 'POST', {
-            secret: CONFIG.KOT_PRINT_SECRET,
-            kotId: kot.id
-          });
-          
-          log(`✓ Printed KOT #${kot.id} (Order: ${kot.orderNumber})`);
+          if (printed) {
+            // Mark as printed
+            await apiRequest('/api/kot/printed', 'POST', {
+              secret: CONFIG.KOT_PRINT_SECRET,
+              kotId: kot.id
+            });
+            
+            log(`✓ KOT #${kot.id} (Order: ${kot.orderNumber}) printed to all printers`);
+          } else {
+            log(`✗ KOT #${kot.id} failed on all printers`, 'ERROR');
+          }
         } catch (printError) {
-          log(`✗ Failed to print KOT #${kot.id}: ${printError.message}`, 'ERROR');
+          log(`✗ Failed to process KOT #${kot.id}: ${printError.message}`, 'ERROR');
         }
       }
     }
@@ -421,33 +449,60 @@ async function poll() {
 }
 
 // Test printer connection
-async function testPrinter() {
-  log('Testing printer connection...');
-  const printer = createPrinter();
+async function testPrinters() {
+  log('Testing printer connections...');
   
-  try {
-    printer.alignCenter();
-    printer.bold(true);
-    printer.println('PRINTER TEST');
-    printer.bold(false);
-    printer.drawLine();
-    printer.alignLeft();
-    printer.println(`Date: ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}`);
-    printer.println(`Printer: ${CONFIG.PRINTER_NAME}`);
-    printer.newLine();
-    printer.println('If you can read this, the printer');
-    printer.println('is working correctly!');
-    printer.drawLine();
-    printer.newLine();
-    printer.newLine();
-    printer.cut();
+  // Test KOT printers
+  for (const printerName of CONFIG.KOT_PRINTERS) {
+    log(`Testing KOT printer: ${printerName}`);
+    const printer = createPrinter(printerName);
     
-    await printer.execute();
-    log('✓ Test print successful');
-    return true;
-  } catch (error) {
-    log(`✗ Test print failed: ${error.message}`, 'ERROR');
-    return false;
+    try {
+      printer.alignCenter();
+      printer.bold(true);
+      printer.println('PRINTER TEST');
+      printer.bold(false);
+      printer.drawLine();
+      printer.alignLeft();
+      printer.println(`Date: ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}`);
+      printer.println(`Printer: ${printerName}`);
+      printer.println(`Role: KOT Printer`);
+      printer.newLine();
+      printer.println('If you can read this, the printer');
+      printer.println('is working correctly!');
+      printer.drawLine();
+      printer.newLine();
+      printer.newLine();
+      printer.cut();
+      
+      await printer.execute();
+      log(`✓ ${printerName} - OK`);
+    } catch (error) {
+      log(`✗ ${printerName} - FAILED: ${error.message}`, 'ERROR');
+    }
+  }
+  
+  // Test receipt printer (if different from KOT printers)
+  if (!CONFIG.KOT_PRINTERS.includes(CONFIG.RECEIPT_PRINTER)) {
+    log(`Testing Receipt printer: ${CONFIG.RECEIPT_PRINTER}`);
+    const printer = createPrinter(CONFIG.RECEIPT_PRINTER);
+    
+    try {
+      printer.alignCenter();
+      printer.bold(true);
+      printer.println('RECEIPT PRINTER TEST');
+      printer.bold(false);
+      printer.drawLine();
+      printer.println(`Printer: ${CONFIG.RECEIPT_PRINTER}`);
+      printer.drawLine();
+      printer.newLine();
+      printer.cut();
+      
+      await printer.execute();
+      log(`✓ ${CONFIG.RECEIPT_PRINTER} - OK`);
+    } catch (error) {
+      log(`✗ ${CONFIG.RECEIPT_PRINTER} - FAILED: ${error.message}`, 'ERROR');
+    }
   }
 }
 
@@ -456,18 +511,19 @@ async function startup() {
   console.log('');
   console.log('╔════════════════════════════════════════════════════════════╗');
   console.log('║         Taiwan Maami - KOT & Receipt Printer               ║');
-  console.log('║                    Version 2.1                              ║');
+  console.log('║              Version 2.2 - Dual Printer                    ║');
   console.log('╚════════════════════════════════════════════════════════════╝');
   console.log('');
   log(`Starting printer client...`);
-  log(`Printer: ${CONFIG.PRINTER_NAME}`);
+  log(`KOT Printers: ${CONFIG.KOT_PRINTERS.join(', ')}`);
+  log(`Receipt Printer: ${CONFIG.RECEIPT_PRINTER}`);
   log(`API URL: ${CONFIG.API_BASE_URL}`);
   log(`Polling every ${CONFIG.POLL_INTERVAL_SECONDS} seconds`);
   log(`Log file: ${LOG_FILE}`);
   console.log('');
   
-  // Test printer
-  await testPrinter();
+  // Test printers
+  await testPrinters();
   
   console.log('');
   console.log('Press Ctrl+C to stop');

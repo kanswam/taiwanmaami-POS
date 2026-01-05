@@ -1570,3 +1570,8 @@
 - [x] Add node-thermal-printer library support for compact printing
 - [x] Update setup documentation with new installation steps
 - [x] Update Start-Printer.bat to auto-install printer library
+
+### Dual KOT Printer Support
+- [x] Update printer script to support multiple KOT printers
+- [x] Configure Main Bill KOT (front) and Kitchen KOT (kitchen) printers
+- [x] Print same KOT to both printers simultaneously
