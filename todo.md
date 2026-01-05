@@ -1485,3 +1485,15 @@
 - [x] Fix cms.test.ts creating "Test Category" and "Updated Category" in production
 - [x] Ensure all tests clean up after themselves using afterAll hook
 - [x] Using unique test prefix "__VITEST_TEMP__" that gets cleaned up automatically
+
+
+## Phase 47 - Order Type UI Fixes (Jan 5, 2026)
+
+### Order Type Tiles
+- [x] Make all three order type cards equal height using flex layout
+- [x] Fix Dine In-Store card being taller than others (shortened descriptions)
+
+### Navigation Flow
+- [x] Change "Order Now" button to scroll to order options section
+- [x] Update Menu link in header to show order options first (/#order-options)
+- [x] Ensure customers see the three options before menu

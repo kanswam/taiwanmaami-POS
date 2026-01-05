@@ -112,12 +112,16 @@ export default function Home() {
                 {heroDescription}
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
-                <Link href="/menu">
-                  <Button size="lg" className="bg-white text-primary hover:bg-white/90 w-full sm:w-auto">
-                    Order Now
-                    <ArrowRight className="ml-2 w-5 h-5" />
-                  </Button>
-                </Link>
+                <Button 
+                  size="lg" 
+                  className="bg-white text-primary hover:bg-white/90 w-full sm:w-auto"
+                  onClick={() => {
+                    document.getElementById('order-options')?.scrollIntoView({ behavior: 'smooth' });
+                  }}
+                >
+                  Order Now
+                  <ArrowRight className="ml-2 w-5 h-5" />
+                </Button>
                 <Link href="/about">
                   <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/10 w-full sm:w-auto">
                     <MapPin className="mr-2 w-5 h-5" />
@@ -166,7 +170,7 @@ export default function Home() {
       </section>
 
       {/* How to Order Section */}
-      <section className="py-16 bg-background">
+      <section id="order-options" className="py-16 bg-background">
         <div className="container">
           <div className="text-center mb-10">
             <h2 className="text-3xl font-bold mb-4">How Would You Like to Order?</h2>
@@ -177,48 +181,48 @@ export default function Home() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
             {/* In-Store */}
-            <Link href="/menu?type=instore">
-              <Card className="p-6 text-center hover:shadow-lg transition-all duration-300 cursor-pointer group border-2 hover:border-primary">
-                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-colors">
+            <Link href="/menu?type=instore" className="h-full">
+              <Card className="p-6 text-center hover:shadow-lg transition-all duration-300 cursor-pointer group border-2 hover:border-primary h-full flex flex-col">
+                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-colors flex-shrink-0">
                   <Store className="w-8 h-8 text-primary group-hover:text-white" />
                 </div>
                 <h3 className="font-bold text-xl mb-2">Dine In-Store</h3>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Visit our outlets in Palladium Mall or T Nagar and enjoy freshly made bubble tea
+                <p className="text-sm text-muted-foreground mb-4 flex-grow">
+                  Visit our outlets and enjoy freshly made bubble tea
                 </p>
-                <div className="text-primary font-medium flex items-center justify-center gap-2">
+                <div className="text-primary font-medium flex items-center justify-center gap-2 mt-auto">
                   Order In-Store <ArrowRight className="w-4 h-4" />
                 </div>
               </Card>
             </Link>
 
             {/* Delivery */}
-            <Link href="/menu?type=delivery">
-              <Card className="p-6 text-center hover:shadow-lg transition-all duration-300 cursor-pointer group border-2 hover:border-primary">
-                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-colors">
+            <Link href="/menu?type=delivery" className="h-full">
+              <Card className="p-6 text-center hover:shadow-lg transition-all duration-300 cursor-pointer group border-2 hover:border-primary h-full flex flex-col">
+                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-colors flex-shrink-0">
                   <Truck className="w-8 h-8 text-primary group-hover:text-white" />
                 </div>
                 <h3 className="font-bold text-xl mb-2">Home Delivery</h3>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Get your favorites delivered to your doorstep from our T Nagar outlet
+                <p className="text-sm text-muted-foreground mb-4 flex-grow">
+                  Get your favorites delivered to your doorstep
                 </p>
-                <div className="text-primary font-medium flex items-center justify-center gap-2">
+                <div className="text-primary font-medium flex items-center justify-center gap-2 mt-auto">
                   Order Delivery <ArrowRight className="w-4 h-4" />
                 </div>
               </Card>
             </Link>
 
             {/* Pickup */}
-            <Link href="/menu?type=pickup">
-              <Card className="p-6 text-center hover:shadow-lg transition-all duration-300 cursor-pointer group border-2 hover:border-primary">
-                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-colors">
+            <Link href="/menu?type=pickup" className="h-full">
+              <Card className="p-6 text-center hover:shadow-lg transition-all duration-300 cursor-pointer group border-2 hover:border-primary h-full flex flex-col">
+                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-colors flex-shrink-0">
                   <ShoppingBag className="w-8 h-8 text-primary group-hover:text-white" />
                 </div>
                 <h3 className="font-bold text-xl mb-2">Quick Pickup</h3>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Order ahead and pick up at your convenience from either outlet
+                <p className="text-sm text-muted-foreground mb-4 flex-grow">
+                  Order ahead and pick up at your convenience
                 </p>
-                <div className="text-primary font-medium flex items-center justify-center gap-2">
+                <div className="text-primary font-medium flex items-center justify-center gap-2 mt-auto">
                   Order Pickup <ArrowRight className="w-4 h-4" />
                 </div>
               </Card>
