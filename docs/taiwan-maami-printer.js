@@ -44,12 +44,12 @@ try {
 const CONFIG = {
   // KOT Printers - KOTs will print to ALL printers in this list
   KOT_PRINTERS: [
-    'Main Bill KOT',    // Front/Bar printer
-    'Kitchen KOT',      // Kitchen printer
+    'MAIN BILL',        // Bar printer
+    'KITCHEN KOT',      // Kitchen printer
   ],
   
   // Receipt Printer (for customer receipts)
-  RECEIPT_PRINTER: 'Main Bill KOT',
+  RECEIPT_PRINTER: 'MAIN BILL',
   
   // Secret key for authentication (DO NOT SHARE THIS)
   KOT_PRINT_SECRET: 'LqhbdPxvsm27rFoc2ImVqc9sZ8Rrme3a',
