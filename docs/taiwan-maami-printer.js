@@ -27,14 +27,14 @@ const CONFIG = {
   // Your printer name (MUST match exactly as shown in system settings)
   PRINTER_NAME: 'EPSON TM-T82 Receipt',
   
-  // Secret key (get from Admin → Settings → Site Settings)
-  KOT_PRINT_SECRET: 'taiwan-maami-kot-secret-2024',
+  // Secret key for authentication (DO NOT SHARE THIS)
+  KOT_PRINT_SECRET: 'LqhbdPxvsm27rFoc2ImVqc9sZ8Rrme3a',
   
   // How often to check for new orders (in seconds)
   POLL_INTERVAL_SECONDS: 10,
   
   // Website URL (don't change unless instructed)
-  API_BASE_URL: 'https://taiwanmaami.com',
+  API_BASE_URL: 'https://www.taiwanmaami.com',
 };
 
 // ╔════════════════════════════════════════════════════════════════╗
@@ -54,7 +54,7 @@ function log(message, type = 'INFO') {
   } catch (e) {}
 }
 
-// HTTP request helper
+// HTTP request helper with better error handling
 function apiRequest(endpoint, method = 'GET', body = null) {
   return new Promise((resolve, reject) => {
     const url = new URL(endpoint, CONFIG.API_BASE_URL);
@@ -66,22 +66,39 @@ function apiRequest(endpoint, method = 'GET', body = null) {
       method: method,
       headers: {
         'Content-Type': 'application/json',
-      }
+        'User-Agent': 'TaiwanMaami-Printer/2.0'
+      },
+      timeout: 30000 // 30 second timeout
     };
 
     const req = https.request(options, (res) => {
       let data = '';
       res.on('data', chunk => data += chunk);
       res.on('end', () => {
+        if (res.statusCode !== 200) {
+          log(`API Error: Status ${res.statusCode} - ${data}`, 'ERROR');
+          reject(new Error(`HTTP ${res.statusCode}: ${data}`));
+          return;
+        }
         try {
           resolve(JSON.parse(data));
         } catch (e) {
-          resolve(data);
+          log(`API Parse Error: ${e.message}`, 'ERROR');
+          reject(new Error(`JSON parse error: ${e.message}`));
         }
       });
     });
 
-    req.on('error', reject);
+    req.on('error', (error) => {
+      log(`API Network Error: ${error.message}`, 'ERROR');
+      reject(error);
+    });
+    
+    req.on('timeout', () => {
+      log('API Request Timeout', 'ERROR');
+      req.destroy();
+      reject(new Error('Request timeout'));
+    });
     
     if (body) {
       req.write(JSON.stringify(body));
@@ -251,7 +268,8 @@ function formatReceipt(receipt) {
   lines.push(centerText('Thank you for your order!', width));
   lines.push(centerText('Visit us again', width));
   lines.push('');
-  lines.push(centerText('GSTIN: [Your GSTIN]', width));
+  lines.push(centerText('Thamarai Foods & Trading Pvt Ltd', width));
+  lines.push(centerText('GSTIN: 33AAKCT4782H1Z1', width));
   lines.push('');
   lines.push('');
   lines.push('');
