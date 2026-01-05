@@ -1,19 +1,18 @@
 #!/usr/bin/env node
 /**
  * Taiwan Maami - KOT & Receipt Printer Client
- * Version 2.3 - Dual Printer Support (Simple Method)
+ * Version 2.4 - Network Printer Support
  * 
  * SETUP:
  * 1. Install Node.js from https://nodejs.org (v18 or higher)
- * 2. Edit the CONFIG section below with your printer names
+ * 2. Edit the CONFIG section below with your printer IP addresses
  * 3. Double-click Start-Printer.bat to run
  */
 
 const https = require('https');
+const net = require('net');
 const fs = require('fs');
 const path = require('path');
-const { exec } = require('child_process');
-const os = require('os');
 
 // ╔════════════════════════════════════════════════════════════════╗
 // ║                    CONFIGURATION                                ║
@@ -23,12 +22,12 @@ const os = require('os');
 const CONFIG = {
   // KOT Printers - KOTs will print to ALL printers in this list
   KOT_PRINTERS: [
-    'MAIN BILL',        // Bar printer
-    'KITCHEN KOT',      // Kitchen printer
+    { name: 'MAIN BILL', ip: '192.168.1.23', port: 9100 },
+    { name: 'KITCHEN KOT', ip: '192.168.1.22', port: 9100 },
   ],
   
   // Receipt Printer (for customer receipts)
-  RECEIPT_PRINTER: 'MAIN BILL',
+  RECEIPT_PRINTER: { name: 'MAIN BILL', ip: '192.168.1.23', port: 9100 },
   
   // Secret key for authentication (DO NOT SHARE THIS)
   KOT_PRINT_SECRET: 'LqhbdPxvsm27rFoc2ImVqc9sZ8Rrme3a',
@@ -39,13 +38,32 @@ const CONFIG = {
   // Website URL
   API_BASE_URL: 'https://www.taiwanmaami.com',
   
-  // Paper width in characters
-  PAPER_WIDTH: 42,
+  // Paper width in characters (48 for 80mm, 32 for 58mm)
+  PAPER_WIDTH: 48,
 };
 
 // ╔════════════════════════════════════════════════════════════════╗
 // ║              DO NOT EDIT BELOW THIS LINE                        ║
 // ╚════════════════════════════════════════════════════════════════╝
+
+// ESC/POS Commands
+const ESC = '\x1B';
+const GS = '\x1D';
+const COMMANDS = {
+  INIT: ESC + '@',                    // Initialize printer
+  ALIGN_LEFT: ESC + 'a' + '\x00',
+  ALIGN_CENTER: ESC + 'a' + '\x01',
+  ALIGN_RIGHT: ESC + 'a' + '\x02',
+  BOLD_ON: ESC + 'E' + '\x01',
+  BOLD_OFF: ESC + 'E' + '\x00',
+  DOUBLE_HEIGHT_ON: ESC + '!' + '\x10',
+  DOUBLE_WIDTH_ON: ESC + '!' + '\x20',
+  DOUBLE_ON: ESC + '!' + '\x30',      // Double height + width
+  NORMAL: ESC + '!' + '\x00',
+  CUT: GS + 'V' + '\x00',             // Full cut
+  PARTIAL_CUT: GS + 'V' + '\x01',
+  FEED_LINES: (n) => ESC + 'd' + String.fromCharCode(n),
+};
 
 const POLL_INTERVAL = CONFIG.POLL_INTERVAL_SECONDS * 1000;
 const LOG_FILE = path.join(__dirname, 'printer-log.txt');
@@ -72,7 +90,7 @@ function apiRequest(endpoint, method = 'GET', body = null) {
       method: method,
       headers: {
         'Content-Type': 'application/json',
-        'User-Agent': 'TaiwanMaami-Printer/2.3'
+        'User-Agent': 'TaiwanMaami-Printer/2.4'
       },
       timeout: 30000
     };
@@ -107,229 +125,261 @@ function apiRequest(endpoint, method = 'GET', body = null) {
   });
 }
 
-// Print text to a specific printer
-function printToDevice(text, printerName, filename) {
+// Send data directly to network printer via TCP socket
+function printToNetwork(data, printer) {
   return new Promise((resolve, reject) => {
-    const tempDir = os.tmpdir();
-    const tempFile = path.join(tempDir, `${filename}-${Date.now()}.txt`);
+    const socket = new net.Socket();
     
-    fs.writeFileSync(tempFile, text, 'utf8');
+    socket.setTimeout(10000);
     
-    // Use Windows print command with specific printer
-    const printCmd = `print /D:"${printerName}" "${tempFile}"`;
+    socket.on('error', (err) => {
+      socket.destroy();
+      reject(new Error(`Connection error: ${err.message}`));
+    });
     
-    exec(printCmd, (error, stdout, stderr) => {
-      // Clean up temp file after a delay
-      setTimeout(() => {
-        try { fs.unlinkSync(tempFile); } catch (e) {}
-      }, 5000);
-      
-      if (error) {
-        // Try alternative method using notepad
-        const altCmd = `notepad /p "${tempFile}"`;
-        exec(altCmd, (err2) => {
-          if (err2) {
-            reject(error);
-          } else {
+    socket.on('timeout', () => {
+      socket.destroy();
+      reject(new Error('Connection timeout'));
+    });
+    
+    socket.connect(printer.port, printer.ip, () => {
+      socket.write(data, 'binary', (err) => {
+        if (err) {
+          socket.destroy();
+          reject(err);
+        } else {
+          // Give printer time to receive data
+          setTimeout(() => {
+            socket.end();
             resolve();
-          }
-        });
-      } else {
-        resolve();
-      }
+          }, 500);
+        }
+      });
+    });
+    
+    socket.on('close', () => {
+      resolve();
     });
   });
 }
 
-// Format KOT for printing
+// Format KOT with ESC/POS commands
 function formatKOT(kot) {
   const width = CONFIG.PAPER_WIDTH;
-  const lines = [];
+  let data = '';
   
-  lines.push('='.repeat(width));
-  lines.push('');
-  lines.push(centerText('KITCHEN ORDER TICKET', width));
-  lines.push('='.repeat(width));
-  lines.push('');
+  // Initialize printer
+  data += COMMANDS.INIT;
   
-  lines.push(`Order #: ${kot.orderNumber}`);
-  lines.push(`Type: ${kot.kotData?.orderType || 'N/A'}`);
+  // Header
+  data += COMMANDS.ALIGN_CENTER;
+  data += COMMANDS.DOUBLE_ON;
+  data += COMMANDS.BOLD_ON;
+  data += 'KITCHEN ORDER TICKET\n';
+  data += COMMANDS.NORMAL;
+  data += COMMANDS.BOLD_OFF;
+  data += '='.repeat(width) + '\n';
+  
+  // Order info
+  data += COMMANDS.ALIGN_LEFT;
+  data += COMMANDS.DOUBLE_HEIGHT_ON;
+  data += COMMANDS.BOLD_ON;
+  data += `Order #: ${kot.orderNumber}\n`;
+  data += COMMANDS.NORMAL;
+  data += COMMANDS.BOLD_OFF;
+  
+  const orderType = kot.kotData?.orderType || 'N/A';
+  data += `Type: ${orderType}\n`;
   
   const time = new Date(kot.createdAt).toLocaleString('en-IN', { 
-    timeZone: 'Asia/Kolkata'
+    timeZone: 'Asia/Kolkata',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true
   });
-  lines.push(`Time: ${time}`);
+  data += `Time: ${time}\n`;
   
   const customer = kot.kotData?.customerName || 'Guest';
-  lines.push(`Customer: ${customer}`);
+  data += `Customer: ${customer}\n`;
   
   if (kot.kotData?.customerPhone) {
-    lines.push(`Phone: ${kot.kotData.customerPhone}`);
+    data += `Phone: ${kot.kotData.customerPhone}\n`;
   }
   
   if (kot.kotData?.tableNumber) {
-    lines.push(`Table: ${kot.kotData.tableNumber}`);
+    data += COMMANDS.BOLD_ON;
+    data += `Table: ${kot.kotData.tableNumber}\n`;
+    data += COMMANDS.BOLD_OFF;
   }
   
-  lines.push('');
-  lines.push('-'.repeat(width));
-  lines.push('');
+  data += '-'.repeat(width) + '\n\n';
   
   // Items
   const items = kot.kotData?.items || [];
   items.forEach((item, idx) => {
-    lines.push(`${idx + 1}. ${item.productName}`);
-    lines.push(`   x${item.quantity}`);
+    // Product name - bold and larger
+    data += COMMANDS.DOUBLE_HEIGHT_ON;
+    data += COMMANDS.BOLD_ON;
+    data += `${idx + 1}. ${item.productName}\n`;
+    data += `   x${item.quantity}\n`;
+    data += COMMANDS.NORMAL;
+    data += COMMANDS.BOLD_OFF;
     
+    // Customizations
     if (item.size && item.size !== 'Regular') {
-      lines.push(`   Size: ${item.size}`);
+      data += `   Size: ${item.size}\n`;
     }
     if (item.withBoba) {
-      lines.push(`   Boba: ${item.withBoba}`);
+      data += `   Boba: ${item.withBoba}\n`;
     }
     if (item.sugarLevel) {
-      lines.push(`   Sugar: ${item.sugarLevel}`);
+      data += `   Sugar: ${item.sugarLevel}\n`;
     }
     if (item.iceLevel) {
-      lines.push(`   Ice: ${item.iceLevel}`);
+      data += `   Ice: ${item.iceLevel}\n`;
     }
     if (item.addons && item.addons.length > 0) {
       const addonStr = item.addons.map(a => 
         a.quantity > 1 ? `${a.name} x${a.quantity}` : a.name
       ).join(', ');
-      lines.push(`   Add-ons: ${addonStr}`);
+      data += `   Add-ons: ${addonStr}\n`;
     }
+    
+    // Special instructions - highlighted
     if (item.specialInstructions) {
-      lines.push(`   *** ${item.specialInstructions}`);
+      data += COMMANDS.BOLD_ON;
+      data += `   *** ${item.specialInstructions}\n`;
+      data += COMMANDS.BOLD_OFF;
     }
-    lines.push('');
+    
+    data += '\n';
   });
   
   // Order-level special instructions
   if (kot.kotData?.specialInstructions) {
-    lines.push('-'.repeat(width));
-    lines.push('ORDER NOTES:');
-    lines.push(kot.kotData.specialInstructions);
+    data += '-'.repeat(width) + '\n';
+    data += COMMANDS.BOLD_ON;
+    data += 'ORDER NOTES:\n';
+    data += kot.kotData.specialInstructions + '\n';
+    data += COMMANDS.BOLD_OFF;
   }
   
-  lines.push('='.repeat(width));
-  lines.push('');
-  lines.push('');
-  lines.push('');
+  // Footer
+  data += '='.repeat(width) + '\n';
+  data += COMMANDS.FEED_LINES(4);
+  data += COMMANDS.CUT;
   
-  return lines.join('\n');
+  return data;
 }
 
-// Format Receipt for printing
+// Format Receipt with ESC/POS commands
 function formatReceipt(receipt) {
   const width = CONFIG.PAPER_WIDTH;
-  const lines = [];
-  const data = receipt.receiptData || {};
+  const data_obj = receipt.receiptData || {};
+  let data = '';
   
-  lines.push('='.repeat(width));
-  lines.push('');
-  lines.push(centerText('TAIWAN MAAMI', width));
-  lines.push(centerText('Authentic Taiwanese Bubble Tea', width));
-  lines.push('');
-  lines.push('-'.repeat(width));
-  lines.push(centerText('TAX INVOICE', width));
-  lines.push('-'.repeat(width));
-  lines.push('');
+  // Initialize printer
+  data += COMMANDS.INIT;
   
-  lines.push(`Order #: ${receipt.orderNumber}`);
+  // Header
+  data += COMMANDS.ALIGN_CENTER;
+  data += COMMANDS.DOUBLE_ON;
+  data += COMMANDS.BOLD_ON;
+  data += 'TAIWAN MAAMI\n';
+  data += COMMANDS.NORMAL;
+  data += COMMANDS.BOLD_OFF;
+  data += 'Authentic Taiwanese Bubble Tea\n\n';
+  data += '-'.repeat(width) + '\n';
+  data += COMMANDS.BOLD_ON;
+  data += 'TAX INVOICE\n';
+  data += COMMANDS.BOLD_OFF;
+  data += '-'.repeat(width) + '\n\n';
+  
+  // Order info
+  data += COMMANDS.ALIGN_LEFT;
+  data += `Order #: ${receipt.orderNumber}\n`;
+  
   const date = new Date(receipt.createdAt).toLocaleString('en-IN', { 
     timeZone: 'Asia/Kolkata'
   });
-  lines.push(`Date: ${date}`);
-  lines.push(`Type: ${data.orderType || 'N/A'}`);
+  data += `Date: ${date}\n`;
+  data += `Type: ${data_obj.orderType || 'N/A'}\n`;
   
-  if (data.customerName) {
-    lines.push(`Customer: ${data.customerName}`);
+  if (data_obj.customerName) {
+    data += `Customer: ${data_obj.customerName}\n`;
   }
-  if (data.customerPhone) {
-    lines.push(`Phone: ${data.customerPhone}`);
+  if (data_obj.customerPhone) {
+    data += `Phone: ${data_obj.customerPhone}\n`;
   }
   
-  lines.push('');
-  lines.push('-'.repeat(width));
-  lines.push('');
+  data += '\n' + '-'.repeat(width) + '\n\n';
   
   // Items
-  const items = data.items || [];
+  const items = data_obj.items || [];
   items.forEach(item => {
     const name = item.name || item.productName;
     const qty = item.quantity;
     const price = (item.price / 100).toFixed(2);
     const total = ((item.price * qty) / 100).toFixed(2);
     
-    lines.push(name);
-    lines.push(`  ${qty} x Rs.${price}    Rs.${total}`);
+    data += `${name}\n`;
+    data += `  ${qty} x Rs.${price}    Rs.${total}\n`;
     
     if (item.addons && item.addons.length > 0) {
       item.addons.forEach(addon => {
-        lines.push(`  + ${addon.name}    Rs.${(addon.price / 100).toFixed(2)}`);
+        data += `  + ${addon.name}    Rs.${(addon.price / 100).toFixed(2)}\n`;
       });
     }
   });
   
-  lines.push('');
-  lines.push('-'.repeat(width));
+  data += '\n' + '-'.repeat(width) + '\n';
   
   // Totals
-  if (data.subtotal) {
-    lines.push(rightAlign(`Subtotal: Rs.${(data.subtotal / 100).toFixed(2)}`, width));
+  data += COMMANDS.ALIGN_RIGHT;
+  if (data_obj.subtotal) {
+    data += `Subtotal: Rs.${(data_obj.subtotal / 100).toFixed(2)}\n`;
   }
-  if (data.sgst) {
-    lines.push(rightAlign(`SGST (2.5%): Rs.${(data.sgst / 100).toFixed(2)}`, width));
+  if (data_obj.sgst) {
+    data += `SGST (2.5%): Rs.${(data_obj.sgst / 100).toFixed(2)}\n`;
   }
-  if (data.cgst) {
-    lines.push(rightAlign(`CGST (2.5%): Rs.${(data.cgst / 100).toFixed(2)}`, width));
+  if (data_obj.cgst) {
+    data += `CGST (2.5%): Rs.${(data_obj.cgst / 100).toFixed(2)}\n`;
   }
-  if (data.discount) {
-    lines.push(rightAlign(`Discount: -Rs.${(data.discount / 100).toFixed(2)}`, width));
+  if (data_obj.discount) {
+    data += `Discount: -Rs.${(data_obj.discount / 100).toFixed(2)}\n`;
   }
   
-  lines.push('-'.repeat(width));
-  lines.push(rightAlign(`TOTAL: Rs.${(data.total / 100).toFixed(2)}`, width));
-  lines.push('-'.repeat(width));
+  data += '-'.repeat(width) + '\n';
+  data += COMMANDS.BOLD_ON;
+  data += `TOTAL: Rs.${(data_obj.total / 100).toFixed(2)}\n`;
+  data += COMMANDS.BOLD_OFF;
+  data += '-'.repeat(width) + '\n\n';
   
-  lines.push('');
-  lines.push(centerText('Thank you for your order!', width));
-  lines.push(centerText('Visit us again', width));
-  lines.push('');
-  lines.push(centerText('Thamarai Foods & Trading Pvt Ltd', width));
-  lines.push(centerText('GSTIN: 33AAKCT4782H1Z1', width));
-  lines.push('');
-  lines.push('');
-  lines.push('');
+  // Footer
+  data += COMMANDS.ALIGN_CENTER;
+  data += 'Thank you for your order!\n';
+  data += 'Visit us again\n\n';
+  data += 'Thamarai Foods & Trading Pvt Ltd\n';
+  data += 'GSTIN: 33AAKCT4782H1Z1\n';
+  data += COMMANDS.FEED_LINES(4);
+  data += COMMANDS.CUT;
   
-  return lines.join('\n');
-}
-
-// Helper functions
-function centerText(text, width) {
-  const padding = Math.max(0, Math.floor((width - text.length) / 2));
-  return ' '.repeat(padding) + text;
-}
-
-function rightAlign(text, width) {
-  const padding = Math.max(0, width - text.length);
-  return ' '.repeat(padding) + text;
+  return data;
 }
 
 // Print KOT to ALL configured printers
 async function printKOT(kot) {
-  const text = formatKOT(kot);
+  const data = formatKOT(kot);
   const results = [];
   
-  for (const printerName of CONFIG.KOT_PRINTERS) {
+  for (const printer of CONFIG.KOT_PRINTERS) {
     try {
-      await printToDevice(text, printerName, `kot-${kot.id}`);
-      log(`✓ KOT printed to: ${printerName}`);
-      results.push({ printer: printerName, success: true });
+      await printToNetwork(data, printer);
+      log(`✓ KOT printed to: ${printer.name} (${printer.ip})`);
+      results.push({ printer: printer.name, success: true });
     } catch (error) {
-      log(`✗ Failed to print KOT to ${printerName}: ${error.message}`, 'ERROR');
-      results.push({ printer: printerName, success: false });
+      log(`✗ Failed to print KOT to ${printer.name} (${printer.ip}): ${error.message}`, 'ERROR');
+      results.push({ printer: printer.name, success: false, error: error.message });
     }
   }
   
@@ -338,9 +388,9 @@ async function printKOT(kot) {
 
 // Print Receipt
 async function printReceipt(receipt) {
-  const text = formatReceipt(receipt);
+  const data = formatReceipt(receipt);
   try {
-    await printToDevice(text, CONFIG.RECEIPT_PRINTER, `receipt-${receipt.id}`);
+    await printToNetwork(data, CONFIG.RECEIPT_PRINTER);
     return true;
   } catch (error) {
     log(`Receipt print error: ${error.message}`, 'ERROR');
@@ -405,6 +455,27 @@ async function pollReceipt() {
   }
 }
 
+// Test printer connection
+async function testPrinter(printer) {
+  let data = '';
+  data += COMMANDS.INIT;
+  data += COMMANDS.ALIGN_CENTER;
+  data += COMMANDS.BOLD_ON;
+  data += 'PRINTER TEST\n';
+  data += COMMANDS.BOLD_OFF;
+  data += '-'.repeat(32) + '\n';
+  data += COMMANDS.ALIGN_LEFT;
+  data += `Printer: ${printer.name}\n`;
+  data += `IP: ${printer.ip}\n`;
+  data += `Time: ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}\n`;
+  data += '-'.repeat(32) + '\n';
+  data += 'Connection OK!\n';
+  data += COMMANDS.FEED_LINES(3);
+  data += COMMANDS.CUT;
+  
+  await printToNetwork(data, printer);
+}
+
 // Main polling loop
 async function poll() {
   await pollKOT();
@@ -416,14 +487,28 @@ async function startup() {
   console.log('');
   console.log('╔════════════════════════════════════════════════════════════╗');
   console.log('║         Taiwan Maami - KOT & Receipt Printer               ║');
-  console.log('║              Version 2.3 - Dual Printer                    ║');
+  console.log('║           Version 2.4 - Network Printer                    ║');
   console.log('╚════════════════════════════════════════════════════════════╝');
   console.log('');
   log(`Starting printer client...`);
-  log(`KOT Printers: ${CONFIG.KOT_PRINTERS.join(', ')}`);
-  log(`Receipt Printer: ${CONFIG.RECEIPT_PRINTER}`);
+  log(`KOT Printers:`);
+  CONFIG.KOT_PRINTERS.forEach(p => log(`  - ${p.name}: ${p.ip}:${p.port}`));
+  log(`Receipt Printer: ${CONFIG.RECEIPT_PRINTER.name} (${CONFIG.RECEIPT_PRINTER.ip})`);
   log(`Polling every ${CONFIG.POLL_INTERVAL_SECONDS} seconds`);
   log(`Log file: ${LOG_FILE}`);
+  console.log('');
+  
+  // Test printer connections
+  log('Testing printer connections...');
+  for (const printer of CONFIG.KOT_PRINTERS) {
+    try {
+      await testPrinter(printer);
+      log(`✓ ${printer.name} (${printer.ip}) - OK`);
+    } catch (error) {
+      log(`✗ ${printer.name} (${printer.ip}) - FAILED: ${error.message}`, 'ERROR');
+    }
+  }
+  
   console.log('');
   console.log('Press Ctrl+C to stop');
   console.log('');
