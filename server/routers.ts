@@ -11,7 +11,7 @@ import { categories, subcategories, products, addons, orders, orderItems as orde
 import { eq, and, desc, asc, sql } from "drizzle-orm";
 import { generateOrderNumber, calculateGst } from "@shared/types";
 // POS functionality removed - Employee Master import removed
-import { outletProducts, loyaltyRewards, stampTransactions, guestOrders, reviews, kotQueue, productAuditLog, categoryAuditLog } from "../drizzle/schema";
+import { outletProducts, loyaltyRewards, stampTransactions, guestOrders, reviews, kotQueue, productAuditLog, categoryAuditLog, complaints } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 // Admin procedure - only allows admin role
@@ -2492,7 +2492,7 @@ export const appRouter = router({
           rating: input.rating,
           comment: input.comment || null,
           customerName: ctx.user.name || 'Anonymous',
-          status: 'approved', // Auto-approve reviews
+          status: 'pending', // Requires admin approval before display
         }).$returningId();
         
         return { success: true, reviewId: review.id };
@@ -2647,6 +2647,196 @@ export const appRouter = router({
         await dbInstance!
           .delete(reviews)
           .where(eq(reviews.id, input.reviewId));
+        
+        return { success: true };
+      }),
+  }),
+
+  // Customer complaints management
+  complaints: router({
+    // Submit a complaint (public - can be guest or authenticated)
+    submit: publicProcedure
+      .input(z.object({
+        orderId: z.number().optional(),
+        orderNumber: z.string().optional(),
+        customerName: z.string().min(1),
+        customerEmail: z.string().email().optional(),
+        customerPhone: z.string().optional(),
+        complaintType: z.enum(['delivery_issue', 'quality_issue', 'missing_item', 'wrong_order', 'late_delivery', 'payment_issue', 'staff_behavior', 'other']),
+        description: z.string().min(10),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const dbInstance = await getDb();
+        
+        const [complaint] = await dbInstance!.insert(complaints).values({
+          userId: ctx.user?.id || null,
+          orderId: input.orderId || null,
+          orderNumber: input.orderNumber || null,
+          customerName: input.customerName,
+          customerEmail: input.customerEmail || null,
+          customerPhone: input.customerPhone || null,
+          complaintType: input.complaintType,
+          description: input.description,
+          status: 'open',
+          priority: input.complaintType === 'delivery_issue' || input.complaintType === 'wrong_order' ? 'high' : 'medium',
+        }).$returningId();
+        
+        return { success: true, complaintId: complaint.id };
+      }),
+
+    // Get user's complaints (authenticated)
+    getMine: protectedProcedure.query(async ({ ctx }) => {
+      const dbInstance = await getDb();
+      
+      const myComplaints = await dbInstance!
+        .select()
+        .from(complaints)
+        .where(eq(complaints.userId, ctx.user.id))
+        .orderBy(desc(complaints.createdAt));
+      
+      return myComplaints;
+    }),
+
+    // Admin: Get all complaints
+    getAll: adminProcedure
+      .input(z.object({
+        status: z.enum(['open', 'in_progress', 'resolved', 'closed']).optional(),
+        priority: z.enum(['low', 'medium', 'high', 'urgent']).optional(),
+        limit: z.number().min(1).max(100).default(50),
+        offset: z.number().min(0).default(0),
+      }).optional())
+      .query(async ({ input }) => {
+        const dbInstance = await getDb();
+        const limit = input?.limit || 50;
+        const offset = input?.offset || 0;
+        
+        let conditions = [];
+        if (input?.status) {
+          conditions.push(eq(complaints.status, input.status));
+        }
+        if (input?.priority) {
+          conditions.push(eq(complaints.priority, input.priority));
+        }
+        
+        const query = dbInstance!
+          .select()
+          .from(complaints)
+          .orderBy(desc(complaints.createdAt))
+          .limit(limit)
+          .offset(offset);
+        
+        if (conditions.length > 0) {
+          return query.where(and(...conditions));
+        }
+        
+        return query;
+      }),
+
+    // Admin: Get complaint stats
+    getStats: adminProcedure.query(async () => {
+      const dbInstance = await getDb();
+      
+      const [stats] = await dbInstance!
+        .select({
+          total: sql<number>`COUNT(*)`,
+          open: sql<number>`SUM(CASE WHEN status = 'open' THEN 1 ELSE 0 END)`,
+          inProgress: sql<number>`SUM(CASE WHEN status = 'in_progress' THEN 1 ELSE 0 END)`,
+          resolved: sql<number>`SUM(CASE WHEN status = 'resolved' THEN 1 ELSE 0 END)`,
+          closed: sql<number>`SUM(CASE WHEN status = 'closed' THEN 1 ELSE 0 END)`,
+        })
+        .from(complaints);
+      
+      return {
+        total: Number(stats?.total) || 0,
+        open: Number(stats?.open) || 0,
+        inProgress: Number(stats?.inProgress) || 0,
+        resolved: Number(stats?.resolved) || 0,
+        closed: Number(stats?.closed) || 0,
+      };
+    }),
+
+    // Admin: Update complaint status
+    updateStatus: adminProcedure
+      .input(z.object({
+        complaintId: z.number(),
+        status: z.enum(['open', 'in_progress', 'resolved', 'closed']),
+        priority: z.enum(['low', 'medium', 'high', 'urgent']).optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const dbInstance = await getDb();
+        
+        const updateData: any = { status: input.status };
+        if (input.priority) {
+          updateData.priority = input.priority;
+        }
+        
+        await dbInstance!
+          .update(complaints)
+          .set(updateData)
+          .where(eq(complaints.id, input.complaintId));
+        
+        return { success: true };
+      }),
+
+    // Admin: Resolve complaint with action (refund/store credit)
+    resolve: adminProcedure
+      .input(z.object({
+        complaintId: z.number(),
+        resolution: z.string().min(1),
+        resolutionType: z.enum(['refund', 'store_credit', 'replacement', 'apology', 'no_action']),
+        refundAmount: z.number().optional(), // In paise
+        storeCreditAmount: z.number().optional(), // In paise
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const dbInstance = await getDb();
+        
+        // Get the complaint to find the user
+        const [complaint] = await dbInstance!
+          .select()
+          .from(complaints)
+          .where(eq(complaints.id, input.complaintId));
+        
+        if (!complaint) {
+          throw new TRPCError({ code: 'NOT_FOUND', message: 'Complaint not found' });
+        }
+        
+        // If store credit is being issued and user exists, update their balance
+        if (input.resolutionType === 'store_credit' && input.storeCreditAmount && complaint.userId) {
+          await dbInstance!
+            .update(users)
+            .set({
+              storeCredit: sql`${users.storeCredit} + ${input.storeCreditAmount}`,
+            })
+            .where(eq(users.id, complaint.userId));
+        }
+        
+        // Update the complaint
+        await dbInstance!
+          .update(complaints)
+          .set({
+            status: 'resolved',
+            resolution: input.resolution,
+            resolutionType: input.resolutionType,
+            refundAmount: input.refundAmount || null,
+            storeCreditAmount: input.storeCreditAmount || null,
+            resolvedBy: ctx.user.id,
+            resolvedByName: ctx.user.name || 'Admin',
+            resolvedAt: new Date(),
+          })
+          .where(eq(complaints.id, input.complaintId));
+        
+        return { success: true };
+      }),
+
+    // Admin: Delete complaint
+    delete: adminProcedure
+      .input(z.object({ complaintId: z.number() }))
+      .mutation(async ({ input }) => {
+        const dbInstance = await getDb();
+        
+        await dbInstance!
+          .delete(complaints)
+          .where(eq(complaints.id, input.complaintId));
         
         return { success: true };
       }),

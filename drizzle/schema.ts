@@ -10,6 +10,8 @@ export const users = mysqlTable("users", {
   loginMethod: varchar("loginMethod", { length: 64 }),
   role: mysqlEnum("role", ["customer", "staff", "admin"]).default("customer").notNull(),
   loyaltyPoints: int("loyaltyPoints").default(0).notNull(),
+  // Store credit for refunds/compensation (in paise)
+  storeCredit: int("storeCredit").default(0).notNull(),
   // Digital stamp card fields
   stampCount: int("stampCount").default(0).notNull(),
   lifetimeStamps: int("lifetimeStamps").default(0).notNull(),
@@ -476,6 +478,41 @@ export const categoryAuditLog = mysqlTable("category_audit_log", {
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 
+// Customer complaints for delivery issues, refunds, etc.
+export const complaints = mysqlTable("complaints", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId"), // Null for guest complaints
+  orderId: int("orderId"),
+  orderNumber: varchar("orderNumber", { length: 50 }),
+  customerName: varchar("customerName", { length: 200 }).notNull(),
+  customerEmail: varchar("customerEmail", { length: 320 }),
+  customerPhone: varchar("customerPhone", { length: 20 }),
+  complaintType: mysqlEnum("complaintType", [
+    "delivery_issue",
+    "quality_issue",
+    "missing_item",
+    "wrong_order",
+    "late_delivery",
+    "payment_issue",
+    "staff_behavior",
+    "other"
+  ]).notNull(),
+  description: text("description").notNull(),
+  status: mysqlEnum("status", ["open", "in_progress", "resolved", "closed"]).default("open").notNull(),
+  priority: mysqlEnum("priority", ["low", "medium", "high", "urgent"]).default("medium").notNull(),
+  // Resolution details
+  resolution: text("resolution"),
+  resolutionType: mysqlEnum("resolutionType", ["refund", "store_credit", "replacement", "apology", "no_action"]),
+  refundAmount: int("refundAmount"), // In paise
+  storeCreditAmount: int("storeCreditAmount"), // In paise
+  resolvedBy: int("resolvedBy"), // Admin user ID who resolved
+  resolvedByName: varchar("resolvedByName", { length: 200 }),
+  resolvedAt: timestamp("resolvedAt"),
+  // Audit
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
 // Type exports
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
@@ -502,3 +539,5 @@ export type KotQueue = typeof kotQueue.$inferSelect;
 export type SiteSettings = typeof siteSettings.$inferSelect;
 export type ProductAuditLog = typeof productAuditLog.$inferSelect;
 export type CategoryAuditLog = typeof categoryAuditLog.$inferSelect;
+export type Complaint = typeof complaints.$inferSelect;
+export type InsertComplaint = typeof complaints.$inferInsert;

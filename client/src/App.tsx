@@ -23,6 +23,8 @@ import StaffOrders from "./pages/StaffOrders";
 import MenuCategories from "./pages/MenuCategories";
 import CategorySubcategories from "./pages/CategorySubcategories";
 import Analytics from "./pages/Analytics";
+import Complaint from "./pages/Complaint";
+import Testimonials from "./pages/Testimonials";
 
 function Router() {
   return (
@@ -43,6 +45,8 @@ function Router() {
       <Route path="/terms" component={Terms} />
       <Route path="/privacy" component={Privacy} />
       <Route path="/refund" component={Refund} />
+      <Route path="/complaint" component={Complaint} />
+      <Route path="/testimonials" component={Testimonials} />
       
       {/* Admin Routes */}
       <Route path="/staff/orders" component={StaffOrders} />

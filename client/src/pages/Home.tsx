@@ -349,7 +349,8 @@ export default function Home() {
               <ul className="space-y-2 text-sm text-background/70">
                 <li><Link href="/menu" className="hover:text-background">Menu</Link></li>
                 <li><Link href="/about" className="hover:text-background">About Us</Link></li>
-                <li><Link href="/locations" className="hover:text-background">Locations</Link></li>
+                <li><Link href="/testimonials" className="hover:text-background">Customer Reviews</Link></li>
+                <li><Link href="/complaint" className="hover:text-background">Submit Feedback</Link></li>
               </ul>
             </div>
             <div>
@@ -364,7 +365,8 @@ export default function Home() {
             <div>
               <h4 className="font-semibold mb-4">Hours</h4>
               <ul className="space-y-2 text-sm text-background/70">
-                <li>Mon - Sun: 11am - 10pm</li>
+                <li><strong>Palladium:</strong> 10am - 10pm</li>
+                <li><strong>T Nagar:</strong> 12pm - 12am</li>
               </ul>
             </div>
           </div>

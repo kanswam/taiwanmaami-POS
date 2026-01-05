@@ -1328,3 +1328,16 @@
 - [x] Implement order time restrictions (no orders before 12noon or after 11:45pm)
 - [x] Prepare full code and infrastructure documentation
 - [x] Add proprietary rights notice for Thamarai Foods and Trading Private Limited
+
+## Customer Complaint & Review Management System
+- [ ] Create complaints table in database
+- [ ] Add store_credit field to users table
+- [ ] Add approval fields to reviews table
+- [ ] Create complaint submission API endpoint
+- [ ] Create admin complaint management endpoints (view, resolve, refund, credit)
+- [ ] Build customer complaint submission form
+- [ ] Build admin Complaints tab in dashboard
+- [ ] Update review submission to default to pending approval
+- [ ] Build admin review approval interface
+- [ ] Create public testimonials/endorsement page
+- [ ] Display approved reviews on endorsement page
