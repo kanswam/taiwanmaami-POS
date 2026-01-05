@@ -50,10 +50,13 @@ export function Header() {
                     const hash = link.href.split('#')[1];
                     if (window.location.pathname === '/') {
                       // Already on home page, just scroll
-                      document.getElementById(hash)?.scrollIntoView({ behavior: 'smooth' });
+                      const element = document.getElementById(hash);
+                      if (element) {
+                        element.scrollIntoView({ behavior: 'smooth' });
+                      }
                     } else {
-                      // Navigate to home then scroll
-                      window.location.href = link.href;
+                      // Navigate to home page with hash - browser will handle scroll
+                      window.location.href = '/#' + hash;
                     }
                   }}
                   className={`text-base font-semibold transition-colors hover:text-primary text-foreground cursor-pointer`}
@@ -141,9 +144,13 @@ export function Header() {
                           setMobileMenuOpen(false);
                           const hash = link.href.split('#')[1];
                           if (location === '/') {
-                            document.getElementById(hash)?.scrollIntoView({ behavior: 'smooth' });
+                            const element = document.getElementById(hash);
+                            if (element) {
+                              element.scrollIntoView({ behavior: 'smooth' });
+                            }
                           } else {
-                            window.location.href = link.href;
+                            // Navigate to home page with hash - browser will handle scroll
+                            window.location.href = '/#' + hash;
                           }
                         }}
                         className="flex items-center gap-3 p-3 rounded-lg transition-colors hover:bg-secondary cursor-pointer"

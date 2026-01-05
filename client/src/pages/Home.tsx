@@ -530,6 +530,7 @@ export default function Home() {
                 <li><Link href="/terms" className="hover:text-background">Terms & Conditions</Link></li>
                 <li><Link href="/privacy" className="hover:text-background">Privacy Policy</Link></li>
                 <li><Link href="/refund" className="hover:text-background">Refund Policy</Link></li>
+                <li><Link href="/shipping" className="hover:text-background">Shipping Policy</Link></li>
                 <li><Link href="/franchise" className="hover:text-background">Franchise Opportunity</Link></li>
               </ul>
             </div>

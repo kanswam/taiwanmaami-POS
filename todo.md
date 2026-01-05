@@ -1693,3 +1693,9 @@
 - [x] Add toggle switches in Admin Menu for each subcategory's outlet availability
 - [x] Filter menu items based on subcategory outlet availability
 - [x] Apply to instore, delivery, and pickup orders
+
+
+## Phase 37 - Shipping Policy & Locations Fix
+- [x] Add Shipping Policy to footer Quick Links
+- [x] Add Shipping Policy page (CMS editable)
+- [x] Fix Locations link on About Us page to scroll directly to outlets section

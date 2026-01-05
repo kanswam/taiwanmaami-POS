@@ -26,6 +26,7 @@ import Analytics from "./pages/Analytics";
 import Complaint from "./pages/Complaint";
 import Testimonials from "./pages/Testimonials";
 import Franchise from "./pages/Franchise";
+import Shipping from "./pages/Shipping";
 
 function Router() {
   return (
@@ -49,6 +50,7 @@ function Router() {
       <Route path="/complaint" component={Complaint} />
       <Route path="/testimonials" component={Testimonials} />
       <Route path="/franchise" component={Franchise} />
+      <Route path="/shipping" component={Shipping} />
       
       {/* Admin Routes */}
       <Route path="/staff/orders" component={StaffOrders} />
