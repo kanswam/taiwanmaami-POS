@@ -1620,3 +1620,28 @@
 ### Category Cards
 - [ ] Make category card titles editable
 - [ ] Make category card descriptions editable
+
+
+## Phase 34 - Complete CMS & Invoice Details (Jan 5, 2026)
+
+### Category Cards Editing
+- [ ] Add category card titles/descriptions to Site Settings
+- [ ] Connect homepage category cards to database
+- [ ] Allow editing of all 4 category cards
+
+### Location Cards Editing
+- [ ] Add location card details to Site Settings
+- [ ] Connect homepage location cards to database
+- [ ] Allow editing of both outlet locations
+
+### Invoice/Receipt Company Details
+- [x] Add GST number 33AAKCT4782H1Z1 to receipts
+- [x] Add company name "Thamarai Foods and Trading Private Limited" to receipts
+- [x] Update KOT printer script with company details
+- [x] Update online order confirmation with company details
+
+
+### Header Logo Update
+- [x] Remove "Taiwan Maami" text from header
+- [x] Make logo bigger
+- [x] Use new logo image provided by user

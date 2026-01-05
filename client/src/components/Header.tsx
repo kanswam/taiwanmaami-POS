@@ -25,18 +25,17 @@ export function Header() {
   return (
     <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border shadow-sm">
       <div className="container">
-        <div className="flex items-center justify-between h-16">
+        <div className="flex items-center justify-between h-18 md:h-20">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-3">
+          <Link href="/" className="flex items-center">
             <img 
-              src="/logo.png" 
+              src="/taiwan-maami-logo-full.png" 
               alt="Taiwan Maami" 
-              className="h-10 w-auto"
+              className="h-12 md:h-16 w-auto"
               onError={(e) => {
                 (e.target as HTMLImageElement).style.display = 'none';
               }}
             />
-            <span className="font-bold text-xl text-primary">Taiwan Maami</span>
           </Link>
 
           {/* Desktop Navigation */}

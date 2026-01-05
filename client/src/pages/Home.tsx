@@ -21,6 +21,26 @@ export default function Home() {
   const [freshnessDescription, setFreshnessDescription] = useState('Made to order, every time');
   const [deliveryTitle, setDeliveryTitle] = useState('Quick Delivery');
   const [deliveryDescription, setDeliveryDescription] = useState('Fast delivery across Chennai');
+  
+  // Category cards
+  const [cat1Name, setCat1Name] = useState('Iced Beverages');
+  const [cat1Desc, setCat1Desc] = useState('Authentic Taiwanese bubble tea & premium coffee');
+  const [cat2Name, setCat2Name] = useState('Hot Beverages');
+  const [cat2Desc, setCat2Desc] = useState('Warm & comforting traditional drinks');
+  const [cat3Name, setCat3Name] = useState('Asian Rice-Noodles-Bread');
+  const [cat3Desc, setCat3Desc] = useState('Savory Asian street food favorites');
+  const [cat4Name, setCat4Name] = useState('Asian Sweet Bites');
+  const [cat4Desc, setCat4Desc] = useState('Delicious mochis & desserts');
+  
+  // Location cards
+  const [loc1Name, setLoc1Name] = useState('Taiwan Maami');
+  const [loc1Subtitle, setLoc1Subtitle] = useState('Palladium Mall');
+  const [loc1Address, setLoc1Address] = useState('First Floor, Palladium Mall, Velachery');
+  const [loc1City, setLoc1City] = useState('Chennai - 600042');
+  const [loc2Name, setLoc2Name] = useState('Moutan');
+  const [loc2Subtitle, setLoc2Subtitle] = useState('T Nagar');
+  const [loc2Address, setLoc2Address] = useState('New No. 29, Burkit Road, T Nagar');
+  const [loc2City, setLoc2City] = useState('Chennai - 600017');
 
   // Load settings from database when available
   useEffect(() => {
@@ -38,6 +58,26 @@ export default function Home() {
       if (settingsMap.freshness_description) setFreshnessDescription(settingsMap.freshness_description);
       if (settingsMap.delivery_title) setDeliveryTitle(settingsMap.delivery_title);
       if (settingsMap.delivery_description) setDeliveryDescription(settingsMap.delivery_description);
+      
+      // Category cards
+      if (settingsMap.cat1_name) setCat1Name(settingsMap.cat1_name);
+      if (settingsMap.cat1_desc) setCat1Desc(settingsMap.cat1_desc);
+      if (settingsMap.cat2_name) setCat2Name(settingsMap.cat2_name);
+      if (settingsMap.cat2_desc) setCat2Desc(settingsMap.cat2_desc);
+      if (settingsMap.cat3_name) setCat3Name(settingsMap.cat3_name);
+      if (settingsMap.cat3_desc) setCat3Desc(settingsMap.cat3_desc);
+      if (settingsMap.cat4_name) setCat4Name(settingsMap.cat4_name);
+      if (settingsMap.cat4_desc) setCat4Desc(settingsMap.cat4_desc);
+      
+      // Location cards
+      if (settingsMap.loc1_name) setLoc1Name(settingsMap.loc1_name);
+      if (settingsMap.loc1_subtitle) setLoc1Subtitle(settingsMap.loc1_subtitle);
+      if (settingsMap.loc1_address) setLoc1Address(settingsMap.loc1_address);
+      if (settingsMap.loc1_city) setLoc1City(settingsMap.loc1_city);
+      if (settingsMap.loc2_name) setLoc2Name(settingsMap.loc2_name);
+      if (settingsMap.loc2_subtitle) setLoc2Subtitle(settingsMap.loc2_subtitle);
+      if (settingsMap.loc2_address) setLoc2Address(settingsMap.loc2_address);
+      if (settingsMap.loc2_city) setLoc2City(settingsMap.loc2_city);
     }
   }, [siteSettings]);
 
@@ -45,26 +85,26 @@ export default function Home() {
   // Using actual database slugs: bubble-tea, coffee, mochis, food
   const menuCategories = [
     {
-      name: 'Iced Beverages',
-      description: 'Authentic Taiwanese bubble tea & premium coffee',
+      name: cat1Name,
+      description: cat1Desc,
       video: 'https://files.manuscdn.com/user_upload_by_module/session_file/114675165/ecZXiwJjoSwJdZrZ.mp4',
       href: '/menu?category=bubble-tea',
     },
     {
-      name: 'Hot Beverages',
-      description: 'Warm & comforting traditional drinks',
+      name: cat2Name,
+      description: cat2Desc,
       video: 'https://files.manuscdn.com/user_upload_by_module/session_file/114675165/OXrITxhITgHnggSH.mp4',
       href: '/menu?category=coffee',
     },
     {
-      name: 'Asian Rice-Noodles-Bread',
-      description: 'Savory Asian street food favorites',
+      name: cat3Name,
+      description: cat3Desc,
       video: 'https://files.manuscdn.com/user_upload_by_module/session_file/114675165/bNweCHEHeGisBBOW.mp4',
       href: '/menu?category=food',
     },
     {
-      name: 'Asian Sweet Bites',
-      description: 'Delicious mochis & desserts',
+      name: cat4Name,
+      description: cat4Desc,
       video: 'https://files.manuscdn.com/user_upload_by_module/session_file/114675165/SidroKXBRlTSURyD.mp4',
       href: '/menu?category=mochis',
     },
@@ -73,10 +113,10 @@ export default function Home() {
   // Location cards with video backgrounds
   const locations = [
     {
-      name: 'Taiwan Maami',
-      subtitle: 'Palladium Mall',
-      address: 'First Floor, Palladium Mall, Velachery',
-      city: 'Chennai - 600042',
+      name: loc1Name,
+      subtitle: loc1Subtitle,
+      address: loc1Address,
+      city: loc1City,
       video: 'https://files.manuscdn.com/user_upload_by_module/session_file/114675165/tRoWoigbWbPFdWft.mp4',
       mapUrl: 'https://maps.google.com/?q=Palladium+Mall+Velachery+Chennai',
       phone: '+91 89259 14303',
@@ -84,10 +124,10 @@ export default function Home() {
       services: 'In-store & Pickup only',
     },
     {
-      name: 'Taiwan Maami',
-      subtitle: 'T Nagar',
-      address: 'New No. 29, Burkit Road, T Nagar',
-      city: 'Chennai - 600017',
+      name: loc2Name,
+      subtitle: loc2Subtitle,
+      address: loc2Address,
+      city: loc2City,
       video: 'https://files.manuscdn.com/user_upload_by_module/session_file/114675165/bnVxigSNwrNZdrqE.mp4',
       mapUrl: 'https://maps.google.com/?q=29+Burkit+Road+TNagar+Chennai',
       phone: '+91 91505 70557',

@@ -359,7 +359,7 @@ function formatReceipt(receipt) {
   data += COMMANDS.ALIGN_CENTER;
   data += 'Thank you for your order!\n';
   data += 'Visit us again\n\n';
-  data += 'Thamarai Foods & Trading Pvt Ltd\n';
+  data += 'Thamarai Foods and Trading Private Limited\n';
   data += 'GSTIN: 33AAKCT4782H1Z1\n';
   data += COMMANDS.FEED_LINES(4);
   data += COMMANDS.CUT;

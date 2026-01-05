@@ -15,6 +15,11 @@ export default function OrderConfirmation() {
     { enabled: !!orderId }
   );
   const order = data?.order;
+  
+  // Fetch company details from site settings
+  const { data: siteSettings } = trpc.admin.getSiteSettings.useQuery();
+  const companyName = siteSettings?.find((s: any) => s.key === 'company_name')?.value || 'Thamarai Foods and Trading Private Limited';
+  const gstNumber = siteSettings?.find((s: any) => s.key === 'gst_number')?.value || '33AAKCT4782H1Z1';
 
   if (isLoading) {
     return (
@@ -176,6 +181,12 @@ export default function OrderConfirmation() {
                 <span>Total</span>
                 <span>{formatPrice(order.totalAmount)}</span>
               </div>
+            </div>
+            
+            {/* Company & GST Details */}
+            <div className="mt-4 pt-4 border-t border-dashed text-xs text-muted-foreground text-center">
+              <p className="font-medium">{companyName}</p>
+              <p>GSTIN: {gstNumber}</p>
             </div>
           </Card>
 
