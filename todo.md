@@ -1377,3 +1377,20 @@
 - [x] Palladium: 10am - 10pm
 - [x] T Nagar: 12pm - 12am
 - [x] Added service types (In-store, Pickup, Delivery)
+
+
+## Phase 43 - Customer Edit, Delivery Radius Fix, Message Styling (Jan 5, 2026)
+
+### Customer Edit Feature
+- [x] Add edit button to customer rows in Admin Customers tab
+- [x] Create edit dialog to modify customer name, phone, email
+- [x] Backend procedure already exists (customers.update)
+
+### Delivery Radius Display Fix
+- [x] Menu page shows hardcoded 15km instead of database setting
+- [x] Fetch delivery_radius from siteSettings in menu page
+- [x] Display actual configured radius in delivery message
+
+### Delivery Message Styling
+- [x] Make "Delivery from T Nagar" message bolder
+- [x] Improve visibility and prominence of delivery info (added background, border, larger icon)

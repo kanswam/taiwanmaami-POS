@@ -88,6 +88,10 @@ export default function Menu() {
     isDelivery: state.orderType === 'delivery',
   });
 
+  // Get delivery settings (radius)
+  const { data: deliverySettings } = trpc.menu.getDeliverySettings.useQuery();
+  const deliveryRadius = deliverySettings?.deliveryRadius || 15;
+
   // Get subcategories for selected category
   const categorySubcategories = useMemo(() => {
     if (!menuData || selectedCategory === 'all') return [];
@@ -421,9 +425,9 @@ export default function Menu() {
 
             {/* Delivery radius notice */}
             {state.orderType === 'delivery' && (
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Truck className="w-4 h-4" />
-                <span>Delivery from T Nagar (within 15km)</span>
+              <div className="flex items-center gap-2 px-3 py-2 bg-primary/10 border border-primary/20 rounded-lg">
+                <Truck className="w-5 h-5 text-primary" />
+                <span className="font-semibold text-primary">Delivery from T Nagar (within {deliveryRadius}km)</span>
               </div>
             )}
 

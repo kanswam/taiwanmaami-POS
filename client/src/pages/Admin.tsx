@@ -3588,13 +3588,25 @@ function CustomersTab() {
   const [searchTerm, setSearchTerm] = useState('');
   const [typeFilter, setTypeFilter] = useState<'all' | 'registered' | 'guest'>('all');
   const [showAddDialog, setShowAddDialog] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
   const [newCustomer, setNewCustomer] = useState({ name: '', phone: '', email: '' });
+  const [editingCustomer, setEditingCustomer] = useState<{ id: number; name: string; phone: string; email: string } | null>(null);
 
   const createCustomer = trpc.customers.create.useMutation({
     onSuccess: () => {
       toast.success('Customer added successfully');
       setShowAddDialog(false);
       setNewCustomer({ name: '', phone: '', email: '' });
+      refetch();
+    },
+    onError: (err) => toast.error(err.message),
+  });
+
+  const updateCustomer = trpc.customers.update.useMutation({
+    onSuccess: () => {
+      toast.success('Customer updated successfully');
+      setShowEditDialog(false);
+      setEditingCustomer(null);
       refetch();
     },
     onError: (err) => toast.error(err.message),
@@ -3655,6 +3667,7 @@ function CustomersTab() {
                 <th className="text-right p-3 text-sm font-medium">Store Credit</th>
                 <th className="text-center p-3 text-sm font-medium">Stamps</th>
                 <th className="text-left p-3 text-sm font-medium">Last Order</th>
+                <th className="text-center p-3 text-sm font-medium">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -3686,11 +3699,30 @@ function CustomersTab() {
                       : 'N/A'
                     }
                   </td>
+                  <td className="p-3 text-center">
+                    {customer.type === 'registered' && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setEditingCustomer({
+                            id: customer.id,
+                            name: customer.name || '',
+                            phone: customer.phone || '',
+                            email: customer.email || '',
+                          });
+                          setShowEditDialog(true);
+                        }}
+                      >
+                        <Edit className="w-4 h-4" />
+                      </Button>
+                    )}
+                  </td>
                 </tr>
               ))}
               {filteredCustomers.length === 0 && (
                 <tr>
-                  <td colSpan={9} className="p-8 text-center text-muted-foreground">
+                  <td colSpan={10} className="p-8 text-center text-muted-foreground">
                     No customers found
                   </td>
                 </tr>
@@ -3743,6 +3775,67 @@ function CustomersTab() {
               onClick={() => createCustomer.mutate(newCustomer)}
             >
               Add Customer
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Customer Dialog */}
+      <Dialog open={showEditDialog} onOpenChange={(open) => {
+        setShowEditDialog(open);
+        if (!open) setEditingCustomer(null);
+      }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Customer</DialogTitle>
+          </DialogHeader>
+          {editingCustomer && (
+            <div className="space-y-4 py-4">
+              <div>
+                <Label>Name *</Label>
+                <Input
+                  value={editingCustomer.name}
+                  onChange={(e) => setEditingCustomer({ ...editingCustomer, name: e.target.value })}
+                  placeholder="Customer name"
+                />
+              </div>
+              <div>
+                <Label>Phone *</Label>
+                <Input
+                  value={editingCustomer.phone}
+                  onChange={(e) => setEditingCustomer({ ...editingCustomer, phone: e.target.value })}
+                  placeholder="10-digit phone number"
+                />
+              </div>
+              <div>
+                <Label>Email (Optional)</Label>
+                <Input
+                  value={editingCustomer.email}
+                  onChange={(e) => setEditingCustomer({ ...editingCustomer, email: e.target.value })}
+                  placeholder="customer@email.com"
+                />
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => {
+              setShowEditDialog(false);
+              setEditingCustomer(null);
+            }}>Cancel</Button>
+            <Button
+              disabled={!editingCustomer?.name.trim() || !editingCustomer?.phone.trim() || updateCustomer.isPending}
+              onClick={() => {
+                if (editingCustomer) {
+                  updateCustomer.mutate({
+                    id: editingCustomer.id,
+                    name: editingCustomer.name,
+                    phone: editingCustomer.phone,
+                    email: editingCustomer.email || undefined,
+                  });
+                }
+              }}
+            >
+              {updateCustomer.isPending ? 'Saving...' : 'Save Changes'}
             </Button>
           </DialogFooter>
         </DialogContent>

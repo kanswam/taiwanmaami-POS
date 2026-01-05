@@ -81,6 +81,16 @@ export const appRouter = router({
       return db.getCustomizationOptions();
     }),
 
+    // Get public delivery settings (radius, etc.)
+    getDeliverySettings: publicProcedure.query(async () => {
+      const dbInstance = await getDb();
+      if (!dbInstance) return { deliveryRadius: 15 };
+      const { siteSettings } = await import('../drizzle/schema.js');
+      const settings = await dbInstance.select().from(siteSettings).where(eq(siteSettings.key, 'delivery_radius'));
+      const radius = settings.length > 0 && settings[0].value ? parseInt(settings[0].value) || 15 : 15;
+      return { deliveryRadius: radius };
+    }),
+
     // Get addons linked to a specific product
     getProductAddons: publicProcedure
       .input(z.object({ productId: z.number() }))
