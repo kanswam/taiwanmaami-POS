@@ -8,7 +8,7 @@ import * as db from "./db";
 import { getDb } from "./db";
 import { seedDatabase } from "./seed";
 import { categories, subcategories, products, addons, orders, orderItems as orderItemsTable, orderItemAddons, payments, discounts, addresses, storeLocations, deliveryAreas, users, productAddons } from "../drizzle/schema";
-import { eq, and, desc, asc, sql } from "drizzle-orm";
+import { eq, and, desc, asc, sql, or } from "drizzle-orm";
 import { generateOrderNumber, calculateGst } from "@shared/types";
 // POS functionality removed - Employee Master import removed
 import { outletProducts, loyaltyRewards, stampTransactions, guestOrders, reviews, kotQueue, productAuditLog, categoryAuditLog, complaints } from "../drizzle/schema";
