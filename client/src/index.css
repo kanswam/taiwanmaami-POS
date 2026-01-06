@@ -41,8 +41,9 @@
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
   
-  /* Custom brand font */
-  --font-heading: 'Playfair Display', serif;
+  /* Custom brand font - Jost (Futura-style) */
+  --font-sans: 'Jost', system-ui, sans-serif;
+  --font-heading: 'Jost', system-ui, sans-serif;
 }
 
 :root {
@@ -148,10 +149,11 @@
   }
   body {
     @apply bg-background text-foreground;
-    font-family: 'Inter', system-ui, sans-serif;
+    font-family: 'Jost', system-ui, sans-serif;
   }
   h1, h2, h3, h4, h5, h6 {
-    font-family: var(--font-heading), serif;
+    font-family: 'Jost', system-ui, sans-serif;
+    font-weight: 600;
   }
 }
 

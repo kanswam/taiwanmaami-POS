@@ -2,7 +2,8 @@
 
 ## Active Tasks
 
-(No active tasks)
+- [x] Preview Jost font (Futura-style) for user approval - APPROVED
+- [x] Apply Jost font throughout website
 
 ## Completed (Recent)
 
