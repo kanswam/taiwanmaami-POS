@@ -84,4 +84,4 @@
   - [x] Remove + button (clicking card opens modal)
   - [x] Remove white frame/padding at top
   - [x] Make image larger and more prominent (1:1 square aspect ratio)
-  - [x] Compact name and price section (overlay on image with gradient)
+  - [x] Move name and price to compact white section below image with proper contrast

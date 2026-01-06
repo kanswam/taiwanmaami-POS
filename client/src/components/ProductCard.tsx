@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { Card } from '@/components/ui/card';
 import { Leaf, Egg } from 'lucide-react';
 import { formatPrice } from '@shared/types';
 import { ProductCustomizationModal } from './ProductCustomizationModal';
@@ -119,11 +118,11 @@ export function ProductCard({ product, subcategory, category, isDelivery = false
 
   return (
     <>
-      <Card 
-        className={`product-card group overflow-hidden ${isUnavailable ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`}
+      <div 
+        className={`group overflow-hidden rounded-lg shadow-sm hover:shadow-md transition-shadow ${isUnavailable ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`}
         onClick={() => !isUnavailable && setShowModal(true)}
       >
-        {/* Image section - larger aspect ratio for more image focus */}
+        {/* Image section - square aspect ratio, no padding */}
         <div className="relative overflow-hidden bg-secondary" style={{ aspectRatio: '1/1' }}>
           <img
             src={currentImage}
@@ -207,22 +206,23 @@ export function ProductCard({ product, subcategory, category, isDelivery = false
               </span>
             </div>
           )}
-          {/* Price overlay at bottom of image */}
-          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 via-black/40 to-transparent p-2 pt-6">
-            <h3 className="font-semibold text-white text-sm leading-tight line-clamp-2 drop-shadow-md">
-              {product.name}
-            </h3>
-            <div className="flex items-center justify-between mt-1">
-              <span className={`text-white font-bold text-base drop-shadow-md ${isUnavailable ? 'line-through opacity-70' : ''}`}>
-                {formatPrice(displayPrice)}
-              </span>
-              {product.chineseName && (
-                <span className="text-white/80 text-xs drop-shadow-md">{product.chineseName}</span>
-              )}
-            </div>
+        </div>
+        
+        {/* Content section - compact with good contrast */}
+        <div className="bg-white p-2">
+          <h3 className="font-semibold text-gray-900 text-sm leading-tight line-clamp-2">
+            {product.name}
+          </h3>
+          <div className="flex items-center justify-between mt-1">
+            <span className={`text-primary font-bold text-base ${isUnavailable ? 'line-through opacity-70' : ''}`}>
+              {formatPrice(displayPrice)}
+            </span>
+            {product.chineseName && (
+              <span className="text-gray-500 text-xs">{product.chineseName}</span>
+            )}
           </div>
         </div>
-      </Card>
+      </div>
 
       {showModal && (
         <ProductCustomizationModal
