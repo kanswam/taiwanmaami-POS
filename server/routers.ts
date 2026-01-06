@@ -365,6 +365,7 @@ export const appRouter = router({
         orderId: z.number(), 
         status: z.string(),
         paymentMethod: z.enum(['cash', 'upi', 'card', 'swiggy_dineout', 'zomato_dineout', 'other']).optional(),
+        paymentProofUrl: z.string().optional(),
       }))
       .mutation(async ({ input }) => {
         const dbInstance = await db.getDb();
@@ -377,11 +378,15 @@ export const appRouter = router({
         
         await db.updateOrderStatus(input.orderId, input.status);
         
-        // Update payment method if provided (for completed in-store orders)
-        if (input.paymentMethod && input.status === 'completed') {
+        // Update payment method and proof if provided (for completed in-store orders)
+        if (input.status === 'completed' && (input.paymentMethod || input.paymentProofUrl)) {
+          const updateData: any = {};
+          if (input.paymentMethod) updateData.paymentMethod = input.paymentMethod;
+          if (input.paymentProofUrl) updateData.paymentProofUrl = input.paymentProofUrl;
+          
           await dbInstance!
             .update(orders)
-            .set({ paymentMethod: input.paymentMethod })
+            .set(updateData)
             .where(eq(orders.id, input.orderId));
         }
         

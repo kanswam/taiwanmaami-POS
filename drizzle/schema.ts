@@ -217,6 +217,8 @@ export const orders = mysqlTable("orders", {
   staffNotes: text("staffNotes"), // Internal notes from staff about the order
   // Payment method for in-store orders (recorded at collection)
   paymentMethod: mysqlEnum("paymentMethod", ["cash", "upi", "card", "swiggy_dineout", "zomato_dineout", "other"]),
+  // Payment proof screenshot URL (for non-cash payments)
+  paymentProofUrl: text("paymentProofUrl"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
   completedAt: timestamp("completedAt"),

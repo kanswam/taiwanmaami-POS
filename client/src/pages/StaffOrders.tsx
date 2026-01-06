@@ -17,7 +17,7 @@ import {
   Printer, RefreshCw, MapPin, Phone, User, Bell,
   Filter, Store, UtensilsCrossed, ShoppingBag,
   MessageSquare, AlertTriangle, BarChart3, Volume2, VolumeX,
-  X, Calendar, Hash
+  X, Calendar, Hash, Camera, Upload, Image
 } from 'lucide-react';
 
 // Status flow for delivery orders
@@ -74,6 +74,10 @@ export default function StaffOrders() {
     open: false, order: null, nextStatus: ''
   });
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string>('');
+  const [paymentProofFile, setPaymentProofFile] = useState<File | null>(null);
+  const [paymentProofPreview, setPaymentProofPreview] = useState<string>('');
+  const [isUploadingProof, setIsUploadingProof] = useState(false);
+  const paymentProofInputRef = useRef<HTMLInputElement>(null);
   
   const utils = trpc.useUtils();
   
@@ -84,7 +88,8 @@ export default function StaffOrders() {
     orderType: orderTypeFilter as any,
     status: activeTab === 'active' ? undefined : undefined, // We filter client-side for tabs
   }, {
-    refetchInterval: 10000, // Auto-refresh every 10 seconds
+    refetchInterval: 15000, // Auto-refresh every 15 seconds (reduced from 10s for better mobile performance)
+    staleTime: 5000, // Consider data fresh for 5 seconds
   });
   
   const updateStatus = trpc.orders.updateStatus.useMutation({
@@ -176,18 +181,63 @@ export default function StaffOrders() {
     updateStatus.mutate({ orderId, status: newStatus as any });
   };
 
-  const handlePaymentComplete = () => {
+  const handlePaymentProofChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setPaymentProofFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPaymentProofPreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handlePaymentComplete = async () => {
     if (!paymentDialog.order || !selectedPaymentMethod) {
       toast.error('Please select a payment method');
       return;
     }
+
+    let paymentProofUrl: string | undefined;
+
+    // Upload payment proof if provided (for non-cash payments)
+    if (paymentProofFile && selectedPaymentMethod !== 'cash') {
+      setIsUploadingProof(true);
+      try {
+        const formData = new FormData();
+        formData.append('file', paymentProofFile);
+        formData.append('folder', 'payment-proofs');
+        
+        const response = await fetch('/api/upload', {
+          method: 'POST',
+          body: formData,
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          paymentProofUrl = data.url;
+        } else {
+          toast.error('Failed to upload payment proof');
+        }
+      } catch (error) {
+        console.error('Upload error:', error);
+        toast.error('Failed to upload payment proof');
+      } finally {
+        setIsUploadingProof(false);
+      }
+    }
+
     updateStatus.mutate({ 
       orderId: paymentDialog.order.id, 
       status: paymentDialog.nextStatus as any,
       paymentMethod: selectedPaymentMethod as any,
+      paymentProofUrl,
     });
     setPaymentDialog({ open: false, order: null, nextStatus: '' });
     setSelectedPaymentMethod('');
+    setPaymentProofFile(null);
+    setPaymentProofPreview('');
   };
 
   const getNextAction = (order: any) => {
@@ -632,7 +682,12 @@ export default function StaffOrders() {
 
       {/* Payment Method Dialog */}
       <Dialog open={paymentDialog.open} onOpenChange={(open) => {
-        if (!open) setPaymentDialog({ open: false, order: null, nextStatus: '' });
+        if (!open) {
+          setPaymentDialog({ open: false, order: null, nextStatus: '' });
+          setSelectedPaymentMethod('');
+          setPaymentProofFile(null);
+          setPaymentProofPreview('');
+        }
       }}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
@@ -641,38 +696,112 @@ export default function StaffOrders() {
               Order #{paymentDialog.order?.orderNumber} - {formatPrice(paymentDialog.order?.totalAmount || 0)}
             </p>
           </DialogHeader>
-          <div className="space-y-3 py-4">
-            <p className="text-sm font-medium">Select payment method:</p>
-            <div className="grid grid-cols-2 gap-3">
-              {[
-                { value: 'cash', label: 'Cash', icon: '💵' },
-                { value: 'upi', label: 'GPay / UPI', icon: '📱' },
-                { value: 'card', label: 'Card', icon: '💳' },
-                { value: 'swiggy_dineout', label: 'Swiggy Dineout', icon: '🟠' },
-                { value: 'zomato_dineout', label: 'Zomato Dineout', icon: '🔴' },
-                { value: 'other', label: 'Other', icon: '📋' },
-              ].map((method) => (
-                <Button
-                  key={method.value}
-                  variant={selectedPaymentMethod === method.value ? 'default' : 'outline'}
-                  className={`h-auto py-4 flex flex-col items-center gap-2 ${selectedPaymentMethod === method.value ? 'ring-2 ring-primary' : ''}`}
-                  onClick={() => setSelectedPaymentMethod(method.value)}
-                >
-                  <span className="text-2xl">{method.icon}</span>
-                  <span className="text-sm">{method.label}</span>
-                </Button>
-              ))}
+          <div className="space-y-4 py-4">
+            <div>
+              <p className="text-sm font-medium mb-3">Select payment method:</p>
+              <div className="grid grid-cols-2 gap-3">
+                {[
+                  { value: 'cash', label: 'Cash', icon: '💵' },
+                  { value: 'upi', label: 'GPay / UPI', icon: '📱' },
+                  { value: 'card', label: 'Card', icon: '💳' },
+                  { value: 'swiggy_dineout', label: 'Swiggy Dineout', icon: '🟠' },
+                  { value: 'zomato_dineout', label: 'Zomato Dineout', icon: '🔴' },
+                  { value: 'other', label: 'Other', icon: '📋' },
+                ].map((method) => (
+                  <Button
+                    key={method.value}
+                    variant={selectedPaymentMethod === method.value ? 'default' : 'outline'}
+                    className={`h-auto py-3 flex flex-col items-center gap-1 ${selectedPaymentMethod === method.value ? 'ring-2 ring-primary' : ''}`}
+                    onClick={() => setSelectedPaymentMethod(method.value)}
+                  >
+                    <span className="text-xl">{method.icon}</span>
+                    <span className="text-xs">{method.label}</span>
+                  </Button>
+                ))}
+              </div>
             </div>
+
+            {/* Payment Proof Upload - shown for non-cash payments */}
+            {selectedPaymentMethod && selectedPaymentMethod !== 'cash' && (
+              <div className="border-t pt-4">
+                <p className="text-sm font-medium mb-2">Payment Screenshot (Optional):</p>
+                <input
+                  type="file"
+                  ref={paymentProofInputRef}
+                  accept="image/*"
+                  capture="environment"
+                  onChange={handlePaymentProofChange}
+                  className="hidden"
+                />
+                
+                {paymentProofPreview ? (
+                  <div className="relative">
+                    <img 
+                      src={paymentProofPreview} 
+                      alt="Payment proof" 
+                      className="w-full h-40 object-cover rounded-lg border"
+                    />
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      className="absolute top-2 right-2"
+                      onClick={() => {
+                        setPaymentProofFile(null);
+                        setPaymentProofPreview('');
+                        if (paymentProofInputRef.current) {
+                          paymentProofInputRef.current.value = '';
+                        }
+                      }}
+                    >
+                      <X className="w-4 h-4" />
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      className="flex-1"
+                      onClick={() => paymentProofInputRef.current?.click()}
+                    >
+                      <Camera className="w-4 h-4 mr-2" />
+                      Take Photo
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="flex-1"
+                      onClick={() => {
+                        if (paymentProofInputRef.current) {
+                          paymentProofInputRef.current.removeAttribute('capture');
+                          paymentProofInputRef.current.click();
+                          paymentProofInputRef.current.setAttribute('capture', 'environment');
+                        }
+                      }}
+                    >
+                      <Image className="w-4 h-4 mr-2" />
+                      Upload
+                    </Button>
+                  </div>
+                )}
+                <p className="text-xs text-muted-foreground mt-2">
+                  Capture screenshot of payment confirmation from {selectedPaymentMethod === 'upi' ? 'GPay/UPI' : selectedPaymentMethod === 'swiggy_dineout' ? 'Swiggy' : selectedPaymentMethod === 'zomato_dineout' ? 'Zomato' : 'payment'} app
+                </p>
+              </div>
+            )}
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setPaymentDialog({ open: false, order: null, nextStatus: '' })}>
+            <Button variant="outline" onClick={() => {
+              setPaymentDialog({ open: false, order: null, nextStatus: '' });
+              setSelectedPaymentMethod('');
+              setPaymentProofFile(null);
+              setPaymentProofPreview('');
+            }}>
               Cancel
             </Button>
             <Button 
               onClick={handlePaymentComplete}
-              disabled={!selectedPaymentMethod || updateStatus.isPending}
+              disabled={!selectedPaymentMethod || updateStatus.isPending || isUploadingProof}
             >
-              {updateStatus.isPending ? 'Processing...' : 'Complete Order'}
+              {isUploadingProof ? 'Uploading...' : updateStatus.isPending ? 'Processing...' : 'Complete Order'}
             </Button>
           </DialogFooter>
         </DialogContent>

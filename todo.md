@@ -2,6 +2,10 @@
 
 ## Active Tasks
 
+- [x] Add payment screenshot/receipt capture for non-cash payments
+- [x] Check mobile performance - optimized refresh interval from 10s to 15s, added staleTime
+- [x] Delete Kannan's test orders from today (2 orders deleted)
+
 - [x] Add payment method recording at collect payment stage
   - [x] Add paymentMethod field to orders table
   - [x] Add payment method selection dialog when completing in-store orders
