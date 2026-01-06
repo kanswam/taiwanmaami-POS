@@ -2,6 +2,12 @@
 
 ## Active Tasks
 
+- [x] Add cookie consent banner
+  - [x] Create CookieConsent component with accept/decline buttons
+  - [x] Link to Privacy Policy page
+  - [x] Store consent in localStorage
+  - [x] Only show on first visit
+
 - [x] Fix receipt printing after collect payment (queues receipt when order marked completed)
 - [x] Add customer receipt download option on My Orders page (Download Receipt button)
 - [x] Fix customer add-to-order flow (activeOrderId in CartContext, addItemsToOrder in Checkout)

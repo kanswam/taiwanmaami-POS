@@ -29,6 +29,7 @@ import Testimonials from "./pages/Testimonials";
 import Franchise from "./pages/Franchise";
 import Shipping from "./pages/Shipping";
 import FAQ from "./pages/FAQ";
+import { CookieConsent } from "./components/CookieConsent";
 
 // Scroll to top on route change
 function ScrollToTop() {
@@ -89,6 +90,7 @@ function App() {
           <TooltipProvider>
             <Toaster />
             <Router />
+            <CookieConsent />
           </TooltipProvider>
         </CartProvider>
       </ThemeProvider>
