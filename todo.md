@@ -8,6 +8,8 @@
   - [x] Store consent in localStorage
   - [x] Only show on first visit
 
+- [x] Fix product card images being cropped (Cloudinary crop mode changed from fill to limit)
+
 - [x] Fix receipt printing after collect payment (queues receipt when order marked completed)
 - [x] Add customer receipt download option on My Orders page (Download Receipt button)
 - [x] Fix customer add-to-order flow (activeOrderId in CartContext, addItemsToOrder in Checkout)

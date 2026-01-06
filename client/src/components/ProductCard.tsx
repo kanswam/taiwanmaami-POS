@@ -122,12 +122,11 @@ export function ProductCard({ product, subcategory, category, isDelivery = false
   return (
     <>
       <Card 
-        className={`product-card group flex flex-col ${isUnavailable ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`}
-        style={{ aspectRatio: '3/4' }}
+        className={`product-card group flex flex-col h-full ${isUnavailable ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`}
         onClick={() => !isUnavailable && setShowModal(true)}
       >
-        {/* Image section - fixed aspect ratio for consistency */}
-        <div className="relative flex-1 overflow-hidden bg-secondary" style={{ minHeight: '60%' }}>
+        {/* Image section - maintain aspect ratio for food photos */}
+        <div className="relative overflow-hidden bg-secondary" style={{ aspectRatio: '4/3' }}>
           <img
             src={currentImage}
             srcSet={srcSet}
@@ -212,8 +211,8 @@ export function ProductCard({ product, subcategory, category, isDelivery = false
           )}
         </div>
 
-        {/* Content section - fixed height for consistency */}
-        <div className="product-card-content flex-shrink-0 p-3">
+{/* Content section */}
+          <div className="product-card-content p-3">
           <div>
             <h3 className="font-semibold text-foreground line-clamp-2 text-sm sm:text-base">
               {product.name}

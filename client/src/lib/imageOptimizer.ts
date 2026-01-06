@@ -113,11 +113,11 @@ export function getImageForContext(
   context: 'thumbnail' | 'card' | 'detail' | 'hero' | 'admin'
 ): string {
   const contextSettings: Record<string, { width: number; crop?: 'fill' | 'limit' }> = {
-    thumbnail: { width: 150, crop: 'fill' },
-    card: { width: 400, crop: 'fill' },
+    thumbnail: { width: 150, crop: 'limit' },
+    card: { width: 400, crop: 'limit' },
     detail: { width: 800, crop: 'limit' },
     hero: { width: 1200, crop: 'limit' },
-    admin: { width: 300, crop: 'fill' },
+    admin: { width: 300, crop: 'limit' },
   };
   
   const settings = contextSettings[context] || contextSettings.card;
