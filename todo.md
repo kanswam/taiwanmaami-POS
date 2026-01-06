@@ -1776,3 +1776,30 @@
 - [x] Add JSON-LD LocalBusiness schema for both outlets
 - [x] Include address, phone, hours, cuisine type
 - [x] Add Restaurant schema with menu link
+
+
+## Phase 52 - Product Tile Fixes (Jan 5, 2026)
+
+### Product Tile Sizing
+- [ ] Investigate inconsistent tile sizes on menu pages
+- [ ] Fix tiles to have uniform height/width
+- [ ] Ensure responsive behavior is maintained
+
+### Image Loading Speed
+- [ ] Check current image loading implementation
+- [ ] Investigate CDN configuration
+- [ ] Optimize image loading for faster performance
+
+
+## Phase 52 - Product Tile Fixes (Jan 5, 2026)
+
+### Product Tile Sizing
+- [x] Investigate inconsistent tile sizes on menu pages
+- [x] Fix tiles to have uniform height/width using aspect-ratio: 3/4
+- [x] Ensure responsive behavior is maintained
+
+### Image Loading Speed
+- [x] Check current image loading implementation
+- [x] Investigate CDN configuration - CloudFront does not support image resizing without Lambda@Edge
+- [x] Add fetchPriority="low" and contentVisibility="auto" for better browser optimization
+- [ ] Future: Consider enabling CloudFront image optimization or using a third-party image CDN for true image resizing

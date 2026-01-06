@@ -119,17 +119,20 @@ export function ProductCard({ product, subcategory, category, isDelivery = false
   return (
     <>
       <Card 
-        className={`product-card group ${isUnavailable ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`}
+        className={`product-card group flex flex-col ${isUnavailable ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`}
+        style={{ aspectRatio: '3/4' }}
         onClick={() => !isUnavailable && setShowModal(true)}
       >
-        {/* Image section - 60% height */}
-        <div className="relative h-3/5 overflow-hidden bg-secondary">
+        {/* Image section - fixed aspect ratio for consistency */}
+        <div className="relative flex-1 overflow-hidden bg-secondary" style={{ minHeight: '60%' }}>
           <img
             src={currentImage}
             alt={product.name}
             loading="lazy"
             decoding="async"
+            fetchPriority="low"
             className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+            style={{ contentVisibility: 'auto' }}
             onError={(e) => {
               (e.target as HTMLImageElement).src = '/placeholder-drink.jpg';
             }}
@@ -204,8 +207,8 @@ export function ProductCard({ product, subcategory, category, isDelivery = false
           )}
         </div>
 
-        {/* Content section - 40% height */}
-        <div className="product-card-content">
+        {/* Content section - fixed height for consistency */}
+        <div className="product-card-content flex-shrink-0 p-3">
           <div>
             <h3 className="font-semibold text-foreground line-clamp-2 text-sm sm:text-base">
               {product.name}
