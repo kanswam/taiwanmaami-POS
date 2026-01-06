@@ -1,55 +1,69 @@
 import { Header } from '@/components/Header';
 import { trpc } from '@/lib/trpc';
-import { Loader2 } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function FAQ() {
-  const { data: content, isLoading } = trpc.cms.getContent.useQuery({ key: 'faq' });
-
-  const defaultContent = `# Frequently Asked Questions
-
-## What are your operating hours?
-**Palladium Mall:** 10am - 10pm daily
-**T Nagar (Moutan):** 12pm - 12am daily
-
-## Do you offer delivery?
-Yes! We deliver within a 15km radius of our outlets. Delivery charges are calculated based on distance.
-
-## What payment methods do you accept?
-We accept cash, all major credit/debit cards, UPI, and digital wallets.
-
-## Are your drinks customizable?
-Yes! You can customize sugar levels (0%, 25%, 50%, 75%, 100%) and ice levels for most drinks.
-
-## Do you have vegetarian options?
-Yes, most of our menu items are vegetarian. Please check individual item descriptions for details.
-
-## How can I contact you?
-Email us at hello@taiwanmaami.com or call our outlets directly.`;
+  const { data: cmsContent, isLoading } = trpc.cms.getContent.useQuery({ key: 'faq' });
 
   return (
     <div className="min-h-screen bg-background">
       <Header />
       <main className="container py-12">
         <div className="max-w-3xl mx-auto">
+          <h1 className="text-3xl font-bold mb-8">Frequently Asked Questions</h1>
+          
           {isLoading ? (
-            <div className="flex items-center justify-center py-20">
-              <Loader2 className="w-8 h-8 animate-spin text-primary" />
+            <div className="space-y-4">
+              <Skeleton className="h-6 w-64" />
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-6 w-64 mt-8" />
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-3/4" />
             </div>
+          ) : cmsContent ? (
+            <div 
+              className="prose prose-lg max-w-none text-muted-foreground
+                prose-headings:text-foreground prose-headings:font-semibold
+                prose-h2:text-xl prose-h2:mt-8 prose-h2:mb-4
+                prose-h3:text-lg prose-h3:mt-4 prose-h3:mb-2
+                prose-p:my-4 prose-ul:my-4 prose-ol:my-4 prose-li:my-1
+                prose-strong:text-foreground
+                prose-a:text-primary prose-a:hover:underline"
+              dangerouslySetInnerHTML={{ __html: cmsContent }}
+            />
           ) : (
-            <div className="prose prose-lg max-w-none">
-              {((content as any)?.value || defaultContent).split('\n').map((line: string, i: number) => {
-                if (line.startsWith('# ')) {
-                  return <h1 key={i} className="text-3xl font-bold mb-6 text-foreground">{line.replace('# ', '')}</h1>;
-                } else if (line.startsWith('## ')) {
-                  return <h2 key={i} className="text-xl font-semibold mt-8 mb-4 text-foreground">{line.replace('## ', '')}</h2>;
-                } else if (line.startsWith('**') && line.includes(':**')) {
-                  const parts = line.split(':**');
-                  return <p key={i} className="text-muted-foreground mb-2"><strong className="text-foreground">{parts[0].replace('**', '')}:</strong>{parts[1]?.replace('**', '')}</p>;
-                } else if (line.trim()) {
-                  return <p key={i} className="text-muted-foreground mb-4">{line}</p>;
-                }
-                return null;
-              })}
+            <div className="prose prose-lg max-w-none space-y-6 text-muted-foreground">
+              <section>
+                <h2 className="text-xl font-semibold text-foreground mt-8 mb-4">What are your operating hours?</h2>
+                <p><strong className="text-foreground">Palladium Mall:</strong> 10am - 10pm daily</p>
+                <p><strong className="text-foreground">T Nagar (Moutan):</strong> 12pm - 12am daily</p>
+              </section>
+
+              <section>
+                <h2 className="text-xl font-semibold text-foreground mt-8 mb-4">Do you offer delivery?</h2>
+                <p>Yes! We deliver within a 15km radius of our outlets. Delivery charges are calculated based on distance.</p>
+              </section>
+
+              <section>
+                <h2 className="text-xl font-semibold text-foreground mt-8 mb-4">What payment methods do you accept?</h2>
+                <p>We accept cash, all major credit/debit cards, UPI, and digital wallets.</p>
+              </section>
+
+              <section>
+                <h2 className="text-xl font-semibold text-foreground mt-8 mb-4">Are your drinks customizable?</h2>
+                <p>Yes! You can customize sugar levels (0%, 25%, 50%, 75%, 100%) and ice levels for most drinks.</p>
+              </section>
+
+              <section>
+                <h2 className="text-xl font-semibold text-foreground mt-8 mb-4">Do you have vegetarian options?</h2>
+                <p>Yes, most of our menu items are vegetarian. Please check individual item descriptions for details.</p>
+              </section>
+
+              <section>
+                <h2 className="text-xl font-semibold text-foreground mt-8 mb-4">How can I contact you?</h2>
+                <p>Email us at hello@taiwanmaami.com or call our outlets directly.</p>
+              </section>
             </div>
           )}
         </div>

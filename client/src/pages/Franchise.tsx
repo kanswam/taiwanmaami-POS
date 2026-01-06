@@ -1,45 +1,12 @@
 import { Header } from '@/components/Header';
 import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { trpc } from '@/lib/trpc';
 import { Link } from 'wouter';
-import { ArrowRight, Mail } from 'lucide-react';
+import { Mail } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function Franchise() {
-  // Fetch CMS content from database
-  const { data: content } = trpc.cms.getContent.useQuery({ key: 'franchise_opportunity' });
-  
-  // Default content if not set in CMS
-  const pageContent = ((content as any)?.value || '') || `
-# Franchise Opportunity
-
-## Join the Taiwan Maami Family
-
-Taiwan Maami is expanding! We're looking for passionate entrepreneurs who share our vision of bringing authentic Taiwanese bubble tea culture to India.
-
-### Why Partner With Us?
-
-- **Proven Business Model**: Our outlets in Chennai have demonstrated strong customer loyalty and consistent growth
-- **Premium Brand**: Taiwan Maami is known for quality, using imported Taiwanese tapioca pearls
-- **Comprehensive Training**: Full training program for you and your staff
-- **Marketing Support**: National and local marketing campaigns to drive traffic
-- **Ongoing Support**: Dedicated franchise support team to help you succeed
-
-### Investment Overview
-
-Our franchise model is designed to be accessible while maintaining our high standards of quality and service.
-
-### Requirements
-
-- Passion for the F&B industry
-- Commitment to quality and customer service
-- Minimum investment capability
-- Prime retail location (300-500 sq ft)
-
-### Next Steps
-
-If you're interested in becoming a Taiwan Maami franchise partner, please contact us to learn more about this exciting opportunity.
-  `;
+  const { data: cmsContent, isLoading } = trpc.cms.getContent.useQuery({ key: 'franchise_opportunity' });
 
   return (
     <div className="min-h-screen bg-background">
@@ -62,18 +29,60 @@ If you're interested in becoming a Taiwan Maami franchise partner, please contac
         <div className="container">
           <div className="max-w-3xl mx-auto">
             <Card className="p-8">
-              <div 
-                className="prose prose-lg max-w-none"
-                dangerouslySetInnerHTML={{ 
-                  __html: pageContent
-                    .replace(/^### (.*$)/gim, '<h3 class="text-xl font-semibold mt-8 mb-4">$1</h3>')
-                    .replace(/^## (.*$)/gim, '<h2 class="text-2xl font-bold mt-8 mb-4">$1</h2>')
-                    .replace(/^# (.*$)/gim, '<h1 class="text-3xl font-bold mb-6">$1</h1>')
-                    .replace(/^\- (.*$)/gim, '<li class="ml-4">$1</li>')
-                    .replace(/\n\n/g, '</p><p class="mb-4">')
-                    .replace(/^(?!<)/gm, '<p class="mb-4">')
-                }}
-              />
+              {isLoading ? (
+                <div className="space-y-4">
+                  <Skeleton className="h-8 w-64" />
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-4 w-3/4" />
+                  <Skeleton className="h-6 w-48 mt-8" />
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-4 w-full" />
+                </div>
+              ) : cmsContent ? (
+                <div 
+                  className="prose prose-lg max-w-none text-muted-foreground
+                    prose-headings:text-foreground prose-headings:font-semibold
+                    prose-h1:text-3xl prose-h1:mb-6
+                    prose-h2:text-2xl prose-h2:mt-8 prose-h2:mb-4
+                    prose-h3:text-xl prose-h3:mt-6 prose-h3:mb-3
+                    prose-p:my-4 prose-ul:my-4 prose-ol:my-4 prose-li:my-1
+                    prose-strong:text-foreground
+                    prose-a:text-primary prose-a:hover:underline"
+                  dangerouslySetInnerHTML={{ __html: cmsContent }}
+                />
+              ) : (
+                <div className="prose prose-lg max-w-none space-y-6 text-muted-foreground">
+                  <h2 className="text-2xl font-bold text-foreground">Join the Taiwan Maami Family</h2>
+                  <p>
+                    Taiwan Maami is expanding! We're looking for passionate entrepreneurs who share our 
+                    vision of bringing authentic Taiwanese bubble tea culture to India.
+                  </p>
+
+                  <h3 className="text-xl font-semibold text-foreground mt-8 mb-4">Why Partner With Us?</h3>
+                  <ul className="list-disc pl-6 space-y-2">
+                    <li><strong className="text-foreground">Proven Business Model:</strong> Our outlets in Chennai have demonstrated strong customer loyalty and consistent growth</li>
+                    <li><strong className="text-foreground">Premium Brand:</strong> Taiwan Maami is known for quality, using imported Taiwanese tapioca pearls</li>
+                    <li><strong className="text-foreground">Comprehensive Training:</strong> Full training program for you and your staff</li>
+                    <li><strong className="text-foreground">Marketing Support:</strong> National and local marketing campaigns to drive traffic</li>
+                    <li><strong className="text-foreground">Ongoing Support:</strong> Dedicated franchise support team to help you succeed</li>
+                  </ul>
+
+                  <h3 className="text-xl font-semibold text-foreground mt-8 mb-4">Requirements</h3>
+                  <ul className="list-disc pl-6 space-y-2">
+                    <li>Passion for the F&B industry</li>
+                    <li>Commitment to quality and customer service</li>
+                    <li>Minimum investment capability</li>
+                    <li>Prime retail location (300-500 sq ft)</li>
+                  </ul>
+
+                  <h3 className="text-xl font-semibold text-foreground mt-8 mb-4">Next Steps</h3>
+                  <p>
+                    If you're interested in becoming a Taiwan Maami franchise partner, please contact us 
+                    to learn more about this exciting opportunity.
+                  </p>
+                </div>
+              )}
             </Card>
           </div>
         </div>
