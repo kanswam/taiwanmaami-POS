@@ -9,9 +9,82 @@ import { trpc } from '@/lib/trpc';
 import { formatPrice } from '@shared/types';
 import { getLoginUrl } from '@/const';
 import { Link } from 'wouter';
-import { Package, Clock, ChevronRight, ShoppingBag, Star, MessageSquare } from 'lucide-react';
+import { Package, Clock, ChevronRight, ShoppingBag, Star, MessageSquare, Download } from 'lucide-react';
 import { StampCard } from '@/components/StampCard';
 import { toast } from 'sonner';
+
+// Generate receipt HTML for download
+function generateReceiptHTML(order: any): string {
+  const formatPrice = (amount: number) => `₹${(amount / 100).toFixed(2)}`;
+  const items = order.items || [];
+  
+  return `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Receipt - ${order.orderNumber}</title>
+  <style>
+    body { font-family: 'Courier New', monospace; max-width: 300px; margin: 0 auto; padding: 20px; }
+    .header { text-align: center; border-bottom: 2px dashed #000; padding-bottom: 10px; margin-bottom: 10px; }
+    .logo { font-size: 18px; font-weight: bold; }
+    .info { font-size: 12px; margin: 5px 0; }
+    .items { border-bottom: 1px dashed #000; padding-bottom: 10px; margin-bottom: 10px; }
+    .item { display: flex; justify-content: space-between; font-size: 12px; margin: 5px 0; }
+    .item-name { flex: 1; }
+    .totals { font-size: 12px; }
+    .total-row { display: flex; justify-content: space-between; margin: 3px 0; }
+    .grand-total { font-weight: bold; font-size: 14px; border-top: 2px dashed #000; padding-top: 5px; margin-top: 5px; }
+    .footer { text-align: center; font-size: 10px; margin-top: 15px; border-top: 1px dashed #000; padding-top: 10px; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="logo">TAIWAN MAAMI</div>
+    <div class="info">Authentic Taiwanese Bubble Tea</div>
+  </div>
+  
+  <div class="info">
+    <strong>Order #:</strong> ${order.orderNumber}<br>
+    <strong>Date:</strong> ${new Date(order.createdAt).toLocaleString()}<br>
+    <strong>Type:</strong> ${order.orderType.toUpperCase()}<br>
+    ${order.tableNumber ? `<strong>Table:</strong> ${order.tableNumber}<br>` : ''}
+    ${order.customerName ? `<strong>Customer:</strong> ${order.customerName}<br>` : ''}
+  </div>
+  
+  <div class="items">
+    <div style="font-weight: bold; margin-bottom: 5px;">Items:</div>
+    ${items.map((item: any) => `
+      <div class="item">
+        <span class="item-name">${item.quantity}x ${item.productName}${item.size ? ` (${item.size})` : ''}</span>
+        <span>${formatPrice(item.unitPrice * item.quantity)}</span>
+      </div>
+      ${item.addons?.map((addon: any) => `
+        <div class="item" style="padding-left: 15px; font-size: 11px;">
+          <span>+ ${addon.addonName}</span>
+          <span>${formatPrice(addon.addonPrice)}</span>
+        </div>
+      `).join('') || ''}
+    `).join('')}
+  </div>
+  
+  <div class="totals">
+    <div class="total-row"><span>Subtotal:</span><span>${formatPrice(order.subtotal)}</span></div>
+    ${order.stateGst ? `<div class="total-row"><span>SGST:</span><span>${formatPrice(order.stateGst)}</span></div>` : ''}
+    ${order.centralGst ? `<div class="total-row"><span>CGST:</span><span>${formatPrice(order.centralGst)}</span></div>` : ''}
+    ${order.discountAmount ? `<div class="total-row"><span>Discount:</span><span>-${formatPrice(order.discountAmount)}</span></div>` : ''}
+    ${order.deliveryCharge ? `<div class="total-row"><span>Delivery:</span><span>${formatPrice(order.deliveryCharge)}</span></div>` : ''}
+    <div class="total-row grand-total"><span>TOTAL:</span><span>${formatPrice(order.totalAmount)}</span></div>
+  </div>
+  
+  <div class="footer">
+    Thank you for your order!<br>
+    Visit us at taiwanmaami.com
+  </div>
+</body>
+</html>
+  `;
+}
 
 export default function Orders() {
   const { user, isAuthenticated, loading } = useAuth();
@@ -183,6 +256,36 @@ function OrderCard({ order, statusColors, onReviewSubmitted }: {
           </div>
         </div>
       </Link>
+
+      {/* Download Receipt for completed orders */}
+      {order.orderStatus === 'completed' && (
+        <div className="mt-3 pt-3 border-t">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="w-full gap-2"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              // Generate and download receipt
+              const receiptContent = generateReceiptHTML(order);
+              const blob = new Blob([receiptContent], { type: 'text/html' });
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement('a');
+              a.href = url;
+              a.download = `receipt-${order.orderNumber}.html`;
+              document.body.appendChild(a);
+              a.click();
+              document.body.removeChild(a);
+              URL.revokeObjectURL(url);
+              toast.success('Receipt downloaded!');
+            }}
+          >
+            <Download className="w-4 h-4" />
+            Download Receipt
+          </Button>
+        </div>
+      )}
 
       {/* Review Button for completed orders */}
       {canReview && (

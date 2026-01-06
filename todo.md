@@ -2,6 +2,11 @@
 
 ## Active Tasks
 
+- [x] Fix receipt printing after collect payment (queues receipt when order marked completed)
+- [x] Add customer receipt download option on My Orders page (Download Receipt button)
+- [x] Fix customer add-to-order flow (activeOrderId in CartContext, addItemsToOrder in Checkout)
+- [x] Add staff ability to add items to customer orders (Add Items button in StaffOrders)
+
 - [x] Add payment report to Admin panel
   - [x] Create backend procedure to fetch payments by date and method
   - [x] Build payment report UI with date filter and method breakdown

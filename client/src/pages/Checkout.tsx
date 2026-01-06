@@ -27,7 +27,7 @@ declare global {
 export default function Checkout() {
   const [, navigate] = useLocation();
   const { isAuthenticated, user } = useAuth();
-  const { state, subtotal, gst, total, clearCart, itemCount, tableNumber, setTableNumber } = useCart();
+  const { state, subtotal, gst, total, clearCart, itemCount, tableNumber, setTableNumber, activeOrderId, setActiveOrderId } = useCart();
   const { data: stores } = trpc.stores.getAll.useQuery();
 
   const [paymentMethod, setPaymentMethod] = useState<'online' | 'cash'>('online');
@@ -56,6 +56,7 @@ export default function Checkout() {
   const createPaymentOrder = trpc.orders.createPaymentOrder.useMutation();
   const verifyPayment = trpc.orders.verifyPayment.useMutation();
   const createKotForInstore = trpc.orders.createKotForInstore.useMutation();
+  const addItemsToOrder = trpc.orders.addItemsToOrder.useMutation();
 
   // Check ordering hours (skip for in-store orders)
   const orderingStatus = isOrderingAvailable();
@@ -154,7 +155,34 @@ export default function Checkout() {
     setIsSubmitting(true);
 
     try {
-      // Create order first
+      // If there's an active order for this table, add items to it instead of creating new
+      if (activeOrderId && state.orderType === 'instore') {
+        const result = await addItemsToOrder.mutateAsync({
+          orderId: activeOrderId,
+          items: state.items.map(item => ({
+            productId: item.productId,
+            productName: item.productName,
+            size: item.size as 'petite' | 'regular' | 'large' | undefined,
+            withBoba: item.withBoba,
+            sugarLevel: item.sugarLevel,
+            iceLevel: item.iceLevel,
+            specialInstructions: item.specialInstructions || undefined,
+            addons: item.addons,
+            quantity: item.quantity,
+            unitPrice: item.unitPrice,
+            addonsTotal: item.addonsTotal,
+            lineTotal: item.lineTotal,
+          })),
+        });
+        
+        clearCart();
+        setActiveOrderId(null);
+        toast.success('Items added to your existing order!');
+        navigate(`/order-confirmation/${result.orderNumber}`);
+        return;
+      }
+
+      // Create new order
       const orderData = await createOrder.mutateAsync({
         orderType: state.orderType,
         tableNumber: state.orderType === 'instore' ? tableNumber || undefined : undefined,

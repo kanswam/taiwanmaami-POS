@@ -64,7 +64,7 @@ export default function Menu() {
   const [selectedSubcategory, setSelectedSubcategory] = useState<string | null>(initialSubcategory);
   const [searchQuery, setSearchQuery] = useState('');
   const [showAddToOrderBanner, setShowAddToOrderBanner] = useState(false);
-  const { state, setOrderType, setTableNumber, tableNumber, setPickupOutlet, pickupOutlet, setInstoreOutlet, instoreOutlet, itemCount, total } = useCart();
+  const { state, setOrderType, setTableNumber, tableNumber, setPickupOutlet, pickupOutlet, setInstoreOutlet, instoreOutlet, itemCount, total, setActiveOrderId } = useCart();
   
   // Check for active order if table number is in URL
   const { data: activeOrder } = trpc.orders.getActiveOrderForTable.useQuery(
@@ -95,9 +95,10 @@ export default function Menu() {
       // Show banner if there's an active order for this table
       if (activeOrder) {
         setShowAddToOrderBanner(true);
+        setActiveOrderId(activeOrder.id);
       }
     }
-  }, [tableFromUrl, outletFromUrl, activeOrder, setOrderType, setTableNumber, setInstoreOutlet]);
+  }, [tableFromUrl, outletFromUrl, activeOrder, setOrderType, setTableNumber, setInstoreOutlet, setActiveOrderId]);
 
 
   const { data: menuData, isLoading } = trpc.menu.getFullMenu.useQuery({

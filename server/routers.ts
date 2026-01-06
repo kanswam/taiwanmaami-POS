@@ -390,6 +390,52 @@ export const appRouter = router({
             .where(eq(orders.id, input.orderId));
         }
         
+        // Queue receipt for printing when order is completed
+        if (input.status === 'completed' && order) {
+          // Get order items with details
+          const items = await dbInstance!.select().from(orderItemsTable).where(eq(orderItemsTable.orderId, input.orderId));
+          // Get all item addons for this order's items
+          const itemIds = items.map(i => i.id);
+          const itemAddons = itemIds.length > 0 
+            ? await dbInstance!.select().from(orderItemAddons).where(sql`${orderItemAddons.orderItemId} IN (${sql.join(itemIds.map(id => sql`${id}`), sql`, `)})`)
+            : [];
+          
+          // Build receipt data
+          const receiptData = {
+            orderNumber: order.orderNumber,
+            orderType: order.orderType.toUpperCase(),
+            customerName: order.customerName || 'Guest',
+            customerPhone: order.customerPhone || '',
+            tableNumber: order.tableNumber || '',
+            items: items.map(item => {
+              const addons = itemAddons.filter(a => a.orderItemId === item.id);
+              return {
+                name: item.productName,
+                quantity: item.quantity,
+                price: item.unitPrice,
+                size: item.size,
+                addons: addons.map(a => ({ name: a.addonName, price: a.addonPrice })),
+              };
+            }),
+            subtotal: order.subtotal,
+            sgst: order.stateGst,
+            cgst: order.centralGst,
+            discount: order.discountAmount || 0,
+            deliveryCharge: order.deliveryCharge || 0,
+            total: order.totalAmount,
+            paymentMethod: input.paymentMethod || order.paymentMethod || 'cash',
+            createdAt: new Date().toISOString(),
+          };
+          
+          await dbInstance!.insert(receiptQueue).values({
+            orderId: order.id,
+            outletId: order.outletId || 1,
+            orderNumber: order.orderNumber,
+            receiptData: receiptData,
+            isPrinted: false,
+          });
+        }
+        
         // Award stamps when order is marked as completed
         if (input.status === 'completed' && order && order.userId) {
           const orderTotal = order.totalAmount || 0;
@@ -639,7 +685,7 @@ export const appRouter = router({
       }),
 
     // Add items to existing order (for in-store customers adding more items)
-    addItemsToOrder: adminProcedure
+    addItemsToOrder: publicProcedure
       .input(z.object({
         orderId: z.number(),
         items: z.array(z.object({
@@ -661,7 +707,7 @@ export const appRouter = router({
           specialInstructions: z.string().optional(),
         })),
       }))
-      .mutation(async ({ ctx, input }) => {
+      .mutation(async ({ input }) => {
         const dbInstance = await getDb();
         if (!dbInstance) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
         
@@ -669,9 +715,14 @@ export const appRouter = router({
         const [order] = await dbInstance.select().from(orders).where(eq(orders.id, input.orderId));
         if (!order) throw new TRPCError({ code: 'NOT_FOUND', message: 'Order not found' });
         
-        // Only allow adding items to pending payment orders
+        // Only allow adding items to pending payment orders (in-store)
         if (order.paymentStatus !== 'pending') {
           throw new TRPCError({ code: 'BAD_REQUEST', message: 'Cannot add items to paid orders' });
+        }
+        
+        // Only allow adding to in-store orders
+        if (order.orderType !== 'instore') {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: 'Can only add items to in-store orders' });
         }
         
         // Calculate new items total
@@ -760,6 +811,7 @@ export const appRouter = router({
         
         return { 
           success: true, 
+          orderNumber: order.orderNumber,
           newSubtotal,
           newTotalAmount,
           itemsAdded: newOrderItems.length,

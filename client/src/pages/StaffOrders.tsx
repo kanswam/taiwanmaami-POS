@@ -79,6 +79,9 @@ export default function StaffOrders() {
   const [isUploadingProof, setIsUploadingProof] = useState(false);
   const paymentProofInputRef = useRef<HTMLInputElement>(null);
   
+  // Add items dialog
+  const [addItemsDialog, setAddItemsDialog] = useState<{ open: boolean; order: any }>({ open: false, order: null });
+  
   const utils = trpc.useUtils();
   
   // Fetch orders with filters and auto-refresh every 10 seconds
@@ -434,6 +437,17 @@ export default function StaffOrders() {
             >
               <MessageSquare className="w-4 h-4" />
             </Button>
+            {/* Add Items button for active in-store orders */}
+            {order.orderType === 'instore' && order.orderStatus !== 'completed' && order.orderStatus !== 'cancelled' && (
+              <Button 
+                variant="outline" 
+                size="icon" 
+                title="Add Items"
+                onClick={() => setAddItemsDialog({ open: true, order })}
+              >
+                <ShoppingBag className="w-4 h-4" />
+              </Button>
+            )}
           </div>
         )}
       </Card>
@@ -802,6 +816,59 @@ export default function StaffOrders() {
               disabled={!selectedPaymentMethod || updateStatus.isPending || isUploadingProof}
             >
               {isUploadingProof ? 'Uploading...' : updateStatus.isPending ? 'Processing...' : 'Complete Order'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add Items Dialog */}
+      <Dialog open={addItemsDialog.open} onOpenChange={(open) => {
+        if (!open) {
+          setAddItemsDialog({ open: false, order: null });
+        }
+      }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Add Items to Order</DialogTitle>
+            <p className="text-sm text-muted-foreground">
+              Order #{addItemsDialog.order?.orderNumber} - Table {addItemsDialog.order?.tableNumber}
+            </p>
+          </DialogHeader>
+          <div className="py-4">
+            <p className="text-sm text-muted-foreground mb-4">
+              To add items to this customer's order, scan the table QR code or use the link below:
+            </p>
+            <div className="bg-muted p-3 rounded-lg">
+              <p className="text-xs text-muted-foreground mb-1">Direct link:</p>
+              <code className="text-xs break-all">
+                {window.location.origin}/menu?table={addItemsDialog.order?.tableNumber}&outlet={addItemsDialog.order?.outletId === 1 ? 'palladium' : 'tnagar'}
+              </code>
+            </div>
+            <div className="mt-4 flex gap-2">
+              <Button 
+                className="flex-1"
+                onClick={() => {
+                  const url = `${window.location.origin}/menu?table=${addItemsDialog.order?.tableNumber}&outlet=${addItemsDialog.order?.outletId === 1 ? 'palladium' : 'tnagar'}`;
+                  window.open(url, '_blank');
+                }}
+              >
+                Open Menu
+              </Button>
+              <Button 
+                variant="outline"
+                onClick={() => {
+                  const url = `${window.location.origin}/menu?table=${addItemsDialog.order?.tableNumber}&outlet=${addItemsDialog.order?.outletId === 1 ? 'palladium' : 'tnagar'}`;
+                  navigator.clipboard.writeText(url);
+                  toast.success('Link copied to clipboard');
+                }}
+              >
+                Copy Link
+              </Button>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAddItemsDialog({ open: false, order: null })}>
+              Close
             </Button>
           </DialogFooter>
         </DialogContent>

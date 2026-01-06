@@ -11,6 +11,7 @@ interface CartState {
   discountAmount: number;
   loyaltyPointsUsed: number;
   lastAddedItem: { productId: number; subcategoryId: number } | null;
+  activeOrderId: number | null; // For adding items to existing in-store orders
 }
 
 type CartAction =
@@ -25,7 +26,8 @@ type CartAction =
   | { type: 'APPLY_DISCOUNT'; payload: { code: string; amount: number } }
   | { type: 'REMOVE_DISCOUNT' }
   | { type: 'USE_LOYALTY_POINTS'; payload: number }
-  | { type: 'LOAD_CART'; payload: CartState };
+  | { type: 'LOAD_CART'; payload: CartState }
+  | { type: 'SET_ACTIVE_ORDER_ID'; payload: number | null };
 
 const initialState: CartState = {
   items: [],
@@ -37,6 +39,7 @@ const initialState: CartState = {
   discountAmount: 0,
   loyaltyPointsUsed: 0,
   lastAddedItem: null,
+  activeOrderId: null,
 };
 
 function cartReducer(state: CartState, action: CartAction): CartState {
@@ -129,6 +132,8 @@ function cartReducer(state: CartState, action: CartAction): CartState {
       return { ...state, loyaltyPointsUsed: action.payload };
     case 'LOAD_CART':
       return action.payload;
+    case 'SET_ACTIVE_ORDER_ID':
+      return { ...state, activeOrderId: action.payload };
     default:
       return state;
   }
@@ -147,6 +152,7 @@ interface CartContextValue {
   applyDiscount: (code: string, amount: number) => void;
   removeDiscount: () => void;
   useLoyaltyPoints: (points: number) => void;
+  setActiveOrderId: (orderId: number | null) => void;
   subtotal: number;
   gst: { stateGst: number; centralGst: number; total: number };
   total: number;
@@ -155,6 +161,7 @@ interface CartContextValue {
   pickupOutlet: 'palladium' | 'tnagar' | null;
   instoreOutlet: 'palladium' | 'tnagar' | null;
   lastAddedItem: { productId: number; subcategoryId: number } | null;
+  activeOrderId: number | null;
 }
 
 const CartContext = createContext<CartContextValue | undefined>(undefined);
@@ -198,6 +205,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     applyDiscount: (code, amount) => dispatch({ type: 'APPLY_DISCOUNT', payload: { code, amount } }),
     removeDiscount: () => dispatch({ type: 'REMOVE_DISCOUNT' }),
     useLoyaltyPoints: (points) => dispatch({ type: 'USE_LOYALTY_POINTS', payload: points }),
+    setActiveOrderId: (orderId) => dispatch({ type: 'SET_ACTIVE_ORDER_ID', payload: orderId }),
     subtotal,
     gst,
     total,
@@ -206,6 +214,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     pickupOutlet: state.pickupOutlet,
     instoreOutlet: state.instoreOutlet,
     lastAddedItem: state.lastAddedItem,
+    activeOrderId: state.activeOrderId,
   };
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
