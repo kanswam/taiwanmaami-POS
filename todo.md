@@ -1872,3 +1872,29 @@
 - [x] Connected About.tsx to CMS database
 - [x] All pages now fetch content from database and display dynamically
 - [x] Theresa can now manage all content pages from Admin → Settings → Content Pages
+
+
+## Phase 58 - CMS Rich Text Editor (Jan 6, 2026)
+
+### Bug Fix - Content Formatting
+- [ ] Add rich text editor (WYSIWYG) to Admin CMS content pages
+- [ ] Install and configure TipTap or similar rich text editor
+- [ ] Update content display pages to render HTML properly
+- [ ] Test formatting on Terms, Privacy, Refund, FAQ, Shipping, Franchise, About pages
+- [ ] Ensure Theresa can format content with headings, paragraphs, bold, lists, etc.
+
+
+## Phase 59 - CMS Rich Text Editor & Auto-Formatting (Jan 6, 2026)
+
+### Rich Text Editor
+- [x] Install TipTap rich text editor
+- [x] Create RichTextEditor component with formatting toolbar
+- [x] Replace Textarea with RichTextEditor in Admin CMS
+- [x] Add formatting options: bold, italic, underline, headings, lists, links
+
+### Auto-Formatting for Existing Content
+- [x] Create textToHtml utility for auto-formatting plain text
+- [x] Update Terms, Privacy, Refund, FAQ, Shipping, Franchise, About pages
+- [x] Handle numbered sections (1., 1.1, etc.)
+- [x] Handle Q&A format
+- [x] Handle general paragraph content with sentence pattern detection

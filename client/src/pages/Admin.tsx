@@ -37,6 +37,7 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { SortableCategory, SortableSubcategory } from '@/components/SortableCategory';
+import { RichTextEditor } from '@/components/RichTextEditor';
 
 export default function Admin() {
   const [, navigate] = useLocation();
@@ -5735,13 +5736,11 @@ function CMSTab() {
             {saving === 'about_us' ? 'Saving...' : 'Save'}
           </Button>
         </div>
-        <Textarea
-          value={aboutUs}
-          onChange={(e) => setAboutUs(e.target.value)}
+        <RichTextEditor
+          content={aboutUs}
+          onChange={setAboutUs}
           placeholder="Tell your story... Who is Taiwan Maami? What makes your bubble tea special?"
-          className="min-h-[200px]"
         />
-        <p className="text-xs text-muted-foreground mt-2">Supports basic HTML tags for formatting.</p>
       </Card>
 
       <Card className="p-6">
@@ -5751,11 +5750,10 @@ function CMSTab() {
             {saving === 'terms_conditions' ? 'Saving...' : 'Save'}
           </Button>
         </div>
-        <Textarea
-          value={termsConditions}
-          onChange={(e) => setTermsConditions(e.target.value)}
+        <RichTextEditor
+          content={termsConditions}
+          onChange={setTermsConditions}
           placeholder="Your terms and conditions for using the website and ordering..."
-          className="min-h-[200px]"
         />
       </Card>
 
@@ -5766,11 +5764,10 @@ function CMSTab() {
             {saving === 'privacy_policy' ? 'Saving...' : 'Save'}
           </Button>
         </div>
-        <Textarea
-          value={privacyPolicy}
-          onChange={(e) => setPrivacyPolicy(e.target.value)}
+        <RichTextEditor
+          content={privacyPolicy}
+          onChange={setPrivacyPolicy}
           placeholder="How you collect, use, and protect customer data..."
-          className="min-h-[200px]"
         />
       </Card>
 
@@ -5781,11 +5778,10 @@ function CMSTab() {
             {saving === 'refund_policy' ? 'Saving...' : 'Save'}
           </Button>
         </div>
-        <Textarea
-          value={refundPolicy}
-          onChange={(e) => setRefundPolicy(e.target.value)}
+        <RichTextEditor
+          content={refundPolicy}
+          onChange={setRefundPolicy}
           placeholder="Your refund and cancellation policy..."
-          className="min-h-[200px]"
         />
       </Card>
 
@@ -5796,13 +5792,11 @@ function CMSTab() {
             {saving === 'faq' ? 'Saving...' : 'Save'}
           </Button>
         </div>
-        <Textarea
-          value={faq}
-          onChange={(e) => setFaq(e.target.value)}
+        <RichTextEditor
+          content={faq}
+          onChange={setFaq}
           placeholder="Frequently asked questions and answers..."
-          className="min-h-[200px]"
         />
-        <p className="text-xs text-muted-foreground mt-2">Use ## for question headers and regular text for answers.</p>
       </Card>
 
       <Card className="p-6">
@@ -5812,13 +5806,11 @@ function CMSTab() {
             {saving === 'shipping_policy' ? 'Saving...' : 'Save'}
           </Button>
         </div>
-        <Textarea
-          value={shippingPolicy}
-          onChange={(e) => setShippingPolicy(e.target.value)}
+        <RichTextEditor
+          content={shippingPolicy}
+          onChange={setShippingPolicy}
           placeholder="Your shipping and delivery policy... Include delivery areas, times, and charges."
-          className="min-h-[200px]"
         />
-        <p className="text-xs text-muted-foreground mt-2">Use # for main title, ## for sections, - for bullet points.</p>
       </Card>
 
       <Card className="p-6">
@@ -5828,13 +5820,11 @@ function CMSTab() {
             {saving === 'franchise_opportunity' ? 'Saving...' : 'Save'}
           </Button>
         </div>
-        <Textarea
-          value={franchiseOpportunity}
-          onChange={(e) => setFranchiseOpportunity(e.target.value)}
+        <RichTextEditor
+          content={franchiseOpportunity}
+          onChange={setFranchiseOpportunity}
           placeholder="Information about franchise opportunities... Include requirements, investment details, and contact information."
-          className="min-h-[200px]"
         />
-        <p className="text-xs text-muted-foreground mt-2">Use # for main title, ## for sections, - for bullet points.</p>
       </Card>
     </div>
   );

@@ -5,9 +5,17 @@ import { Link } from 'wouter';
 import { MapPin, Clock, Phone, Instagram, ArrowRight, Facebook, Twitter, Youtube } from 'lucide-react';
 import { trpc } from '@/lib/trpc';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useMemo } from 'react';
+import { formatLegalContent } from '@/lib/textToHtml';
 
 export default function About() {
   const { data: cmsContent, isLoading } = trpc.cms.getContent.useQuery({ key: 'about_us' });
+
+  // Auto-format plain text content to HTML
+  const formattedContent = useMemo(() => {
+    if (!cmsContent) return '';
+    return formatLegalContent(cmsContent);
+  }, [cmsContent]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -39,16 +47,17 @@ export default function About() {
                 <Skeleton className="h-4 w-full" />
                 <Skeleton className="h-4 w-2/3" />
               </div>
-            ) : cmsContent ? (
+            ) : formattedContent ? (
               <div 
                 className="prose prose-lg max-w-none text-muted-foreground
                   prose-headings:text-foreground prose-headings:font-semibold
                   prose-h2:text-xl prose-h2:mt-8 prose-h2:mb-4
-                  prose-h3:text-lg prose-h3:mt-4 prose-h3:mb-2
+                  prose-h3:text-lg prose-h3:mt-6 prose-h3:mb-3
                   prose-p:my-4 prose-ul:my-4 prose-ol:my-4 prose-li:my-1
                   prose-strong:text-foreground
-                  prose-a:text-primary prose-a:hover:underline"
-                dangerouslySetInnerHTML={{ __html: cmsContent }}
+                  prose-a:text-primary prose-a:hover:underline
+                  [&>h2]:border-b [&>h2]:border-border/50 [&>h2]:pb-2"
+                dangerouslySetInnerHTML={{ __html: formattedContent }}
               />
             ) : (
               <div className="prose prose-lg max-w-none text-muted-foreground space-y-4">

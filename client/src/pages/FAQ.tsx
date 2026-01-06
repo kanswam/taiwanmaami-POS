@@ -1,9 +1,17 @@
 import { Header } from '@/components/Header';
 import { trpc } from '@/lib/trpc';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useMemo } from 'react';
+import { formatLegalContent } from '@/lib/textToHtml';
 
 export default function FAQ() {
   const { data: cmsContent, isLoading } = trpc.cms.getContent.useQuery({ key: 'faq' });
+
+  // Auto-format plain text content to HTML
+  const formattedContent = useMemo(() => {
+    if (!cmsContent) return '';
+    return formatLegalContent(cmsContent);
+  }, [cmsContent]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -21,16 +29,17 @@ export default function FAQ() {
               <Skeleton className="h-4 w-full" />
               <Skeleton className="h-4 w-3/4" />
             </div>
-          ) : cmsContent ? (
+          ) : formattedContent ? (
             <div 
               className="prose prose-lg max-w-none text-muted-foreground
                 prose-headings:text-foreground prose-headings:font-semibold
                 prose-h2:text-xl prose-h2:mt-8 prose-h2:mb-4
-                prose-h3:text-lg prose-h3:mt-4 prose-h3:mb-2
+                prose-h3:text-lg prose-h3:mt-6 prose-h3:mb-3
                 prose-p:my-4 prose-ul:my-4 prose-ol:my-4 prose-li:my-1
                 prose-strong:text-foreground
-                prose-a:text-primary prose-a:hover:underline"
-              dangerouslySetInnerHTML={{ __html: cmsContent }}
+                prose-a:text-primary prose-a:hover:underline
+                [&>h3]:border-l-4 [&>h3]:border-primary [&>h3]:pl-4"
+              dangerouslySetInnerHTML={{ __html: formattedContent }}
             />
           ) : (
             <div className="prose prose-lg max-w-none space-y-6 text-muted-foreground">
