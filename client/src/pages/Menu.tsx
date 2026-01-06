@@ -268,9 +268,9 @@ export default function Menu() {
                   </div>
                 )}
               </div>
-              <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
-                <h3 className="font-bold text-lg leading-tight">{category.name}</h3>
-                <p className="text-sm text-white/70 mt-1">{subcategories.length} subcategories • {productCount} items</p>
+              <div className="absolute bottom-0 left-0 right-0 p-3 sm:p-4 text-white">
+                <h3 className="font-bold text-sm sm:text-lg leading-tight line-clamp-2">{category.name}</h3>
+                <p className="text-xs sm:text-sm text-white/70 mt-0.5 sm:mt-1">{subcategories.length} subcategories • {productCount} items</p>
               </div>
               <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm rounded-full p-2 opacity-0 group-hover:opacity-100 transition-opacity shadow-lg">
                 <ChevronRight className="w-5 h-5 text-primary" />
@@ -333,12 +333,12 @@ export default function Menu() {
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
                 </div>
-                <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
-                  <h3 className="font-bold text-lg">{subcategory.name}</h3>
+                <div className="absolute bottom-0 left-0 right-0 p-3 sm:p-4 text-white">
+                  <h3 className="font-bold text-sm sm:text-lg leading-tight line-clamp-2">{subcategory.name}</h3>
                   {subcategory.chineseName && (
-                    <p className="text-sm text-white/80">{subcategory.chineseName}</p>
+                    <p className="text-xs sm:text-sm text-white/80 line-clamp-1">{subcategory.chineseName}</p>
                   )}
-                  <p className="text-xs text-white/60 mt-1">{productCount} items</p>
+                  <p className="text-xs text-white/60 mt-0.5 sm:mt-1">{productCount} items</p>
                 </div>
                 <div className="absolute top-3 right-3 bg-white/20 backdrop-blur-sm rounded-full p-2 group-hover:bg-primary group-hover:text-white transition-colors">
                   <ChevronRight className="w-4 h-4" />

@@ -2,6 +2,11 @@
 
 ## Active Tasks
 
+- [x] Fix page not scrolling to top when navigating on mobile (added ScrollToTop component)
+- [x] Fix category tile text overflow on mobile (smaller text, line-clamp on mobile)
+
+## Recently Completed
+
 - [x] Preview Jost font (Futura-style) for user approval - APPROVED
 - [x] Apply Jost font throughout website
 
