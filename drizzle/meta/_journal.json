@@ -183,6 +183,13 @@
       "when": 1767622807091,
       "tag": "0025_nostalgic_korvac",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "5",
+      "when": 1767690067287,
+      "tag": "0026_colorful_mephistopheles",
+      "breakpoints": true
     }
   ]
 }

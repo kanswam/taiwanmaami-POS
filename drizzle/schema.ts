@@ -214,6 +214,7 @@ export const orders = mysqlTable("orders", {
   manualDiscountPercent: int("manualDiscountPercent"), // If percentage type, the percent value
   manualDiscountReason: text("manualDiscountReason"), // Reason for discount
   manualDiscountApprovedBy: int("manualDiscountApprovedBy"), // Admin user ID who approved
+  staffNotes: text("staffNotes"), // Internal notes from staff about the order
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
   completedAt: timestamp("completedAt"),

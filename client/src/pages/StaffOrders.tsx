@@ -1,40 +1,86 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Header } from '@/components/Header';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
 import { trpc } from '@/lib/trpc';
 import { formatPrice } from '@shared/types';
 import { useAuth } from '@/_core/hooks/useAuth';
 import { toast } from 'sonner';
 import { 
   ChefHat, Package, Truck, CheckCircle, Clock, 
-  Printer, RefreshCw, MapPin, Phone, User
+  Printer, RefreshCw, MapPin, Phone, User, Bell,
+  Filter, Store, UtensilsCrossed, ShoppingBag,
+  MessageSquare, AlertTriangle, BarChart3, Volume2, VolumeX,
+  X, Calendar, Hash
 } from 'lucide-react';
 
+// Status flow for delivery orders
 const statusFlow = {
-  pending: { next: 'confirmed', label: 'Confirm Payment', icon: CheckCircle },
-  confirmed: { next: 'preparing', label: 'Start Preparing', icon: ChefHat },
-  preparing: { next: 'ready', label: 'Mark Ready', icon: Package },
-  ready: { next: 'out_for_delivery', label: 'Handed to Delivery', icon: Truck, deliveryOnly: true },
-  out_for_delivery: { next: 'completed', label: 'Mark Delivered', icon: CheckCircle },
+  pending: { next: 'confirmed', label: 'Confirm Order', icon: CheckCircle, color: 'bg-yellow-500' },
+  confirmed: { next: 'preparing', label: 'Start Preparing', icon: ChefHat, color: 'bg-blue-500' },
+  preparing: { next: 'ready', label: 'Mark Ready', icon: Package, color: 'bg-orange-500' },
+  ready: { next: 'out_for_delivery', label: 'Hand to Delivery', icon: Truck, color: 'bg-green-500' },
+  out_for_delivery: { next: 'completed', label: 'Mark Delivered', icon: CheckCircle, color: 'bg-purple-500' },
 };
 
+// Status flow for pickup/instore orders
 const pickupStatusFlow = {
-  pending: { next: 'confirmed', label: 'Confirm Payment', icon: CheckCircle },
-  confirmed: { next: 'preparing', label: 'Start Preparing', icon: ChefHat },
-  preparing: { next: 'ready', label: 'Mark Ready', icon: Package },
-  ready: { next: 'completed', label: 'Mark Picked Up', icon: CheckCircle },
+  pending: { next: 'confirmed', label: 'Confirm Order', icon: CheckCircle, color: 'bg-yellow-500' },
+  confirmed: { next: 'preparing', label: 'Start Preparing', icon: ChefHat, color: 'bg-blue-500' },
+  preparing: { next: 'ready', label: 'Mark Ready', icon: Package, color: 'bg-orange-500' },
+  ready: { next: 'completed', label: 'Mark Picked Up', icon: CheckCircle, color: 'bg-green-500' },
+};
+
+const statusColors: Record<string, string> = {
+  pending: 'bg-yellow-100 text-yellow-800 border-yellow-300',
+  confirmed: 'bg-blue-100 text-blue-800 border-blue-300',
+  preparing: 'bg-orange-100 text-orange-800 border-orange-300',
+  ready: 'bg-green-100 text-green-800 border-green-300',
+  out_for_delivery: 'bg-purple-100 text-purple-800 border-purple-300',
+  completed: 'bg-gray-100 text-gray-800 border-gray-300',
+  cancelled: 'bg-red-100 text-red-800 border-red-300',
+};
+
+const orderTypeIcons: Record<string, React.ReactNode> = {
+  instore: <UtensilsCrossed className="w-4 h-4" />,
+  delivery: <Truck className="w-4 h-4" />,
+  pickup: <ShoppingBag className="w-4 h-4" />,
 };
 
 export default function StaffOrders() {
   const { user, isAuthenticated } = useAuth();
   const [activeTab, setActiveTab] = useState('active');
+  const [soundEnabled, setSoundEnabled] = useState(true);
+  const [previousOrderCount, setPreviousOrderCount] = useState(0);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  
+  // Filters
+  const [outletFilter, setOutletFilter] = useState<string>('all');
+  const [orderTypeFilter, setOrderTypeFilter] = useState<string>('all');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  
+  // Dialogs
+  const [noteDialog, setNoteDialog] = useState<{ open: boolean; orderId: number | null; currentNote: string }>({
+    open: false, orderId: null, currentNote: ''
+  });
+  const [kotDialog, setKotDialog] = useState<{ open: boolean; order: any }>({ open: false, order: null });
+  
   const utils = trpc.useUtils();
   
+  // Fetch orders with filters and auto-refresh every 10 seconds
   const { data: ordersData, isLoading, refetch } = trpc.orders.getRecent.useQuery({
     limit: 100,
+    outlet: outletFilter as any,
+    orderType: orderTypeFilter as any,
+    status: activeTab === 'active' ? undefined : undefined, // We filter client-side for tabs
+  }, {
+    refetchInterval: 10000, // Auto-refresh every 10 seconds
   });
   
   const updateStatus = trpc.orders.updateStatus.useMutation({
@@ -47,13 +93,48 @@ export default function StaffOrders() {
     },
   });
 
-  if (!isAuthenticated || (user?.role !== 'admin')) {
+  const updateStaffNotes = trpc.orders.updateStaffNotes.useMutation({
+    onSuccess: () => {
+      toast.success('Note saved');
+      utils.orders.getRecent.invalidate();
+      setNoteDialog({ open: false, orderId: null, currentNote: '' });
+    },
+    onError: (err) => {
+      toast.error(err.message || 'Failed to save note');
+    },
+  });
+
+  // Sound notification for new orders
+  useEffect(() => {
+    if (!audioRef.current) {
+      audioRef.current = new Audio('/sounds/notification.mp3');
+    }
+  }, []);
+
+  useEffect(() => {
+    if (ordersData && soundEnabled) {
+      const activeOrders = ordersData.filter((o: any) => 
+        ['pending', 'confirmed', 'preparing', 'ready', 'out_for_delivery'].includes(o.orderStatus)
+      );
+      
+      if (activeOrders.length > previousOrderCount && previousOrderCount > 0) {
+        // New order arrived
+        audioRef.current?.play().catch(() => {});
+        toast.info('🔔 New order received!', { duration: 5000 });
+      }
+      setPreviousOrderCount(activeOrders.length);
+    }
+  }, [ordersData, soundEnabled, previousOrderCount]);
+
+  // Check access - allow staff and admin
+  if (!isAuthenticated || (user?.role !== 'admin' && user?.role !== 'staff')) {
     return (
       <div className="min-h-screen bg-background">
         <Header />
         <div className="container py-12 text-center">
           <h1 className="text-2xl font-bold mb-4">Access Denied</h1>
-          <p className="text-muted-foreground">You need admin access to view this page.</p>
+          <p className="text-muted-foreground">You need staff access to view this page.</p>
+          <p className="text-sm text-muted-foreground mt-2">Please contact your manager to get access.</p>
         </div>
       </div>
     );
@@ -61,12 +142,25 @@ export default function StaffOrders() {
 
   const orders = ordersData || [];
   
-  const activeOrders = orders.filter((o: any) => 
+  // Apply client-side filters
+  let filteredOrders = orders;
+  if (statusFilter !== 'all') {
+    filteredOrders = filteredOrders.filter((o: any) => o.orderStatus === statusFilter);
+  }
+  
+  const activeOrders = filteredOrders.filter((o: any) => 
     ['pending', 'confirmed', 'preparing', 'ready', 'out_for_delivery'].includes(o.orderStatus)
   );
-  const completedOrders = orders.filter((o: any) => 
+  const completedOrders = filteredOrders.filter((o: any) => 
     ['completed', 'cancelled'].includes(o.orderStatus)
   );
+
+  // Daily summary stats
+  const today = new Date().toDateString();
+  const todayOrders = orders.filter((o: any) => new Date(o.createdAt).toDateString() === today);
+  const todayCompleted = todayOrders.filter((o: any) => o.orderStatus === 'completed');
+  const todayRevenue = todayCompleted.reduce((sum: number, o: any) => sum + o.totalAmount, 0);
+  const todayCancelled = todayOrders.filter((o: any) => o.orderStatus === 'cancelled').length;
 
   const handleStatusUpdate = (orderId: number, newStatus: string) => {
     updateStatus.mutate({ orderId, status: newStatus as any });
@@ -77,35 +171,100 @@ export default function StaffOrders() {
     return flow[order.orderStatus as keyof typeof flow];
   };
 
-  const statusColors: Record<string, string> = {
-    pending: 'bg-yellow-100 text-yellow-800 border-yellow-300',
-    confirmed: 'bg-blue-100 text-blue-800 border-blue-300',
-    preparing: 'bg-orange-100 text-orange-800 border-orange-300',
-    ready: 'bg-green-100 text-green-800 border-green-300',
-    out_for_delivery: 'bg-purple-100 text-purple-800 border-purple-300',
-    completed: 'bg-gray-100 text-gray-800 border-gray-300',
-    cancelled: 'bg-red-100 text-red-800 border-red-300',
+  const handlePrintKOT = (order: any) => {
+    setKotDialog({ open: true, order });
+  };
+
+  const printKOT = () => {
+    if (!kotDialog.order) return;
+    
+    const order = kotDialog.order;
+    const kotContent = `
+      <html>
+        <head>
+          <title>KOT - ${order.orderNumber}</title>
+          <style>
+            body { font-family: monospace; font-size: 12px; width: 80mm; margin: 0; padding: 10px; }
+            .header { text-align: center; border-bottom: 1px dashed #000; padding-bottom: 10px; margin-bottom: 10px; }
+            .order-type { font-size: 16px; font-weight: bold; text-transform: uppercase; }
+            .order-num { font-size: 24px; font-weight: bold; }
+            .items { margin: 10px 0; }
+            .item { margin: 5px 0; padding: 5px 0; border-bottom: 1px dotted #ccc; }
+            .item-name { font-weight: bold; }
+            .item-details { font-size: 11px; color: #666; }
+            .special { background: #fff3cd; padding: 5px; margin-top: 10px; }
+            .footer { text-align: center; margin-top: 10px; font-size: 10px; }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <div class="order-type">${order.orderType}</div>
+            <div class="order-num">#${order.orderNumber}</div>
+            ${order.tableNumber ? `<div>Table: ${order.tableNumber}</div>` : ''}
+            <div>${new Date(order.createdAt).toLocaleString()}</div>
+          </div>
+          <div class="items">
+            ${order.items?.map((item: any) => `
+              <div class="item">
+                <div class="item-name">${item.quantity}x ${item.productName}</div>
+                <div class="item-details">
+                  ${item.size ? `Size: ${item.size}` : ''}
+                  ${item.sugarLevel ? ` | Sugar: ${item.sugarLevel}` : ''}
+                  ${item.iceLevel ? ` | Ice: ${item.iceLevel}` : ''}
+                </div>
+                ${item.specialInstructions ? `<div class="item-details">Note: ${item.specialInstructions}</div>` : ''}
+              </div>
+            `).join('')}
+          </div>
+          ${order.specialInstructions ? `<div class="special">⚠️ ${order.specialInstructions}</div>` : ''}
+          <div class="footer">
+            <div>Customer: ${order.customerName || 'Guest'}</div>
+            ${order.customerPhone ? `<div>Phone: ${order.customerPhone}</div>` : ''}
+          </div>
+        </body>
+      </html>
+    `;
+    
+    const printWindow = window.open('', '_blank');
+    if (printWindow) {
+      printWindow.document.write(kotContent);
+      printWindow.document.close();
+      printWindow.print();
+    }
+    
+    setKotDialog({ open: false, order: null });
+    toast.success('KOT sent to printer');
   };
 
   const OrderCard = ({ order }: { order: any }) => {
     const nextAction = getNextAction(order);
     const Icon = nextAction?.icon || CheckCircle;
+    const isUrgent = order.orderStatus === 'pending' && 
+      (Date.now() - new Date(order.createdAt).getTime()) > 5 * 60 * 1000; // 5 minutes
     
     return (
-      <Card className="p-4 mb-4">
+      <Card className={`p-4 mb-4 ${isUrgent ? 'ring-2 ring-red-500 animate-pulse' : ''}`}>
         <div className="flex items-start justify-between mb-3">
           <div>
-            <div className="flex items-center gap-2">
-              <span className="font-bold text-lg">#{order.orderNumber}</span>
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="font-bold text-xl">#{order.orderNumber}</span>
               <Badge variant="outline" className={statusColors[order.orderStatus]}>
                 {order.orderStatus.replace(/_/g, ' ')}
               </Badge>
-              <Badge variant="secondary" className="capitalize">
+              <Badge variant="secondary" className="capitalize flex items-center gap-1">
+                {orderTypeIcons[order.orderType]}
                 {order.orderType}
               </Badge>
+              {order.tableNumber && (
+                <Badge variant="outline" className="bg-blue-50">
+                  Table {order.tableNumber}
+                </Badge>
+              )}
             </div>
-            <p className="text-sm text-muted-foreground mt-1">
-              {new Date(order.createdAt).toLocaleString()}
+            <p className="text-sm text-muted-foreground mt-1 flex items-center gap-1">
+              <Clock className="w-3 h-3" />
+              {new Date(order.createdAt).toLocaleTimeString()}
+              {isUrgent && <span className="text-red-500 font-medium ml-2">⚠️ Waiting</span>}
             </p>
           </div>
           <span className="font-bold text-lg">{formatPrice(order.totalAmount)}</span>
@@ -115,12 +274,14 @@ export default function StaffOrders() {
         <div className="bg-muted/50 rounded-lg p-3 mb-3 space-y-1">
           <div className="flex items-center gap-2 text-sm">
             <User className="w-4 h-4" />
-            <span>{order.customerName || 'Guest'}</span>
+            <span className="font-medium">{order.customerName || 'Guest'}</span>
           </div>
           {order.customerPhone && (
             <div className="flex items-center gap-2 text-sm">
               <Phone className="w-4 h-4" />
-              <span>{order.customerPhone}</span>
+              <a href={`tel:${order.customerPhone}`} className="text-primary hover:underline">
+                {order.customerPhone}
+              </a>
             </div>
           )}
           {order.deliveryAddress && (
@@ -132,13 +293,22 @@ export default function StaffOrders() {
         </div>
 
         {/* Order Items */}
-        <div className="space-y-1 mb-4">
+        <div className="space-y-2 mb-4">
           {order.items?.map((item: any, idx: number) => (
-            <div key={idx} className="flex justify-between text-sm">
-              <span>
-                {item.quantity}x {item.productName}
-                {item.size && ` (${item.size})`}
-              </span>
+            <div key={idx} className="flex justify-between text-sm border-b border-dashed pb-1">
+              <div>
+                <span className="font-medium">{item.quantity}x {item.productName}</span>
+                {(item.size || item.sugarLevel || item.iceLevel) && (
+                  <div className="text-xs text-muted-foreground">
+                    {[item.size, item.sugarLevel && `Sugar: ${item.sugarLevel}`, item.iceLevel && `Ice: ${item.iceLevel}`]
+                      .filter(Boolean).join(' • ')}
+                  </div>
+                )}
+                {item.specialInstructions && (
+                  <div className="text-xs text-orange-600">📝 {item.specialInstructions}</div>
+                )}
+              </div>
+              <span className="text-muted-foreground">{formatPrice(item.lineTotal || item.unitPrice * item.quantity)}</span>
             </div>
           ))}
         </div>
@@ -146,14 +316,26 @@ export default function StaffOrders() {
         {/* Special Instructions */}
         {order.specialInstructions && (
           <div className="bg-yellow-50 border border-yellow-200 rounded p-2 mb-3">
-            <p className="text-sm font-medium text-yellow-800">Special Instructions:</p>
+            <p className="text-sm font-medium text-yellow-800 flex items-center gap-1">
+              <AlertTriangle className="w-4 h-4" /> Special Instructions:
+            </p>
             <p className="text-sm text-yellow-700">{order.specialInstructions}</p>
+          </div>
+        )}
+
+        {/* Staff Notes */}
+        {order.staffNotes && (
+          <div className="bg-blue-50 border border-blue-200 rounded p-2 mb-3">
+            <p className="text-sm font-medium text-blue-800 flex items-center gap-1">
+              <MessageSquare className="w-4 h-4" /> Staff Notes:
+            </p>
+            <p className="text-sm text-blue-700">{order.staffNotes}</p>
           </div>
         )}
 
         {/* Action Buttons */}
         {nextAction && order.orderStatus !== 'completed' && order.orderStatus !== 'cancelled' && (
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
             <Button 
               onClick={() => handleStatusUpdate(order.id, nextAction.next)}
               disabled={updateStatus.isPending}
@@ -162,11 +344,22 @@ export default function StaffOrders() {
               <Icon className="w-4 h-4 mr-2" />
               {nextAction.label}
             </Button>
-            {order.orderStatus === 'confirmed' && (
-              <Button variant="outline" size="icon" title="Print KOT">
-                <Printer className="w-4 h-4" />
-              </Button>
-            )}
+            <Button 
+              variant="outline" 
+              size="icon" 
+              title="Print KOT"
+              onClick={() => handlePrintKOT(order)}
+            >
+              <Printer className="w-4 h-4" />
+            </Button>
+            <Button 
+              variant="outline" 
+              size="icon" 
+              title="Add Note"
+              onClick={() => setNoteDialog({ open: true, orderId: order.id, currentNote: order.staffNotes || '' })}
+            >
+              <MessageSquare className="w-4 h-4" />
+            </Button>
           </div>
         )}
       </Card>
@@ -177,13 +370,101 @@ export default function StaffOrders() {
     <div className="min-h-screen bg-background">
       <Header />
       
-      <div className="container py-6">
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-bold">Order Management</h1>
-          <Button variant="outline" onClick={() => refetch()}>
-            <RefreshCw className="w-4 h-4 mr-2" />
-            Refresh
-          </Button>
+      <div className="container py-4 sm:py-6">
+        {/* Header with Stats */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+          <div>
+            <h1 className="text-2xl font-bold">Staff Orders</h1>
+            <p className="text-muted-foreground text-sm">Manage incoming orders</p>
+          </div>
+          
+          {/* Daily Summary */}
+          <div className="flex items-center gap-4 bg-muted/50 rounded-lg p-3">
+            <div className="text-center">
+              <div className="text-2xl font-bold text-primary">{todayCompleted.length}</div>
+              <div className="text-xs text-muted-foreground">Completed</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-green-600">{formatPrice(todayRevenue)}</div>
+              <div className="text-xs text-muted-foreground">Revenue</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-red-500">{todayCancelled}</div>
+              <div className="text-xs text-muted-foreground">Cancelled</div>
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <Button 
+              variant="outline" 
+              size="icon"
+              onClick={() => setSoundEnabled(!soundEnabled)}
+              title={soundEnabled ? 'Mute notifications' : 'Enable notifications'}
+            >
+              {soundEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
+            </Button>
+            <Button variant="outline" onClick={() => refetch()}>
+              <RefreshCw className="w-4 h-4 mr-2" />
+              Refresh
+            </Button>
+          </div>
+        </div>
+
+        {/* Filters */}
+        <div className="flex flex-wrap items-center gap-3 mb-6 p-3 bg-muted/30 rounded-lg">
+          <Filter className="w-4 h-4 text-muted-foreground" />
+          
+          <Select value={outletFilter} onValueChange={setOutletFilter}>
+            <SelectTrigger className="w-[140px]">
+              <Store className="w-4 h-4 mr-2" />
+              <SelectValue placeholder="Outlet" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Outlets</SelectItem>
+              <SelectItem value="palladium">Palladium</SelectItem>
+              <SelectItem value="tnagar">T Nagar</SelectItem>
+            </SelectContent>
+          </Select>
+          
+          <Select value={orderTypeFilter} onValueChange={setOrderTypeFilter}>
+            <SelectTrigger className="w-[140px]">
+              <SelectValue placeholder="Order Type" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Types</SelectItem>
+              <SelectItem value="instore">Dine In</SelectItem>
+              <SelectItem value="delivery">Delivery</SelectItem>
+              <SelectItem value="pickup">Pickup</SelectItem>
+            </SelectContent>
+          </Select>
+          
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-[140px]">
+              <SelectValue placeholder="Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Status</SelectItem>
+              <SelectItem value="pending">Pending</SelectItem>
+              <SelectItem value="confirmed">Confirmed</SelectItem>
+              <SelectItem value="preparing">Preparing</SelectItem>
+              <SelectItem value="ready">Ready</SelectItem>
+              <SelectItem value="out_for_delivery">Out for Delivery</SelectItem>
+            </SelectContent>
+          </Select>
+          
+          {(outletFilter !== 'all' || orderTypeFilter !== 'all' || statusFilter !== 'all') && (
+            <Button 
+              variant="ghost" 
+              size="sm"
+              onClick={() => {
+                setOutletFilter('all');
+                setOrderTypeFilter('all');
+                setStatusFilter('all');
+              }}
+            >
+              <X className="w-4 h-4 mr-1" /> Clear
+            </Button>
+          )}
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
@@ -196,41 +477,134 @@ export default function StaffOrders() {
                 </span>
               )}
             </TabsTrigger>
-            <TabsTrigger value="completed">Completed</TabsTrigger>
+            <TabsTrigger value="completed">Completed Today</TabsTrigger>
           </TabsList>
 
           <TabsContent value="active">
             {isLoading ? (
-              <div className="text-center py-8">Loading orders...</div>
+              <div className="text-center py-8">
+                <RefreshCw className="w-8 h-8 mx-auto mb-4 animate-spin text-muted-foreground" />
+                <p>Loading orders...</p>
+              </div>
             ) : activeOrders.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                <Clock className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                <p>No active orders</p>
+              <div className="text-center py-12 text-muted-foreground">
+                <Clock className="w-16 h-16 mx-auto mb-4 opacity-30" />
+                <p className="text-lg">No active orders</p>
+                <p className="text-sm">New orders will appear here automatically</p>
               </div>
             ) : (
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {activeOrders.map((order: any) => (
-                  <OrderCard key={order.id} order={order} />
-                ))}
+              <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-4">
+                {activeOrders
+                  .sort((a: any, b: any) => {
+                    // Sort by status priority, then by time
+                    const statusPriority: Record<string, number> = {
+                      pending: 0, confirmed: 1, preparing: 2, ready: 3, out_for_delivery: 4
+                    };
+                    const aPriority = statusPriority[a.orderStatus] ?? 5;
+                    const bPriority = statusPriority[b.orderStatus] ?? 5;
+                    if (aPriority !== bPriority) return aPriority - bPriority;
+                    return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+                  })
+                  .map((order: any) => (
+                    <OrderCard key={order.id} order={order} />
+                  ))}
               </div>
             )}
           </TabsContent>
 
           <TabsContent value="completed">
             {completedOrders.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                <p>No completed orders yet</p>
+              <div className="text-center py-12 text-muted-foreground">
+                <CheckCircle className="w-16 h-16 mx-auto mb-4 opacity-30" />
+                <p>No completed orders today</p>
               </div>
             ) : (
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {completedOrders.slice(0, 20).map((order: any) => (
-                  <OrderCard key={order.id} order={order} />
-                ))}
+              <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-4">
+                {completedOrders
+                  .filter((o: any) => new Date(o.createdAt).toDateString() === today)
+                  .slice(0, 30)
+                  .map((order: any) => (
+                    <OrderCard key={order.id} order={order} />
+                  ))}
               </div>
             )}
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* KOT Print Dialog */}
+      <Dialog open={kotDialog.open} onOpenChange={(open) => setKotDialog({ open, order: open ? kotDialog.order : null })}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Print Kitchen Order Ticket</DialogTitle>
+          </DialogHeader>
+          {kotDialog.order && (
+            <div className="space-y-4">
+              <div className="bg-muted p-4 rounded-lg font-mono text-sm">
+                <div className="text-center border-b pb-2 mb-2">
+                  <div className="text-lg font-bold uppercase">{kotDialog.order.orderType}</div>
+                  <div className="text-2xl font-bold">#{kotDialog.order.orderNumber}</div>
+                  {kotDialog.order.tableNumber && <div>Table: {kotDialog.order.tableNumber}</div>}
+                </div>
+                <div className="space-y-1">
+                  {kotDialog.order.items?.map((item: any, idx: number) => (
+                    <div key={idx}>
+                      <div className="font-bold">{item.quantity}x {item.productName}</div>
+                      {item.size && <div className="text-xs pl-4">Size: {item.size}</div>}
+                      {item.sugarLevel && <div className="text-xs pl-4">Sugar: {item.sugarLevel}</div>}
+                      {item.iceLevel && <div className="text-xs pl-4">Ice: {item.iceLevel}</div>}
+                    </div>
+                  ))}
+                </div>
+                {kotDialog.order.specialInstructions && (
+                  <div className="mt-2 pt-2 border-t text-orange-600">
+                    ⚠️ {kotDialog.order.specialInstructions}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setKotDialog({ open: false, order: null })}>
+              Cancel
+            </Button>
+            <Button onClick={printKOT}>
+              <Printer className="w-4 h-4 mr-2" />
+              Print KOT
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Note Dialog */}
+      <Dialog open={noteDialog.open} onOpenChange={(open) => setNoteDialog({ ...noteDialog, open })}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add Staff Note</DialogTitle>
+          </DialogHeader>
+          <Textarea
+            placeholder="Add a note about this order..."
+            value={noteDialog.currentNote}
+            onChange={(e) => setNoteDialog({ ...noteDialog, currentNote: e.target.value })}
+            rows={4}
+          />
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setNoteDialog({ open: false, orderId: null, currentNote: '' })}>
+              Cancel
+            </Button>
+            <Button 
+              onClick={() => {
+                if (noteDialog.orderId) {
+                  updateStaffNotes.mutate({ orderId: noteDialog.orderId, notes: noteDialog.currentNote });
+                }
+              }}
+              disabled={updateStaffNotes.isPending}
+            >
+              {updateStaffNotes.isPending ? 'Saving...' : 'Save Note'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

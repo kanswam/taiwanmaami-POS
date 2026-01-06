@@ -23,7 +23,13 @@ const adminProcedure = protectedProcedure.use(({ ctx, next }) => {
   return next({ ctx });
 });
 
-// POS functionality removed - staffProcedure removed, using adminProcedure for order management
+// Staff procedure - allows staff and admin roles
+const staffProcedure = protectedProcedure.use(({ ctx, next }) => {
+  if (ctx.user.role !== 'staff' && ctx.user.role !== 'admin') {
+    throw new TRPCError({ code: 'FORBIDDEN', message: 'Staff access required' });
+  }
+  return next({ ctx });
+});
 
 export const appRouter = router({
   system: systemRouter,
@@ -353,7 +359,8 @@ export const appRouter = router({
       return db.getUserOrders(ctx.user.id);
     }),
 
-    updateStatus: adminProcedure
+    // Staff can update order status
+    updateStatus: staffProcedure
       .input(z.object({ orderId: z.number(), status: z.string() }))
       .mutation(async ({ input }) => {
         const dbInstance = await db.getDb();
@@ -446,14 +453,62 @@ export const appRouter = router({
         return { success: true };
       }),
 
-    getRecent: adminProcedure
-      .input(z.object({ limit: z.number().default(50) }).optional())
+    // Staff can view recent orders
+    getRecent: staffProcedure
+      .input(z.object({ 
+        limit: z.number().default(50),
+        outlet: z.enum(['all', 'palladium', 'tnagar']).optional(),
+        orderType: z.enum(['all', 'instore', 'delivery', 'pickup']).optional(),
+        status: z.enum(['all', 'pending', 'confirmed', 'preparing', 'ready', 'out_for_delivery', 'completed', 'cancelled']).optional(),
+      }).optional())
       .query(async ({ input }) => {
-        return db.getRecentOrders(input?.limit || 50);
+        const dbInstance = await getDb();
+        if (!dbInstance) return [];
+        
+        let conditions: any[] = [];
+        
+        // Filter by outlet if specified (outletId is int, need to map outlet name to id)
+        if (input?.outlet && input.outlet !== 'all') {
+          // Map outlet name to outletId: palladium=1, tnagar=2 (based on storeLocations)
+          const outletIdMap: Record<string, number> = { palladium: 1, tnagar: 2 };
+          const outletId = outletIdMap[input.outlet];
+          if (outletId) {
+            conditions.push(eq(orders.outletId, outletId));
+          }
+        }
+        
+        // Filter by order type if specified
+        if (input?.orderType && input.orderType !== 'all') {
+          conditions.push(eq(orders.orderType, input.orderType));
+        }
+        
+        // Filter by status if specified
+        if (input?.status && input.status !== 'all') {
+          conditions.push(eq(orders.orderStatus, input.status));
+        }
+        
+        const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+        
+        const recentOrders = await dbInstance
+          .select()
+          .from(orders)
+          .where(whereClause)
+          .orderBy(desc(orders.createdAt))
+          .limit(input?.limit || 50);
+        
+        // Get order items for each order
+        const ordersWithItems = await Promise.all(
+          recentOrders.map(async (order) => {
+            const items = await dbInstance.select().from(orderItemsTable).where(eq(orderItemsTable.orderId, order.id));
+            return { ...order, items };
+          })
+        );
+        
+        return ordersWithItems;
       }),
 
     // Get active in-store orders for table dashboard
-    getActiveInstoreOrders: adminProcedure
+    getActiveInstoreOrders: staffProcedure
       .query(async () => {
         const dbInstance = await getDb();
         if (!dbInstance) return [];
@@ -486,6 +541,21 @@ export const appRouter = router({
         await dbInstance
           .update(orders)
           .set({ paymentStatus: input.paymentStatus })
+          .where(eq(orders.id, input.orderId));
+        
+        return { success: true };
+      }),
+
+    // Staff can update notes on orders
+    updateStaffNotes: staffProcedure
+      .input(z.object({ orderId: z.number(), notes: z.string() }))
+      .mutation(async ({ input }) => {
+        const dbInstance = await getDb();
+        if (!dbInstance) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
+        
+        await dbInstance
+          .update(orders)
+          .set({ staffNotes: input.notes })
           .where(eq(orders.id, input.orderId));
         
         return { success: true };

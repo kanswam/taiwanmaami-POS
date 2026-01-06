@@ -2,6 +2,19 @@
 
 ## Active Tasks
 
+- [x] Build Staff Orders page with restricted access
+  - [x] Add staff role to database schema (staff role already exists)
+  - [x] Create staff-only procedures in routers.ts (staffProcedure)
+  - [x] Build live order queue UI with auto-refresh every 10 seconds
+  - [x] Add order status management (Pending → Confirmed → Preparing → Ready → Completed)
+  - [x] Add filtering by order type, status, outlet
+  - [x] Add sound/visual alerts for new orders (bell notification)
+  - [x] Add KOT print button with print preview
+  - [x] Add quick notes on orders (staffNotes field)
+  - [x] Add daily order summary/count (completed, revenue, cancelled)
+
+## Recently Completed
+
 - [x] Fix page not scrolling to top when navigating on mobile (added ScrollToTop component)
 - [x] Fix category tile text overflow on mobile (smaller text, line-clamp on mobile)
 
