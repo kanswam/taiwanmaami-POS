@@ -343,3 +343,66 @@
   border: 2px solid #f59e0b;
   box-shadow: 0 1px 3px rgba(0,0,0,0.2);
 }
+
+
+/* CMS Content - Renders HTML exactly as created in WYSIWYG editor */
+.cms-content {
+  line-height: 1.7;
+}
+.cms-content p {
+  margin-bottom: 1em;
+}
+.cms-content p:empty {
+  margin-bottom: 0.5em;
+}
+.cms-content h1 {
+  font-size: 1.875rem;
+  font-weight: 700;
+  margin-top: 1.5em;
+  margin-bottom: 0.75em;
+  color: var(--foreground);
+}
+.cms-content h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-top: 1.25em;
+  margin-bottom: 0.5em;
+  color: var(--foreground);
+}
+.cms-content h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-top: 1em;
+  margin-bottom: 0.5em;
+  color: var(--foreground);
+}
+.cms-content strong {
+  font-weight: 600;
+  color: var(--foreground);
+}
+.cms-content em {
+  font-style: italic;
+}
+.cms-content u {
+  text-decoration: underline;
+}
+.cms-content ul {
+  list-style-type: disc;
+  padding-left: 1.5em;
+  margin-bottom: 1em;
+}
+.cms-content ol {
+  list-style-type: decimal;
+  padding-left: 1.5em;
+  margin-bottom: 1em;
+}
+.cms-content li {
+  margin-bottom: 0.25em;
+}
+.cms-content a {
+  color: var(--primary);
+  text-decoration: underline;
+}
+.cms-content a:hover {
+  opacity: 0.8;
+}

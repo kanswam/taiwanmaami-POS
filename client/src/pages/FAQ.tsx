@@ -23,15 +23,7 @@ export default function FAQ() {
             </div>
           ) : cmsContent ? (
             <div 
-              className="prose prose-lg max-w-none text-muted-foreground
-                prose-headings:text-foreground prose-headings:font-semibold
-                prose-h1:text-2xl prose-h1:mt-8 prose-h1:mb-4
-                prose-h2:text-xl prose-h2:mt-8 prose-h2:mb-4
-                prose-h3:text-lg prose-h3:mt-6 prose-h3:mb-3
-                prose-p:my-4 prose-ul:my-4 prose-ol:my-4 prose-li:my-1
-                prose-strong:text-foreground
-                prose-a:text-primary prose-a:hover:underline
-                [&>h3]:border-l-4 [&>h3]:border-primary [&>h3]:pl-4"
+              className="cms-content text-muted-foreground"
               dangerouslySetInnerHTML={{ __html: cmsContent }}
             />
           ) : (
