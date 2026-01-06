@@ -361,7 +361,11 @@ export const appRouter = router({
 
     // Staff can update order status
     updateStatus: staffProcedure
-      .input(z.object({ orderId: z.number(), status: z.string() }))
+      .input(z.object({ 
+        orderId: z.number(), 
+        status: z.string(),
+        paymentMethod: z.enum(['cash', 'upi', 'card', 'swiggy_dineout', 'zomato_dineout', 'other']).optional(),
+      }))
       .mutation(async ({ input }) => {
         const dbInstance = await db.getDb();
         
@@ -372,6 +376,14 @@ export const appRouter = router({
           .where(eq(orders.id, input.orderId));
         
         await db.updateOrderStatus(input.orderId, input.status);
+        
+        // Update payment method if provided (for completed in-store orders)
+        if (input.paymentMethod && input.status === 'completed') {
+          await dbInstance!
+            .update(orders)
+            .set({ paymentMethod: input.paymentMethod })
+            .where(eq(orders.id, input.orderId));
+        }
         
         // Award stamps when order is marked as completed
         if (input.status === 'completed' && order && order.userId) {

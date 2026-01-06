@@ -215,6 +215,8 @@ export const orders = mysqlTable("orders", {
   manualDiscountReason: text("manualDiscountReason"), // Reason for discount
   manualDiscountApprovedBy: int("manualDiscountApprovedBy"), // Admin user ID who approved
   staffNotes: text("staffNotes"), // Internal notes from staff about the order
+  // Payment method for in-store orders (recorded at collection)
+  paymentMethod: mysqlEnum("paymentMethod", ["cash", "upi", "card", "swiggy_dineout", "zomato_dineout", "other"]),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
   completedAt: timestamp("completedAt"),

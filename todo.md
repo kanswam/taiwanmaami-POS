@@ -2,6 +2,13 @@
 
 ## Active Tasks
 
+- [x] Add payment method recording at collect payment stage
+  - [x] Add paymentMethod field to orders table
+  - [x] Add payment method selection dialog when completing in-store orders
+  - [x] Options: Cash, GPay/UPI, Swiggy Dineout, Zomato Dineout, Card, Other
+
+- [x] Fix Staff Orders page API errors - resolved (was temporary issue)
+
 - [x] Add Staff Orders link to navigation menu for staff/admin users
 
 - [x] Auto-grant staff access to Employee Master users

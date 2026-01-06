@@ -70,6 +70,10 @@ export default function StaffOrders() {
     open: false, orderId: null, currentNote: ''
   });
   const [kotDialog, setKotDialog] = useState<{ open: boolean; order: any }>({ open: false, order: null });
+  const [paymentDialog, setPaymentDialog] = useState<{ open: boolean; order: any; nextStatus: string }>({
+    open: false, order: null, nextStatus: ''
+  });
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string>('');
   
   const utils = trpc.useUtils();
   
@@ -162,8 +166,28 @@ export default function StaffOrders() {
   const todayRevenue = todayCompleted.reduce((sum: number, o: any) => sum + o.totalAmount, 0);
   const todayCancelled = todayOrders.filter((o: any) => o.orderStatus === 'cancelled').length;
 
-  const handleStatusUpdate = (orderId: number, newStatus: string) => {
+  const handleStatusUpdate = (orderId: number, newStatus: string, order?: any) => {
+    // For in-store orders being marked as completed, show payment method dialog
+    if (newStatus === 'completed' && order && (order.orderType === 'instore' || order.paymentStatus === 'pending')) {
+      setPaymentDialog({ open: true, order, nextStatus: newStatus });
+      setSelectedPaymentMethod('');
+      return;
+    }
     updateStatus.mutate({ orderId, status: newStatus as any });
+  };
+
+  const handlePaymentComplete = () => {
+    if (!paymentDialog.order || !selectedPaymentMethod) {
+      toast.error('Please select a payment method');
+      return;
+    }
+    updateStatus.mutate({ 
+      orderId: paymentDialog.order.id, 
+      status: paymentDialog.nextStatus as any,
+      paymentMethod: selectedPaymentMethod as any,
+    });
+    setPaymentDialog({ open: false, order: null, nextStatus: '' });
+    setSelectedPaymentMethod('');
   };
 
   const getNextAction = (order: any) => {
@@ -337,7 +361,7 @@ export default function StaffOrders() {
         {nextAction && order.orderStatus !== 'completed' && order.orderStatus !== 'cancelled' && (
           <div className="flex gap-2 flex-wrap">
             <Button 
-              onClick={() => handleStatusUpdate(order.id, nextAction.next)}
+              onClick={() => handleStatusUpdate(order.id, nextAction.next, order)}
               disabled={updateStatus.isPending}
               className="flex-1"
             >
@@ -601,6 +625,54 @@ export default function StaffOrders() {
               disabled={updateStaffNotes.isPending}
             >
               {updateStaffNotes.isPending ? 'Saving...' : 'Save Note'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Payment Method Dialog */}
+      <Dialog open={paymentDialog.open} onOpenChange={(open) => {
+        if (!open) setPaymentDialog({ open: false, order: null, nextStatus: '' });
+      }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Collect Payment</DialogTitle>
+            <p className="text-sm text-muted-foreground">
+              Order #{paymentDialog.order?.orderNumber} - {formatPrice(paymentDialog.order?.totalAmount || 0)}
+            </p>
+          </DialogHeader>
+          <div className="space-y-3 py-4">
+            <p className="text-sm font-medium">Select payment method:</p>
+            <div className="grid grid-cols-2 gap-3">
+              {[
+                { value: 'cash', label: 'Cash', icon: '💵' },
+                { value: 'upi', label: 'GPay / UPI', icon: '📱' },
+                { value: 'card', label: 'Card', icon: '💳' },
+                { value: 'swiggy_dineout', label: 'Swiggy Dineout', icon: '🟠' },
+                { value: 'zomato_dineout', label: 'Zomato Dineout', icon: '🔴' },
+                { value: 'other', label: 'Other', icon: '📋' },
+              ].map((method) => (
+                <Button
+                  key={method.value}
+                  variant={selectedPaymentMethod === method.value ? 'default' : 'outline'}
+                  className={`h-auto py-4 flex flex-col items-center gap-2 ${selectedPaymentMethod === method.value ? 'ring-2 ring-primary' : ''}`}
+                  onClick={() => setSelectedPaymentMethod(method.value)}
+                >
+                  <span className="text-2xl">{method.icon}</span>
+                  <span className="text-sm">{method.label}</span>
+                </Button>
+              ))}
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setPaymentDialog({ open: false, order: null, nextStatus: '' })}>
+              Cancel
+            </Button>
+            <Button 
+              onClick={handlePaymentComplete}
+              disabled={!selectedPaymentMethod || updateStatus.isPending}
+            >
+              {updateStatus.isPending ? 'Processing...' : 'Complete Order'}
             </Button>
           </DialogFooter>
         </DialogContent>
