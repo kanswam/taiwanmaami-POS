@@ -25,8 +25,12 @@ export async function getDb() {
 // User functions
 export async function upsertUser(user: InsertUser): Promise<void> {
   if (!user.openId) throw new Error("User openId is required for upsert");
-  const db = await getDb();
-  if (!db) return;
+  const dbInstance = await getDb();
+  if (!dbInstance) return;
+
+  // Check if user already exists and their current role
+  const existingUser = await dbInstance.select().from(users).where(eq(users.openId, user.openId)).limit(1);
+  const currentRole = existingUser.length > 0 ? existingUser[0].role : null;
 
   const values: InsertUser = { openId: user.openId };
   const updateSet: Record<string, unknown> = {};
@@ -37,9 +41,15 @@ export async function upsertUser(user: InsertUser): Promise<void> {
   if (user.loginMethod !== undefined) { values.loginMethod = user.loginMethod; updateSet.loginMethod = user.loginMethod; }
   if (user.lastSignedIn !== undefined) { values.lastSignedIn = user.lastSignedIn; updateSet.lastSignedIn = user.lastSignedIn; }
   
+  // Role logic: never downgrade admin to staff, but upgrade user to staff if employee
   if (user.role !== undefined) {
-    values.role = user.role;
-    updateSet.role = user.role;
+    // Don't downgrade admin to staff
+    if (currentRole === 'admin' && user.role === 'staff') {
+      // Keep admin role, don't update
+    } else {
+      values.role = user.role;
+      updateSet.role = user.role;
+    }
   } else if (user.openId === ENV.ownerOpenId) {
     values.role = 'admin';
     updateSet.role = 'admin';
@@ -48,7 +58,7 @@ export async function upsertUser(user: InsertUser): Promise<void> {
   if (!values.lastSignedIn) values.lastSignedIn = new Date();
   if (Object.keys(updateSet).length === 0) updateSet.lastSignedIn = new Date();
 
-  await db.insert(users).values(values).onDuplicateKeyUpdate({ set: updateSet });
+  await dbInstance.insert(users).values(values).onDuplicateKeyUpdate({ set: updateSet });
 }
 
 export async function getUserByOpenId(openId: string) {

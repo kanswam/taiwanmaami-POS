@@ -3,6 +3,7 @@ import type { Express, Request, Response } from "express";
 import * as db from "../db";
 import { getSessionCookieOptions } from "./cookies";
 import { sdk } from "./sdk";
+import { isEmployeeEmail } from "../employeeMaster";
 
 function getQueryParam(req: Request, key: string): string | undefined {
   const value = req.query[key];
@@ -28,12 +29,23 @@ export function registerOAuthRoutes(app: Express) {
         return;
       }
 
+      // Check if user email is in Employee Master for auto staff role
+      let role: 'admin' | 'staff' | 'user' | undefined = undefined;
+      if (userInfo.email) {
+        const isEmployee = await isEmployeeEmail(userInfo.email);
+        if (isEmployee) {
+          role = 'staff';
+          console.log(`[OAuth] Auto-granting staff role to employee: ${userInfo.email}`);
+        }
+      }
+
       await db.upsertUser({
         openId: userInfo.openId,
         name: userInfo.name || null,
         email: userInfo.email ?? null,
         loginMethod: userInfo.loginMethod ?? userInfo.platform ?? null,
         lastSignedIn: new Date(),
+        role: role,
       });
 
       const sessionToken = await sdk.createSessionToken(userInfo.openId, {

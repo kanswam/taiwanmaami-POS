@@ -170,6 +170,26 @@ export async function getActiveEmployees(): Promise<Employee[]> {
 }
 
 /**
+ * Check if an email belongs to an active employee
+ * Used for auto-granting staff role on OAuth login
+ */
+export async function isEmployeeEmail(email: string): Promise<boolean> {
+  if (!email || !EMP_MASTER_API_URL || !EMP_MASTER_API_KEY) {
+    return false;
+  }
+
+  try {
+    // Get all active employees and check if email matches
+    const employees = await getActiveEmployees();
+    const normalizedEmail = email.toLowerCase().trim();
+    return employees.some(emp => emp.email?.toLowerCase().trim() === normalizedEmail);
+  } catch (error) {
+    console.error('Error checking employee email:', error);
+    return false;
+  }
+}
+
+/**
  * Test API connectivity
  * Used for health checks and credential validation
  */

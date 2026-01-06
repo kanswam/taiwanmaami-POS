@@ -2,6 +2,11 @@
 
 ## Active Tasks
 
+- [x] Auto-grant staff access to Employee Master users
+  - [x] Update all existing Employee Master emails to staff role
+  - [x] Implement auto-grant on OAuth login if email matches Employee Master
+  - [x] Protect admin users from being downgraded to staff
+
 - [x] Build Staff Orders page with restricted access
   - [x] Add staff role to database schema (staff role already exists)
   - [x] Create staff-only procedures in routers.ts (staffProcedure)

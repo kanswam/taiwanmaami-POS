@@ -1,0 +1,9 @@
+{
+  "query": "UPDATE users SET role = 'staff' WHERE email IN (\n  'vindhiya2511@gmail.com',\n  'kannanswamy@hotmail.com',\n  'naveenkumaroscar80122@gmail.com',\n  'manojvarma96@gmail.com',\n  'biakmawi771@gmail.com',\n  'chinnoutonshing13@gmail.com',\n  'mujammilmuji@gmail.com',\n  'lokeshkanna895@gmail.com',\n  'kipgenboichong291@gmail.com',\n  'awungshisongarin1@gmail.com',\n  'sakthijj2017@gmail.com',\n  'rinoldthousen94@gmail.com',\n  'ringsolikhempraei@gmail.com',\n  'theresa.hu.cy@taiwanmaami.com',\n  'saakilan0011@gmail.com'\n);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute UPDATE users SET role = 'staff' WHERE email IN (\n  'vindhiya2511@gmail.com',\n  'kannanswamy@hotmail.com',\n  'naveenkumaroscar80122@gmail.com',\n  'manojvarma96@gmail.com',\n  'biakmawi771@gmail.com',\n  'chinnoutonshing13@gmail.com',\n  'mujammilmuji@gmail.com',\n  'lokeshkanna895@gmail.com',\n  'kipgenboichong291@gmail.com',\n  'awungshisongarin1@gmail.com',\n  'sakthijj2017@gmail.com',\n  'rinoldthousen94@gmail.com',\n  'ringsolikhempraei@gmail.com',\n  'theresa.hu.cy@taiwanmaami.com',\n  'saakilan0011@gmail.com'\n);",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 1523
+}
