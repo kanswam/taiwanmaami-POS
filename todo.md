@@ -1825,3 +1825,14 @@
 - [x] Test upload flow in Admin panel
 - [x] Verify images saved to both Manus S3 and Cloudinary
 - [x] Verify optimized delivery on menu pages
+
+
+## Phase 54 - Bulk Image Migration to Cloudinary (Jan 6, 2026)
+
+### Migration Script
+- [x] Query all existing image URLs from database (products, categories, subcategories)
+- [x] Create migration script to fetch images from S3 and upload to Cloudinary
+- [x] Update database records with new Cloudinary URLs
+- [x] Preserve original S3 URLs as backup reference
+- [x] Test migration on a few images first
+- [x] Run full migration for all 146 images (142 success, 3 skipped, 1 failed)
