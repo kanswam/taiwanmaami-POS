@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Plus, Leaf, Egg } from 'lucide-react';
+import { Leaf, Egg } from 'lucide-react';
 import { formatPrice } from '@shared/types';
 import { ProductCustomizationModal } from './ProductCustomizationModal';
 import { getImageForContext, getResponsiveSrcSet, isCloudinaryUrl } from '@/lib/imageOptimizer';
@@ -112,7 +111,6 @@ export function ProductCard({ product, subcategory, category, isDelivery = false
   };
 
   const displayPrice = getDisplayPrice();
-  const hasCustomization = subcategory.hasSizeVariants || subcategory.hasBobaOption;
 
   // Default placeholder image - use optimized version for Cloudinary images
   const rawImage = images[currentImageIndex] || product.imageUrl || '/placeholder-drink.jpg';
@@ -122,11 +120,11 @@ export function ProductCard({ product, subcategory, category, isDelivery = false
   return (
     <>
       <Card 
-        className={`product-card group flex flex-col h-full ${isUnavailable ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`}
+        className={`product-card group overflow-hidden ${isUnavailable ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`}
         onClick={() => !isUnavailable && setShowModal(true)}
       >
-        {/* Image section - maintain aspect ratio for food photos */}
-        <div className="relative overflow-hidden bg-secondary" style={{ aspectRatio: '4/3' }}>
+        {/* Image section - larger aspect ratio for more image focus */}
+        <div className="relative overflow-hidden bg-secondary" style={{ aspectRatio: '1/1' }}>
           <img
             src={currentImage}
             srcSet={srcSet}
@@ -209,40 +207,19 @@ export function ProductCard({ product, subcategory, category, isDelivery = false
               </span>
             </div>
           )}
-        </div>
-
-{/* Content section */}
-          <div className="product-card-content p-3">
-          <div>
-            <h3 className="font-semibold text-foreground line-clamp-2 text-sm sm:text-base">
+          {/* Price overlay at bottom of image */}
+          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 via-black/40 to-transparent p-2 pt-6">
+            <h3 className="font-semibold text-white text-sm leading-tight line-clamp-2 drop-shadow-md">
               {product.name}
             </h3>
-            {product.chineseName && (
-              <p className="text-xs text-muted-foreground mt-0.5">{product.chineseName}</p>
-            )}
-          </div>
-
-          <div className="flex items-center justify-between mt-2">
-            <div>
-              <span className={`price-tag ${isUnavailable ? 'line-through text-muted-foreground' : ''}`}>
+            <div className="flex items-center justify-between mt-1">
+              <span className={`text-white font-bold text-base drop-shadow-md ${isUnavailable ? 'line-through opacity-70' : ''}`}>
                 {formatPrice(displayPrice)}
               </span>
-              {hasCustomization && !isUnavailable && (
-                <span className="text-xs text-muted-foreground ml-1">onwards</span>
+              {product.chineseName && (
+                <span className="text-white/80 text-xs drop-shadow-md">{product.chineseName}</span>
               )}
             </div>
-            {!isUnavailable && (
-              <Button
-                size="sm"
-                className="rounded-full w-8 h-8 p-0"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setShowModal(true);
-                }}
-              >
-                <Plus className="w-4 h-4" />
-              </Button>
-            )}
           </div>
         </div>
       </Card>

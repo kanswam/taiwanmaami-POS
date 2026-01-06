@@ -79,3 +79,9 @@
   - [x] Add prominent full image view in ProductCustomizationModal
   - [x] Make image gallery/carousel more visible
   - [x] Changed modal to show full product image at top with navigation arrows
+
+- [x] Redesign product cards for better image focus
+  - [x] Remove + button (clicking card opens modal)
+  - [x] Remove white frame/padding at top
+  - [x] Make image larger and more prominent (1:1 square aspect ratio)
+  - [x] Compact name and price section (overlay on image with gradient)
