@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Plus, Leaf, Egg } from 'lucide-react';
 import { formatPrice } from '@shared/types';
 import { ProductCustomizationModal } from './ProductCustomizationModal';
+import { getImageForContext, getResponsiveSrcSet, isCloudinaryUrl } from '@/lib/imageOptimizer';
 
 interface ProductCardProps {
   product: {
@@ -113,8 +114,10 @@ export function ProductCard({ product, subcategory, category, isDelivery = false
   const displayPrice = getDisplayPrice();
   const hasCustomization = subcategory.hasSizeVariants || subcategory.hasBobaOption;
 
-  // Default placeholder image
-  const currentImage = images[currentImageIndex] || product.imageUrl || '/placeholder-drink.jpg';
+  // Default placeholder image - use optimized version for Cloudinary images
+  const rawImage = images[currentImageIndex] || product.imageUrl || '/placeholder-drink.jpg';
+  const currentImage = getImageForContext(rawImage, 'card');
+  const srcSet = isCloudinaryUrl(rawImage) ? getResponsiveSrcSet(rawImage) : undefined;
 
   return (
     <>
@@ -127,6 +130,8 @@ export function ProductCard({ product, subcategory, category, isDelivery = false
         <div className="relative flex-1 overflow-hidden bg-secondary" style={{ minHeight: '60%' }}>
           <img
             src={currentImage}
+            srcSet={srcSet}
+            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
             alt={product.name}
             loading="lazy"
             decoding="async"

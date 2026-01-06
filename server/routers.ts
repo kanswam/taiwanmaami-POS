@@ -994,21 +994,26 @@ export const appRouter = router({
         if (!dbInstance) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
         const { id, imageBase64, ...data } = input;
         
-        // Handle image upload if base64 provided
+        // Handle image upload if base64 provided - uses hybrid storage (S3 backup + Cloudinary delivery)
         if (imageBase64 && imageBase64.length > 0) {
           try {
-            const { storagePut } = await import('./storage');
+            const { hybridUpload } = await import('./hybridStorage');
             const base64Data = imageBase64.replace(/^data:[^;]+;base64,/, '');
             const buffer = Buffer.from(base64Data, 'base64');
             // Detect image type from base64 header
             const mimeMatch = imageBase64.match(/^data:([^;]+);base64,/);
             const mimeType = mimeMatch ? mimeMatch[1] : 'image/jpeg';
             const ext = mimeType.includes('png') ? 'png' : mimeType.includes('webp') ? 'webp' : 'jpg';
-            const fileKey = `categories/${id}-${Date.now()}.${ext}`;
-            console.log('[updateCategory] Uploading image:', fileKey, 'size:', buffer.length);
-            const { url } = await storagePut(fileKey, buffer, mimeType);
-            console.log('[updateCategory] Image uploaded:', url);
-            (data as any).imageUrl = url;
+            const fileName = `${id}-${Date.now()}.${ext}`;
+            console.log('[updateCategory] Uploading image:', fileName, 'size:', buffer.length);
+            const result = await hybridUpload(buffer, {
+              folder: 'categories',
+              fileName,
+              mimeType,
+              tags: ['category', `category-${id}`],
+            });
+            console.log('[updateCategory] Image uploaded - Delivery:', result.deliveryUrl, 'Backup:', result.backupUrl);
+            (data as any).imageUrl = result.deliveryUrl;
           } catch (err) {
             console.error('[updateCategory] Image upload failed:', err);
             throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to upload image' });
@@ -1092,16 +1097,26 @@ export const appRouter = router({
         console.log('[updateSubcategory] Input received:', { id, hasImageData: !!imageData, hasImageBase64: !!imageBase64, imageDataLength: imageData?.length });
         
         // Handle image upload if base64 provided (support both imageBase64 and imageData)
+        // Uses hybrid storage: S3 (backup) + Cloudinary (optimized delivery)
         const base64ToUpload = imageData || imageBase64;
         if (base64ToUpload) {
           console.log('[updateSubcategory] Uploading image, base64 length:', base64ToUpload.length);
-          const { storagePut } = await import('./storage');
+          const { hybridUpload } = await import('./hybridStorage');
           const base64Data = base64ToUpload.replace(/^data:[^;]+;base64,/, '');
           const buffer = Buffer.from(base64Data, 'base64');
-          const fileKey = `subcategories/${id}-${Date.now()}.jpg`;
-          const { url } = await storagePut(fileKey, buffer, 'image/jpeg');
-          console.log('[updateSubcategory] Image uploaded successfully:', url);
-          (data as any).imageUrl = url;
+          // Detect mime type from base64 header
+          const mimeMatch = base64ToUpload.match(/^data:([^;]+);base64,/);
+          const mimeType = mimeMatch ? mimeMatch[1] : 'image/jpeg';
+          const ext = mimeType.includes('png') ? 'png' : mimeType.includes('webp') ? 'webp' : 'jpg';
+          const fileName = `${id}-${Date.now()}.${ext}`;
+          const result = await hybridUpload(buffer, {
+            folder: 'subcategories',
+            fileName,
+            mimeType,
+            tags: ['subcategory', `subcategory-${id}`],
+          });
+          console.log('[updateSubcategory] Image uploaded - Delivery:', result.deliveryUrl, 'Backup:', result.backupUrl);
+          (data as any).imageUrl = result.deliveryUrl;
         }
         
         // Add availability fields to data if provided
@@ -1291,7 +1306,7 @@ export const appRouter = router({
         imageIndex: z.number().optional(), // 0 = main, 1 = second, 2 = third
       }))
       .mutation(async ({ input }) => {
-        const { storagePut } = await import('./storage');
+        const { hybridUpload } = await import('./hybridStorage');
         const dbInstance = await getDb();
         if (!dbInstance) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
         
@@ -1299,13 +1314,22 @@ export const appRouter = router({
         const base64Data = input.imageBase64.replace(/^data:[^;]+;base64,/, '');
         const buffer = Buffer.from(base64Data, 'base64');
         
-        // Generate unique file key
+        // Generate unique file name
         const ext = input.fileName.split('.').pop() || 'jpg';
         const imageIndex = input.imageIndex ?? 0;
-        const fileKey = `products/${input.productId}-img${imageIndex + 1}-${Date.now()}.${ext}`;
+        const fileName = `${input.productId}-img${imageIndex + 1}-${Date.now()}.${ext}`;
         
-        // Upload to S3
-        const { url } = await storagePut(fileKey, buffer, input.mimeType);
+        // Upload to both S3 (backup) and Cloudinary (delivery)
+        const result = await hybridUpload(buffer, {
+          folder: 'products',
+          fileName,
+          mimeType: input.mimeType,
+          tags: ['product', `product-${input.productId}`],
+        });
+        
+        // Use Cloudinary URL for delivery (optimized), S3 URL is backup
+        const url = result.deliveryUrl;
+        console.log(`[uploadProductImage] Uploaded - Delivery: ${url}, Backup: ${result.backupUrl}`);
         
         // Update product with new image URL based on index
         const updateData: Record<string, string> = {};
@@ -1319,7 +1343,7 @@ export const appRouter = router({
         
         await dbInstance!.update(products).set(updateData).where(eq(products.id, input.productId));
         
-        return { success: true, imageUrl: url };
+        return { success: true, imageUrl: url, backupUrl: result.backupUrl };
       }),
 
     deleteProduct: adminProcedure
