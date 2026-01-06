@@ -2,6 +2,12 @@
 
 ## Active Tasks
 
+- [x] Add payment report to Admin panel
+  - [x] Create backend procedure to fetch payments by date and method
+  - [x] Build payment report UI with date filter and method breakdown
+  - [x] Show payment screenshots in report (View button opens dialog)
+  - [x] Add export/download option (CSV export)
+
 - [x] Add payment screenshot/receipt capture for non-cash payments
 - [x] Check mobile performance - optimized refresh interval from 10s to 15s, added staleTime
 - [x] Delete Kannan's test orders from today (2 orders deleted)

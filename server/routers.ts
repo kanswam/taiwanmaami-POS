@@ -973,6 +973,86 @@ export const appRouter = router({
         
         return { success: true, message: 'Payment verified successfully' };
       }),
+
+    // Payment report for admin - shows payments by date and method
+    getPaymentReport: adminProcedure
+      .input(z.object({
+        startDate: z.string(), // ISO date string
+        endDate: z.string(),   // ISO date string
+        outlet: z.enum(['all', 'palladium', 'tnagar']).optional(),
+        paymentMethod: z.string().optional(), // 'all', 'cash', 'upi', 'card', 'swiggy_dineout', 'zomato_dineout', 'other'
+      }))
+      .query(async ({ input }) => {
+        const dbInstance = await getDb();
+        if (!dbInstance) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
+        
+        const startDate = new Date(input.startDate);
+        startDate.setHours(0, 0, 0, 0);
+        const endDate = new Date(input.endDate);
+        endDate.setHours(23, 59, 59, 999);
+        
+        // Build query conditions
+        const conditions = [
+          sql`${orders.createdAt} >= ${startDate}`,
+          sql`${orders.createdAt} <= ${endDate}`,
+          eq(orders.orderStatus, 'completed'),
+        ];
+        
+        // Add outlet filter
+        if (input.outlet && input.outlet !== 'all') {
+          const outletId = input.outlet === 'palladium' ? 1 : 2;
+          conditions.push(eq(orders.outletId, outletId));
+        }
+        
+        // Add payment method filter
+        if (input.paymentMethod && input.paymentMethod !== 'all') {
+          conditions.push(sql`${orders.paymentMethod} = ${input.paymentMethod}`);
+        }
+        
+        // Get orders with payment info
+        const completedOrders = await dbInstance
+          .select({
+            id: orders.id,
+            orderNumber: orders.orderNumber,
+            customerName: orders.customerName,
+            totalAmount: orders.totalAmount,
+            paymentMethod: orders.paymentMethod,
+            paymentProofUrl: orders.paymentProofUrl,
+            outletId: orders.outletId,
+            createdAt: orders.createdAt,
+            orderType: orders.orderType,
+          })
+          .from(orders)
+          .where(and(...conditions))
+          .orderBy(desc(orders.createdAt));
+        
+        // Calculate summary by payment method
+        const summary: Record<string, { count: number; total: number }> = {};
+        let grandTotal = 0;
+        let totalOrders = 0;
+        
+        for (const order of completedOrders) {
+          const method = order.paymentMethod || 'unknown';
+          if (!summary[method]) {
+            summary[method] = { count: 0, total: 0 };
+          }
+          summary[method].count++;
+          summary[method].total += order.totalAmount;
+          grandTotal += order.totalAmount;
+          totalOrders++;
+        }
+        
+        return {
+          orders: completedOrders,
+          summary,
+          grandTotal,
+          totalOrders,
+          dateRange: {
+            start: startDate.toISOString(),
+            end: endDate.toISOString(),
+          },
+        };
+      }),
   }),
 
   // Discount routes
