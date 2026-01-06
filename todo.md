@@ -74,3 +74,8 @@
 - Full project history archived to /home/ubuntu/taiwan-maami-archive/
 - KOT printer scripts kept in root for easy access by staff
 - Documentation for printer setup kept in root and docs/
+
+- [x] Improve product image visibility
+  - [x] Add prominent full image view in ProductCustomizationModal
+  - [x] Make image gallery/carousel more visible
+  - [x] Changed modal to show full product image at top with navigation arrows

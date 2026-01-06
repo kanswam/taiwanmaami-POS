@@ -5,11 +5,12 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
-import { Minus, Plus } from 'lucide-react';
+import { Minus, Plus, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useCart } from '@/contexts/CartContext';
 import { trpc } from '@/lib/trpc';
 import { formatPrice, SIZES, SUGAR_LEVELS, ICE_LEVELS, Size } from '@shared/types';
 import { nanoid } from 'nanoid';
+import { getImageForContext, isCloudinaryUrl, getResponsiveSrcSet } from '@/lib/imageOptimizer';
 
 interface ProductCustomizationModalProps {
   product: {
@@ -18,6 +19,8 @@ interface ProductCustomizationModalProps {
     chineseName?: string | null;
     description?: string | null;
     imageUrl?: string | null;
+    imageUrl2?: string | null;
+    imageUrl3?: string | null;
     instorePrice?: number | null;
     deliveryPrice?: number | null;
   };
@@ -362,30 +365,90 @@ export function ProductCustomizationModal({
     onClose();
   };
 
+  // Build array of available images for gallery
+  const productImages = [product.imageUrl, product.imageUrl2, product.imageUrl3].filter(Boolean) as string[];
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const hasMultipleImages = productImages.length > 1;
+
+  const nextImage = () => {
+    setCurrentImageIndex((prev) => (prev + 1) % productImages.length);
+  };
+
+  const prevImage = () => {
+    setCurrentImageIndex((prev) => (prev - 1 + productImages.length) % productImages.length);
+  };
+
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-start justify-between">
-            <div>
-              <span className="text-lg">{product.name}</span>
-              {product.chineseName && (
-                <span className="block text-sm text-muted-foreground">{product.chineseName}</span>
-              )}
-              {product.description && (
-                <p className="block text-sm text-muted-foreground mt-2 font-normal">{product.description}</p>
-              )}
-              {/* Mochi set indicator for delivery/pickup */}
-              {isDelivery && isMochiProduct && (
-                <span className="inline-block mt-1 bg-primary/10 text-primary text-xs font-semibold px-2 py-0.5 rounded-full">
-                  Minimum 2 pieces for delivery/pickup
-                </span>
-              )}
-            </div>
-          </DialogTitle>
-        </DialogHeader>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-0">
+        {/* Product Image Gallery - Full width at top */}
+        {productImages.length > 0 && (
+          <div className="relative w-full bg-secondary">
+            <img
+              src={getImageForContext(productImages[currentImageIndex], 'detail')}
+              srcSet={isCloudinaryUrl(productImages[currentImageIndex]) ? getResponsiveSrcSet(productImages[currentImageIndex]) : undefined}
+              sizes="(max-width: 768px) 100vw, 672px"
+              alt={product.name}
+              className="w-full h-auto max-h-[50vh] object-contain"
+              onError={(e) => {
+                (e.target as HTMLImageElement).src = '/placeholder-drink.jpg';
+              }}
+            />
+            {/* Navigation arrows for multiple images */}
+            {hasMultipleImages && (
+              <>
+                <button
+                  onClick={prevImage}
+                  className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full p-2 transition-colors"
+                  aria-label="Previous image"
+                >
+                  <ChevronLeft className="w-5 h-5" />
+                </button>
+                <button
+                  onClick={nextImage}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full p-2 transition-colors"
+                  aria-label="Next image"
+                >
+                  <ChevronRight className="w-5 h-5" />
+                </button>
+                {/* Image dots indicator */}
+                <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-2">
+                  {productImages.map((_, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => setCurrentImageIndex(idx)}
+                      className={`w-2.5 h-2.5 rounded-full transition-all ${idx === currentImageIndex ? 'bg-white scale-110' : 'bg-white/50 hover:bg-white/75'}`}
+                      aria-label={`View image ${idx + 1}`}
+                    />
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+        )}
 
-        <div className="space-y-6 py-4">
+        <div className="p-6">
+          <DialogHeader>
+            <DialogTitle className="flex items-start justify-between">
+              <div>
+                <span className="text-xl font-semibold">{product.name}</span>
+                {product.chineseName && (
+                  <span className="block text-sm text-muted-foreground mt-1">{product.chineseName}</span>
+                )}
+                {product.description && (
+                  <p className="block text-sm text-muted-foreground mt-2 font-normal">{product.description}</p>
+                )}
+                {/* Mochi set indicator for delivery/pickup */}
+                {isDelivery && isMochiProduct && (
+                  <span className="inline-block mt-2 bg-primary/10 text-primary text-xs font-semibold px-2 py-0.5 rounded-full">
+                    Minimum 2 pieces for delivery/pickup
+                  </span>
+                )}
+              </div>
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-6 py-4">
           {/* Size selection */}
           {subcategory.hasSizeVariants && (
             <div>
@@ -814,13 +877,14 @@ export function ProductCustomizationModal({
               </Button>
             </div>
           </div>
-        </div>
+          </div>
 
-        {/* Add to cart button */}
-        <div className="sticky bottom-0 bg-background pt-4 border-t">
-          <Button className="w-full h-12 text-lg" onClick={handleAddToCart}>
-            Add to Cart - {formatPrice(displayTotal)}
-          </Button>
+          {/* Add to cart button */}
+          <div className="sticky bottom-0 bg-background pt-4 border-t">
+            <Button className="w-full h-12 text-lg" onClick={handleAddToCart}>
+              Add to Cart - {formatPrice(displayTotal)}
+            </Button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
