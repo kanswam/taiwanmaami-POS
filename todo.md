@@ -2,6 +2,8 @@
 
 ## Active Tasks
 
+- [x] Add Staff Orders link to navigation menu for staff/admin users
+
 - [x] Auto-grant staff access to Employee Master users
   - [x] Update all existing Employee Master emails to staff role
   - [x] Implement auto-grant on OAuth login if email matches Employee Master

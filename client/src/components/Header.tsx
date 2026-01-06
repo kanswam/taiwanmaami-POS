@@ -5,7 +5,7 @@ import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { useAuth } from '@/_core/hooks/useAuth';
 import { useCart } from '@/contexts/CartContext';
 import { getLoginUrl } from '@/const';
-import { Menu, ShoppingCart, User, LogOut, MapPin, Info, FileText, X } from 'lucide-react';
+import { Menu, ShoppingCart, User, LogOut, MapPin, Info, FileText, X, ClipboardList } from 'lucide-react';
 import { formatPrice } from '@shared/types';
 
 export function Header() {
@@ -107,6 +107,14 @@ export function Header() {
                   </Button>
                 </Link>
 
+                {(user?.role === 'staff' || user?.role === 'admin') && (
+                  <Link href="/staff/orders">
+                    <Button variant="outline" size="sm">
+                      Staff Orders
+                    </Button>
+                  </Link>
+                )}
+
                 {user?.role === 'admin' && (
                   <Link href="/admin">
                     <Button variant="outline" size="sm">
@@ -191,6 +199,17 @@ export function Header() {
                         <FileText className="w-5 h-5" />
                         My Orders
                       </Link>
+
+                      {(user?.role === 'staff' || user?.role === 'admin') && (
+                        <Link
+                          href="/staff/orders"
+                          onClick={() => setMobileMenuOpen(false)}
+                          className="flex items-center gap-3 p-3 rounded-lg hover:bg-secondary"
+                        >
+                          <ClipboardList className="w-5 h-5" />
+                          Staff Orders
+                        </Link>
+                      )}
 
                       {user?.role === 'admin' && (
                         <Link
