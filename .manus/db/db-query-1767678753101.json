@@ -1,0 +1,70 @@
+{
+  "query": "SELECT * FROM site_settings LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT * FROM site_settings LIMIT 10;",
+  "rows": [
+    {
+      "id": "1",
+      "key": "hero_title",
+      "value": "CRAFTED DAILY. ENJOY THOUGHTFULLY. ",
+      "updatedAt": "2026-01-05 10:49:46"
+    },
+    {
+      "id": "2",
+      "key": "hero_description",
+      "value": "Each drink and food is prepared fresh in-store, guided by care, restraint, and quality—offering a composed, consistent experience whether enjoyed at our counter or delivered to you.",
+      "updatedAt": "2026-01-05 10:49:46"
+    },
+    {
+      "id": "3",
+      "key": "quality_title",
+      "value": "FRESHLY CRAFTED   ",
+      "updatedAt": "2026-01-05 10:54:31"
+    },
+    {
+      "id": "4",
+      "key": "quality_description",
+      "value": "Prepared in-store with care, precision, and consistent quality.",
+      "updatedAt": "2026-01-05 10:54:31"
+    },
+    {
+      "id": "5",
+      "key": "freshness_title",
+      "value": "AUTHENTIC SERVICE",
+      "updatedAt": "2026-01-05 10:54:31"
+    },
+    {
+      "id": "6",
+      "key": "freshness_description",
+      "value": "Thoughtful attention, reflecting genuine craft and refinement. ",
+      "updatedAt": "2026-01-05 10:54:31"
+    },
+    {
+      "id": "7",
+      "key": "delivery_title",
+      "value": "REWARDED RITUAL",
+      "updatedAt": "2026-01-05 10:54:32"
+    },
+    {
+      "id": "8",
+      "key": "delivery_description",
+      "value": "Quietly earn points that turn into complimentary drinks, naturally.",
+      "updatedAt": "2026-01-05 10:54:32"
+    },
+    {
+      "id": "9",
+      "key": "store_phone",
+      "value": "9150570557",
+      "updatedAt": "2026-01-05 05:02:57"
+    },
+    {
+      "id": "10",
+      "key": "store_email",
+      "value": "hello@taiwanmaami.com",
+      "updatedAt": "2026-01-05 05:02:57"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tkey\tvalue\tupdatedAt\n1\thero_title\tCRAFTED DAILY. ENJOY THOUGHTFULLY. \t2026-01-05 10:49:46\n2\thero_description\tEach drink and food is prepared fresh in-store, guided by care, restraint, and quality—offering a composed, consistent experience whether enjoyed at our counter or delivered to you.\t2026-01-05 10:49:46\n3\tquality_title\tFRESHLY CRAFTED   \t2026-01-05 10:54:31\n4\tquality_description\tPrepared in-store with care, precision, and consistent quality.\t2026-01-05 10:54:31\n5\tfreshness_title\tAUTHENTIC SERVICE\t2026-01-05 10:54:31\n6\tfreshness_description\tThoughtful attention, reflecting genuine craft and refinement. \t2026-01-05 10:54:31\n7\tdelivery_title\tREWARDED RITUAL\t2026-01-05 10:54:32\n8\tdelivery_description\tQuietly earn points that turn into complimentary drinks, naturally.\t2026-01-05 10:54:32\n9\tstore_phone\t9150570557\t2026-01-05 05:02:57\n10\tstore_email\thello@taiwanmaami.com\t2026-01-05 05:02:57\n",
+  "stderr": "",
+  "execution_time_ms": 1499
+}

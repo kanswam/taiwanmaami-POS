@@ -1898,3 +1898,9 @@
 - [x] Handle numbered sections (1., 1.1, etc.)
 - [x] Handle Q&A format
 - [x] Handle general paragraph content with sentence pattern detection
+
+## Phase 60 - Fix WYSIWYG Editor Display (Jan 6, 2026)
+- [x] Remove auto-conversion from content pages (Refund, Terms, Privacy, FAQ, Shipping, Franchise, About)
+- [x] Display HTML from WYSIWYG editor directly using dangerouslySetInnerHTML
+- [x] Test Refund Policy page - now shows proper formatting with headings and paragraphs
+- [x] Theresa can now use WYSIWYG editor to format content exactly as intended

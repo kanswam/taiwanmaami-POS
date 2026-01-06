@@ -1,0 +1,51 @@
+{
+  "query": "SELECT id, `key`, SUBSTRING(`value`, 1, 200) as preview FROM site_settings WHERE `key` LIKE 'cms_%';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT id, `key`, SUBSTRING(`value`, 1, 200) as preview FROM site_settings WHERE `key` LIKE 'cms_%';",
+  "rows": [
+    {
+      "id": "90001",
+      "key": "cms_about_us",
+      "preview": "THE HOUSE OF THAMARAI: CRAFTING TAIWAN MAAMI AND BEYOND "
+    },
+    {
+      "id": "90002",
+      "key": "cms_terms_conditions",
+      "preview": "Welcome to Thamarai Foods & Trading Private Limited (“Thamarai”, “we”, “us” or “our”)."
+    },
+    {
+      "id": "120001",
+      "key": "cms_privacy_policy",
+      "preview": "Effective Date: 01 January 2026"
+    },
+    {
+      "id": "150001",
+      "key": "cms_refund_policy",
+      "preview": "<p>Effective Date: 01 January 2025 This Refund &amp; Cancellation Policy governs all orders placed for dine in, take away, and online orders through our website, mobile interfaces, or direct channels "
+    },
+    {
+      "id": "150002",
+      "key": "cms_shipping_policy",
+      "preview": "Effective Date: 01 January 2025"
+    },
+    {
+      "id": "150003",
+      "key": "cms_faq",
+      "preview": "Q1. What brands and products are available under Thamarai?"
+    },
+    {
+      "id": "180001",
+      "key": "cms_franchise_opportunity",
+      "preview": ""
+    }
+  ],
+  "messages": [
+    "Thamarai Foods & Trading Private Limited is built on the enduring principles of authenticity, sincerity, and transparency, approaching food and",
+    "These Terms & Conditions (“Terms”) govern your use of our restaurant services, including dine-in, take-away, and ",
+    "Thamarai Foods & Trading Private Limited (“Thamarai”, “we”, “us”, or “our”) respects your privacy and is committed to protecting your personal information in accordance",
+    "This Shipping & Delivery Policy governs how Thamarai manages the delivery of food and beverage orders placed through our online ordering systems or directly with our re",
+    "Thamarai Foods & Trading Private Limited is the parent company of Taiwan Maami, offering premium boba beverages, hand-pulled noodles, contemp"
+  ],
+  "stdout": "id\tkey\tpreview\n90001\tcms_about_us\tTHE HOUSE OF THAMARAI: CRAFTING TAIWAN MAAMI AND BEYOND \nThamarai Foods & Trading Private Limited is built on the enduring principles of authenticity, sincerity, and transparency, approaching food and\n90002\tcms_terms_conditions\tWelcome to Thamarai Foods & Trading Private Limited (“Thamarai”, “we”, “us” or “our”).\nThese Terms & Conditions (“Terms”) govern your use of our restaurant services, including dine-in, take-away, and \n120001\tcms_privacy_policy\tEffective Date: 01 January 2026\nThamarai Foods & Trading Private Limited (“Thamarai”, “we”, “us”, or “our”) respects your privacy and is committed to protecting your personal information in accordance\n150001\tcms_refund_policy\t<p>Effective Date: 01 January 2025 This Refund &amp; Cancellation Policy governs all orders placed for dine in, take away, and online orders through our website, mobile interfaces, or direct channels \n150002\tcms_shipping_policy\tEffective Date: 01 January 2025\nThis Shipping & Delivery Policy governs how Thamarai manages the delivery of food and beverage orders placed through our online ordering systems or directly with our re\n150003\tcms_faq\tQ1. What brands and products are available under Thamarai?\nThamarai Foods & Trading Private Limited is the parent company of Taiwan Maami, offering premium boba beverages, hand-pulled noodles, contemp\n180001\tcms_franchise_opportunity\t\n",
+  "stderr": "",
+  "execution_time_ms": 1536
+}

@@ -1,17 +1,9 @@
 import { Header } from '@/components/Header';
 import { trpc } from '@/lib/trpc';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useMemo } from 'react';
-import { formatLegalContent } from '@/lib/textToHtml';
 
 export default function Shipping() {
   const { data: cmsContent, isLoading } = trpc.cms.getContent.useQuery({ key: 'shipping_policy' });
-
-  // Auto-format plain text content to HTML
-  const formattedContent = useMemo(() => {
-    if (!cmsContent) return '';
-    return formatLegalContent(cmsContent);
-  }, [cmsContent]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -29,17 +21,18 @@ export default function Shipping() {
               <Skeleton className="h-4 w-full" />
               <Skeleton className="h-4 w-3/4" />
             </div>
-          ) : formattedContent ? (
+          ) : cmsContent ? (
             <div 
               className="prose prose-lg max-w-none text-muted-foreground
                 prose-headings:text-foreground prose-headings:font-semibold
+                prose-h1:text-2xl prose-h1:mt-8 prose-h1:mb-4
                 prose-h2:text-xl prose-h2:mt-8 prose-h2:mb-4
                 prose-h3:text-lg prose-h3:mt-6 prose-h3:mb-3
                 prose-p:my-4 prose-ul:my-4 prose-ol:my-4 prose-li:my-1
                 prose-strong:text-foreground
                 prose-a:text-primary prose-a:hover:underline
                 [&>h2]:border-b [&>h2]:border-border/50 [&>h2]:pb-2"
-              dangerouslySetInnerHTML={{ __html: formattedContent }}
+              dangerouslySetInnerHTML={{ __html: cmsContent }}
             />
           ) : (
             <div className="prose prose-lg max-w-none space-y-6 text-muted-foreground">
