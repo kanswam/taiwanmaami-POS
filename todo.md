@@ -95,3 +95,7 @@
   - [x] Renamed ManusDialog to LoginDialog with generic text
   - [x] Changed localStorage key from manus-runtime-user-info to app-user-info
   - [x] Video CDN URLs kept (not visible to customers in UI)
+
+- [x] Create infrastructure documentation
+- [x] Fix page refresh/flash issue on load (cart hydration fix)
+- [x] Package and share complete codebase

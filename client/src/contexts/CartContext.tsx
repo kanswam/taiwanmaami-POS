@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useReducer, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useReducer, useEffect, ReactNode, useState } from 'react';
 import { CartItem, calculateGst, GST_RATE } from '@shared/types';
 
 interface CartState {
@@ -41,6 +41,22 @@ const initialState: CartState = {
   lastAddedItem: null,
   activeOrderId: null,
 };
+
+// Get initial state from localStorage synchronously to prevent flash
+function getInitialState(): CartState {
+  if (typeof window === 'undefined') return initialState;
+  
+  try {
+    const savedCart = localStorage.getItem('taiwanMaamiCart');
+    if (savedCart) {
+      const parsed = JSON.parse(savedCart);
+      return { ...initialState, ...parsed };
+    }
+  } catch (e) {
+    console.error('Failed to load cart from localStorage');
+  }
+  return initialState;
+}
 
 function cartReducer(state: CartState, action: CartAction): CartState {
   switch (action.type) {
@@ -162,30 +178,27 @@ interface CartContextValue {
   instoreOutlet: 'palladium' | 'tnagar' | null;
   lastAddedItem: { productId: number; subcategoryId: number } | null;
   activeOrderId: number | null;
+  isHydrated: boolean;
 }
 
 const CartContext = createContext<CartContextValue | undefined>(undefined);
 
 export function CartProvider({ children }: { children: ReactNode }) {
-  const [state, dispatch] = useReducer(cartReducer, initialState);
+  // Initialize with localStorage data synchronously to prevent flash
+  const [state, dispatch] = useReducer(cartReducer, undefined, getInitialState);
+  const [isHydrated, setIsHydrated] = useState(false);
 
-  // Load cart from localStorage on mount
+  // Mark as hydrated after first render
   useEffect(() => {
-    const savedCart = localStorage.getItem('taiwanMaamiCart');
-    if (savedCart) {
-      try {
-        const parsed = JSON.parse(savedCart);
-        dispatch({ type: 'LOAD_CART', payload: parsed });
-      } catch (e) {
-        console.error('Failed to load cart from localStorage');
-      }
-    }
+    setIsHydrated(true);
   }, []);
 
-  // Save cart to localStorage on change
+  // Save cart to localStorage on change (after hydration)
   useEffect(() => {
-    localStorage.setItem('taiwanMaamiCart', JSON.stringify(state));
-  }, [state]);
+    if (isHydrated) {
+      localStorage.setItem('taiwanMaamiCart', JSON.stringify(state));
+    }
+  }, [state, isHydrated]);
 
   const subtotal = state.items.reduce((sum, item) => sum + item.lineTotal, 0);
   const gst = calculateGst(subtotal);
@@ -215,6 +228,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     instoreOutlet: state.instoreOutlet,
     lastAddedItem: state.lastAddedItem,
     activeOrderId: state.activeOrderId,
+    isHydrated,
   };
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
