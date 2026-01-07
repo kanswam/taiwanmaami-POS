@@ -153,18 +153,6 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Running Banner Ticker */}
-      <div className="bg-primary text-white py-2 overflow-hidden">
-        <div className="animate-marquee whitespace-nowrap">
-          <span className="mx-8">📍 ₹100 Flat Delivery Within 10 km of T. Nagar</span>
-          <span className="mx-8">🚚 Free Delivery on Orders Above ₹2500</span>
-          <span className="mx-8">⭐ 10 Stamps = 1 Free Drink · Loyalty Now Online</span>
-          <span className="mx-8">📍 ₹100 Flat Delivery Within 10 km of T. Nagar</span>
-          <span className="mx-8">🚚 Free Delivery on Orders Above ₹2500</span>
-          <span className="mx-8">⭐ 10 Stamps = 1 Free Drink · Loyalty Now Online</span>
-        </div>
-      </div>
-      
       <Header />
 
       {/* Hero Section with Video Background */}

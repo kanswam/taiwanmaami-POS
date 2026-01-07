@@ -23,7 +23,20 @@ export function Header() {
   const isActive = (href: string) => location === href;
 
   return (
-    <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border shadow-sm">
+    <div className="sticky top-0 z-50">
+      {/* Running Banner Ticker */}
+      <div className="bg-primary text-white py-2 overflow-hidden">
+        <div className="animate-marquee whitespace-nowrap">
+          <span className="mx-8">⭐ 10 Stamps = 1 Free Drink · Loyalty Now Online</span>
+          <span className="mx-8">📍 ₹100 Flat Delivery Within 10 km of T. Nagar</span>
+          <span className="mx-8">🚚 Free Delivery on Orders Above ₹2500</span>
+          <span className="mx-8">⭐ 10 Stamps = 1 Free Drink · Loyalty Now Online</span>
+          <span className="mx-8">📍 ₹100 Flat Delivery Within 10 km of T. Nagar</span>
+          <span className="mx-8">🚚 Free Delivery on Orders Above ₹2500</span>
+        </div>
+      </div>
+      
+      <header className="bg-background/95 backdrop-blur-sm border-b border-border shadow-sm">
       <div className="container">
         <div className="flex items-center justify-between h-20 md:h-24">
           {/* Logo */}
@@ -247,5 +260,6 @@ export function Header() {
         </div>
       </div>
     </header>
+    </div>
   );
 }
