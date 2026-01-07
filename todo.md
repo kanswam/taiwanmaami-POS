@@ -117,3 +117,8 @@
 - [x] Replace "Ready to Order" with "Join our Loyalty Programme" section
 - [x] Add running banner ticker above logo on landing page
 - [x] Add loyalty programme reminder at checkout for guest users
+
+## SEO Fixes (Jan 7)
+
+- [x] Reduce keywords from 9 to 6 focused keywords
+- [x] Shorten meta description from 169 to 131 characters
