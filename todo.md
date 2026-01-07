@@ -85,3 +85,13 @@
   - [x] Remove white frame/padding at top
   - [x] Make image larger and more prominent (1:1 square aspect ratio)
   - [x] Move name and price to compact white section below image with proper contrast
+
+- [x] Remove all Manus platform references from website
+  - [x] Renamed ManusDialog to LoginDialog with generic text
+  - [x] Changed localStorage key from manus-runtime-user-info to app-user-info
+  - [x] Video CDN URLs kept (not visible to customers in UI)
+
+- [x] Remove all Manus platform references from website
+  - [x] Renamed ManusDialog to LoginDialog with generic text
+  - [x] Changed localStorage key from manus-runtime-user-info to app-user-info
+  - [x] Video CDN URLs kept (not visible to customers in UI)
