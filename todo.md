@@ -99,3 +99,6 @@
 - [x] Create infrastructure documentation
 - [x] Fix page refresh/flash issue on load (cart hydration fix)
 - [x] Package and share complete codebase
+
+- [x] Fix subcategory availability not being respected for delivery/pickup
+- [x] Add staff ability to toggle subcategory availability (Staff Orders > Availability tab)

@@ -122,16 +122,30 @@ export const appRouter = router({
     }),
 
     getFullMenu: publicProcedure
-      .input(z.object({ isDelivery: z.boolean().default(false), includeUnavailable: z.boolean().default(true) }))
+      .input(z.object({ 
+        isDelivery: z.boolean().default(false), 
+        isPickup: z.boolean().default(false),
+        includeUnavailable: z.boolean().default(true) 
+      }))
       .query(async ({ input }) => {
         const dbInstance = await getDb();
         if (!dbInstance) return { categories: [], subcategories: [], products: [], addons: [] };
 
         const cats = await db.getCategories();
-        const subs = await db.getSubcategories();
+        const allSubs = await db.getSubcategories();
+        
+        // Filter subcategories by availability for the order type
+        const subs = allSubs.filter(sub => {
+          if (input.isDelivery) return sub.availableDelivery !== false;
+          if (input.isPickup) return sub.availablePickup !== false;
+          return sub.availableInstore !== false;
+        });
+        
+        // Get IDs of available subcategories
+        const availableSubcategoryIds = subs.map(s => s.id);
         
         // Include all products for the channel, showing inactive/out-of-stock with visual indicators
-        // Only filter by availability channel (delivery vs instore)
+        // Filter by availability channel (delivery vs instore) AND subcategory availability
         // Order by subcategory (which inherits category order), then product displayOrder
         const prods = await dbInstance!.select()
           .from(products)
@@ -145,7 +159,8 @@ export const appRouter = router({
             asc(subcategories.displayOrder),
             asc(products.displayOrder)
           )
-          .then(rows => rows.map(r => r.products));
+          .then(rows => rows.map(r => r.products))
+          .then(prods => prods.filter(p => availableSubcategoryIds.includes(p.subcategoryId)));
         const adds = await db.getAddons();
 
         return { categories: cats, subcategories: subs, products: prods, addons: adds };
@@ -1387,6 +1402,36 @@ export const appRouter = router({
           count: productsToSync.length,
           products: productsToSync.map(p => ({ id: p.id, name: p.name })),
         };
+      }),
+
+    // Staff can toggle subcategory availability (delivery/pickup/instore)
+    toggleSubcategoryAvailability: staffProcedure
+      .input(z.object({
+        id: z.number(),
+        availableInstore: z.boolean().optional(),
+        availableDelivery: z.boolean().optional(),
+        availablePickup: z.boolean().optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const dbInstance = await getDb();
+        if (!dbInstance) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
+        const { id, availableInstore, availableDelivery, availablePickup } = input;
+        
+        const updateData: Record<string, boolean> = {};
+        if (availableInstore !== undefined) updateData.availableInstore = availableInstore;
+        if (availableDelivery !== undefined) updateData.availableDelivery = availableDelivery;
+        if (availablePickup !== undefined) updateData.availablePickup = availablePickup;
+        
+        if (Object.keys(updateData).length === 0) {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: 'No availability fields provided' });
+        }
+        
+        await dbInstance!.update(subcategories).set(updateData).where(eq(subcategories.id, id));
+        
+        // Log the change
+        console.log(`[Staff] ${ctx.user.name} (${ctx.user.id}) toggled availability for subcategory ${id}:`, updateData);
+        
+        return { success: true };
       }),
 
     deleteSubcategory: adminProcedure

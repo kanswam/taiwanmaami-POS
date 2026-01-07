@@ -103,6 +103,7 @@ export default function Menu() {
 
   const { data: menuData, isLoading } = trpc.menu.getFullMenu.useQuery({
     isDelivery: state.orderType === 'delivery',
+    isPickup: state.orderType === 'pickup',
   });
 
   // Get delivery settings (radius and enabled status)

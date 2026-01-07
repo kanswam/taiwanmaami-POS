@@ -17,8 +17,9 @@ import {
   Printer, RefreshCw, MapPin, Phone, User, Bell,
   Filter, Store, UtensilsCrossed, ShoppingBag,
   MessageSquare, AlertTriangle, BarChart3, Volume2, VolumeX,
-  X, Calendar, Hash, Camera, Upload, Image
+  X, Calendar, Hash, Camera, Upload, Image, ToggleLeft
 } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
 
 // Status flow for delivery orders
 const statusFlow = {
@@ -52,6 +53,107 @@ const orderTypeIcons: Record<string, React.ReactNode> = {
   delivery: <Truck className="w-4 h-4" />,
   pickup: <ShoppingBag className="w-4 h-4" />,
 };
+
+// Availability Panel Component for staff to toggle subcategory availability
+function AvailabilityPanel() {
+  const utils = trpc.useUtils();
+  const { data: subcategories, isLoading } = trpc.menu.getSubcategories.useQuery();
+  const { data: categories } = trpc.menu.getCategories.useQuery();
+  
+  const toggleAvailability = trpc.admin.toggleSubcategoryAvailability.useMutation({
+    onSuccess: () => {
+      toast.success('Availability updated');
+      utils.menu.getSubcategories.invalidate();
+    },
+    onError: (err) => {
+      toast.error(err.message || 'Failed to update availability');
+    },
+  });
+
+  const getCategoryName = (categoryId: number) => {
+    return categories?.find(c => c.id === categoryId)?.name || 'Unknown';
+  };
+
+  if (isLoading) {
+    return (
+      <div className="text-center py-8">
+        <RefreshCw className="w-8 h-8 mx-auto mb-4 animate-spin text-muted-foreground" />
+        <p>Loading subcategories...</p>
+      </div>
+    );
+  }
+
+  // Group subcategories by category
+  const groupedSubcategories = subcategories?.reduce((acc: Record<string, any[]>, sub: any) => {
+    const catName = getCategoryName(sub.categoryId);
+    if (!acc[catName]) acc[catName] = [];
+    acc[catName].push(sub);
+    return acc;
+  }, {} as Record<string, any[]>) || {};
+
+  return (
+    <div className="space-y-6">
+      <div className="bg-muted/50 p-4 rounded-lg">
+        <h3 className="font-medium flex items-center gap-2 mb-2">
+          <ToggleLeft className="w-5 h-5" />
+          Toggle Subcategory Availability
+        </h3>
+        <p className="text-sm text-muted-foreground">
+          Turn off availability for subcategories that are out of stock or unavailable. 
+          Changes take effect immediately for customers.
+        </p>
+      </div>
+
+      {Object.entries(groupedSubcategories).map(([categoryName, subs]) => (
+        <div key={categoryName} className="border rounded-lg overflow-hidden">
+          <div className="bg-muted px-4 py-2 font-medium">{categoryName}</div>
+          <div className="divide-y">
+            {(subs as any[]).map((sub: any) => (
+              <div key={sub.id} className="p-4 flex items-center justify-between gap-4">
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium truncate">{sub.name}</p>
+                  {sub.chineseName && <p className="text-sm text-muted-foreground">{sub.chineseName}</p>}
+                </div>
+                <div className="flex items-center gap-6 flex-shrink-0">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-muted-foreground w-16">In-store</span>
+                    <Switch
+                      checked={sub.availableInstore !== false}
+                      onCheckedChange={(checked) => {
+                        toggleAvailability.mutate({ id: sub.id, availableInstore: checked });
+                      }}
+                      disabled={toggleAvailability.isPending}
+                    />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-muted-foreground w-16">Delivery</span>
+                    <Switch
+                      checked={sub.availableDelivery !== false}
+                      onCheckedChange={(checked) => {
+                        toggleAvailability.mutate({ id: sub.id, availableDelivery: checked });
+                      }}
+                      disabled={toggleAvailability.isPending}
+                    />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-muted-foreground w-16">Pickup</span>
+                    <Switch
+                      checked={sub.availablePickup !== false}
+                      onCheckedChange={(checked) => {
+                        toggleAvailability.mutate({ id: sub.id, availablePickup: checked });
+                      }}
+                      disabled={toggleAvailability.isPending}
+                    />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 export default function StaffOrders() {
   const { user, isAuthenticated } = useAuth();
@@ -566,6 +668,7 @@ export default function StaffOrders() {
               )}
             </TabsTrigger>
             <TabsTrigger value="completed">Completed Today</TabsTrigger>
+            <TabsTrigger value="availability">Availability</TabsTrigger>
           </TabsList>
 
           <TabsContent value="active">
@@ -616,6 +719,10 @@ export default function StaffOrders() {
                   ))}
               </div>
             )}
+          </TabsContent>
+
+          <TabsContent value="availability">
+            <AvailabilityPanel />
           </TabsContent>
         </Tabs>
       </div>
