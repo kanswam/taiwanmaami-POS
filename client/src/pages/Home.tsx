@@ -459,7 +459,7 @@ export default function Home() {
         <div className="container">
           <div className="text-center mb-10">
             <h2 className="text-3xl sm:text-4xl font-bold text-white mb-3">
-              Join our Loyalty Programme
+              Login to our Loyalty Programme
             </h2>
             <p className="text-white/90 text-lg">
               Simple. Seamless. Rewarding.
