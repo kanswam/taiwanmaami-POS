@@ -102,3 +102,10 @@
 
 - [x] Fix subcategory availability not being respected for delivery/pickup
 - [x] Add staff ability to toggle subcategory availability (Staff Orders > Availability tab)
+
+- [ ] Fix customer list to exclude staff/admin users
+- [ ] Fix stamp calculation to be 1 stamp per ₹450 spent
+
+- [x] Fix customer list to exclude staff/admin users (Boichong onwards are staff)
+- [x] Stamp calculation verified correct (1 per ₹450 + welcome stamp for first order)
+- [x] Update Iced Beverages tile video with Moutan-FaloodaTea.mov

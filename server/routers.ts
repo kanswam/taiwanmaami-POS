@@ -4068,20 +4068,26 @@ export const appRouter = router({
         const dbInstance = await getDb();
         if (!dbInstance) return { customers: [], total: 0 };
 
-        // Get registered users
+        // Get registered users (exclude staff and admin)
         let registeredUsers: any[] = [];
         if (input?.type !== 'guest') {
-          let userQuery = dbInstance.select().from(users);
+          // Filter to only show customers (exclude staff and admin roles)
+          const roleFilter = sql`(${users.role} = 'user' OR ${users.role} = 'customer' OR ${users.role} IS NULL)`;
+          
           if (input?.search) {
-            userQuery = userQuery.where(
-              or(
-                sql`${users.name} LIKE ${`%${input.search}%`}`,
-                sql`${users.phone} LIKE ${`%${input.search}%`}`,
-                sql`${users.email} LIKE ${`%${input.search}%`}`
+            registeredUsers = await dbInstance.select().from(users).where(
+              and(
+                roleFilter,
+                or(
+                  sql`${users.name} LIKE ${`%${input.search}%`}`,
+                  sql`${users.phone} LIKE ${`%${input.search}%`}`,
+                  sql`${users.email} LIKE ${`%${input.search}%`}`
+                )
               )
-            ) as any;
+            );
+          } else {
+            registeredUsers = await dbInstance.select().from(users).where(roleFilter);
           }
-          registeredUsers = await userQuery;
         }
 
         // Get order stats for registered users

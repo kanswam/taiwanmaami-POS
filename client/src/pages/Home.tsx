@@ -102,7 +102,7 @@ export default function Home() {
     {
       name: cat1Name,
       description: cat1Desc,
-      video: 'https://files.manuscdn.com/user_upload_by_module/session_file/114675165/ecZXiwJjoSwJdZrZ.mp4',
+      video: 'https://files.manuscdn.com/user_upload_by_module/session_file/114675165/CKsMrsUAUMbuMMbu.mov',
       href: '/menu?category=bubble-tea',
     },
     {
