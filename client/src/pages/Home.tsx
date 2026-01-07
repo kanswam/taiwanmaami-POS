@@ -153,6 +153,18 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Running Banner Ticker */}
+      <div className="bg-primary text-white py-2 overflow-hidden">
+        <div className="animate-marquee whitespace-nowrap">
+          <span className="mx-8">📍 ₹100 Flat Delivery Within 10 km of T. Nagar</span>
+          <span className="mx-8">🚚 Free Delivery on Orders Above ₹2500</span>
+          <span className="mx-8">⭐ 10 Stamps = 1 Free Drink · Loyalty Now Online</span>
+          <span className="mx-8">📍 ₹100 Flat Delivery Within 10 km of T. Nagar</span>
+          <span className="mx-8">🚚 Free Delivery on Orders Above ₹2500</span>
+          <span className="mx-8">⭐ 10 Stamps = 1 Free Drink · Loyalty Now Online</span>
+        </div>
+      </div>
+      
       <Header />
 
       {/* Hero Section with Video Background */}
@@ -442,35 +454,60 @@ export default function Home() {
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="py-16">
+      {/* Loyalty Programme Section */}
+      <section className="py-16 bg-primary">
         <div className="container">
-          <Card className="relative overflow-hidden">
-            <div className="absolute inset-0">
-              <img
-                src="/images/popping-boba.jpg"
-                alt="Popping Boba"
-                loading="lazy"
-                decoding="async"
-                className="w-full h-full object-cover opacity-20"
-              />
-              <div className="absolute inset-0 gradient-primary opacity-90" />
-            </div>
-            <div className="relative p-8 sm:p-12 text-center">
-              <h2 className="text-2xl sm:text-3xl font-bold text-white mb-4">
-                Ready to Order?
-              </h2>
-              <p className="text-white/90 mb-6 max-w-xl mx-auto">
-                Order online for delivery or pickup, or visit our outlets for the full Taiwan Maami experience.
+          <div className="text-center mb-10">
+            <h2 className="text-3xl sm:text-4xl font-bold text-white mb-3">
+              Join our Loyalty Programme
+            </h2>
+            <p className="text-white/90 text-lg">
+              Simple. Seamless. Rewarding.
+            </p>
+          </div>
+          
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-5xl mx-auto mb-10">
+            <Card className="p-6 bg-white/10 border-white/20 text-center">
+              <div className="text-4xl mb-3">🏆</div>
+              <h3 className="font-bold text-white text-lg mb-2">₹450 = 1 stamp</h3>
+              <p className="text-white/80 text-sm">
+                Collect 10 stamps and receive a free drink.
               </p>
-              <Link href="/menu">
-                <Button size="lg" className="bg-white text-primary hover:bg-white/90">
-                  Start Your Order
-                  <ArrowRight className="ml-2 w-5 h-5" />
-                </Button>
-              </Link>
-            </div>
-          </Card>
+            </Card>
+            
+            <Card className="p-6 bg-white/10 border-white/20 text-center">
+              <div className="text-4xl mb-3">⚙️</div>
+              <h3 className="font-bold text-white text-lg mb-2">Fully automated</h3>
+              <p className="text-white/80 text-sm">
+                Just log in — stamps and rewards are tracked automatically.
+              </p>
+            </Card>
+            
+            <Card className="p-6 bg-white/10 border-white/20 text-center">
+              <div className="text-4xl mb-3">🌍</div>
+              <h3 className="font-bold text-white text-lg mb-2">Use it anywhere</h3>
+              <p className="text-white/80 text-sm">
+                Valid for in-store, pickup, and delivery when you pay on our website.
+              </p>
+            </Card>
+            
+            <Card className="p-6 bg-white/10 border-white/20 text-center">
+              <div className="text-4xl mb-3">⭐</div>
+              <h3 className="font-bold text-white text-lg mb-2">Member exclusives</h3>
+              <p className="text-white/80 text-sm">
+                Enjoy special gifts, early access, and invite-only events.
+              </p>
+            </Card>
+          </div>
+          
+          <div className="text-center">
+            <Link href="/menu">
+              <Button size="lg" className="bg-white text-primary hover:bg-white/90">
+                Start Your Order
+                <ArrowRight className="ml-2 w-5 h-5" />
+              </Button>
+            </Link>
+          </div>
         </div>
       </section>
 

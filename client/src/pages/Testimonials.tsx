@@ -1,4 +1,5 @@
 import { Header } from '@/components/Header';
+import { Footer } from '@/components/Footer';
 import { Card } from '@/components/ui/card';
 import { trpc } from '@/lib/trpc';
 import { Star, Quote, ArrowLeft } from 'lucide-react';
@@ -126,13 +127,7 @@ export default function Testimonials() {
         </div>
       </div>
 
-      {/* Footer */}
-      <footer className="border-t py-8">
-        <div className="container text-center text-sm text-muted-foreground">
-          <p>© {new Date().getFullYear()} Taiwan Maami. All rights reserved.</p>
-          <p className="mt-1">Proprietary of Thamarai Foods and Trading Private Limited</p>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }

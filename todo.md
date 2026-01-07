@@ -109,3 +109,11 @@
 - [x] Fix customer list to exclude staff/admin users (Boichong onwards are staff)
 - [x] Stamp calculation verified correct (1 per ₹450 + welcome stamp for first order)
 - [x] Update Iced Beverages tile video with Moutan-FaloodaTea.mov
+## Content Updates (Jan 7)
+
+- [x] Update Our Story text
+- [x] Rename "What We Offer" to "Taiwan Maami is famous for" with new tile content
+- [x] Fix footer links to show on all pages (created shared Footer component)
+- [x] Replace "Ready to Order" with "Join our Loyalty Programme" section
+- [x] Add running banner ticker above logo on landing page
+- [x] Add loyalty programme reminder at checkout for guest users

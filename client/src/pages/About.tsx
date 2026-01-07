@@ -1,4 +1,5 @@
 import { Header } from '@/components/Header';
+import { Footer } from '@/components/Footer';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Link } from 'wouter';
@@ -22,7 +23,7 @@ export default function About() {
           <div className="max-w-3xl mx-auto text-center">
             <h1 className="text-4xl md:text-5xl font-bold mb-4">Our Story</h1>
             <p className="text-lg text-muted-foreground">
-              Bringing authentic Taiwanese bubble tea culture to Chennai
+              Our story is not one of rapid outlets or fleeting concepts, but of institution-building in food
             </p>
           </div>
         </div>
@@ -73,15 +74,25 @@ export default function About() {
       {/* What We Offer */}
       <section className="py-16 bg-secondary/30">
         <div className="container">
-          <h2 className="text-2xl font-bold mb-8 text-center">What We Offer</h2>
+          <h2 className="text-2xl font-bold mb-8 text-center">Taiwan Maami is famous for</h2>
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-5xl mx-auto">
             <Card className="p-6 text-center">
               <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
                 <span className="text-3xl">🧋</span>
               </div>
-              <h3 className="font-semibold mb-2">Premium Bubble Tea</h3>
+              <h3 className="font-semibold mb-2">Taiwanese Tapioca & Boba</h3>
               <p className="text-sm text-muted-foreground">
-                Authentic Taiwanese bubble tea with imported tapioca pearls in multiple flavors and sizes
+                Premium tapioca pearls and popping boba sourced from Taiwan, defined by precise texture, clarity, and consistency.
+              </p>
+            </Card>
+
+            <Card className="p-6 text-center">
+              <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                <span className="text-3xl">🍵</span>
+              </div>
+              <h3 className="font-semibold mb-2">Whole-Leaf Teas & Matcha</h3>
+              <p className="text-sm text-muted-foreground">
+                Organic whole-leaf teas—rarely found in the market—alongside imported matcha brewed to the highest standards.
               </p>
             </Card>
 
@@ -89,19 +100,9 @@ export default function About() {
               <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
                 <span className="text-3xl">🍡</span>
               </div>
-              <h3 className="font-semibold mb-2">Mochi Desserts</h3>
+              <h3 className="font-semibold mb-2">Authentic Mochi Dessert</h3>
               <p className="text-sm text-muted-foreground">
-                Fruit flavored and signature mochis including Rocher, Banoffee, and Dragon Fruit
-              </p>
-            </Card>
-
-            <Card className="p-6 text-center">
-              <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                <span className="text-3xl">☕</span>
-              </div>
-              <h3 className="font-semibold mb-2">Specialty Coffee</h3>
-              <p className="text-sm text-muted-foreground">
-                Iced and hot coffee options including Americano, Latte, Cappuccino, and Mocha
+                Raw material imported from Taiwan, created with authentic skills, monitored with highest quality assurance.
               </p>
             </Card>
 
@@ -109,9 +110,9 @@ export default function About() {
               <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
                 <span className="text-3xl">🍜</span>
               </div>
-              <h3 className="font-semibold mb-2">Asian Street Food</h3>
+              <h3 className="font-semibold mb-2">Asian Noodles, Rice & Breads</h3>
               <p className="text-sm text-muted-foreground">
-                Authentic dishes like Cong You Bing, Biang Biang Noodles, and Yaki Onigiri
+                True Asian noodle, rice, and bread preparations developed with respect for origin, technique, and texture.
               </p>
             </Card>
           </div>
@@ -248,29 +249,7 @@ export default function About() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="py-8 border-t">
-        <div className="container">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-            <p className="text-sm text-muted-foreground">
-              © {new Date().getFullYear()} Taiwan Maami. A brand of Thamarai Foods and Trading Private Limited.
-            </p>
-            <div className="flex items-center gap-4 text-sm">
-              <Link href="/terms" className="text-muted-foreground hover:text-foreground">Terms</Link>
-              <Link href="/privacy" className="text-muted-foreground hover:text-foreground">Privacy</Link>
-              <Link href="/refund" className="text-muted-foreground hover:text-foreground">Refund Policy</Link>
-              <a 
-                href="https://www.instagram.com/taiwan_maami/" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="text-muted-foreground hover:text-foreground flex items-center gap-1"
-              >
-                <Instagram className="w-4 h-4" />
-              </a>
-            </div>
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }

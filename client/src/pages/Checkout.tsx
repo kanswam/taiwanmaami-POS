@@ -314,9 +314,9 @@ export default function Checkout() {
               </Button>
             </Link>
             
-            <h1 className="text-2xl font-bold mb-2 text-center">How would you like to checkout?</h1>
+            <h1 className="text-2xl font-bold mb-2 text-center">Are you sure you want to miss out?</h1>
             <p className="text-muted-foreground text-center mb-8">
-              Choose an option to complete your order
+              Join now and start collecting stamps toward a free drink 🥤
             </p>
 
             <div className="space-y-4">
@@ -330,7 +330,7 @@ export default function Checkout() {
                     <Gift className="w-6 h-6 text-primary" />
                   </div>
                   <div className="flex-1">
-                    <h3 className="font-semibold text-lg">Login & Earn Rewards</h3>
+                    <h3 className="font-semibold text-lg">Join & Collect Stamps</h3>
                     <p className="text-muted-foreground text-sm mt-1">
                       Earn stamps on this order towards a FREE bubble tea!
                     </p>
@@ -352,7 +352,7 @@ export default function Checkout() {
                     <User className="w-6 h-6 text-muted-foreground" />
                   </div>
                   <div className="flex-1">
-                    <h3 className="font-semibold text-lg">Continue as Guest</h3>
+                    <h3 className="font-semibold text-lg text-muted-foreground">Continue as Guest</h3>
                     <p className="text-muted-foreground text-sm mt-1">
                       Quick checkout without creating an account
                     </p>

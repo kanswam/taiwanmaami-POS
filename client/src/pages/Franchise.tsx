@@ -1,4 +1,5 @@
 import { Header } from '@/components/Header';
+import { Footer } from '@/components/Footer';
 import { Card } from '@/components/ui/card';
 import { trpc } from '@/lib/trpc';
 import { Link } from 'wouter';
@@ -96,21 +97,7 @@ export default function Franchise() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="py-8 border-t">
-        <div className="container">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-            <p className="text-sm text-muted-foreground">
-              © {new Date().getFullYear()} Taiwan Maami. A brand of Thamarai Foods and Trading Private Limited.
-            </p>
-            <div className="flex items-center gap-4 text-sm">
-              <Link href="/terms" className="text-muted-foreground hover:text-foreground">Terms</Link>
-              <Link href="/privacy" className="text-muted-foreground hover:text-foreground">Privacy</Link>
-              <Link href="/refund" className="text-muted-foreground hover:text-foreground">Refund Policy</Link>
-            </div>
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }
