@@ -231,7 +231,19 @@ export async function createOrderItem(itemData: typeof orderItems.$inferInsert) 
 export async function getOrderItems(orderId: number) {
   const db = await getDb();
   if (!db) return [];
-  return db.select().from(orderItems).where(eq(orderItems.orderId, orderId));
+  
+  // Get order items
+  const items = await db.select().from(orderItems).where(eq(orderItems.orderId, orderId));
+  
+  // Get addons for each item
+  const itemsWithAddons = await Promise.all(
+    items.map(async (item) => {
+      const addons = await db.select().from(orderItemAddons).where(eq(orderItemAddons.orderItemId, item.id));
+      return { ...item, addons };
+    })
+  );
+  
+  return itemsWithAddons;
 }
 
 // Discount functions

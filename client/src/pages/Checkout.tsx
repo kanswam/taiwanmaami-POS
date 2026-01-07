@@ -167,7 +167,11 @@ export default function Checkout() {
             sugarLevel: item.sugarLevel,
             iceLevel: item.iceLevel,
             specialInstructions: item.specialInstructions || undefined,
-            addons: item.addons,
+            addons: [
+              ...item.addons,
+              // Include product-specific addons (e.g., eggs for food items)
+              ...(item.productAddons || []).map(pa => ({ id: pa.id, name: pa.name, price: pa.totalPrice })),
+            ],
             quantity: item.quantity,
             unitPrice: item.unitPrice,
             addonsTotal: item.addonsTotal,
@@ -194,7 +198,11 @@ export default function Checkout() {
           sugarLevel: item.sugarLevel,
           iceLevel: item.iceLevel,
           specialInstructions: item.specialInstructions || undefined,
-          addons: item.addons,
+          addons: [
+            ...item.addons,
+            // Include product-specific addons (e.g., eggs for food items)
+            ...(item.productAddons || []).map(pa => ({ id: pa.id, name: pa.name, price: pa.totalPrice })),
+          ],
           quantity: item.quantity,
           unitPrice: item.unitPrice,
           addonsTotal: item.addonsTotal,
@@ -274,7 +282,11 @@ export default function Checkout() {
           specialInstructions: item.specialInstructions || undefined,
           quantity: item.quantity,
           unitPrice: item.unitPrice,
-          addons: item.addons.map(a => ({ id: a.id, name: a.name, price: a.price })),
+          addons: [
+            ...item.addons.map(a => ({ id: a.id, name: a.name, price: a.price })),
+            // Include product-specific addons (e.g., eggs for food items)
+            ...(item.productAddons || []).map(pa => ({ id: pa.id, name: pa.name, price: pa.totalPrice })),
+          ],
         })),
         addressLine1: formData.addressLine1 || undefined,
         addressLine2: formData.addressLine2 || undefined,

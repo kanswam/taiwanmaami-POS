@@ -122,3 +122,11 @@
 
 - [x] Reduce keywords from 9 to 6 focused keywords
 - [x] Shorten meta description from 169 to 131 characters
+
+## Bug Fixes (Jan 7)
+
+- [x] Fix add-ons not being saved to order_item_addons table when placing orders
+  - Root cause: productAddons (e.g., eggs for food items) were not being merged with addons array in Checkout.tsx
+  - Fixed in 3 places: guest checkout, logged-in checkout, and addItemsToOrder
+- [x] Ensure add-ons display on order confirmation page (updated getOrderItems to include addons)
+- [x] Ensure add-ons display on KOT print (KOT already includes addons from input.items)

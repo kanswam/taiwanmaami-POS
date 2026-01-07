@@ -144,12 +144,22 @@ export default function OrderConfirmation() {
             <div className="space-y-3 mb-4">
               <p className="font-medium">Order Items</p>
               {data?.items?.map((item: any, index: number) => (
-                <div key={index} className="flex justify-between text-sm">
-                  <span>
-                    {item.quantity}x {item.productName}
-                    {item.size && ` (${item.size})`}
-                  </span>
-                  <span>{formatPrice(item.lineTotal)}</span>
+                <div key={index} className="text-sm">
+                  <div className="flex justify-between">
+                    <span>
+                      {item.quantity}x {item.productName}
+                      {item.size && ` (${item.size})`}
+                    </span>
+                    <span>{formatPrice(item.lineTotal)}</span>
+                  </div>
+                  {/* Display addons if any */}
+                  {item.addons && item.addons.length > 0 && (
+                    <div className="ml-4 text-xs text-muted-foreground">
+                      {item.addons.map((addon: any, addonIndex: number) => (
+                        <div key={addonIndex}>+ {addon.addonName}</div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
