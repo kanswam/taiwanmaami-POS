@@ -5,7 +5,7 @@ import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { useCart } from '@/contexts/CartContext';
 import { trpc } from '@/lib/trpc';
-import { formatPrice } from '@shared/types';
+import { formatPrice, isOutletOpen } from '@shared/types';
 import { Minus, Plus, Trash2, ArrowLeft, ShoppingBag, Tag } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
@@ -26,6 +26,15 @@ export default function Cart() {
 
   const [discountInput, setDiscountInput] = useState('');
   const [isApplyingDiscount, setIsApplyingDiscount] = useState(false);
+
+  // Check ordering hours based on selected outlet and order type
+  const selectedOutlet = state.orderType === 'instore' 
+    ? (state.instoreOutlet || 'palladium')
+    : state.orderType === 'pickup'
+      ? (state.pickupOutlet || 'tnagar')
+      : 'tnagar'; // Delivery defaults to T Nagar
+  const outletStatus = isOutletOpen(selectedOutlet, state.orderType);
+  const isOutsideOrderingHours = !outletStatus.available;
 
   const validateDiscount = trpc.discounts.validate.useQuery(
     { code: discountInput, subtotal: subtotal || 0 },
@@ -253,11 +262,17 @@ export default function Cart() {
                 </div>
               </div>
 
-              <Link href="/checkout">
-                <Button className="w-full mt-6 h-12 text-lg">
-                  Proceed to Checkout
-                </Button>
-              </Link>
+              {isOutsideOrderingHours ? (
+                <div className="mt-6 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+                  <p className="font-medium text-amber-800 text-center">{outletStatus.message}</p>
+                </div>
+              ) : (
+                <Link href="/checkout">
+                  <Button className="w-full mt-6 h-12 text-lg">
+                    Proceed to Checkout
+                  </Button>
+                </Link>
+              )}
 
               <p className="text-xs text-muted-foreground text-center mt-4">
                 5% GST will be added at checkout. Delivery charges may apply.

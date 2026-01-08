@@ -130,3 +130,12 @@
   - Fixed in 3 places: guest checkout, logged-in checkout, and addItemsToOrder
 - [x] Ensure add-ons display on order confirmation page (updated getOrderItems to include addons)
 - [x] Ensure add-ons display on KOT print (KOT already includes addons from input.items)
+
+## Business Hours Enforcement (Jan 8)
+
+- [x] Update business hours: Palladium 10AM-10PM, T Nagar 12PM-12AM
+- [x] Make ordering restriction outlet-specific
+- [x] Last order times: Palladium online 9:45PM, in-store 10PM; T Nagar both 11:45PM
+- [x] Added isOutletOpen() function for outlet-specific hour checks
+- [x] Updated Cart.tsx and Checkout.tsx to use outlet-specific hours
+- [x] All 16 unit tests passing

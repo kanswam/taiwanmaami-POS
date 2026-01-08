@@ -152,30 +152,88 @@ export function generateOrderNumber(): string {
 // Operating Hours Configuration
 export const OUTLET_HOURS = {
   palladium: {
+    id: 1,
     name: 'Palladium Mall',
     openHour: 10, // 10:00 AM
     openMinute: 0,
     closeHour: 22, // 10:00 PM
     closeMinute: 0,
-    lastOrderMinutesBefore: 15, // Last order 15 minutes before closing
+    lastOrderMinutesBefore: 0, // In-store orders till 10:00 PM
+    onlineLastOrderMinutesBefore: 15, // Online orders till 9:45 PM
   },
   tnagar: {
+    id: 2,
     name: 'T Nagar (Moutan)',
     openHour: 12, // 12:00 PM (noon)
     openMinute: 0,
     closeHour: 24, // 12:00 AM (midnight)
     closeMinute: 0,
-    lastOrderMinutesBefore: 15, // Last order 15 minutes before closing (11:45 PM)
+    lastOrderMinutesBefore: 15, // In-store orders till 11:45 PM
+    onlineLastOrderMinutesBefore: 15, // Online orders till 11:45 PM
   },
 } as const;
 
 // Global ordering hours (most restrictive for delivery which can go to either outlet)
 export const GLOBAL_ORDER_HOURS = {
-  openHour: 12, // 12:00 PM - latest opening time
+  openHour: 10, // 10:00 AM - earliest opening time (Palladium)
   openMinute: 0,
-  closeHour: 23, // 11:00 PM
-  closeMinute: 45, // 11:45 PM - earliest last order time
+  closeHour: 21, // 9:00 PM
+  closeMinute: 45, // 9:45 PM - earliest last order time (Palladium online)
 };
+
+// Check if a specific outlet is currently accepting orders
+export function isOutletOpen(
+  outlet: 'palladium' | 'tnagar',
+  orderType: 'instore' | 'delivery' | 'pickup' = 'pickup',
+  timezone: string = 'Asia/Kolkata'
+): { available: boolean; message: string; opensAt?: string; closesAt?: string } {
+  const now = new Date();
+  const istTime = new Date(now.toLocaleString('en-US', { timeZone: timezone }));
+  const currentHour = istTime.getHours();
+  const currentMinute = istTime.getMinutes();
+  const currentTimeInMinutes = currentHour * 60 + currentMinute;
+  
+  const hours = OUTLET_HOURS[outlet];
+  const openTimeInMinutes = hours.openHour * 60 + hours.openMinute;
+  
+  // For in-store, use lastOrderMinutesBefore; for online, use onlineLastOrderMinutesBefore
+  const lastOrderBuffer = orderType === 'instore' ? hours.lastOrderMinutesBefore : hours.onlineLastOrderMinutesBefore;
+  
+  // Handle midnight (24:00) as 1440 minutes
+  const closeTimeInMinutes = (hours.closeHour === 24 ? 24 * 60 : hours.closeHour * 60 + hours.closeMinute) - lastOrderBuffer;
+  
+  const formatTime = (hour: number, minute: number) => {
+    const h = hour === 24 ? 12 : hour > 12 ? hour - 12 : hour === 0 ? 12 : hour;
+    const ampm = hour >= 12 && hour < 24 ? 'PM' : 'AM';
+    return `${h}:${minute.toString().padStart(2, '0')} ${ampm}`;
+  };
+  
+  const opensAt = formatTime(hours.openHour, hours.openMinute);
+  const closesAt = formatTime(
+    Math.floor((hours.closeHour * 60 + hours.closeMinute - lastOrderBuffer) / 60) % 24,
+    (hours.closeHour * 60 + hours.closeMinute - lastOrderBuffer) % 60
+  );
+  
+  if (currentTimeInMinutes < openTimeInMinutes) {
+    return {
+      available: false,
+      message: `${hours.name} opens at ${opensAt}. Please try again later.`,
+      opensAt,
+      closesAt,
+    };
+  }
+  
+  if (currentTimeInMinutes >= closeTimeInMinutes) {
+    return {
+      available: false,
+      message: `${hours.name} is closed for ${orderType === 'instore' ? 'in-store' : 'online'} orders today. Last order was at ${closesAt}.`,
+      opensAt,
+      closesAt,
+    };
+  }
+  
+  return { available: true, message: '', opensAt, closesAt };
+}
 
 // Check if ordering is currently available
 export function isOrderingAvailable(timezone: string = 'Asia/Kolkata'): { available: boolean; message: string } {

@@ -10,7 +10,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useCart } from '@/contexts/CartContext';
 import { useAuth } from '@/_core/hooks/useAuth';
 import { trpc } from '@/lib/trpc';
-import { formatPrice, CHENNAI_AREAS, isOrderingAvailable } from '@shared/types';
+import { formatPrice, CHENNAI_AREAS, isOrderingAvailable, isOutletOpen, OUTLET_HOURS } from '@shared/types';
 import { ArrowLeft, MapPin, Clock, CreditCard, Banknote, Loader2, Gift, User, Stamp } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
@@ -58,9 +58,16 @@ export default function Checkout() {
   const createKotForInstore = trpc.orders.createKotForInstore.useMutation();
   const addItemsToOrder = trpc.orders.addItemsToOrder.useMutation();
 
-  // Check ordering hours (skip for in-store orders)
-  const orderingStatus = isOrderingAvailable();
-  const isOutsideOrderingHours = state.orderType !== 'instore' && !orderingStatus.available;
+  // Determine which outlet is selected based on order type
+  const selectedOutlet = state.orderType === 'instore' 
+    ? (state.instoreOutlet || 'palladium')
+    : state.orderType === 'pickup'
+      ? (state.pickupOutlet || 'tnagar')
+      : 'tnagar'; // Delivery defaults to T Nagar
+  
+  // Check ordering hours based on outlet and order type
+  const outletStatus = isOutletOpen(selectedOutlet, state.orderType);
+  const isOutsideOrderingHours = !outletStatus.available;
 
   // Load Razorpay script
   useEffect(() => {
@@ -402,7 +409,7 @@ export default function Checkout() {
                 <Clock className="w-5 h-5 text-amber-600 flex-shrink-0" />
                 <div>
                   <p className="font-medium text-amber-800">Online Ordering Closed</p>
-                  <p className="text-sm text-amber-700">{orderingStatus.message}</p>
+                  <p className="text-sm text-amber-700">{outletStatus.message}</p>
                 </div>
               </div>
             </Card>
@@ -676,7 +683,7 @@ export default function Checkout() {
               <Clock className="w-5 h-5 text-amber-600 flex-shrink-0" />
               <div>
                 <p className="font-medium text-amber-800">Online Ordering Closed</p>
-                <p className="text-sm text-amber-700">{orderingStatus.message}</p>
+                <p className="text-sm text-amber-700">{outletStatus.message}</p>
               </div>
             </div>
           </Card>
