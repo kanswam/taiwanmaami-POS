@@ -20,6 +20,7 @@ import {
   X, Calendar, Hash, Camera, Upload, Image, ToggleLeft, Trash2
 } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
+import { AddItemsDialog } from '@/components/AddItemsDialog';
 
 // Status flow for delivery orders
 const statusFlow = {
@@ -183,6 +184,13 @@ export default function StaffOrders() {
   
   // Add items dialog
   const [addItemsDialog, setAddItemsDialog] = useState<{ open: boolean; order: any }>({ open: false, order: null });
+  const { data: allProducts } = trpc.menu.getProducts.useQuery();
+  const addItemsToOrder = trpc.orders.addItemsToOrder.useMutation({
+    onSuccess: () => {
+      toast.success('Items added to order');
+      utils.orders.getRecent.invalidate();
+    }
+  });
   
   // Cancel item dialog
   const [cancelItemDialog, setCancelItemDialog] = useState<{ open: boolean; item: any; order: any; reason: string }>({
@@ -970,58 +978,19 @@ export default function StaffOrders() {
         </DialogContent>
       </Dialog>
 
-      {/* Add Items Dialog */}
-      <Dialog open={addItemsDialog.open} onOpenChange={(open) => {
-        if (!open) {
-          setAddItemsDialog({ open: false, order: null });
-        }
-      }}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Add Items to Order</DialogTitle>
-            <p className="text-sm text-muted-foreground">
-              Order #{addItemsDialog.order?.orderNumber} - Table {addItemsDialog.order?.tableNumber}
-            </p>
-          </DialogHeader>
-          <div className="py-4">
-            <p className="text-sm text-muted-foreground mb-4">
-              To add items to this customer's order, scan the table QR code or use the link below:
-            </p>
-            <div className="bg-muted p-3 rounded-lg">
-              <p className="text-xs text-muted-foreground mb-1">Direct link:</p>
-              <code className="text-xs break-all">
-                {window.location.origin}/menu?table={addItemsDialog.order?.tableNumber}&outlet={addItemsDialog.order?.outletId === 1 ? 'palladium' : 'tnagar'}
-              </code>
-            </div>
-            <div className="mt-4 flex gap-2">
-              <Button 
-                className="flex-1"
-                onClick={() => {
-                  const url = `${window.location.origin}/menu?table=${addItemsDialog.order?.tableNumber}&outlet=${addItemsDialog.order?.outletId === 1 ? 'palladium' : 'tnagar'}`;
-                  window.open(url, '_blank');
-                }}
-              >
-                Open Menu
-              </Button>
-              <Button 
-                variant="outline"
-                onClick={() => {
-                  const url = `${window.location.origin}/menu?table=${addItemsDialog.order?.tableNumber}&outlet=${addItemsDialog.order?.outletId === 1 ? 'palladium' : 'tnagar'}`;
-                  navigator.clipboard.writeText(url);
-                  toast.success('Link copied to clipboard');
-                }}
-              >
-                Copy Link
-              </Button>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setAddItemsDialog({ open: false, order: null })}>
-              Close
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {/* Add Items Dialog - Using new component */}
+      <AddItemsDialog
+        open={addItemsDialog.open}
+        order={addItemsDialog.order}
+        products={allProducts || []}
+        onClose={() => setAddItemsDialog({ open: false, order: null })}
+        onAddItem={(orderId, items) => new Promise((resolve) => {
+          addItemsToOrder.mutate({ orderId, items }, {
+            onSuccess: () => resolve(),
+            onError: () => resolve()
+          });
+        })}
+      />
 
       {/* Cancel Item Dialog */}
       <Dialog open={cancelItemDialog.open} onOpenChange={(open) => setCancelItemDialog({ ...cancelItemDialog, open })}>

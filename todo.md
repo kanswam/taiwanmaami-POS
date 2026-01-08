@@ -158,3 +158,11 @@
 - [x] Add refund/credit tracking columns to orders table
 - [ ] Show refund options (store credit or refund) for cancelled items in UI
 - [ ] Track which items were refunded and the refund amount
+
+## Bug Fixes (Jan 8 - Evening) - CRITICAL
+
+- [x] Add Items button not displaying in Staff Orders page
+  - Fixed: Created new AddItemsDialog component with product search
+- [x] Add Items dialog missing product customization
+  - Fixed: Integrated ProductCustomizationModal for full variant selection
+  - Staff can now select eggs, size, sugar level, ice level, boba, etc. before adding items
