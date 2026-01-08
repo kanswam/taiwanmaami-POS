@@ -904,6 +904,27 @@ export const appRouter = router({
           })
           .where(eq(orders.id, order.id));
         
+        // Create supplementary KOT for cancelled item to notify kitchen
+        const cancellationKotData = {
+          orderId: order.orderNumber,
+          orderType: 'INSTORE',
+          customerName: order.customerName || 'Guest',
+          tableNumber: order.tableNumber || '',
+          isCancellation: true,
+          cancelledItemName: item.productName,
+          cancelledItemQuantity: item.quantity,
+          cancellationReason: input.reason || 'Cancelled by staff',
+          createdAt: new Date().toISOString(),
+        };
+        
+        await dbInstance.insert(kotQueue).values({
+          orderId: order.id.toString(),
+          outletId: order.outletId || 1,
+          orderNumber: order.orderNumber,
+          kotData: cancellationKotData,
+          isPrinted: false,
+        });
+        
         return { 
           success: true, 
           message: 'Item cancelled successfully',

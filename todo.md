@@ -150,3 +150,11 @@
 - [x] Recalculate order totals when items are cancelled
 - [x] Show cancellation reason on cancelled items
 - [ ] Update Admin interface with cancel button (dine-in only)
+
+## Order Modification Next Steps (Jan 8)
+
+- [x] Add cancel button to Admin Orders interface (dine-in only)
+- [x] Create supplementary KOT for cancelled items to notify kitchen
+- [x] Add refund/credit tracking columns to orders table
+- [ ] Show refund options (store credit or refund) for cancelled items in UI
+- [ ] Track which items were refunded and the refund amount

@@ -1632,6 +1632,11 @@ function OrdersTab() {
   const [addItemsOrderId, setAddItemsOrderId] = useState<number | null>(null);
   const [addItemsOrderNumber, setAddItemsOrderNumber] = useState<string>('');
   
+  // Cancel Item state
+  const [cancelItemDialog, setCancelItemDialog] = useState<{ open: boolean; item: any; order: any; reason: string }>({
+    open: false, item: null, order: null, reason: ''
+  });
+  
   const updateStatus = trpc.orders.updateStatus.useMutation({
     onSuccess: () => {
       toast.success('Order status updated');
@@ -1662,6 +1667,17 @@ function OrdersTab() {
       refetch();
     },
     onError: (err) => toast.error(err.message),
+  });
+
+  const cancelOrderItem = trpc.orders.cancelOrderItem.useMutation({
+    onSuccess: () => {
+      toast.success('Item cancelled');
+      setCancelItemDialog({ open: false, item: null, order: null, reason: '' });
+      refetch();
+    },
+    onError: (err) => {
+      toast.error(err.message || 'Failed to cancel item');
+    },
   });
 
   const applyDiscount = trpc.orders.applyManualDiscount.useMutation({
@@ -1960,10 +1976,15 @@ function OrdersTab() {
               <div>
                 <h4 className="font-semibold mb-2">Order Items</h4>
                 <div className="space-y-2">
-                  {orderDetails.items?.map((item: any, idx: number) => (
-                    <div key={idx} className="flex justify-between items-start p-3 bg-secondary/50 rounded-lg">
+                  {orderDetails.items?.map((item: any, idx: number) => {
+                    const isCancelled = item.status === 'cancelled';
+                    return (
+                    <div key={idx} className={`flex justify-between items-start p-3 bg-secondary/50 rounded-lg ${isCancelled ? 'opacity-60' : ''}`}>
                       <div className="flex-1">
-                        <p className="font-medium">{item.product?.name || item.productName || 'Unknown Product'}</p>
+                        <p className={`font-medium ${isCancelled ? 'line-through text-red-500' : ''}`}>{item.product?.name || item.productName || 'Unknown Product'}</p>
+                        {isCancelled && (
+                          <span className="text-xs bg-red-100 text-red-600 px-1.5 py-0.5 rounded">Cancelled</span>
+                        )}
                         <p className="text-sm text-muted-foreground">
                           {item.size && `Size: ${item.size}`}
                           {item.bobaType && ` • Boba: ${item.bobaType}`}
@@ -1977,12 +1998,26 @@ function OrdersTab() {
                           <p className="text-sm text-amber-600">Note: {item.specialInstructions}</p>
                         )}
                       </div>
-                      <div className="text-right">
-                        <p className="font-medium">{formatPrice(item.totalPrice || item.unitPrice * item.quantity)}</p>
-                        <p className="text-sm text-muted-foreground">x{item.quantity}</p>
+                      <div className="flex items-center gap-2">
+                        {!isCancelled && orderDetails.orderType === 'instore' && orderDetails.orderStatus !== 'completed' && orderDetails.orderStatus !== 'cancelled' && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-6 w-6 text-red-500 hover:text-red-700 hover:bg-red-50"
+                            title="Cancel Item"
+                            onClick={() => setCancelItemDialog({ open: true, item, order: orderDetails, reason: '' })}
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </Button>
+                        )}
+                        <div className="text-right">
+                          <p className={`font-medium ${isCancelled ? 'line-through' : ''}`}>{formatPrice(item.totalPrice || item.unitPrice * item.quantity)}</p>
+                          <p className="text-sm text-muted-foreground">x{item.quantity}</p>
+                        </div>
                       </div>
                     </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
 
@@ -2085,6 +2120,50 @@ function OrdersTab() {
               onCancel={() => setAddItemsDialogOpen(false)}
             />
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Cancel Item Dialog */}
+      <Dialog open={cancelItemDialog.open} onOpenChange={(open) => setCancelItemDialog({ ...cancelItemDialog, open })}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Cancel Item</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <p className="text-sm font-medium">Item: {cancelItemDialog.item?.productName}</p>
+              <p className="text-sm text-muted-foreground">Quantity: {cancelItemDialog.item?.quantity}</p>
+              <p className="text-sm text-muted-foreground">Price: {formatPrice(cancelItemDialog.item?.lineTotal || 0)}</p>
+            </div>
+            <div>
+              <label className="text-sm font-medium">Reason (optional)</label>
+              <Textarea
+                placeholder="Why do you want to cancel this item?"
+                value={cancelItemDialog.reason}
+                onChange={(e) => setCancelItemDialog({ ...cancelItemDialog, reason: e.target.value })}
+                rows={3}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCancelItemDialog({ open: false, item: null, order: null, reason: '' })}>
+              Keep Item
+            </Button>
+            <Button 
+              variant="destructive"
+              onClick={() => {
+                if (cancelItemDialog.item) {
+                  cancelOrderItem.mutate({
+                    orderItemId: cancelItemDialog.item.id,
+                    reason: cancelItemDialog.reason,
+                  });
+                }
+              }}
+              disabled={cancelOrderItem.isPending}
+            >
+              {cancelOrderItem.isPending ? 'Cancelling...' : 'Cancel Item'}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
