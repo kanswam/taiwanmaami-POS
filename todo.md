@@ -166,3 +166,11 @@
 - [x] Add Items dialog missing product customization
   - Fixed: Integrated ProductCustomizationModal for full variant selection
   - Staff can now select eggs, size, sugar level, ice level, boba, etc. before adding items
+
+## Permission Fixes (Jan 8 - Evening)
+
+- [x] Fix order modification permissions
+  - Changed cancelOrderItem from protectedProcedure to staffProcedure
+  - Removed cancel button from customer-facing OrderConfirmation page
+  - Staff and Admin can still cancel items in Staff Orders and Admin Orders tabs
+  - Customers can only add items to active dine-in orders, not cancel or modify

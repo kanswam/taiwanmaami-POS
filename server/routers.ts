@@ -834,7 +834,7 @@ export const appRouter = router({
       }),
 
     // Cancel an order item (for dine-in orders only)
-    cancelOrderItem: protectedProcedure
+    cancelOrderItem: staffProcedure
       .input(z.object({
         orderItemId: z.number(),
         reason: z.string().optional(),
