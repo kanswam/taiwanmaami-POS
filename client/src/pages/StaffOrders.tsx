@@ -17,7 +17,7 @@ import {
   Printer, RefreshCw, MapPin, Phone, User, Bell,
   Filter, Store, UtensilsCrossed, ShoppingBag,
   MessageSquare, AlertTriangle, BarChart3, Volume2, VolumeX,
-  X, Calendar, Hash, Camera, Upload, Image, ToggleLeft
+  X, Calendar, Hash, Camera, Upload, Image, ToggleLeft, Trash2
 } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 
@@ -184,6 +184,11 @@ export default function StaffOrders() {
   // Add items dialog
   const [addItemsDialog, setAddItemsDialog] = useState<{ open: boolean; order: any }>({ open: false, order: null });
   
+  // Cancel item dialog
+  const [cancelItemDialog, setCancelItemDialog] = useState<{ open: boolean; item: any; order: any; reason: string }>({
+    open: false, item: null, order: null, reason: ''
+  });
+  
   const utils = trpc.useUtils();
   
   // Fetch orders with filters and auto-refresh every 10 seconds
@@ -215,6 +220,17 @@ export default function StaffOrders() {
     },
     onError: (err) => {
       toast.error(err.message || 'Failed to save note');
+    },
+  });
+
+  const cancelOrderItem = trpc.orders.cancelOrderItem.useMutation({
+    onSuccess: () => {
+      toast.success('Item cancelled');
+      utils.orders.getRecent.invalidate();
+      setCancelItemDialog({ open: false, item: null, order: null, reason: '' });
+    },
+    onError: (err) => {
+      toast.error(err.message || 'Failed to cancel item');
     },
   });
 
@@ -473,23 +489,49 @@ export default function StaffOrders() {
 
         {/* Order Items */}
         <div className="space-y-2 mb-4">
-          {order.items?.map((item: any, idx: number) => (
-            <div key={idx} className="flex justify-between text-sm border-b border-dashed pb-1">
-              <div>
-                <span className="font-medium">{item.quantity}x {item.productName}</span>
+          {order.items?.map((item: any, idx: number) => {
+            const isCancelled = item.status === 'cancelled';
+            return (
+            <div key={idx} className={`flex justify-between text-sm border-b border-dashed pb-1 ${isCancelled ? 'opacity-60' : ''}`}>
+              <div className="flex-1">
+                <span className={`font-medium ${isCancelled ? 'line-through text-red-500' : ''}`}>
+                  {item.quantity}x {item.productName}
+                </span>
+                {isCancelled && (
+                  <span className="ml-2 text-xs bg-red-100 text-red-600 px-1.5 py-0.5 rounded">Cancelled</span>
+                )}
                 {(item.size || item.sugarLevel || item.iceLevel) && (
-                  <div className="text-xs text-muted-foreground">
+                  <div className={`text-xs text-muted-foreground ${isCancelled ? 'line-through' : ''}`}>
                     {[item.size, item.sugarLevel && `Sugar: ${item.sugarLevel}`, item.iceLevel && `Ice: ${item.iceLevel}`]
                       .filter(Boolean).join(' • ')}
                   </div>
                 )}
                 {item.specialInstructions && (
-                  <div className="text-xs text-orange-600">📝 {item.specialInstructions}</div>
+                  <div className={`text-xs text-orange-600 ${isCancelled ? 'line-through' : ''}`}>📝 {item.specialInstructions}</div>
+                )}
+                {item.cancellationReason && (
+                  <div className="text-xs text-red-600">Reason: {item.cancellationReason}</div>
                 )}
               </div>
-              <span className="text-muted-foreground">{formatPrice(item.lineTotal || item.unitPrice * item.quantity)}</span>
+              <div className="flex items-center gap-2">
+                {!isCancelled && order.orderStatus !== 'completed' && order.orderStatus !== 'cancelled' && order.orderType === 'instore' && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6 text-red-500 hover:text-red-700 hover:bg-red-50"
+                    title="Cancel Item"
+                    onClick={() => setCancelItemDialog({ open: true, item, order, reason: '' })}
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </Button>
+                )}
+                <span className={`text-muted-foreground ${isCancelled ? 'line-through' : ''}`}>
+                  {formatPrice(item.lineTotal || item.unitPrice * item.quantity)}
+                </span>
+              </div>
             </div>
-          ))}
+            );
+          })}
         </div>
 
         {/* Special Instructions */}
@@ -976,6 +1018,50 @@ export default function StaffOrders() {
           <DialogFooter>
             <Button variant="outline" onClick={() => setAddItemsDialog({ open: false, order: null })}>
               Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Cancel Item Dialog */}
+      <Dialog open={cancelItemDialog.open} onOpenChange={(open) => setCancelItemDialog({ ...cancelItemDialog, open })}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Cancel Item</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <p className="text-sm font-medium">Item: {cancelItemDialog.item?.productName}</p>
+              <p className="text-sm text-muted-foreground">Quantity: {cancelItemDialog.item?.quantity}</p>
+              <p className="text-sm text-muted-foreground">Price: {formatPrice(cancelItemDialog.item?.lineTotal || 0)}</p>
+            </div>
+            <div>
+              <label className="text-sm font-medium">Reason (optional)</label>
+              <Textarea
+                placeholder="Why is this item being cancelled?"
+                value={cancelItemDialog.reason}
+                onChange={(e) => setCancelItemDialog({ ...cancelItemDialog, reason: e.target.value })}
+                rows={3}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCancelItemDialog({ open: false, item: null, order: null, reason: '' })}>
+              Keep Item
+            </Button>
+            <Button 
+              variant="destructive"
+              onClick={() => {
+                if (cancelItemDialog.item) {
+                  cancelOrderItem.mutate({
+                    orderItemId: cancelItemDialog.item.id,
+                    reason: cancelItemDialog.reason,
+                  });
+                }
+              }}
+              disabled={cancelOrderItem.isPending}
+            >
+              {cancelOrderItem.isPending ? 'Cancelling...' : 'Cancel Item'}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -1,20 +1,35 @@
 import React from 'react';
 import { useParams, Link } from 'wouter';
+import { useState } from 'react';
 import { Header } from '@/components/Header';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Textarea } from '@/components/ui/textarea';
 import { trpc } from '@/lib/trpc';
 import { formatPrice } from '@shared/types';
-import { CheckCircle, Clock, MapPin, Phone, ArrowRight, RefreshCw, Printer, UtensilsCrossed } from 'lucide-react';
+import { CheckCircle, Clock, MapPin, Phone, ArrowRight, RefreshCw, Printer, UtensilsCrossed, Trash2 } from 'lucide-react';
 import { OrderTracker } from '@/components/OrderTracker';
 
 export default function OrderConfirmation() {
   const { orderId } = useParams<{ orderId: string }>();
+  const [cancelItemDialog, setCancelItemDialog] = useState<{ open: boolean; item: any; reason: string }>({
+    open: false, item: null, reason: ''
+  });
+  
   const { data, isLoading } = trpc.orders.getByNumber.useQuery(
     { orderNumber: orderId || '' },
     { enabled: !!orderId }
   );
   const order = data?.order;
+  const utils = trpc.useUtils();
+  
+  const cancelOrderItem = trpc.orders.cancelOrderItem.useMutation({
+    onSuccess: () => {
+      setCancelItemDialog({ open: false, item: null, reason: '' });
+      utils.orders.getByNumber.invalidate();
+    },
+  });
   
   // Fetch company details from site settings
   const { data: siteSettings } = trpc.admin.getSiteSettings.useQuery();
@@ -143,14 +158,34 @@ export default function OrderConfirmation() {
             {/* Order Items */}
             <div className="space-y-3 mb-4">
               <p className="font-medium">Order Items</p>
-              {data?.items?.map((item: any, index: number) => (
-                <div key={index} className="text-sm">
-                  <div className="flex justify-between">
-                    <span>
-                      {item.quantity}x {item.productName}
-                      {item.size && ` (${item.size})`}
-                    </span>
-                    <span>{formatPrice(item.lineTotal)}</span>
+              {data?.items?.map((item: any, index: number) => {
+                const isCancelled = item.status === 'cancelled';
+                return (
+                <div key={index} className={`text-sm ${isCancelled ? 'opacity-60' : ''}`}>
+                  <div className="flex justify-between items-start">
+                    <div className="flex-1">
+                      <span className={isCancelled ? 'line-through text-red-500' : ''}>
+                        {item.quantity}x {item.productName}
+                        {item.size && ` (${item.size})`}
+                      </span>
+                      {isCancelled && (
+                        <span className="ml-2 text-xs bg-red-100 text-red-600 px-1.5 py-0.5 rounded">Cancelled</span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {!isCancelled && order?.orderType === 'instore' && order?.orderStatus !== 'completed' && order?.orderStatus !== 'cancelled' && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-6 w-6 text-red-500 hover:text-red-700 hover:bg-red-50"
+                          title="Cancel Item"
+                          onClick={() => setCancelItemDialog({ open: true, item, reason: '' })}
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </Button>
+                      )}
+                      <span className={isCancelled ? 'line-through' : ''}>{formatPrice(item.lineTotal)}</span>
+                    </div>
                   </div>
                   {/* Display addons if any */}
                   {item.addons && item.addons.length > 0 && (
@@ -161,7 +196,8 @@ export default function OrderConfirmation() {
                     </div>
                   )}
                 </div>
-              ))}
+                );
+              })}
             </div>
 
             <hr className="my-4" />
@@ -235,6 +271,50 @@ export default function OrderConfirmation() {
           </div>
         </div>
       </div>
+
+      {/* Cancel Item Dialog */}
+      <Dialog open={cancelItemDialog.open} onOpenChange={(open) => setCancelItemDialog({ ...cancelItemDialog, open })}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Cancel Item</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <p className="text-sm font-medium">Item: {cancelItemDialog.item?.productName}</p>
+              <p className="text-sm text-muted-foreground">Quantity: {cancelItemDialog.item?.quantity}</p>
+              <p className="text-sm text-muted-foreground">Price: {formatPrice(cancelItemDialog.item?.lineTotal || 0)}</p>
+            </div>
+            <div>
+              <label className="text-sm font-medium">Reason (optional)</label>
+              <Textarea
+                placeholder="Why do you want to cancel this item?"
+                value={cancelItemDialog.reason}
+                onChange={(e) => setCancelItemDialog({ ...cancelItemDialog, reason: e.target.value })}
+                rows={3}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCancelItemDialog({ open: false, item: null, reason: '' })}>
+              Keep Item
+            </Button>
+            <Button 
+              variant="destructive"
+              onClick={() => {
+                if (cancelItemDialog.item) {
+                  cancelOrderItem.mutate({
+                    orderItemId: cancelItemDialog.item.id,
+                    reason: cancelItemDialog.reason,
+                  });
+                }
+              }}
+              disabled={cancelOrderItem.isPending}
+            >
+              {cancelOrderItem.isPending ? 'Cancelling...' : 'Cancel Item'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

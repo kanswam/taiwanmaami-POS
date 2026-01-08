@@ -139,3 +139,14 @@
 - [x] Added isOutletOpen() function for outlet-specific hour checks
 - [x] Updated Cart.tsx and Checkout.tsx to use outlet-specific hours
 - [x] All 16 unit tests passing
+
+## Order Modification Feature (Jan 8)
+
+- [x] Add status, cancelledAt, cancelledBy, cancellationReason columns to order_items table
+- [x] Create cancelOrderItem backend procedure with dine-in validation
+- [x] Update Staff Orders interface with cancel button and dialog (dine-in only)
+- [x] Add customer-side cancel for dine-in orders in OrderConfirmation page
+- [x] Display cancelled items with strikethrough and "Cancelled" badge
+- [x] Recalculate order totals when items are cancelled
+- [x] Show cancellation reason on cancelled items
+- [ ] Update Admin interface with cancel button (dine-in only)

@@ -239,6 +239,11 @@ export const orderItems = mysqlTable("order_items", {
   addonsTotal: int("addonsTotal").default(0).notNull(),
   lineTotal: int("lineTotal").notNull(),
   specialInstructions: text("specialInstructions"),
+  // Item status for cancellation/replacement tracking
+  status: mysqlEnum("status", ["active", "cancelled", "replaced"]).default("active"),
+  cancelledAt: timestamp("cancelledAt"),
+  cancelledBy: int("cancelledBy"),
+  cancellationReason: text("cancellationReason"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 

@@ -833,6 +833,84 @@ export const appRouter = router({
         };
       }),
 
+    // Cancel an order item (for dine-in orders only)
+    cancelOrderItem: protectedProcedure
+      .input(z.object({
+        orderItemId: z.number(),
+        reason: z.string().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const dbInstance = await getDb();
+        if (!dbInstance) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
+        
+        // Get the order item
+        const [item] = await dbInstance
+          .select()
+          .from(orderItemsTable)
+          .where(eq(orderItemsTable.id, input.orderItemId));
+        
+        if (!item) {
+          throw new TRPCError({ code: 'NOT_FOUND', message: 'Order item not found' });
+        }
+        
+        // Get the order to check if it's dine-in and not completed
+        const [order] = await dbInstance
+          .select()
+          .from(orders)
+          .where(eq(orders.id, item.orderId));
+        
+        if (!order) {
+          throw new TRPCError({ code: 'NOT_FOUND', message: 'Order not found' });
+        }
+        
+        if (order.orderType !== 'instore') {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: 'Can only cancel items from dine-in orders' });
+        }
+        
+        if (order.orderStatus === 'completed' || order.orderStatus === 'cancelled') {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: 'Cannot modify completed or cancelled orders' });
+        }
+        
+        // Update the item status to cancelled
+        await dbInstance
+          .update(orderItemsTable)
+          .set({
+            status: 'cancelled',
+            cancelledAt: new Date(),
+            cancelledBy: ctx.user.id,
+            cancellationReason: input.reason || 'Cancelled by staff',
+          })
+          .where(eq(orderItemsTable.id, input.orderItemId));
+        
+        // Recalculate order totals (excluding cancelled items)
+        const allItems = await dbInstance
+          .select()
+          .from(orderItemsTable)
+          .where(eq(orderItemsTable.orderId, order.id));
+        
+        const activeItems = allItems.filter(i => i.status !== 'cancelled');
+        const newSubtotal = activeItems.reduce((sum, i) => sum + i.lineTotal, 0);
+        const newStateGst = Math.round(newSubtotal * 0.025);
+        const newCentralGst = Math.round(newSubtotal * 0.025);
+        const newTotalAmount = newSubtotal + newStateGst + newCentralGst;
+        
+        await dbInstance
+          .update(orders)
+          .set({
+            subtotal: newSubtotal,
+            stateGst: newStateGst,
+            centralGst: newCentralGst,
+            totalAmount: newTotalAmount,
+          })
+          .where(eq(orders.id, order.id));
+        
+        return { 
+          success: true, 
+          message: 'Item cancelled successfully',
+          newTotalAmount,
+        };
+      }),
+
     // Get active order for a table (for customer add-to-order flow)
     getActiveOrderForTable: publicProcedure
       .input(z.object({ tableNumber: z.string() }))
