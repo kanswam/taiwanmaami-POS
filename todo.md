@@ -183,3 +183,13 @@
   - Lock is set immediately on form submission and only released on error
   - Applied to both handleSubmit (logged-in) and handleGuestSubmit (guest checkout)
   - Prevents race conditions and duplicate order creation
+
+## Order Recovery (Jan 9)
+
+- [x] Restore order 00029 (cash payment, instore, status: preparing)
+  - Restored with paymentStatus: completed, paymentMethod: cash
+  - Total: ₹2105
+- [x] Create order 00030 as cancelled duplicate
+  - Created with status: cancelled, paymentStatus: completed, paymentMethod: cash
+  - staffNotes: "Duplicate order - System error during checkout (Jan 9)"
+  - Total: ₹2105
