@@ -236,3 +236,22 @@
   - "Collect Payment", "Add Items", "Discount" buttons are hidden
   - Prevents mistaken modifications to closed orders
   - Applied to both Admin and Staff Orders pages
+
+
+## Features to Implement (Jan 9 - Evening)
+
+- [ ] Add order modification audit log
+  - Create orderAuditLog table to track all modifications
+  - Log who made changes, when, and what changed
+  - Track payment collection, item additions, cancellations
+  - Use for compliance and dispute resolution
+- [ ] Implement order lock mechanism
+  - Automatically lock orders 24 hours after completion
+  - Prevent any modifications to locked orders
+  - Show "Locked" status on locked orders
+  - Admin can manually unlock if needed
+- [ ] Create staff action history widget
+  - Display recent actions on admin dashboard
+  - Show payments collected, items added, cancellations
+  - Include staff member name, timestamp, order number
+  - Track accountability and staff performance

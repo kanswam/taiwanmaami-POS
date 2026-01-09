@@ -607,3 +607,37 @@ export type InsertComplaint = typeof complaints.$inferInsert;
 export type AdminPin = typeof adminPins.$inferSelect;
 export type DiscountAuthorization = typeof discountAuthorizations.$inferSelect;
 export type RefundRequest = typeof refundRequests.$inferSelect;
+
+// Order Audit Log - Track all modifications to orders for compliance and dispute resolution
+export const orderAuditLog = mysqlTable("order_audit_log", {
+  id: int("id").autoincrement().primaryKey(),
+  orderId: int("orderId").notNull(),
+  orderNumber: varchar("orderNumber", { length: 20 }).notNull(),
+  userId: int("userId"), // Staff/admin who made the change
+  userName: varchar("userName", { length: 200 }), // Name of staff/admin
+  userRole: mysqlEnum("userRole", ["customer", "staff", "admin"]).notNull(),
+  actionType: mysqlEnum("actionType", [
+    "payment_collected",
+    "item_added",
+    "item_cancelled",
+    "discount_applied",
+    "order_cancelled",
+    "status_changed",
+    "manual_discount_applied",
+    "refund_issued",
+    "order_locked",
+    "order_unlocked"
+  ]).notNull(),
+  description: text("description"), // Human-readable description of what changed
+  oldValue: text("oldValue"), // Previous value (JSON stringified if needed)
+  newValue: text("newValue"), // New value (JSON stringified if needed)
+  itemId: int("itemId"), // For item-specific actions
+  itemName: varchar("itemName", { length: 200 }), // Product name for item actions
+  itemQuantity: int("itemQuantity"), // Quantity of item affected
+  amount: int("amount"), // Amount affected (in paise) for payment/discount actions
+  ipAddress: varchar("ipAddress", { length: 45 }), // IP address of the user making change
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type OrderAuditLog = typeof orderAuditLog.$inferSelect;
+export type InsertOrderAuditLog = typeof orderAuditLog.$inferInsert;

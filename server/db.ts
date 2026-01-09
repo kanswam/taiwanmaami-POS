@@ -1,10 +1,10 @@
-import { eq, and, desc, asc, sql } from "drizzle-orm";
+import { eq, and, desc, asc, sql, inArray } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import { 
   InsertUser, users, categories, subcategories, products, addons, 
   orders, orderItems, orderItemAddons, payments, discounts, 
   addresses, loyaltyTransactions, storeLocations, deliveryAreas,
-  productAddons, customizationOptions
+  productAddons, customizationOptions, orderAuditLog
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -312,4 +312,87 @@ export async function getCustomizationOptions() {
   const db = await getDb();
   if (!db) return [];
   return db.select().from(customizationOptions).where(eq(customizationOptions.isActive, true)).orderBy(asc(customizationOptions.displayOrder));
+}
+
+
+// Order Audit Log functions
+export async function logOrderAudit(params: {
+  orderId: number;
+  orderNumber: string;
+  userId?: number;
+  userName?: string;
+  userRole: 'customer' | 'staff' | 'admin';
+  actionType: 'payment_collected' | 'item_added' | 'item_cancelled' | 'discount_applied' | 'order_cancelled' | 'status_changed' | 'manual_discount_applied' | 'refund_issued' | 'order_locked' | 'order_unlocked';
+  description: string;
+  oldValue?: string;
+  newValue?: string;
+  itemId?: number;
+  itemName?: string;
+  itemQuantity?: number;
+  amount?: number;
+  ipAddress?: string;
+}) {
+  const db = await getDb();
+  if (!db) return;
+
+  try {
+    await db.insert(orderAuditLog).values({
+      orderId: params.orderId,
+      orderNumber: params.orderNumber,
+      userId: params.userId,
+      userName: params.userName,
+      userRole: params.userRole,
+      actionType: params.actionType,
+      description: params.description,
+      oldValue: params.oldValue,
+      newValue: params.newValue,
+      itemId: params.itemId,
+      itemName: params.itemName,
+      itemQuantity: params.itemQuantity,
+      amount: params.amount,
+      ipAddress: params.ipAddress,
+    });
+  } catch (error) {
+    console.error('[Audit Log] Failed to log order audit:', error);
+  }
+}
+
+// Get order audit history
+export async function getOrderAuditHistory(orderId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  return db.select().from(orderAuditLog)
+    .where(eq(orderAuditLog.orderId, orderId))
+    .orderBy(desc(orderAuditLog.createdAt));
+}
+
+// Get recent staff actions for dashboard
+export async function getRecentStaffActions(limit: number = 20) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  return db.select().from(orderAuditLog)
+    .where(inArray(orderAuditLog.actionType, ['payment_collected', 'item_added', 'item_cancelled', 'order_cancelled']))
+    .orderBy(desc(orderAuditLog.createdAt))
+    .limit(limit);
+}
+
+// Check if order is locked (24 hours after completion)
+export async function isOrderLocked(orderId: number): Promise<boolean> {
+  const db = await getDb();
+  if (!db) return false;
+
+  const order = await db.select().from(orders).where(eq(orders.id, orderId)).limit(1);
+  if (!order || order.length === 0) return false;
+
+  const orderData = order[0];
+  if (orderData.orderStatus !== 'completed') return false;
+
+  // Check if 24 hours have passed since completion
+  const completedTime = new Date(orderData.updatedAt).getTime();
+  const now = new Date().getTime();
+  const hoursElapsed = (now - completedTime) / (1000 * 60 * 60);
+
+  return hoursElapsed >= 24;
 }
