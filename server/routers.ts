@@ -4605,9 +4605,87 @@ export const appRouter = router({
       const [result] = await dbInstance.select({ count: sql<number>`COUNT(*)` }).from(refundRequests).where(eq(refundRequests.status, 'pending'));
       return Number(result?.count || 0);
     }),
+
+    // End-of-day reconciliation report
+    getEndOfDayReport: adminProcedure
+      .input(z.object({
+        date: z.string().optional(),
+      }).optional())
+      .query(async ({ input }) => {
+        const dbInstance = await getDb();
+        if (!dbInstance) return null;
+
+        const reportDate = input?.date ? new Date(input.date) : new Date();
+        const startOfDay = new Date(reportDate.getFullYear(), reportDate.getMonth(), reportDate.getDate(), 0, 0, 0);
+        const endOfDay = new Date(reportDate.getFullYear(), reportDate.getMonth(), reportDate.getDate(), 23, 59, 59);
+
+        const completedOrders = await dbInstance
+          .select()
+          .from(orders)
+          .where(
+            and(
+              eq(orders.orderStatus, 'completed'),
+              sql`${orders.createdAt} >= ${startOfDay.toISOString()}`,
+              sql`${orders.createdAt} <= ${endOfDay.toISOString()}`
+            )
+          )
+          .orderBy(desc(orders.createdAt));
+
+        let totalSubtotal = 0;
+        let totalGst = 0;
+        let totalCollected = 0;
+        let cashOrders = 0;
+        let onlineOrders = 0;
+        let discrepancies = [];
+
+        for (const order of completedOrders) {
+          totalSubtotal += order.subtotal || 0;
+          totalGst += (order.stateGst || 0) + (order.centralGst || 0);
+          totalCollected += order.totalAmount || 0;
+
+          if (order.paymentMethod === 'cash') {
+            cashOrders++;
+          } else if (order.paymentMethod === 'online') {
+            onlineOrders++;
+          }
+
+          const expectedTotal = (order.subtotal || 0) + (order.stateGst || 0) + (order.centralGst || 0);
+          if (order.totalAmount !== expectedTotal) {
+            discrepancies.push({
+              orderNumber: order.orderNumber,
+              subtotal: order.subtotal,
+              gst: (order.stateGst || 0) + (order.centralGst || 0),
+              expected: expectedTotal,
+              actual: order.totalAmount,
+              difference: order.totalAmount - expectedTotal,
+            });
+          }
+        }
+
+        return {
+          date: reportDate.toISOString().split('T')[0],
+          summary: {
+            totalOrders: completedOrders.length,
+            cashOrders,
+            onlineOrders,
+            totalSubtotal,
+            totalGst,
+            totalCollected,
+            expectedTotal: totalSubtotal + totalGst,
+            discrepancy: totalCollected - (totalSubtotal + totalGst),
+          },
+          discrepancies,
+          orders: completedOrders.map(o => ({
+            orderNumber: o.orderNumber,
+            customerName: o.customerName || 'Guest',
+            orderType: o.orderType,
+            paymentMethod: o.paymentMethod,
+            subtotal: o.subtotal,
+            gst: (o.stateGst || 0) + (o.centralGst || 0),
+            total: o.totalAmount,
+            createdAt: o.createdAt,
+          })),
+        };
+      }),
   }),
 });
-
-export type AppRouter = typeof appRouter;
-
-// KOT Polling System v1.2 - Schema fix deployed 2025-12-12 16:05 IST - orderId as varchar, outletId added, kotData as json

@@ -202,3 +202,23 @@
 - [x] Create order 00030 as cancelled duplicate
   - Created with status: cancelled, paymentStatus: completed, paymentMethod: cash
   - Total: ₹2105
+
+## Features to Implement (Jan 9)
+## Features Implemented (Jan 9 - Evening)
+
+- [x] Add "Collect Payment" button to Staff Orders page
+  - Added updatePaymentStatus mutation to trigger receipt printing
+  - Button appears for in-store orders with pending payment
+  - Same functionality as Admin page button
+  - Receipt automatically queues for printing when payment collected
+- [x] Fix receipt template to include GST in TOTAL
+  - Fixed printer field names: stateGst, centralGst, totalAmount
+  - Receipt now correctly prints TOTAL = Subtotal + SGST + CGST
+  - Updated taiwan-maami-printer.js to use correct field mappings
+  - Root cause was field name mismatch between database and printer
+- [x] Implement end-of-day reconciliation report
+  - Added reconciliation.getEndOfDayReport procedure
+  - Generates daily summary with total orders, cash/online split
+  - Calculates total subtotal, GST, and amounts collected
+  - Identifies discrepancies where totalAmount != subtotal + GST
+  - Admin can query by date to track financial accuracy

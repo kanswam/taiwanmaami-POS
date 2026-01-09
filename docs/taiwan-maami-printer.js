@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 /**
  * Taiwan Maami - KOT & Receipt Printer Client
  * Version 2.4 - Network Printer Support
@@ -99,15 +98,10 @@ function apiRequest(endpoint, method = 'GET', body = null) {
       let data = '';
       res.on('data', chunk => data += chunk);
       res.on('end', () => {
-        if (res.statusCode !== 200) {
-          log(`API Error: Status ${res.statusCode} - ${data}`, 'ERROR');
-          reject(new Error(`HTTP ${res.statusCode}`));
-          return;
-        }
         try {
           resolve(JSON.parse(data));
         } catch (e) {
-          reject(new Error('JSON parse error'));
+          reject(e);
         }
       });
     });
@@ -117,162 +111,89 @@ function apiRequest(endpoint, method = 'GET', body = null) {
       req.destroy();
       reject(new Error('Request timeout'));
     });
-    
-    if (body) {
-      req.write(JSON.stringify(body));
-    }
+
+    if (body) req.write(JSON.stringify(body));
     req.end();
   });
 }
 
-// Send data directly to network printer via TCP socket
-function printToNetwork(data, printer) {
-  return new Promise((resolve, reject) => {
-    const socket = new net.Socket();
-    
-    socket.setTimeout(10000);
-    
-    socket.on('error', (err) => {
-      socket.destroy();
-      reject(new Error(`Connection error: ${err.message}`));
-    });
-    
-    socket.on('timeout', () => {
-      socket.destroy();
-      reject(new Error('Connection timeout'));
-    });
-    
-    socket.connect(printer.port, printer.ip, () => {
-      socket.write(data, 'binary', (err) => {
-        if (err) {
-          socket.destroy();
-          reject(err);
-        } else {
-          // Give printer time to receive data
-          setTimeout(() => {
-            socket.end();
-            resolve();
-          }, 500);
-        }
-      });
-    });
-    
-    socket.on('close', () => {
-      resolve();
-    });
-  });
-}
-
-// Format KOT with ESC/POS commands
-function formatKOT(kot) {
+// Format KOT (Kitchen Order Ticket)
+function formatKOT(order) {
   const width = CONFIG.PAPER_WIDTH;
+  const items = order.items || [];
   let data = '';
-  
+
   // Initialize printer
   data += COMMANDS.INIT;
-  
+
   // Header
   data += COMMANDS.ALIGN_CENTER;
   data += COMMANDS.DOUBLE_ON;
   data += COMMANDS.BOLD_ON;
-  data += 'KITCHEN ORDER TICKET\n';
+  data += 'TAIWAN MAAMI\n';
   data += COMMANDS.NORMAL;
   data += COMMANDS.BOLD_OFF;
-  data += '='.repeat(width) + '\n';
-  
+  data += 'Kitchen Order Ticket\n\n';
+  data += '-'.repeat(width) + '\n';
+
   // Order info
   data += COMMANDS.ALIGN_LEFT;
-  data += COMMANDS.DOUBLE_HEIGHT_ON;
-  data += COMMANDS.BOLD_ON;
-  data += `Order #: ${kot.orderNumber}\n`;
-  data += COMMANDS.NORMAL;
-  data += COMMANDS.BOLD_OFF;
+  data += `Order #: ${order.orderNumber}\n`;
   
-  const orderType = kot.kotData?.orderType || 'N/A';
-  data += `Type: ${orderType}\n`;
-  
-  const time = new Date(kot.createdAt).toLocaleString('en-IN', { 
-    timeZone: 'Asia/Kolkata',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: true
+  const date = new Date(order.createdAt).toLocaleString('en-IN', { 
+    timeZone: 'Asia/Kolkata'
   });
-  data += `Time: ${time}\n`;
+  data += `Time: ${date}\n`;
+  data += `Type: ${order.orderType.toUpperCase()}\n`;
   
-  const customer = kot.kotData?.customerName || 'Guest';
-  data += `Customer: ${customer}\n`;
-  
-  if (kot.kotData?.customerPhone) {
-    data += `Phone: ${kot.kotData.customerPhone}\n`;
+  if (order.tableNumber) {
+    data += `Table: ${order.tableNumber}\n`;
   }
-  
-  if (kot.kotData?.tableNumber) {
-    data += COMMANDS.BOLD_ON;
-    data += `Table: ${kot.kotData.tableNumber}\n`;
-    data += COMMANDS.BOLD_OFF;
+  if (order.customerName) {
+    data += `Customer: ${order.customerName}\n`;
   }
-  
-  data += '-'.repeat(width) + '\n\n';
-  
+
+  data += '\n' + '-'.repeat(width) + '\n\n';
+
   // Items
-  const items = kot.kotData?.items || [];
-  items.forEach((item, idx) => {
-    // Product name - bold and larger
-    data += COMMANDS.DOUBLE_HEIGHT_ON;
-    data += COMMANDS.BOLD_ON;
-    data += `${idx + 1}. ${item.productName}\n`;
-    data += `   x${item.quantity}\n`;
-    data += COMMANDS.NORMAL;
-    data += COMMANDS.BOLD_OFF;
+  items.forEach((item, index) => {
+    data += `${index + 1}. ${item.productName}\n`;
+    data += `   Qty: ${item.quantity}`;
     
-    // Customizations
-    if (item.size && item.size !== 'Regular') {
-      data += `   Size: ${item.size}\n`;
-    }
-    if (item.withBoba) {
-      data += `   Boba: ${item.withBoba}\n`;
-    }
-    if (item.sugarLevel) {
-      data += `   Sugar: ${item.sugarLevel}\n`;
-    }
-    if (item.iceLevel) {
-      data += `   Ice: ${item.iceLevel}\n`;
-    }
-    if (item.addons && item.addons.length > 0) {
-      const addonStr = item.addons.map(a => 
-        a.quantity > 1 ? `${a.name} x${a.quantity}` : a.name
-      ).join(', ');
-      data += `   Add-ons: ${addonStr}\n`;
-    }
-    
-    // Special instructions - highlighted
-    if (item.specialInstructions) {
-      data += COMMANDS.BOLD_ON;
-      data += `   *** ${item.specialInstructions}\n`;
-      data += COMMANDS.BOLD_OFF;
-    }
+    if (item.size) data += ` | Size: ${item.size}`;
+    if (item.sugarLevel) data += ` | Sugar: ${item.sugarLevel}`;
+    if (item.iceLevel) data += ` | Ice: ${item.iceLevel}`;
+    if (item.withBoba !== undefined) data += ` | Boba: ${item.withBoba ? 'Yes' : 'No'}`;
     
     data += '\n';
+
+    if (item.addons && item.addons.length > 0) {
+      item.addons.forEach(addon => {
+        data += `   + ${addon.name}\n`;
+      });
+    }
+    data += '\n';
   });
+
+  data += '-'.repeat(width) + '\n';
   
-  // Order-level special instructions
-  if (kot.kotData?.specialInstructions) {
-    data += '-'.repeat(width) + '\n';
+  if (order.staffNotes) {
     data += COMMANDS.BOLD_ON;
-    data += 'ORDER NOTES:\n';
-    data += kot.kotData.specialInstructions + '\n';
+    data += 'SPECIAL INSTRUCTIONS:\n';
     data += COMMANDS.BOLD_OFF;
+    data += order.staffNotes + '\n';
+    data += '-'.repeat(width) + '\n';
   }
-  
-  // Footer
-  data += '='.repeat(width) + '\n';
+
+  data += COMMANDS.ALIGN_CENTER;
+  data += 'Please prepare carefully\n\n';
   data += COMMANDS.FEED_LINES(4);
   data += COMMANDS.CUT;
-  
+
   return data;
 }
 
-// Format Receipt with ESC/POS commands
+// Format Receipt with correct field names
 function formatReceipt(receipt) {
   const width = CONFIG.PAPER_WIDTH;
   const data_obj = receipt.receiptData || {};
@@ -317,13 +238,13 @@ function formatReceipt(receipt) {
   // Items
   const items = data_obj.items || [];
   items.forEach(item => {
-    const name = item.name || item.productName;
+    const name = item.productName;
     const qty = item.quantity;
-    const price = (item.price / 100).toFixed(2);
-    const total = ((item.price * qty) / 100).toFixed(2);
+    const unitPrice = (item.unitPrice / 100).toFixed(2);
+    const total = ((item.unitPrice * qty) / 100).toFixed(2);
     
     data += `${name}\n`;
-    data += `  ${qty} x Rs.${price}    Rs.${total}\n`;
+    data += `  ${qty} x Rs.${unitPrice}    Rs.${total}\n`;
     
     if (item.addons && item.addons.length > 0) {
       item.addons.forEach(addon => {
@@ -334,24 +255,25 @@ function formatReceipt(receipt) {
   
   data += '\n' + '-'.repeat(width) + '\n';
   
-  // Totals
+  // Totals - FIXED TO USE CORRECT FIELD NAMES
   data += COMMANDS.ALIGN_RIGHT;
   if (data_obj.subtotal) {
     data += `Subtotal: Rs.${(data_obj.subtotal / 100).toFixed(2)}\n`;
   }
-  if (data_obj.sgst) {
-    data += `SGST (2.5%): Rs.${(data_obj.sgst / 100).toFixed(2)}\n`;
+  if (data_obj.stateGst) {
+    data += `SGST (2.5%): Rs.${(data_obj.stateGst / 100).toFixed(2)}\n`;
   }
-  if (data_obj.cgst) {
-    data += `CGST (2.5%): Rs.${(data_obj.cgst / 100).toFixed(2)}\n`;
+  if (data_obj.centralGst) {
+    data += `CGST (2.5%): Rs.${(data_obj.centralGst / 100).toFixed(2)}\n`;
   }
-  if (data_obj.discount) {
-    data += `Discount: -Rs.${(data_obj.discount / 100).toFixed(2)}\n`;
+  if (data_obj.discountAmount) {
+    data += `Discount: -Rs.${(data_obj.discountAmount / 100).toFixed(2)}\n`;
   }
   
   data += '-'.repeat(width) + '\n';
   data += COMMANDS.BOLD_ON;
-  data += `TOTAL: Rs.${(data_obj.total / 100).toFixed(2)}\n`;
+  // TOTAL NOW CORRECTLY USES totalAmount WHICH INCLUDES GST
+  data += `TOTAL: Rs.${(data_obj.totalAmount / 100).toFixed(2)}\n`;
   data += COMMANDS.BOLD_OFF;
   data += '-'.repeat(width) + '\n\n';
   
@@ -359,7 +281,7 @@ function formatReceipt(receipt) {
   data += COMMANDS.ALIGN_CENTER;
   data += 'Thank you for your order!\n';
   data += 'Visit us again\n\n';
-  data += 'Thamarai Foods and Trading Private Limited\n';
+  data += 'Thamarai Foods & Trading Pvt Ltd\n';
   data += 'GSTIN: 33AAKCT4782H1Z1\n';
   data += COMMANDS.FEED_LINES(4);
   data += COMMANDS.CUT;
@@ -368,57 +290,92 @@ function formatReceipt(receipt) {
 }
 
 // Print KOT to ALL configured printers
-async function printKOT(kot) {
-  const data = formatKOT(kot);
-  const results = [];
-  
-  for (const printer of CONFIG.KOT_PRINTERS) {
+async function printKOT(order) {
+  const kotData = formatKOT(order);
+  const printers = CONFIG.KOT_PRINTERS;
+
+  for (const printer of printers) {
     try {
-      await printToNetwork(data, printer);
-      log(`✓ KOT printed to: ${printer.name} (${printer.ip})`);
-      results.push({ printer: printer.name, success: true });
+      await printToNetwork(printer, kotData);
+      log(`KOT #${order.orderNumber} printed to ${printer.name}`, 'SUCCESS');
     } catch (error) {
-      log(`✗ Failed to print KOT to ${printer.name} (${printer.ip}): ${error.message}`, 'ERROR');
-      results.push({ printer: printer.name, success: false, error: error.message });
+      log(`Failed to print KOT to ${printer.name}: ${error.message}`, 'ERROR');
     }
   }
-  
-  return results.some(r => r.success);
 }
 
 // Print Receipt
 async function printReceipt(receipt) {
-  const data = formatReceipt(receipt);
+  const receiptData = formatReceipt(receipt);
+  const printer = CONFIG.RECEIPT_PRINTER;
+
   try {
-    await printToNetwork(data, CONFIG.RECEIPT_PRINTER);
-    return true;
+    await printToNetwork(printer, receiptData);
+    log(`Receipt #${receipt.orderNumber} printed`, 'SUCCESS');
   } catch (error) {
-    log(`Receipt print error: ${error.message}`, 'ERROR');
-    throw error;
+    log(`Failed to print receipt: ${error.message}`, 'ERROR');
   }
 }
 
-// Poll for KOTs
-async function pollKOT() {
+// Print to Network Printer
+function printToNetwork(printer, data) {
+  return new Promise((resolve, reject) => {
+    const client = net.createConnection(printer.port, printer.ip, () => {
+      client.write(data, 'binary');
+      client.end();
+      resolve();
+    });
+
+    client.on('error', reject);
+    client.setTimeout(5000, () => {
+      client.destroy();
+      reject(new Error('Connection timeout'));
+    });
+  });
+}
+
+// Poll for pending receipts
+async function pollReceipts() {
   try {
-    const response = await apiRequest(`/api/kot/poll?secret=${CONFIG.KOT_PRINT_SECRET}`);
+    const response = await apiRequest('/api/receipt/poll');
+    
+    if (response.receipts && response.receipts.length > 0) {
+      for (const receipt of response.receipts) {
+        try {
+          await printReceipt(receipt);
+          
+          // Mark as printed
+          await apiRequest('/api/receipt/printed', 'POST', {
+            secret: CONFIG.KOT_PRINT_SECRET,
+            receiptId: receipt.id,
+          });
+        } catch (error) {
+          log(`Error processing receipt ${receipt.id}: ${error.message}`, 'ERROR');
+        }
+      }
+    }
+  } catch (error) {
+    log(`Poll error: ${error.message}`, 'ERROR');
+  }
+}
+
+// Poll for pending KOTs
+async function pollKOTs() {
+  try {
+    const response = await apiRequest('/api/kot/poll');
     
     if (response.kots && response.kots.length > 0) {
-      log(`Found ${response.kots.length} pending KOT(s)`);
-      
       for (const kot of response.kots) {
         try {
-          const printed = await printKOT(kot);
+          await printKOT(kot.order);
           
-          if (printed) {
-            await apiRequest('/api/kot/printed', 'POST', {
-              secret: CONFIG.KOT_PRINT_SECRET,
-              kotId: kot.id
-            });
-            log(`✓ KOT #${kot.id} (Order: ${kot.orderNumber}) processed`);
-          }
-        } catch (printError) {
-          log(`✗ Failed to process KOT #${kot.id}: ${printError.message}`, 'ERROR');
+          // Mark as printed
+          await apiRequest('/api/kot/printed', 'POST', {
+            secret: CONFIG.KOT_PRINT_SECRET,
+            kotId: kot.id,
+          });
+        } catch (error) {
+          log(`Error processing KOT ${kot.id}: ${error.message}`, 'ERROR');
         }
       }
     }
@@ -427,108 +384,25 @@ async function pollKOT() {
   }
 }
 
-// Poll for Receipts
-async function pollReceipt() {
-  try {
-    const response = await apiRequest(`/api/receipt/poll?secret=${CONFIG.KOT_PRINT_SECRET}`);
-    
-    if (response.receipts && response.receipts.length > 0) {
-      log(`Found ${response.receipts.length} pending receipt(s)`);
-      
-      for (const receipt of response.receipts) {
-        try {
-          await printReceipt(receipt);
-          
-          await apiRequest('/api/receipt/printed', 'POST', {
-            secret: CONFIG.KOT_PRINT_SECRET,
-            receiptId: receipt.id
-          });
-          
-          log(`✓ Printed Receipt #${receipt.id} (Order: ${receipt.orderNumber})`);
-        } catch (printError) {
-          log(`✗ Failed to print Receipt #${receipt.id}: ${printError.message}`, 'ERROR');
-        }
-      }
-    }
-  } catch (error) {
-    log(`Receipt poll error: ${error.message}`, 'ERROR');
-  }
-}
-
-// Test printer connection
-async function testPrinter(printer) {
-  let data = '';
-  data += COMMANDS.INIT;
-  data += COMMANDS.ALIGN_CENTER;
-  data += COMMANDS.BOLD_ON;
-  data += 'PRINTER TEST\n';
-  data += COMMANDS.BOLD_OFF;
-  data += '-'.repeat(32) + '\n';
-  data += COMMANDS.ALIGN_LEFT;
-  data += `Printer: ${printer.name}\n`;
-  data += `IP: ${printer.ip}\n`;
-  data += `Time: ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}\n`;
-  data += '-'.repeat(32) + '\n';
-  data += 'Connection OK!\n';
-  data += COMMANDS.FEED_LINES(3);
-  data += COMMANDS.CUT;
-  
-  await printToNetwork(data, printer);
-}
-
 // Main polling loop
-async function poll() {
-  await pollKOT();
-  await pollReceipt();
+async function startPolling() {
+  log('Taiwan Maami Printer Service Started', 'INFO');
+  log(`Polling interval: ${CONFIG.POLL_INTERVAL_SECONDS} seconds`, 'INFO');
+  log(`API Base URL: ${CONFIG.API_BASE_URL}`, 'INFO');
+  
+  // Poll immediately on startup
+  await pollKOTs();
+  await pollReceipts();
+  
+  // Then poll at regular intervals
+  setInterval(async () => {
+    await pollKOTs();
+    await pollReceipts();
+  }, POLL_INTERVAL);
 }
 
-// Startup
-async function startup() {
-  console.log('');
-  console.log('╔════════════════════════════════════════════════════════════╗');
-  console.log('║         Taiwan Maami - KOT & Receipt Printer               ║');
-  console.log('║           Version 2.4 - Network Printer                    ║');
-  console.log('╚════════════════════════════════════════════════════════════╝');
-  console.log('');
-  log(`Starting printer client...`);
-  log(`KOT Printers:`);
-  CONFIG.KOT_PRINTERS.forEach(p => log(`  - ${p.name}: ${p.ip}:${p.port}`));
-  log(`Receipt Printer: ${CONFIG.RECEIPT_PRINTER.name} (${CONFIG.RECEIPT_PRINTER.ip})`);
-  log(`Polling every ${CONFIG.POLL_INTERVAL_SECONDS} seconds`);
-  log(`Log file: ${LOG_FILE}`);
-  console.log('');
-  
-  // Test printer connections
-  log('Testing printer connections...');
-  for (const printer of CONFIG.KOT_PRINTERS) {
-    try {
-      await testPrinter(printer);
-      log(`✓ ${printer.name} (${printer.ip}) - OK`);
-    } catch (error) {
-      log(`✗ ${printer.name} (${printer.ip}) - FAILED: ${error.message}`, 'ERROR');
-    }
-  }
-  
-  console.log('');
-  console.log('Press Ctrl+C to stop');
-  console.log('');
-  
-  // Initial poll
-  poll();
-  
-  // Set up interval
-  setInterval(poll, POLL_INTERVAL);
-}
-
-// Handle exit
-process.on('SIGINT', () => {
-  log('Printer client stopped');
-  process.exit(0);
+// Start the service
+startPolling().catch(error => {
+  log(`Fatal error: ${error.message}`, 'ERROR');
+  process.exit(1);
 });
-
-process.on('uncaughtException', (error) => {
-  log(`Uncaught exception: ${error.message}`, 'ERROR');
-});
-
-// Start
-startup();

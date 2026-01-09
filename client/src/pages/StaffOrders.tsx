@@ -242,6 +242,30 @@ export default function StaffOrders() {
     },
   });
 
+  const updatePaymentStatus = trpc.orders.updatePaymentStatus.useMutation({
+    onSuccess: async (_, variables) => {
+      toast.success('Payment collected successfully!');
+      
+      // Queue receipt for printing
+      try {
+        await fetch('/api/receipt/queue', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            secret: import.meta.env.VITE_KOT_PRINT_SECRET || 'tmm-kot-print-2024-secure',
+            orderId: variables.orderId,
+          }),
+        });
+        toast.success('Receipt queued for printing');
+      } catch (error) {
+        console.error('Failed to queue receipt:', error);
+      }
+      
+      utils.orders.getRecent.invalidate();
+    },
+    onError: (err) => toast.error(err.message),
+  });
+
   // Sound notification for new orders
   useEffect(() => {
     if (!audioRef.current) {
@@ -598,6 +622,19 @@ export default function StaffOrders() {
                 onClick={() => setAddItemsDialog({ open: true, order })}
               >
                 <ShoppingBag className="w-4 h-4" />
+              </Button>
+            )}
+            {/* Collect Payment button for in-store orders with pending payment */}
+            {order.orderType === 'instore' && order.paymentStatus === 'pending' && (
+              <Button
+                size="sm"
+                className="bg-green-600 hover:bg-green-700 text-white"
+                onClick={() => {
+                  updatePaymentStatus.mutate({ orderId: order.id, paymentStatus: 'completed' });
+                }}
+                disabled={updatePaymentStatus.isPending}
+              >
+                💰 Collect Payment
               </Button>
             )}
           </div>
