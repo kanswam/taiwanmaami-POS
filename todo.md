@@ -174,3 +174,12 @@
   - Removed cancel button from customer-facing OrderConfirmation page
   - Staff and Admin can still cancel items in Staff Orders and Admin Orders tabs
   - Customers can only add items to active dine-in orders, not cancel or modify
+
+## Bug Fixes (Jan 8 - Late Evening)
+
+- [x] Fix duplicate order creation on double-click
+  - Root cause: Form submission could be triggered twice if user double-clicked submit button or on slow connections
+  - Added submissionLockRef using useRef to prevent multiple simultaneous submissions
+  - Lock is set immediately on form submission and only released on error
+  - Applied to both handleSubmit (logged-in) and handleGuestSubmit (guest checkout)
+  - Prevents race conditions and duplicate order creation

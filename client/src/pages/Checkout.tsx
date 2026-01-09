@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useLocation } from 'wouter';
 import { Header } from '@/components/Header';
 import { Button } from '@/components/ui/button';
@@ -33,6 +33,7 @@ export default function Checkout() {
   const [paymentMethod, setPaymentMethod] = useState<'online' | 'cash'>('online');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [checkoutMode, setCheckoutMode] = useState<'choose' | 'guest' | 'login'>('choose');
+  const submissionLockRef = useRef(false);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -136,25 +137,36 @@ export default function Checkout() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Prevent double submission
+    if (submissionLockRef.current || isSubmitting) {
+      return;
+    }
+    submissionLockRef.current = true;
+    
     if (itemCount === 0) {
       toast.error('Your cart is empty');
+      submissionLockRef.current = false;
       return;
     }
 
     // Validation
     if (!formData.name || !formData.phone) {
       toast.error('Please fill in all required fields');
+      submissionLockRef.current = false;
       return;
     }
 
     if (state.orderType === 'delivery') {
       if (!formData.addressLine1 || !formData.area || !formData.pincode) {
         toast.error('Please fill in your delivery address');
+        submissionLockRef.current = false;
         return;
       }
       // Validate Chennai pincode
       if (!formData.pincode.startsWith('6')) {
         toast.error('We currently only deliver within Chennai');
+        submissionLockRef.current = false;
         return;
       }
     }
@@ -241,6 +253,7 @@ export default function Checkout() {
     } catch (err: any) {
       toast.error(err.message || 'Failed to create order');
       setIsSubmitting(false);
+      submissionLockRef.current = false;
     }
   };
 
@@ -253,19 +266,29 @@ export default function Checkout() {
   // Handle guest checkout
   const handleGuestSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Prevent double submission
+    if (submissionLockRef.current || isSubmitting) {
+      return;
+    }
+    submissionLockRef.current = true;
+    
     if (itemCount === 0) {
       toast.error('Your cart is empty');
+      submissionLockRef.current = false;
       return;
     }
 
     if (!formData.name || !formData.phone) {
       toast.error('Please fill in all required fields');
+      submissionLockRef.current = false;
       return;
     }
 
     if (state.orderType === 'delivery') {
       if (!formData.addressLine1 || !formData.area || !formData.pincode) {
         toast.error('Please fill in your delivery address');
+        submissionLockRef.current = false;
         return;
       }
     }
@@ -316,10 +339,10 @@ export default function Checkout() {
     } catch (err: any) {
       toast.error(err.message || 'Failed to create order');
       setIsSubmitting(false);
+      submissionLockRef.current = false;
     }
-  };
+  }
 
-  // Show checkout mode choice for non-authenticated users
   if (!isAuthenticated && checkoutMode === 'choose') {
     return (
       <div className="min-h-screen bg-background">
