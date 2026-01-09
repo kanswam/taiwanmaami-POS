@@ -1803,8 +1803,8 @@ function OrdersTab() {
                   </td>
                   <td className="p-3 text-center">
                     <div className="flex gap-2 justify-center flex-wrap">
-                      {/* Apply Discount button for orders with pending payment */}
-                      {order.paymentStatus === 'pending' && !order.manualDiscountAmount && (
+                      {/* Apply Discount button - only for pending payment AND not completed/cancelled */}
+                      {order.paymentStatus === 'pending' && !order.manualDiscountAmount && order.orderStatus !== 'completed' && order.orderStatus !== 'cancelled' && (
                         <Button
                           size="sm"
                           variant="outline"
@@ -1823,8 +1823,8 @@ function OrdersTab() {
                           -{formatPrice(order.manualDiscountAmount ?? 0)} off
                         </span>
                       )}
-                      {/* Add Items button for in-store orders with pending payment */}
-                      {order.orderType === 'instore' && order.paymentStatus === 'pending' && (
+                      {/* Add Items button - only for pending payment AND not completed/cancelled */}
+                      {order.orderType === 'instore' && order.paymentStatus === 'pending' && order.orderStatus !== 'completed' && order.orderStatus !== 'cancelled' && (
                         <Button
                           size="sm"
                           variant="outline"
@@ -1838,8 +1838,8 @@ function OrdersTab() {
                           ➕ Add Items
                         </Button>
                       )}
-                      {/* Collect Payment button for in-store orders with pending payment */}
-                      {order.orderType === 'instore' && order.paymentStatus === 'pending' && (
+                      {/* Collect Payment button - only for pending payment AND not completed/cancelled */}
+                      {order.orderType === 'instore' && order.paymentStatus === 'pending' && order.orderStatus !== 'completed' && order.orderStatus !== 'cancelled' && (
                         <Button
                           size="sm"
                           className="bg-green-600 hover:bg-green-700 text-white"

@@ -222,3 +222,17 @@
   - Calculates total subtotal, GST, and amounts collected
   - Identifies discrepancies where totalAmount != subtotal + GST
   - Admin can query by date to track financial accuracy
+
+
+## Critical UI Fixes (Jan 9 - Late Evening)
+
+- [x] Disable action buttons for completed orders
+  - Completed orders now only show "Print Receipt" button
+  - "Collect Payment", "Add Items", "Discount" buttons are hidden
+  - Prevents duplicate receipt printing and accidental modifications
+  - Applied to both Admin and Staff Orders pages
+- [x] Disable action buttons for cancelled orders
+  - Cancelled orders now only show "Print Receipt" button
+  - "Collect Payment", "Add Items", "Discount" buttons are hidden
+  - Prevents mistaken modifications to closed orders
+  - Applied to both Admin and Staff Orders pages

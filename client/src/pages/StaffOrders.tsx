@@ -624,8 +624,8 @@ export default function StaffOrders() {
                 <ShoppingBag className="w-4 h-4" />
               </Button>
             )}
-            {/* Collect Payment button for in-store orders with pending payment */}
-            {order.orderType === 'instore' && order.paymentStatus === 'pending' && (
+            {/* Collect Payment button - only for pending payment AND not completed/cancelled */}
+            {order.orderType === 'instore' && order.paymentStatus === 'pending' && order.orderStatus !== 'completed' && order.orderStatus !== 'cancelled' && (
               <Button
                 size="sm"
                 className="bg-green-600 hover:bg-green-700 text-white"
