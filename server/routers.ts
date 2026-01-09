@@ -567,11 +567,12 @@ export const appRouter = router({
         
         const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
         
+        // Sort by orderNumber numerically in descending order
         const recentOrders = await dbInstance
           .select()
           .from(orders)
           .where(whereClause)
-          .orderBy(desc(orders.createdAt))
+          .orderBy(sql`CAST(${orders.orderNumber} AS UNSIGNED) DESC`)
           .limit(input?.limit || 50);
         
         // Get order items for each order

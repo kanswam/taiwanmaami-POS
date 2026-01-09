@@ -184,6 +184,14 @@
   - Applied to both handleSubmit (logged-in) and handleGuestSubmit (guest checkout)
   - Prevents race conditions and duplicate order creation
 
+## Bug Fixes (Jan 9 - Morning)
+
+- [x] Fix order list sorting in Admin Orders tab
+  - Root cause: Orders were sorted by createdAt instead of orderNumber
+  - Orders 00029 and 00030 appeared at top due to recent recreation timestamp
+  - Changed sorting to use numeric orderNumber DESC
+  - Orders now display in correct sequence
+
 ## Order Recovery (Jan 9)
 
 - [x] Restore order 00029 with complete order details from receipt
