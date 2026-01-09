@@ -186,10 +186,11 @@
 
 ## Order Recovery (Jan 9)
 
-- [x] Restore order 00029 (cash payment, instore, status: preparing)
-  - Restored with paymentStatus: completed, paymentMethod: cash
-  - Total: ₹2105
+- [x] Restore order 00029 with complete order details from receipt
+  - Status: completed, Payment: cash (completed)
+  - Date: 9/1/2026, 3:42:02 PM
+  - All 5 items restored with correct prices
+  - Subtotal: ₹2105.00, SGST: ₹52.63, CGST: ₹52.63, Total: ₹2210.26
 - [x] Create order 00030 as cancelled duplicate
   - Created with status: cancelled, paymentStatus: completed, paymentMethod: cash
-  - staffNotes: "Duplicate order - System error during checkout (Jan 9)"
   - Total: ₹2105
