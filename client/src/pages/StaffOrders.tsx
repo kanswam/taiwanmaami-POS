@@ -110,14 +110,14 @@ function AvailabilityPanel() {
           <div className="bg-muted px-4 py-2 font-medium">{categoryName}</div>
           <div className="divide-y">
             {(subs as any[]).map((sub: any) => (
-              <div key={sub.id} className="p-4 flex items-center justify-between gap-4">
-                <div className="flex-1 min-w-0">
-                  <p className="font-medium truncate">{sub.name}</p>
+              <div key={sub.id} className="p-4 space-y-3 md:flex md:items-center md:justify-between md:gap-4 md:space-y-0">
+                <div className="flex-1 min-w-0 md:flex-initial">
+                  <p className="font-medium break-words">{sub.name}</p>
                   {sub.chineseName && <p className="text-sm text-muted-foreground">{sub.chineseName}</p>}
                 </div>
-                <div className="flex items-center gap-6 flex-shrink-0">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs text-muted-foreground w-16">In-store</span>
+                <div className="grid grid-cols-3 gap-4 md:flex md:items-center md:gap-6 md:flex-shrink-0">
+                  <div className="flex flex-col items-center gap-2 md:flex-row">
+                    <span className="text-xs text-muted-foreground text-center md:text-left md:w-16">In-store</span>
                     <Switch
                       checked={sub.availableInstore !== false}
                       onCheckedChange={(checked) => {
@@ -126,8 +126,8 @@ function AvailabilityPanel() {
                       disabled={toggleAvailability.isPending}
                     />
                   </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs text-muted-foreground w-16">Delivery</span>
+                  <div className="flex flex-col items-center gap-2 md:flex-row">
+                    <span className="text-xs text-muted-foreground text-center md:text-left md:w-16">Delivery</span>
                     <Switch
                       checked={sub.availableDelivery !== false}
                       onCheckedChange={(checked) => {
@@ -136,8 +136,8 @@ function AvailabilityPanel() {
                       disabled={toggleAvailability.isPending}
                     />
                   </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs text-muted-foreground w-16">Pickup</span>
+                  <div className="flex flex-col items-center gap-2 md:flex-row">
+                    <span className="text-xs text-muted-foreground text-center md:text-left md:w-16">Pickup</span>
                     <Switch
                       checked={sub.availablePickup !== false}
                       onCheckedChange={(checked) => {
