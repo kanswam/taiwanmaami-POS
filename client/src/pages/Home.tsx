@@ -6,7 +6,7 @@ import { Card } from '@/components/ui/card';
 import { Header } from '@/components/Header';
 import { LazyVideo } from '@/components/LazyVideo';
 import { trpc } from '@/lib/trpc';
-import { ArrowRight, MapPin, Clock, Star, Sparkles, Instagram, Phone, Navigation, Store, Truck, ShoppingBag, Facebook, Twitter, Youtube } from 'lucide-react';
+import { ArrowRight, MapPin, Clock, Star, Sparkles, Instagram, Phone, Navigation, Store, Truck, ShoppingBag, Facebook, Twitter, Youtube, Package } from 'lucide-react';
 
 export default function Home() {
   // Fetch site settings from database (public endpoint - no auth required)
@@ -249,7 +249,7 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto">
             {/* In-Store */}
             <Link href="/menu?type=instore" className="h-full">
               <Card className="p-6 text-center hover:shadow-lg transition-all duration-300 cursor-pointer group border-2 hover:border-primary h-full flex flex-col">
@@ -258,7 +258,7 @@ export default function Home() {
                 </div>
                 <h3 className="font-bold text-xl mb-2">Dine In-Store</h3>
                 <p className="text-sm text-muted-foreground mb-2 flex-grow">
-                  Visit our outlets and enjoy freshly made bubble tea
+                  Visit Taiwan Maami T Nagar and enjoy freshly made bubble tea
                 </p>
                 <div className="flex items-center justify-center gap-1 text-xs text-muted-foreground mb-3">
                   <Clock className="w-3 h-3" />
@@ -266,6 +266,26 @@ export default function Home() {
                 </div>
                 <div className="text-primary font-medium flex items-center justify-center gap-2 mt-auto">
                   Order In-Store <ArrowRight className="w-4 h-4" />
+                </div>
+              </Card>
+            </Link>
+
+            {/* Pickup */}
+            <Link href="/menu?type=pickup" className="h-full">
+              <Card className="p-6 text-center hover:shadow-lg transition-all duration-300 cursor-pointer group border-2 hover:border-primary h-full flex flex-col">
+                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-colors flex-shrink-0">
+                  <Package className="w-8 h-8 text-primary group-hover:text-white" />
+                </div>
+                <h3 className="font-bold text-xl mb-2">Pickup</h3>
+                <p className="text-sm text-muted-foreground mb-2 flex-grow">
+                  Pick up from Ground Floor New No.29 Burkit Road, TNagar
+                </p>
+                <div className="flex items-center justify-center gap-1 text-xs text-muted-foreground mb-3">
+                  <Clock className="w-3 h-3" />
+                  <span>Ready in 20-40 mins</span>
+                </div>
+                <div className="text-primary font-medium flex items-center justify-center gap-2 mt-auto">
+                  Order Pickup <ArrowRight className="w-4 h-4" />
                 </div>
               </Card>
             </Link>
@@ -278,34 +298,14 @@ export default function Home() {
                 </div>
                 <h3 className="font-bold text-xl mb-2">Home Delivery</h3>
                 <p className="text-sm text-muted-foreground mb-2 flex-grow">
-                  Get your favorites delivered to your doorstep
+                  Get your favorites delivered within 10 km of T Nagar
                 </p>
                 <div className="flex items-center justify-center gap-1 text-xs text-muted-foreground mb-3">
                   <Clock className="w-3 h-3" />
-                  <span>30-60 mins (varies by distance)</span>
+                  <span>30-60 mins</span>
                 </div>
                 <div className="text-primary font-medium flex items-center justify-center gap-2 mt-auto">
                   Order Delivery <ArrowRight className="w-4 h-4" />
-                </div>
-              </Card>
-            </Link>
-
-            {/* Pickup */}
-            <Link href="/menu?type=pickup" className="h-full">
-              <Card className="p-6 text-center hover:shadow-lg transition-all duration-300 cursor-pointer group border-2 hover:border-primary h-full flex flex-col">
-                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-colors flex-shrink-0">
-                  <ShoppingBag className="w-8 h-8 text-primary group-hover:text-white" />
-                </div>
-                <h3 className="font-bold text-xl mb-2">Quick Pickup</h3>
-                <p className="text-sm text-muted-foreground mb-2 flex-grow">
-                  Order ahead and pick up at your convenience
-                </p>
-                <div className="flex items-center justify-center gap-1 text-xs text-muted-foreground mb-3">
-                  <Clock className="w-3 h-3" />
-                  <span>Ready in 10-30 mins</span>
-                </div>
-                <div className="text-primary font-medium flex items-center justify-center gap-2 mt-auto">
-                  Order Pickup <ArrowRight className="w-4 h-4" />
                 </div>
               </Card>
             </Link>

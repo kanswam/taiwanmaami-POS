@@ -224,6 +224,9 @@ export const orders = mysqlTable("orders", {
   refundReason: text("refundReason"),
   refundProcessedAt: timestamp("refundProcessedAt"),
   refundProcessedBy: int("refundProcessedBy"),
+  // Loyalty stamp tracking
+  stampsEarned: int("stampsEarned").default(0).notNull(), // Number of stamps earned from this order (1 stamp per 450 rupees)
+  stampRedeemed: boolean("stampRedeemed").default(false).notNull(), // Whether stamps were redeemed for free drink
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
   completedAt: timestamp("completedAt"),
