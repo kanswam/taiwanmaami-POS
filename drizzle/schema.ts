@@ -224,6 +224,8 @@ export const orders = mysqlTable("orders", {
   refundReason: text("refundReason"),
   refundProcessedAt: timestamp("refundProcessedAt"),
   refundProcessedBy: int("refundProcessedBy"),
+  // Idempotency key to prevent duplicate orders on network retry
+  idempotencyKey: varchar("idempotencyKey", { length: 100 }).unique(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
   completedAt: timestamp("completedAt"),

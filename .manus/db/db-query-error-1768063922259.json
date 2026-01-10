@@ -1,0 +1,8 @@
+{
+  "query": "ALTER TABLE orders ADD COLUMN idempotencyKey VARCHAR(100) UNIQUE NULL;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute ALTER TABLE orders ADD COLUMN idempotencyKey VARCHAR(100) UNIQUE NULL;",
+  "returncode": 1,
+  "logs": [
+    "ERROR 8200 (HY000) at line 1: unsupported add column 'idempotencykey' constraint UNIQUE KEY when altering '7xKVuVPoe4TavcqcxPZkpC.orders'"
+  ]
+}

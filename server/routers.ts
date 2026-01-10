@@ -2727,6 +2727,7 @@ export const appRouter = router({
         guestEmail: z.string().email().optional(),
         orderType: z.enum(['instore', 'delivery', 'pickup']),
         tableNumber: z.string().optional(), // For in-store orders
+        idempotencyKey: z.string().optional(), // For preventing duplicate orders on network retry
         items: z.array(z.object({
           productId: z.number(),
           productName: z.string(),
@@ -2762,6 +2763,19 @@ export const appRouter = router({
       }))
       .mutation(async ({ input }) => {
         const dbInstance = await getDb();
+        
+        // Check for duplicate order using idempotency key
+        if (input.idempotencyKey) {
+          const [existingOrder] = await dbInstance!.select().from(orders).where(eq(orders.idempotencyKey, input.idempotencyKey)).limit(1);
+          if (existingOrder) {
+            // Return existing order instead of creating duplicate
+            return {
+              orderId: existingOrder.id,
+              orderNumber: existingOrder.orderNumber,
+              totalAmount: existingOrder.totalAmount,
+            };
+          }
+        }
         
         // Calculate totals
         let subtotal = 0;
@@ -2800,6 +2814,8 @@ export const appRouter = router({
           outletId: input.storeLocationId,
           // Special instructions
           specialInstructions: input.specialInstructions,
+          // Idempotency key to prevent duplicate orders on network retry
+          idempotencyKey: input.idempotencyKey || null,
         });
         
         const orderId = orderResult.insertId;

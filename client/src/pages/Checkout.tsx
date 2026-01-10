@@ -313,12 +313,16 @@ export default function Checkout() {
     setIsSubmitting(true);
 
     try {
+      // Generate idempotency key to prevent duplicate orders on network retry
+      const idempotencyKey = `${formData.phone}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      
       const orderData = await createGuestOrder.mutateAsync({
         guestName: formData.name,
         guestPhone: formData.phone,
         guestEmail: formData.email || undefined,
         orderType: state.orderType,
         tableNumber: state.orderType === 'instore' ? formData.tableNumber || undefined : undefined,
+        idempotencyKey,
         items: state.items.map(item => ({
           productId: item.productId,
           productName: item.productName,

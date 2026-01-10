@@ -1,0 +1,9 @@
+{
+  "query": "UPDATE orders SET orderStatus = 'cancelled' WHERE orderNumber IN ('00052', '00053');",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute UPDATE orders SET orderStatus = 'cancelled' WHERE orderNumber IN ('00052', '00053');",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 1529
+}
