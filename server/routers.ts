@@ -988,6 +988,7 @@ export const appRouter = router({
     createPaymentOrder: publicProcedure
       .input(z.object({
         orderId: z.number(),
+        orderNumber: z.string(),
         amount: z.number(), // Amount in paise
       }))
       .mutation(async ({ input }) => {
@@ -996,8 +997,8 @@ export const appRouter = router({
         const razorpayOrder = await createRazorpayOrder({
           amount: input.amount,
           currency: 'INR',
-          receipt: `order_${input.orderId}`,
-          notes: { orderId: String(input.orderId) },
+          receipt: input.orderNumber,
+          notes: { orderid: input.orderNumber },
         });
         
         return {
@@ -1005,6 +1006,7 @@ export const appRouter = router({
           razorpayKeyId: getRazorpayKeyId(),
           amount: razorpayOrder.amount,
           currency: razorpayOrder.currency,
+          description: `Order #${input.orderNumber}`,
         };
       }),
 

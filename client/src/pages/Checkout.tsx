@@ -85,14 +85,14 @@ export default function Checkout() {
   const handleRazorpayPayment = useCallback(async (orderId: number, orderNumber: string, amount: number) => {
     try {
       // Create Razorpay order
-      const paymentOrder = await createPaymentOrder.mutateAsync({ orderId, amount });
+      const paymentOrder = await createPaymentOrder.mutateAsync({ orderId, orderNumber, amount });
       
       const options = {
         key: paymentOrder.razorpayKeyId,
         amount: paymentOrder.amount,
         currency: paymentOrder.currency,
         name: 'Taiwan Maami',
-        description: `Order #${orderId}`,
+        description: `Order #${orderNumber}`,
         order_id: paymentOrder.razorpayOrderId,
         handler: async (response: any) => {
           try {

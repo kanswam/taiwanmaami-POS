@@ -255,3 +255,35 @@
   - Show payments collected, items added, cancellations
   - Include staff member name, timestamp, order number
   - Track accountability and staff performance
+
+
+## CRITICAL - Razorpay Integration Fix (Jan 10)
+
+- [x] Fix Razorpay order number integration
+  - [x] Updated frontend to pass orderNumber to createPaymentOrder
+  - [x] Updated backend to accept and use orderNumber
+  - [x] Now passes correct order number (00039) instead of internal ID (870005) to Razorpay
+  - [x] Order number now appears in Description and Notes fields in Razorpay dashboard
+
+## URGENT - KOT Printing Issue (Jan 10)
+
+- [x] Fix KOT printing failure for Order 36
+  - [x] Added reprintKot mutation to backend
+  - [x] Added Reprint button to Admin Orders page
+
+## CRITICAL - Business Logic Issues (Jan 10)
+
+- [x] Pickup option restored for T.Nagar
+- [x] Table number requirement added for dine-in orders
+- [x] Loyalty stamp backend implemented (1 per ₹450)
+- [ ] Fix location restrictions - Palladium should NOT show any order options
+- [ ] Verify table number requirement is actually forcing customers to enter it
+- [ ] Investigate pricing anomalies - Rocher Mochi showing ₹550 instead of ₹270 on some invoices
+- [ ] Check all Rocher Mochi orders for pricing consistency
+
+## Priority Features (Jan 10)
+
+- [ ] Delivery distance validation (10km radius check with popup)
+- [ ] Payment method selection for dine-in orders (UPI, Card, GPay, Zomato, Swiggy, EazyDiner)
+- [ ] Login prompt for loyalty stamps before checkout
+- [ ] Soft warning for dine-in orders after 11:45 PM (not blocking)
