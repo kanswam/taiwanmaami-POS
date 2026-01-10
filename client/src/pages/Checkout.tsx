@@ -40,6 +40,7 @@ export default function Checkout() {
     name: user?.name || '',
     phone: '',
     email: user?.email || '',
+    tableNumber: '',
     // Delivery address
     addressLine1: '',
     addressLine2: '',
@@ -157,6 +158,14 @@ export default function Checkout() {
       return;
     }
 
+    if (state.orderType === 'instore') {
+      if (!formData.tableNumber) {
+        toast.error('Please enter your table number');
+        submissionLockRef.current = false;
+        return;
+      }
+    }
+
     if (state.orderType === 'delivery') {
       if (!formData.addressLine1 || !formData.area || !formData.pincode) {
         toast.error('Please fill in your delivery address');
@@ -208,7 +217,7 @@ export default function Checkout() {
       // Create new order
       const orderData = await createOrder.mutateAsync({
         orderType: state.orderType,
-        tableNumber: state.orderType === 'instore' ? tableNumber || undefined : undefined,
+        tableNumber: state.orderType === 'instore' ? formData.tableNumber || undefined : undefined,
         items: state.items.map(item => ({
           productId: item.productId,
           productName: item.productName,
@@ -477,6 +486,24 @@ export default function Checkout() {
                     </div>
                   </div>
                 </Card>
+
+                {/* Table Number for Dine-in */}
+                {state.orderType === 'instore' && (
+                  <Card className="p-6">
+                    <h2 className="text-lg font-semibold mb-4">Table Number *</h2>
+                    <div>
+                      <Label htmlFor="guest-table">Enter your table number</Label>
+                      <Input
+                        id="guest-table"
+                        type="text"
+                        value={formData.tableNumber}
+                        onChange={(e) => setFormData({ ...formData, tableNumber: e.target.value })}
+                        placeholder="e.g., 5 or A1"
+                        required
+                      />
+                    </div>
+                  </Card>
+                )}
 
                 {/* Delivery Address with Locality Dropdown */}
                 {state.orderType === 'delivery' && (

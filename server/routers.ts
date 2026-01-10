@@ -227,9 +227,6 @@ export const appRouter = router({
 
         const totalAmount = subtotal + gst.total + deliveryCharge - discountAmount - input.loyaltyPointsUsed;
         
-        // Calculate loyalty stamps: 1 stamp per ₹450 spent (based on subtotal)
-        const stampsEarned = Math.floor(subtotal / 45000); // 45000 paise = ₹450
-        
         // Generate sequential 5-digit order number
         const [maxOrderResult] = await dbInstance!.execute(sql`SELECT MAX(CAST(orderNumber AS UNSIGNED)) as maxNum FROM orders WHERE orderNumber REGEXP '^[0-9]+$'`);
         const maxNum = (maxOrderResult as any)[0]?.maxNum || 0;
@@ -256,9 +253,6 @@ export const appRouter = router({
           scheduledTime: input.scheduledTime ? new Date(input.scheduledTime) : null,
           discountCode: input.discountCode,
           specialInstructions: input.specialInstructions,
-          // Loyalty stamps
-          stampsEarned,
-          stampRedeemed: false,
         });
 
         const orderId = orderResult.insertId;
@@ -2778,9 +2772,6 @@ export const appRouter = router({
         const deliveryCharge = input.orderType === 'delivery' ? 5000 : 0; // ₹50 delivery
         const totalAmount = subtotal + deliveryCharge;
         
-        // Calculate loyalty stamps: 1 stamp per ₹450 spent (based on subtotal)
-        const stampsEarned = Math.floor(subtotal / 45000); // 45000 paise = ₹450
-        
         // Generate sequential 5-digit order number
         const [maxOrderResult] = await dbInstance!.execute(sql`SELECT MAX(CAST(orderNumber AS UNSIGNED)) as maxNum FROM orders WHERE orderNumber REGEXP '^[0-9]+$'`);
         const maxNum = (maxOrderResult as any)[0]?.maxNum || 0;
@@ -2807,9 +2798,6 @@ export const appRouter = router({
           outletId: input.storeLocationId,
           // Special instructions
           specialInstructions: input.specialInstructions,
-          // Loyalty stamps
-          stampsEarned,
-          stampRedeemed: false,
         });
         
         const orderId = orderResult.insertId;

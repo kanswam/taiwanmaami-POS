@@ -1851,6 +1851,28 @@ function OrdersTab() {
                           💰 Collect Payment
                         </Button>
                       )}
+                      {/* Reprint KOT button */}
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={async () => {
+                          try {
+                            await fetch('/api/kot/reprint', {
+                              method: 'POST',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({
+                                secret: import.meta.env.VITE_KOT_PRINT_SECRET || 'tmm-kot-print-2024-secure',
+                                orderId: order.id,
+                              }),
+                            });
+                            toast.success('KOT queued for reprinting');
+                          } catch (error) {
+                            toast.error('Failed to reprint KOT');
+                          }
+                        }}
+                      >
+                        🖨️ Reprint KOT
+                      </Button>
                       {/* Print Receipt button for completed orders */}
                       {order.paymentStatus === 'completed' && (
                         <Button
