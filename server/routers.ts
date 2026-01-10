@@ -379,7 +379,7 @@ export const appRouter = router({
       .input(z.object({ 
         orderId: z.number(), 
         status: z.string(),
-        paymentMethod: z.enum(['cash', 'upi', 'card', 'swiggy_dineout', 'zomato_dineout', 'other']).optional(),
+        paymentMethod: z.enum(['cash', 'upi', 'card', 'swiggy_dineout', 'zomato_dineout', 'eazydiner', 'other']).optional(),
         paymentProofUrl: z.string().optional(),
       }))
       .mutation(async ({ input }) => {

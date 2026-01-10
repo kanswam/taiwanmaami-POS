@@ -6225,6 +6225,7 @@ function PaymentReportTab() {
     card: 'Card',
     swiggy_dineout: 'Swiggy Dineout',
     zomato_dineout: 'Zomato Dineout',
+    eazydiner: 'EazyDiner',
     other: 'Other',
     unknown: 'Not Recorded',
   };
@@ -6235,6 +6236,7 @@ function PaymentReportTab() {
     card: '💳',
     swiggy_dineout: '🟠',
     zomato_dineout: '🔴',
+    eazydiner: '🟣',
     other: '📋',
     unknown: '❓',
   };
@@ -6318,6 +6320,7 @@ function PaymentReportTab() {
                 <SelectItem value="card">Card</SelectItem>
                 <SelectItem value="swiggy_dineout">Swiggy Dineout</SelectItem>
                 <SelectItem value="zomato_dineout">Zomato Dineout</SelectItem>
+                <SelectItem value="eazydiner">EazyDiner</SelectItem>
                 <SelectItem value="other">Other</SelectItem>
               </SelectContent>
             </Select>

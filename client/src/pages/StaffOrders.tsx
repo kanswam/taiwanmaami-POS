@@ -914,6 +914,7 @@ export default function StaffOrders() {
                   { value: 'card', label: 'Card', icon: '💳' },
                   { value: 'swiggy_dineout', label: 'Swiggy Dineout', icon: '🟠' },
                   { value: 'zomato_dineout', label: 'Zomato Dineout', icon: '🔴' },
+                  { value: 'eazydiner', label: 'EazyDiner', icon: '🟣' },
                   { value: 'other', label: 'Other', icon: '📋' },
                 ].map((method) => (
                   <Button

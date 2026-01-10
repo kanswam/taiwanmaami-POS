@@ -216,7 +216,7 @@ export const orders = mysqlTable("orders", {
   manualDiscountApprovedBy: int("manualDiscountApprovedBy"), // Admin user ID who approved
   staffNotes: text("staffNotes"), // Internal notes from staff about the order
   // Payment method for in-store orders (recorded at collection)
-  paymentMethod: mysqlEnum("paymentMethod", ["cash", "upi", "card", "swiggy_dineout", "zomato_dineout", "other"]),
+  paymentMethod: mysqlEnum("paymentMethod", ["cash", "upi", "card", "swiggy_dineout", "zomato_dineout", "eazydiner", "other"]),
   // Payment proof screenshot URL (for non-cash payments)
   paymentProofUrl: text("paymentProofUrl"),
   refundAmount: int("refundAmount").default(0).notNull(),
@@ -265,7 +265,7 @@ export const orderItemAddons = mysqlTable("order_item_addons", {
 export const payments = mysqlTable("payments", {
   id: int("id").autoincrement().primaryKey(),
   orderId: int("orderId").notNull(),
-  paymentMethod: mysqlEnum("paymentMethod", ["cash", "card", "upi", "razorpay"]).notNull(),
+  paymentMethod: mysqlEnum("paymentMethod", ["cash", "card", "upi", "razorpay", "eazydiner"]).notNull(),
   amount: int("amount").notNull(),
   paymentStatus: mysqlEnum("paymentStatus", ["pending", "success", "failed"]).default("pending").notNull(),
   razorpayPaymentId: varchar("razorpayPaymentId", { length: 100 }),
