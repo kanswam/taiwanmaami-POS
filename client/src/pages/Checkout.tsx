@@ -294,6 +294,14 @@ export default function Checkout() {
       return;
     }
 
+    if (state.orderType === 'instore') {
+      if (!formData.tableNumber) {
+        toast.error('Please enter your table number');
+        submissionLockRef.current = false;
+        return;
+      }
+    }
+
     if (state.orderType === 'delivery') {
       if (!formData.addressLine1 || !formData.area || !formData.pincode) {
         toast.error('Please fill in your delivery address');
@@ -310,7 +318,7 @@ export default function Checkout() {
         guestPhone: formData.phone,
         guestEmail: formData.email || undefined,
         orderType: state.orderType,
-        tableNumber: state.orderType === 'instore' ? tableNumber || undefined : undefined,
+        tableNumber: state.orderType === 'instore' ? formData.tableNumber || undefined : undefined,
         items: state.items.map(item => ({
           productId: item.productId,
           productName: item.productName,
