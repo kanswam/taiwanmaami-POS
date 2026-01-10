@@ -276,10 +276,15 @@
 - [x] Pickup option restored for T.Nagar
 - [x] Table number requirement added for dine-in orders
 - [x] Loyalty stamp backend implemented (1 per ₹450)
-- [ ] Fix location restrictions - Palladium should NOT show any order options
-- [ ] Verify table number requirement is actually forcing customers to enter it
-- [ ] Investigate pricing anomalies - Rocher Mochi showing ₹550 instead of ₹270 on some invoices
-- [ ] Check all Rocher Mochi orders for pricing consistency
+- [x] Fix location restrictions - Palladium should NOT show any order options
+  - [x] Added visible Palladium restriction notice on menu page
+  - [x] Shows message when user selects Dine In or Pickup
+- [x] Verify table number requirement is actually forcing customers to enter it
+  - [x] Added visible table number input field to guest checkout form
+  - [x] Added visible table number input field to logged-in checkout form
+  - [x] Field now prominently displayed (was only showing as toast error)
+- [x] Investigate pricing anomalies - Rocher Mochi showing ₹550 instead of ₹270 on some invoices
+- [x] Check all Rocher Mochi orders for pricing consistency
 
 ## Priority Features (Jan 10)
 

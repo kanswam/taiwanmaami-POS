@@ -500,6 +500,15 @@ export default function Menu() {
                 <span>Pickup</span>
               </button>
             </div>
+            {/* Palladium restriction notice */}
+            {state.orderType !== 'delivery' && (
+              <div className="mt-3 p-2 bg-amber-50 border border-amber-200 rounded-lg flex items-start gap-2">
+                <AlertCircle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
+                <p className="text-xs text-amber-700">
+                  <strong>Palladium Mall:</strong> Only delivery orders are available online. For dine-in and pickup, please visit our outlet.
+                </p>
+              </div>
+            )}
           </div>
 
           <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">

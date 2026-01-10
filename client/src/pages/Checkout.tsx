@@ -852,6 +852,24 @@ export default function Checkout() {
                 </Card>
               )}
 
+              {/* Table Number for Dine-in */}
+              {state.orderType === 'instore' && (
+                <Card className="p-6">
+                  <h2 className="text-lg font-semibold mb-4">Table Number *</h2>
+                  <div>
+                    <Label htmlFor="table-number">Enter your table number</Label>
+                    <Input
+                      id="table-number"
+                      type="text"
+                      value={formData.tableNumber}
+                      onChange={(e) => setFormData({ ...formData, tableNumber: e.target.value })}
+                      placeholder="e.g., 5 or A1"
+                      required
+                    />
+                  </div>
+                </Card>
+              )}
+
               {/* Pickup Store */}
               {state.orderType === 'pickup' && (
                 <Card className="p-6">
