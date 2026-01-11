@@ -359,11 +359,7 @@ export default function Menu() {
     
     // Check if product is available at selected pickup outlet
     const isProductAvailableAtOutlet = (product: typeof products[0]) => {
-      if (state.orderType !== 'pickup') return true;
-      if (!pickupOutlet) return true; // No outlet selected yet, show all
-      if (pickupOutlet === 'tnagar') return true; // All products available at T Nagar
-      // Palladium - check availableAtPalladium field
-      return (product as any).availableAtPalladium !== false;
+      return true; // All products available at T Nagar
     };
     
     return (
@@ -378,15 +374,6 @@ export default function Menu() {
           </div>
         )}
         
-        {/* Palladium availability notice */}
-        {state.orderType === 'pickup' && pickupOutlet === 'palladium' && (
-          <div className="flex items-center gap-2 px-4 py-3 bg-amber-50 border border-amber-200 rounded-lg">
-            <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0" />
-            <span className="text-sm text-amber-800">
-              <strong>Palladium Mall:</strong> Only iced beverages, mochis, and boba crème caramel are available for pickup. Hot beverages and food items are greyed out.
-            </span>
-          </div>
-        )}
         
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
           {products.filter((product) => product.isAvailable !== false).map((product) => {
@@ -410,13 +397,7 @@ export default function Menu() {
                   isDelivery={state.orderType !== 'instore'}
                   orderType={state.orderType}
                 />
-                {!isAvailable && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-black/20 rounded-xl">
-                    <span className="bg-white/90 text-xs font-medium px-2 py-1 rounded text-muted-foreground">
-                      Not at Palladium
-                    </span>
-                  </div>
-                )}
+
               </div>
             );
           })}
@@ -527,32 +508,17 @@ export default function Menu() {
               </div>
             )}
 
-            {/* Pickup outlet selector */}
+            {/* Pickup outlet selector - currently only T Nagar available */}
             {state.orderType === 'pickup' && (
               <div className="flex items-center gap-3">
                 <span className="text-sm font-medium text-muted-foreground">Pickup from:</span>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => setPickupOutlet('palladium')}
-                    className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
-                      pickupOutlet === 'palladium'
-                        ? 'bg-primary text-white shadow-md'
-                        : 'bg-white border border-border hover:border-primary/50 text-muted-foreground hover:text-primary'
-                    }`}
-                  >
-                    Palladium Mall
-                  </button>
-                  <button
-                    onClick={() => setPickupOutlet('tnagar')}
-                    className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
-                      pickupOutlet === 'tnagar'
-                        ? 'bg-primary text-white shadow-md'
-                        : 'bg-white border border-border hover:border-primary/50 text-muted-foreground hover:text-primary'
-                    }`}
-                  >
-                    T Nagar
-                  </button>
-                </div>
+                <button
+                  onClick={() => setPickupOutlet('tnagar')}
+                  className="px-3 py-1.5 rounded-lg text-sm font-medium bg-primary text-white shadow-md"
+                  disabled
+                >
+                  T Nagar
+                </button>
               </div>
             )}
 
@@ -653,13 +619,7 @@ export default function Menu() {
                         isDelivery={state.orderType !== 'instore'}
                         orderType={state.orderType}
                       />
-                      {!isAvailable && (
-                        <div className="absolute inset-0 flex items-center justify-center bg-black/20 rounded-xl">
-                          <span className="bg-white/90 text-xs font-medium px-2 py-1 rounded text-muted-foreground">
-                            Not at Palladium
-                          </span>
-                        </div>
-                      )}
+
                     </div>
                   );
                 })}
