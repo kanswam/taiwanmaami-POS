@@ -60,6 +60,7 @@ function AvailabilityPanel() {
   const utils = trpc.useUtils();
   const { data: subcategories, isLoading } = trpc.menu.getSubcategories.useQuery();
   const { data: categories } = trpc.menu.getCategories.useQuery();
+  const { data: products } = trpc.menu.getProducts.useQuery();
   
   const toggleAvailability = trpc.admin.toggleSubcategoryAvailability.useMutation({
     onSuccess: () => {
@@ -68,6 +69,16 @@ function AvailabilityPanel() {
     },
     onError: (err) => {
       toast.error(err.message || 'Failed to update availability');
+    },
+  });
+
+  const toggleProductAvailability = trpc.admin.toggleProductAvailability.useMutation({
+    onSuccess: () => {
+      toast.success('Product availability updated');
+      utils.menu.getProducts.invalidate();
+    },
+    onError: (err) => {
+      toast.error(err.message || 'Failed to update product availability');
     },
   });
 
@@ -152,6 +163,47 @@ function AvailabilityPanel() {
           </div>
         </div>
       ))}
+
+      {/* Product Availability Section */}
+      <div className="mt-8 pt-8 border-t">
+        <div className="bg-muted/50 p-4 rounded-lg mb-6">
+          <h3 className="font-medium flex items-center gap-2 mb-2">
+            <ToggleLeft className="w-5 h-5" />
+            Toggle Product Availability
+          </h3>
+          <p className="text-sm text-muted-foreground">
+            Turn off availability for individual products that are out of stock.
+          </p>
+        </div>
+
+        {Object.entries(groupedSubcategories).map(([categoryName, subs]) => {
+          const categoryProducts = products?.filter((p: any) => (subs as any[]).some(s => s.id === p.subcategoryId)) || [];
+          if (categoryProducts.length === 0) return null;
+          return (
+            <div key={`products-${categoryName}`} className="border rounded-lg overflow-hidden mb-4">
+              <div className="bg-muted px-4 py-2 font-medium">{categoryName}</div>
+              <div className="divide-y">
+                {categoryProducts.map((product: any) => (
+                  <div key={product.id} className="p-4 flex items-center justify-between">
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium break-words">{product.name}</p>
+                      {product.chineseName && <p className="text-sm text-muted-foreground">{product.chineseName}</p>}
+                    </div>
+                    <div className="flex items-center gap-3 flex-shrink-0 ml-4">
+                      <span className="text-sm text-muted-foreground">{product.isAvailable ? 'Available' : 'Out'}</span>
+                      <Switch
+                        checked={product.isAvailable !== false}
+                        onCheckedChange={(checked) => toggleProductAvailability.mutate({ id: product.id, isAvailable: checked })}
+                        disabled={toggleProductAvailability.isPending}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }

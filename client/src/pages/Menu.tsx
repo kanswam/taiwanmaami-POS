@@ -389,7 +389,7 @@ export default function Menu() {
         )}
         
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-          {products.map((product) => {
+          {products.filter((product) => product.isAvailable !== false).map((product) => {
             const sub = getSubcategoryById(product.subcategoryId);
             if (!sub) return null;
             // Find the category for this product's subcategory

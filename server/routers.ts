@@ -1536,6 +1536,24 @@ export const appRouter = router({
         return { success: true };
       }),
 
+    toggleProductAvailability: staffProcedure
+      .input(z.object({
+        id: z.number(),
+        isAvailable: z.boolean(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const dbInstance = await getDb();
+        if (!dbInstance) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
+        const { id, isAvailable } = input;
+        
+        await dbInstance!.update(products).set({ isAvailable }).where(eq(products.id, id));
+        
+        // Log the change
+        console.log(`[Staff] ${ctx.user.name} (${ctx.user.id}) toggled product ${id} availability to ${isAvailable}`);
+        
+        return { success: true };
+      }),
+
     deleteSubcategory: adminProcedure
       .input(z.object({ id: z.number() }))
       .mutation(async ({ input }) => {

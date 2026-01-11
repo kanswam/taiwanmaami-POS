@@ -114,6 +114,7 @@ export const products = mysqlTable("products", {
   useBasePrice: boolean("useBasePrice").default(true).notNull(), // If true, inherit price from subcategory
   // Availability
   isInStock: boolean("isInStock").default(true).notNull(),
+  isAvailable: boolean("isAvailable").default(true).notNull(), // Real-time availability toggle for staff
   availableInstore: boolean("availableInstore").default(true).notNull(),
   availableDelivery: boolean("availableDelivery").default(true).notNull(),
   availableAtPalladium: boolean("availableAtPalladium").default(true).notNull(), // For pickup at Palladium outlet
