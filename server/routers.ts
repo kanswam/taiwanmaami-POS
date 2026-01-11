@@ -1567,8 +1567,8 @@ export const appRouter = router({
         return { success: true };
       }),
 
-    // Get all products including inactive ones
-    getAllProducts: adminProcedure.query(async () => {
+    // Get all products including inactive ones - for staff availability management
+    getAllProducts: staffProcedure.query(async () => {
       const dbInstance = await getDb();
       if (!dbInstance) return [];
       const allProducts = await dbInstance.select().from(products).orderBy(asc(products.displayOrder));

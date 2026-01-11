@@ -60,7 +60,7 @@ function AvailabilityPanel() {
   const utils = trpc.useUtils();
   const { data: subcategories, isLoading } = trpc.menu.getSubcategories.useQuery();
   const { data: categories } = trpc.menu.getCategories.useQuery();
-  const { data: products } = trpc.menu.getProducts.useQuery();
+  const { data: products } = trpc.admin.getAllProducts.useQuery();
   
   const toggleAvailability = trpc.admin.toggleSubcategoryAvailability.useMutation({
     onSuccess: () => {

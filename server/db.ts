@@ -117,6 +117,12 @@ export async function getProducts(subcategoryId?: number, activeOnly = true) {
   return db.select().from(products).where(and(...conditions)).orderBy(asc(products.displayOrder));
 }
 
+export async function getAllProductsForStaff() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(products).orderBy(asc(products.displayOrder));
+}
+
 export async function getProductById(id: number) {
   const db = await getDb();
   if (!db) return undefined;
