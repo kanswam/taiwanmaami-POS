@@ -1,0 +1,20 @@
+{
+  "query": "SELECT id, orderNumber, orderStatus, paymentStatus, totalAmount, stateGst, centralGst, createdAt FROM orders WHERE orderNumber LIKE 'TMMJYG8SV9QUF2%'",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT id, orderNumber, orderStatus, paymentStatus, totalAmount, stateGst, centralGst, createdAt FROM orders WHERE orderNumber LIKE 'TMMJYG8SV9QUF2%'",
+  "rows": [
+    {
+      "id": "630001",
+      "orderNumber": "TMMJYG8SV9QUF2",
+      "orderStatus": "completed",
+      "paymentStatus": "completed",
+      "totalAmount": "126500",
+      "stateGst": "3038",
+      "centralGst": "3038",
+      "createdAt": "2026-01-03 15:20:08"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\torderNumber\torderStatus\tpaymentStatus\ttotalAmount\tstateGst\tcentralGst\tcreatedAt\n630001\tTMMJYG8SV9QUF2\tcompleted\tcompleted\t126500\t3038\t3038\t2026-01-03 15:20:08\n",
+  "stderr": "",
+  "execution_time_ms": 1540
+}

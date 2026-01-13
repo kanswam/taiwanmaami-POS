@@ -40,77 +40,107 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+  
+  /* Custom brand font - Jost (Futura-style) */
+  --font-sans: 'Jost', system-ui, sans-serif;
+  --font-heading: 'Jost', system-ui, sans-serif;
 }
 
 :root {
-  --primary: var(--color-blue-700);
-  --primary-foreground: var(--color-blue-50);
-  --sidebar-primary: var(--color-blue-600);
-  --sidebar-primary-foreground: var(--color-blue-50);
-  --chart-1: var(--color-blue-300);
-  --chart-2: var(--color-blue-500);
-  --chart-3: var(--color-blue-600);
-  --chart-4: var(--color-blue-700);
-  --chart-5: var(--color-blue-800);
+  /* Taiwan Maami Brand - New Color Palette */
+  /* #d2b48c - Tan/Wheat (backgrounds) */
+  /* #a86462 - Dusty Rose (secondary) */
+  /* #a85348 - Terracotta (accent) */
+  /* #bd302c - Warm Red (primary) */
+  /* #9e0b0f - Deep Red (destructive/hover) */
+  
+  /* Primary: Warm Red #bd302c */
+  --primary: #bd302c;
+  --primary-foreground: #ffffff;
+  
+  /* Sidebar primary */
+  --sidebar-primary: #a85348;
+  --sidebar-primary-foreground: #ffffff;
+  
+  /* Chart colors - warm palette */
+  --chart-1: #bd302c;
+  --chart-2: #a85348;
+  --chart-3: #d2b48c;
+  --chart-4: #a86462;
+  --chart-5: #9e0b0f;
+  
   --radius: 0.65rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.235 0.015 65);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.235 0.015 65);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.235 0.015 65);
-  --secondary: oklch(0.98 0.001 286.375);
-  --secondary-foreground: oklch(0.4 0.015 65);
-  --muted: oklch(0.967 0.001 286.375);
-  --muted-foreground: oklch(0.552 0.016 285.938);
-  --accent: oklch(0.967 0.001 286.375);
-  --accent-foreground: oklch(0.141 0.005 285.823);
-  --destructive: oklch(0.577 0.245 27.325);
-  --destructive-foreground: oklch(0.985 0 0);
-  --border: oklch(0.92 0.004 286.32);
-  --input: oklch(0.92 0.004 286.32);
-  --ring: oklch(0.623 0.214 259.815);
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.235 0.015 65);
-  --sidebar-accent: oklch(0.967 0.001 286.375);
-  --sidebar-accent-foreground: oklch(0.141 0.005 285.823);
-  --sidebar-border: oklch(0.92 0.004 286.32);
-  --sidebar-ring: oklch(0.623 0.214 259.815);
+  
+  /* Background: Warm beige RGB(210, 180, 140) */
+  --background: rgb(210, 180, 140);
+  --foreground: #3d2c24;
+  
+  /* Card: Warm white */
+  --card: #fffbf5;
+  --card-foreground: #3d2c24;
+  
+  /* Popover */
+  --popover: #fffbf5;
+  --popover-foreground: #3d2c24;
+  
+  /* Secondary: Dusty Rose #a86462 lighter */
+  --secondary: #f0e4de;
+  --secondary-foreground: #5c3d38;
+  
+  /* Muted */
+  --muted: #ebe3d9;
+  --muted-foreground: #7a6a5f;
+  
+  /* Accent: Terracotta #a85348 */
+  --accent: #a85348;
+  --accent-foreground: #ffffff;
+  
+  /* Destructive: Deep Red #9e0b0f */
+  --destructive: #9e0b0f;
+  --destructive-foreground: #ffffff;
+  
+  /* Borders - based on tan */
+  --border: #d2b48c;
+  --input: #d2b48c;
+  --ring: #bd302c;
+  
+  /* Sidebar */
+  --sidebar: #faf6f0;
+  --sidebar-foreground: #3d2c24;
+  --sidebar-accent: #f0e4de;
+  --sidebar-accent-foreground: #3d2c24;
+  --sidebar-border: #d2b48c;
+  --sidebar-ring: #bd302c;
 }
 
 .dark {
-  --primary: var(--color-blue-700);
-  --primary-foreground: var(--color-blue-50);
-  --sidebar-primary: var(--color-blue-500);
-  --sidebar-primary-foreground: var(--color-blue-50);
-  --background: oklch(0.141 0.005 285.823);
-  --foreground: oklch(0.85 0.005 65);
-  --card: oklch(0.21 0.006 285.885);
-  --card-foreground: oklch(0.85 0.005 65);
-  --popover: oklch(0.21 0.006 285.885);
-  --popover-foreground: oklch(0.85 0.005 65);
-  --secondary: oklch(0.24 0.006 286.033);
-  --secondary-foreground: oklch(0.7 0.005 65);
-  --muted: oklch(0.274 0.006 286.033);
-  --muted-foreground: oklch(0.705 0.015 286.067);
-  --accent: oklch(0.274 0.006 286.033);
-  --accent-foreground:  oklch(0.92 0.005 65);
-  --destructive: oklch(0.704 0.191 22.216);
-  --destructive-foreground: oklch(0.985 0 0);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.488 0.243 264.376);
-  --chart-1: var(--color-blue-300);
-  --chart-2: var(--color-blue-500);
-  --chart-3: var(--color-blue-600);
-  --chart-4: var(--color-blue-700);
-  --chart-5: var(--color-blue-800);
-  --sidebar: oklch(0.21 0.006 285.885);
-  --sidebar-foreground: oklch(0.85 0.005 65);
-  --sidebar-accent: oklch(0.274 0.006 286.033);
-  --sidebar-accent-foreground:  oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.488 0.243 264.376);
+  --primary: #d94a46;
+  --primary-foreground: #ffffff;
+  --sidebar-primary: #c45a4f;
+  --sidebar-primary-foreground: #ffffff;
+  --background: #2a1f1a;
+  --foreground: #f5efe6;
+  --card: #3d2c24;
+  --card-foreground: #f5efe6;
+  --popover: #3d2c24;
+  --popover-foreground: #f5efe6;
+  --secondary: #4a3830;
+  --secondary-foreground: #e8ddd4;
+  --muted: #4a3830;
+  --muted-foreground: #a89a8f;
+  --accent: #c45a4f;
+  --accent-foreground: #ffffff;
+  --destructive: #c41a1f;
+  --destructive-foreground: #ffffff;
+  --border: #5c4a40;
+  --input: #5c4a40;
+  --ring: #d94a46;
+  --sidebar: #352820;
+  --sidebar-foreground: #f5efe6;
+  --sidebar-accent: #4a3830;
+  --sidebar-accent-foreground: #f5efe6;
+  --sidebar-border: #5c4a40;
+  --sidebar-ring: #d94a46;
 }
 
 @layer base {
@@ -119,59 +149,277 @@
   }
   body {
     @apply bg-background text-foreground;
+    font-family: 'Jost', system-ui, sans-serif;
   }
-  button:not(:disabled),
-  [role="button"]:not([aria-disabled="true"]),
-  [type="button"]:not(:disabled),
-  [type="submit"]:not(:disabled),
-  [type="reset"]:not(:disabled),
-  a[href],
-  select:not(:disabled),
-  input[type="checkbox"]:not(:disabled),
-  input[type="radio"]:not(:disabled) {
-    @apply cursor-pointer;
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Jost', system-ui, sans-serif;
+    font-weight: 600;
   }
 }
 
-@layer components {
-  /**
-   * Custom container utility that centers content and adds responsive padding.
-   *
-   * This overrides Tailwind's default container behavior to:
-   * - Auto-center content (mx-auto)
-   * - Add responsive horizontal padding
-   * - Set max-width for large screens
-   *
-   * Usage: <div className="container">...</div>
-   *
-   * For custom widths, use max-w-* utilities directly:
-   * <div className="max-w-6xl mx-auto px-4">...</div>
-   */
-  .container {
-    width: 100%;
-    margin-left: auto;
-    margin-right: auto;
-    padding-left: 1rem; /* 16px - mobile padding */
-    padding-right: 1rem;
-  }
+/* Container customization */
+.container {
+  @apply mx-auto px-4 sm:px-6 lg:px-8;
+  max-width: 1280px;
+}
 
-  .flex {
-    min-height: 0;
-    min-width: 0;
-  }
+/* Flex defaults */
+.flex {
+  min-width: 0;
+  min-height: 0;
+}
 
-  @media (min-width: 640px) {
-    .container {
-      padding-left: 1.5rem; /* 24px - tablet padding */
-      padding-right: 1.5rem;
-    }
-  }
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
 
-  @media (min-width: 1024px) {
-    .container {
-      padding-left: 2rem; /* 32px - desktop padding */
-      padding-right: 2rem;
-      max-width: 1280px; /* Standard content width */
-    }
+::-webkit-scrollbar-track {
+  background: #f5efe6;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #d2b48c;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a85348;
+}
+
+/* Product card styling - consistent sizing */
+.product-card {
+  display: flex;
+  flex-direction: column;
+  aspect-ratio: 3/4;
+  overflow: hidden;
+}
+
+.product-card-content {
+  padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  flex-shrink: 0;
+  min-height: 5.5rem;
+}
+
+/* Product card portrait styling */
+.product-card-portrait {
+  aspect-ratio: 3/4;
+}
+
+/* Category card styling */
+.category-card {
+  background: linear-gradient(135deg, #bd302c 0%, #9e0b0f 100%);
+}
+
+/* Subcategory card with image overlay */
+.subcategory-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.subcategory-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.2) 50%, transparent 100%);
+}
+
+/* Hero section gradient */
+.hero-gradient {
+  background: linear-gradient(135deg, #f5efe6 0%, #f0e4de 100%);
+}
+
+/* Warm button hover effect */
+.btn-warm:hover {
+  background: #9e0b0f;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(189, 48, 44, 0.3);
+}
+
+/* Touch-friendly button for POS */
+.pos-touch-btn {
+  min-height: 48px;
+  min-width: 48px;
+  touch-action: manipulation;
+}
+
+/* Loading shimmer effect */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
   }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.shimmer {
+  background: linear-gradient(
+    90deg,
+    #ebe3d9 0%,
+    #f5efe6 50%,
+    #ebe3d9 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* Price tag styling */
+.price-tag {
+  color: #bd302c;
+  font-weight: 700;
+}
+
+/* Badge styling */
+.badge-new {
+  background: #a85348;
+  color: white;
+}
+
+.badge-popular {
+  background: #bd302c;
+  color: white;
+}
+
+/* Modal overlay */
+.modal-overlay {
+  background: rgba(61, 44, 36, 0.6);
+  backdrop-filter: blur(4px);
+}
+
+/* Selection highlight */
+.selection-ring {
+  box-shadow: 0 0 0 3px rgba(189, 48, 44, 0.3);
+}
+
+/* Warm gradient backgrounds */
+.bg-warm-gradient {
+  background: linear-gradient(135deg, #f5efe6 0%, #f0e4de 100%);
+}
+
+.bg-wood-pattern {
+  background-color: #a85348;
+  background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+}
+
+
+/* Dietary badges */
+.badge-veg {
+  display: inline-flex;
+  align-items: center;
+  background: #22c55e;
+  color: white;
+  font-size: 0.65rem;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 4px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+
+.badge-vegan {
+  display: inline-flex;
+  align-items: center;
+  background: #16a34a;
+  color: white;
+  font-size: 0.65rem;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 4px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+
+.badge-egg {
+  display: inline-flex;
+  align-items: center;
+  background: #fbbf24;
+  color: #78350f;
+  font-size: 0.65rem;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 2px solid #f59e0b;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+
+
+/* CMS Content - Renders HTML exactly as created in WYSIWYG editor */
+.cms-content {
+  line-height: 1.7;
+}
+.cms-content p {
+  margin-bottom: 1em;
+}
+.cms-content p:empty {
+  margin-bottom: 0.5em;
+}
+.cms-content h1 {
+  font-size: 1.875rem;
+  font-weight: 700;
+  margin-top: 1.5em;
+  margin-bottom: 0.75em;
+  color: var(--foreground);
+}
+.cms-content h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-top: 1.25em;
+  margin-bottom: 0.5em;
+  color: var(--foreground);
+}
+.cms-content h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-top: 1em;
+  margin-bottom: 0.5em;
+  color: var(--foreground);
+}
+.cms-content strong {
+  font-weight: 600;
+  color: var(--foreground);
+}
+.cms-content em {
+  font-style: italic;
+}
+.cms-content u {
+  text-decoration: underline;
+}
+.cms-content ul {
+  list-style-type: disc;
+  padding-left: 1.5em;
+  margin-bottom: 1em;
+}
+.cms-content ol {
+  list-style-type: decimal;
+  padding-left: 1.5em;
+  margin-bottom: 1em;
+}
+.cms-content li {
+  margin-bottom: 0.25em;
+}
+.cms-content a {
+  color: var(--primary);
+  text-decoration: underline;
+}
+.cms-content a:hover {
+  opacity: 0.8;
+}
+
+/* Marquee animation for running banner ticker */
+@keyframes marquee {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-marquee {
+  display: inline-block;
+  animation: marquee 20s linear infinite;
 }

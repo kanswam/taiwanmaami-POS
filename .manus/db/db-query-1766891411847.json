@@ -1,0 +1,9 @@
+{
+  "query": "INSERT INTO addons (name, chineseName, type, pricePetite, priceRegular, priceLarge, fixedPrice, isActive, displayOrder) VALUES \n('Coconut Cream Cap', '椰子奶蓋', 'vegan_milk', 3500, 4000, 4500, NULL, 1, 10),\n('Extra Egg', '加蛋', 'food_addon', NULL, NULL, NULL, 2500, 1, 1),\n('Extra Cheese', '加芝士', 'food_addon', NULL, NULL, NULL, 3000, 1, 2);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute INSERT INTO addons (name, chineseName, type, pricePetite, priceRegular, priceLarge, fixedPrice, isActive, displayOrder) VALUES \n('Coconut Cream Cap', '椰子奶蓋', 'vegan_milk', 3500, 4000, 4500, NULL, 1, 10),\n('Extra Egg', '加蛋', 'food_addon', NULL, NULL, NULL, 2500, 1, 1),\n('Extra Cheese', '加芝士', 'food_addon', NULL, NULL, NULL, 3000, 1, 2);",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 1590
+}

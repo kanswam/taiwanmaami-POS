@@ -1,0 +1,30 @@
+{
+  "query": "SELECT id, name, slug FROM products WHERE name LIKE '%Imo%' OR name LIKE '%Coconut Katsu%' OR name LIKE '%Katsu Curry%';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT id, name, slug FROM products WHERE name LIKE '%Imo%' OR name LIKE '%Coconut Katsu%' OR name LIKE '%Katsu Curry%';",
+  "rows": [
+    {
+      "id": "61",
+      "name": "Original Japanese Imo Katsu Curry",
+      "slug": "yaki-onigiri"
+    },
+    {
+      "id": "240001",
+      "name": "Coconut Japanese Imo Katsu Curry",
+      "slug": "coconut-japanese-imo-katsu-curry"
+    },
+    {
+      "id": "270001",
+      "name": "Spicy Japanese Imo Katsu Curry",
+      "slug": "spicy-japanese-imo-katsu-curry"
+    },
+    {
+      "id": "420001",
+      "name": "Imo Coconut Katsu Curry",
+      "slug": "imo-coconut-katsu-curry"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\tslug\n61\tOriginal Japanese Imo Katsu Curry\tyaki-onigiri\n240001\tCoconut Japanese Imo Katsu Curry\tcoconut-japanese-imo-katsu-curry\n270001\tSpicy Japanese Imo Katsu Curry\tspicy-japanese-imo-katsu-curry\n420001\tImo Coconut Katsu Curry\timo-coconut-katsu-curry\n",
+  "stderr": "",
+  "execution_time_ms": 1541
+}

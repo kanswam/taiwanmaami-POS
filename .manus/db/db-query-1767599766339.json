@@ -1,0 +1,37 @@
+{
+  "query": "SELECT id, orderNumber, orderType, orderStatus, paymentStatus, totalAmount, createdAt FROM orders ORDER BY createdAt DESC LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT id, orderNumber, orderType, orderStatus, paymentStatus, totalAmount, createdAt FROM orders ORDER BY createdAt DESC LIMIT 10;",
+  "rows": [
+    {
+      "id": "660011",
+      "orderNumber": "00003",
+      "orderType": "instore",
+      "orderStatus": "completed",
+      "paymentStatus": "completed",
+      "totalAmount": "378526",
+      "createdAt": "2026-01-04 16:03:04"
+    },
+    {
+      "id": "660010",
+      "orderNumber": "00002",
+      "orderType": "instore",
+      "orderStatus": "completed",
+      "paymentStatus": "completed",
+      "totalAmount": "128992",
+      "createdAt": "2026-01-04 15:15:49"
+    },
+    {
+      "id": "630001",
+      "orderNumber": "00001",
+      "orderType": "delivery",
+      "orderStatus": "completed",
+      "paymentStatus": "completed",
+      "totalAmount": "126500",
+      "createdAt": "2026-01-03 15:20:08"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\torderNumber\torderType\torderStatus\tpaymentStatus\ttotalAmount\tcreatedAt\n660011\t00003\tinstore\tcompleted\tcompleted\t378526\t2026-01-04 16:03:04\n660010\t00002\tinstore\tcompleted\tcompleted\t128992\t2026-01-04 15:15:49\n630001\t00001\tdelivery\tcompleted\tcompleted\t126500\t2026-01-03 15:20:08\n",
+  "stderr": "",
+  "execution_time_ms": 1586
+}

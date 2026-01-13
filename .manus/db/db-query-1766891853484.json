@@ -1,0 +1,172 @@
+{
+  "query": "SELECT id, name, slug, categoryId, isActive, displayOrder FROM subcategories ORDER BY categoryId, displayOrder;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT id, name, slug, categoryId, isActive, displayOrder FROM subcategories ORDER BY categoryId, displayOrder;",
+  "rows": [
+    {
+      "id": "30003",
+      "name": "Slush",
+      "slug": "slush",
+      "categoryId": "1",
+      "isActive": "1",
+      "displayOrder": "0"
+    },
+    {
+      "id": "30004",
+      "name": "Iced Lavazza Coffee",
+      "slug": "iced-lavazza-coffee",
+      "categoryId": "1",
+      "isActive": "1",
+      "displayOrder": "0"
+    },
+    {
+      "id": "1",
+      "name": "Organic Assam",
+      "slug": "black-tea",
+      "categoryId": "1",
+      "isActive": "1",
+      "displayOrder": "1"
+    },
+    {
+      "id": "2",
+      "name": "Organic Oolong",
+      "slug": "oolong-tea",
+      "categoryId": "1",
+      "isActive": "1",
+      "displayOrder": "2"
+    },
+    {
+      "id": "3",
+      "name": "Organic Green Tea",
+      "slug": "green-tea",
+      "categoryId": "1",
+      "isActive": "1",
+      "displayOrder": "3"
+    },
+    {
+      "id": "4",
+      "name": "Matcha Blend",
+      "slug": "matcha",
+      "categoryId": "1",
+      "isActive": "1",
+      "displayOrder": "4"
+    },
+    {
+      "id": "5",
+      "name": "Taro Blend",
+      "slug": "taro",
+      "categoryId": "1",
+      "isActive": "1",
+      "displayOrder": "5"
+    },
+    {
+      "id": "7",
+      "name": "Hot Coffee & Cocoa ",
+      "slug": "hot-coffee",
+      "categoryId": "2",
+      "isActive": "1",
+      "displayOrder": "2"
+    },
+    {
+      "id": "180001",
+      "name": "Grilled Mochi   ",
+      "slug": "grilled-mochi",
+      "categoryId": "3",
+      "isActive": "1",
+      "displayOrder": "0"
+    },
+    {
+      "id": "120001",
+      "name": "Soufflé Pancake ",
+      "slug": "souffl-pancake",
+      "categoryId": "3",
+      "isActive": "1",
+      "displayOrder": "0"
+    },
+    {
+      "id": "60003",
+      "name": "Sweet Pillow Brioche ",
+      "slug": "sweet-pillow-brioche",
+      "categoryId": "3",
+      "isActive": "1",
+      "displayOrder": "0"
+    },
+    {
+      "id": "60002",
+      "name": "Boba Crème Caramel",
+      "slug": "boba-cr-me-caramel",
+      "categoryId": "3",
+      "isActive": "1",
+      "displayOrder": "0"
+    },
+    {
+      "id": "8",
+      "name": "Fruit Mochi",
+      "slug": "fruit-mochi",
+      "categoryId": "3",
+      "isActive": "1",
+      "displayOrder": "1"
+    },
+    {
+      "id": "9",
+      "name": "Signature Mochi",
+      "slug": "signature-mochi",
+      "categoryId": "3",
+      "isActive": "1",
+      "displayOrder": "2"
+    },
+    {
+      "id": "60004",
+      "name": "Saucy Noodles",
+      "slug": "saucy-noodles",
+      "categoryId": "4",
+      "isActive": "1",
+      "displayOrder": "0"
+    },
+    {
+      "id": "10",
+      "name": "Rice",
+      "slug": "onigiri",
+      "categoryId": "4",
+      "isActive": "1",
+      "displayOrder": "1"
+    },
+    {
+      "id": "11",
+      "name": "Flat Bread",
+      "slug": "flat-bread",
+      "categoryId": "4",
+      "isActive": "1",
+      "displayOrder": "2"
+    },
+    {
+      "id": "12",
+      "name": "Noodles Soup",
+      "slug": "noodles",
+      "categoryId": "4",
+      "isActive": "1",
+      "displayOrder": "3"
+    },
+    {
+      "id": "13",
+      "name": "Savoury Pillow Brioche",
+      "slug": "pillow-brioche",
+      "categoryId": "4",
+      "isActive": "1",
+      "displayOrder": "4"
+    },
+    {
+      "id": "14",
+      "name": "Omelette ",
+      "slug": "desserts",
+      "categoryId": "4",
+      "isActive": "1",
+      "displayOrder": "5"
+    }
+  ],
+  "messages": [
+    "6\tTea in Pot\t\ticed-coffee\t2\t1\t1"
+  ],
+  "stdout": "id\tname\tslug\tcategoryId\tisActive\tdisplayOrder\n30003\tSlush\tslush\t1\t1\t0\n30004\tIced Lavazza Coffee\ticed-lavazza-coffee\t1\t1\t0\n1\tOrganic Assam\tblack-tea\t1\t1\t1\n2\tOrganic Oolong\toolong-tea\t1\t1\t2\n3\tOrganic Green Tea\tgreen-tea\t1\t1\t3\n4\tMatcha Blend\tmatcha\t1\t1\t4\n5\tTaro Blend\ttaro\t1\t1\t5\n6\tTea in Pot\t\ticed-coffee\t2\t1\t1\n7\tHot Coffee & Cocoa \thot-coffee\t2\t1\t2\n180001\tGrilled Mochi   \tgrilled-mochi\t3\t1\t0\n120001\tSoufflé Pancake \tsouffl-pancake\t3\t1\t0\n60003\tSweet Pillow Brioche \tsweet-pillow-brioche\t3\t1\t0\n60002\tBoba Crème Caramel\tboba-cr-me-caramel\t3\t1\t0\n8\tFruit Mochi\tfruit-mochi\t3\t1\t1\n9\tSignature Mochi\tsignature-mochi\t3\t1\t2\n60004\tSaucy Noodles\tsaucy-noodles\t4\t1\t0\n10\tRice\tonigiri\t4\t1\t1\n11\tFlat Bread\tflat-bread\t4\t1\t2\n12\tNoodles Soup\tnoodles\t4\t1\t3\n13\tSavoury Pillow Brioche\tpillow-brioche\t4\t1\t4\n14\tOmelette \tdesserts\t4\t1\t5\n",
+  "stderr": "",
+  "execution_time_ms": 1606
+}

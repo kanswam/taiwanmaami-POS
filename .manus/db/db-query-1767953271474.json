@@ -1,0 +1,30 @@
+{
+  "query": "SELECT id, orderNumber, customerName, orderType, orderStatus, subtotal, totalAmount, createdAt FROM orders WHERE orderNumber IN ('00030', '00029') ORDER BY createdAt DESC;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT id, orderNumber, customerName, orderType, orderStatus, subtotal, totalAmount, createdAt FROM orders WHERE orderNumber IN ('00030', '00029') ORDER BY createdAt DESC;",
+  "rows": [
+    {
+      "id": "840003",
+      "orderNumber": "00030",
+      "customerName": "NULL",
+      "orderType": "instore",
+      "orderStatus": "ready",
+      "subtotal": "210500",
+      "totalAmount": "210500",
+      "createdAt": "2026-01-09 09:19:59"
+    },
+    {
+      "id": "840002",
+      "orderNumber": "00029",
+      "customerName": "NULL",
+      "orderType": "instore",
+      "orderStatus": "preparing",
+      "subtotal": "210500",
+      "totalAmount": "210500",
+      "createdAt": "2026-01-09 09:19:27"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\torderNumber\tcustomerName\torderType\torderStatus\tsubtotal\ttotalAmount\tcreatedAt\n840003\t00030\tNULL\tinstore\tready\t210500\t210500\t2026-01-09 09:19:59\n840002\t00029\tNULL\tinstore\tpreparing\t210500\t210500\t2026-01-09 09:19:27\n",
+  "stderr": "",
+  "execution_time_ms": 1685
+}

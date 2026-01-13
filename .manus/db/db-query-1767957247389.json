@@ -1,0 +1,22 @@
+{
+  "query": "SELECT o.orderNumber, o.customerName, o.orderStatus, o.paymentStatus, o.paymentMethod, o.subtotal, o.stateGst, o.centralGst, o.totalAmount, COUNT(oi.id) as itemCount FROM orders o LEFT JOIN order_items oi ON o.id = oi.orderId WHERE o.orderNumber = '00029' GROUP BY o.id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT o.orderNumber, o.customerName, o.orderStatus, o.paymentStatus, o.paymentMethod, o.subtotal, o.stateGst, o.centralGst, o.totalAmount, COUNT(oi.id) as itemCount FROM orders o LEFT JOIN order_items oi ON o.id = oi.orderId WHERE o.orderNumber = '00029' GROUP BY o.id;",
+  "rows": [
+    {
+      "orderNumber": "00029",
+      "customerName": "Guest",
+      "orderStatus": "completed",
+      "paymentStatus": "completed",
+      "paymentMethod": "cash",
+      "subtotal": "210500",
+      "stateGst": "5263",
+      "centralGst": "5263",
+      "totalAmount": "221026",
+      "itemCount": "5"
+    }
+  ],
+  "messages": [],
+  "stdout": "orderNumber\tcustomerName\torderStatus\tpaymentStatus\tpaymentMethod\tsubtotal\tstateGst\tcentralGst\ttotalAmount\titemCount\n00029\tGuest\tcompleted\tcompleted\tcash\t210500\t5263\t5263\t221026\t5\n",
+  "stderr": "",
+  "execution_time_ms": 1508
+}

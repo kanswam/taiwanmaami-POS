@@ -1,0 +1,35 @@
+{
+  "query": "SELECT id, name, displayOrder FROM categories ORDER BY displayOrder;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT id, name, displayOrder FROM categories ORDER BY displayOrder;",
+  "rows": [
+    {
+      "id": "1",
+      "name": "Bubble Tea",
+      "displayOrder": "1"
+    },
+    {
+      "id": "2",
+      "name": "Coffee",
+      "displayOrder": "2"
+    },
+    {
+      "id": "3",
+      "name": "Mochis",
+      "displayOrder": "3"
+    },
+    {
+      "id": "4",
+      "name": "Food",
+      "displayOrder": "4"
+    },
+    {
+      "id": "5",
+      "name": "Slush",
+      "displayOrder": "5"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\tdisplayOrder\n1\tBubble Tea\t1\n2\tCoffee\t2\n3\tMochis\t3\n4\tFood\t4\n5\tSlush\t5\n",
+  "stderr": "",
+  "execution_time_ms": 1006
+}

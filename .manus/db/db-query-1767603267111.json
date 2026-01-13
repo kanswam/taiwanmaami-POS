@@ -1,0 +1,18 @@
+{
+  "query": "SELECT id, orderId, outletId, orderNumber, isPrinted, createdAt FROM kot_queue WHERE isPrinted = 0;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT id, orderId, outletId, orderNumber, isPrinted, createdAt FROM kot_queue WHERE isPrinted = 0;",
+  "rows": [
+    {
+      "id": "360001",
+      "orderId": "690001",
+      "outletId": "1",
+      "orderNumber": "00004",
+      "isPrinted": "0",
+      "createdAt": "2026-01-05 08:37:02"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\torderId\toutletId\torderNumber\tisPrinted\tcreatedAt\n360001\t690001\t1\t00004\t0\t2026-01-05 08:37:02\n",
+  "stderr": "",
+  "execution_time_ms": 1620
+}

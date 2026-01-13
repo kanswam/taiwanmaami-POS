@@ -1,0 +1,9 @@
+{
+  "query": "INSERT INTO product_addons (productId, addonId) VALUES \n(61, 9), \n(240001, 9), \n(270001, 9)\nON DUPLICATE KEY UPDATE productId=productId;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute INSERT INTO product_addons (productId, addonId) VALUES \n(61, 9), \n(240001, 9), \n(270001, 9)\nON DUPLICATE KEY UPDATE productId=productId;",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 1553
+}

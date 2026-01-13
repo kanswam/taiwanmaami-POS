@@ -1,0 +1,73 @@
+{
+  "query": "SELECT slug FROM subcategories;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT slug FROM subcategories;",
+  "rows": [
+    {
+      "slug": "black-tea"
+    },
+    {
+      "slug": "boba-cr-me-caramel"
+    },
+    {
+      "slug": "desserts"
+    },
+    {
+      "slug": "flat-bread"
+    },
+    {
+      "slug": "fruit-mochi"
+    },
+    {
+      "slug": "green-tea"
+    },
+    {
+      "slug": "hot-chocolate"
+    },
+    {
+      "slug": "hot-coffee"
+    },
+    {
+      "slug": "iced-coffee"
+    },
+    {
+      "slug": "iced-lavazza-coffee"
+    },
+    {
+      "slug": "matcha"
+    },
+    {
+      "slug": "noodles"
+    },
+    {
+      "slug": "onigiri"
+    },
+    {
+      "slug": "oolong-tea"
+    },
+    {
+      "slug": "pillow-brioche"
+    },
+    {
+      "slug": "saucy-noodles"
+    },
+    {
+      "slug": "signature-mochi"
+    },
+    {
+      "slug": "slush"
+    },
+    {
+      "slug": "souffl-pancake"
+    },
+    {
+      "slug": "sweet-pillow-brioche"
+    },
+    {
+      "slug": "taro"
+    }
+  ],
+  "messages": [],
+  "stdout": "slug\nblack-tea\nboba-cr-me-caramel\ndesserts\nflat-bread\nfruit-mochi\ngreen-tea\nhot-chocolate\nhot-coffee\niced-coffee\niced-lavazza-coffee\nmatcha\nnoodles\nonigiri\noolong-tea\npillow-brioche\nsaucy-noodles\nsignature-mochi\nslush\nsouffl-pancake\nsweet-pillow-brioche\ntaro\n",
+  "stderr": "",
+  "execution_time_ms": 1574
+}

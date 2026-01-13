@@ -1,0 +1,9 @@
+{
+  "query": "UPDATE categories SET displayOrder = CASE \n  WHEN slug = 'bubble-tea' THEN 1 \n  WHEN slug = 'coffee' THEN 2 \n  WHEN slug = 'food' THEN 3 \n  WHEN slug = 'mochis' THEN 4 \n  ELSE displayOrder \nEND;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute UPDATE categories SET displayOrder = CASE \n  WHEN slug = 'bubble-tea' THEN 1 \n  WHEN slug = 'coffee' THEN 2 \n  WHEN slug = 'food' THEN 3 \n  WHEN slug = 'mochis' THEN 4 \n  ELSE displayOrder \nEND;",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 1805
+}

@@ -1,0 +1,30 @@
+{
+  "query": "SELECT id, name, displayOrder FROM categories ORDER BY displayOrder, id",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT id, name, displayOrder FROM categories ORDER BY displayOrder, id",
+  "rows": [
+    {
+      "id": "1",
+      "name": "Iced Beverages 凍飲",
+      "displayOrder": "1"
+    },
+    {
+      "id": "2",
+      "name": "Hot Beverages 熱飲",
+      "displayOrder": "2"
+    },
+    {
+      "id": "3",
+      "name": "Asian Sweet Bites 甜品",
+      "displayOrder": "3"
+    },
+    {
+      "id": "4",
+      "name": "Asian Rice • Noodle • Bread 主餐",
+      "displayOrder": "4"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\tdisplayOrder\n1\tIced Beverages 凍飲\t1\n2\tHot Beverages 熱飲\t2\n3\tAsian Sweet Bites 甜品\t3\n4\tAsian Rice • Noodle • Bread 主餐\t4\n",
+  "stderr": "",
+  "execution_time_ms": 1537
+}

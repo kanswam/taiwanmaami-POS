@@ -1,0 +1,46 @@
+{
+  "query": "SELECT s.id, s.name, c.name as categoryName, s.hasBobaOption \nFROM subcategories s \nJOIN categories c ON s.categoryId = c.id \nWHERE c.name LIKE '%Rice%' OR c.name LIKE '%Noodle%' OR c.name LIKE '%Bread%';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT s.id, s.name, c.name as categoryName, s.hasBobaOption \nFROM subcategories s \nJOIN categories c ON s.categoryId = c.id \nWHERE c.name LIKE '%Rice%' OR c.name LIKE '%Noodle%' OR c.name LIKE '%Bread%';",
+  "rows": [
+    {
+      "id": "10",
+      "name": "Rice",
+      "categoryName": "Asian Rice • Noodle • Bread 主餐",
+      "hasBobaOption": "0"
+    },
+    {
+      "id": "11",
+      "name": "Flat Bread",
+      "categoryName": "Asian Rice • Noodle • Bread 主餐",
+      "hasBobaOption": "0"
+    },
+    {
+      "id": "12",
+      "name": "Noodles Soup",
+      "categoryName": "Asian Rice • Noodle • Bread 主餐",
+      "hasBobaOption": "0"
+    },
+    {
+      "id": "13",
+      "name": "Savoury Pillow Brioche",
+      "categoryName": "Asian Rice • Noodle • Bread 主餐",
+      "hasBobaOption": "0"
+    },
+    {
+      "id": "14",
+      "name": "Omelette ",
+      "categoryName": "Asian Rice • Noodle • Bread 主餐",
+      "hasBobaOption": "0"
+    },
+    {
+      "id": "60004",
+      "name": "Saucy Noodles",
+      "categoryName": "Asian Rice • Noodle • Bread 主餐",
+      "hasBobaOption": "1"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\tcategoryName\thasBobaOption\n10\tRice\tAsian Rice • Noodle • Bread 主餐\t0\n11\tFlat Bread\tAsian Rice • Noodle • Bread 主餐\t0\n12\tNoodles Soup\tAsian Rice • Noodle • Bread 主餐\t0\n13\tSavoury Pillow Brioche\tAsian Rice • Noodle • Bread 主餐\t0\n14\tOmelette \tAsian Rice • Noodle • Bread 主餐\t0\n60004\tSaucy Noodles\tAsian Rice • Noodle • Bread 主餐\t1\n",
+  "stderr": "",
+  "execution_time_ms": 1520
+}

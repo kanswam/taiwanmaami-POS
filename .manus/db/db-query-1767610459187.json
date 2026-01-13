@@ -1,0 +1,34 @@
+{
+  "query": "SELECT id, orderNumber FROM orders WHERE orderStatus = 'cancelled';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT id, orderNumber FROM orders WHERE orderStatus = 'cancelled';",
+  "rows": [
+    {
+      "id": "690001",
+      "orderNumber": "00004"
+    },
+    {
+      "id": "720001",
+      "orderNumber": "00005"
+    },
+    {
+      "id": "720002",
+      "orderNumber": "00006"
+    },
+    {
+      "id": "720003",
+      "orderNumber": "00007"
+    },
+    {
+      "id": "720004",
+      "orderNumber": "00008"
+    },
+    {
+      "id": "720005",
+      "orderNumber": "00009"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\torderNumber\n690001\t00004\n720001\t00005\n720002\t00006\n720003\t00007\n720004\t00008\n720005\t00009\n",
+  "stderr": "",
+  "execution_time_ms": 1503
+}

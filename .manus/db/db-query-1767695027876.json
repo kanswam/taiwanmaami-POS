@@ -1,0 +1,28 @@
+{
+  "query": "SELECT o.id, o.orderNumber, o.customerName, o.totalAmount/100 as totalRupees, o.orderStatus, o.createdAt, u.name as userName FROM orders o LEFT JOIN users u ON o.userId = u.id WHERE DATE(o.createdAt) = CURDATE() AND (o.customerName LIKE '%Kannan%' OR o.userId = (SELECT id FROM users WHERE email = 'kannanswamy@hotmail.com'));",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT o.id, o.orderNumber, o.customerName, o.totalAmount/100 as totalRupees, o.orderStatus, o.createdAt, u.name as userName FROM orders o LEFT JOIN users u ON o.userId = u.id WHERE DATE(o.createdAt) = CURDATE() AND (o.customerName LIKE '%Kannan%' OR o.userId = (SELECT id FROM users WHERE email = 'kannanswamy@hotmail.com'));",
+  "rows": [
+    {
+      "id": "750002",
+      "orderNumber": "00005",
+      "customerName": "Kannan Swamy",
+      "totalRupees": "1333.5000",
+      "orderStatus": "completed",
+      "createdAt": "2026-01-06 10:17:02",
+      "userName": "Kannan Swamy"
+    },
+    {
+      "id": "750001",
+      "orderNumber": "00004",
+      "customerName": "Kannan Swamy",
+      "totalRupees": "1743.0000",
+      "orderStatus": "cancelled",
+      "createdAt": "2026-01-06 08:43:00",
+      "userName": "Kannan Swamy"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\torderNumber\tcustomerName\ttotalRupees\torderStatus\tcreatedAt\tuserName\n750002\t00005\tKannan Swamy\t1333.5000\tcompleted\t2026-01-06 10:17:02\tKannan Swamy\n750001\t00004\tKannan Swamy\t1743.0000\tcancelled\t2026-01-06 08:43:00\tKannan Swamy\n",
+  "stderr": "",
+  "execution_time_ms": 1553
+}

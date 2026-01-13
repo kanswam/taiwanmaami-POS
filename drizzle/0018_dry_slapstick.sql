@@ -1,0 +1,1 @@
+ALTER TABLE `orders` ADD `tableNumber` varchar(10);

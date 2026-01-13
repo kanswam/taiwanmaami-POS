@@ -1,0 +1,9 @@
+{
+  "query": "ALTER TABLE users \nADD COLUMN IF NOT EXISTS stampCount INT DEFAULT 0 NOT NULL,\nADD COLUMN IF NOT EXISTS lifetimeStamps INT DEFAULT 0 NOT NULL,\nADD COLUMN IF NOT EXISTS lastStampDate TIMESTAMP NULL;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute ALTER TABLE users \nADD COLUMN IF NOT EXISTS stampCount INT DEFAULT 0 NOT NULL,\nADD COLUMN IF NOT EXISTS lifetimeStamps INT DEFAULT 0 NOT NULL,\nADD COLUMN IF NOT EXISTS lastStampDate TIMESTAMP NULL;",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 60
+}

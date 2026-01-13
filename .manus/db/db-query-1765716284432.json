@@ -1,0 +1,15 @@
+{
+  "query": "SELECT id, orderId, kotData FROM kot_queue WHERE orderId = '420002'",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT id, orderId, kotData FROM kot_queue WHERE orderId = '420002'",
+  "rows": [
+    {
+      "id": "120001",
+      "orderId": "420002",
+      "kotData": "{\"createdAt\": \"2025-12-14T09:40:05.084Z\", \"customerName\": \"Kannan Swamy\", \"customerPhone\": \"7845053909\", \"items\": [{\"addons\": [], \"iceLevel\": \"Regular Ice\", \"price\": 41500, \"productName\": \"Butterscotch Milk Oolong\", \"quantity\": 1, \"size\": \"regular\", \"sugarLevel\": \"100%\", \"withBoba\": true}], \"orderId\": \"TMMJ5J94N69VMH\", \"totalAmount\": 47776}"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\torderId\tkotData\n120001\t420002\t{\"createdAt\": \"2025-12-14T09:40:05.084Z\", \"customerName\": \"Kannan Swamy\", \"customerPhone\": \"7845053909\", \"items\": [{\"addons\": [], \"iceLevel\": \"Regular Ice\", \"price\": 41500, \"productName\": \"Butterscotch Milk Oolong\", \"quantity\": 1, \"size\": \"regular\", \"sugarLevel\": \"100%\", \"withBoba\": true}], \"orderId\": \"TMMJ5J94N69VMH\", \"totalAmount\": 47776}\n",
+  "stderr": "",
+  "execution_time_ms": 178
+}

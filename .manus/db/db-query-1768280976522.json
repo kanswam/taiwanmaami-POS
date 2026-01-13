@@ -1,0 +1,9 @@
+{
+  "query": "ALTER TABLE workshops \nADD COLUMN venue VARCHAR(500) NULL,\nADD COLUMN totalCapacity INT DEFAULT 0,\nADD COLUMN bookedCount INT DEFAULT 0,\nADD COLUMN earlyBirdPrice INT NULL,\nADD COLUMN earlyBirdDeadline DATE NULL;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute ALTER TABLE workshops \nADD COLUMN venue VARCHAR(500) NULL,\nADD COLUMN totalCapacity INT DEFAULT 0,\nADD COLUMN bookedCount INT DEFAULT 0,\nADD COLUMN earlyBirdPrice INT NULL,\nADD COLUMN earlyBirdDeadline DATE NULL;",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 2946
+}

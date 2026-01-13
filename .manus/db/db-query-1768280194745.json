@@ -1,0 +1,28 @@
+{
+  "query": "SHOW TABLES LIKE 'event%'; SHOW TABLES LIKE 'workshop%';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SHOW TABLES LIKE 'event%'; SHOW TABLES LIKE 'workshop%';",
+  "rows": [
+    {
+      "Tables_in_7xKVuVPoe4TavcqcxPZkpC (event%)": "event_inquiries"
+    },
+    {
+      "Tables_in_7xKVuVPoe4TavcqcxPZkpC (event%)": "event_order_items"
+    },
+    {
+      "Tables_in_7xKVuVPoe4TavcqcxPZkpC (event%)": "event_orders"
+    },
+    {
+      "Tables_in_7xKVuVPoe4TavcqcxPZkpC (event%)": "Tables_in_7xKVuVPoe4TavcqcxPZkpC (workshop%)"
+    },
+    {
+      "Tables_in_7xKVuVPoe4TavcqcxPZkpC (event%)": "workshop_bookings"
+    },
+    {
+      "Tables_in_7xKVuVPoe4TavcqcxPZkpC (event%)": "workshops"
+    }
+  ],
+  "messages": [],
+  "stdout": "Tables_in_7xKVuVPoe4TavcqcxPZkpC (event%)\nevent_inquiries\nevent_order_items\nevent_orders\nTables_in_7xKVuVPoe4TavcqcxPZkpC (workshop%)\nworkshop_bookings\nworkshops\n",
+  "stderr": "",
+  "execution_time_ms": 1764
+}

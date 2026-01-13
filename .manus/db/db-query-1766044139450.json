@@ -1,0 +1,25 @@
+{
+  "query": "SHOW CREATE TABLE kot_queue;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SHOW CREATE TABLE kot_queue;",
+  "rows": [
+    {
+      "Table": "kot_queue",
+      "Create Table": "CREATE TABLE `kot_queue` ("
+    }
+  ],
+  "messages": [
+    "  `id` int(11) NOT NULL AUTO_INCREMENT,",
+    "  `orderId` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,",
+    "  `outletId` int(11) NOT NULL,",
+    "  `kotData` json NOT NULL,",
+    "  `isPrinted` tinyint(1) NOT NULL DEFAULT '0',",
+    "  `createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,",
+    "  `printedAt` timestamp NULL DEFAULT NULL,",
+    "  `orderNumber` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',",
+    "  PRIMARY KEY (`id`) /*T![clustered_index] CLUSTERED */",
+    ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci AUTO_INCREMENT=180001"
+  ],
+  "stdout": "Table\tCreate Table\nkot_queue\tCREATE TABLE `kot_queue` (\n  `id` int(11) NOT NULL AUTO_INCREMENT,\n  `orderId` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `outletId` int(11) NOT NULL,\n  `kotData` json NOT NULL,\n  `isPrinted` tinyint(1) NOT NULL DEFAULT '0',\n  `createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  `printedAt` timestamp NULL DEFAULT NULL,\n  `orderNumber` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',\n  PRIMARY KEY (`id`) /*T![clustered_index] CLUSTERED */\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci AUTO_INCREMENT=180001\n",
+  "stderr": "",
+  "execution_time_ms": 142
+}

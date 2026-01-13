@@ -1,0 +1,180 @@
+{
+  "query": "SELECT s.id, s.name, s.slug, c.name as categoryName, s.hasBobaOption, s.hasSizeVariants \nFROM subcategories s \nJOIN categories c ON s.categoryId = c.id \nORDER BY c.name, s.name;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT s.id, s.name, s.slug, c.name as categoryName, s.hasBobaOption, s.hasSizeVariants \nFROM subcategories s \nJOIN categories c ON s.categoryId = c.id \nORDER BY c.name, s.name;",
+  "rows": [
+    {
+      "id": "11",
+      "name": "Flat Bread",
+      "slug": "flat-bread",
+      "categoryName": "Asian Rice • Noodle • Bread 主餐",
+      "hasBobaOption": "0",
+      "hasSizeVariants": "0"
+    },
+    {
+      "id": "12",
+      "name": "Noodles Soup",
+      "slug": "noodles",
+      "categoryName": "Asian Rice • Noodle • Bread 主餐",
+      "hasBobaOption": "0",
+      "hasSizeVariants": "0"
+    },
+    {
+      "id": "14",
+      "name": "Omelette ",
+      "slug": "desserts",
+      "categoryName": "Asian Rice • Noodle • Bread 主餐",
+      "hasBobaOption": "0",
+      "hasSizeVariants": "0"
+    },
+    {
+      "id": "10",
+      "name": "Rice",
+      "slug": "onigiri",
+      "categoryName": "Asian Rice • Noodle • Bread 主餐",
+      "hasBobaOption": "0",
+      "hasSizeVariants": "0"
+    },
+    {
+      "id": "60004",
+      "name": "Saucy Noodles",
+      "slug": "saucy-noodles",
+      "categoryName": "Asian Rice • Noodle • Bread 主餐",
+      "hasBobaOption": "1",
+      "hasSizeVariants": "1"
+    },
+    {
+      "id": "13",
+      "name": "Savoury Pillow Brioche",
+      "slug": "pillow-brioche",
+      "categoryName": "Asian Rice • Noodle • Bread 主餐",
+      "hasBobaOption": "0",
+      "hasSizeVariants": "0"
+    },
+    {
+      "id": "60002",
+      "name": "Boba Crème Caramel",
+      "slug": "boba-cr-me-caramel",
+      "categoryName": "Asian Sweet Bites 甜品",
+      "hasBobaOption": "1",
+      "hasSizeVariants": "1"
+    },
+    {
+      "id": "8",
+      "name": "Fruit Mochi",
+      "slug": "fruit-mochi",
+      "categoryName": "Asian Sweet Bites 甜品",
+      "hasBobaOption": "0",
+      "hasSizeVariants": "0"
+    },
+    {
+      "id": "180001",
+      "name": "Grilled Mochi   ",
+      "slug": "grilled-mochi",
+      "categoryName": "Asian Sweet Bites 甜品",
+      "hasBobaOption": "1",
+      "hasSizeVariants": "1"
+    },
+    {
+      "id": "9",
+      "name": "Signature Mochi",
+      "slug": "signature-mochi",
+      "categoryName": "Asian Sweet Bites 甜品",
+      "hasBobaOption": "0",
+      "hasSizeVariants": "0"
+    },
+    {
+      "id": "120001",
+      "name": "Soufflé Pancake ",
+      "slug": "souffl-pancake",
+      "categoryName": "Asian Sweet Bites 甜品",
+      "hasBobaOption": "1",
+      "hasSizeVariants": "1"
+    },
+    {
+      "id": "60003",
+      "name": "Sweet Pillow Brioche ",
+      "slug": "sweet-pillow-brioche",
+      "categoryName": "Asian Sweet Bites 甜品",
+      "hasBobaOption": "1",
+      "hasSizeVariants": "1"
+    },
+    {
+      "id": "7",
+      "name": "Hot Coffee & Cocoa ",
+      "slug": "hot-coffee",
+      "categoryName": "Hot Beverages 熱飲",
+      "hasBobaOption": "0",
+      "hasSizeVariants": "0"
+    },
+    {
+      "id": "30004",
+      "name": "Iced Lavazza Coffee",
+      "slug": "iced-lavazza-coffee",
+      "categoryName": "Updated Category",
+      "hasBobaOption": "1",
+      "hasSizeVariants": "1"
+    },
+    {
+      "id": "4",
+      "name": "Matcha Blend",
+      "slug": "matcha",
+      "categoryName": "Updated Category",
+      "hasBobaOption": "1",
+      "hasSizeVariants": "1"
+    },
+    {
+      "id": "3",
+      "name": "Organic Green Tea",
+      "slug": "green-tea",
+      "categoryName": "Updated Category",
+      "hasBobaOption": "1",
+      "hasSizeVariants": "1"
+    },
+    {
+      "id": "2",
+      "name": "Organic Oolong",
+      "slug": "oolong-tea",
+      "categoryName": "Updated Category",
+      "hasBobaOption": "1",
+      "hasSizeVariants": "1"
+    },
+    {
+      "id": "30003",
+      "name": "Slush",
+      "slug": "slush",
+      "categoryName": "Updated Category",
+      "hasBobaOption": "1",
+      "hasSizeVariants": "1"
+    },
+    {
+      "id": "5",
+      "name": "Taro Blend",
+      "slug": "taro",
+      "categoryName": "Updated Category",
+      "hasBobaOption": "1",
+      "hasSizeVariants": "1"
+    },
+    {
+      "id": "210001",
+      "name": "Test Subcategory",
+      "slug": "test-subcategory",
+      "categoryName": "Updated Category",
+      "hasBobaOption": "1",
+      "hasSizeVariants": "1"
+    },
+    {
+      "id": "1",
+      "name": "Updated Subcategory",
+      "slug": "black-tea",
+      "categoryName": "Updated Category",
+      "hasBobaOption": "1",
+      "hasSizeVariants": "1"
+    }
+  ],
+  "messages": [
+    "6\tTea in Pot\t\ticed-coffee\tHot Beverages 熱飲\t1\t1"
+  ],
+  "stdout": "id\tname\tslug\tcategoryName\thasBobaOption\thasSizeVariants\n11\tFlat Bread\tflat-bread\tAsian Rice • Noodle • Bread 主餐\t0\t0\n12\tNoodles Soup\tnoodles\tAsian Rice • Noodle • Bread 主餐\t0\t0\n14\tOmelette \tdesserts\tAsian Rice • Noodle • Bread 主餐\t0\t0\n10\tRice\tonigiri\tAsian Rice • Noodle • Bread 主餐\t0\t0\n60004\tSaucy Noodles\tsaucy-noodles\tAsian Rice • Noodle • Bread 主餐\t1\t1\n13\tSavoury Pillow Brioche\tpillow-brioche\tAsian Rice • Noodle • Bread 主餐\t0\t0\n60002\tBoba Crème Caramel\tboba-cr-me-caramel\tAsian Sweet Bites 甜品\t1\t1\n8\tFruit Mochi\tfruit-mochi\tAsian Sweet Bites 甜品\t0\t0\n180001\tGrilled Mochi   \tgrilled-mochi\tAsian Sweet Bites 甜品\t1\t1\n9\tSignature Mochi\tsignature-mochi\tAsian Sweet Bites 甜品\t0\t0\n120001\tSoufflé Pancake \tsouffl-pancake\tAsian Sweet Bites 甜品\t1\t1\n60003\tSweet Pillow Brioche \tsweet-pillow-brioche\tAsian Sweet Bites 甜品\t1\t1\n7\tHot Coffee & Cocoa \thot-coffee\tHot Beverages 熱飲\t0\t0\n6\tTea in Pot\t\ticed-coffee\tHot Beverages 熱飲\t1\t1\n30004\tIced Lavazza Coffee\ticed-lavazza-coffee\tUpdated Category\t1\t1\n4\tMatcha Blend\tmatcha\tUpdated Category\t1\t1\n3\tOrganic Green Tea\tgreen-tea\tUpdated Category\t1\t1\n2\tOrganic Oolong\toolong-tea\tUpdated Category\t1\t1\n30003\tSlush\tslush\tUpdated Category\t1\t1\n5\tTaro Blend\ttaro\tUpdated Category\t1\t1\n210001\tTest Subcategory\ttest-subcategory\tUpdated Category\t1\t1\n1\tUpdated Subcategory\tblack-tea\tUpdated Category\t1\t1\n",
+  "stderr": "",
+  "execution_time_ms": 1552
+}

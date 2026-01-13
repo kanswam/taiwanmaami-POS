@@ -1,0 +1,8 @@
+{
+  "query": "ALTER TABLE workshops \nADD COLUMN instructorName VARCHAR(255) NULL AFTER description,\nADD COLUMN workshopDate DATE NULL AFTER instructorName,\nADD COLUMN startTime VARCHAR(10) NULL AFTER workshopDate,\nADD COLUMN endTime VARCHAR(10) NULL AFTER startTime,\nADD COLUMN duration VARCHAR(50) NULL AFTER endTime,\nADD COLUMN venue VARCHAR(500) NULL AFTER duration,\nADD COLUMN totalCapacity INT DEFAULT 0 AFTER venue,\nADD COLUMN bookedCount INT DEFAULT 0 AFTER totalCapacity,\nADD COLUMN earlyBirdPrice INT NULL AFTER price,\nADD COLUMN earlyBirdDeadline DATE NULL AFTER earlyBirdPrice,\nADD COLUMN imageUrl VARCHAR(500) NULL AFTER earlyBirdDeadline;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute ALTER TABLE workshops \nADD COLUMN instructorName VARCHAR(255) NULL AFTER description,\nADD COLUMN workshopDate DATE NULL AFTER instructorName,\nADD COLUMN startTime VARCHAR(10) NULL AFTER workshopDate,\nADD COLUMN endTime VARCHAR(10) NULL AFTER startTime,\nADD COLUMN duration VARCHAR(50) NULL AFTER endTime,\nADD COLUMN venue VARCHAR(500) NULL AFTER duration,\nADD COLUMN totalCapacity INT DEFAULT 0 AFTER venue,\nADD COLUMN bookedCount INT DEFAULT 0 AFTER totalCapacity,\nADD COLUMN earlyBirdPrice INT NULL AFTER price,\nADD COLUMN earlyBirdDeadline DATE NULL AFTER earlyBirdPrice,\nADD COLUMN imageUrl VARCHAR(500) NULL AFTER earlyBirdDeadline;",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1060 (42S21) at line 1: Duplicate column name 'workshopDate'"
+  ]
+}

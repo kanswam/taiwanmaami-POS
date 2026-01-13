@@ -1,0 +1,68 @@
+{
+  "query": "SELECT s.id, s.name, c.id as catId, c.name as catName, s.hasBobaOption \nFROM subcategories s \nJOIN categories c ON s.categoryId = c.id \nWHERE s.hasBobaOption = 1;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT s.id, s.name, c.id as catId, c.name as catName, s.hasBobaOption \nFROM subcategories s \nJOIN categories c ON s.categoryId = c.id \nWHERE s.hasBobaOption = 1;",
+  "rows": [
+    {
+      "id": "1",
+      "name": "Updated Subcategory",
+      "catId": "1",
+      "catName": "Updated Category",
+      "hasBobaOption": "1"
+    },
+    {
+      "id": "2",
+      "name": "Organic Oolong",
+      "catId": "1",
+      "catName": "Updated Category",
+      "hasBobaOption": "1"
+    },
+    {
+      "id": "3",
+      "name": "Organic Green Tea",
+      "catId": "1",
+      "catName": "Updated Category",
+      "hasBobaOption": "1"
+    },
+    {
+      "id": "4",
+      "name": "Matcha Blend",
+      "catId": "1",
+      "catName": "Updated Category",
+      "hasBobaOption": "1"
+    },
+    {
+      "id": "5",
+      "name": "Taro Blend",
+      "catId": "1",
+      "catName": "Updated Category",
+      "hasBobaOption": "1"
+    },
+    {
+      "id": "30003",
+      "name": "Slush",
+      "catId": "1",
+      "catName": "Updated Category",
+      "hasBobaOption": "1"
+    },
+    {
+      "id": "30004",
+      "name": "Iced Lavazza Coffee",
+      "catId": "1",
+      "catName": "Updated Category",
+      "hasBobaOption": "1"
+    },
+    {
+      "id": "210001",
+      "name": "Test Subcategory",
+      "catId": "1",
+      "catName": "Updated Category",
+      "hasBobaOption": "1"
+    }
+  ],
+  "messages": [
+    "6\tTea in Pot\t\t2\tHot Beverages 熱飲\t1"
+  ],
+  "stdout": "id\tname\tcatId\tcatName\thasBobaOption\n1\tUpdated Subcategory\t1\tUpdated Category\t1\n2\tOrganic Oolong\t1\tUpdated Category\t1\n3\tOrganic Green Tea\t1\tUpdated Category\t1\n4\tMatcha Blend\t1\tUpdated Category\t1\n5\tTaro Blend\t1\tUpdated Category\t1\n6\tTea in Pot\t\t2\tHot Beverages 熱飲\t1\n30003\tSlush\t1\tUpdated Category\t1\n30004\tIced Lavazza Coffee\t1\tUpdated Category\t1\n210001\tTest Subcategory\t1\tUpdated Category\t1\n",
+  "stderr": "",
+  "execution_time_ms": 1639
+}

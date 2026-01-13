@@ -1,0 +1,8 @@
+{
+  "query": "SELECT o.id, o.orderNumber, o.status, o.paymentStatus, o.paymentMethod, o.razorpayOrderId, o.razorpayPaymentId, o.total, o.orderType, o.createdAt, u.name as customerName, u.email as customerEmail\nFROM orders o\nLEFT JOIN users u ON o.userId = u.id\nWHERE o.orderNumber = '00015'",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT o.id, o.orderNumber, o.status, o.paymentStatus, o.paymentMethod, o.razorpayOrderId, o.razorpayPaymentId, o.total, o.orderType, o.createdAt, u.name as customerName, u.email as customerEmail\nFROM orders o\nLEFT JOIN users u ON o.userId = u.id\nWHERE o.orderNumber = '00015'",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1054 (42S22) at line 1: Unknown column 'o.status' in 'field list'"
+  ]
+}

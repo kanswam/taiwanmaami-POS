@@ -1,0 +1,17 @@
+{
+  "query": "SELECT orderNumber, subtotal, stateGst, centralGst, totalAmount FROM orders WHERE orderNumber = '00029';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT orderNumber, subtotal, stateGst, centralGst, totalAmount FROM orders WHERE orderNumber = '00029';",
+  "rows": [
+    {
+      "orderNumber": "00029",
+      "subtotal": "210500",
+      "stateGst": "5263",
+      "centralGst": "5263",
+      "totalAmount": "210500"
+    }
+  ],
+  "messages": [],
+  "stdout": "orderNumber\tsubtotal\tstateGst\tcentralGst\ttotalAmount\n00029\t210500\t5263\t5263\t210500\n",
+  "stderr": "",
+  "execution_time_ms": 1512
+}

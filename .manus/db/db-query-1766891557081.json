@@ -1,0 +1,42 @@
+{
+  "query": "SELECT * FROM categories ORDER BY displayOrder;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT * FROM categories ORDER BY displayOrder;",
+  "rows": [
+    {
+      "id": "2",
+      "name": "Hot Beverages 熱飲",
+      "slug": "coffee",
+      "description": "Premium Lavazza coffee/ organic tea/ hot chocolate to warm your heart n-store",
+      "imageUrl": "NULL",
+      "displayOrder": "2",
+      "isActive": "1",
+      "createdAt": "2025-12-07 12:24:04"
+    },
+    {
+      "id": "3",
+      "name": "Asian Sweet Bites 甜品",
+      "slug": "mochis",
+      "description": "A delightful collection of classic Asian sweets featuring soft, chewy mochi at the heart of the menu. Indulge in silky boba crème caramel and fluffy, sweet pillow brioche—comforting, delicate desserts with authentic Asian flavours.",
+      "imageUrl": "NULL",
+      "displayOrder": "3",
+      "isActive": "1",
+      "createdAt": "2025-12-07 12:24:04"
+    },
+    {
+      "id": "4",
+      "name": "Asian Rice • Noodle • Bread 主餐",
+      "slug": "food",
+      "description": "A carefully curated selection of authentic Asian rice, noodles, traditional flatbreads, and thick brioche. From light and chewy to fluffy and buttery, each variety highlights comforting flavours and true Asian craftsmanship.",
+      "imageUrl": "NULL",
+      "displayOrder": "4",
+      "isActive": "1",
+      "createdAt": "2025-12-07 12:24:04"
+    }
+  ],
+  "messages": [
+    "1\tIced Beverages \t凍飲\tbubble-tea\tA refreshing range of chilled drinks made with tea, coffee, taro and slush options. Enjoy them plain or customised with your choice of boba for the perfect cool-down treat.\tNULL\t1\t1\t2025-12-07 12:24:04"
+  ],
+  "stdout": "id\tname\tslug\tdescription\timageUrl\tdisplayOrder\tisActive\tcreatedAt\n1\tIced Beverages \t凍飲\tbubble-tea\tA refreshing range of chilled drinks made with tea, coffee, taro and slush options. Enjoy them plain or customised with your choice of boba for the perfect cool-down treat.\tNULL\t1\t1\t2025-12-07 12:24:04\n2\tHot Beverages 熱飲\tcoffee\tPremium Lavazza coffee/ organic tea/ hot chocolate to warm your heart n-store\tNULL\t2\t1\t2025-12-07 12:24:04\n3\tAsian Sweet Bites 甜品\tmochis\tA delightful collection of classic Asian sweets featuring soft, chewy mochi at the heart of the menu. Indulge in silky boba crème caramel and fluffy, sweet pillow brioche—comforting, delicate desserts with authentic Asian flavours.\tNULL\t3\t1\t2025-12-07 12:24:04\n4\tAsian Rice • Noodle • Bread 主餐\tfood\tA carefully curated selection of authentic Asian rice, noodles, traditional flatbreads, and thick brioche. From light and chewy to fluffy and buttery, each variety highlights comforting flavours and true Asian craftsmanship.\tNULL\t4\t1\t2025-12-07 12:24:04\n",
+  "stderr": "",
+  "execution_time_ms": 1470
+}

@@ -1,0 +1,159 @@
+{
+  "query": "SELECT id, name, categoryId, hasBobaOption, hasSizeVariants FROM subcategories ORDER BY categoryId, id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT id, name, categoryId, hasBobaOption, hasSizeVariants FROM subcategories ORDER BY categoryId, id;",
+  "rows": [
+    {
+      "id": "1",
+      "name": "Updated Subcategory",
+      "categoryId": "1",
+      "hasBobaOption": "1",
+      "hasSizeVariants": "1"
+    },
+    {
+      "id": "2",
+      "name": "Organic Oolong",
+      "categoryId": "1",
+      "hasBobaOption": "1",
+      "hasSizeVariants": "1"
+    },
+    {
+      "id": "3",
+      "name": "Organic Green Tea",
+      "categoryId": "1",
+      "hasBobaOption": "1",
+      "hasSizeVariants": "1"
+    },
+    {
+      "id": "4",
+      "name": "Matcha Blend",
+      "categoryId": "1",
+      "hasBobaOption": "1",
+      "hasSizeVariants": "1"
+    },
+    {
+      "id": "5",
+      "name": "Taro Blend",
+      "categoryId": "1",
+      "hasBobaOption": "1",
+      "hasSizeVariants": "1"
+    },
+    {
+      "id": "30003",
+      "name": "Slush",
+      "categoryId": "1",
+      "hasBobaOption": "1",
+      "hasSizeVariants": "1"
+    },
+    {
+      "id": "30004",
+      "name": "Iced Lavazza Coffee",
+      "categoryId": "1",
+      "hasBobaOption": "1",
+      "hasSizeVariants": "1"
+    },
+    {
+      "id": "210001",
+      "name": "Test Subcategory",
+      "categoryId": "1",
+      "hasBobaOption": "1",
+      "hasSizeVariants": "1"
+    },
+    {
+      "id": "7",
+      "name": "Hot Coffee & Cocoa ",
+      "categoryId": "2",
+      "hasBobaOption": "0",
+      "hasSizeVariants": "0"
+    },
+    {
+      "id": "8",
+      "name": "Fruit Mochi",
+      "categoryId": "3",
+      "hasBobaOption": "0",
+      "hasSizeVariants": "0"
+    },
+    {
+      "id": "9",
+      "name": "Signature Mochi",
+      "categoryId": "3",
+      "hasBobaOption": "0",
+      "hasSizeVariants": "0"
+    },
+    {
+      "id": "60002",
+      "name": "Boba Crème Caramel",
+      "categoryId": "3",
+      "hasBobaOption": "0",
+      "hasSizeVariants": "0"
+    },
+    {
+      "id": "60003",
+      "name": "Sweet Pillow Brioche ",
+      "categoryId": "3",
+      "hasBobaOption": "0",
+      "hasSizeVariants": "0"
+    },
+    {
+      "id": "120001",
+      "name": "Soufflé Pancake ",
+      "categoryId": "3",
+      "hasBobaOption": "0",
+      "hasSizeVariants": "0"
+    },
+    {
+      "id": "180001",
+      "name": "Grilled Mochi   ",
+      "categoryId": "3",
+      "hasBobaOption": "0",
+      "hasSizeVariants": "0"
+    },
+    {
+      "id": "10",
+      "name": "Rice",
+      "categoryId": "4",
+      "hasBobaOption": "0",
+      "hasSizeVariants": "0"
+    },
+    {
+      "id": "11",
+      "name": "Flat Bread",
+      "categoryId": "4",
+      "hasBobaOption": "0",
+      "hasSizeVariants": "0"
+    },
+    {
+      "id": "12",
+      "name": "Noodles Soup",
+      "categoryId": "4",
+      "hasBobaOption": "0",
+      "hasSizeVariants": "0"
+    },
+    {
+      "id": "13",
+      "name": "Savoury Pillow Brioche",
+      "categoryId": "4",
+      "hasBobaOption": "0",
+      "hasSizeVariants": "0"
+    },
+    {
+      "id": "14",
+      "name": "Omelette ",
+      "categoryId": "4",
+      "hasBobaOption": "0",
+      "hasSizeVariants": "0"
+    },
+    {
+      "id": "60004",
+      "name": "Saucy Noodles",
+      "categoryId": "4",
+      "hasBobaOption": "0",
+      "hasSizeVariants": "0"
+    }
+  ],
+  "messages": [
+    "6\tTea in Pot\t\t2\t1\t1"
+  ],
+  "stdout": "id\tname\tcategoryId\thasBobaOption\thasSizeVariants\n1\tUpdated Subcategory\t1\t1\t1\n2\tOrganic Oolong\t1\t1\t1\n3\tOrganic Green Tea\t1\t1\t1\n4\tMatcha Blend\t1\t1\t1\n5\tTaro Blend\t1\t1\t1\n30003\tSlush\t1\t1\t1\n30004\tIced Lavazza Coffee\t1\t1\t1\n210001\tTest Subcategory\t1\t1\t1\n6\tTea in Pot\t\t2\t1\t1\n7\tHot Coffee & Cocoa \t2\t0\t0\n8\tFruit Mochi\t3\t0\t0\n9\tSignature Mochi\t3\t0\t0\n60002\tBoba Crème Caramel\t3\t0\t0\n60003\tSweet Pillow Brioche \t3\t0\t0\n120001\tSoufflé Pancake \t3\t0\t0\n180001\tGrilled Mochi   \t3\t0\t0\n10\tRice\t4\t0\t0\n11\tFlat Bread\t4\t0\t0\n12\tNoodles Soup\t4\t0\t0\n13\tSavoury Pillow Brioche\t4\t0\t0\n14\tOmelette \t4\t0\t0\n60004\tSaucy Noodles\t4\t0\t0\n",
+  "stderr": "",
+  "execution_time_ms": 1520
+}

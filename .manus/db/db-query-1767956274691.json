@@ -1,0 +1,28 @@
+{
+  "query": "SELECT orderNumber, customerName, orderStatus, paymentStatus, paymentMethod, totalAmount, staffNotes FROM orders WHERE orderNumber IN ('00029', '00030');",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT orderNumber, customerName, orderStatus, paymentStatus, paymentMethod, totalAmount, staffNotes FROM orders WHERE orderNumber IN ('00029', '00030');",
+  "rows": [
+    {
+      "orderNumber": "00029",
+      "customerName": "Guest",
+      "orderStatus": "preparing",
+      "paymentStatus": "completed",
+      "paymentMethod": "cash",
+      "totalAmount": "2105",
+      "staffNotes": "NULL"
+    },
+    {
+      "orderNumber": "00030",
+      "customerName": "Guest",
+      "orderStatus": "cancelled",
+      "paymentStatus": "completed",
+      "paymentMethod": "cash",
+      "totalAmount": "2105",
+      "staffNotes": "Duplicate order - System error during checkout (Jan 9)"
+    }
+  ],
+  "messages": [],
+  "stdout": "orderNumber\tcustomerName\torderStatus\tpaymentStatus\tpaymentMethod\ttotalAmount\tstaffNotes\n00029\tGuest\tpreparing\tcompleted\tcash\t2105\tNULL\n00030\tGuest\tcancelled\tcompleted\tcash\t2105\tDuplicate order - System error during checkout (Jan 9)\n",
+  "stderr": "",
+  "execution_time_ms": 1516
+}

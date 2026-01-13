@@ -1,0 +1,1 @@
+ALTER TABLE `categories` ADD `availableInstore` boolean DEFAULT true NOT NULL;

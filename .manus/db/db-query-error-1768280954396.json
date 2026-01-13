@@ -1,0 +1,8 @@
+{
+  "query": "ALTER TABLE workshops \nADD COLUMN startTime VARCHAR(10) NULL,\nADD COLUMN endTime VARCHAR(10) NULL,\nADD COLUMN duration VARCHAR(50) NULL,\nADD COLUMN venue VARCHAR(500) NULL,\nADD COLUMN totalCapacity INT DEFAULT 0,\nADD COLUMN bookedCount INT DEFAULT 0,\nADD COLUMN earlyBirdPrice INT NULL,\nADD COLUMN earlyBirdDeadline DATE NULL,\nADD COLUMN imageUrl VARCHAR(500) NULL;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute ALTER TABLE workshops \nADD COLUMN startTime VARCHAR(10) NULL,\nADD COLUMN endTime VARCHAR(10) NULL,\nADD COLUMN duration VARCHAR(50) NULL,\nADD COLUMN venue VARCHAR(500) NULL,\nADD COLUMN totalCapacity INT DEFAULT 0,\nADD COLUMN bookedCount INT DEFAULT 0,\nADD COLUMN earlyBirdPrice INT NULL,\nADD COLUMN earlyBirdDeadline DATE NULL,\nADD COLUMN imageUrl VARCHAR(500) NULL;",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1060 (42S21) at line 1: Duplicate column name 'duration'"
+  ]
+}

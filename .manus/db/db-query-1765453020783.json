@@ -1,0 +1,60 @@
+{
+  "query": "SELECT o.id, o.orderNumber, o.orderStatus, o.userId, o.totalAmount, u.name, u.stampCount, u.lifetimeStamps \nFROM orders o \nLEFT JOIN users u ON o.userId = u.id \nWHERE o.orderStatus = 'completed' \nORDER BY o.id DESC \nLIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT o.id, o.orderNumber, o.orderStatus, o.userId, o.totalAmount, u.name, u.stampCount, u.lifetimeStamps \nFROM orders o \nLEFT JOIN users u ON o.userId = u.id \nWHERE o.orderStatus = 'completed' \nORDER BY o.id DESC \nLIMIT 10;",
+  "rows": [
+    {
+      "id": "60001",
+      "orderNumber": "TMMJ008PCE7STX",
+      "orderStatus": "completed",
+      "userId": "3510001",
+      "totalAmount": "64050",
+      "name": "MUJAMMIL.M",
+      "stampCount": "0",
+      "lifetimeStamps": "0"
+    },
+    {
+      "id": "30001",
+      "orderNumber": "TMMIW2GV4VV37Q",
+      "orderStatus": "completed",
+      "userId": "2370040",
+      "totalAmount": "130200",
+      "name": "crvenkat",
+      "stampCount": "0",
+      "lifetimeStamps": "0"
+    },
+    {
+      "id": "3",
+      "orderNumber": "TMMIVW2BGVXP2R",
+      "orderStatus": "completed",
+      "userId": "1",
+      "totalAmount": "299250",
+      "name": "Kannan Swamy",
+      "stampCount": "1",
+      "lifetimeStamps": "11"
+    },
+    {
+      "id": "2",
+      "orderNumber": "TMMIVVY6S4BAVF",
+      "orderStatus": "completed",
+      "userId": "1",
+      "totalAmount": "113926",
+      "name": "Kannan Swamy",
+      "stampCount": "1",
+      "lifetimeStamps": "11"
+    },
+    {
+      "id": "1",
+      "orderNumber": "TMMIVVH21ZUSMM",
+      "orderStatus": "completed",
+      "userId": "1",
+      "totalAmount": "98176",
+      "name": "Kannan Swamy",
+      "stampCount": "1",
+      "lifetimeStamps": "11"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\torderNumber\torderStatus\tuserId\ttotalAmount\tname\tstampCount\tlifetimeStamps\n60001\tTMMJ008PCE7STX\tcompleted\t3510001\t64050\tMUJAMMIL.M\t0\t0\n30001\tTMMIW2GV4VV37Q\tcompleted\t2370040\t130200\tcrvenkat\t0\t0\n3\tTMMIVW2BGVXP2R\tcompleted\t1\t299250\tKannan Swamy\t1\t11\n2\tTMMIVVY6S4BAVF\tcompleted\t1\t113926\tKannan Swamy\t1\t11\n1\tTMMIVVH21ZUSMM\tcompleted\t1\t98176\tKannan Swamy\t1\t11\n",
+  "stderr": "",
+  "execution_time_ms": 907
+}
