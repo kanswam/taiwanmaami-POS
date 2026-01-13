@@ -234,6 +234,7 @@ export default function Complaint() {
 
           <p className="text-center text-sm text-muted-foreground mt-6">
             For urgent matters, please call us directly at{' '}
+            <a href="tel:+918925914303" className="text-primary underline">+91 89259 14303</a> (Palladium) or{' '}
             <a href="tel:+919150570557" className="text-primary underline">+91 91505 70557</a> (T Nagar)
           </p>
         </div>

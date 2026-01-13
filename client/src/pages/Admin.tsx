@@ -4461,6 +4461,7 @@ function SiteSettingsTab() {
           <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
             <p className="text-sm text-amber-800">
               <strong>Current setting:</strong> {deliveryEnabled ? `Delivery available within ${deliveryRadius}km of T Nagar outlet.` : 'Delivery is currently disabled.'}
+              Palladium outlet is pickup/in-store only.
             </p>
           </div>
         </div>
@@ -6250,7 +6251,7 @@ function PaymentReportTab() {
       order.customerName || 'Guest',
       (order.totalAmount / 100).toFixed(2),
       paymentMethodLabels[order.paymentMethod || 'unknown'],
-      'T Nagar',
+      order.outletId === 1 ? 'Palladium' : 'T Nagar',
       order.orderType,
     ]);
     
@@ -6301,6 +6302,7 @@ function PaymentReportTab() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Outlets</SelectItem>
+                <SelectItem value="palladium">Palladium</SelectItem>
                 <SelectItem value="tnagar">T Nagar</SelectItem>
               </SelectContent>
             </Select>
@@ -6448,7 +6450,7 @@ function PaymentReportTab() {
                       )}
                     </td>
                     <td className="py-2 px-2">
-                      T Nagar
+                      {order.outletId === 1 ? 'Palladium' : 'T Nagar'}
                     </td>
                   </tr>
                 ))}
