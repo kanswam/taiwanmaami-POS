@@ -394,3 +394,7 @@
 - [x] Create Workshops management UI (create, edit, pricing, capacity)
 - [x] Create Workshop Bookings management UI
 - [x] Write Vitest tests for new functionality (tests written, requires db schema sync)
+
+### About Us Page Fix & Order Cleanup (Jan 13)
+- [x] Add Palladium location card back to About Us page
+- [x] Delete test orders 66 and 67 from database
