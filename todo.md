@@ -382,3 +382,15 @@
 ### Add Palladium Hours (Jan 13)
 - [x] Add Palladium hours (10am-10pm) to Footer Hours section
 - [x] Add Palladium hours to Home page Hours section
+
+### Events & Workshops Admin Interface (Jan 13)
+- [x] Add tRPC procedures for event inquiries (list, update status, add notes) - ALREADY EXISTS
+- [x] Add tRPC procedures for event orders (create, list, update) - ALREADY EXISTS
+- [x] Add tRPC procedures for workshops (CRUD operations) - ALREADY EXISTS
+- [x] Add tRPC procedures for workshop bookings (list, update status) - ALREADY EXISTS
+- [x] Add Events & Workshops tab to Admin navigation
+- [x] Create Event Inquiries management UI
+- [x] Create Event Orders/Quotes management UI
+- [x] Create Workshops management UI (create, edit, pricing, capacity)
+- [x] Create Workshop Bookings management UI
+- [x] Write Vitest tests for new functionality (tests written, requires db schema sync)

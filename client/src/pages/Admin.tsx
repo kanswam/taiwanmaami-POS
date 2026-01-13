@@ -18,7 +18,7 @@ import {
   Plus, Edit, Trash2, ImageIcon, RefreshCw, Check, X, Search,
   ChevronDown, ChevronUp, Eye, EyeOff, Star, MessageSquare, Reply, Printer,
   ClipboardList, RotateCcw, History, Filter, BarChart3, UtensilsCrossed, AlertCircle, DollarSign, CreditCard, Users,
-  Settings, Layers, FileText, TrendingUp
+  Settings, Layers, FileText, TrendingUp, Calendar, Ticket, Mail, Phone, MapPin, Clock, UserCheck, BookOpen
 } from 'lucide-react';
 import { toast } from 'sonner';
 import {
@@ -156,6 +156,36 @@ export default function Admin() {
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setActiveTab('bulk-pricing')} className={activeTab === 'bulk-pricing' ? 'bg-accent' : ''}>
                   <DollarSign className="w-4 h-4 mr-2" /> Bulk Pricing
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            {/* Events & Workshops */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button 
+                  variant={['event-inquiries', 'event-orders', 'workshops', 'workshop-bookings'].includes(activeTab) ? 'default' : 'outline'} 
+                  size="sm" 
+                  className={`gap-2 ${!['event-inquiries', 'event-orders', 'workshops', 'workshop-bookings'].includes(activeTab) ? 'border-transparent hover:bg-accent' : ''}`}
+                >
+                  <Calendar className="w-4 h-4" />
+                  Events
+                  <ChevronDown className="w-3 h-3" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start">
+                <DropdownMenuItem onClick={() => setActiveTab('event-inquiries')} className={activeTab === 'event-inquiries' ? 'bg-accent' : ''}>
+                  <Mail className="w-4 h-4 mr-2" /> Event Inquiries
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setActiveTab('event-orders')} className={activeTab === 'event-orders' ? 'bg-accent' : ''}>
+                  <ClipboardList className="w-4 h-4 mr-2" /> Event Orders
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => setActiveTab('workshops')} className={activeTab === 'workshops' ? 'bg-accent' : ''}>
+                  <BookOpen className="w-4 h-4 mr-2" /> Workshops
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setActiveTab('workshop-bookings')} className={activeTab === 'workshop-bookings' ? 'bg-accent' : ''}>
+                  <Ticket className="w-4 h-4 mr-2" /> Workshop Bookings
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -318,6 +348,22 @@ export default function Admin() {
 
           <TabsContent value="payment-report">
             <PaymentReportTab />
+          </TabsContent>
+
+          <TabsContent value="event-inquiries">
+            <EventInquiriesTab />
+          </TabsContent>
+
+          <TabsContent value="event-orders">
+            <EventOrdersTab />
+          </TabsContent>
+
+          <TabsContent value="workshops">
+            <WorkshopsTab />
+          </TabsContent>
+
+          <TabsContent value="workshop-bookings">
+            <WorkshopBookingsTab />
           </TabsContent>
         </Tabs>
       </div>
@@ -6473,6 +6519,1249 @@ function PaymentReportTab() {
           )}
         </DialogContent>
       </Dialog>
+    </div>
+  );
+}
+
+
+// Event Inquiries Tab
+function EventInquiriesTab() {
+  const utils = trpc.useUtils();
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [selectedInquiry, setSelectedInquiry] = useState<any>(null);
+  const [adminNotes, setAdminNotes] = useState("");
+  const [newStatus, setNewStatus] = useState<string>("");
+
+  const { data: inquiries, isLoading } = trpc.events.getInquiries.useQuery({ status: statusFilter });
+  
+  const updateStatusMutation = trpc.events.updateInquiryStatus.useMutation({
+    onSuccess: () => {
+      toast.success("Inquiry updated successfully");
+      utils.events.getInquiries.invalidate();
+      setSelectedInquiry(null);
+    },
+    onError: (error) => toast.error(error.message),
+  });
+
+  const statusColors: Record<string, string> = {
+    new: "bg-blue-100 text-blue-800",
+    contacted: "bg-yellow-100 text-yellow-800",
+    quoted: "bg-purple-100 text-purple-800",
+    confirmed: "bg-green-100 text-green-800",
+    cancelled: "bg-red-100 text-red-800",
+  };
+
+  const eventTypeLabels: Record<string, string> = {
+    wedding: "Wedding",
+    corporate: "Corporate",
+    school: "School",
+    private: "Private Party",
+    other: "Other",
+  };
+
+  const cateringTypeLabels: Record<string, string> = {
+    beverages_only: "Beverages Only",
+    food_only: "Food Only",
+    both: "Food & Beverages",
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h2 className="text-2xl font-bold">Event Inquiries</h2>
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="w-40">
+            <SelectValue placeholder="Filter by status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Status</SelectItem>
+            <SelectItem value="new">New</SelectItem>
+            <SelectItem value="contacted">Contacted</SelectItem>
+            <SelectItem value="quoted">Quoted</SelectItem>
+            <SelectItem value="confirmed">Confirmed</SelectItem>
+            <SelectItem value="cancelled">Cancelled</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      {isLoading ? (
+        <div className="text-center py-8">Loading inquiries...</div>
+      ) : !inquiries?.length ? (
+        <Card className="p-8 text-center text-muted-foreground">
+          No event inquiries found.
+        </Card>
+      ) : (
+        <div className="space-y-4">
+          {inquiries.map((inquiry: any) => (
+            <Card key={inquiry.id} className="p-4">
+              <div className="flex items-start justify-between">
+                <div className="space-y-2">
+                  <div className="flex items-center gap-3">
+                    <h3 className="font-semibold text-lg">{inquiry.customerName}</h3>
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusColors[inquiry.status]}`}>
+                      {inquiry.status.charAt(0).toUpperCase() + inquiry.status.slice(1)}
+                    </span>
+                    <span className="px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                      {eventTypeLabels[inquiry.eventType] || inquiry.eventType}
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-muted-foreground">
+                    <div className="flex items-center gap-1">
+                      <Mail className="w-4 h-4" />
+                      {inquiry.customerEmail}
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Phone className="w-4 h-4" />
+                      {inquiry.customerPhone}
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Calendar className="w-4 h-4" />
+                      {inquiry.eventDate}
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Users className="w-4 h-4" />
+                      {inquiry.guestCount} guests
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-4 text-sm">
+                    <span className="flex items-center gap-1">
+                      <MapPin className="w-4 h-4" />
+                      {inquiry.venue}
+                    </span>
+                    <span className="text-muted-foreground">
+                      {cateringTypeLabels[inquiry.cateringType]}
+                    </span>
+                    {inquiry.budgetRange && (
+                      <span className="text-muted-foreground">Budget: {inquiry.budgetRange}</span>
+                    )}
+                  </div>
+                  {inquiry.preferredItems && (
+                    <p className="text-sm text-muted-foreground">
+                      <strong>Preferred Items:</strong> {inquiry.preferredItems}
+                    </p>
+                  )}
+                  {inquiry.specialRequirements && (
+                    <p className="text-sm text-muted-foreground">
+                      <strong>Special Requirements:</strong> {inquiry.specialRequirements}
+                    </p>
+                  )}
+                  {inquiry.adminNotes && (
+                    <p className="text-sm bg-yellow-50 p-2 rounded">
+                      <strong>Admin Notes:</strong> {inquiry.adminNotes}
+                    </p>
+                  )}
+                  <p className="text-xs text-muted-foreground">
+                    Submitted: {new Date(inquiry.createdAt).toLocaleString()}
+                  </p>
+                </div>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => {
+                    setSelectedInquiry(inquiry);
+                    setAdminNotes(inquiry.adminNotes || "");
+                    setNewStatus(inquiry.status);
+                  }}
+                >
+                  <Edit className="w-4 h-4 mr-1" />
+                  Update
+                </Button>
+              </div>
+            </Card>
+          ))}
+        </div>
+      )}
+
+      {/* Update Inquiry Dialog */}
+      <Dialog open={!!selectedInquiry} onOpenChange={() => setSelectedInquiry(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Update Inquiry</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label>Status</Label>
+              <Select value={newStatus} onValueChange={setNewStatus}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="new">New</SelectItem>
+                  <SelectItem value="contacted">Contacted</SelectItem>
+                  <SelectItem value="quoted">Quoted</SelectItem>
+                  <SelectItem value="confirmed">Confirmed</SelectItem>
+                  <SelectItem value="cancelled">Cancelled</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Admin Notes</Label>
+              <Textarea
+                value={adminNotes}
+                onChange={(e) => setAdminNotes(e.target.value)}
+                placeholder="Add notes about this inquiry..."
+                rows={4}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setSelectedInquiry(null)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={() => {
+                if (selectedInquiry) {
+                  updateStatusMutation.mutate({
+                    id: selectedInquiry.id,
+                    status: newStatus as any,
+                    adminNotes,
+                  });
+                }
+              }}
+              disabled={updateStatusMutation.isPending}
+            >
+              {updateStatusMutation.isPending ? "Saving..." : "Save Changes"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
+// Event Orders Tab
+function EventOrdersTab() {
+  const utils = trpc.useUtils();
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [selectedOrder, setSelectedOrder] = useState<any>(null);
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [showAddItemDialog, setShowAddItemDialog] = useState(false);
+  
+  // Create order form state
+  const [newOrder, setNewOrder] = useState({
+    customerName: "",
+    customerEmail: "",
+    customerPhone: "",
+    companyName: "",
+    eventType: "corporate" as const,
+    eventDate: "",
+    eventTime: "",
+    venue: "",
+    guestCount: 50,
+  });
+
+  // Add item form state
+  const [newItem, setNewItem] = useState({
+    itemType: "beverage" as const,
+    itemName: "",
+    description: "",
+    quantity: 1,
+    unitPrice: 0,
+  });
+
+  const { data: orders, isLoading } = trpc.events.getOrders.useQuery({ status: statusFilter });
+  const { data: orderDetails } = trpc.events.getOrder.useQuery(
+    { id: selectedOrder?.id },
+    { enabled: !!selectedOrder }
+  );
+
+  const createOrderMutation = trpc.events.createOrder.useMutation({
+    onSuccess: () => {
+      toast.success("Event order created successfully");
+      utils.events.getOrders.invalidate();
+      setShowCreateDialog(false);
+      setNewOrder({
+        customerName: "",
+        customerEmail: "",
+        customerPhone: "",
+        companyName: "",
+        eventType: "corporate",
+        eventDate: "",
+        eventTime: "",
+        venue: "",
+        guestCount: 50,
+      });
+    },
+    onError: (error) => toast.error(error.message),
+  });
+
+  const addItemMutation = trpc.events.addOrderItem.useMutation({
+    onSuccess: () => {
+      toast.success("Item added successfully");
+      utils.events.getOrder.invalidate();
+      setShowAddItemDialog(false);
+      setNewItem({
+        itemType: "beverage",
+        itemName: "",
+        description: "",
+        quantity: 1,
+        unitPrice: 0,
+      });
+    },
+    onError: (error) => toast.error(error.message),
+  });
+
+  const removeItemMutation = trpc.events.removeOrderItem.useMutation({
+    onSuccess: () => {
+      toast.success("Item removed");
+      utils.events.getOrder.invalidate();
+    },
+    onError: (error) => toast.error(error.message),
+  });
+
+  const updateStatusMutation = trpc.events.updateOrderStatus.useMutation({
+    onSuccess: () => {
+      toast.success("Status updated");
+      utils.events.getOrders.invalidate();
+      utils.events.getOrder.invalidate();
+    },
+    onError: (error) => toast.error(error.message),
+  });
+
+  const recordPaymentMutation = trpc.events.recordPayment.useMutation({
+    onSuccess: () => {
+      toast.success("Payment recorded");
+      utils.events.getOrders.invalidate();
+      utils.events.getOrder.invalidate();
+    },
+    onError: (error) => toast.error(error.message),
+  });
+
+  const statusColors: Record<string, string> = {
+    draft: "bg-gray-100 text-gray-800",
+    quoted: "bg-blue-100 text-blue-800",
+    confirmed: "bg-green-100 text-green-800",
+    completed: "bg-purple-100 text-purple-800",
+    cancelled: "bg-red-100 text-red-800",
+  };
+
+  const itemTypeLabels: Record<string, string> = {
+    beverage: "Beverage",
+    food: "Food",
+    staff: "Staff",
+    delivery: "Delivery",
+    equipment: "Equipment",
+    other: "Other",
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h2 className="text-2xl font-bold">Event Orders</h2>
+        <div className="flex items-center gap-2">
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-40">
+              <SelectValue placeholder="Filter by status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Status</SelectItem>
+              <SelectItem value="draft">Draft</SelectItem>
+              <SelectItem value="quoted">Quoted</SelectItem>
+              <SelectItem value="confirmed">Confirmed</SelectItem>
+              <SelectItem value="completed">Completed</SelectItem>
+              <SelectItem value="cancelled">Cancelled</SelectItem>
+            </SelectContent>
+          </Select>
+          <Button onClick={() => setShowCreateDialog(true)}>
+            <Plus className="w-4 h-4 mr-2" />
+            New Order
+          </Button>
+        </div>
+      </div>
+
+      {isLoading ? (
+        <div className="text-center py-8">Loading orders...</div>
+      ) : !orders?.length ? (
+        <Card className="p-8 text-center text-muted-foreground">
+          No event orders found. Create your first event order.
+        </Card>
+      ) : (
+        <div className="grid gap-4">
+          {orders.map((order: any) => (
+            <Card 
+              key={order.id} 
+              className="p-4 cursor-pointer hover:shadow-md transition-shadow"
+              onClick={() => setSelectedOrder(order)}
+            >
+              <div className="flex items-start justify-between">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-3">
+                    <h3 className="font-semibold">{order.orderNumber}</h3>
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusColors[order.status]}`}>
+                      {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                    </span>
+                  </div>
+                  <p className="text-sm">{order.customerName} {order.companyName && `(${order.companyName})`}</p>
+                  <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                    <span className="flex items-center gap-1">
+                      <Calendar className="w-4 h-4" />
+                      {order.eventDate}
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Users className="w-4 h-4" />
+                      {order.guestCount} guests
+                    </span>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="font-semibold text-lg">₹{(order.totalAmount / 100).toLocaleString()}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {order.advancePaid ? "Advance Paid" : "Advance Pending"}
+                  </p>
+                </div>
+              </div>
+            </Card>
+          ))}
+        </div>
+      )}
+
+      {/* Order Details Dialog */}
+      <Dialog open={!!selectedOrder} onOpenChange={() => setSelectedOrder(null)}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Event Order: {selectedOrder?.orderNumber}</DialogTitle>
+          </DialogHeader>
+          {orderDetails && (
+            <div className="space-y-6">
+              {/* Customer Info */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <h4 className="font-semibold mb-2">Customer Details</h4>
+                  <div className="space-y-1 text-sm">
+                    <p><strong>Name:</strong> {orderDetails.order.customerName}</p>
+                    <p><strong>Email:</strong> {orderDetails.order.customerEmail}</p>
+                    <p><strong>Phone:</strong> {orderDetails.order.customerPhone}</p>
+                    {orderDetails.order.companyName && (
+                      <p><strong>Company:</strong> {orderDetails.order.companyName}</p>
+                    )}
+                  </div>
+                </div>
+                <div>
+                  <h4 className="font-semibold mb-2">Event Details</h4>
+                  <div className="space-y-1 text-sm">
+                    <p><strong>Type:</strong> {orderDetails.order.eventType}</p>
+                    <p><strong>Date:</strong> {orderDetails.order.eventDate} {orderDetails.order.eventTime}</p>
+                    <p><strong>Venue:</strong> {orderDetails.order.venue}</p>
+                    <p><strong>Guests:</strong> {orderDetails.order.guestCount}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Order Items */}
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <h4 className="font-semibold">Order Items</h4>
+                  <Button size="sm" variant="outline" onClick={() => setShowAddItemDialog(true)}>
+                    <Plus className="w-4 h-4 mr-1" />
+                    Add Item
+                  </Button>
+                </div>
+                {orderDetails.items.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">No items added yet.</p>
+                ) : (
+                  <table className="w-full text-sm">
+                    <thead className="bg-muted">
+                      <tr>
+                        <th className="text-left p-2">Item</th>
+                        <th className="text-left p-2">Type</th>
+                        <th className="text-right p-2">Qty</th>
+                        <th className="text-right p-2">Unit Price</th>
+                        <th className="text-right p-2">Total</th>
+                        <th className="p-2"></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {orderDetails.items.map((item: any) => (
+                        <tr key={item.id} className="border-b">
+                          <td className="p-2">
+                            {item.itemName}
+                            {item.description && <p className="text-xs text-muted-foreground">{item.description}</p>}
+                          </td>
+                          <td className="p-2">{itemTypeLabels[item.itemType]}</td>
+                          <td className="p-2 text-right">{item.quantity}</td>
+                          <td className="p-2 text-right">₹{(item.unitPrice / 100).toFixed(2)}</td>
+                          <td className="p-2 text-right">₹{(item.totalPrice / 100).toFixed(2)}</td>
+                          <td className="p-2">
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => removeItemMutation.mutate({ 
+                                itemId: item.id, 
+                                eventOrderId: selectedOrder.id 
+                              })}
+                            >
+                              <Trash2 className="w-4 h-4 text-red-500" />
+                            </Button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
+              </div>
+
+              {/* Pricing Summary */}
+              <div className="bg-muted p-4 rounded-lg">
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span>Subtotal:</span>
+                    <span>₹{(orderDetails.order.subtotal / 100).toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>GST (18%):</span>
+                    <span>₹{(orderDetails.order.gstAmount / 100).toFixed(2)}</span>
+                  </div>
+                  {orderDetails.order.discountAmount > 0 && (
+                    <div className="flex justify-between text-green-600">
+                      <span>Discount:</span>
+                      <span>-₹{(orderDetails.order.discountAmount / 100).toFixed(2)}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between font-semibold text-lg border-t pt-2">
+                    <span>Total:</span>
+                    <span>₹{(orderDetails.order.totalAmount / 100).toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span>Advance ({orderDetails.order.advancePercentage}%):</span>
+                    <span className={orderDetails.order.advancePaid ? "text-green-600" : ""}>
+                      ₹{(orderDetails.order.advanceAmount / 100).toFixed(2)}
+                      {orderDetails.order.advancePaid && " ✓"}
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span>Balance:</span>
+                    <span className={orderDetails.order.balancePaid ? "text-green-600" : ""}>
+                      ₹{(orderDetails.order.balanceAmount / 100).toFixed(2)}
+                      {orderDetails.order.balancePaid && " ✓"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div className="flex items-center gap-2 flex-wrap">
+                <Select 
+                  value={orderDetails.order.status}
+                  onValueChange={(value) => updateStatusMutation.mutate({ id: selectedOrder.id, status: value as any })}
+                >
+                  <SelectTrigger className="w-40">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="draft">Draft</SelectItem>
+                    <SelectItem value="quoted">Quoted</SelectItem>
+                    <SelectItem value="confirmed">Confirmed</SelectItem>
+                    <SelectItem value="completed">Completed</SelectItem>
+                    <SelectItem value="cancelled">Cancelled</SelectItem>
+                  </SelectContent>
+                </Select>
+                {!orderDetails.order.advancePaid && (
+                  <Button 
+                    variant="outline"
+                    onClick={() => recordPaymentMutation.mutate({ id: selectedOrder.id, paymentType: "advance" })}
+                  >
+                    Record Advance Payment
+                  </Button>
+                )}
+                {orderDetails.order.advancePaid && !orderDetails.order.balancePaid && (
+                  <Button 
+                    variant="outline"
+                    onClick={() => recordPaymentMutation.mutate({ id: selectedOrder.id, paymentType: "balance" })}
+                  >
+                    Record Balance Payment
+                  </Button>
+                )}
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Create Order Dialog */}
+      <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Create Event Order</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 max-h-[60vh] overflow-y-auto">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>Customer Name *</Label>
+                <Input
+                  value={newOrder.customerName}
+                  onChange={(e) => setNewOrder({ ...newOrder, customerName: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label>Company Name</Label>
+                <Input
+                  value={newOrder.companyName}
+                  onChange={(e) => setNewOrder({ ...newOrder, companyName: e.target.value })}
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>Email *</Label>
+                <Input
+                  type="email"
+                  value={newOrder.customerEmail}
+                  onChange={(e) => setNewOrder({ ...newOrder, customerEmail: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label>Phone *</Label>
+                <Input
+                  value={newOrder.customerPhone}
+                  onChange={(e) => setNewOrder({ ...newOrder, customerPhone: e.target.value })}
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>Event Type *</Label>
+                <Select 
+                  value={newOrder.eventType}
+                  onValueChange={(value: any) => setNewOrder({ ...newOrder, eventType: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="wedding">Wedding</SelectItem>
+                    <SelectItem value="corporate">Corporate</SelectItem>
+                    <SelectItem value="school">School</SelectItem>
+                    <SelectItem value="private">Private Party</SelectItem>
+                    <SelectItem value="other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>Guest Count *</Label>
+                <Input
+                  type="number"
+                  value={newOrder.guestCount}
+                  onChange={(e) => setNewOrder({ ...newOrder, guestCount: parseInt(e.target.value) || 0 })}
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>Event Date *</Label>
+                <Input
+                  type="date"
+                  value={newOrder.eventDate}
+                  onChange={(e) => setNewOrder({ ...newOrder, eventDate: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label>Event Time</Label>
+                <Input
+                  type="time"
+                  value={newOrder.eventTime}
+                  onChange={(e) => setNewOrder({ ...newOrder, eventTime: e.target.value })}
+                />
+              </div>
+            </div>
+            <div>
+              <Label>Venue *</Label>
+              <Textarea
+                value={newOrder.venue}
+                onChange={(e) => setNewOrder({ ...newOrder, venue: e.target.value })}
+                placeholder="Event venue address"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowCreateDialog(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={() => createOrderMutation.mutate(newOrder)}
+              disabled={createOrderMutation.isPending || !newOrder.customerName || !newOrder.customerEmail || !newOrder.customerPhone || !newOrder.eventDate || !newOrder.venue}
+            >
+              {createOrderMutation.isPending ? "Creating..." : "Create Order"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add Item Dialog */}
+      <Dialog open={showAddItemDialog} onOpenChange={setShowAddItemDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add Order Item</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label>Item Type</Label>
+              <Select 
+                value={newItem.itemType}
+                onValueChange={(value: any) => setNewItem({ ...newItem, itemType: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="beverage">Beverage</SelectItem>
+                  <SelectItem value="food">Food</SelectItem>
+                  <SelectItem value="staff">Staff</SelectItem>
+                  <SelectItem value="delivery">Delivery</SelectItem>
+                  <SelectItem value="equipment">Equipment</SelectItem>
+                  <SelectItem value="other">Other</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Item Name *</Label>
+              <Input
+                value={newItem.itemName}
+                onChange={(e) => setNewItem({ ...newItem, itemName: e.target.value })}
+                placeholder="e.g., Brown Sugar Milk Tea (500ml)"
+              />
+            </div>
+            <div>
+              <Label>Description</Label>
+              <Input
+                value={newItem.description}
+                onChange={(e) => setNewItem({ ...newItem, description: e.target.value })}
+                placeholder="Optional description"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>Quantity</Label>
+                <Input
+                  type="number"
+                  value={newItem.quantity}
+                  onChange={(e) => setNewItem({ ...newItem, quantity: parseInt(e.target.value) || 1 })}
+                />
+              </div>
+              <div>
+                <Label>Unit Price (₹)</Label>
+                <Input
+                  type="number"
+                  value={newItem.unitPrice}
+                  onChange={(e) => setNewItem({ ...newItem, unitPrice: parseFloat(e.target.value) || 0 })}
+                />
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowAddItemDialog(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={() => {
+                if (selectedOrder) {
+                  addItemMutation.mutate({
+                    eventOrderId: selectedOrder.id,
+                    ...newItem,
+                    unitPrice: Math.round(newItem.unitPrice * 100), // Convert to paise
+                  });
+                }
+              }}
+              disabled={addItemMutation.isPending || !newItem.itemName}
+            >
+              {addItemMutation.isPending ? "Adding..." : "Add Item"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
+// Workshops Tab
+function WorkshopsTab() {
+  const utils = trpc.useUtils();
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [editingWorkshop, setEditingWorkshop] = useState<any>(null);
+  
+  const [formData, setFormData] = useState({
+    title: "",
+    shortDescription: "",
+    description: "",
+    instructorName: "",
+    workshopDate: "",
+    startTime: "",
+    endTime: "",
+    duration: "",
+    venue: "",
+    totalCapacity: 20,
+    price: 0,
+    earlyBirdPrice: 0,
+    earlyBirdDeadline: "",
+    imageUrl: "",
+    status: "draft" as const,
+  });
+
+  const { data: workshops, isLoading } = trpc.workshops.getAll.useQuery();
+
+  const createMutation = trpc.workshops.create.useMutation({
+    onSuccess: () => {
+      toast.success("Workshop created successfully");
+      utils.workshops.getAll.invalidate();
+      setShowCreateDialog(false);
+      resetForm();
+    },
+    onError: (error) => toast.error(error.message),
+  });
+
+  const updateMutation = trpc.workshops.update.useMutation({
+    onSuccess: () => {
+      toast.success("Workshop updated successfully");
+      utils.workshops.getAll.invalidate();
+      setEditingWorkshop(null);
+      resetForm();
+    },
+    onError: (error) => toast.error(error.message),
+  });
+
+  const resetForm = () => {
+    setFormData({
+      title: "",
+      shortDescription: "",
+      description: "",
+      instructorName: "",
+      workshopDate: "",
+      startTime: "",
+      endTime: "",
+      duration: "",
+      venue: "",
+      totalCapacity: 20,
+      price: 0,
+      earlyBirdPrice: 0,
+      earlyBirdDeadline: "",
+      imageUrl: "",
+      status: "draft",
+    });
+  };
+
+  const openEditDialog = (workshop: any) => {
+    setEditingWorkshop(workshop);
+    setFormData({
+      title: workshop.title,
+      shortDescription: workshop.shortDescription || "",
+      description: workshop.description,
+      instructorName: workshop.instructorName,
+      workshopDate: workshop.workshopDate,
+      startTime: workshop.startTime,
+      endTime: workshop.endTime,
+      duration: workshop.duration || "",
+      venue: workshop.venue,
+      totalCapacity: workshop.totalCapacity,
+      price: workshop.price / 100,
+      earlyBirdPrice: workshop.earlyBirdPrice ? workshop.earlyBirdPrice / 100 : 0,
+      earlyBirdDeadline: workshop.earlyBirdDeadline || "",
+      imageUrl: workshop.imageUrl || "",
+      status: workshop.status,
+    });
+  };
+
+  const statusColors: Record<string, string> = {
+    draft: "bg-gray-100 text-gray-800",
+    published: "bg-green-100 text-green-800",
+    cancelled: "bg-red-100 text-red-800",
+    completed: "bg-purple-100 text-purple-800",
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h2 className="text-2xl font-bold">Workshops</h2>
+        <Button onClick={() => setShowCreateDialog(true)}>
+          <Plus className="w-4 h-4 mr-2" />
+          Create Workshop
+        </Button>
+      </div>
+
+      {isLoading ? (
+        <div className="text-center py-8">Loading workshops...</div>
+      ) : !workshops?.length ? (
+        <Card className="p-8 text-center text-muted-foreground">
+          No workshops found. Create your first workshop.
+        </Card>
+      ) : (
+        <div className="grid gap-4">
+          {workshops.map((workshop: any) => (
+            <Card key={workshop.id} className="p-4">
+              <div className="flex items-start justify-between">
+                <div className="flex gap-4">
+                  {workshop.imageUrl && (
+                    <img 
+                      src={workshop.imageUrl} 
+                      alt={workshop.title}
+                      className="w-24 h-24 object-cover rounded-lg"
+                    />
+                  )}
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-semibold text-lg">{workshop.title}</h3>
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusColors[workshop.status]}`}>
+                        {workshop.status.charAt(0).toUpperCase() + workshop.status.slice(1)}
+                      </span>
+                    </div>
+                    <p className="text-sm text-muted-foreground">{workshop.shortDescription}</p>
+                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                      <span className="flex items-center gap-1">
+                        <Calendar className="w-4 h-4" />
+                        {workshop.workshopDate}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Clock className="w-4 h-4" />
+                        {workshop.startTime} - {workshop.endTime}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Users className="w-4 h-4" />
+                        {workshop.bookedCount}/{workshop.totalCapacity} booked
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-4 text-sm">
+                      <span className="font-semibold">₹{(workshop.price / 100).toLocaleString()}</span>
+                      {workshop.earlyBirdPrice && (
+                        <span className="text-green-600">
+                          Early Bird: ₹{(workshop.earlyBirdPrice / 100).toLocaleString()} (until {workshop.earlyBirdDeadline})
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                <Button variant="outline" size="sm" onClick={() => openEditDialog(workshop)}>
+                  <Edit className="w-4 h-4 mr-1" />
+                  Edit
+                </Button>
+              </div>
+            </Card>
+          ))}
+        </div>
+      )}
+
+      {/* Create/Edit Workshop Dialog */}
+      <Dialog open={showCreateDialog || !!editingWorkshop} onOpenChange={() => {
+        setShowCreateDialog(false);
+        setEditingWorkshop(null);
+        resetForm();
+      }}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{editingWorkshop ? "Edit Workshop" : "Create Workshop"}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label>Title *</Label>
+              <Input
+                value={formData.title}
+                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                placeholder="e.g., Bubble Tea Making Masterclass"
+              />
+            </div>
+            <div>
+              <Label>Short Description</Label>
+              <Input
+                value={formData.shortDescription}
+                onChange={(e) => setFormData({ ...formData, shortDescription: e.target.value })}
+                placeholder="Brief description for listings"
+              />
+            </div>
+            <div>
+              <Label>Full Description *</Label>
+              <Textarea
+                value={formData.description}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                placeholder="Detailed workshop description"
+                rows={4}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>Instructor Name *</Label>
+                <Input
+                  value={formData.instructorName}
+                  onChange={(e) => setFormData({ ...formData, instructorName: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label>Venue *</Label>
+                <Input
+                  value={formData.venue}
+                  onChange={(e) => setFormData({ ...formData, venue: e.target.value })}
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-3 gap-4">
+              <div>
+                <Label>Date *</Label>
+                <Input
+                  type="date"
+                  value={formData.workshopDate}
+                  onChange={(e) => setFormData({ ...formData, workshopDate: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label>Start Time *</Label>
+                <Input
+                  type="time"
+                  value={formData.startTime}
+                  onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label>End Time *</Label>
+                <Input
+                  type="time"
+                  value={formData.endTime}
+                  onChange={(e) => setFormData({ ...formData, endTime: e.target.value })}
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>Duration</Label>
+                <Input
+                  value={formData.duration}
+                  onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
+                  placeholder="e.g., 3 hours"
+                />
+              </div>
+              <div>
+                <Label>Total Capacity *</Label>
+                <Input
+                  type="number"
+                  value={formData.totalCapacity}
+                  onChange={(e) => setFormData({ ...formData, totalCapacity: parseInt(e.target.value) || 0 })}
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>Price (₹) *</Label>
+                <Input
+                  type="number"
+                  value={formData.price}
+                  onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) || 0 })}
+                />
+              </div>
+              <div>
+                <Label>Early Bird Price (₹)</Label>
+                <Input
+                  type="number"
+                  value={formData.earlyBirdPrice}
+                  onChange={(e) => setFormData({ ...formData, earlyBirdPrice: parseFloat(e.target.value) || 0 })}
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>Early Bird Deadline</Label>
+                <Input
+                  type="date"
+                  value={formData.earlyBirdDeadline}
+                  onChange={(e) => setFormData({ ...formData, earlyBirdDeadline: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label>Status</Label>
+                <Select 
+                  value={formData.status}
+                  onValueChange={(value: any) => setFormData({ ...formData, status: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="draft">Draft</SelectItem>
+                    <SelectItem value="published">Published</SelectItem>
+                    <SelectItem value="cancelled">Cancelled</SelectItem>
+                    <SelectItem value="completed">Completed</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div>
+              <Label>Image URL</Label>
+              <Input
+                value={formData.imageUrl}
+                onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
+                placeholder="https://..."
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => {
+              setShowCreateDialog(false);
+              setEditingWorkshop(null);
+              resetForm();
+            }}>
+              Cancel
+            </Button>
+            <Button
+              onClick={() => {
+                const data = {
+                  ...formData,
+                  price: Math.round(formData.price * 100),
+                  earlyBirdPrice: formData.earlyBirdPrice ? Math.round(formData.earlyBirdPrice * 100) : undefined,
+                };
+                if (editingWorkshop) {
+                  updateMutation.mutate({ id: editingWorkshop.id, ...data });
+                } else {
+                  createMutation.mutate(data);
+                }
+              }}
+              disabled={createMutation.isPending || updateMutation.isPending || !formData.title || !formData.description || !formData.instructorName || !formData.workshopDate || !formData.startTime || !formData.endTime || !formData.venue || !formData.price}
+            >
+              {createMutation.isPending || updateMutation.isPending ? "Saving..." : editingWorkshop ? "Update Workshop" : "Create Workshop"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
+// Workshop Bookings Tab
+function WorkshopBookingsTab() {
+  const utils = trpc.useUtils();
+  const [selectedWorkshopId, setSelectedWorkshopId] = useState<number | null>(null);
+
+  const { data: workshops } = trpc.workshops.getAll.useQuery();
+  const { data: bookings, isLoading } = trpc.workshops.getBookings.useQuery(
+    { workshopId: selectedWorkshopId! },
+    { enabled: !!selectedWorkshopId }
+  );
+
+  const updatePaymentMutation = trpc.workshops.updateBookingPayment.useMutation({
+    onSuccess: () => {
+      toast.success("Payment status updated");
+      utils.workshops.getBookings.invalidate();
+    },
+    onError: (error) => toast.error(error.message),
+  });
+
+  const updateAttendanceMutation = trpc.workshops.updateAttendance.useMutation({
+    onSuccess: () => {
+      toast.success("Attendance updated");
+      utils.workshops.getBookings.invalidate();
+    },
+    onError: (error) => toast.error(error.message),
+  });
+
+  const paymentStatusColors: Record<string, string> = {
+    pending: "bg-yellow-100 text-yellow-800",
+    paid: "bg-green-100 text-green-800",
+    refunded: "bg-blue-100 text-blue-800",
+    cancelled: "bg-red-100 text-red-800",
+  };
+
+  const attendanceColors: Record<string, string> = {
+    not_attended: "bg-gray-100 text-gray-800",
+    attended: "bg-green-100 text-green-800",
+    no_show: "bg-red-100 text-red-800",
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h2 className="text-2xl font-bold">Workshop Bookings</h2>
+        <Select 
+          value={selectedWorkshopId?.toString() || ""} 
+          onValueChange={(value) => setSelectedWorkshopId(value ? parseInt(value) : null)}
+        >
+          <SelectTrigger className="w-64">
+            <SelectValue placeholder="Select a workshop" />
+          </SelectTrigger>
+          <SelectContent>
+            {workshops?.map((workshop: any) => (
+              <SelectItem key={workshop.id} value={workshop.id.toString()}>
+                {workshop.title} ({workshop.workshopDate})
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      {!selectedWorkshopId ? (
+        <Card className="p-8 text-center text-muted-foreground">
+          Select a workshop to view its bookings.
+        </Card>
+      ) : isLoading ? (
+        <div className="text-center py-8">Loading bookings...</div>
+      ) : !bookings?.length ? (
+        <Card className="p-8 text-center text-muted-foreground">
+          No bookings found for this workshop.
+        </Card>
+      ) : (
+        <Card className="overflow-hidden">
+          <table className="w-full">
+            <thead className="bg-muted">
+              <tr>
+                <th className="text-left p-3">Booking #</th>
+                <th className="text-left p-3">Customer</th>
+                <th className="text-left p-3">Contact</th>
+                <th className="text-center p-3">Tickets</th>
+                <th className="text-right p-3">Amount</th>
+                <th className="text-center p-3">Payment</th>
+                <th className="text-center p-3">Attendance</th>
+                <th className="text-left p-3">Booked On</th>
+              </tr>
+            </thead>
+            <tbody>
+              {bookings.map((booking: any) => (
+                <tr key={booking.id} className="border-b">
+                  <td className="p-3 font-mono text-sm">{booking.bookingNumber}</td>
+                  <td className="p-3">{booking.customerName}</td>
+                  <td className="p-3 text-sm">
+                    <div>{booking.customerEmail}</div>
+                    <div className="text-muted-foreground">{booking.customerPhone}</div>
+                  </td>
+                  <td className="p-3 text-center">{booking.ticketCount}</td>
+                  <td className="p-3 text-right">₹{(booking.totalAmount / 100).toFixed(2)}</td>
+                  <td className="p-3 text-center">
+                    <Select
+                      value={booking.paymentStatus}
+                      onValueChange={(value) => updatePaymentMutation.mutate({
+                        bookingId: booking.id,
+                        paymentStatus: value as any,
+                      })}
+                    >
+                      <SelectTrigger className={`w-28 h-8 text-xs ${paymentStatusColors[booking.paymentStatus]}`}>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="pending">Pending</SelectItem>
+                        <SelectItem value="paid">Paid</SelectItem>
+                        <SelectItem value="refunded">Refunded</SelectItem>
+                        <SelectItem value="cancelled">Cancelled</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </td>
+                  <td className="p-3 text-center">
+                    <Select
+                      value={booking.attendedStatus}
+                      onValueChange={(value) => updateAttendanceMutation.mutate({
+                        bookingId: booking.id,
+                        attendedStatus: value as any,
+                      })}
+                    >
+                      <SelectTrigger className={`w-28 h-8 text-xs ${attendanceColors[booking.attendedStatus]}`}>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="not_attended">Not Attended</SelectItem>
+                        <SelectItem value="attended">Attended</SelectItem>
+                        <SelectItem value="no_show">No Show</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </td>
+                  <td className="p-3 text-sm text-muted-foreground">
+                    {new Date(booking.createdAt).toLocaleDateString()}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </Card>
+      )}
     </div>
   );
 }
