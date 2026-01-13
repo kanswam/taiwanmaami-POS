@@ -398,3 +398,7 @@
 ### About Us Page Fix & Order Cleanup (Jan 13)
 - [x] Add Palladium location card back to About Us page
 - [x] Delete test orders 66 and 67 from database
+
+### About Us Page Map Directions (Jan 13)
+- [x] Add map directions links to location cards (like landing page)
+- [x] Update Palladium phone number to +91 89259 14303
