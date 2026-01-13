@@ -43,7 +43,7 @@ const pastEvents = [
   {
     title: "Wedding Celebrations",
     description: "Create unforgettable moments with our premium wedding catering and event services. From intimate ceremonies to grand celebrations, we bring your vision to life with exquisite cuisine and impeccable service.",
-    image: "https://res.cloudinary.com/drpu1dbqk/image/upload/f_auto,q_auto/v1768284574/events/wedding-event.jpg",
+    image: "https://res.cloudinary.com/drpu1dbqk/image/upload/f_auto,q_auto/v1768284572/events/corporate-event.jpg",
     icon: <Heart className="h-5 w-5" />,
     type: "Wedding",
     cta: "Plan Your Wedding",
@@ -52,7 +52,7 @@ const pastEvents = [
   {
     title: "Corporate Functions",
     description: "Impress your clients and team with sophisticated corporate catering. Our expert team delivers premium Asian cuisine and seamless service for conferences, gala dinners, and business gatherings.",
-    image: "https://res.cloudinary.com/drpu1dbqk/image/upload/f_auto,q_auto/v1768284572/events/corporate-event.jpg",
+    image: "https://res.cloudinary.com/drpu1dbqk/image/upload/f_auto,q_auto/v1768284574/events/wedding-event.jpg",
     icon: <Building2 className="h-5 w-5" />,
     type: "Corporate",
     cta: "Plan Your Corporate Event",
@@ -79,8 +79,8 @@ const offerings = [
 
 // Stats
 const stats = [
-  { value: "500+", label: "Events Catered" },
-  { value: "50,000+", label: "Guests Served" },
+  { value: "5+", label: "Events Catered" },
+  { value: "5,000+", label: "Guests Served" },
   { value: "100%", label: "Client Satisfaction" },
   { value: "5★", label: "Average Rating" },
 ];

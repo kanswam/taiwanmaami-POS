@@ -357,3 +357,7 @@
 - [x] Add hero carousel with beverage and food product photos
 - [x] Improve overall visual design and layout
 - [x] Make page more impressive and attractive
+
+### Events Page Fixes (Jan 13)
+- [x] Correctly swap wedding/corporate photos (wedding=colorful buffet saree, corporate=yellow kurta bubble tea)
+- [x] Update stats to realistic numbers (5+ events, 5,000 guests)
