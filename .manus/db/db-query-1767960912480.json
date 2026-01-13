@@ -1,9 +1,0 @@
-{
-  "query": "CREATE TABLE IF NOT EXISTS `order_audit_log` (\n  `id` int AUTO_INCREMENT NOT NULL,\n  `orderId` int NOT NULL,\n  `orderNumber` varchar(20) NOT NULL,\n  `userId` int,\n  `userName` varchar(200),\n  `userRole` enum('customer','staff','admin') NOT NULL,\n  `actionType` enum('payment_collected','item_added','item_cancelled','discount_applied','order_cancelled','status_changed','manual_discount_applied','refund_issued','order_locked','order_unlocked') NOT NULL,\n  `description` text,\n  `oldValue` text,\n  `newValue` text,\n  `itemId` int,\n  `itemName` varchar(200),\n  `itemQuantity` int,\n  `amount` int,\n  `ipAddress` varchar(45),\n  `createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  PRIMARY KEY (`id`)\n);",
-  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute CREATE TABLE IF NOT EXISTS `order_audit_log` (\n  `id` int AUTO_INCREMENT NOT NULL,\n  `orderId` int NOT NULL,\n  `orderNumber` varchar(20) NOT NULL,\n  `userId` int,\n  `userName` varchar(200),\n  `userRole` enum('customer','staff','admin') NOT NULL,\n  `actionType` enum('payment_collected','item_added','item_cancelled','discount_applied','order_cancelled','status_changed','manual_discount_applied','refund_issued','order_locked','order_unlocked') NOT NULL,\n  `description` text,\n  `oldValue` text,\n  `newValue` text,\n  `itemId` int,\n  `itemName` varchar(200),\n  `itemQuantity` int,\n  `amount` int,\n  `ipAddress` varchar(45),\n  `createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  PRIMARY KEY (`id`)\n);",
-  "rows": [],
-  "messages": [],
-  "stdout": "",
-  "stderr": "",
-  "execution_time_ms": 1714
-}

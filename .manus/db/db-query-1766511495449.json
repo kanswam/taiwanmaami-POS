@@ -1,9 +1,0 @@
-{
-  "query": "CREATE TABLE IF NOT EXISTS `product_audit_log` (\n  `id` int AUTO_INCREMENT NOT NULL,\n  `productId` int NOT NULL,\n  `productName` varchar(200) NOT NULL,\n  `userId` int,\n  `userName` varchar(200),\n  `action` enum('create','update','delete','deactivate','reactivate','stock_in','stock_out','price_change','image_change') NOT NULL,\n  `fieldChanged` varchar(100),\n  `oldValue` text,\n  `newValue` text,\n  `ipAddress` varchar(45),\n  `userAgent` text,\n  `createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  CONSTRAINT `product_audit_log_id` PRIMARY KEY(`id`)\n);",
-  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute CREATE TABLE IF NOT EXISTS `product_audit_log` (\n  `id` int AUTO_INCREMENT NOT NULL,\n  `productId` int NOT NULL,\n  `productName` varchar(200) NOT NULL,\n  `userId` int,\n  `userName` varchar(200),\n  `action` enum('create','update','delete','deactivate','reactivate','stock_in','stock_out','price_change','image_change') NOT NULL,\n  `fieldChanged` varchar(100),\n  `oldValue` text,\n  `newValue` text,\n  `ipAddress` varchar(45),\n  `userAgent` text,\n  `createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  CONSTRAINT `product_audit_log_id` PRIMARY KEY(`id`)\n);",
-  "rows": [],
-  "messages": [],
-  "stdout": "",
-  "stderr": "",
-  "execution_time_ms": 1684
-}

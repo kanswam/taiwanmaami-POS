@@ -1,9 +1,0 @@
-{
-  "query": "INSERT INTO orders (\n  orderNumber, \n  customerName, \n  customerPhone, \n  orderType, \n  orderStatus, \n  paymentStatus, \n  paymentMethod,\n  subtotal, \n  stateGst, \n  centralGst, \n  totalAmount, \n  outletId,\n  createdAt\n) VALUES (\n  '00029',\n  'Guest',\n  '',\n  'instore',\n  'preparing',\n  'paid',\n  'cash',\n  2000,\n  50,\n  50,\n  2100,\n  1,\n  datetime('now')\n);",
-  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute INSERT INTO orders (\n  orderNumber, \n  customerName, \n  customerPhone, \n  orderType, \n  orderStatus, \n  paymentStatus, \n  paymentMethod,\n  subtotal, \n  stateGst, \n  centralGst, \n  totalAmount, \n  outletId,\n  createdAt\n) VALUES (\n  '00029',\n  'Guest',\n  '',\n  'instore',\n  'preparing',\n  'paid',\n  'cash',\n  2000,\n  50,\n  50,\n  2100,\n  1,\n  datetime('now')\n);",
-  "returncode": 1,
-  "logs": [
-    "ERROR 1064 (42000) at line 1: You have an error in your SQL syntax; check the manual that corresponds to your TiDB version for the right syntax to use line 28 column 12 near \"('now')",
-    ")\""
-  ]
-}

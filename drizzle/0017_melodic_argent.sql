@@ -1,1 +1,0 @@
-ALTER TABLE `addons` ADD `maxQuantity` int DEFAULT 3;

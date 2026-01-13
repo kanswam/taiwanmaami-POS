@@ -1,2 +1,0 @@
-ALTER TABLE `orders` ADD `idempotencyKey` varchar(100);--> statement-breakpoint
-ALTER TABLE `orders` ADD CONSTRAINT `orders_idempotencyKey_unique` UNIQUE(`idempotencyKey`);

@@ -1,1 +1,0 @@
-ALTER TABLE `products` ADD `isAvailable` boolean DEFAULT true NOT NULL;

@@ -1,1 +1,0 @@
-ALTER TABLE `subcategories` ADD `availablePickup` boolean DEFAULT true NOT NULL;

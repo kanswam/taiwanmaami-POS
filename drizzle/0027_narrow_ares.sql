@@ -1,1 +1,0 @@
-ALTER TABLE `orders` ADD `paymentMethod` enum('cash','upi','card','swiggy_dineout','zomato_dineout','other');

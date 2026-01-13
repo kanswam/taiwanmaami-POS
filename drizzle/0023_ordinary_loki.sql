@@ -1,1 +1,0 @@
-ALTER TABLE `products` ADD `availableAtPalladium` boolean DEFAULT true NOT NULL;

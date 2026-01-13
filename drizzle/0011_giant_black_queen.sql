@@ -1,1 +1,0 @@
-ALTER TABLE `kot_queue` ADD `orderNumber` varchar(50) NOT NULL;

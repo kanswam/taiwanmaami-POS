@@ -1,2 +1,0 @@
-ALTER TABLE `orders` MODIFY COLUMN `paymentMethod` enum('cash','upi','card','swiggy_dineout','zomato_dineout','eazydiner','other');--> statement-breakpoint
-ALTER TABLE `payments` MODIFY COLUMN `paymentMethod` enum('cash','card','upi','razorpay','eazydiner') NOT NULL;
