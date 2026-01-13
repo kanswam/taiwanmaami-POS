@@ -378,3 +378,7 @@
 - [x] Updated all orders in database to outletId=2 (T Nagar)
 - [x] Palladium outlet info remains on About page, Footer, index.html, Complaint page
 - Note: Palladium Mall outlet is still operational, only this website's transactions are from T Nagar
+
+### Add Palladium Hours (Jan 13)
+- [x] Add Palladium hours (10am-10pm) to Footer Hours section
+- [x] Add Palladium hours to Home page Hours section
