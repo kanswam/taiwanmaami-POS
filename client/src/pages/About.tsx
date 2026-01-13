@@ -52,8 +52,7 @@ export default function About() {
               <div className="prose prose-lg max-w-none text-muted-foreground space-y-4">
                 <p>
                   Taiwan Maami is a flagship bubble tea brand under Thamarai Foods and Trading Private Limited. 
-                  We opened our first outlet in Palladium Mall, Chennai in April 2024, and have been serving 
-                  authentic premium bubble tea to our customers for over 20 months.
+                  We have been serving authentic premium bubble tea to our customers in Chennai since 2024.
                 </p>
                 <p>
                   Our commitment to quality starts with our ingredients. We use imported Tapioca Pearls from Taiwan, 
@@ -123,29 +122,7 @@ export default function About() {
       <section className="py-16" id="locations">
         <div className="container">
           <h2 className="text-2xl font-bold mb-8 text-center">Our Locations</h2>
-          <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-            <Card className="p-6">
-              <h3 className="font-semibold text-lg mb-4">Palladium Mall</h3>
-              <div className="space-y-3 text-sm">
-                <div className="flex items-start gap-3">
-                  <MapPin className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
-                  <p className="text-muted-foreground">
-                    First Floor, Palladium Mall<br />
-                    Velachery Main Road, Velachery<br />
-                    Chennai - 600042
-                  </p>
-                </div>
-                <div className="flex items-center gap-3">
-                  <Clock className="w-5 h-5 text-primary flex-shrink-0" />
-                  <p className="text-muted-foreground">10:00 AM - 10:00 PM (All days)</p>
-                </div>
-                <div className="flex items-center gap-3">
-                  <Phone className="w-5 h-5 text-primary flex-shrink-0" />
-                  <p className="text-muted-foreground">+91 89259 14303</p>
-                </div>
-              </div>
-            </Card>
-
+          <div className="max-w-md mx-auto">
             <Card className="p-6">
               <h3 className="font-semibold text-lg mb-4">T Nagar (Moutan)</h3>
               <div className="space-y-3 text-sm">

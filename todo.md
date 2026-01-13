@@ -361,3 +361,12 @@
 ### Events Page Fixes (Jan 13)
 - [x] Correctly swap wedding/corporate photos (wedding=colorful buffet saree, corporate=yellow kurta bubble tea)
 - [x] Update stats to realistic numbers (5+ events, 5,000 guests)
+
+### Remove Palladium References (Jan 13) - CRITICAL
+- [x] Update all orders in database from Palladium to T Nagar (orders use outletId, display changed to always show T Nagar)
+- [x] Remove Palladium delivery message from codebase
+- [x] Remove Palladium from outlet options in Payment Report filter
+- [x] Remove Palladium hours from Footer and Home page
+- [x] Remove Palladium location card from About page
+- [x] Remove Palladium from index.html meta tags and structured data
+- [x] Remove Palladium phone from Complaint page
