@@ -351,3 +351,9 @@
 - [x] Update Events page with document content
 - [x] Add real event photos to past events gallery
 - [x] Test Events page displays correctly
+
+### Events Page Redesign (Jan 13)
+- [x] Fix wedding/corporate photo mix-up (swap images)
+- [x] Add hero carousel with beverage and food product photos
+- [x] Improve overall visual design and layout
+- [x] Make page more impressive and attractive
