@@ -10,41 +10,44 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
-import { Calendar, Clock, MapPin, Users, Ticket, ChefHat, PartyPopper, Phone, Mail, Instagram, Sparkles, CheckCircle2, ArrowRight } from "lucide-react";
+import { Calendar, Clock, MapPin, Users, Ticket, ChefHat, PartyPopper, Phone, Mail, Instagram, Sparkles, CheckCircle2, ArrowRight, Heart, Building2, GraduationCap, UtensilsCrossed } from "lucide-react";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 
-// Past events showcase data
+// Past events showcase data with real photos
 const pastEvents = [
   {
-    title: "Wedding Reception - Radisson Blu",
-    description: "Served 200+ guests with our signature bubble tea bar and Taiwanese snacks",
-    image: "https://images.unsplash.com/photo-1519741497674-611481863552?w=600&h=400&fit=crop",
-    guests: 200,
+    title: "Wedding Celebrations",
+    description: "Create unforgettable moments with our premium wedding catering and event services. From intimate ceremonies to grand celebrations, we bring your vision to life with exquisite cuisine and impeccable service.",
+    image: "https://res.cloudinary.com/drpu1dbqk/image/upload/f_auto,q_auto/v1768284574/events/wedding-event.jpg",
+    icon: <Heart className="h-5 w-5" />,
     type: "Wedding",
+    cta: "Plan Your Wedding",
   },
   {
-    title: "Tech Company Annual Meet",
-    description: "Corporate event with customized bubble tea flavors and biang biang noodles",
-    image: "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=600&h=400&fit=crop",
-    guests: 150,
+    title: "Corporate Functions",
+    description: "Impress your clients and team with sophisticated corporate catering. Our expert team delivers premium Asian cuisine and seamless service for conferences, gala dinners, and business gatherings.",
+    image: "https://res.cloudinary.com/drpu1dbqk/image/upload/f_auto,q_auto/v1768284572/events/corporate-event.jpg",
+    icon: <Building2 className="h-5 w-5" />,
     type: "Corporate",
+    cta: "Plan Your Corporate Event",
   },
   {
-    title: "School Cultural Festival",
-    description: "Fun-filled event with interactive bubble tea making stations",
-    image: "https://images.unsplash.com/photo-1523580494863-6f3031224c94?w=600&h=400&fit=crop",
-    guests: 300,
+    title: "School Events",
+    description: "Bring joy and flavour to your school events. Our vibrant food stall and catering services create memorable experiences for students, families, and staff. Perfect for fairs, festivals, and fundraisers!",
+    image: "https://res.cloudinary.com/drpu1dbqk/image/upload/f_auto,q_auto/v1768284573/events/school-event.jpg",
+    icon: <GraduationCap className="h-5 w-5" />,
     type: "School",
+    cta: "Plan Your School Event",
   },
 ];
 
-// What we offer
+// What we offer - consistent across all event types
 const offerings = [
-  { icon: <ChefHat className="h-6 w-6" />, title: "Authentic Taiwanese Cuisine", desc: "From bubble tea to biang biang noodles" },
-  { icon: <Users className="h-6 w-6" />, title: "Flexible Guest Count", desc: "From intimate gatherings to large events" },
-  { icon: <Sparkles className="h-6 w-6" />, title: "Customized Menus", desc: "Tailored to your preferences and budget" },
+  { icon: <Sparkles className="h-6 w-6" />, title: "Premium Quality", desc: "Only the finest ingredients for your special day" },
   { icon: <CheckCircle2 className="h-6 w-6" />, title: "Professional Service", desc: "Trained staff for seamless execution" },
+  { icon: <ChefHat className="h-6 w-6" />, title: "Authentic Cuisine", desc: "Genuine Taiwanese flavors and recipes" },
+  { icon: <UtensilsCrossed className="h-6 w-6" />, title: "Custom Solutions", desc: "Tailored menus for your preferences" },
 ];
 
 export default function Events() {
@@ -159,14 +162,14 @@ export default function Events() {
         <div className="absolute inset-0 bg-black/20" />
         <div className="container relative z-10">
           <div className="max-w-3xl">
-            <Badge className="bg-white/20 text-white mb-4">Events & Workshops</Badge>
+            <Badge className="bg-white/20 text-white mb-4">Premium Event Services</Badge>
             <h1 className="text-4xl md:text-6xl font-bold mb-6">
-              Bring Taiwan to Your Event
+              Celebrate Life's Precious Moments
             </h1>
             <p className="text-xl md:text-2xl text-white/90 mb-8">
-              From corporate gatherings to weddings, we bring authentic Taiwanese flavors 
-              that create unforgettable experiences. Plus, learn to make our signature dishes 
-              in our exclusive workshops!
+              From intimate weddings to grand corporate galas, Taiwan Maami brings authentic Asian 
+              cuisine and beverages to every celebration. Create unforgettable memories with our 
+              premium catering.
             </p>
             <div className="flex flex-wrap gap-4">
               <Dialog open={inquiryDialogOpen} onOpenChange={setInquiryDialogOpen}>
@@ -243,20 +246,21 @@ export default function Events() {
                               <SelectValue placeholder="Select event type" />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="wedding">Wedding / Reception</SelectItem>
+                              <SelectItem value="wedding">Wedding</SelectItem>
                               <SelectItem value="corporate">Corporate Event</SelectItem>
-                              <SelectItem value="school">School / College Event</SelectItem>
-                              <SelectItem value="private">Private Party</SelectItem>
+                              <SelectItem value="school">School Event</SelectItem>
+                              <SelectItem value="private">Private Gathering</SelectItem>
                               <SelectItem value="other">Other</SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="guestCount">Number of Guests *</Label>
+                          <Label htmlFor="guestCount">Expected Guests *</Label>
                           <Input
                             id="guestCount"
                             type="number"
                             min="1"
+                            placeholder="e.g., 100"
                             value={inquiryForm.guestCount}
                             onChange={(e) => setInquiryForm({ ...inquiryForm, guestCount: e.target.value })}
                             required
@@ -281,16 +285,16 @@ export default function Events() {
                             onChange={(e) => setInquiryForm({ ...inquiryForm, eventTime: e.target.value })}
                           />
                         </div>
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="venue">Venue / Location *</Label>
-                        <Input
-                          id="venue"
-                          placeholder="Where will the event be held?"
-                          value={inquiryForm.venue}
-                          onChange={(e) => setInquiryForm({ ...inquiryForm, venue: e.target.value })}
-                          required
-                        />
+                        <div className="space-y-2 md:col-span-2">
+                          <Label htmlFor="venue">Venue/Location *</Label>
+                          <Input
+                            id="venue"
+                            placeholder="e.g., ITC Grand Chola, Chennai"
+                            value={inquiryForm.venue}
+                            onChange={(e) => setInquiryForm({ ...inquiryForm, venue: e.target.value })}
+                            required
+                          />
+                        </div>
                       </div>
                     </div>
 
@@ -301,7 +305,7 @@ export default function Events() {
                       <h3 className="font-semibold text-lg">Catering Requirements</h3>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-2">
-                          <Label htmlFor="cateringType">What would you like? *</Label>
+                          <Label htmlFor="cateringType">Catering Type *</Label>
                           <Select
                             value={inquiryForm.cateringType}
                             onValueChange={(value) => setInquiryForm({ ...inquiryForm, cateringType: value as typeof inquiryForm.cateringType })}
@@ -310,14 +314,14 @@ export default function Events() {
                               <SelectValue placeholder="Select catering type" />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="beverages_only">Bubble Tea Only</SelectItem>
+                              <SelectItem value="beverages_only">Beverages Only (Bubble Tea, etc.)</SelectItem>
                               <SelectItem value="food_only">Food Only</SelectItem>
-                              <SelectItem value="both">Both Beverages & Food</SelectItem>
+                              <SelectItem value="both">Both Food & Beverages</SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="budgetRange">Budget Range (Optional)</Label>
+                          <Label htmlFor="budgetRange">Budget Range</Label>
                           <Select
                             value={inquiryForm.budgetRange}
                             onValueChange={(value) => setInquiryForm({ ...inquiryForm, budgetRange: value })}
@@ -329,38 +333,41 @@ export default function Events() {
                               <SelectItem value="under_25k">Under ₹25,000</SelectItem>
                               <SelectItem value="25k_50k">₹25,000 - ₹50,000</SelectItem>
                               <SelectItem value="50k_1l">₹50,000 - ₹1,00,000</SelectItem>
-                              <SelectItem value="above_1l">Above ₹1,00,000</SelectItem>
+                              <SelectItem value="1l_2l">₹1,00,000 - ₹2,00,000</SelectItem>
+                              <SelectItem value="above_2l">Above ₹2,00,000</SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="preferredItems">Preferred Items</Label>
-                        <Textarea
-                          id="preferredItems"
-                          placeholder="Any specific drinks or food items you'd like? (e.g., Brown Sugar Boba, Biang Biang Noodles)"
-                          value={inquiryForm.preferredItems}
-                          onChange={(e) => setInquiryForm({ ...inquiryForm, preferredItems: e.target.value })}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="specialRequirements">Special Requirements</Label>
-                        <Textarea
-                          id="specialRequirements"
-                          placeholder="Any dietary restrictions, allergies, or special requests?"
-                          value={inquiryForm.specialRequirements}
-                          onChange={(e) => setInquiryForm({ ...inquiryForm, specialRequirements: e.target.value })}
-                        />
+                        <div className="space-y-2 md:col-span-2">
+                          <Label htmlFor="preferredItems">Preferred Items</Label>
+                          <Textarea
+                            id="preferredItems"
+                            placeholder="e.g., Bubble Tea Bar, Biang Biang Noodles, Mochi, etc."
+                            value={inquiryForm.preferredItems}
+                            onChange={(e) => setInquiryForm({ ...inquiryForm, preferredItems: e.target.value })}
+                          />
+                        </div>
+                        <div className="space-y-2 md:col-span-2">
+                          <Label htmlFor="specialRequirements">Special Requirements</Label>
+                          <Textarea
+                            id="specialRequirements"
+                            placeholder="Any dietary restrictions, allergies, or special requests?"
+                            value={inquiryForm.specialRequirements}
+                            onChange={(e) => setInquiryForm({ ...inquiryForm, specialRequirements: e.target.value })}
+                          />
+                        </div>
                       </div>
                     </div>
 
                     <Button type="submit" className="w-full" disabled={submitInquiry.isPending}>
                       {submitInquiry.isPending ? "Submitting..." : "Submit Inquiry"}
                     </Button>
+                    <p className="text-xs text-muted-foreground text-center">
+                      Our team will contact you within 24 hours to discuss your requirements.
+                    </p>
                   </form>
                 </DialogContent>
               </Dialog>
-              
               <a href="#workshops">
                 <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/10">
                   <Ticket className="mr-2 h-5 w-5" />
@@ -372,11 +379,117 @@ export default function Events() {
         </div>
       </section>
 
-      {/* What We Offer */}
-      <section className="py-16 bg-muted/30">
+      {/* Event Categories - From EventPage.docx */}
+      <section className="py-16">
         <div className="container">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4">Why Choose Taiwan Maami for Your Event?</h2>
+            <h2 className="text-3xl font-bold mb-4">From Private Celebrations to Corporate Functions</h2>
+            <p className="text-muted-foreground max-w-2xl mx-auto">
+              We offer premium event catering and experiences for every occasion.
+            </p>
+            <div className="flex flex-wrap justify-center gap-4 mt-6">
+              <Badge variant="outline" className="text-lg py-2 px-4">
+                <Heart className="h-4 w-4 mr-2" /> Weddings
+              </Badge>
+              <Badge variant="outline" className="text-lg py-2 px-4">
+                <GraduationCap className="h-4 w-4 mr-2" /> School Events
+              </Badge>
+              <Badge variant="outline" className="text-lg py-2 px-4">
+                <Building2 className="h-4 w-4 mr-2" /> Corporate
+              </Badge>
+              <Badge variant="outline" className="text-lg py-2 px-4">
+                <PartyPopper className="h-4 w-4 mr-2" /> Private Gatherings
+              </Badge>
+            </div>
+          </div>
+
+          {/* Event Cards with Real Photos */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {pastEvents.map((event, index) => (
+              <Card key={index} className="overflow-hidden group hover:shadow-lg transition-shadow">
+                <div className="aspect-[4/3] relative overflow-hidden">
+                  <img 
+                    src={event.image} 
+                    alt={event.title}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    loading="lazy"
+                  />
+                  <Badge className="absolute top-3 left-3 bg-red-600">{event.type}</Badge>
+                </div>
+                <CardContent className="pt-6">
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center text-red-600">
+                      {event.icon}
+                    </div>
+                    <h3 className="text-xl font-semibold">{event.title}</h3>
+                  </div>
+                  <p className="text-muted-foreground mb-4">{event.description}</p>
+                  
+                  {/* Features */}
+                  <div className="flex flex-wrap gap-2 mb-4">
+                    <Badge variant="secondary" className="text-xs">Premium Quality</Badge>
+                    <Badge variant="secondary" className="text-xs">Professional Service</Badge>
+                    <Badge variant="secondary" className="text-xs">Authentic Cuisine</Badge>
+                    <Badge variant="secondary" className="text-xs">Custom Solutions</Badge>
+                  </div>
+                </CardContent>
+                <CardFooter>
+                  <Button 
+                    className="w-full" 
+                    onClick={() => setInquiryDialogOpen(true)}
+                  >
+                    {event.cta}
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+                </CardFooter>
+              </Card>
+            ))}
+          </div>
+
+          {/* Premium Meal Boxes Section */}
+          <Card className="mt-8 overflow-hidden">
+            <div className="grid md:grid-cols-2 gap-0">
+              <div className="p-8 flex flex-col justify-center">
+                <Badge className="w-fit mb-4 bg-amber-100 text-amber-800">Premium Meal Boxes</Badge>
+                <h3 className="text-2xl font-bold mb-4">Elevate Your Special Occasions</h3>
+                <p className="text-muted-foreground mb-6">
+                  Elevate your special occasions and gatherings with our premium bento box catering. 
+                  Each box is meticulously crafted with premium ingredients, elegant presentation, 
+                  and authentic Asian delicacies.
+                </p>
+                <div className="flex flex-wrap gap-2 mb-6">
+                  <Badge variant="secondary">Premium Quality</Badge>
+                  <Badge variant="secondary">Professional Service</Badge>
+                  <Badge variant="secondary">Authentic Cuisine</Badge>
+                  <Badge variant="secondary">Custom Solutions</Badge>
+                </div>
+                <Button onClick={() => setInquiryDialogOpen(true)} className="w-fit">
+                  Plan Your Meal Boxes
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              </div>
+              <div className="bg-gradient-to-br from-amber-50 to-orange-50 p-8 flex items-center justify-center">
+                <div className="text-center">
+                  <UtensilsCrossed className="h-16 w-16 mx-auto text-amber-600 mb-4" />
+                  <h4 className="font-semibold text-lg mb-2">Culinary Box</h4>
+                  <p className="text-sm text-muted-foreground">
+                    South Indian Tiffin • Sandwiches • Cóng Yoú Bǐng 蔥油餅
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    As featured at UN for Taiwan 2025
+                  </p>
+                </div>
+              </div>
+            </div>
+          </Card>
+        </div>
+      </section>
+
+      {/* Why Choose Us */}
+      <section className="py-16 bg-muted/50">
+        <div className="container">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold mb-4">Why Choose Taiwan Maami?</h2>
             <p className="text-muted-foreground max-w-2xl mx-auto">
               We don't just serve food – we create experiences. Our exotic Taiwanese offerings 
               stand out from the usual fare seen at events.
@@ -391,41 +504,6 @@ export default function Events() {
                   </div>
                   <h3 className="font-semibold mb-2">{item.title}</h3>
                   <p className="text-sm text-muted-foreground">{item.desc}</p>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Past Events Gallery */}
-      <section className="py-16">
-        <div className="container">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4">Events We've Catered</h2>
-            <p className="text-muted-foreground max-w-2xl mx-auto">
-              From intimate gatherings to grand celebrations, we've brought Taiwanese flavors 
-              to events across Chennai.
-            </p>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {pastEvents.map((event, index) => (
-              <Card key={index} className="overflow-hidden">
-                <div className="aspect-video relative">
-                  <img 
-                    src={event.image} 
-                    alt={event.title}
-                    className="w-full h-full object-cover"
-                  />
-                  <Badge className="absolute top-3 left-3 bg-red-600">{event.type}</Badge>
-                </div>
-                <CardContent className="pt-4">
-                  <h3 className="font-semibold mb-2">{event.title}</h3>
-                  <p className="text-sm text-muted-foreground mb-2">{event.description}</p>
-                  <div className="flex items-center text-sm text-muted-foreground">
-                    <Users className="h-4 w-4 mr-1" />
-                    {event.guests}+ guests served
-                  </div>
                 </CardContent>
               </Card>
             ))}
@@ -448,24 +526,25 @@ export default function Events() {
           {workshopsLoading ? (
             <div className="text-center py-12">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600 mx-auto"></div>
-              <p className="mt-4 text-muted-foreground">Loading workshops...</p>
+              <p className="text-muted-foreground mt-4">Loading workshops...</p>
             </div>
           ) : workshops && workshops.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {workshops.map((workshop) => {
-                const isSoldOut = workshop.bookedCount >= workshop.totalCapacity;
-                const availableSeats = workshop.totalCapacity - workshop.bookedCount;
-                const today = new Date().toISOString().split('T')[0];
-                const isEarlyBird = workshop.earlyBirdPrice && workshop.earlyBirdDeadline && today <= workshop.earlyBirdDeadline;
-                
+                const availableSeats = workshop.capacity - (workshop.bookedCount || 0);
+                const isSoldOut = availableSeats <= 0;
+                const isEarlyBird = workshop.earlyBirdPrice && workshop.earlyBirdDeadline && 
+                  new Date().toISOString().split('T')[0] <= workshop.earlyBirdDeadline;
+
                 return (
-                  <Card key={workshop.id} className="overflow-hidden">
+                  <Card key={workshop.id} className={`overflow-hidden ${isSoldOut ? 'opacity-75' : ''}`}>
                     {workshop.imageUrl && (
                       <div className="aspect-video relative">
                         <img 
                           src={workshop.imageUrl} 
                           alt={workshop.title}
                           className="w-full h-full object-cover"
+                          loading="lazy"
                         />
                         {isSoldOut && (
                           <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
@@ -473,14 +552,12 @@ export default function Events() {
                           </div>
                         )}
                         {isEarlyBird && !isSoldOut && (
-                          <Badge className="absolute top-3 right-3 bg-green-600">Early Bird!</Badge>
+                          <Badge className="absolute top-3 right-3 bg-green-600">Early Bird</Badge>
                         )}
                       </div>
                     )}
                     <CardHeader>
-                      <CardTitle className="flex items-start justify-between">
-                        <span>{workshop.title}</span>
-                      </CardTitle>
+                      <CardTitle>{workshop.title}</CardTitle>
                       {workshop.shortDescription && (
                         <CardDescription>{workshop.shortDescription}</CardDescription>
                       )}
@@ -488,7 +565,7 @@ export default function Events() {
                     <CardContent className="space-y-3">
                       <div className="flex items-center text-sm">
                         <Calendar className="h-4 w-4 mr-2 text-muted-foreground" />
-                        {new Date(workshop.workshopDate).toLocaleDateString('en-IN', { 
+                        {new Date(workshop.date).toLocaleDateString('en-IN', { 
                           weekday: 'long', 
                           year: 'numeric', 
                           month: 'long', 
@@ -497,7 +574,7 @@ export default function Events() {
                       </div>
                       <div className="flex items-center text-sm">
                         <Clock className="h-4 w-4 mr-2 text-muted-foreground" />
-                        {workshop.startTime} - {workshop.endTime}
+                        {workshop.time}
                         {workshop.duration && <span className="ml-2 text-muted-foreground">({workshop.duration})</span>}
                       </div>
                       <div className="flex items-center text-sm">
@@ -670,10 +747,10 @@ export default function Events() {
                 Call Us: +91 89259 14303
               </Button>
             </a>
-            <a href="mailto:events@taiwanmaami.com">
+            <a href="mailto:hello@taiwanmaami.com">
               <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/10">
                 <Mail className="mr-2 h-5 w-5" />
-                events@taiwanmaami.com
+                hello@taiwanmaami.com
               </Button>
             </a>
             <a href="https://instagram.com/taiwan_maami" target="_blank" rel="noopener noreferrer">

@@ -342,3 +342,12 @@
 
 ### Testing
 - [x] Write Vitest tests for events and workshops functionality (12 tests passing)
+
+### Events Page Content Update (Jan 13)
+- [x] Read EventPage.docx for exact wording
+- [x] Upload wedding event photo to Cloudinary
+- [x] Upload corporate event photo to Cloudinary  
+- [x] Upload school event photo to Cloudinary
+- [x] Update Events page with document content
+- [x] Add real event photos to past events gallery
+- [x] Test Events page displays correctly
