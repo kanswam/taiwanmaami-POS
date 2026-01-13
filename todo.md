@@ -361,3 +361,20 @@
 ### Events Page Fixes (Jan 13)
 - [x] Correctly swap wedding/corporate photos (wedding=colorful buffet saree, corporate=yellow kurta bubble tea)
 - [x] Update stats to realistic numbers (5+ events, 5,000 guests)
+
+### Remove Palladium References (Jan 13) - CRITICAL
+- [x] Update all orders in database from Palladium to T Nagar (orders use outletId, display changed to always show T Nagar)
+- [x] Remove Palladium delivery message from codebase
+- [x] Remove Palladium from outlet options in Payment Report filter
+- [x] Remove Palladium hours from Footer and Home page
+- [x] Remove Palladium location card from About page
+- [x] Remove Palladium from index.html meta tags and structured data
+- [x] Remove Palladium phone from Complaint page
+
+
+### CORRECTION: Restore Palladium Outlet Info (Jan 13)
+- [x] Rolled back to checkpoint 69ad9e03 with Palladium info intact
+- [x] Updated Payment Report filter to only show T Nagar orders (website transactions are T Nagar only)
+- [x] Updated all orders in database to outletId=2 (T Nagar)
+- [x] Palladium outlet info remains on About page, Footer, index.html, Complaint page
+- Note: Palladium Mall outlet is still operational, only this website's transactions are from T Nagar

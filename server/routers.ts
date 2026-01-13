@@ -545,14 +545,10 @@ export const appRouter = router({
         
         let conditions: any[] = [];
         
-        // Filter by outlet if specified (outletId is int, need to map outlet name to id)
+        // Filter by outlet if specified - this website only handles T Nagar orders (outletId 2)
         if (input?.outlet && input.outlet !== 'all') {
-          // Map outlet name to outletId: palladium=1, tnagar=2 (based on storeLocations)
-          const outletIdMap: Record<string, number> = { palladium: 1, tnagar: 2 };
-          const outletId = outletIdMap[input.outlet];
-          if (outletId) {
-            conditions.push(eq(orders.outletId, outletId));
-          }
+          // T Nagar is outletId 2
+          conditions.push(eq(orders.outletId, 2));
         }
         
         // Filter by order type if specified
@@ -1167,10 +1163,10 @@ export const appRouter = router({
           eq(orders.orderStatus, 'completed'),
         ];
         
-        // Add outlet filter
+        // Add outlet filter - this website only handles T Nagar orders (outletId 2)
         if (input.outlet && input.outlet !== 'all') {
-          const outletId = input.outlet === 'palladium' ? 1 : 2;
-          conditions.push(eq(orders.outletId, outletId));
+          // T Nagar is outletId 2
+          conditions.push(eq(orders.outletId, 2));
         }
         
         // Add payment method filter
