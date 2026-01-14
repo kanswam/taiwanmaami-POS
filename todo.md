@@ -2,6 +2,11 @@
 
 ## Active Tasks
 
+- [x] Delete test workshop data from database
+- [x] Verify CRUD functionality for events in admin panel (added delete buttons)
+- [x] Verify CRUD functionality for workshops in admin panel (added delete button)
+- [x] Ensure Theresa and owner have admin access to manage events/workshops (admin role required)
+
 - [x] Add cookie consent banner
   - [x] Create CookieConsent component with accept/decline buttons
   - [x] Link to Privacy Policy page

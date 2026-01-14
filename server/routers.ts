@@ -5012,6 +5012,43 @@ export const appRouter = router({
         
         return { success: true };
       }),
+
+    // Delete event inquiry (admin)
+    deleteInquiry: adminProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        const database = await getDb();
+        if (!database) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Database not available' });
+        
+        // Check if inquiry has linked orders
+        const linkedOrders = await database.select().from(eventOrders)
+          .where(eq(eventOrders.inquiryId, input.id));
+        
+        if (linkedOrders.length > 0) {
+          throw new TRPCError({ 
+            code: 'BAD_REQUEST', 
+            message: `Cannot delete inquiry with ${linkedOrders.length} linked order(s). Please delete the orders first.` 
+          });
+        }
+        
+        await database.delete(eventInquiries).where(eq(eventInquiries.id, input.id));
+        return { success: true };
+      }),
+
+    // Delete event order (admin)
+    deleteOrder: adminProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        const database = await getDb();
+        if (!database) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Database not available' });
+        
+        // Delete order items first
+        await database.delete(eventOrderItems).where(eq(eventOrderItems.eventOrderId, input.id));
+        
+        // Delete the order
+        await database.delete(eventOrders).where(eq(eventOrders.id, input.id));
+        return { success: true };
+      }),
   }),
 
   // Workshops & Ticketing
@@ -5260,6 +5297,28 @@ export const appRouter = router({
         await database.update(workshopBookings)
           .set({ attendedStatus: input.attendedStatus })
           .where(eq(workshopBookings.id, input.bookingId));
+        return { success: true };
+      }),
+
+    // Delete workshop (admin)
+    delete: adminProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        const database = await getDb();
+        if (!database) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Database not available' });
+        
+        // Check if workshop has any bookings
+        const bookings = await database.select().from(workshopBookings)
+          .where(eq(workshopBookings.workshopId, input.id));
+        
+        if (bookings.length > 0) {
+          throw new TRPCError({ 
+            code: 'BAD_REQUEST', 
+            message: `Cannot delete workshop with ${bookings.length} existing booking(s). Please cancel or refund bookings first.` 
+          });
+        }
+        
+        await database.delete(workshops).where(eq(workshops.id, input.id));
         return { success: true };
       }),
   }),

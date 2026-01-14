@@ -6543,6 +6543,20 @@ function EventInquiriesTab() {
     onError: (error) => toast.error(error.message),
   });
 
+  const deleteInquiryMutation = trpc.events.deleteInquiry.useMutation({
+    onSuccess: () => {
+      toast.success("Inquiry deleted successfully");
+      utils.events.getInquiries.invalidate();
+    },
+    onError: (error) => toast.error(error.message),
+  });
+
+  const handleDeleteInquiry = (inquiry: any) => {
+    if (window.confirm(`Are you sure you want to delete the inquiry from "${inquiry.customerName}"? This action cannot be undone.`)) {
+      deleteInquiryMutation.mutate({ id: inquiry.id });
+    }
+  };
+
   const statusColors: Record<string, string> = {
     new: "bg-blue-100 text-blue-800",
     contacted: "bg-yellow-100 text-yellow-800",
@@ -6654,18 +6668,30 @@ function EventInquiriesTab() {
                     Submitted: {new Date(inquiry.createdAt).toLocaleString()}
                   </p>
                 </div>
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => {
-                    setSelectedInquiry(inquiry);
-                    setAdminNotes(inquiry.adminNotes || "");
-                    setNewStatus(inquiry.status);
-                  }}
-                >
-                  <Edit className="w-4 h-4 mr-1" />
-                  Update
-                </Button>
+                <div className="flex gap-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => {
+                      setSelectedInquiry(inquiry);
+                      setAdminNotes(inquiry.adminNotes || "");
+                      setNewStatus(inquiry.status);
+                    }}
+                  >
+                    <Edit className="w-4 h-4 mr-1" />
+                    Update
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                    onClick={() => handleDeleteInquiry(inquiry)}
+                    disabled={deleteInquiryMutation.isPending}
+                  >
+                    <Trash2 className="w-4 h-4 mr-1" />
+                    Delete
+                  </Button>
+                </div>
               </div>
             </Card>
           ))}
@@ -6826,6 +6852,21 @@ function EventOrdersTab() {
     },
     onError: (error) => toast.error(error.message),
   });
+
+  const deleteOrderMutation = trpc.events.deleteOrder.useMutation({
+    onSuccess: () => {
+      toast.success("Event order deleted successfully");
+      utils.events.getOrders.invalidate();
+      setSelectedOrder(null);
+    },
+    onError: (error) => toast.error(error.message),
+  });
+
+  const handleDeleteOrder = (order: any) => {
+    if (window.confirm(`Are you sure you want to delete order "${order.orderNumber}"? This will also delete all order items. This action cannot be undone.`)) {
+      deleteOrderMutation.mutate({ id: order.id });
+    }
+  };
 
   const statusColors: Record<string, string> = {
     draft: "bg-gray-100 text-gray-800",
@@ -7071,6 +7112,15 @@ function EventOrdersTab() {
                     Record Balance Payment
                   </Button>
                 )}
+                <Button 
+                  variant="outline"
+                  className="text-red-600 hover:text-red-700 hover:bg-red-50 ml-auto"
+                  onClick={() => handleDeleteOrder(selectedOrder)}
+                  disabled={deleteOrderMutation.isPending}
+                >
+                  <Trash2 className="w-4 h-4 mr-1" />
+                  Delete Order
+                </Button>
               </div>
             </div>
           )}
@@ -7318,6 +7368,20 @@ function WorkshopsTab() {
     onError: (error) => toast.error(error.message),
   });
 
+  const deleteMutation = trpc.workshops.delete.useMutation({
+    onSuccess: () => {
+      toast.success("Workshop deleted successfully");
+      utils.workshops.getAll.invalidate();
+    },
+    onError: (error) => toast.error(error.message),
+  });
+
+  const handleDelete = (workshop: any) => {
+    if (window.confirm(`Are you sure you want to delete "${workshop.title}"? This action cannot be undone.`)) {
+      deleteMutation.mutate({ id: workshop.id });
+    }
+  };
+
   const resetForm = () => {
     setFormData({
       title: "",
@@ -7427,10 +7491,22 @@ function WorkshopsTab() {
                     </div>
                   </div>
                 </div>
-                <Button variant="outline" size="sm" onClick={() => openEditDialog(workshop)}>
-                  <Edit className="w-4 h-4 mr-1" />
-                  Edit
-                </Button>
+                <div className="flex gap-2">
+                  <Button variant="outline" size="sm" onClick={() => openEditDialog(workshop)}>
+                    <Edit className="w-4 h-4 mr-1" />
+                    Edit
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                    onClick={() => handleDelete(workshop)}
+                    disabled={deleteMutation.isPending}
+                  >
+                    <Trash2 className="w-4 h-4 mr-1" />
+                    Delete
+                  </Button>
+                </div>
               </div>
             </Card>
           ))}
