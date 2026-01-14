@@ -1,8 +1,0 @@
-{
-  "query": "INSERT INTO workshops (title, description, instructorName, workshopDate, startTime, endTime, venue, totalCapacity, price, status) VALUES ('Test Workshop 2', 'Test description', 'Test Instructor', '2026-02-15', '10:00', '12:00', 'Test Venue', 20, 100000, 'draft');",
-  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute INSERT INTO workshops (title, description, instructorName, workshopDate, startTime, endTime, venue, totalCapacity, price, status) VALUES ('Test Workshop 2', 'Test description', 'Test Instructor', '2026-02-15', '10:00', '12:00', 'Test Venue', 20, 100000, 'draft');",
-  "returncode": 1,
-  "logs": [
-    "ERROR 1364 (HY000) at line 1: Field 'slug' doesn't have a default value"
-  ]
-}

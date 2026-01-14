@@ -5150,30 +5150,13 @@ export const appRouter = router({
       .mutation(async ({ input }) => {
         const database = await getDb();
         if (!database) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Database not available' });
-        // Generate slug from title
-        const slug = input.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') + '-' + Date.now();
-        // Map to database column names (database has different column names than schema)
         const result = await database.insert(workshops).values({
-          slug,
-          title: input.title,
+          ...input,
           shortDescription: input.shortDescription || null,
-          description: input.description,
-          instructorName: input.instructorName,
-          instructor: input.instructorName, // database requires 'instructor' column
-          workshopDate: new Date(input.workshopDate),
-          startTime: input.startTime,
-          endTime: input.endTime,
-          duration: input.duration || '2 hours',
-          location: input.venue, // database uses 'location' not 'venue'
-          venue: input.venue,
-          maxCapacity: input.totalCapacity, // database uses 'maxCapacity'
-          totalCapacity: input.totalCapacity,
-          ticketPrice: input.price, // database uses 'ticketPrice'
-          price: input.price,
+          duration: input.duration || null,
           earlyBirdPrice: input.earlyBirdPrice || null,
-          earlyBirdDeadline: input.earlyBirdDeadline ? new Date(input.earlyBirdDeadline) : null,
+          earlyBirdDeadline: input.earlyBirdDeadline || null,
           imageUrl: input.imageUrl || null,
-          status: input.status,
         });
         return { success: true, id: result[0].insertId };
       }),
@@ -5201,15 +5184,7 @@ export const appRouter = router({
       .mutation(async ({ input }) => {
         const database = await getDb();
         if (!database) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Database not available' });
-        const { id, workshopDate, earlyBirdDeadline, ...rest } = input;
-        const updates: any = { ...rest };
-        if (workshopDate) updates.workshopDate = new Date(workshopDate);
-        if (earlyBirdDeadline) updates.earlyBirdDeadline = new Date(earlyBirdDeadline);
-        // Map to database column names
-        if (rest.instructorName) updates.instructor = rest.instructorName;
-        if (rest.venue) updates.location = rest.venue;
-        if (rest.totalCapacity) updates.maxCapacity = rest.totalCapacity;
-        if (rest.price) updates.ticketPrice = rest.price;
+        const { id, ...updates } = input;
         await database.update(workshops)
           .set(updates)
           .where(eq(workshops.id, id));
