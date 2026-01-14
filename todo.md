@@ -402,3 +402,13 @@
 ### About Us Page Map Directions (Jan 13)
 - [x] Add map directions links to location cards (like landing page)
 - [x] Update Palladium phone number to +91 89259 14303
+
+### Workshop Creation Error Fix (Jan 13)
+- [ ] Fix database insert error for workshops (column mismatch)
+- [ ] Provide stable version before Events & Workshops addition
+
+### Workshop Creation Error Fix (Jan 13)
+- [x] Fix database insert error for workshops (column mismatch)
+- [x] Fixed Date object rendering in React (workshopDate instanceof Date check)
+- [x] Workshop creation now working (test workshop "Bubble Tea Making Workshop" created successfully)
+- Note: Stable version before Events & Workshops is f09824c8 (kept for reference)

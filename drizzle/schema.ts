@@ -1,4 +1,4 @@
-import { int, mysqlEnum, mysqlTable, text, timestamp, varchar, boolean, json, decimal } from "drizzle-orm/mysql-core";
+import { int, mysqlEnum, mysqlTable, text, timestamp, varchar, boolean, json, decimal, date } from "drizzle-orm/mysql-core";
 
 // Users table with extended fields for bubble tea shop
 export const users = mysqlTable("users", {
@@ -730,24 +730,37 @@ export type InsertEventOrderItem = typeof eventOrderItems.$inferInsert;
 // Workshops - Cooking workshops/classes
 export const workshops = mysqlTable("workshops", {
   id: int("id").autoincrement().primaryKey(),
-  title: varchar("title", { length: 200 }).notNull(),
-  shortDescription: varchar("shortDescription", { length: 500 }),
-  description: text("description").notNull(),
-  instructorName: varchar("instructorName", { length: 200 }).notNull(),
-  workshopDate: varchar("workshopDate", { length: 20 }).notNull(),
-  startTime: varchar("startTime", { length: 20 }).notNull(),
-  endTime: varchar("endTime", { length: 20 }).notNull(),
-  duration: varchar("duration", { length: 50 }),
-  venue: varchar("venue", { length: 500 }).notNull(),
-  totalCapacity: int("totalCapacity").notNull(),
-  bookedCount: int("bookedCount").default(0).notNull(),
-  price: int("price").notNull(), // in paise
-  earlyBirdPrice: int("earlyBirdPrice"), // in paise
-  earlyBirdDeadline: varchar("earlyBirdDeadline", { length: 20 }),
+  slug: varchar("slug", { length: 100 }).notNull().unique(),
+  title: varchar("title", { length: 255 }).notNull(),
+  shortDescription: varchar("shortDescription", { length: 255 }),
+  description: text("description"),
+  instructorName: varchar("instructorName", { length: 255 }),
+  instructor: varchar("instructor", { length: 255 }).notNull(),
+  instructorTitle: varchar("instructorTitle", { length: 100 }),
+  instructorImage: varchar("instructorImage", { length: 500 }),
+  workshopDate: timestamp("workshopDate").notNull(),
+  duration: varchar("duration", { length: 50 }).notNull(),
+  location: varchar("location", { length: 255 }).notNull(),
+  maxCapacity: int("maxCapacity").notNull(),
+  ticketsSold: int("ticketsSold").default(0).notNull(),
+  ticketPrice: int("ticketPrice").notNull(), // in paise
   imageUrl: varchar("imageUrl", { length: 500 }),
+  highlights: text("highlights"),
+  whatYouLearn: text("whatYouLearn"),
+  includes: text("includes"),
   status: mysqlEnum("status", ["draft", "published", "cancelled", "completed"]).default("draft").notNull(),
+  isActive: boolean("isActive").default(true).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  // Additional columns that exist in DB
+  startTime: varchar("startTime", { length: 10 }),
+  endTime: varchar("endTime", { length: 10 }),
+  venue: varchar("venue", { length: 500 }),
+  totalCapacity: int("totalCapacity").default(0),
+  bookedCount: int("bookedCount").default(0),
+  earlyBirdPrice: int("earlyBirdPrice"), // in paise
+  earlyBirdDeadline: date("earlyBirdDeadline"),
+  price: int("price").default(0), // in paise
 });
 
 export type Workshop = typeof workshops.$inferSelect;

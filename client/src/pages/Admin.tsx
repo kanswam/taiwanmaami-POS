@@ -7406,7 +7406,7 @@ function WorkshopsTab() {
                     <div className="flex items-center gap-4 text-sm text-muted-foreground">
                       <span className="flex items-center gap-1">
                         <Calendar className="w-4 h-4" />
-                        {workshop.workshopDate}
+                        {workshop.workshopDate instanceof Date ? workshop.workshopDate.toLocaleDateString() : workshop.workshopDate}
                       </span>
                       <span className="flex items-center gap-1">
                         <Clock className="w-4 h-4" />
@@ -7414,7 +7414,7 @@ function WorkshopsTab() {
                       </span>
                       <span className="flex items-center gap-1">
                         <Users className="w-4 h-4" />
-                        {workshop.bookedCount}/{workshop.totalCapacity} booked
+                        {workshop.bookedCount || 0}/{workshop.totalCapacity || workshop.maxCapacity || 0} booked
                       </span>
                     </div>
                     <div className="flex items-center gap-4 text-sm">
@@ -7673,7 +7673,7 @@ function WorkshopBookingsTab() {
           <SelectContent>
             {workshops?.map((workshop: any) => (
               <SelectItem key={workshop.id} value={workshop.id.toString()}>
-                {workshop.title} ({workshop.workshopDate})
+                {workshop.title} ({workshop.workshopDate instanceof Date ? workshop.workshopDate.toLocaleDateString() : workshop.workshopDate})
               </SelectItem>
             ))}
           </SelectContent>
