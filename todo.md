@@ -6,6 +6,14 @@
 - [x] Verify CRUD functionality for events in admin panel (added delete buttons)
 - [x] Verify CRUD functionality for workshops in admin panel (added delete button)
 - [x] Ensure Theresa and owner have admin access to manage events/workshops (admin role required)
+- [x] Enhance event order items to link with menu products
+- [x] Add customization/special instructions field to event order items
+- [x] Build quotation PDF generation with company details and T&Cs
+- [x] Build invoice PDF generation with payment terms
+- [x] Add edit, regenerate, finalize workflow for quotes/invoices
+- [x] Add quotation/invoice status tracking (draft, sent, approved, etc.)
+- [x] Integrate event sales into Payment Report
+- [x] Integrate workshop sales into Payment Report
 
 - [x] Add cookie consent banner
   - [x] Create CookieConsent component with accept/decline buttons

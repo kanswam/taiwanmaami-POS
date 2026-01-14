@@ -1,0 +1,8 @@
+{
+  "query": "DELETE FROM event_order_items WHERE order_id IN (SELECT id FROM event_orders WHERE order_number = 'EVTMKE6F5J7');\nDELETE FROM event_orders WHERE order_number = 'EVTMKE6F5J7';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute DELETE FROM event_order_items WHERE order_id IN (SELECT id FROM event_orders WHERE order_number = 'EVTMKE6F5J7');\nDELETE FROM event_orders WHERE order_number = 'EVTMKE6F5J7';",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1054 (42S22) at line 1: Unknown column 'order_id' in 'where clause'"
+  ]
+}

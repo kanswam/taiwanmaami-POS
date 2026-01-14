@@ -1,0 +1,27 @@
+{
+  "query": "SELECT * FROM event_order_items LIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT * FROM event_order_items LIMIT 5;",
+  "rows": [
+    {
+      "id": "1",
+      "eventOrderId": "2",
+      "itemType": "beverage",
+      "productId": "NULL",
+      "subcategoryId": "NULL",
+      "size": "NULL",
+      "withBoba": "0",
+      "itemName": "Classic Taiwan Milk Tea (500ml)",
+      "description": "With extra boba, less sugar",
+      "customization": "NULL",
+      "quantity": "150",
+      "unitPrice": "38500",
+      "totalPrice": "5775000",
+      "notes": "NULL",
+      "createdAt": "2026-01-14 17:06:36"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\teventOrderId\titemType\tproductId\tsubcategoryId\tsize\twithBoba\titemName\tdescription\tcustomization\tquantity\tunitPrice\ttotalPrice\tnotes\tcreatedAt\n1\t2\tbeverage\tNULL\tNULL\tNULL\t0\tClassic Taiwan Milk Tea (500ml)\tWith extra boba, less sugar\tNULL\t150\t38500\t5775000\tNULL\t2026-01-14 17:06:36\n",
+  "stderr": "",
+  "execution_time_ms": 1557
+}
