@@ -62,7 +62,7 @@ export default function Checkout() {
 
   // Determine which outlet is selected based on order type
   const selectedOutlet = state.orderType === 'instore' 
-    ? (state.instoreOutlet || 'palladium')
+    ? (state.instoreOutlet || 'tnagar')
     : state.orderType === 'pickup'
       ? (state.pickupOutlet || 'tnagar')
       : 'tnagar'; // Delivery defaults to T Nagar

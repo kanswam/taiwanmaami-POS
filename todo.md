@@ -2,6 +2,10 @@
 
 ## Active Tasks
 
+- [x] CRITICAL: Fix in-store orders defaulting to Palladium Mall instead of T Nagar
+- [x] Remove Palladium Mall restriction notice from Menu page
+- [x] Fix cart showing "Palladium Mall is closed" message for T Nagar customers
+
 - [x] Delete test workshop data from database
 - [x] Verify CRUD functionality for events in admin panel (added delete buttons)
 - [x] Verify CRUD functionality for workshops in admin panel (added delete button)

@@ -29,7 +29,7 @@ export default function Cart() {
 
   // Check ordering hours based on selected outlet and order type
   const selectedOutlet = state.orderType === 'instore' 
-    ? (state.instoreOutlet || 'palladium')
+    ? (state.instoreOutlet || 'tnagar')
     : state.orderType === 'pickup'
       ? (state.pickupOutlet || 'tnagar')
       : 'tnagar'; // Delivery defaults to T Nagar
