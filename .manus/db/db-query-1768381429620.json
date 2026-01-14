@@ -1,0 +1,19 @@
+{
+  "query": "SELECT COUNT(*) as total_orders FROM orders; SELECT outletId, COUNT(*) as cnt FROM orders GROUP BY outletId;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT COUNT(*) as total_orders FROM orders; SELECT outletId, COUNT(*) as cnt FROM orders GROUP BY outletId;",
+  "rows": [
+    {
+      "total_orders": "71"
+    },
+    {
+      "total_orders": "outletId\tcnt"
+    },
+    {
+      "total_orders": "2\t71"
+    }
+  ],
+  "messages": [],
+  "stdout": "total_orders\n71\noutletId\tcnt\n2\t71\n",
+  "stderr": "",
+  "execution_time_ms": 1798
+}

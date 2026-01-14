@@ -1,0 +1,49 @@
+{
+  "query": "SHOW CREATE TABLE workshops;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SHOW CREATE TABLE workshops;",
+  "rows": [
+    {
+      "Table": "workshops",
+      "Create Table": "CREATE TABLE `workshops` ("
+    }
+  ],
+  "messages": [
+    "  `id` int(11) NOT NULL AUTO_INCREMENT,",
+    "  `slug` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,",
+    "  `title` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,",
+    "  `shortDescription` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,",
+    "  `description` text COLLATE utf8mb4_unicode_ci DEFAULT NULL,",
+    "  `instructorName` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,",
+    "  `instructor` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,",
+    "  `instructorTitle` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,",
+    "  `instructorImage` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,",
+    "  `workshopDate` timestamp NOT NULL,",
+    "  `duration` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,",
+    "  `location` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,",
+    "  `maxCapacity` int(11) NOT NULL,",
+    "  `ticketsSold` int(11) NOT NULL DEFAULT '0',",
+    "  `ticketPrice` int(11) NOT NULL,",
+    "  `imageUrl` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,",
+    "  `highlights` text COLLATE utf8mb4_unicode_ci DEFAULT NULL,",
+    "  `whatYouLearn` text COLLATE utf8mb4_unicode_ci DEFAULT NULL,",
+    "  `includes` text COLLATE utf8mb4_unicode_ci DEFAULT NULL,",
+    "  `status` enum('draft','published','cancelled','completed') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'draft',",
+    "  `isActive` tinyint(1) NOT NULL DEFAULT '1',",
+    "  `createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,",
+    "  `updatedAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,",
+    "  `startTime` varchar(10) COLLATE utf8mb4_unicode_ci DEFAULT NULL,",
+    "  `endTime` varchar(10) COLLATE utf8mb4_unicode_ci DEFAULT NULL,",
+    "  `venue` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,",
+    "  `totalCapacity` int(11) DEFAULT '0',",
+    "  `bookedCount` int(11) DEFAULT '0',",
+    "  `earlyBirdPrice` int(11) DEFAULT NULL,",
+    "  `earlyBirdDeadline` date DEFAULT NULL,",
+    "  `price` int(11) DEFAULT '0',",
+    "  PRIMARY KEY (`id`) /*T![clustered_index] CLUSTERED */,",
+    "  UNIQUE KEY `slug` (`slug`)",
+    ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci"
+  ],
+  "stdout": "Table\tCreate Table\nworkshops\tCREATE TABLE `workshops` (\n  `id` int(11) NOT NULL AUTO_INCREMENT,\n  `slug` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `title` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `shortDescription` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `description` text COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `instructorName` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `instructor` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `instructorTitle` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `instructorImage` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `workshopDate` timestamp NOT NULL,\n  `duration` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `location` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `maxCapacity` int(11) NOT NULL,\n  `ticketsSold` int(11) NOT NULL DEFAULT '0',\n  `ticketPrice` int(11) NOT NULL,\n  `imageUrl` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `highlights` text COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `whatYouLearn` text COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `includes` text COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `status` enum('draft','published','cancelled','completed') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'draft',\n  `isActive` tinyint(1) NOT NULL DEFAULT '1',\n  `createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  `updatedAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,\n  `startTime` varchar(10) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `endTime` varchar(10) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `venue` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `totalCapacity` int(11) DEFAULT '0',\n  `bookedCount` int(11) DEFAULT '0',\n  `earlyBirdPrice` int(11) DEFAULT NULL,\n  `earlyBirdDeadline` date DEFAULT NULL,\n  `price` int(11) DEFAULT '0',\n  PRIMARY KEY (`id`) /*T![clustered_index] CLUSTERED */,\n  UNIQUE KEY `slug` (`slug`)\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci\n",
+  "stderr": "",
+  "execution_time_ms": 1520
+}

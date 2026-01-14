@@ -3,7 +3,7 @@ import { Footer } from '@/components/Footer';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Link } from 'wouter';
-import { MapPin, Clock, Phone, Instagram, ArrowRight, Facebook, Twitter, Youtube } from 'lucide-react';
+import { MapPin, Clock, Phone, Instagram, ArrowRight, Facebook, Twitter, Youtube, Navigation } from 'lucide-react';
 import { trpc } from '@/lib/trpc';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -122,7 +122,7 @@ export default function About() {
       <section className="py-16" id="locations">
         <div className="container">
           <h2 className="text-2xl font-bold mb-8 text-center">Our Locations</h2>
-          <div className="max-w-md mx-auto">
+          <div className="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto">
             <Card className="p-6">
               <h3 className="font-semibold text-lg mb-4">T Nagar (Moutan)</h3>
               <div className="space-y-3 text-sm">
@@ -143,10 +143,55 @@ export default function About() {
                   <p className="text-muted-foreground">+91 91505 70557</p>
                 </div>
               </div>
-              <div className="mt-4 pt-4 border-t">
+              <div className="mt-4 pt-4 border-t flex items-center justify-between">
                 <p className="text-sm text-primary font-medium">
                   Now serving Asian Street Food!
                 </p>
+                <a 
+                  href="https://maps.google.com/?q=29+Burkit+Road+TNagar+Chennai" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 text-primary hover:text-primary/80 text-sm font-medium transition-colors"
+                >
+                  <Navigation className="w-4 h-4" />
+                  Directions
+                </a>
+              </div>
+            </Card>
+            
+            <Card className="p-6">
+              <h3 className="font-semibold text-lg mb-4">Palladium Mall</h3>
+              <div className="space-y-3 text-sm">
+                <div className="flex items-start gap-3">
+                  <MapPin className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+                  <p className="text-muted-foreground">
+                    Palladium Mall, Level 2<br />
+                    Velachery Main Road<br />
+                    Chennai - 600042
+                  </p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <Clock className="w-5 h-5 text-primary flex-shrink-0" />
+                  <p className="text-muted-foreground">10:00 AM - 10:00 PM (All days)</p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <Phone className="w-5 h-5 text-primary flex-shrink-0" />
+                  <p className="text-muted-foreground">+91 89259 14303</p>
+                </div>
+              </div>
+              <div className="mt-4 pt-4 border-t flex items-center justify-between">
+                <p className="text-sm text-primary font-medium">
+                  Bubble Tea & Beverages
+                </p>
+                <a 
+                  href="https://maps.google.com/?q=Palladium+Mall+Velachery+Chennai" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 text-primary hover:text-primary/80 text-sm font-medium transition-colors"
+                >
+                  <Navigation className="w-4 h-4" />
+                  Directions
+                </a>
               </div>
             </Card>
           </div>
