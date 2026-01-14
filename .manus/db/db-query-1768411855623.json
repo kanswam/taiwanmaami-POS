@@ -1,0 +1,30 @@
+{
+  "query": "SELECT 'event_orders' as table_name, COUNT(*) as count FROM event_orders\nUNION ALL\nSELECT 'event_order_items', COUNT(*) FROM event_order_items\nUNION ALL\nSELECT 'workshop_bookings', COUNT(*) FROM workshop_bookings\nUNION ALL\nSELECT 'workshops', COUNT(*) FROM workshops\nUNION ALL\nSELECT 'event_inquiries', COUNT(*) FROM event_inquiries;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT 'event_orders' as table_name, COUNT(*) as count FROM event_orders\nUNION ALL\nSELECT 'event_order_items', COUNT(*) FROM event_order_items\nUNION ALL\nSELECT 'workshop_bookings', COUNT(*) FROM workshop_bookings\nUNION ALL\nSELECT 'workshops', COUNT(*) FROM workshops\nUNION ALL\nSELECT 'event_inquiries', COUNT(*) FROM event_inquiries;",
+  "rows": [
+    {
+      "table_name": "workshop_bookings",
+      "count": "0"
+    },
+    {
+      "table_name": "workshops",
+      "count": "0"
+    },
+    {
+      "table_name": "event_orders",
+      "count": "0"
+    },
+    {
+      "table_name": "event_order_items",
+      "count": "0"
+    },
+    {
+      "table_name": "event_inquiries",
+      "count": "0"
+    }
+  ],
+  "messages": [],
+  "stdout": "table_name\tcount\nworkshop_bookings\t0\nworkshops\t0\nevent_orders\t0\nevent_order_items\t0\nevent_inquiries\t0\n",
+  "stderr": "",
+  "execution_time_ms": 1530
+}

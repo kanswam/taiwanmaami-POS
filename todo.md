@@ -2,6 +2,9 @@
 
 ## Active Tasks
 
+- [x] Delete all test data from database (tables already empty)
+- [x] Remove 'In-store & Pickup only' caption from Palladium Mall tile in Locations section
+
 - [x] CRITICAL: Fix in-store orders defaulting to Palladium Mall instead of T Nagar
 - [x] Remove Palladium Mall restriction notice from Menu page
 - [x] Fix cart showing "Palladium Mall is closed" message for T Nagar customers

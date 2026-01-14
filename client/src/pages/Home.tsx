@@ -136,7 +136,7 @@ export default function Home() {
       mapUrl: 'https://maps.google.com/?q=Palladium+Mall+Velachery+Chennai',
       phone: '+91 89259 14303',
       hours: '10:00 AM - 10:00 PM',
-      services: 'In-store & Pickup only',
+      
     },
     {
       name: loc2Name,
@@ -421,9 +421,11 @@ export default function Home() {
                       <Clock className="w-4 h-4" />
                       {location.hours}
                     </p>
-                    <p className="text-amber-300 text-xs font-medium mt-1">
-                      {location.services}
-                    </p>
+                    {location.services && (
+                      <p className="text-amber-300 text-xs font-medium mt-1">
+                        {location.services}
+                      </p>
+                    )}
                   </div>
                   
                   <a 
