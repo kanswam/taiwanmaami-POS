@@ -1,5 +1,13 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { trpc } from "@/lib/trpc";
+import { useLocation } from "wouter";
+
+// Declare Razorpay types
+declare global {
+  interface Window {
+    Razorpay: any;
+  }
+}
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -92,6 +100,21 @@ export default function Events() {
   const [currentSlide, setCurrentSlide] = useState(0);
   const workshopsRef = useRef<HTMLDivElement>(null);
   
+  const [, navigate] = useLocation();
+  const [isBookingInProgress, setIsBookingInProgress] = useState(false);
+  const [bookingSuccess, setBookingSuccess] = useState<{
+    bookingNumber: string;
+    customerName: string;
+    customerEmail: string;
+    ticketCount: number;
+    totalAmount: number;
+    workshopTitle: string;
+    workshopDate: string;
+    workshopTime: string;
+    workshopVenue: string;
+    paymentId: string;
+  } | null>(null);
+  
   // Auto-scroll to workshops section if #workshops hash is present
   useEffect(() => {
     if (window.location.hash === '#workshops' && workshopsRef.current) {
@@ -99,6 +122,19 @@ export default function Events() {
         workshopsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }, 500);
     }
+  }, []);
+  
+  // Load Razorpay script
+  useEffect(() => {
+    const script = document.createElement('script');
+    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+    script.async = true;
+    document.body.appendChild(script);
+    return () => {
+      if (document.body.contains(script)) {
+        document.body.removeChild(script);
+      }
+    };
   }, []);
   
   // Auto-advance carousel
@@ -167,21 +203,103 @@ export default function Events() {
     },
   });
 
-  // Book workshop mutation
-  const bookWorkshop = trpc.workshops.bookTickets.useMutation({
+  // Verify workshop payment mutation
+  const verifyWorkshopPayment = trpc.workshops.verifyPayment.useMutation({
     onSuccess: (data) => {
-      toast.success(`Booking Confirmed! Your booking number is ${data.bookingNumber}. We'll contact you for payment details.`);
+      setBookingSuccess({
+        bookingNumber: data.bookingNumber,
+        customerName: data.customerName,
+        customerEmail: data.customerEmail,
+        ticketCount: data.ticketCount,
+        totalAmount: data.totalAmount,
+        workshopTitle: data.workshopTitle || '',
+        workshopDate: data.workshopDate || '',
+        workshopTime: data.workshopTime || '',
+        workshopVenue: data.workshopVenue || '',
+        paymentId: data.paymentId,
+      });
       setWorkshopDialogOpen(false);
-      setBookingForm({
-        customerName: "",
-        customerEmail: "",
-        customerPhone: "",
-        ticketCount: 1,
-        specialRequirements: "",
+      setIsBookingInProgress(false);
+      toast.success('Payment successful! Your booking is confirmed.');
+    },
+    onError: (error) => {
+      toast.error(error.message || 'Payment verification failed');
+      setIsBookingInProgress(false);
+    },
+  });
+
+  // Handle Razorpay payment for workshop
+  const handleRazorpayWorkshopPayment = useCallback(async (bookingData: {
+    bookingId: number;
+    bookingNumber: string;
+    totalAmount: number;
+    razorpayOrderId: string;
+    razorpayKeyId: string;
+    customerName: string;
+    customerEmail: string;
+    customerPhone: string;
+    workshopTitle: string;
+  }) => {
+    const options = {
+      key: bookingData.razorpayKeyId,
+      amount: bookingData.totalAmount,
+      currency: 'INR',
+      name: 'Taiwan Maami',
+      description: `Workshop: ${bookingData.workshopTitle}`,
+      order_id: bookingData.razorpayOrderId,
+      handler: async (response: any) => {
+        try {
+          await verifyWorkshopPayment.mutateAsync({
+            bookingId: bookingData.bookingId,
+            bookingNumber: bookingData.bookingNumber,
+            razorpayOrderId: response.razorpay_order_id,
+            razorpayPaymentId: response.razorpay_payment_id,
+            razorpaySignature: response.razorpay_signature,
+          });
+        } catch (err: any) {
+          toast.error(err.message || 'Payment verification failed');
+          setIsBookingInProgress(false);
+        }
+      },
+      prefill: {
+        name: bookingData.customerName,
+        email: bookingData.customerEmail,
+        contact: bookingData.customerPhone,
+      },
+      theme: {
+        color: '#B45309',
+      },
+      modal: {
+        ondismiss: () => {
+          setIsBookingInProgress(false);
+          toast.info('Payment cancelled. Your booking is not confirmed.');
+        },
+      },
+    };
+    
+    const razorpay = new window.Razorpay(options);
+    razorpay.open();
+  }, [verifyWorkshopPayment]);
+
+  // Book workshop mutation - creates booking and initiates Razorpay payment
+  const bookWorkshop = trpc.workshops.bookTickets.useMutation({
+    onSuccess: async (data) => {
+      // Initiate Razorpay payment
+      await handleRazorpayWorkshopPayment({
+        bookingId: data.bookingId,
+        bookingNumber: data.bookingNumber,
+        totalAmount: data.totalAmount,
+        razorpayOrderId: data.razorpayOrderId,
+        razorpayKeyId: data.razorpayKeyId,
+        customerName: data.customerName,
+        customerEmail: data.customerEmail,
+        customerPhone: data.customerPhone,
+        workshopTitle: data.workshopTitle,
       });
     },
     onError: (error) => {
       toast.error(error.message || "Failed to book tickets. Please try again.");
+      setIsBookingInProgress(false);
     },
   });
 
@@ -202,6 +320,7 @@ export default function Events() {
   const handleWorkshopBook = (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedWorkshop) return;
+    setIsBookingInProgress(true);
     bookWorkshop.mutate({
       workshopId: selectedWorkshop,
       ...bookingForm,
@@ -664,118 +783,104 @@ export default function Events() {
                   new Date().toISOString().split('T')[0] <= workshop.earlyBirdDeadline;
 
                 return (
-                  <Card key={workshop.id} className={`overflow-hidden shadow-xl ${isSoldOut ? 'opacity-75' : ''}`}>
-                    <div className="grid md:grid-cols-2 gap-0">
-                      {/* Left side - Image */}
-                      <div className="relative aspect-video md:aspect-auto md:min-h-[400px]">
-                        {workshop.imageUrl ? (
-                          <img 
-                            src={workshop.imageUrl} 
-                            alt={workshop.title}
-                            className="w-full h-full object-cover"
-                            loading="lazy"
-                          />
-                        ) : (
-                          <div className="w-full h-full bg-gradient-to-br from-amber-100 to-orange-100 flex items-center justify-center">
-                            <ChefHat className="h-24 w-24 text-amber-400" />
-                          </div>
-                        )}
-                        {isSoldOut && (
-                          <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
-                            <Badge className="bg-red-600 text-xl py-3 px-6">SOLD OUT</Badge>
-                          </div>
-                        )}
-                        {isEarlyBird && !isSoldOut && (
-                          <Badge className="absolute top-4 right-4 bg-green-600 text-lg py-2 px-4">🎉 Early Bird Offer!</Badge>
-                        )}
-                      </div>
+                  <Card key={workshop.id} className={`overflow-hidden shadow-xl max-w-4xl mx-auto ${isSoldOut ? 'opacity-75' : ''}`}>
+                    {/* Centered Content Layout */}
+                    <div className="p-8 md:p-12">
+                      {/* Sold Out Overlay */}
+                      {isSoldOut && (
+                        <div className="text-center mb-6">
+                          <Badge className="bg-red-600 text-xl py-3 px-8">SOLD OUT</Badge>
+                        </div>
+                      )}
                       
-                      {/* Right side - Details */}
-                      <div className="p-6 md:p-8 flex flex-col">
-                        <div className="flex-1">
-                          <h3 className="text-2xl md:text-3xl font-bold mb-3">{workshop.title}</h3>
-                          
-                          {/* Quick Info Bar */}
-                          <div className="flex flex-wrap gap-4 mb-6 text-sm">
-                            <div className="flex items-center gap-2 bg-amber-100 text-amber-800 px-3 py-1.5 rounded-full">
-                              <Calendar className="h-4 w-4" />
-                              {new Date(workshop.workshopDate).toLocaleDateString('en-IN', { 
-                                weekday: 'short', 
-                                day: 'numeric',
-                                month: 'short',
-                                year: 'numeric'
-                              })}
-                            </div>
-                            <div className="flex items-center gap-2 bg-blue-100 text-blue-800 px-3 py-1.5 rounded-full">
-                              <Clock className="h-4 w-4" />
-                              {workshop.startTime} - {workshop.endTime}
-                            </div>
-                            <div className="flex items-center gap-2 bg-green-100 text-green-800 px-3 py-1.5 rounded-full">
-                              <Users className="h-4 w-4" />
-                              {availableSeats} spots left
-                            </div>
+                      {/* Header Section - Title */}
+                      <div className="text-center mb-8">
+                        <h3 className="text-3xl md:text-4xl font-bold mb-6">{workshop.title}</h3>
+                        
+                        {/* Quick Info Badges */}
+                        <div className="flex flex-wrap justify-center gap-4 text-sm">
+                          <div className="flex items-center gap-2 bg-amber-100 text-amber-800 px-4 py-2 rounded-full">
+                            <Calendar className="h-4 w-4" />
+                            {new Date(workshop.workshopDate).toLocaleDateString('en-IN', { 
+                              weekday: 'long', 
+                              day: 'numeric',
+                              month: 'long',
+                              year: 'numeric'
+                            })}
                           </div>
-                          
-                          {/* Full Description */}
-                          {workshop.description && (
-                            <div className="mb-6">
-                              <h4 className="font-semibold text-lg mb-2">About This Workshop</h4>
-                              <div className="text-muted-foreground whitespace-pre-line leading-relaxed">
-                                {workshop.description}
-                              </div>
-                            </div>
-                          )}
-                          
-                          {/* Venue & Instructor */}
-                          <div className="grid grid-cols-2 gap-4 mb-6">
-                            <div className="bg-gray-50 p-4 rounded-lg">
-                              <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground mb-1">
-                                <MapPin className="h-4 w-4" />
-                                Venue
-                              </div>
-                              <p className="font-medium">{workshop.venue || workshop.location}</p>
-                            </div>
-                            <div className="bg-gray-50 p-4 rounded-lg">
-                              <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground mb-1">
-                                <ChefHat className="h-4 w-4" />
-                                Instructor
-                              </div>
-                              <p className="font-medium">{workshop.instructorName}</p>
-                            </div>
+                          <div className="flex items-center gap-2 bg-blue-100 text-blue-800 px-4 py-2 rounded-full">
+                            <Clock className="h-4 w-4" />
+                            {workshop.startTime} - {workshop.endTime}
+                          </div>
+                          <div className={`flex items-center gap-2 px-4 py-2 rounded-full ${availableSeats <= 3 ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'}`}>
+                            <Users className="h-4 w-4" />
+                            {availableSeats} spots left
                           </div>
                         </div>
-                        
-                        {/* Price & Book Button */}
-                        <div className="border-t pt-6 mt-auto">
-                          <div className="flex items-center justify-between">
-                            <div>
-                              {isEarlyBird ? (
-                                <div>
-                                  <span className="text-3xl font-bold text-green-600">₹{(workshop.earlyBirdPrice! / 100).toFixed(0)}</span>
-                                  <span className="text-lg text-muted-foreground line-through ml-2">₹{(workshop.price / 100).toFixed(0)}</span>
-                                  <span className="text-sm text-muted-foreground"> / person</span>
-                                  <p className="text-sm text-green-600 mt-1">Early bird until {new Date(workshop.earlyBirdDeadline!).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}</p>
-                                </div>
-                              ) : (
-                                <div>
-                                  <span className="text-3xl font-bold">₹{(workshop.price / 100).toFixed(0)}</span>
-                                  <span className="text-sm text-muted-foreground"> / person</span>
-                                </div>
-                              )}
-                            </div>
-                            <Button 
-                              size="lg"
-                              className="text-lg px-8" 
-                              disabled={isSoldOut}
-                              onClick={() => {
-                                setSelectedWorkshop(workshop.id);
-                                setWorkshopDialogOpen(true);
-                              }}
-                            >
-                              {isSoldOut ? "Sold Out" : "Book Now"}
-                              {!isSoldOut && <ArrowRight className="ml-2 h-5 w-5" />}
-                            </Button>
+                      </div>
+                      
+                      {/* Full Description - Centered */}
+                      {workshop.description && (
+                        <div className="max-w-3xl mx-auto mb-8">
+                          <h4 className="font-semibold text-xl mb-4 text-center">About This Workshop</h4>
+                          <div className="text-muted-foreground whitespace-pre-line leading-relaxed text-center">
+                            {workshop.description}
                           </div>
+                        </div>
+                      )}
+                      
+                      {/* Venue & Instructor - Centered Grid */}
+                      <div className="grid md:grid-cols-2 gap-6 max-w-2xl mx-auto mb-8">
+                        <div className="bg-amber-50 p-5 rounded-xl text-center">
+                          <div className="flex items-center justify-center gap-2 text-sm font-medium text-amber-700 mb-2">
+                            <MapPin className="h-5 w-5" />
+                            Venue
+                          </div>
+                          <p className="font-semibold text-lg">{workshop.venue || workshop.location}</p>
+                        </div>
+                        <div className="bg-blue-50 p-5 rounded-xl text-center">
+                          <div className="flex items-center justify-center gap-2 text-sm font-medium text-blue-700 mb-2">
+                            <ChefHat className="h-5 w-5" />
+                            Instructor
+                          </div>
+                          <p className="font-semibold text-lg">{workshop.instructorName}</p>
+                        </div>
+                      </div>
+                      
+                      {/* Price & Book Button - Centered */}
+                      <div className="border-t pt-8 max-w-xl mx-auto">
+                        <div className="flex flex-col md:flex-row items-center justify-center gap-6">
+                          <div className="text-center">
+                            {isEarlyBird ? (
+                              <div>
+                                <div className="flex items-center justify-center gap-3">
+                                  <span className="text-4xl font-bold text-green-600">₹{(workshop.earlyBirdPrice! / 100).toFixed(0)}</span>
+                                  <span className="text-xl text-muted-foreground line-through">₹{(workshop.price / 100).toFixed(0)}</span>
+                                </div>
+                                <p className="text-sm text-muted-foreground mt-1">per person</p>
+                                <p className="text-sm text-green-600 font-medium mt-2">
+                                  🎉 Early bird price until {new Date(workshop.earlyBirdDeadline!).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
+                                </p>
+                              </div>
+                            ) : (
+                              <div>
+                                <span className="text-4xl font-bold">₹{(workshop.price / 100).toFixed(0)}</span>
+                                <p className="text-sm text-muted-foreground mt-1">per person</p>
+                              </div>
+                            )}
+                          </div>
+                          <Button 
+                            size="lg"
+                            className="text-lg px-10 py-6" 
+                            disabled={isSoldOut}
+                            onClick={() => {
+                              setSelectedWorkshop(workshop.id);
+                              setWorkshopDialogOpen(true);
+                            }}
+                          >
+                            {isSoldOut ? "Sold Out" : "Book Your Spot"}
+                            {!isSoldOut && <ArrowRight className="ml-2 h-5 w-5" />}
+                          </Button>
                         </div>
                       </div>
                     </div>
@@ -884,13 +989,71 @@ export default function Events() {
               </div>
             )}
 
-            <Button type="submit" className="w-full" disabled={bookWorkshop.isPending}>
-              {bookWorkshop.isPending ? "Booking..." : "Confirm Booking"}
+            <Button type="submit" className="w-full" disabled={isBookingInProgress || bookWorkshop.isPending}>
+              {isBookingInProgress ? "Processing Payment..." : bookWorkshop.isPending ? "Creating Booking..." : "Pay & Confirm Booking"}
             </Button>
             <p className="text-xs text-muted-foreground text-center">
-              You'll receive payment details via email after booking confirmation.
+              You will be redirected to Razorpay to complete payment.
             </p>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Booking Success Dialog */}
+      <Dialog open={!!bookingSuccess} onOpenChange={() => setBookingSuccess(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-green-600">
+              <CheckCircle2 className="h-6 w-6" />
+              Booking Confirmed!
+            </DialogTitle>
+          </DialogHeader>
+          {bookingSuccess && (
+            <div className="space-y-4 mt-4">
+              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                <p className="text-sm text-green-800 font-medium">Your booking has been confirmed and payment received.</p>
+              </div>
+              
+              <div className="space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Booking Number:</span>
+                  <span className="font-bold">{bookingSuccess.bookingNumber}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Workshop:</span>
+                  <span className="font-medium text-right">{bookingSuccess.workshopTitle}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Tickets:</span>
+                  <span>{bookingSuccess.ticketCount}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Amount Paid:</span>
+                  <span className="font-bold text-green-600">₹{(bookingSuccess.totalAmount / 100).toFixed(0)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Payment ID:</span>
+                  <span className="text-xs font-mono">{bookingSuccess.paymentId}</span>
+                </div>
+              </div>
+              
+              <Separator />
+              
+              <div className="space-y-1 text-sm">
+                <p><strong>Date:</strong> {bookingSuccess.workshopDate ? new Date(bookingSuccess.workshopDate).toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) : ''}</p>
+                <p><strong>Time:</strong> {bookingSuccess.workshopTime}</p>
+                <p><strong>Venue:</strong> {bookingSuccess.workshopVenue}</p>
+              </div>
+              
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+                <p className="text-sm text-amber-800">A confirmation email with your invoice has been sent to <strong>{bookingSuccess.customerEmail}</strong></p>
+              </div>
+              
+              <Button className="w-full" onClick={() => setBookingSuccess(null)}>
+                Close
+              </Button>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
 

@@ -1,8 +1,8 @@
 {
   "version": "5",
   "dialect": "mysql",
-  "id": "0c09a8d3-639b-4698-b9cf-830c0a353b04",
-  "prevId": "fdde6fba-08f6-47f9-8694-23fe1d3bf95b",
+  "id": "fc6fd3a7-36ba-4bc2-85eb-1afa2f8e0d73",
+  "prevId": "4c8fe64b-75d9-407b-be2b-7890f5a09ac7",
   "tables": {
     "addons": {
       "name": "addons",
@@ -1004,51 +1004,44 @@
           "notNull": true,
           "autoincrement": true
         },
-        "referenceNumber": {
-          "name": "referenceNumber",
-          "type": "varchar(20)",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
         "customerName": {
           "name": "customerName",
-          "type": "varchar(255)",
+          "type": "varchar(200)",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
-        "phone": {
-          "name": "phone",
-          "type": "varchar(20)",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "email": {
-          "name": "email",
+        "customerEmail": {
+          "name": "customerEmail",
           "type": "varchar(320)",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
-        "company": {
-          "name": "company",
-          "type": "varchar(255)",
+        "customerPhone": {
+          "name": "customerPhone",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "companyName": {
+          "name": "companyName",
+          "type": "varchar(200)",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
         },
         "eventType": {
           "name": "eventType",
-          "type": "enum('wedding','corporate','school','birthday','private','festival','other')",
+          "type": "enum('wedding','corporate','school','private','other')",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
         "eventDate": {
           "name": "eventDate",
-          "type": "timestamp",
+          "type": "varchar(20)",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
@@ -1057,7 +1050,7 @@
           "name": "eventTime",
           "type": "varchar(20)",
           "primaryKey": false,
-          "notNull": true,
+          "notNull": false,
           "autoincrement": false
         },
         "venue": {
@@ -1074,22 +1067,15 @@
           "notNull": true,
           "autoincrement": false
         },
-        "serviceType": {
-          "name": "serviceType",
+        "cateringType": {
+          "name": "cateringType",
           "type": "enum('beverages_only','food_only','both')",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
-        "preferredBeverages": {
-          "name": "preferredBeverages",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "preferredFood": {
-          "name": "preferredFood",
+        "preferredItems": {
+          "name": "preferredItems",
           "type": "text",
           "primaryKey": false,
           "notNull": false,
@@ -1109,30 +1095,16 @@
           "notNull": false,
           "autoincrement": false
         },
-        "referralSource": {
-          "name": "referralSource",
-          "type": "varchar(50)",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
         "status": {
           "name": "status",
-          "type": "enum('new','contacted','quoted','confirmed','completed','cancelled')",
+          "type": "enum('new','contacted','quoted','confirmed','cancelled')",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
           "default": "'new'"
         },
-        "assignedTo": {
-          "name": "assignedTo",
-          "type": "varchar(255)",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "internalNotes": {
-          "name": "internalNotes",
+        "adminNotes": {
+          "name": "adminNotes",
           "type": "text",
           "primaryKey": false,
           "notNull": false,
@@ -1166,14 +1138,7 @@
           ]
         }
       },
-      "uniqueConstraints": {
-        "event_inquiries_referenceNumber_unique": {
-          "name": "event_inquiries_referenceNumber_unique",
-          "columns": [
-            "referenceNumber"
-          ]
-        }
-      },
+      "uniqueConstraints": {},
       "checkConstraint": {}
     },
     "event_order_items": {
@@ -1195,45 +1160,48 @@
         },
         "itemType": {
           "name": "itemType",
-          "type": "enum('beverage','food','additional_charge')",
+          "type": "enum('beverage','food','staff','delivery','equipment','other')",
           "primaryKey": false,
           "notNull": true,
-          "autoincrement": false
-        },
-        "productId": {
-          "name": "productId",
-          "type": "int",
-          "primaryKey": false,
-          "notNull": false,
           "autoincrement": false
         },
         "itemName": {
           "name": "itemName",
-          "type": "varchar(255)",
+          "type": "varchar(200)",
           "primaryKey": false,
           "notNull": true,
+          "autoincrement": false
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
           "autoincrement": false
         },
         "quantity": {
           "name": "quantity",
           "type": "int",
           "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
+          "notNull": true,
+          "autoincrement": false,
+          "default": 1
         },
         "unitPrice": {
           "name": "unitPrice",
           "type": "int",
           "primaryKey": false,
           "notNull": true,
-          "autoincrement": false
+          "autoincrement": false,
+          "default": 0
         },
         "totalPrice": {
           "name": "totalPrice",
           "type": "int",
           "primaryKey": false,
           "notNull": true,
-          "autoincrement": false
+          "autoincrement": false,
+          "default": 0
         },
         "notes": {
           "name": "notes",
@@ -1241,28 +1209,6 @@
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
-        },
-        "chargeType": {
-          "name": "chargeType",
-          "type": "varchar(50)",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "chargeDescription": {
-          "name": "chargeDescription",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "displayOrder": {
-          "name": "displayOrder",
-          "type": "int",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": 0
         },
         "createdAt": {
           "name": "createdAt",
@@ -1296,13 +1242,6 @@
           "notNull": true,
           "autoincrement": true
         },
-        "orderNumber": {
-          "name": "orderNumber",
-          "type": "varchar(20)",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
         "inquiryId": {
           "name": "inquiryId",
           "type": "int",
@@ -1310,44 +1249,51 @@
           "notNull": false,
           "autoincrement": false
         },
-        "customerName": {
-          "name": "customerName",
-          "type": "varchar(255)",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "phone": {
-          "name": "phone",
+        "orderNumber": {
+          "name": "orderNumber",
           "type": "varchar(20)",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
-        "email": {
-          "name": "email",
+        "customerName": {
+          "name": "customerName",
+          "type": "varchar(200)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "customerEmail": {
+          "name": "customerEmail",
           "type": "varchar(320)",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
-        "company": {
-          "name": "company",
-          "type": "varchar(255)",
+        "customerPhone": {
+          "name": "customerPhone",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "companyName": {
+          "name": "companyName",
+          "type": "varchar(200)",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
         },
         "eventType": {
           "name": "eventType",
-          "type": "varchar(50)",
+          "type": "enum('wedding','corporate','school','private','other')",
           "primaryKey": false,
-          "notNull": false,
+          "notNull": true,
           "autoincrement": false
         },
         "eventDate": {
           "name": "eventDate",
-          "type": "timestamp",
+          "type": "varchar(20)",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
@@ -1356,7 +1302,7 @@
           "name": "eventTime",
           "type": "varchar(20)",
           "primaryKey": false,
-          "notNull": true,
+          "notNull": false,
           "autoincrement": false
         },
         "venue": {
@@ -1372,30 +1318,6 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
-        },
-        "beveragesSubtotal": {
-          "name": "beveragesSubtotal",
-          "type": "int",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": 0
-        },
-        "foodSubtotal": {
-          "name": "foodSubtotal",
-          "type": "int",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": 0
-        },
-        "additionalChargesSubtotal": {
-          "name": "additionalChargesSubtotal",
-          "type": "int",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": 0
         },
         "subtotal": {
           "name": "subtotal",
@@ -1421,26 +1343,13 @@
           "autoincrement": false,
           "default": 0
         },
-        "discountType": {
-          "name": "discountType",
-          "type": "enum('percentage','fixed')",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "discountReason": {
-          "name": "discountReason",
-          "type": "varchar(255)",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "grandTotal": {
-          "name": "grandTotal",
+        "totalAmount": {
+          "name": "totalAmount",
           "type": "int",
           "primaryKey": false,
           "notNull": true,
-          "autoincrement": false
+          "autoincrement": false,
+          "default": 0
         },
         "advancePercentage": {
           "name": "advancePercentage",
@@ -1454,8 +1363,9 @@
           "name": "advanceAmount",
           "type": "int",
           "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
         },
         "advancePaid": {
           "name": "advancePaid",
@@ -1472,19 +1382,13 @@
           "notNull": false,
           "autoincrement": false
         },
-        "advancePaymentMethod": {
-          "name": "advancePaymentMethod",
-          "type": "varchar(50)",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
         "balanceAmount": {
           "name": "balanceAmount",
           "type": "int",
           "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
         },
         "balancePaid": {
           "name": "balancePaid",
@@ -1501,37 +1405,16 @@
           "notNull": false,
           "autoincrement": false
         },
-        "balancePaymentMethod": {
-          "name": "balancePaymentMethod",
-          "type": "varchar(50)",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "eventOrderStatus": {
-          "name": "eventOrderStatus",
+        "status": {
+          "name": "status",
           "type": "enum('draft','quoted','confirmed','in_progress','completed','cancelled')",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
           "default": "'draft'"
         },
-        "quoteSentAt": {
-          "name": "quoteSentAt",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "confirmedAt": {
-          "name": "confirmedAt",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "internalNotes": {
-          "name": "internalNotes",
+        "adminNotes": {
+          "name": "adminNotes",
           "type": "text",
           "primaryKey": false,
           "notNull": false,
@@ -1539,7 +1422,7 @@
         },
         "createdBy": {
           "name": "createdBy",
-          "type": "varchar(255)",
+          "type": "int",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
@@ -4226,13 +4109,6 @@
           "notNull": true,
           "autoincrement": true
         },
-        "bookingNumber": {
-          "name": "bookingNumber",
-          "type": "varchar(20)",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
         "workshopId": {
           "name": "workshopId",
           "type": "int",
@@ -4240,40 +4116,41 @@
           "notNull": true,
           "autoincrement": false
         },
-        "userId": {
-          "name": "userId",
-          "type": "int",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "name": {
-          "name": "name",
-          "type": "varchar(255)",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "email": {
-          "name": "email",
-          "type": "varchar(320)",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "phone": {
-          "name": "phone",
+        "bookingNumber": {
+          "name": "bookingNumber",
           "type": "varchar(20)",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
-        "ticketsBooked": {
-          "name": "ticketsBooked",
-          "type": "int",
+        "customerName": {
+          "name": "customerName",
+          "type": "varchar(200)",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
+        },
+        "customerEmail": {
+          "name": "customerEmail",
+          "type": "varchar(320)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "customerPhone": {
+          "name": "customerPhone",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "ticketCount": {
+          "name": "ticketCount",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 1
         },
         "totalAmount": {
           "name": "totalAmount",
@@ -4284,7 +4161,7 @@
         },
         "paymentStatus": {
           "name": "paymentStatus",
-          "type": "enum('pending','completed','failed','refunded')",
+          "type": "enum('pending','paid','refunded','cancelled')",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
@@ -4297,27 +4174,19 @@
           "notNull": false,
           "autoincrement": false
         },
-        "razorpayOrderId": {
-          "name": "razorpayOrderId",
+        "paymentId": {
+          "name": "paymentId",
           "type": "varchar(100)",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
         },
-        "razorpayPaymentId": {
-          "name": "razorpayPaymentId",
-          "type": "varchar(100)",
+        "invoiceUrl": {
+          "name": "invoiceUrl",
+          "type": "varchar(500)",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
-        },
-        "bookingStatus": {
-          "name": "bookingStatus",
-          "type": "enum('confirmed','cancelled','attended','no_show')",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": "'confirmed'"
         },
         "specialRequirements": {
           "name": "specialRequirements",
@@ -4325,6 +4194,14 @@
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
+        },
+        "attendedStatus": {
+          "name": "attendedStatus",
+          "type": "enum('not_attended','attended','no_show')",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'not_attended'"
         },
         "createdAt": {
           "name": "createdAt",
@@ -4388,9 +4265,23 @@
           "notNull": true,
           "autoincrement": false
         },
+        "shortDescription": {
+          "name": "shortDescription",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
         "description": {
           "name": "description",
           "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "instructorName": {
+          "name": "instructorName",
+          "type": "varchar(255)",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
@@ -4487,13 +4378,13 @@
           "notNull": false,
           "autoincrement": false
         },
-        "workshopStatus": {
-          "name": "workshopStatus",
-          "type": "enum('upcoming','ongoing','completed','cancelled')",
+        "status": {
+          "name": "status",
+          "type": "enum('draft','published','cancelled','completed')",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
-          "default": "'upcoming'"
+          "default": "'draft'"
         },
         "isActive": {
           "name": "isActive",
@@ -4519,6 +4410,65 @@
           "autoincrement": false,
           "onUpdate": true,
           "default": "(now())"
+        },
+        "startTime": {
+          "name": "startTime",
+          "type": "varchar(10)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "endTime": {
+          "name": "endTime",
+          "type": "varchar(10)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "venue": {
+          "name": "venue",
+          "type": "varchar(500)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "totalCapacity": {
+          "name": "totalCapacity",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false,
+          "default": 0
+        },
+        "bookedCount": {
+          "name": "bookedCount",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false,
+          "default": 0
+        },
+        "earlyBirdPrice": {
+          "name": "earlyBirdPrice",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "earlyBirdDeadline": {
+          "name": "earlyBirdDeadline",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "price": {
+          "name": "price",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false,
+          "default": 0
         }
       },
       "indexes": {},

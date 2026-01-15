@@ -470,3 +470,13 @@
 - [x] Move workshop banner above "Crafted Daily" hero section for more prominence
 - [x] Fix banner link to auto-scroll to #workshops section on page load
 - [x] Display full workshop details on Events page (description, venue, instructor, pricing)
+
+
+## Workshop Booking System (Jan 15)
+
+- [x] Clean up workshop card UI - remove broken image/link, center content prominently
+- [x] Implement booking form - collect customer name, mobile, email
+- [x] Integrate Razorpay payment with early bird/regular pricing based on deadline
+- [x] Generate invoice PDF after successful payment (stored in S3)
+- [x] Track bookings in real-time and update remaining slots (bookedCount updated on payment)
+- [x] Close booking automatically when max capacity is reached (shows SOLD OUT badge)

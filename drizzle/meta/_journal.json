@@ -246,6 +246,13 @@
       "when": 1768134366977,
       "tag": "0034_damp_zeigeist",
       "breakpoints": true
+    },
+    {
+      "idx": 35,
+      "version": "5",
+      "when": 1768489977873,
+      "tag": "0035_medical_blindfold",
+      "breakpoints": true
     }
   ]
 }

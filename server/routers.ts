@@ -5143,6 +5143,7 @@ export const appRouter = router({
       }),
 
     // Book workshop tickets (public)
+    // Create workshop booking and Razorpay order
     bookTickets: publicProcedure
       .input(z.object({
         workshopId: z.number(),
@@ -5156,7 +5157,7 @@ export const appRouter = router({
         const database = await getDb();
         if (!database) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Database not available' });
         
-        // Get workshop and check availability (atomic operation)
+        // Get workshop and check availability
         const workshop = await database.select().from(workshops)
           .where(eq(workshops.id, input.workshopId))
           .limit(1);
@@ -5186,42 +5187,170 @@ export const appRouter = router({
           ? w.earlyBirdDeadline.toISOString().split('T')[0]
           : String(w.earlyBirdDeadline);
         const isEarlyBird = w.earlyBirdPrice && w.earlyBirdDeadline && today <= deadlineStr;
-        const pricePerTicket = isEarlyBird ? w.earlyBirdPrice : (w.price || 0);
-        if (!pricePerTicket) {
+        // Prices are stored in paise in the database
+        const pricePerTicketPaise = isEarlyBird ? w.earlyBirdPrice : (w.price || 0);
+        if (!pricePerTicketPaise) {
           throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Invalid workshop pricing" });
         }
-        const totalAmount = pricePerTicket * input.ticketCount;
+        const totalAmountPaise = pricePerTicketPaise * input.ticketCount;
+        const totalAmountRupees = totalAmountPaise / 100; // Convert to rupees for display
         
         const bookingNumber = `WS${Date.now().toString(36).toUpperCase()}`;
         
-        // Create booking
-        await database.insert(workshopBookings).values({
+        // Create booking with pending payment status (store amount in rupees)
+        const [insertedBooking] = await database.insert(workshopBookings).values({
           workshopId: input.workshopId,
           bookingNumber,
           customerName: input.customerName,
           customerEmail: input.customerEmail,
           customerPhone: input.customerPhone,
           ticketCount: input.ticketCount,
-          totalAmount,
+          totalAmount: totalAmountRupees,
+          paymentStatus: 'pending',
           specialRequirements: input.specialRequirements || null,
-        });
+        }).$returningId();
         
-        // Update workshop booked count
-        await database.update(workshops)
-          .set({ bookedCount: (w.bookedCount || 0) + input.ticketCount })
-          .where(eq(workshops.id, input.workshopId));
-        
-        // Notify owner
-        await notifyOwner({
-          title: `New Workshop Booking: ${w.title}`,
-          content: `${input.customerName} booked ${input.ticketCount} ticket(s) for ${w.title}\n\nBooking #: ${bookingNumber}\nEmail: ${input.customerEmail}\nPhone: ${input.customerPhone}\nTotal: ₹${(totalAmount / 100).toFixed(2)}`,
+        // Create Razorpay order (Razorpay expects amount in paise)
+        console.log('[Workshop Booking] Creating Razorpay order:', { totalAmountPaise, bookingNumber, workshopTitle: w.title });
+        const { createRazorpayOrder, getRazorpayKeyId } = await import('./razorpay');
+        const razorpayOrder = await createRazorpayOrder({
+          amount: totalAmountPaise,
+          currency: 'INR',
+          receipt: bookingNumber,
+          notes: {
+            bookingNumber,
+            workshopTitle: w.title,
+            customerName: input.customerName,
+            customerEmail: input.customerEmail,
+            ticketCount: String(input.ticketCount),
+          },
         });
         
         return { 
           success: true, 
+          bookingId: insertedBooking.id,
           bookingNumber,
-          totalAmount,
+          totalAmount: totalAmountRupees,
           isEarlyBird,
+          workshopTitle: w.title,
+          workshopDate: w.workshopDate,
+          razorpayOrderId: razorpayOrder.id,
+          razorpayKeyId: getRazorpayKeyId(),
+          customerName: input.customerName,
+          customerEmail: input.customerEmail,
+          customerPhone: input.customerPhone,
+        };
+      }),
+
+    // Verify workshop payment and finalize booking
+    verifyPayment: publicProcedure
+      .input(z.object({
+        bookingId: z.number(),
+        bookingNumber: z.string(),
+        razorpayOrderId: z.string(),
+        razorpayPaymentId: z.string(),
+        razorpaySignature: z.string(),
+      }))
+      .mutation(async ({ input }) => {
+        const { verifyPaymentSignature } = await import('./razorpay');
+        const database = await getDb();
+        if (!database) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Database not available' });
+        
+        // Verify signature
+        const isValid = verifyPaymentSignature(
+          input.razorpayOrderId,
+          input.razorpayPaymentId,
+          input.razorpaySignature
+        );
+        
+        if (!isValid) {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: 'Invalid payment signature' });
+        }
+        
+        // Get booking details
+        const [booking] = await database.select().from(workshopBookings)
+          .where(eq(workshopBookings.id, input.bookingId));
+        
+        if (!booking) {
+          throw new TRPCError({ code: 'NOT_FOUND', message: 'Booking not found' });
+        }
+        
+        // Get workshop details
+        const [workshop] = await database.select().from(workshops)
+          .where(eq(workshops.id, booking.workshopId));
+        
+        // Update booking with payment info
+        await database.update(workshopBookings)
+          .set({
+            paymentStatus: 'paid',
+            paymentMethod: 'razorpay',
+            paymentId: input.razorpayPaymentId,
+          })
+          .where(eq(workshopBookings.id, input.bookingId));
+        
+        // Update workshop booked count (only after successful payment)
+        await database.update(workshops)
+          .set({ bookedCount: sql`${workshops.bookedCount} + ${booking.ticketCount}` })
+          .where(eq(workshops.id, booking.workshopId));
+        
+        // Generate invoice PDF
+        let invoiceUrl = '';
+        try {
+          const { generateWorkshopInvoice } = await import('./workshopInvoice');
+          const today = new Date();
+          const isEarlyBird = workshop?.earlyBirdDeadline && workshop.earlyBirdPrice
+            ? new Date(workshop.earlyBirdDeadline) >= today
+            : false;
+          const pricePerTicket = isEarlyBird && workshop?.earlyBirdPrice 
+            ? workshop.earlyBirdPrice 
+            : (workshop?.price || 0);
+          
+          const invoiceResult = await generateWorkshopInvoice({
+            bookingNumber: booking.bookingNumber,
+            customerName: booking.customerName,
+            customerEmail: booking.customerEmail,
+            customerPhone: booking.customerPhone,
+            workshopTitle: workshop?.title || 'Workshop',
+            workshopDate: workshop?.workshopDate || new Date(),
+            workshopTime: workshop ? `${workshop.startTime} - ${workshop.endTime}` : '',
+            workshopVenue: workshop?.venue || '',
+            ticketCount: booking.ticketCount,
+            pricePerTicket,
+            totalAmount: booking.totalAmount,
+            paymentId: input.razorpayPaymentId,
+            isEarlyBird,
+            invoiceDate: new Date(),
+          });
+          invoiceUrl = invoiceResult.url;
+          
+          // Update booking with invoice URL
+          await database.update(workshopBookings)
+            .set({ invoiceUrl })
+            .where(eq(workshopBookings.id, input.bookingId));
+        } catch (invoiceError) {
+          console.error('Failed to generate invoice:', invoiceError);
+          // Continue without invoice - don't fail the payment
+        }
+        
+        // Notify owner
+        await notifyOwner({
+          title: `Workshop Payment Received: ${workshop?.title}`,
+          content: `Payment confirmed for ${booking.customerName}\n\nBooking #: ${booking.bookingNumber}\nTickets: ${booking.ticketCount}\nAmount: ₹${(booking.totalAmount / 100).toFixed(2)}\nPayment ID: ${input.razorpayPaymentId}${invoiceUrl ? `\n\nInvoice: ${invoiceUrl}` : ''}`,
+        });
+        
+        return { 
+          success: true,
+          bookingNumber: booking.bookingNumber,
+          customerName: booking.customerName,
+          customerEmail: booking.customerEmail,
+          ticketCount: booking.ticketCount,
+          totalAmount: booking.totalAmount,
+          workshopTitle: workshop?.title,
+          workshopDate: workshop?.workshopDate,
+          workshopTime: workshop ? `${workshop.startTime} - ${workshop.endTime}` : '',
+          workshopVenue: workshop?.venue,
+          paymentId: input.razorpayPaymentId,
+          invoiceUrl,
         };
       }),
 

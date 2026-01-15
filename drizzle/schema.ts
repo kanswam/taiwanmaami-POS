@@ -779,6 +779,7 @@ export const workshopBookings = mysqlTable("workshop_bookings", {
   paymentStatus: mysqlEnum("paymentStatus", ["pending", "paid", "refunded", "cancelled"]).default("pending").notNull(),
   paymentMethod: varchar("paymentMethod", { length: 50 }),
   paymentId: varchar("paymentId", { length: 100 }),
+  invoiceUrl: varchar("invoiceUrl", { length: 500 }),
   specialRequirements: text("specialRequirements"),
   attendedStatus: mysqlEnum("attendedStatus", ["not_attended", "attended", "no_show"]).default("not_attended").notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
