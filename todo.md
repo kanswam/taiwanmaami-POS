@@ -2,6 +2,10 @@
 
 ## Active Tasks
 
+- [x] Fix workshop update procedure to accept Date objects for workshopDate and earlyBirdDeadline
+- [x] Fix workshop_bookings table missing columns (recreated table with correct schema)
+- [x] Fix workshop delete procedure (working - uses confirmation dialog)
+
 - [x] Delete all test data from database (tables already empty)
 - [x] Remove 'In-store & Pickup only' caption from Palladium Mall tile in Locations section
 

@@ -1,0 +1,9 @@
+{
+  "query": "DROP TABLE IF EXISTS workshop_bookings;\n\nCREATE TABLE workshop_bookings (\n  id INT AUTO_INCREMENT PRIMARY KEY,\n  workshopId INT NOT NULL,\n  bookingNumber VARCHAR(20) NOT NULL UNIQUE,\n  customerName VARCHAR(200) NOT NULL,\n  customerEmail VARCHAR(320) NOT NULL,\n  customerPhone VARCHAR(20) NOT NULL,\n  ticketCount INT NOT NULL DEFAULT 1,\n  totalAmount INT NOT NULL,\n  paymentStatus ENUM('pending', 'paid', 'refunded', 'cancelled') NOT NULL DEFAULT 'pending',\n  paymentMethod VARCHAR(50),\n  paymentId VARCHAR(100),\n  specialRequirements TEXT,\n  attendedStatus ENUM('not_attended', 'attended', 'no_show') NOT NULL DEFAULT 'not_attended',\n  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,\n  updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP NOT NULL\n);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute DROP TABLE IF EXISTS workshop_bookings;\n\nCREATE TABLE workshop_bookings (\n  id INT AUTO_INCREMENT PRIMARY KEY,\n  workshopId INT NOT NULL,\n  bookingNumber VARCHAR(20) NOT NULL UNIQUE,\n  customerName VARCHAR(200) NOT NULL,\n  customerEmail VARCHAR(320) NOT NULL,\n  customerPhone VARCHAR(20) NOT NULL,\n  ticketCount INT NOT NULL DEFAULT 1,\n  totalAmount INT NOT NULL,\n  paymentStatus ENUM('pending', 'paid', 'refunded', 'cancelled') NOT NULL DEFAULT 'pending',\n  paymentMethod VARCHAR(50),\n  paymentId VARCHAR(100),\n  specialRequirements TEXT,\n  attendedStatus ENUM('not_attended', 'attended', 'no_show') NOT NULL DEFAULT 'not_attended',\n  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,\n  updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP NOT NULL\n);",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 2255
+}

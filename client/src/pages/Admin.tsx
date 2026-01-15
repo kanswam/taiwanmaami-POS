@@ -7437,12 +7437,19 @@ function WorkshopsTab() {
 
   const openEditDialog = (workshop: any) => {
     setEditingWorkshop(workshop);
+    // Convert Date objects to strings for the form
+    const formatDateForInput = (date: any) => {
+      if (!date) return "";
+      if (typeof date === 'string') return date;
+      if (date instanceof Date) return date.toISOString().split('T')[0];
+      return String(date);
+    };
     setFormData({
       title: workshop.title,
       shortDescription: workshop.shortDescription || "",
       description: workshop.description,
       instructorName: workshop.instructorName,
-      workshopDate: workshop.workshopDate,
+      workshopDate: formatDateForInput(workshop.workshopDate),
       startTime: workshop.startTime,
       endTime: workshop.endTime,
       duration: workshop.duration || "",
@@ -7450,7 +7457,7 @@ function WorkshopsTab() {
       totalCapacity: workshop.totalCapacity,
       price: workshop.price / 100,
       earlyBirdPrice: workshop.earlyBirdPrice ? workshop.earlyBirdPrice / 100 : 0,
-      earlyBirdDeadline: workshop.earlyBirdDeadline || "",
+      earlyBirdDeadline: formatDateForInput(workshop.earlyBirdDeadline),
       imageUrl: workshop.imageUrl || "",
       status: workshop.status,
     });
