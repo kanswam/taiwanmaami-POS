@@ -482,9 +482,23 @@
 - [x] Close booking automatically when max capacity is reached (shows SOLD OUT badge)
 
 
-## CRITICAL BUG - Receipt Total Not Including GST (Jan 15)
+## BUG FIX - Order Total Missing GST (Jan 15)
 
-- [x] Fix receipt TOTAL to include GST (currently showing subtotal only)
-  - Root cause: Guest order totalAmount calculation was missing GST
-  - Fixed: Changed `subtotal + deliveryCharge` to `subtotal + gstDetails.total + deliveryCharge`
-  - Order 82 was affected by this bug (totalAmount stored as ₹1260 instead of ₹1323)
+- [x] Fixed guest order totalAmount calculation in backend (was missing GST)
+  - Changed `subtotal + deliveryCharge` to `subtotal + gstDetails.total + deliveryCharge`
+- [x] Fixed all affected orders in database (orders 72-84 that had incorrect totalAmount)
+  - Updated totalAmount = subtotal + stateGst + centralGst for all affected orders
+- [x] Payment collection was always correct (Razorpay charged correct amount)
+  - The bug was in how totalAmount was stored in database
+  - UI was correctly displaying the (incorrect) database value
+
+Orders fixed:
+- Order 84: ₹1120 → ₹1176
+- Order 83: ₹230 → ₹241.50
+- Order 82: ₹1260 → ₹1323
+- Order 78: ₹1320 → ₹1386
+- Order 77: ₹2645 → ₹2777.26
+- Order 76: ₹2085 → ₹2189.26
+- Order 74: ₹840 → ₹882
+- Order 73: ₹405 → ₹425.26
+- Order 72: ₹360 → ₹378

@@ -1,0 +1,9 @@
+{
+  "query": "SELECT oi.orderId, oi.productName, oi.quantity, oi.unitPrice, oi.lineTotal\nFROM order_items oi\nJOIN orders o ON oi.orderId = o.id\nWHERE o.orderNumber IN ('79', '83', '84')\nORDER BY o.id, oi.id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT oi.orderId, oi.productName, oi.quantity, oi.unitPrice, oi.lineTotal\nFROM order_items oi\nJOIN orders o ON oi.orderId = o.id\nWHERE o.orderNumber IN ('79', '83', '84')\nORDER BY o.id, oi.id;",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 1515
+}

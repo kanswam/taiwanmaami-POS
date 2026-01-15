@@ -1,0 +1,43 @@
+{
+  "query": "SELECT o.id, o.orderNumber, o.totalAmount, o.subtotal, o.deliveryCharge, o.orderType, o.userId, o.customerName, o.customerPhone\nFROM orders o \nWHERE o.orderNumber IN ('79', '83', '84', '00079', '00083', '00084')\nORDER BY o.id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT o.id, o.orderNumber, o.totalAmount, o.subtotal, o.deliveryCharge, o.orderType, o.userId, o.customerName, o.customerPhone\nFROM orders o \nWHERE o.orderNumber IN ('79', '83', '84', '00079', '00083', '00084')\nORDER BY o.id;",
+  "rows": [
+    {
+      "id": "1050001",
+      "orderNumber": "00079",
+      "totalAmount": "84526",
+      "subtotal": "80500",
+      "deliveryCharge": "0",
+      "orderType": "instore",
+      "userId": "16200143",
+      "customerName": "sharom",
+      "customerPhone": "8122982670"
+    },
+    {
+      "id": "1050005",
+      "orderNumber": "00083",
+      "totalAmount": "23000",
+      "subtotal": "23000",
+      "deliveryCharge": "0",
+      "orderType": "instore",
+      "userId": "0",
+      "customerName": "NULL",
+      "customerPhone": "NULL"
+    },
+    {
+      "id": "1050006",
+      "orderNumber": "00084",
+      "totalAmount": "112000",
+      "subtotal": "112000",
+      "deliveryCharge": "0",
+      "orderType": "instore",
+      "userId": "0",
+      "customerName": "NULL",
+      "customerPhone": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\torderNumber\ttotalAmount\tsubtotal\tdeliveryCharge\torderType\tuserId\tcustomerName\tcustomerPhone\n1050001\t00079\t84526\t80500\t0\tinstore\t16200143\tsharom\t8122982670\n1050005\t00083\t23000\t23000\t0\tinstore\t0\tNULL\tNULL\n1050006\t00084\t112000\t112000\t0\tinstore\t0\tNULL\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 1584
+}
