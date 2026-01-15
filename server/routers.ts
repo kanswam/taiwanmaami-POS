@@ -2846,7 +2846,7 @@ export const appRouter = router({
         
         const gstDetails = calculateGst(subtotal);
         const deliveryCharge = input.orderType === 'delivery' ? 5000 : 0; // ₹50 delivery
-        const totalAmount = subtotal + deliveryCharge;
+        const totalAmount = subtotal + gstDetails.total + deliveryCharge;
         
         // Generate sequential 5-digit order number
         const [maxOrderResult] = await dbInstance!.execute(sql`SELECT MAX(CAST(orderNumber AS UNSIGNED)) as maxNum FROM orders WHERE orderNumber REGEXP '^[0-9]+$'`);

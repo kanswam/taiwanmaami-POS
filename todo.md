@@ -480,3 +480,11 @@
 - [x] Generate invoice PDF after successful payment (stored in S3)
 - [x] Track bookings in real-time and update remaining slots (bookedCount updated on payment)
 - [x] Close booking automatically when max capacity is reached (shows SOLD OUT badge)
+
+
+## CRITICAL BUG - Receipt Total Not Including GST (Jan 15)
+
+- [x] Fix receipt TOTAL to include GST (currently showing subtotal only)
+  - Root cause: Guest order totalAmount calculation was missing GST
+  - Fixed: Changed `subtotal + deliveryCharge` to `subtotal + gstDetails.total + deliveryCharge`
+  - Order 82 was affected by this bug (totalAmount stored as ₹1260 instead of ₹1323)
