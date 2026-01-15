@@ -5,7 +5,7 @@ import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
 import * as db from "./db";
-import { getDb } from "./db";
+import { getDb, serializeDates, serializeDateArray } from "./db";
 import { seedDatabase } from "./seed";
 import { categories, subcategories, products, addons, orders, orderItems as orderItemsTable, orderItemAddons, payments, discounts, addresses, storeLocations, deliveryAreas, users, productAddons } from "../drizzle/schema";
 import { eq, and, desc, asc, sql, or, gte } from "drizzle-orm";
@@ -5057,13 +5057,14 @@ export const appRouter = router({
     getPublished: publicProcedure.query(async () => {
       const database = await getDb();
         if (!database) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Database not available' });
-      const today = new Date().toISOString().split('T')[0];
-      return database.select().from(workshops)
+      const today = new Date();
+      const result = await database.select().from(workshops)
         .where(and(
           eq(workshops.status, "published"),
           gte(workshops.workshopDate, today)
         ))
         .orderBy(asc(workshops.workshopDate));
+      return serializeDateArray(result);
     }),
 
     // Get single workshop (public)
@@ -5080,7 +5081,7 @@ export const appRouter = router({
           throw new TRPCError({ code: "NOT_FOUND", message: "Workshop not found" });
         }
         
-        return workshop[0];
+        return serializeDates(workshop[0]);
       }),
 
     // Book workshop tickets (public)
@@ -5107,6 +5108,9 @@ export const appRouter = router({
         }
         
         const w = workshop[0];
+        if (!w.totalCapacity || w.bookedCount === null) {
+          throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Invalid workshop data" });
+        }
         const availableSeats = w.totalCapacity - w.bookedCount;
         
         if (input.ticketCount > availableSeats) {
@@ -5120,8 +5124,14 @@ export const appRouter = router({
         
         // Check early bird pricing
         const today = new Date().toISOString().split('T')[0];
-        const isEarlyBird = w.earlyBirdPrice && w.earlyBirdDeadline && today <= w.earlyBirdDeadline;
-        const pricePerTicket = isEarlyBird ? w.earlyBirdPrice! : w.price;
+        const deadlineStr = w.earlyBirdDeadline instanceof Date 
+          ? w.earlyBirdDeadline.toISOString().split('T')[0]
+          : String(w.earlyBirdDeadline);
+        const isEarlyBird = w.earlyBirdPrice && w.earlyBirdDeadline && today <= deadlineStr;
+        const pricePerTicket = isEarlyBird ? w.earlyBirdPrice : (w.price || 0);
+        if (!pricePerTicket) {
+          throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Invalid workshop pricing" });
+        }
         const totalAmount = pricePerTicket * input.ticketCount;
         
         const bookingNumber = `WS${Date.now().toString(36).toUpperCase()}`;
@@ -5140,7 +5150,7 @@ export const appRouter = router({
         
         // Update workshop booked count
         await database.update(workshops)
-          .set({ bookedCount: w.bookedCount + input.ticketCount })
+          .set({ bookedCount: (w.bookedCount || 0) + input.ticketCount })
           .where(eq(workshops.id, input.workshopId));
         
         // Notify owner
@@ -5161,8 +5171,9 @@ export const appRouter = router({
     getAll: adminProcedure.query(async () => {
       const database = await getDb();
         if (!database) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Database not available' });
-      return database.select().from(workshops)
+      const result = await database.select().from(workshops)
         .orderBy(desc(workshops.createdAt));
+      return serializeDateArray(result);
     }),
 
     // Create workshop (admin)

@@ -402,3 +402,27 @@ export async function isOrderLocked(orderId: number): Promise<boolean> {
 
   return hoursElapsed >= 24;
 }
+
+
+// Helper function to serialize Date objects to ISO strings
+export function serializeDates<T extends Record<string, any>>(obj: T): T {
+  if (!obj) return obj;
+  
+  const serialized = { ...obj };
+  for (const key in serialized) {
+    const value = serialized[key];
+    if (value && typeof value === 'object' && 'toISOString' in value && typeof (value as any).toISOString === 'function') {
+      // Convert Date to ISO string
+      (serialized as any)[key] = (value as any).toISOString();
+    } else if (value && typeof value === 'object' && !Array.isArray(value)) {
+      // Recursively handle nested objects
+      (serialized as any)[key] = serializeDates(value);
+    }
+  }
+  return serialized;
+}
+
+// Helper function to serialize an array of objects
+export function serializeDateArray<T extends Record<string, any>>(arr: T[]): T[] {
+  return arr.map(item => serializeDates(item));
+}

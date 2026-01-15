@@ -439,3 +439,5 @@
 
 ### Fix Payment Report Outlet Filter (Jan 14) - PERMANENT FIX
 - [ ] Update ALL orders in database to outletId=2 (T Nagar) so T Nagar filter matches All Outlets
+
+- [x] CRITICAL: Fix React error #31 - Date serialization issue in workshop data
