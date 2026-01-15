@@ -6,11 +6,14 @@ import { Card } from '@/components/ui/card';
 import { Header } from '@/components/Header';
 import { LazyVideo } from '@/components/LazyVideo';
 import { trpc } from '@/lib/trpc';
-import { ArrowRight, MapPin, Clock, Star, Sparkles, Instagram, Phone, Navigation, Store, Truck, ShoppingBag, Facebook, Twitter, Youtube } from 'lucide-react';
+import { ArrowRight, MapPin, Clock, Star, Sparkles, Instagram, Phone, Navigation, Store, Truck, ShoppingBag, Facebook, Twitter, Youtube, Calendar, Users, Ticket } from 'lucide-react';
 
 export default function Home() {
   // Fetch site settings from database (public endpoint - no auth required)
   const { data: siteSettings } = trpc.menu.getPublicSiteSettings.useQuery();
+  
+  // Fetch upcoming workshops for announcement banner
+  const { data: upcomingWorkshops } = trpc.workshops.getPublished.useQuery();
   
   // Default values
   const [heroTitle, setHeroTitle] = useState('Authentic Taiwanese\nBubble Tea');
@@ -203,6 +206,46 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* Workshop Announcement Banner - Prominent placement */}
+      {upcomingWorkshops && upcomingWorkshops.length > 0 && (
+        <section className="py-6 bg-gradient-to-r from-amber-500 via-orange-500 to-red-500">
+          <div className="container">
+            <Link href="/events">
+              <div className="flex flex-col md:flex-row items-center justify-between gap-4 text-white cursor-pointer hover:opacity-90 transition-opacity">
+                <div className="flex items-center gap-4">
+                  <div className="w-14 h-14 rounded-full bg-white/20 flex items-center justify-center animate-pulse">
+                    <Calendar className="w-7 h-7" />
+                  </div>
+                  <div>
+                    <div className="text-xs uppercase tracking-wider font-medium opacity-90">Upcoming Workshop</div>
+                    <h3 className="text-xl md:text-2xl font-bold">{upcomingWorkshops[0].title}</h3>
+                    <div className="flex flex-wrap items-center gap-3 text-sm opacity-90 mt-1">
+                      <span className="flex items-center gap-1">
+                        <Calendar className="w-4 h-4" />
+                        {new Date(upcomingWorkshops[0].workshopDate).toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Clock className="w-4 h-4" />
+                        {upcomingWorkshops[0].startTime} - {upcomingWorkshops[0].endTime}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Users className="w-4 h-4" />
+                        {(upcomingWorkshops[0].maxCapacity || upcomingWorkshops[0].totalCapacity || 0) - (upcomingWorkshops[0].bookedCount || upcomingWorkshops[0].ticketsSold || 0)} spots left
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <Button className="bg-white text-orange-600 hover:bg-white/90 font-semibold shadow-lg">
+                  <Ticket className="w-4 h-4 mr-2" />
+                  Book Your Spot
+                  <ArrowRight className="w-4 h-4 ml-2" />
+                </Button>
+              </div>
+            </Link>
+          </div>
+        </section>
+      )}
 
       {/* Features */}
       <section className="py-12 bg-secondary/50">

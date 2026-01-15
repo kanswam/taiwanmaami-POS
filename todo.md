@@ -451,3 +451,16 @@
   - Code already includes specialInstructions in KOT data (line 308 in routers.ts)
   - Printer client already handles item.specialInstructions (line 160-164 in kot-printer-client.mjs)
   - Order 84 issue was due to manual queue not including the data
+
+- [x] CRITICAL: Ensure KOT printing works 100% of the time for all in-store orders
+  - [x] Audit all order creation paths (found 2: orders.create and guest.createOrder)
+  - [x] Fixed guest.createOrder to queue KOT for ALL in-store orders (not just cash_at_pickup)
+  - [x] Added error handling with owner notification if KOT queuing fails
+  - [x] Tested and verified - Order 83 printed with special instructions correctly
+
+- [x] Fix workshop visibility - published workshop not showing on Events page
+  - [x] Added prominent workshop announcement banner on homepage (orange gradient, shows date/time/spots)
+  - [x] Fixed Events page to use correct field names (workshopDate, maxCapacity, startTime, endTime)
+  - [x] Workshop now displays correctly with all details (date, time, venue, instructor, price, seats)
+
+  - [ ] Link to workshop details page

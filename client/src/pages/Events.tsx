@@ -648,7 +648,7 @@ export default function Events() {
           ) : workshops && workshops.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {workshops.map((workshop) => {
-                const availableSeats = workshop.capacity - (workshop.bookedCount || 0);
+                const availableSeats = (workshop.maxCapacity || workshop.totalCapacity || 0) - (workshop.bookedCount || workshop.ticketsSold || 0);
                 const isSoldOut = availableSeats <= 0;
                 const isEarlyBird = workshop.earlyBirdPrice && workshop.earlyBirdDeadline && 
                   new Date().toISOString().split('T')[0] <= workshop.earlyBirdDeadline;
@@ -682,7 +682,7 @@ export default function Events() {
                     <CardContent className="space-y-3">
                       <div className="flex items-center text-sm">
                         <Calendar className="h-4 w-4 mr-2 text-muted-foreground" />
-                        {new Date(workshop.date).toLocaleDateString('en-IN', { 
+                        {new Date(workshop.workshopDate).toLocaleDateString('en-IN', { 
                           weekday: 'long', 
                           year: 'numeric', 
                           month: 'long', 
@@ -691,12 +691,12 @@ export default function Events() {
                       </div>
                       <div className="flex items-center text-sm">
                         <Clock className="h-4 w-4 mr-2 text-muted-foreground" />
-                        {workshop.time}
+                        {workshop.startTime} - {workshop.endTime}
                         {workshop.duration && <span className="ml-2 text-muted-foreground">({workshop.duration})</span>}
                       </div>
                       <div className="flex items-center text-sm">
                         <MapPin className="h-4 w-4 mr-2 text-muted-foreground" />
-                        {workshop.venue}
+                        {workshop.venue || workshop.location}
                       </div>
                       <div className="flex items-center text-sm">
                         <ChefHat className="h-4 w-4 mr-2 text-muted-foreground" />

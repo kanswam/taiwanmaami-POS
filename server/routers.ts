@@ -290,38 +290,51 @@ export const appRouter = router({
         // For in-store orders, create KOT immediately
         // Kitchen needs to start preparing right away since customer is present
         if (input.orderType === 'instore') {
-          const kotData = {
-            orderId: orderNumber,
-            orderType: 'INSTORE',
-            tableNumber: input.tableNumber || '',
-            customerName: input.customerName || ctx.user?.name || 'Guest',
-            customerPhone: input.customerPhone || '',
-            specialInstructions: input.specialInstructions || '',
-            items: input.items.map(item => ({
-              productName: item.productName,
-              quantity: item.quantity,
-              price: item.unitPrice,
-              size: item.size,
-              withBoba: item.withBoba,
-              sugarLevel: item.sugarLevel,
-              iceLevel: item.iceLevel,
-              specialInstructions: item.specialInstructions || '',
-              addons: item.addons.map(a => ({
-                name: a.name,
-                price: a.price,
+          try {
+            const kotData = {
+              orderId: orderNumber,
+              orderType: 'INSTORE',
+              tableNumber: input.tableNumber || '',
+              customerName: input.customerName || ctx.user?.name || 'Guest',
+              customerPhone: input.customerPhone || '',
+              specialInstructions: input.specialInstructions || '',
+              items: input.items.map(item => ({
+                productName: item.productName,
+                quantity: item.quantity,
+                price: item.unitPrice,
+                size: item.size,
+                withBoba: item.withBoba,
+                sugarLevel: item.sugarLevel,
+                iceLevel: item.iceLevel,
+                specialInstructions: item.specialInstructions || '',
+                addons: item.addons.map(a => ({
+                  name: a.name,
+                  price: a.price,
+                })),
               })),
-            })),
-            totalAmount,
-            createdAt: new Date().toISOString(),
-          };
-          
-          await dbInstance!.insert(kotQueue).values({
-            orderId: orderId.toString(),
-            outletId: 2, // T Nagar outlet
-            orderNumber,
-            kotData: kotData,
-            isPrinted: false,
-          });
+              totalAmount,
+              createdAt: new Date().toISOString(),
+            };
+            
+            await dbInstance!.insert(kotQueue).values({
+              orderId: orderId.toString(),
+              outletId: 2, // T Nagar outlet
+              orderNumber,
+              kotData: kotData,
+              isPrinted: false,
+            });
+          } catch (kotError) {
+            // CRITICAL: KOT queuing failed - notify owner immediately
+            console.error('CRITICAL: KOT queuing failed for order', orderNumber, kotError);
+            try {
+              await notifyOwner({
+                title: `🚨 CRITICAL: KOT Failed for Order #${orderNumber}`,
+                content: `KOT could not be queued for in-store order #${orderNumber}. Table: ${input.tableNumber || 'N/A'}. Please manually print KOT from Admin panel immediately!`,
+              });
+            } catch (notifyError) {
+              console.error('Failed to send KOT failure notification', notifyError);
+            }
+          }
         }
         
         return { orderId, orderNumber, totalAmount };
@@ -2906,52 +2919,66 @@ export const appRouter = router({
           guestEmail: input.guestEmail,
         });
         
-        // For in-store "Pay at Counter" orders, create KOT immediately
+        // For ALL in-store orders, create KOT immediately
         // Kitchen needs to start preparing right away since customer is present
-        if (input.orderType === 'instore' && input.paymentMethod === 'cash_at_pickup') {
-          // Build KOT data
-          const kotData = {
-            orderId: orderNumber,
-            orderType: 'INSTORE',
-            tableNumber: input.tableNumber || '',
-            customerName: input.guestName,
-            customerPhone: input.guestPhone,
-            specialInstructions: input.specialInstructions || '',
-            items: input.items.map(item => ({
-              productName: item.productName,
-              quantity: item.quantity,
-              price: item.unitPrice,
-              size: item.size,
-              withBoba: item.withBoba,
-              sugarLevel: item.sugarLevel,
-              iceLevel: item.iceLevel,
-              specialInstructions: item.specialInstructions || '',
-              addons: item.addons.map(a => ({
-                name: a.name,
-                price: a.price,
-              })),
-            })),
-            totalAmount,
-            createdAt: new Date().toISOString(),
-          };
-          
-          await dbInstance!.insert(kotQueue).values({
-            orderId: orderId.toString(),
-            outletId: input.storeLocationId || 1,
-            orderNumber,
-            kotData: kotData,
-            isPrinted: false,
-          });
-          
-          // Send notification for in-store guest order
+        // This applies regardless of payment method (cash, online, etc.)
+        if (input.orderType === 'instore') {
           try {
-            const itemsList = input.items.map(i => `${i.quantity}x ${i.productName}`).join(', ');
-            await notifyOwner({
-              title: `🆕 New In-Store Order #${orderNumber}`,
-              content: `Customer: ${input.guestName}\nPhone: ${input.guestPhone}\nTable: ${input.tableNumber || 'N/A'}\nAmount: ₹${(totalAmount / 100).toFixed(2)}\nItems: ${itemsList}\nPayment: Cash at Counter\n\nOrder placed via website. Please check the admin panel for details.`
+            // Build KOT data
+            const kotData = {
+              orderId: orderNumber,
+              orderType: 'INSTORE',
+              tableNumber: input.tableNumber || '',
+              customerName: input.guestName,
+              customerPhone: input.guestPhone,
+              specialInstructions: input.specialInstructions || '',
+              items: input.items.map(item => ({
+                productName: item.productName,
+                quantity: item.quantity,
+                price: item.unitPrice,
+                size: item.size,
+                withBoba: item.withBoba,
+                sugarLevel: item.sugarLevel,
+                iceLevel: item.iceLevel,
+                specialInstructions: item.specialInstructions || '',
+                addons: item.addons.map(a => ({
+                  name: a.name,
+                  price: a.price,
+                })),
+              })),
+              totalAmount,
+              createdAt: new Date().toISOString(),
+            };
+            
+            await dbInstance!.insert(kotQueue).values({
+              orderId: orderId.toString(),
+              outletId: input.storeLocationId || 2, // Default to T Nagar (2)
+              orderNumber,
+              kotData: kotData,
+              isPrinted: false,
             });
-          } catch (notifyError) {
-            console.warn('[Order] Failed to send notification:', notifyError);
+            
+            // Send notification for in-store guest order
+            try {
+              const itemsList = input.items.map(i => `${i.quantity}x ${i.productName}`).join(', ');
+              await notifyOwner({
+                title: `🆕 New In-Store Order #${orderNumber}`,
+                content: `Customer: ${input.guestName}\nPhone: ${input.guestPhone}\nTable: ${input.tableNumber || 'N/A'}\nAmount: ₹${(totalAmount / 100).toFixed(2)}\nItems: ${itemsList}\nPayment: Cash at Counter\n\nOrder placed via website. Please check the admin panel for details.`
+              });
+            } catch (notifyError) {
+              console.warn('[Order] Failed to send notification:', notifyError);
+            }
+          } catch (kotError) {
+            // CRITICAL: KOT queuing failed - notify owner immediately
+            console.error('CRITICAL: KOT queuing failed for guest order', orderNumber, kotError);
+            try {
+              await notifyOwner({
+                title: `🚨 CRITICAL: KOT Failed for Order #${orderNumber}`,
+                content: `KOT could not be queued for in-store order #${orderNumber}. Customer: ${input.guestName}, Table: ${input.tableNumber || 'N/A'}. Please manually print KOT from Admin panel immediately!`,
+              });
+            } catch (notifyError) {
+              console.error('Failed to send KOT failure notification', notifyError);
+            }
           }
         }
         
@@ -5087,15 +5114,13 @@ export const appRouter = router({
   // Workshops & Ticketing
   workshops: router({
     // Get all published workshops (public)
+    // Shows all published workshops - date filtering removed to allow flexibility
+    // Workshops with past dates can still be shown for reference or rescheduling
     getPublished: publicProcedure.query(async () => {
       const database = await getDb();
         if (!database) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Database not available' });
-      const today = new Date();
       const result = await database.select().from(workshops)
-        .where(and(
-          eq(workshops.status, "published"),
-          gte(workshops.workshopDate, today)
-        ))
+        .where(eq(workshops.status, "published"))
         .orderBy(asc(workshops.workshopDate));
       return serializeDateArray(result);
     }),
