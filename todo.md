@@ -446,3 +446,8 @@
   - Root cause: orders.create procedure for logged-in users didn't auto-queue KOT for in-store orders
   - Fixed: Added automatic KOT queuing for in-store orders in orders.create
   - Manually queued KOT for Order 82
+
+- [x] Fix KOT to include item-level special instructions (e.g., "No garlic")
+  - Code already includes specialInstructions in KOT data (line 308 in routers.ts)
+  - Printer client already handles item.specialInstructions (line 160-164 in kot-printer-client.mjs)
+  - Order 84 issue was due to manual queue not including the data
