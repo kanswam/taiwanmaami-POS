@@ -441,3 +441,8 @@
 - [ ] Update ALL orders in database to outletId=2 (T Nagar) so T Nagar filter matches All Outlets
 
 - [x] CRITICAL: Fix React error #31 - Date serialization issue in workshop data
+
+- [x] URGENT: Investigate KOT printing issue - Order 82 KOT queued but not printing
+  - Root cause: orders.create procedure for logged-in users didn't auto-queue KOT for in-store orders
+  - Fixed: Added automatic KOT queuing for in-store orders in orders.create
+  - Manually queued KOT for Order 82

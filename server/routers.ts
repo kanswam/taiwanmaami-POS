@@ -287,9 +287,42 @@ export const appRouter = router({
           }
         }
 
-        // For in-store orders with cash payment, create KOT immediately
-        // This is handled on the frontend by checking if paymentMethod is 'cash'
-        // The KOT will be created when the order is placed without going through Razorpay
+        // For in-store orders, create KOT immediately
+        // Kitchen needs to start preparing right away since customer is present
+        if (input.orderType === 'instore') {
+          const kotData = {
+            orderId: orderNumber,
+            orderType: 'INSTORE',
+            tableNumber: input.tableNumber || '',
+            customerName: input.customerName || ctx.user?.name || 'Guest',
+            customerPhone: input.customerPhone || '',
+            specialInstructions: input.specialInstructions || '',
+            items: input.items.map(item => ({
+              productName: item.productName,
+              quantity: item.quantity,
+              price: item.unitPrice,
+              size: item.size,
+              withBoba: item.withBoba,
+              sugarLevel: item.sugarLevel,
+              iceLevel: item.iceLevel,
+              specialInstructions: item.specialInstructions || '',
+              addons: item.addons.map(a => ({
+                name: a.name,
+                price: a.price,
+              })),
+            })),
+            totalAmount,
+            createdAt: new Date().toISOString(),
+          };
+          
+          await dbInstance!.insert(kotQueue).values({
+            orderId: orderId.toString(),
+            outletId: 2, // T Nagar outlet
+            orderNumber,
+            kotData: kotData,
+            isPrinted: false,
+          });
+        }
         
         return { orderId, orderNumber, totalAmount };
       }),
