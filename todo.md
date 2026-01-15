@@ -464,3 +464,9 @@
   - [x] Workshop now displays correctly with all details (date, time, venue, instructor, price, seats)
 
   - [ ] Link to workshop details page
+
+## Workshop Display Improvements (Jan 15)
+
+- [x] Move workshop banner above "Crafted Daily" hero section for more prominence
+- [x] Fix banner link to auto-scroll to #workshops section on page load
+- [x] Display full workshop details on Events page (description, venue, instructor, pricing)

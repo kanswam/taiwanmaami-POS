@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -90,6 +90,16 @@ export default function Events() {
   const [workshopDialogOpen, setWorkshopDialogOpen] = useState(false);
   const [selectedWorkshop, setSelectedWorkshop] = useState<number | null>(null);
   const [currentSlide, setCurrentSlide] = useState(0);
+  const workshopsRef = useRef<HTMLDivElement>(null);
+  
+  // Auto-scroll to workshops section if #workshops hash is present
+  useEffect(() => {
+    if (window.location.hash === '#workshops' && workshopsRef.current) {
+      setTimeout(() => {
+        workshopsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 500);
+    }
+  }, []);
   
   // Auto-advance carousel
   useEffect(() => {
@@ -629,7 +639,7 @@ export default function Events() {
       </section>
 
       {/* Workshops Section */}
-      <section id="workshops" className="py-20 bg-gradient-to-br from-amber-50 to-orange-50">
+      <section id="workshops" ref={workshopsRef} className="py-20 bg-gradient-to-br from-amber-50 to-orange-50">
         <div className="container">
           <div className="text-center mb-16">
             <Badge className="bg-amber-100 text-amber-800 mb-4">Learn From The Best</Badge>
@@ -646,7 +656,7 @@ export default function Events() {
               <p className="text-muted-foreground mt-4">Loading workshops...</p>
             </div>
           ) : workshops && workshops.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div className="space-y-12">
               {workshops.map((workshop) => {
                 const availableSeats = (workshop.maxCapacity || workshop.totalCapacity || 0) - (workshop.bookedCount || workshop.ticketsSold || 0);
                 const isSoldOut = availableSeats <= 0;
@@ -654,86 +664,121 @@ export default function Events() {
                   new Date().toISOString().split('T')[0] <= workshop.earlyBirdDeadline;
 
                 return (
-                  <Card key={workshop.id} className={`overflow-hidden ${isSoldOut ? 'opacity-75' : ''}`}>
-                    {workshop.imageUrl && (
-                      <div className="aspect-video relative">
-                        <img 
-                          src={workshop.imageUrl} 
-                          alt={workshop.title}
-                          className="w-full h-full object-cover"
-                          loading="lazy"
-                        />
+                  <Card key={workshop.id} className={`overflow-hidden shadow-xl ${isSoldOut ? 'opacity-75' : ''}`}>
+                    <div className="grid md:grid-cols-2 gap-0">
+                      {/* Left side - Image */}
+                      <div className="relative aspect-video md:aspect-auto md:min-h-[400px]">
+                        {workshop.imageUrl ? (
+                          <img 
+                            src={workshop.imageUrl} 
+                            alt={workshop.title}
+                            className="w-full h-full object-cover"
+                            loading="lazy"
+                          />
+                        ) : (
+                          <div className="w-full h-full bg-gradient-to-br from-amber-100 to-orange-100 flex items-center justify-center">
+                            <ChefHat className="h-24 w-24 text-amber-400" />
+                          </div>
+                        )}
                         {isSoldOut && (
                           <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
-                            <Badge className="bg-red-600 text-lg py-2 px-4">SOLD OUT</Badge>
+                            <Badge className="bg-red-600 text-xl py-3 px-6">SOLD OUT</Badge>
                           </div>
                         )}
                         {isEarlyBird && !isSoldOut && (
-                          <Badge className="absolute top-3 right-3 bg-green-600">Early Bird</Badge>
+                          <Badge className="absolute top-4 right-4 bg-green-600 text-lg py-2 px-4">🎉 Early Bird Offer!</Badge>
                         )}
                       </div>
-                    )}
-                    <CardHeader>
-                      <CardTitle>{workshop.title}</CardTitle>
-                      {workshop.shortDescription && (
-                        <CardDescription>{workshop.shortDescription}</CardDescription>
-                      )}
-                    </CardHeader>
-                    <CardContent className="space-y-3">
-                      <div className="flex items-center text-sm">
-                        <Calendar className="h-4 w-4 mr-2 text-muted-foreground" />
-                        {new Date(workshop.workshopDate).toLocaleDateString('en-IN', { 
-                          weekday: 'long', 
-                          year: 'numeric', 
-                          month: 'long', 
-                          day: 'numeric' 
-                        })}
-                      </div>
-                      <div className="flex items-center text-sm">
-                        <Clock className="h-4 w-4 mr-2 text-muted-foreground" />
-                        {workshop.startTime} - {workshop.endTime}
-                        {workshop.duration && <span className="ml-2 text-muted-foreground">({workshop.duration})</span>}
-                      </div>
-                      <div className="flex items-center text-sm">
-                        <MapPin className="h-4 w-4 mr-2 text-muted-foreground" />
-                        {workshop.venue || workshop.location}
-                      </div>
-                      <div className="flex items-center text-sm">
-                        <ChefHat className="h-4 w-4 mr-2 text-muted-foreground" />
-                        Instructor: {workshop.instructorName}
-                      </div>
-                      <div className="flex items-center justify-between pt-2">
-                        <div>
-                          {isEarlyBird ? (
-                            <div>
-                              <span className="text-2xl font-bold text-green-600">₹{(workshop.earlyBirdPrice! / 100).toFixed(0)}</span>
-                              <span className="text-sm text-muted-foreground line-through ml-2">₹{(workshop.price / 100).toFixed(0)}</span>
+                      
+                      {/* Right side - Details */}
+                      <div className="p-6 md:p-8 flex flex-col">
+                        <div className="flex-1">
+                          <h3 className="text-2xl md:text-3xl font-bold mb-3">{workshop.title}</h3>
+                          
+                          {/* Quick Info Bar */}
+                          <div className="flex flex-wrap gap-4 mb-6 text-sm">
+                            <div className="flex items-center gap-2 bg-amber-100 text-amber-800 px-3 py-1.5 rounded-full">
+                              <Calendar className="h-4 w-4" />
+                              {new Date(workshop.workshopDate).toLocaleDateString('en-IN', { 
+                                weekday: 'short', 
+                                day: 'numeric',
+                                month: 'short',
+                                year: 'numeric'
+                              })}
                             </div>
-                          ) : (
-                            <span className="text-2xl font-bold">₹{(workshop.price / 100).toFixed(0)}</span>
+                            <div className="flex items-center gap-2 bg-blue-100 text-blue-800 px-3 py-1.5 rounded-full">
+                              <Clock className="h-4 w-4" />
+                              {workshop.startTime} - {workshop.endTime}
+                            </div>
+                            <div className="flex items-center gap-2 bg-green-100 text-green-800 px-3 py-1.5 rounded-full">
+                              <Users className="h-4 w-4" />
+                              {availableSeats} spots left
+                            </div>
+                          </div>
+                          
+                          {/* Full Description */}
+                          {workshop.description && (
+                            <div className="mb-6">
+                              <h4 className="font-semibold text-lg mb-2">About This Workshop</h4>
+                              <div className="text-muted-foreground whitespace-pre-line leading-relaxed">
+                                {workshop.description}
+                              </div>
+                            </div>
                           )}
-                          <span className="text-sm text-muted-foreground"> / person</span>
+                          
+                          {/* Venue & Instructor */}
+                          <div className="grid grid-cols-2 gap-4 mb-6">
+                            <div className="bg-gray-50 p-4 rounded-lg">
+                              <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground mb-1">
+                                <MapPin className="h-4 w-4" />
+                                Venue
+                              </div>
+                              <p className="font-medium">{workshop.venue || workshop.location}</p>
+                            </div>
+                            <div className="bg-gray-50 p-4 rounded-lg">
+                              <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground mb-1">
+                                <ChefHat className="h-4 w-4" />
+                                Instructor
+                              </div>
+                              <p className="font-medium">{workshop.instructorName}</p>
+                            </div>
+                          </div>
                         </div>
-                        {!isSoldOut && (
-                          <Badge variant="outline" className="text-amber-700 border-amber-300">
-                            {availableSeats} seats left
-                          </Badge>
-                        )}
+                        
+                        {/* Price & Book Button */}
+                        <div className="border-t pt-6 mt-auto">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              {isEarlyBird ? (
+                                <div>
+                                  <span className="text-3xl font-bold text-green-600">₹{(workshop.earlyBirdPrice! / 100).toFixed(0)}</span>
+                                  <span className="text-lg text-muted-foreground line-through ml-2">₹{(workshop.price / 100).toFixed(0)}</span>
+                                  <span className="text-sm text-muted-foreground"> / person</span>
+                                  <p className="text-sm text-green-600 mt-1">Early bird until {new Date(workshop.earlyBirdDeadline!).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}</p>
+                                </div>
+                              ) : (
+                                <div>
+                                  <span className="text-3xl font-bold">₹{(workshop.price / 100).toFixed(0)}</span>
+                                  <span className="text-sm text-muted-foreground"> / person</span>
+                                </div>
+                              )}
+                            </div>
+                            <Button 
+                              size="lg"
+                              className="text-lg px-8" 
+                              disabled={isSoldOut}
+                              onClick={() => {
+                                setSelectedWorkshop(workshop.id);
+                                setWorkshopDialogOpen(true);
+                              }}
+                            >
+                              {isSoldOut ? "Sold Out" : "Book Now"}
+                              {!isSoldOut && <ArrowRight className="ml-2 h-5 w-5" />}
+                            </Button>
+                          </div>
+                        </div>
                       </div>
-                    </CardContent>
-                    <CardFooter>
-                      <Button 
-                        className="w-full" 
-                        disabled={isSoldOut}
-                        onClick={() => {
-                          setSelectedWorkshop(workshop.id);
-                          setWorkshopDialogOpen(true);
-                        }}
-                      >
-                        {isSoldOut ? "Sold Out" : "Book Now"}
-                        {!isSoldOut && <ArrowRight className="ml-2 h-4 w-4" />}
-                      </Button>
-                    </CardFooter>
+                    </div>
                   </Card>
                 );
               })}
