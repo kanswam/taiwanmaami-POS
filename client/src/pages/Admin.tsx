@@ -2080,7 +2080,7 @@ function OrdersTab() {
                           </Button>
                         )}
                         <div className="text-right">
-                          <p className={`font-medium ${isCancelled ? 'line-through' : ''}`}>{formatPrice(item.totalPrice || item.unitPrice * item.quantity)}</p>
+                          <p className={`font-medium ${isCancelled ? 'line-through' : ''}`}>{formatPrice(item.lineTotal || item.totalPrice || item.unitPrice * item.quantity)}</p>
                           <p className="text-sm text-muted-foreground">x{item.quantity}</p>
                         </div>
                       </div>

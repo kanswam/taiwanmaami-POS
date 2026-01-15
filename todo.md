@@ -502,3 +502,6 @@ Orders fixed:
 - Order 74: ₹840 → ₹882
 - Order 73: ₹405 → ₹425.26
 - Order 72: ₹360 → ₹378
+
+- [x] Fixed Admin UI to show lineTotal (includes add-ons) instead of unitPrice × quantity
+  - Order 79 was correct (₹845) - the Iced Black Americano had a ₹40 add-on
