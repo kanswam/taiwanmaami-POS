@@ -628,3 +628,10 @@ Orders fixed:
 - [x] Add T&Cs link to booking dialog
 - [x] Add refund policy notice: "Full refund provided for cancellation 48 hours before start of workshop only"
 - [x] Update booking success dialog with calendar options
+
+
+## Bug Fix - Duplicate KOT Printing (Jan 16)
+
+- [x] Fix duplicate KOT printing for in-store orders
+  - Root cause: KOT queued twice - once in backend orders.create, once in frontend createKotForInstore call
+  - Solution: Removed redundant createKotForInstore call from Checkout.tsx

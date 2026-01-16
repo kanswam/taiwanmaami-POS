@@ -57,7 +57,7 @@ export default function Checkout() {
   const createOrder = trpc.orders.create.useMutation();
   const createPaymentOrder = trpc.orders.createPaymentOrder.useMutation();
   const verifyPayment = trpc.orders.verifyPayment.useMutation();
-  const createKotForInstore = trpc.orders.createKotForInstore.useMutation();
+  // KOT is now created automatically in backend for in-store orders - no need for createKotForInstore
   const addItemsToOrder = trpc.orders.addItemsToOrder.useMutation();
 
   // Determine which outlet is selected based on order type
@@ -251,10 +251,7 @@ export default function Checkout() {
         // Initiate Razorpay payment
         await handleRazorpayPayment(orderData.orderId, orderData.orderNumber, displayTotal);
       } else {
-        // Cash at pickup/counter - create KOT immediately for in-store orders
-        if (state.orderType === 'instore') {
-          await createKotForInstore.mutateAsync({ orderId: orderData.orderId, orderNumber: orderData.orderNumber });
-        }
+        // Cash at pickup/counter - KOT is already created in backend for in-store orders
         clearCart();
         toast.success(state.orderType === 'instore' ? 'Order placed! Pay at counter.' : 'Order placed! Pay at pickup.');
         navigate(`/order-confirmation/${orderData.orderNumber}`);
