@@ -635,3 +635,8 @@ Orders fixed:
 - [x] Fix duplicate KOT printing for in-store orders
   - Root cause: KOT queued twice - once in backend orders.create, once in frontend createKotForInstore call
   - Solution: Removed redundant createKotForInstore call from Checkout.tsx
+
+
+## Cancellation Policy Update (Jan 16)
+
+- [x] Update cancellation policy from 48 hours to 72 hours before workshop start

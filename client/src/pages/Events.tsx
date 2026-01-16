@@ -1116,7 +1116,7 @@ export default function Events() {
             <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
               <p className="text-sm text-amber-800 font-medium">Cancellation Policy</p>
               <p className="text-xs text-amber-700 mt-1">
-                Full refund provided for cancellation 48 hours before start of workshop only.
+                Full refund provided for cancellation 72 hours before start of workshop only.
               </p>
             </div>
 
