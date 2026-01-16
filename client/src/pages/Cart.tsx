@@ -37,7 +37,7 @@ export default function Cart() {
   const isOutsideOrderingHours = !outletStatus.available;
 
   const validateDiscount = trpc.discounts.validate.useQuery(
-    { code: discountInput, subtotal: subtotal || 0 },
+    { code: discountInput, subtotal: subtotal || 0, orderType: state.orderType as 'delivery' | 'pickup' | 'dine_in' },
     { enabled: false }
   );
 

@@ -1,0 +1,44 @@
+{
+  "query": "SELECT * FROM discounts;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT * FROM discounts;",
+  "rows": [
+    {
+      "id": "1",
+      "code": "BOBA LOVE ",
+      "description": "NULL",
+      "type": "percentage",
+      "value": "10",
+      "minOrderAmount": "1500",
+      "maxDiscountAmount": "NULL",
+      "validFrom": "NULL",
+      "validUntil": "NULL",
+      "usageLimit": "1",
+      "usageCount": "0",
+      "isActive": "1",
+      "createdAt": "2025-12-07 16:10:04",
+      "firstTimeOnly": "0",
+      "orderTypeRestriction": "all"
+    },
+    {
+      "id": "30001",
+      "code": "BOBALOVE10",
+      "description": "NULL",
+      "type": "percentage",
+      "value": "10",
+      "minOrderAmount": "0",
+      "maxDiscountAmount": "NULL",
+      "validFrom": "NULL",
+      "validUntil": "NULL",
+      "usageLimit": "NULL",
+      "usageCount": "0",
+      "isActive": "1",
+      "createdAt": "2026-01-05 04:05:13",
+      "firstTimeOnly": "0",
+      "orderTypeRestriction": "all"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tcode\tdescription\ttype\tvalue\tminOrderAmount\tmaxDiscountAmount\tvalidFrom\tvalidUntil\tusageLimit\tusageCount\tisActive\tcreatedAt\tfirstTimeOnly\torderTypeRestriction\n1\tBOBA LOVE \tNULL\tpercentage\t10\t1500\tNULL\tNULL\tNULL\t1\t0\t1\t2025-12-07 16:10:04\t0\tall\n30001\tBOBALOVE10\tNULL\tpercentage\t10\t0\tNULL\tNULL\tNULL\tNULL\t0\t1\t2026-01-05 04:05:13\t0\tall\n",
+  "stderr": "",
+  "execution_time_ms": 1522
+}

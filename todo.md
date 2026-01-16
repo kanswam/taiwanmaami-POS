@@ -547,3 +547,19 @@ Orders fixed:
   - The imageUrl was stored correctly in database but not rendered in the card
   - Added image display at top of workshop card with proper aspect ratio
   - Shows "SOLD OUT" overlay on image if workshop is sold out
+
+
+## BOBALOVE10 Discount Code (Jan 16)
+
+- [x] Create BOBALOVE10 discount code in database
+  - 10% discount
+  - First-time registered customers only (firstTimeOnly=true)
+  - Delivery orders only (orderTypeRestriction='delivery')
+  - One use per customer (tracked via discount_usage table)
+  - Max discount cap: ₹500
+- [x] Added validation logic in backend:
+  - Checks if user has used this discount before
+  - Checks if user has any previous orders (must be first-time customer)
+  - Checks if order type matches restriction (delivery only)
+- [x] Records discount usage after successful order creation
+- [x] Updated Cart.tsx to pass orderType to discount validation

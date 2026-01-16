@@ -2,7 +2,7 @@ import { eq, and, desc, asc, sql, inArray } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import { 
   InsertUser, users, categories, subcategories, products, addons, 
-  orders, orderItems, orderItemAddons, payments, discounts, 
+  orders, orderItems, orderItemAddons, payments, discounts, discountUsage,
   addresses, loyaltyTransactions, storeLocations, deliveryAreas,
   productAddons, customizationOptions, orderAuditLog
 } from "../drizzle/schema";
@@ -264,6 +264,28 @@ export async function getAllDiscounts() {
   const db = await getDb();
   if (!db) return [];
   return db.select().from(discounts).orderBy(desc(discounts.createdAt));
+}
+
+export async function hasUserUsedDiscount(userId: number, discountId: number): Promise<boolean> {
+  const db = await getDb();
+  if (!db) return false;
+  const result = await db.select().from(discountUsage).where(
+    and(eq(discountUsage.userId, userId), eq(discountUsage.discountId, discountId))
+  ).limit(1);
+  return result.length > 0;
+}
+
+export async function recordDiscountUsage(discountId: number, userId: number, orderId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.insert(discountUsage).values({ discountId, userId, orderId });
+}
+
+export async function getUserOrderCount(userId: number): Promise<number> {
+  const db = await getDb();
+  if (!db) return 0;
+  const result = await db.select({ count: sql<number>`count(*)` }).from(orders).where(eq(orders.userId, userId));
+  return result[0]?.count || 0;
 }
 
 // Address functions

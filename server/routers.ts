@@ -215,16 +215,35 @@ export const appRouter = router({
         }
 
         // Apply discount if code provided
+        let appliedDiscount: Awaited<ReturnType<typeof db.getDiscountByCode>> = undefined;
         if (input.discountCode) {
           const discount = await db.getDiscountByCode(input.discountCode);
           if (discount && discount.isActive) {
-            if (discount.type === 'percentage') {
-              discountAmount = Math.round(subtotal * discount.value / 100);
-              if (discount.maxDiscountAmount) {
-                discountAmount = Math.min(discountAmount, discount.maxDiscountAmount);
+            // Validate first-time only restriction
+            if (discount.firstTimeOnly && ctx.user?.id) {
+              const hasUsed = await db.hasUserUsedDiscount(ctx.user.id, discount.id);
+              const orderCount = await db.getUserOrderCount(ctx.user.id);
+              if (hasUsed || orderCount > 0) {
+                // Skip discount - user is not eligible
+                discount.isActive = false; // Mark as not applicable
               }
-            } else {
-              discountAmount = discount.value;
+            }
+            // Validate order type restriction
+            if (discount.orderTypeRestriction && discount.orderTypeRestriction !== 'all') {
+              if (discount.orderTypeRestriction !== input.orderType) {
+                discount.isActive = false; // Mark as not applicable
+              }
+            }
+            if (discount.isActive) {
+              appliedDiscount = discount;
+              if (discount.type === 'percentage') {
+                discountAmount = Math.round(subtotal * discount.value / 100);
+                if (discount.maxDiscountAmount) {
+                  discountAmount = Math.min(discountAmount, discount.maxDiscountAmount);
+                }
+              } else {
+                discountAmount = discount.value;
+              }
             }
           }
         }
@@ -339,6 +358,11 @@ export const appRouter = router({
               console.error('Failed to send KOT failure notification', notifyError);
             }
           }
+        }
+        
+        // Record discount usage if a first-time discount was applied
+        if (appliedDiscount && appliedDiscount.firstTimeOnly && ctx.user?.id) {
+          await db.recordDiscountUsage(appliedDiscount.id, ctx.user.id, orderId);
         }
         
         return { orderId, orderNumber, totalAmount };
@@ -1272,9 +1296,9 @@ export const appRouter = router({
 
   // Discount routes
   discounts: router({
-    validate: publicProcedure
-      .input(z.object({ code: z.string(), subtotal: z.number() }))
-      .query(async ({ input }) => {
+    validate: protectedProcedure
+      .input(z.object({ code: z.string(), subtotal: z.number(), orderType: z.enum(['delivery', 'pickup', 'dine_in']).optional() }))
+      .query(async ({ ctx, input }) => {
         const discount = await db.getDiscountByCode(input.code);
         if (!discount) return { valid: false, message: 'Invalid discount code' };
         if (!discount.isActive) return { valid: false, message: 'Discount code is no longer active' };
@@ -1283,6 +1307,31 @@ export const appRouter = router({
         }
         if (discount.usageLimit && discount.usageCount >= discount.usageLimit) {
           return { valid: false, message: 'Discount code usage limit reached' };
+        }
+        
+        // Check order type restriction
+        if (discount.orderTypeRestriction && discount.orderTypeRestriction !== 'all') {
+          if (!input.orderType) {
+            return { valid: false, message: 'This discount code is only valid for delivery orders' };
+          }
+          if (discount.orderTypeRestriction !== input.orderType) {
+            const typeLabel = discount.orderTypeRestriction === 'delivery' ? 'delivery' : discount.orderTypeRestriction === 'pickup' ? 'pickup' : 'dine-in';
+            return { valid: false, message: `This discount code is only valid for ${typeLabel} orders` };
+          }
+        }
+        
+        // Check first-time only restriction
+        if (discount.firstTimeOnly) {
+          // Check if user has used this discount before
+          const hasUsed = await db.hasUserUsedDiscount(ctx.user.id, discount.id);
+          if (hasUsed) {
+            return { valid: false, message: 'This discount code can only be used once per customer' };
+          }
+          // Check if user has any previous orders (must be first-time customer)
+          const orderCount = await db.getUserOrderCount(ctx.user.id);
+          if (orderCount > 0) {
+            return { valid: false, message: 'This discount code is only for first-time customers' };
+          }
         }
         
         let discountAmount = 0;

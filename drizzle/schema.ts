@@ -290,7 +290,18 @@ export const discounts = mysqlTable("discounts", {
   usageLimit: int("usageLimit"),
   usageCount: int("usageCount").default(0).notNull(),
   isActive: boolean("isActive").default(true).notNull(),
+  firstTimeOnly: boolean("firstTimeOnly").default(false).notNull(), // Only for first-time registered customers
+  orderTypeRestriction: mysqlEnum("orderTypeRestriction", ["all", "delivery", "pickup", "dine_in"]).default("all").notNull(), // Restrict to specific order types
   createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+// Track which users have used which discount codes (for firstTimeOnly enforcement)
+export const discountUsage = mysqlTable("discount_usage", {
+  id: int("id").autoincrement().primaryKey(),
+  discountId: int("discountId").notNull(),
+  userId: int("userId").notNull(),
+  orderId: int("orderId").notNull(),
+  usedAt: timestamp("usedAt").defaultNow().notNull(),
 });
 
 // Loyalty transactions

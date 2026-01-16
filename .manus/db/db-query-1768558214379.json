@@ -1,0 +1,28 @@
+{
+  "query": "SELECT id, code, description, type, value, firstTimeOnly, orderTypeRestriction FROM discounts;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT id, code, description, type, value, firstTimeOnly, orderTypeRestriction FROM discounts;",
+  "rows": [
+    {
+      "id": "1",
+      "code": "BOBA LOVE ",
+      "description": "NULL",
+      "type": "percentage",
+      "value": "10",
+      "firstTimeOnly": "0",
+      "orderTypeRestriction": "all"
+    },
+    {
+      "id": "30001",
+      "code": "BOBALOVE10",
+      "description": "NULL",
+      "type": "percentage",
+      "value": "10",
+      "firstTimeOnly": "0",
+      "orderTypeRestriction": "all"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tcode\tdescription\ttype\tvalue\tfirstTimeOnly\torderTypeRestriction\n1\tBOBA LOVE \tNULL\tpercentage\t10\t0\tall\n30001\tBOBALOVE10\tNULL\tpercentage\t10\t0\tall\n",
+  "stderr": "",
+  "execution_time_ms": 1515
+}

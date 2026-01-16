@@ -1,0 +1,8 @@
+{
+  "query": "INSERT INTO discounts (code, description, type, value, minOrderAmount, maxDiscountAmount, isActive, firstTimeOnly, orderTypeRestriction) VALUES ('BOBALOVE10', 'Welcome offer - 10% off on first delivery order for new registered customers', 'percentage', 10, 0, 50000, true, true, 'delivery');",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute INSERT INTO discounts (code, description, type, value, minOrderAmount, maxDiscountAmount, isActive, firstTimeOnly, orderTypeRestriction) VALUES ('BOBALOVE10', 'Welcome offer - 10% off on first delivery order for new registered customers', 'percentage', 10, 0, 50000, true, true, 'delivery');",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1062 (23000) at line 1: Duplicate entry '?' for key 'discounts.discounts_code_unique'"
+  ]
+}
