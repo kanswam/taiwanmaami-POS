@@ -1012,6 +1012,7 @@ function WorkshopBookingsDialog({
   onClose: () => void;
 }) {
   const { data: bookings, isLoading, refetch } = trpc.workshops.getBookings.useQuery({ workshopId });
+  const { data: workshopDates } = trpc.workshops.getWorkshopDates.useQuery({ workshopId });
   const updatePayment = trpc.workshops.updateBookingPayment.useMutation({
     onSuccess: () => {
       toast.success("Payment status updated");
@@ -1026,6 +1027,29 @@ function WorkshopBookingsDialog({
     },
     onError: (error) => toast.error(error.message),
   });
+  
+  // Helper to get date display for a booking
+  const getDateDisplay = (booking: any) => {
+    if (booking.workshopDateId && workshopDates) {
+      const dateInfo = workshopDates.find(d => d.id === booking.workshopDateId);
+      if (dateInfo) {
+        return new Date(dateInfo.sessionDate).toLocaleDateString('en-IN', { 
+          weekday: 'short',
+          day: 'numeric',
+          month: 'short'
+        });
+      }
+    }
+    return 'N/A';
+  };
+  
+  // Group bookings by date
+  const bookingsByDate = bookings?.reduce((acc, booking) => {
+    const dateKey = booking.workshopDateId || 'unassigned';
+    if (!acc[dateKey]) acc[dateKey] = [];
+    acc[dateKey].push(booking);
+    return acc;
+  }, {} as Record<string | number, typeof bookings>) || {};
 
   return (
     <Dialog open={true} onOpenChange={() => onClose()}>
@@ -1036,6 +1060,26 @@ function WorkshopBookingsDialog({
             Manage bookings and attendance
           </DialogDescription>
         </DialogHeader>
+        
+        {/* Date Summary Cards */}
+        {workshopDates && workshopDates.length > 0 && (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+            {workshopDates.map(date => (
+              <div key={date.id} className="bg-muted p-3 rounded-lg text-center">
+                <p className="font-semibold">
+                  {new Date(date.sessionDate).toLocaleDateString('en-IN', { 
+                    weekday: 'short',
+                    day: 'numeric',
+                    month: 'short'
+                  })}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  {date.bookedCount}/{date.maxCapacity} booked
+                </p>
+              </div>
+            ))}
+          </div>
+        )}
 
         {isLoading ? (
           <div className="py-8 text-center">Loading bookings...</div>
@@ -1046,6 +1090,7 @@ function WorkshopBookingsDialog({
             <TableHeader>
               <TableRow>
                 <TableHead>Booking #</TableHead>
+                <TableHead>Date</TableHead>
                 <TableHead>Customer</TableHead>
                 <TableHead>Tickets</TableHead>
                 <TableHead>Amount</TableHead>
@@ -1057,6 +1102,11 @@ function WorkshopBookingsDialog({
               {bookings.map((booking) => (
                 <TableRow key={booking.id}>
                   <TableCell className="font-mono">{booking.bookingNumber}</TableCell>
+                  <TableCell>
+                    <span className="text-sm bg-amber-100 text-amber-800 px-2 py-1 rounded">
+                      {getDateDisplay(booking)}
+                    </span>
+                  </TableCell>
                   <TableCell>
                     <div>
                       <p className="font-medium">{booking.customerName}</p>

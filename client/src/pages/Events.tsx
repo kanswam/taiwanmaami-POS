@@ -172,10 +172,17 @@ export default function Events() {
     customerPhone: "",
     ticketCount: 1,
     specialRequirements: "",
+    selectedDateId: null as number | null,
   });
 
   // Fetch published workshops
   const { data: workshops, isLoading: workshopsLoading } = trpc.workshops.getPublished.useQuery();
+  
+  // Fetch available dates for selected workshop
+  const { data: workshopDates, isLoading: datesLoading } = trpc.workshops.getWorkshopDates.useQuery(
+    { workshopId: selectedWorkshop! },
+    { enabled: !!selectedWorkshop }
+  );
 
   // Submit inquiry mutation
   const submitInquiry = trpc.events.submitInquiry.useMutation({
@@ -320,10 +327,22 @@ export default function Events() {
   const handleWorkshopBook = (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedWorkshop) return;
+    
+    // If workshop has multiple dates, require date selection
+    if (workshopDates && workshopDates.length > 0 && !bookingForm.selectedDateId) {
+      toast.error("Please select a date for the workshop");
+      return;
+    }
+    
     setIsBookingInProgress(true);
     bookWorkshop.mutate({
       workshopId: selectedWorkshop,
-      ...bookingForm,
+      workshopDateId: bookingForm.selectedDateId || undefined,
+      customerName: bookingForm.customerName,
+      customerEmail: bookingForm.customerEmail,
+      customerPhone: bookingForm.customerPhone,
+      ticketCount: bookingForm.ticketCount,
+      specialRequirements: bookingForm.specialRequirements,
     });
   };
 
@@ -830,20 +849,15 @@ export default function Events() {
                         <div className="flex flex-wrap justify-center gap-4 text-sm">
                           <div className="flex items-center gap-2 bg-amber-100 text-amber-800 px-4 py-2 rounded-full">
                             <Calendar className="h-4 w-4" />
-                            {new Date(workshop.workshopDate).toLocaleDateString('en-IN', { 
-                              weekday: 'long', 
-                              day: 'numeric',
-                              month: 'long',
-                              year: 'numeric'
-                            })}
+                            Multiple Dates in February 2026
                           </div>
                           <div className="flex items-center gap-2 bg-blue-100 text-blue-800 px-4 py-2 rounded-full">
                             <Clock className="h-4 w-4" />
                             {workshop.startTime} - {workshop.endTime}
                           </div>
-                          <div className={`flex items-center gap-2 px-4 py-2 rounded-full ${availableSeats <= 3 ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'}`}>
+                          <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-green-100 text-green-800">
                             <Users className="h-4 w-4" />
-                            {availableSeats} spots left
+                            8 spots per session
                           </div>
                         </div>
                       </div>
@@ -904,6 +918,7 @@ export default function Events() {
                             disabled={isSoldOut}
                             onClick={() => {
                               setSelectedWorkshop(workshop.id);
+                              setBookingForm(prev => ({ ...prev, selectedDateId: null }));
                               setWorkshopDialogOpen(true);
                             }}
                           >
@@ -951,6 +966,40 @@ export default function Events() {
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleWorkshopBook} className="space-y-4 mt-4">
+            {/* Date Selection - Show only if workshop has multiple dates */}
+            {workshopDates && workshopDates.length > 0 && (
+              <div className="space-y-2">
+                <Label htmlFor="workshopDate">Select Date *</Label>
+                {datesLoading ? (
+                  <div className="text-sm text-muted-foreground">Loading available dates...</div>
+                ) : (
+                  <Select
+                    value={bookingForm.selectedDateId?.toString() || ""}
+                    onValueChange={(value) => setBookingForm({ ...bookingForm, selectedDateId: parseInt(value) })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Choose a date" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {workshopDates.map((date) => (
+                        <SelectItem 
+                          key={date.id} 
+                          value={date.id.toString()}
+                          disabled={date.isSoldOut}
+                        >
+                          {new Date(date.sessionDate).toLocaleDateString('en-IN', { 
+                            weekday: 'short',
+                            day: 'numeric',
+                            month: 'short'
+                          })} ({date.startTime} - {date.endTime}) - {date.isSoldOut ? 'SOLD OUT' : `${date.availableSeats} spots left`}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              </div>
+            )}
+            
             <div className="space-y-2">
               <Label htmlFor="bookingName">Your Name *</Label>
               <Input

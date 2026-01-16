@@ -1,0 +1,20 @@
+{
+  "query": "SELECT * FROM workshops;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT * FROM workshops;",
+  "rows": [],
+  "messages": [
+    "60001\tbiang-biang-noodle-workshop-kung-fu-tea-experience-1768478458591\tBiang Biang Noodle Workshop + Kung Fu Tea Experience \t\tStretch. Slap. Create.",
+    "Discover the craft behind Biang Biang noodles, the iconic hand-pulled noodles of Northern China.",
+    "In this hands-on 3-hour workshop, you’ll learn to make Biang Biang noodles from scratch — kneading, resting, stretching, and pulling the dough the traditional way. Along the way, we’ll share the stories and techniques that give these noodles their distinctive texture.",
+    "All materials are provided, including red oil and the traditional 13-spice blend. While the dough rests, enjoy a Chinese Kung Fu tea demonstration and tasting featuring Oolong and Green teas.",
+    "The experience ends on a comforting note with:",
+    "*A chef-prepared bowl of Biang Biang noodles",
+    "*Bubble tea of your choice",
+    "*Dessert of your choice",
+    "You’ll also take home the dough you made, so you can share with the family and friends. ",
+    "Whether you’re a food lover, a curious beginner, or someone who enjoys learning through hands-on experiences, this workshop is designed to be relaxed, interactive, and deeply satisfying — no prior cooking experience required.\tTheresa Hu \tTheresa Hu \tNULL\tNULL\t2026-02-07 00:00:00\t3 hours\tNew No. 29 Burkit Road T nagar Chennai\t8\t0\t320000\thttps://res.cloudinary.com/drpu1dbqk/video/upload/v1768559062/Taiwan_Maami_workshop_wujpzy.mp4\tNULL\tNULL\tNULL\tpublished\t1\t2026-01-15 12:00:58\t2026-01-16 10:25:24\t11:00\t14:00\tNew No. 29 Burkit Road T nagar Chennai\t8\t0\t288000\t2026-01-30\t320000\tNULL"
+  ],
+  "stdout": "id\tslug\ttitle\tshortDescription\tdescription\tinstructorName\tinstructor\tinstructorTitle\tinstructorImage\tworkshopDate\tduration\tlocation\tmaxCapacity\tticketsSold\tticketPrice\timageUrl\thighlights\twhatYouLearn\tincludes\tstatus\tisActive\tcreatedAt\tupdatedAt\tstartTime\tendTime\tvenue\ttotalCapacity\tbookedCount\tearlyBirdPrice\tearlyBirdDeadline\tprice\tvideoUrl\n60001\tbiang-biang-noodle-workshop-kung-fu-tea-experience-1768478458591\tBiang Biang Noodle Workshop + Kung Fu Tea Experience \t\tStretch. Slap. Create.\nDiscover the craft behind Biang Biang noodles, the iconic hand-pulled noodles of Northern China.\nIn this hands-on 3-hour workshop, you’ll learn to make Biang Biang noodles from scratch — kneading, resting, stretching, and pulling the dough the traditional way. Along the way, we’ll share the stories and techniques that give these noodles their distinctive texture.\nAll materials are provided, including red oil and the traditional 13-spice blend. While the dough rests, enjoy a Chinese Kung Fu tea demonstration and tasting featuring Oolong and Green teas.\nThe experience ends on a comforting note with:\n*A chef-prepared bowl of Biang Biang noodles\n*Bubble tea of your choice\n*Dessert of your choice\nYou’ll also take home the dough you made, so you can share with the family and friends. \nWhether you’re a food lover, a curious beginner, or someone who enjoys learning through hands-on experiences, this workshop is designed to be relaxed, interactive, and deeply satisfying — no prior cooking experience required.\tTheresa Hu \tTheresa Hu \tNULL\tNULL\t2026-02-07 00:00:00\t3 hours\tNew No. 29 Burkit Road T nagar Chennai\t8\t0\t320000\thttps://res.cloudinary.com/drpu1dbqk/video/upload/v1768559062/Taiwan_Maami_workshop_wujpzy.mp4\tNULL\tNULL\tNULL\tpublished\t1\t2026-01-15 12:00:58\t2026-01-16 10:25:24\t11:00\t14:00\tNew No. 29 Burkit Road T nagar Chennai\t8\t0\t288000\t2026-01-30\t320000\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 1514
+}

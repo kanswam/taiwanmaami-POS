@@ -1,0 +1,20 @@
+{
+  "query": "SELECT id, title, workshopDate, startTime, endTime, maxCapacity, bookedCount, totalCapacity FROM workshops;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT id, title, workshopDate, startTime, endTime, maxCapacity, bookedCount, totalCapacity FROM workshops;",
+  "rows": [
+    {
+      "id": "60001",
+      "title": "Biang Biang Noodle Workshop + Kung Fu Tea Experience ",
+      "workshopDate": "2026-02-07 00:00:00",
+      "startTime": "11:00",
+      "endTime": "14:00",
+      "maxCapacity": "8",
+      "bookedCount": "0",
+      "totalCapacity": "8"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\ttitle\tworkshopDate\tstartTime\tendTime\tmaxCapacity\tbookedCount\ttotalCapacity\n60001\tBiang Biang Noodle Workshop + Kung Fu Tea Experience \t2026-02-07 00:00:00\t11:00\t14:00\t8\t0\t8\n",
+  "stderr": "",
+  "execution_time_ms": 1563
+}

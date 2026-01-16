@@ -585,3 +585,35 @@ Orders fixed:
 - [x] Implement lazy loading for workshop video
   - Video auto-plays, loops, muted with preload="metadata" for lazy loading
   - Falls back to image display for non-video URLs
+
+
+## Workshop Multi-Date & Sorting Fix (Jan 16)
+
+- [ ] Fix Customer Database sorting - all columns must be clickable and sortable
+- [ ] Add workshop_dates table for multiple dates per workshop
+- [ ] Create 4 workshop dates: Feb 7, 14, 21, 28 with 8 capacity each
+- [ ] Update Events page UI with date selection dropdown
+- [ ] Update booking flow to select specific date
+- [ ] Track bookings per date (not just per workshop)
+
+## Workshop Multi-Date Selection System (Jan 16)
+
+- [ ] Implement multi-date workshop system for "Biang Biang Noodles Workshop"
+  - [ ] Create workshop_dates table for storing multiple dates per workshop
+  - [ ] Add date selection dropdown in booking flow
+  - [ ] Track capacity and bookings per date (8 per date)
+  - [ ] Update workshopBookings to reference specific date
+  - [ ] Update Admin panel to show bookings by date
+  - [ ] Dates: Feb 7, 14, 21, 28 (2026)
+
+
+## Workshop Multi-Date Selection (Jan 16) - COMPLETED
+- [x] Create workshop_dates table in database
+- [x] Add workshopDateId column to workshop_bookings
+- [x] Insert 4 dates for Feb 7, 14, 21, 28 with 8 capacity each
+- [x] Add getWorkshopDates backend route
+- [x] Update bookTickets to accept workshopDateId
+- [x] Update verifyPayment to increment date-specific booked count
+- [x] Add date selection dropdown to Events page booking dialog
+- [x] Update Admin panel to show bookings grouped by date
+- [x] Test complete booking flow - verified working

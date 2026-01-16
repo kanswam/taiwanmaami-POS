@@ -777,10 +777,27 @@ export const workshops = mysqlTable("workshops", {
 export type Workshop = typeof workshops.$inferSelect;
 export type InsertWorkshop = typeof workshops.$inferInsert;
 
+// Workshop Dates - Multiple dates per workshop
+export const workshopDates = mysqlTable("workshop_dates", {
+  id: int("id").autoincrement().primaryKey(),
+  workshopId: int("workshopId").notNull(),
+  sessionDate: date("sessionDate").notNull(),
+  startTime: varchar("startTime", { length: 10 }),
+  endTime: varchar("endTime", { length: 10 }),
+  maxCapacity: int("maxCapacity").default(8).notNull(),
+  bookedCount: int("bookedCount").default(0).notNull(),
+  isActive: boolean("isActive").default(true).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type WorkshopDate = typeof workshopDates.$inferSelect;
+export type InsertWorkshopDate = typeof workshopDates.$inferInsert;
+
 // Workshop Bookings - Ticket purchases
 export const workshopBookings = mysqlTable("workshop_bookings", {
   id: int("id").autoincrement().primaryKey(),
   workshopId: int("workshopId").notNull(),
+  workshopDateId: int("workshopDateId"), // Reference to specific date session
   bookingNumber: varchar("bookingNumber", { length: 20 }).notNull().unique(),
   customerName: varchar("customerName", { length: 200 }).notNull(),
   customerEmail: varchar("customerEmail", { length: 320 }).notNull(),

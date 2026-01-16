@@ -11,7 +11,7 @@ import { categories, subcategories, products, addons, orders, orderItems as orde
 import { eq, and, desc, asc, sql, or, gte } from "drizzle-orm";
 import { generateOrderNumber, calculateGst } from "@shared/types";
 // POS functionality removed - Employee Master import removed
-import { outletProducts, loyaltyRewards, stampTransactions, guestOrders, reviews, kotQueue, receiptQueue, productAuditLog, categoryAuditLog, complaints, eventInquiries, eventOrders, eventOrderItems, workshops, workshopBookings } from "../drizzle/schema";
+import { outletProducts, loyaltyRewards, stampTransactions, guestOrders, reviews, kotQueue, receiptQueue, productAuditLog, categoryAuditLog, complaints, eventInquiries, eventOrders, eventOrderItems, workshops, workshopBookings, workshopDates } from "../drizzle/schema";
 import { ENV } from './_core/env';
 import { notifyOwner } from './_core/notification';
 
@@ -5199,11 +5199,38 @@ export const appRouter = router({
         return serializeDates(workshop[0]);
       }),
 
+    // Get available dates for a workshop (public)
+    getWorkshopDates: publicProcedure
+      .input(z.object({ workshopId: z.number() }))
+      .query(async ({ input }) => {
+        const database = await getDb();
+        if (!database) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Database not available' });
+        const dates = await database.select().from(workshopDates)
+          .where(and(
+            eq(workshopDates.workshopId, input.workshopId),
+            eq(workshopDates.isActive, true)
+          ))
+          .orderBy(asc(workshopDates.sessionDate));
+        
+        // Return dates with availability info
+        return dates.map(d => ({
+          id: d.id,
+          sessionDate: d.sessionDate instanceof Date ? d.sessionDate.toISOString().split('T')[0] : String(d.sessionDate),
+          startTime: d.startTime,
+          endTime: d.endTime,
+          maxCapacity: d.maxCapacity,
+          bookedCount: d.bookedCount,
+          availableSeats: d.maxCapacity - d.bookedCount,
+          isSoldOut: d.bookedCount >= d.maxCapacity,
+        }));
+      }),
+
     // Book workshop tickets (public)
     // Create workshop booking and Razorpay order
     bookTickets: publicProcedure
       .input(z.object({
         workshopId: z.number(),
+        workshopDateId: z.number().optional(), // Optional for backwards compatibility
         customerName: z.string().min(1),
         customerEmail: z.string().email(),
         customerPhone: z.string().min(10),
@@ -5224,17 +5251,40 @@ export const appRouter = router({
         }
         
         const w = workshop[0];
-        if (!w.totalCapacity || w.bookedCount === null) {
-          throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Invalid workshop data" });
+        
+        // Check if workshop has multiple dates
+        let selectedDate = null;
+        let availableSeats = 0;
+        
+        if (input.workshopDateId) {
+          // Multi-date workshop - check specific date availability
+          const [dateRecord] = await database.select().from(workshopDates)
+            .where(and(
+              eq(workshopDates.id, input.workshopDateId),
+              eq(workshopDates.workshopId, input.workshopId),
+              eq(workshopDates.isActive, true)
+            ));
+          
+          if (!dateRecord) {
+            throw new TRPCError({ code: "NOT_FOUND", message: "Selected date not available" });
+          }
+          
+          selectedDate = dateRecord;
+          availableSeats = dateRecord.maxCapacity - dateRecord.bookedCount;
+        } else {
+          // Legacy single-date workshop - use workshop's own capacity
+          if (!w.totalCapacity || w.bookedCount === null) {
+            throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Invalid workshop data" });
+          }
+          availableSeats = w.totalCapacity - w.bookedCount;
         }
-        const availableSeats = w.totalCapacity - w.bookedCount;
         
         if (input.ticketCount > availableSeats) {
           throw new TRPCError({ 
             code: "BAD_REQUEST", 
             message: availableSeats === 0 
-              ? "Sorry, this workshop is sold out!" 
-              : `Only ${availableSeats} seats available` 
+              ? "Sorry, this date is sold out!" 
+              : `Only ${availableSeats} seats available for this date` 
           });
         }
         
@@ -5257,6 +5307,7 @@ export const appRouter = router({
         // Create booking with pending payment status (store amount in rupees)
         const [insertedBooking] = await database.insert(workshopBookings).values({
           workshopId: input.workshopId,
+          workshopDateId: input.workshopDateId || null,
           bookingNumber,
           customerName: input.customerName,
           customerEmail: input.customerEmail,
@@ -5290,7 +5341,8 @@ export const appRouter = router({
           totalAmount: totalAmountRupees,
           isEarlyBird,
           workshopTitle: w.title,
-          workshopDate: w.workshopDate,
+          workshopDate: selectedDate ? selectedDate.sessionDate : w.workshopDate,
+          workshopDateId: input.workshopDateId || null,
           razorpayOrderId: razorpayOrder.id,
           razorpayKeyId: getRazorpayKeyId(),
           customerName: input.customerName,
@@ -5350,6 +5402,23 @@ export const appRouter = router({
           .set({ bookedCount: sql`${workshops.bookedCount} + ${booking.ticketCount}` })
           .where(eq(workshops.id, booking.workshopId));
         
+        // If booking has a specific date, update that date's booked count too
+        if (booking.workshopDateId) {
+          await database.update(workshopDates)
+            .set({ bookedCount: sql`${workshopDates.bookedCount} + ${booking.ticketCount}` })
+            .where(eq(workshopDates.id, booking.workshopDateId));
+        }
+        
+        // Get selected date info for invoice
+        let selectedDateInfo = null;
+        if (booking.workshopDateId) {
+          const [dateRecord] = await database.select().from(workshopDates)
+            .where(eq(workshopDates.id, booking.workshopDateId));
+          if (dateRecord) {
+            selectedDateInfo = dateRecord;
+          }
+        }
+        
         // Generate invoice PDF
         let invoiceUrl = '';
         try {
@@ -5362,14 +5431,20 @@ export const appRouter = router({
             ? workshop.earlyBirdPrice 
             : (workshop?.price || 0);
           
+          // Use selected date info if available, otherwise fall back to workshop date
+          const invoiceDate = selectedDateInfo?.sessionDate || workshop?.workshopDate || new Date();
+          const invoiceTime = selectedDateInfo 
+            ? `${selectedDateInfo.startTime} - ${selectedDateInfo.endTime}` 
+            : (workshop ? `${workshop.startTime} - ${workshop.endTime}` : '');
+          
           const invoiceResult = await generateWorkshopInvoice({
             bookingNumber: booking.bookingNumber,
             customerName: booking.customerName,
             customerEmail: booking.customerEmail,
             customerPhone: booking.customerPhone,
             workshopTitle: workshop?.title || 'Workshop',
-            workshopDate: workshop?.workshopDate || new Date(),
-            workshopTime: workshop ? `${workshop.startTime} - ${workshop.endTime}` : '',
+            workshopDate: invoiceDate,
+            workshopTime: invoiceTime,
             workshopVenue: workshop?.venue || '',
             ticketCount: booking.ticketCount,
             pricePerTicket,
@@ -5395,6 +5470,12 @@ export const appRouter = router({
           content: `Payment confirmed for ${booking.customerName}\n\nBooking #: ${booking.bookingNumber}\nTickets: ${booking.ticketCount}\nAmount: ₹${(booking.totalAmount / 100).toFixed(2)}\nPayment ID: ${input.razorpayPaymentId}${invoiceUrl ? `\n\nInvoice: ${invoiceUrl}` : ''}`,
         });
         
+        // Use selected date info if available
+        const returnDate = selectedDateInfo?.sessionDate || workshop?.workshopDate;
+        const returnTime = selectedDateInfo 
+          ? `${selectedDateInfo.startTime} - ${selectedDateInfo.endTime}` 
+          : (workshop ? `${workshop.startTime} - ${workshop.endTime}` : '');
+        
         return { 
           success: true,
           bookingNumber: booking.bookingNumber,
@@ -5403,8 +5484,9 @@ export const appRouter = router({
           ticketCount: booking.ticketCount,
           totalAmount: booking.totalAmount,
           workshopTitle: workshop?.title,
-          workshopDate: workshop?.workshopDate,
-          workshopTime: workshop ? `${workshop.startTime} - ${workshop.endTime}` : '',
+          workshopDate: returnDate,
+          workshopDateId: booking.workshopDateId,
+          workshopTime: returnTime,
           workshopVenue: workshop?.venue,
           paymentId: input.razorpayPaymentId,
           invoiceUrl,
