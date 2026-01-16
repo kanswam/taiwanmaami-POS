@@ -235,6 +235,19 @@ export default function Cart() {
                 </div>
               )}
 
+              {/* BOBALOVE10 Banner for first-time delivery customers */}
+              {state.orderType === 'delivery' && !state.discountCode && (
+                <div className="mb-4 p-3 bg-gradient-to-r from-red-50 to-amber-50 border border-red-200 rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg">🎉</span>
+                    <div>
+                      <p className="text-sm font-semibold text-red-700">First Delivery Order?</p>
+                      <p className="text-xs text-red-600">Use code <span className="font-bold bg-red-100 px-1 rounded">BOBALOVE10</span> for 10% off!</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Price breakdown */}
               <div className="space-y-3 text-sm">
                 <div className="flex justify-between">
@@ -249,6 +262,17 @@ export default function Cart() {
                   <span className="text-muted-foreground">Central GST (2.5%)</span>
                   <span>{formatPrice(gst.centralGst)}</span>
                 </div>
+                {/* Delivery charge for delivery orders */}
+                {state.orderType === 'delivery' && (
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Delivery</span>
+                    {subtotal >= 250000 ? (
+                      <span className="text-green-600 font-medium">FREE</span>
+                    ) : (
+                      <span>{formatPrice(10000)}</span>
+                    )}
+                  </div>
+                )}
                 {state.discountAmount > 0 && (
                   <div className="flex justify-between text-green-600">
                     <span>Discount</span>
@@ -258,7 +282,7 @@ export default function Cart() {
                 <hr />
                 <div className="flex justify-between text-lg font-semibold">
                   <span>Total</span>
-                  <span>{formatPrice(total)}</span>
+                  <span>{formatPrice(state.orderType === 'delivery' ? (subtotal >= 250000 ? total : total + 10000) : total)}</span>
                 </div>
               </div>
 
@@ -275,7 +299,12 @@ export default function Cart() {
               )}
 
               <p className="text-xs text-muted-foreground text-center mt-4">
-                5% GST will be added at checkout. Delivery charges may apply.
+                {state.orderType === 'delivery' 
+                  ? (subtotal >= 250000 
+                    ? 'Free delivery on orders above ₹2500!' 
+                    : 'Free delivery on orders above ₹2500. ₹100 delivery charge applies.')
+                  : '5% GST included in total.'
+                }
               </p>
             </Card>
           </div>

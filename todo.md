@@ -563,3 +563,15 @@ Orders fixed:
   - Checks if order type matches restriction (delivery only)
 - [x] Records discount usage after successful order creation
 - [x] Updated Cart.tsx to pass orderType to discount validation
+
+
+## UI Improvements (Jan 16 - Afternoon)
+
+- [x] Add BOBALOVE10 discount banner at checkout for first-time delivery customers
+  - Shows "🎉 First Delivery Order? Use code BOBALOVE10 for 10% off!" in Order Summary
+- [x] Fix Customer Database sorting for all columns (Name, Orders, Stamps, Last Order)
+  - All columns now sortable with click-to-sort functionality
+- [x] Show delivery charge in cart summary
+  - Shows "Delivery: ₹100" for orders under ₹2500
+  - Shows "Delivery: FREE" for orders ₹2500+
+  - Note at bottom: "Free delivery on orders above ₹2500. ₹100 delivery charge applies."
