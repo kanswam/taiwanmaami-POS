@@ -505,3 +505,12 @@ Orders fixed:
 
 - [x] Fixed Admin UI to show lineTotal (includes add-ons) instead of unitPrice × quantity
   - Order 79 was correct (₹845) - the Iced Black Americano had a ₹40 add-on
+
+## BUG FIX - Delivery Charges (Jan 16)
+
+- [x] Fix receipt template to show delivery charge as visible line item
+  - Fixed receipt-printer-client.mjs to handle both field name formats (sgst/cgst vs stateGst/centralGst, total vs totalAmount)
+- [x] Fix automatic ₹100 delivery charge for future delivery orders
+  - Updated logged-in user order creation (line 212)
+  - Updated guest order creation (line 2850)
+  - Changed from ₹50 to ₹100 (10000 paise)

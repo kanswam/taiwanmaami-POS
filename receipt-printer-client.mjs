@@ -144,23 +144,25 @@ function printReceipt(receiptData) {
           printer.text(`Discount: -${formatPrice(totalDiscount)}`);
         }
 
-        // GST
-        const totalGst = data.stateGst + data.centralGst;
-        printer.text(`GST (5%): ${formatPrice(totalGst)}`);
-        printer.text(`  CGST 2.5%: ${formatPrice(data.centralGst)}`);
-        printer.text(`  SGST 2.5%: ${formatPrice(data.stateGst)}`);
+        // GST (handle both field name formats)
+        const sgst = data.stateGst || data.sgst || 0;
+        const cgst = data.centralGst || data.cgst || 0;
+        const totalGst = sgst + cgst;
+        printer.text(`SGST (2.5%): ${formatPrice(sgst)}`);
+        printer.text(`CGST (2.5%): ${formatPrice(cgst)}`);
 
         // Delivery charge if any
         if (data.deliveryCharge > 0) {
           printer.text(`Delivery: ${formatPrice(data.deliveryCharge)}`);
         }
 
-        // Total
+        // Total (handle both field name formats)
+        const totalAmount = data.totalAmount || data.total || 0;
         printer
           .text('--------------------------------')
           .style('b')
           .size(1, 1)
-          .text(`TOTAL: ${formatPrice(data.totalAmount)}`)
+          .text(`TOTAL: ${formatPrice(totalAmount)}`)
           .size(1, 1)
           .style('normal')
           .text('--------------------------------')

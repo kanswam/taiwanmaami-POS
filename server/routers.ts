@@ -208,7 +208,8 @@ export const appRouter = router({
         const subtotal = input.items.reduce((sum, item) => sum + item.lineTotal, 0);
         const gst = calculateGst(subtotal);
         let discountAmount = 0;
-        let deliveryCharge = 0;
+        // ₹100 flat delivery charge for delivery orders
+        let deliveryCharge = input.orderType === 'delivery' ? 10000 : 0;
 
         // Apply discount if code provided
         if (input.discountCode) {
@@ -2845,7 +2846,8 @@ export const appRouter = router({
         }
         
         const gstDetails = calculateGst(subtotal);
-        const deliveryCharge = input.orderType === 'delivery' ? 5000 : 0; // ₹50 delivery
+        // ₹100 flat delivery charge for delivery orders
+        const deliveryCharge = input.orderType === 'delivery' ? 10000 : 0;
         const totalAmount = subtotal + gstDetails.total + deliveryCharge;
         
         // Generate sequential 5-digit order number
