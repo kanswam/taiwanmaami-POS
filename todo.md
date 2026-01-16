@@ -532,3 +532,10 @@ Orders fixed:
 - [x] Implement free delivery for orders above ₹2500
   - Both logged-in and guest orders now get free delivery when subtotal ≥ ₹2500
   - Orders below ₹2500 still have ₹100 delivery charge
+
+## Staff Orders - Razorpay Payment Indicator (Jan 16)
+
+- [x] Add prominent payment indicator on Staff Orders page for Razorpay orders
+  - Shows "✅ Paid (Razorpay)" green badge for Razorpay orders
+  - Shows "💰 Pay at Counter" amber badge for in-store pending payment orders
+  - Staff can immediately see which orders are pre-paid vs need payment collection

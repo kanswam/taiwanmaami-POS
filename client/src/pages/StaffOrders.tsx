@@ -556,6 +556,16 @@ export default function StaffOrders() {
                   Table {order.tableNumber}
                 </Badge>
               )}
+              {/* Payment Status Indicator */}
+              {order.paymentMethod === 'razorpay' || order.paymentStatus === 'completed' ? (
+                <Badge className="bg-green-600 text-white">
+                  ✅ Paid{order.paymentMethod === 'razorpay' ? ' (Razorpay)' : ''}
+                </Badge>
+              ) : order.orderType === 'instore' && order.paymentStatus === 'pending' ? (
+                <Badge variant="outline" className="bg-amber-100 text-amber-800 border-amber-300">
+                  💰 Pay at Counter
+                </Badge>
+              ) : null}
             </div>
             <p className="text-sm text-muted-foreground mt-1 flex items-center gap-1">
               <Clock className="w-3 h-3" />
