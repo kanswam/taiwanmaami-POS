@@ -978,7 +978,7 @@ export default function Events() {
 
       {/* Workshop Booking Dialog */}
       <Dialog open={workshopDialogOpen} onOpenChange={setWorkshopDialogOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Book Workshop Tickets</DialogTitle>
             <DialogDescription>

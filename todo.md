@@ -640,3 +640,9 @@ Orders fixed:
 ## Cancellation Policy Update (Jan 16)
 
 - [x] Update cancellation policy from 48 hours to 72 hours before workshop start
+
+
+## Workshop UI Fixes (Jan 16)
+
+- [x] Update workshop banner to show multiple dates (Feb 7, 14, 21, 28) instead of single date
+- [x] Fix booking popup dialog to be scrollable so users can see full content

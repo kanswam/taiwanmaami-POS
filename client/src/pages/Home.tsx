@@ -174,7 +174,7 @@ export default function Home() {
                     <div className="flex flex-wrap items-center gap-3 text-sm opacity-90 mt-1">
                       <span className="flex items-center gap-1">
                         <Calendar className="w-4 h-4" />
-                        {new Date(upcomingWorkshops[0].workshopDate).toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}
+                        Every Saturday in Feb (7, 14, 21, 28)
                       </span>
                       <span className="flex items-center gap-1">
                         <Clock className="w-4 h-4" />
@@ -182,7 +182,7 @@ export default function Home() {
                       </span>
                       <span className="flex items-center gap-1">
                         <Users className="w-4 h-4" />
-                        {(upcomingWorkshops[0].maxCapacity || upcomingWorkshops[0].totalCapacity || 0) - (upcomingWorkshops[0].bookedCount || upcomingWorkshops[0].ticketsSold || 0)} spots left
+                        Limited spots per session
                       </span>
                     </div>
                   </div>
