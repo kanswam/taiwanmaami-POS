@@ -1,0 +1,40 @@
+{
+  "query": "SELECT * FROM receipt_queue WHERE orderNumber = '00090';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT * FROM receipt_queue WHERE orderNumber = '00090';",
+  "rows": [
+    {
+      "id": "330004",
+      "orderId": "1080003",
+      "outletId": "1",
+      "orderNumber": "00090",
+      "receiptData": "{\"cgst\": 2125, \"createdAt\": \"2026-01-16T13:33:24.791Z\", \"customerName\": \"Guest\", \"customerPhone\": \"\", \"discount\": 0, \"items\": [{\"addons\": [], \"name\": \"Biang Biang Noodles\", \"price\": 41500, \"quantity\": 1}, {\"addons\": [], \"name\": \"Spicy Margherita with Basil Pillow Brioche\", \"price\": 43500, \"quantity\": 1}], \"orderNumber\": \"00090\", \"orderType\": \"DELIVERY\", \"sgst\": 2125, \"subtotal\": 85000, \"total\": 99250}",
+      "isPrinted": "1",
+      "createdAt": "2026-01-16 13:33:24",
+      "printedAt": "2026-01-16 13:33:37"
+    },
+    {
+      "id": "330005",
+      "orderId": "1080003",
+      "outletId": "1",
+      "orderNumber": "00090",
+      "receiptData": "{\"cgst\": 2125, \"createdAt\": \"2026-01-16T14:06:41.586Z\", \"customerName\": \"Guest\", \"customerPhone\": \"\", \"deliveryCharge\": 10000, \"discount\": 0, \"items\": [{\"addons\": [], \"name\": \"Biang Biang Noodles\", \"price\": 41500, \"quantity\": 1, \"size\": null}, {\"addons\": [], \"name\": \"Spicy Margherita with Basil Pillow Brioche\", \"price\": 43500, \"quantity\": 1, \"size\": null}], \"orderNumber\": \"00090\", \"orderType\": \"DELIVERY\", \"paymentMethod\": \"cash\", \"sgst\": 2125, \"subtotal\": 85000, \"tableNumber\": \"\", \"total\": 99250}",
+      "isPrinted": "1",
+      "createdAt": "2026-01-16 14:06:41",
+      "printedAt": "2026-01-16 14:06:46"
+    },
+    {
+      "id": "330006",
+      "orderId": "1080003",
+      "outletId": "1",
+      "orderNumber": "00090",
+      "receiptData": "{\"cgst\": 2125, \"createdAt\": \"2026-01-16T14:15:10.610Z\", \"customerName\": \"Guest\", \"customerPhone\": \"\", \"deliveryCharge\": 10000, \"discount\": 0, \"items\": [{\"addons\": [], \"name\": \"Biang Biang Noodles\", \"price\": 41500, \"quantity\": 1, \"size\": null}, {\"addons\": [], \"name\": \"Spicy Margherita with Basil Pillow Brioche\", \"price\": 43500, \"quantity\": 1, \"size\": null}], \"orderNumber\": \"00090\", \"orderType\": \"DELIVERY\", \"paymentMethod\": \"cash\", \"sgst\": 2125, \"subtotal\": 85000, \"tableNumber\": \"\", \"total\": 99250}",
+      "isPrinted": "0",
+      "createdAt": "2026-01-16 14:15:10",
+      "printedAt": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\torderId\toutletId\torderNumber\treceiptData\tisPrinted\tcreatedAt\tprintedAt\n330004\t1080003\t1\t00090\t{\"cgst\": 2125, \"createdAt\": \"2026-01-16T13:33:24.791Z\", \"customerName\": \"Guest\", \"customerPhone\": \"\", \"discount\": 0, \"items\": [{\"addons\": [], \"name\": \"Biang Biang Noodles\", \"price\": 41500, \"quantity\": 1}, {\"addons\": [], \"name\": \"Spicy Margherita with Basil Pillow Brioche\", \"price\": 43500, \"quantity\": 1}], \"orderNumber\": \"00090\", \"orderType\": \"DELIVERY\", \"sgst\": 2125, \"subtotal\": 85000, \"total\": 99250}\t1\t2026-01-16 13:33:24\t2026-01-16 13:33:37\n330005\t1080003\t1\t00090\t{\"cgst\": 2125, \"createdAt\": \"2026-01-16T14:06:41.586Z\", \"customerName\": \"Guest\", \"customerPhone\": \"\", \"deliveryCharge\": 10000, \"discount\": 0, \"items\": [{\"addons\": [], \"name\": \"Biang Biang Noodles\", \"price\": 41500, \"quantity\": 1, \"size\": null}, {\"addons\": [], \"name\": \"Spicy Margherita with Basil Pillow Brioche\", \"price\": 43500, \"quantity\": 1, \"size\": null}], \"orderNumber\": \"00090\", \"orderType\": \"DELIVERY\", \"paymentMethod\": \"cash\", \"sgst\": 2125, \"subtotal\": 85000, \"tableNumber\": \"\", \"total\": 99250}\t1\t2026-01-16 14:06:41\t2026-01-16 14:06:46\n330006\t1080003\t1\t00090\t{\"cgst\": 2125, \"createdAt\": \"2026-01-16T14:15:10.610Z\", \"customerName\": \"Guest\", \"customerPhone\": \"\", \"deliveryCharge\": 10000, \"discount\": 0, \"items\": [{\"addons\": [], \"name\": \"Biang Biang Noodles\", \"price\": 41500, \"quantity\": 1, \"size\": null}, {\"addons\": [], \"name\": \"Spicy Margherita with Basil Pillow Brioche\", \"price\": 43500, \"quantity\": 1, \"size\": null}], \"orderNumber\": \"00090\", \"orderType\": \"DELIVERY\", \"paymentMethod\": \"cash\", \"sgst\": 2125, \"subtotal\": 85000, \"tableNumber\": \"\", \"total\": 99250}\t0\t2026-01-16 14:15:10\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 1518
+}

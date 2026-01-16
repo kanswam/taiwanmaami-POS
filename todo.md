@@ -646,3 +646,14 @@ Orders fixed:
 
 - [x] Update workshop banner to show multiple dates (Feb 7, 14, 21, 28) instead of single date
 - [x] Fix booking popup dialog to be scrollable so users can see full content
+
+
+## CRITICAL Bug Fixes (Jan 16 - Evening)
+
+- [x] Fix Razorpay payment method not being recorded (Order 90 shows "Not Recorded")
+  - Root cause: orders.verifyPayment was not updating paymentMethod, razorpayOrderId, razorpayPaymentId on orders table
+  - Fixed: Added these fields to the update statement
+- [ ] Fix receipt to show delivery charge as line item (currently missing from printed receipt)
+  - Note: Backend sends deliveryCharge correctly in receipt data
+  - Issue is in the PRINTER SOFTWARE (desktop app) - not rendering the deliveryCharge field
+  - Printer software needs to be updated to display deliveryCharge line item

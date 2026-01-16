@@ -1113,9 +1113,15 @@ export const appRouter = router({
           razorpaySignature: input.razorpaySignature,
         });
         
-        // Update order status to confirmed
+        // Update order status to confirmed and record payment method
         await dbInstance!.update(orders)
-          .set({ orderStatus: 'confirmed', paymentStatus: 'completed' })
+          .set({ 
+            orderStatus: 'confirmed', 
+            paymentStatus: 'completed',
+            paymentMethod: 'razorpay',
+            razorpayOrderId: input.razorpayOrderId,
+            razorpayPaymentId: input.razorpayPaymentId,
+          })
           .where(eq(orders.id, input.orderId));
         
         // Create KOT for kitchen printing
