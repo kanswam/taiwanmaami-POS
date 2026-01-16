@@ -3908,6 +3908,31 @@ function CustomersTab() {
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [newCustomer, setNewCustomer] = useState({ name: '', phone: '', email: '' });
   const [editingCustomer, setEditingCustomer] = useState<{ id: number; name: string; phone: string; email: string; storeCredit: number; notes: string } | null>(null);
+  const [sortColumn, setSortColumn] = useState<'name' | 'totalOrders' | 'totalSpent' | 'stampCount' | 'lastOrderDate'>('totalSpent');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
+
+  const handleSort = (column: typeof sortColumn) => {
+    if (sortColumn === column) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortColumn(column);
+      setSortDirection('desc');
+    }
+  };
+
+  const SortableHeader = ({ column, children, align = 'left' }: { column: typeof sortColumn; children: React.ReactNode; align?: 'left' | 'right' | 'center' }) => (
+    <th 
+      className={`text-${align} p-3 text-sm font-medium cursor-pointer hover:bg-secondary/80 select-none`}
+      onClick={() => handleSort(column)}
+    >
+      <div className={`flex items-center gap-1 ${align === 'right' ? 'justify-end' : align === 'center' ? 'justify-center' : ''}`}>
+        {children}
+        {sortColumn === column && (
+          <span className="text-primary">{sortDirection === 'asc' ? '↑' : '↓'}</span>
+        )}
+      </div>
+    </th>
+  );
 
   const createCustomer = trpc.customers.create.useMutation({
     onSuccess: () => {
@@ -3929,14 +3954,43 @@ function CustomersTab() {
     onError: (err) => toast.error(err.message),
   });
 
-  const filteredCustomers = customersData?.customers?.filter(customer => {
+  const filteredCustomers = (customersData?.customers?.filter(customer => {
     const matchesSearch = !searchTerm || 
       customer.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       customer.phone?.includes(searchTerm) ||
       customer.email?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesType = typeFilter === 'all' || customer.type === typeFilter;
     return matchesSearch && matchesType;
-  }) || [];
+  }) || []).sort((a, b) => {
+    let aVal: any, bVal: any;
+    switch (sortColumn) {
+      case 'name':
+        aVal = (a.name || '').toLowerCase();
+        bVal = (b.name || '').toLowerCase();
+        break;
+      case 'totalOrders':
+        aVal = a.totalOrders || 0;
+        bVal = b.totalOrders || 0;
+        break;
+      case 'totalSpent':
+        aVal = a.totalSpent || 0;
+        bVal = b.totalSpent || 0;
+        break;
+      case 'stampCount':
+        aVal = a.stampCount || 0;
+        bVal = b.stampCount || 0;
+        break;
+      case 'lastOrderDate':
+        aVal = a.lastOrderDate ? new Date(a.lastOrderDate).getTime() : 0;
+        bVal = b.lastOrderDate ? new Date(b.lastOrderDate).getTime() : 0;
+        break;
+      default:
+        return 0;
+    }
+    if (aVal < bVal) return sortDirection === 'asc' ? -1 : 1;
+    if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1;
+    return 0;
+  });
 
   return (
     <div className="space-y-4">
@@ -3975,15 +4029,15 @@ function CustomersTab() {
           <table className="w-full">
             <thead className="bg-secondary">
               <tr>
-                <th className="text-left p-3 text-sm font-medium">Name</th>
+                <SortableHeader column="name" align="left">Name</SortableHeader>
                 <th className="text-left p-3 text-sm font-medium">Phone</th>
                 <th className="text-left p-3 text-sm font-medium">Email</th>
                 <th className="text-center p-3 text-sm font-medium">Type</th>
-                <th className="text-right p-3 text-sm font-medium">Orders</th>
-                <th className="text-right p-3 text-sm font-medium">Total Spent</th>
+                <SortableHeader column="totalOrders" align="right">Orders</SortableHeader>
+                <SortableHeader column="totalSpent" align="right">Total Spent</SortableHeader>
                 <th className="text-right p-3 text-sm font-medium">Store Credit</th>
-                <th className="text-center p-3 text-sm font-medium">Stamps</th>
-                <th className="text-left p-3 text-sm font-medium">Last Order</th>
+                <SortableHeader column="stampCount" align="center">Stamps</SortableHeader>
+                <SortableHeader column="lastOrderDate" align="left">Last Order</SortableHeader>
                 <th className="text-center p-3 text-sm font-medium">Actions</th>
               </tr>
             </thead>

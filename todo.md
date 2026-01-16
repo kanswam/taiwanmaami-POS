@@ -514,3 +514,21 @@ Orders fixed:
   - Updated logged-in user order creation (line 212)
   - Updated guest order creation (line 2850)
   - Changed from ₹50 to ₹100 (10000 paise)
+
+## Features & Fixes (Jan 16)
+
+- [ ] Fix Order 88 payment method to show "Razorpay" instead of "Not Recorded"
+- [ ] Add sortable columns to Customer Database (Name, Orders, Total Spent, Stamps, Last Order)
+- [ ] Implement free delivery for orders above ₹2500
+
+## Features & Fixes (Jan 16 - Afternoon)
+
+- [x] Fix Order 88 payment method to show Razorpay (was showing "Not Recorded")
+  - Added 'razorpay' to paymentMethod enum in database
+  - Updated Order 88 paymentMethod to 'razorpay'
+- [x] Add sortable columns to Customer Database
+  - Can now sort by: Name, Orders, Total Spent, Stamps, Last Order
+  - Click column header to sort, click again to reverse order
+- [x] Implement free delivery for orders above ₹2500
+  - Both logged-in and guest orders now get free delivery when subtotal ≥ ₹2500
+  - Orders below ₹2500 still have ₹100 delivery charge

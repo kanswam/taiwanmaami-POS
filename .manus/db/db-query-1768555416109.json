@@ -1,0 +1,18 @@
+{
+  "query": "SHOW COLUMNS FROM orders WHERE Field = 'paymentMethod';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SHOW COLUMNS FROM orders WHERE Field = 'paymentMethod';",
+  "rows": [
+    {
+      "Field": "paymentMethod",
+      "Type": "enum('cash','upi','card','swiggy_dineout','zomato_dineout','other')",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    }
+  ],
+  "messages": [],
+  "stdout": "Field\tType\tNull\tKey\tDefault\tExtra\npaymentMethod\tenum('cash','upi','card','swiggy_dineout','zomato_dineout','other')\tYES\t\tNULL\t\n",
+  "stderr": "",
+  "execution_time_ms": 1540
+}
