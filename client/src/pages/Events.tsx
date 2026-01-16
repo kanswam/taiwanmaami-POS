@@ -784,14 +784,27 @@ export default function Events() {
 
                 return (
                   <Card key={workshop.id} className={`overflow-hidden shadow-xl max-w-4xl mx-auto ${isSoldOut ? 'opacity-75' : ''}`}>
-                    {/* Workshop Image */}
+                    {/* Workshop Image or Video */}
                     {workshop.imageUrl && (
                       <div className="relative w-full aspect-[3/4] md:aspect-[16/9] max-h-[500px] overflow-hidden">
-                        <img 
-                          src={workshop.imageUrl} 
-                          alt={workshop.title}
-                          className="w-full h-full object-cover object-center"
-                        />
+                        {workshop.imageUrl.includes('.mp4') || workshop.imageUrl.includes('/video/') ? (
+                          <video 
+                            src={workshop.imageUrl}
+                            autoPlay
+                            loop
+                            muted
+                            playsInline
+                            preload="metadata"
+                            className="w-full h-full object-cover object-center"
+                          />
+                        ) : (
+                          <img 
+                            src={workshop.imageUrl} 
+                            alt={workshop.title}
+                            loading="lazy"
+                            className="w-full h-full object-cover object-center"
+                          />
+                        )}
                         {isSoldOut && (
                           <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
                             <Badge className="bg-red-600 text-2xl py-4 px-10">SOLD OUT</Badge>

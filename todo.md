@@ -575,3 +575,13 @@ Orders fixed:
   - Shows "Delivery: ₹100" for orders under ₹2500
   - Shows "Delivery: FREE" for orders ₹2500+
   - Note at bottom: "Free delivery on orders above ₹2500. ₹100 delivery charge applies."
+
+
+## Cleanup & Workshop Video (Jan 16)
+
+- [x] Delete test data from production database (no test data found)
+- [x] Update workshop to use video URL instead of image
+  - Updated database with video URL: https://res.cloudinary.com/drpu1dbqk/video/upload/v1768559062/Taiwan_Maami_workshop_wujpzy.mp4
+- [x] Implement lazy loading for workshop video
+  - Video auto-plays, loops, muted with preload="metadata" for lazy loading
+  - Falls back to image display for non-video URLs

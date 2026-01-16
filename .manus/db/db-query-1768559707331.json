@@ -1,0 +1,9 @@
+{
+  "query": "SELECT id, orderNumber, customerName, totalAmount, orderStatus FROM orders WHERE customerName LIKE '%test%' OR customerName LIKE '%Test%' ORDER BY id DESC LIMIT 20;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT id, orderNumber, customerName, totalAmount, orderStatus FROM orders WHERE customerName LIKE '%test%' OR customerName LIKE '%Test%' ORDER BY id DESC LIMIT 20;",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 1630
+}
