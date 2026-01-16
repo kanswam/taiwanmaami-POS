@@ -617,3 +617,14 @@ Orders fixed:
 - [x] Add date selection dropdown to Events page booking dialog
 - [x] Update Admin panel to show bookings grouped by date
 - [x] Test complete booking flow - verified working
+
+
+## Workshop Booking Enhancements (Jan 16) - COMPLETED
+- [x] Create workshop_waitlist table in database
+- [x] Add joinWaitlist backend route
+- [x] Add getWaitlistPosition backend route
+- [x] Create waitlist UI for sold-out dates
+- [x] Add "Add to Calendar" feature (Google Calendar, Apple Calendar, ICS download)
+- [x] Add T&Cs link to booking dialog
+- [x] Add refund policy notice: "Full refund provided for cancellation 48 hours before start of workshop only"
+- [x] Update booking success dialog with calendar options

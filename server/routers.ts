@@ -11,7 +11,7 @@ import { categories, subcategories, products, addons, orders, orderItems as orde
 import { eq, and, desc, asc, sql, or, gte } from "drizzle-orm";
 import { generateOrderNumber, calculateGst } from "@shared/types";
 // POS functionality removed - Employee Master import removed
-import { outletProducts, loyaltyRewards, stampTransactions, guestOrders, reviews, kotQueue, receiptQueue, productAuditLog, categoryAuditLog, complaints, eventInquiries, eventOrders, eventOrderItems, workshops, workshopBookings, workshopDates } from "../drizzle/schema";
+import { outletProducts, loyaltyRewards, stampTransactions, guestOrders, reviews, kotQueue, receiptQueue, productAuditLog, categoryAuditLog, complaints, eventInquiries, eventOrders, eventOrderItems, workshops, workshopBookings, workshopDates, workshopWaitlist } from "../drizzle/schema";
 import { ENV } from './_core/env';
 import { notifyOwner } from './_core/notification';
 
@@ -5223,6 +5223,124 @@ export const appRouter = router({
           availableSeats: d.maxCapacity - d.bookedCount,
           isSoldOut: d.bookedCount >= d.maxCapacity,
         }));
+      }),
+
+    // Join waitlist for sold-out workshop date (public)
+    joinWaitlist: publicProcedure
+      .input(z.object({
+        workshopId: z.number(),
+        workshopDateId: z.number(),
+        customerName: z.string().min(1),
+        customerEmail: z.string().email(),
+        customerPhone: z.string().min(10),
+        ticketCount: z.number().min(1).max(5),
+      }))
+      .mutation(async ({ input }) => {
+        const database = await getDb();
+        if (!database) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Database not available' });
+        
+        // Verify the date is actually sold out
+        const dateInfo = await database.select().from(workshopDates)
+          .where(eq(workshopDates.id, input.workshopDateId))
+          .limit(1);
+        
+        if (!dateInfo.length) {
+          throw new TRPCError({ code: 'NOT_FOUND', message: 'Workshop date not found' });
+        }
+        
+        if (dateInfo[0].bookedCount < dateInfo[0].maxCapacity) {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: 'This date still has available spots. Please book directly.' });
+        }
+        
+        // Check if customer is already on waitlist for this date
+        const existingEntry = await database.select().from(workshopWaitlist)
+          .where(and(
+            eq(workshopWaitlist.workshopDateId, input.workshopDateId),
+            eq(workshopWaitlist.customerEmail, input.customerEmail),
+            eq(workshopWaitlist.status, 'waiting')
+          ))
+          .limit(1);
+        
+        if (existingEntry.length) {
+          throw new TRPCError({ code: 'CONFLICT', message: 'You are already on the waitlist for this date.' });
+        }
+        
+        // Add to waitlist
+        const result = await database.insert(workshopWaitlist).values({
+          workshopId: input.workshopId,
+          workshopDateId: input.workshopDateId,
+          customerName: input.customerName,
+          customerEmail: input.customerEmail,
+          customerPhone: input.customerPhone,
+          ticketCount: input.ticketCount,
+          status: 'waiting',
+        });
+        
+        // Get position in waitlist
+        const position = await database.select({ count: sql<number>`count(*)` })
+          .from(workshopWaitlist)
+          .where(and(
+            eq(workshopWaitlist.workshopDateId, input.workshopDateId),
+            eq(workshopWaitlist.status, 'waiting')
+          ));
+        
+        return {
+          success: true,
+          position: position[0]?.count || 1,
+          message: `You've been added to the waitlist. Your position is #${position[0]?.count || 1}.`
+        };
+      }),
+
+    // Get waitlist position for a customer (public)
+    getWaitlistPosition: publicProcedure
+      .input(z.object({
+        workshopDateId: z.number(),
+        customerEmail: z.string().email(),
+      }))
+      .query(async ({ input }) => {
+        const database = await getDb();
+        if (!database) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Database not available' });
+        
+        const entry = await database.select().from(workshopWaitlist)
+          .where(and(
+            eq(workshopWaitlist.workshopDateId, input.workshopDateId),
+            eq(workshopWaitlist.customerEmail, input.customerEmail),
+            eq(workshopWaitlist.status, 'waiting')
+          ))
+          .limit(1);
+        
+        if (!entry.length) {
+          return { onWaitlist: false, position: null };
+        }
+        
+        // Count entries before this one
+        const position = await database.select({ count: sql<number>`count(*)` })
+          .from(workshopWaitlist)
+          .where(and(
+            eq(workshopWaitlist.workshopDateId, input.workshopDateId),
+            eq(workshopWaitlist.status, 'waiting'),
+            sql`${workshopWaitlist.createdAt} <= ${entry[0].createdAt}`
+          ));
+        
+        return {
+          onWaitlist: true,
+          position: position[0]?.count || 1,
+          ticketCount: entry[0].ticketCount,
+        };
+      }),
+
+    // Get waitlist entries for admin (admin only)
+    getWaitlistEntries: adminProcedure
+      .input(z.object({ workshopDateId: z.number() }))
+      .query(async ({ input }) => {
+        const database = await getDb();
+        if (!database) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Database not available' });
+        
+        const entries = await database.select().from(workshopWaitlist)
+          .where(eq(workshopWaitlist.workshopDateId, input.workshopDateId))
+          .orderBy(asc(workshopWaitlist.createdAt));
+        
+        return entries;
       }),
 
     // Book workshop tickets (public)

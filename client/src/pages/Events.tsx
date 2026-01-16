@@ -18,7 +18,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
-import { Calendar, Clock, MapPin, Users, Ticket, ChefHat, PartyPopper, Phone, Mail, Instagram, Sparkles, CheckCircle2, ArrowRight, Heart, Building2, GraduationCap, UtensilsCrossed, ChevronLeft, ChevronRight, Star } from "lucide-react";
+import { Calendar, Clock, MapPin, Users, Ticket, ChefHat, PartyPopper, Phone, Mail, Instagram, Sparkles, CheckCircle2, ArrowRight, Heart, Building2, GraduationCap, UtensilsCrossed, ChevronLeft, ChevronRight, Star, Download, ExternalLink } from "lucide-react";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 
@@ -307,6 +307,26 @@ export default function Events() {
     onError: (error) => {
       toast.error(error.message || "Failed to book tickets. Please try again.");
       setIsBookingInProgress(false);
+    },
+  });
+
+  // Waitlist state and mutation
+  const [waitlistDialogOpen, setWaitlistDialogOpen] = useState(false);
+  const [waitlistDateId, setWaitlistDateId] = useState<number | null>(null);
+  const [waitlistSuccess, setWaitlistSuccess] = useState<{ position: number; dateName: string } | null>(null);
+  
+  const joinWaitlist = trpc.workshops.joinWaitlist.useMutation({
+    onSuccess: (data) => {
+      const selectedDate = workshopDates?.find(d => d.id === waitlistDateId);
+      const dateName = selectedDate ? new Date(selectedDate.sessionDate).toLocaleDateString('en-IN', { 
+        weekday: 'short', day: 'numeric', month: 'short' 
+      }) : '';
+      setWaitlistSuccess({ position: data.position, dateName });
+      setWaitlistDialogOpen(false);
+      toast.success(data.message);
+    },
+    onError: (error) => {
+      toast.error(error.message || "Failed to join waitlist. Please try again.");
     },
   });
 
@@ -973,29 +993,54 @@ export default function Events() {
                 {datesLoading ? (
                   <div className="text-sm text-muted-foreground">Loading available dates...</div>
                 ) : (
-                  <Select
-                    value={bookingForm.selectedDateId?.toString() || ""}
-                    onValueChange={(value) => setBookingForm({ ...bookingForm, selectedDateId: parseInt(value) })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Choose a date" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {workshopDates.map((date) => (
-                        <SelectItem 
-                          key={date.id} 
-                          value={date.id.toString()}
-                          disabled={date.isSoldOut}
-                        >
-                          {new Date(date.sessionDate).toLocaleDateString('en-IN', { 
-                            weekday: 'short',
-                            day: 'numeric',
-                            month: 'short'
-                          })} ({date.startTime} - {date.endTime}) - {date.isSoldOut ? 'SOLD OUT' : `${date.availableSeats} spots left`}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <>
+                    <Select
+                      value={bookingForm.selectedDateId?.toString() || ""}
+                      onValueChange={(value) => setBookingForm({ ...bookingForm, selectedDateId: parseInt(value) })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Choose a date" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {workshopDates.map((date) => (
+                          <SelectItem 
+                            key={date.id} 
+                            value={date.id.toString()}
+                            disabled={date.isSoldOut}
+                          >
+                            {new Date(date.sessionDate).toLocaleDateString('en-IN', { 
+                              weekday: 'short',
+                              day: 'numeric',
+                              month: 'short'
+                            })} ({date.startTime} - {date.endTime}) - {date.isSoldOut ? 'SOLD OUT' : `${date.availableSeats} spots left`}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    
+                    {/* Show waitlist buttons for sold-out dates */}
+                    {workshopDates.some(d => d.isSoldOut) && (
+                      <div className="mt-3 space-y-2">
+                        <p className="text-sm text-muted-foreground">Sold out dates? Join the waitlist:</p>
+                        <div className="flex flex-wrap gap-2">
+                          {workshopDates.filter(d => d.isSoldOut).map((date) => (
+                            <Button
+                              key={date.id}
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                setWaitlistDateId(date.id);
+                                setWaitlistDialogOpen(true);
+                              }}
+                            >
+                              Waitlist: {new Date(date.sessionDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
+                            </Button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
             )}
@@ -1067,6 +1112,22 @@ export default function Events() {
               </div>
             )}
 
+            {/* Refund Policy Notice */}
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+              <p className="text-sm text-amber-800 font-medium">Cancellation Policy</p>
+              <p className="text-xs text-amber-700 mt-1">
+                Full refund provided for cancellation 48 hours before start of workshop only.
+              </p>
+            </div>
+
+            {/* T&Cs Link */}
+            <p className="text-xs text-muted-foreground text-center">
+              By booking, you agree to our{' '}
+              <a href="/terms" target="_blank" className="text-primary underline hover:no-underline">
+                Terms & Conditions
+              </a>
+            </p>
+
             <Button type="submit" className="w-full" disabled={isBookingInProgress || bookWorkshop.isPending}>
               {isBookingInProgress ? "Processing Payment..." : bookWorkshop.isPending ? "Creating Booking..." : "Pay & Confirm Booking"}
             </Button>
@@ -1126,8 +1187,189 @@ export default function Events() {
               <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
                 <p className="text-sm text-amber-800">A confirmation email with your invoice has been sent to <strong>{bookingSuccess.customerEmail}</strong></p>
               </div>
+
+              {/* Add to Calendar Section */}
+              <div className="space-y-2">
+                <p className="text-sm font-medium">Add to your calendar:</p>
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      // Generate Google Calendar URL
+                      const startDate = new Date(bookingSuccess.workshopDate);
+                      const [startHour, startMin] = (bookingSuccess.workshopTime?.split(' - ')[0] || '11:00').split(':').map(Number);
+                      startDate.setHours(startHour, startMin, 0, 0);
+                      const endDate = new Date(startDate);
+                      endDate.setHours(endDate.getHours() + 3); // 3 hour workshop
+                      
+                      const formatDate = (d: Date) => d.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+                      const gcalUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(bookingSuccess.workshopTitle)}&dates=${formatDate(startDate)}/${formatDate(endDate)}&details=${encodeURIComponent(`Booking: ${bookingSuccess.bookingNumber}\nTickets: ${bookingSuccess.ticketCount}\n\nPlease arrive 10 minutes early.`)}&location=${encodeURIComponent(bookingSuccess.workshopVenue)}`;
+                      window.open(gcalUrl, '_blank');
+                    }}
+                  >
+                    <ExternalLink className="h-4 w-4 mr-1" />
+                    Google Calendar
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      // Generate ICS file for Apple Calendar / Outlook
+                      const startDate = new Date(bookingSuccess.workshopDate);
+                      const [startHour, startMin] = (bookingSuccess.workshopTime?.split(' - ')[0] || '11:00').split(':').map(Number);
+                      startDate.setHours(startHour, startMin, 0, 0);
+                      const endDate = new Date(startDate);
+                      endDate.setHours(endDate.getHours() + 3);
+                      
+                      const formatICS = (d: Date) => d.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+                      const icsContent = [
+                        'BEGIN:VCALENDAR',
+                        'VERSION:2.0',
+                        'PRODID:-//Taiwan Maami//Workshop Booking//EN',
+                        'BEGIN:VEVENT',
+                        `DTSTART:${formatICS(startDate)}`,
+                        `DTEND:${formatICS(endDate)}`,
+                        `SUMMARY:${bookingSuccess.workshopTitle}`,
+                        `DESCRIPTION:Booking: ${bookingSuccess.bookingNumber}\\nTickets: ${bookingSuccess.ticketCount}\\n\\nPlease arrive 10 minutes early.`,
+                        `LOCATION:${bookingSuccess.workshopVenue}`,
+                        'END:VEVENT',
+                        'END:VCALENDAR'
+                      ].join('\r\n');
+                      
+                      const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
+                      const url = URL.createObjectURL(blob);
+                      const a = document.createElement('a');
+                      a.href = url;
+                      a.download = `workshop-${bookingSuccess.bookingNumber}.ics`;
+                      a.click();
+                      URL.revokeObjectURL(url);
+                    }}
+                  >
+                    <Download className="h-4 w-4 mr-1" />
+                    Download .ics
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground">.ics file works with Apple Calendar, Outlook, and most calendar apps</p>
+              </div>
               
               <Button className="w-full" onClick={() => setBookingSuccess(null)}>
+                Close
+              </Button>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Waitlist Dialog */}
+      <Dialog open={waitlistDialogOpen} onOpenChange={setWaitlistDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Join Waitlist</DialogTitle>
+            <DialogDescription>
+              {waitlistDateId && workshopDates?.find(d => d.id === waitlistDateId) && (
+                <span>
+                  Get notified if a spot opens up for{' '}
+                  <strong>
+                    {new Date(workshopDates.find(d => d.id === waitlistDateId)!.sessionDate).toLocaleDateString('en-IN', {
+                      weekday: 'long',
+                      day: 'numeric',
+                      month: 'long'
+                    })}
+                  </strong>
+                </span>
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (!selectedWorkshop || !waitlistDateId) return;
+              joinWaitlist.mutate({
+                workshopId: selectedWorkshop,
+                workshopDateId: waitlistDateId,
+                customerName: bookingForm.customerName,
+                customerEmail: bookingForm.customerEmail,
+                customerPhone: bookingForm.customerPhone,
+                ticketCount: bookingForm.ticketCount,
+              });
+            }}
+            className="space-y-4"
+          >
+            <div className="space-y-2">
+              <Label htmlFor="waitlistName">Your Name *</Label>
+              <Input
+                id="waitlistName"
+                value={bookingForm.customerName}
+                onChange={(e) => setBookingForm({ ...bookingForm, customerName: e.target.value })}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="waitlistEmail">Email *</Label>
+              <Input
+                id="waitlistEmail"
+                type="email"
+                value={bookingForm.customerEmail}
+                onChange={(e) => setBookingForm({ ...bookingForm, customerEmail: e.target.value })}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="waitlistPhone">Phone Number *</Label>
+              <Input
+                id="waitlistPhone"
+                value={bookingForm.customerPhone}
+                onChange={(e) => setBookingForm({ ...bookingForm, customerPhone: e.target.value })}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="waitlistTickets">Number of Tickets</Label>
+              <Select
+                value={bookingForm.ticketCount.toString()}
+                onValueChange={(value) => setBookingForm({ ...bookingForm, ticketCount: parseInt(value) })}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {[1, 2, 3, 4, 5].map((n) => (
+                    <SelectItem key={n} value={n.toString()}>{n} {n === 1 ? 'ticket' : 'tickets'}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <Button type="submit" className="w-full" disabled={joinWaitlist.isPending}>
+              {joinWaitlist.isPending ? 'Joining...' : 'Join Waitlist'}
+            </Button>
+            <p className="text-xs text-muted-foreground text-center">
+              We'll contact you if a spot becomes available.
+            </p>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Waitlist Success Dialog */}
+      <Dialog open={!!waitlistSuccess} onOpenChange={() => setWaitlistSuccess(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-blue-600">
+              <CheckCircle2 className="h-6 w-6" />
+              Added to Waitlist!
+            </DialogTitle>
+          </DialogHeader>
+          {waitlistSuccess && (
+            <div className="space-y-4 mt-4">
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <p className="text-sm text-blue-800">
+                  You're <strong>#{waitlistSuccess.position}</strong> on the waitlist for <strong>{waitlistSuccess.dateName}</strong>.
+                </p>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                We'll contact you via email or phone if a spot becomes available. No payment is required until you confirm your booking.
+              </p>
+              <Button className="w-full" onClick={() => setWaitlistSuccess(null)}>
                 Close
               </Button>
             </div>

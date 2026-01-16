@@ -1,0 +1,9 @@
+{
+  "query": "CREATE TABLE IF NOT EXISTS workshop_waitlist (\n  id INT AUTO_INCREMENT PRIMARY KEY,\n  workshopId INT NOT NULL,\n  workshopDateId INT NOT NULL,\n  customerName VARCHAR(200) NOT NULL,\n  customerEmail VARCHAR(320) NOT NULL,\n  customerPhone VARCHAR(20) NOT NULL,\n  ticketCount INT DEFAULT 1 NOT NULL,\n  status ENUM('waiting', 'notified', 'booked', 'expired') DEFAULT 'waiting' NOT NULL,\n  notifiedAt TIMESTAMP NULL,\n  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL\n);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute CREATE TABLE IF NOT EXISTS workshop_waitlist (\n  id INT AUTO_INCREMENT PRIMARY KEY,\n  workshopId INT NOT NULL,\n  workshopDateId INT NOT NULL,\n  customerName VARCHAR(200) NOT NULL,\n  customerEmail VARCHAR(320) NOT NULL,\n  customerPhone VARCHAR(20) NOT NULL,\n  ticketCount INT DEFAULT 1 NOT NULL,\n  status ENUM('waiting', 'notified', 'booked', 'expired') DEFAULT 'waiting' NOT NULL,\n  notifiedAt TIMESTAMP NULL,\n  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL\n);",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 1684
+}

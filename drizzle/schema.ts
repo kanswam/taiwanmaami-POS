@@ -816,3 +816,21 @@ export const workshopBookings = mysqlTable("workshop_bookings", {
 
 export type WorkshopBooking = typeof workshopBookings.$inferSelect;
 export type InsertWorkshopBooking = typeof workshopBookings.$inferInsert;
+
+
+// Workshop Waitlist - For sold-out dates
+export const workshopWaitlist = mysqlTable("workshop_waitlist", {
+  id: int("id").autoincrement().primaryKey(),
+  workshopId: int("workshopId").notNull(),
+  workshopDateId: int("workshopDateId").notNull(),
+  customerName: varchar("customerName", { length: 200 }).notNull(),
+  customerEmail: varchar("customerEmail", { length: 320 }).notNull(),
+  customerPhone: varchar("customerPhone", { length: 20 }).notNull(),
+  ticketCount: int("ticketCount").default(1).notNull(),
+  status: mysqlEnum("status", ["waiting", "notified", "booked", "expired"]).default("waiting").notNull(),
+  notifiedAt: timestamp("notifiedAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type WorkshopWaitlist = typeof workshopWaitlist.$inferSelect;
+export type InsertWorkshopWaitlist = typeof workshopWaitlist.$inferInsert;
