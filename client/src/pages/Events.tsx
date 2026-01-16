@@ -784,10 +784,26 @@ export default function Events() {
 
                 return (
                   <Card key={workshop.id} className={`overflow-hidden shadow-xl max-w-4xl mx-auto ${isSoldOut ? 'opacity-75' : ''}`}>
+                    {/* Workshop Image */}
+                    {workshop.imageUrl && (
+                      <div className="relative w-full aspect-[3/4] md:aspect-[16/9] max-h-[500px] overflow-hidden">
+                        <img 
+                          src={workshop.imageUrl} 
+                          alt={workshop.title}
+                          className="w-full h-full object-cover object-center"
+                        />
+                        {isSoldOut && (
+                          <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                            <Badge className="bg-red-600 text-2xl py-4 px-10">SOLD OUT</Badge>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    
                     {/* Centered Content Layout */}
                     <div className="p-8 md:p-12">
-                      {/* Sold Out Overlay */}
-                      {isSoldOut && (
+                      {/* Sold Out Overlay - only show if no image */}
+                      {isSoldOut && !workshop.imageUrl && (
                         <div className="text-center mb-6">
                           <Badge className="bg-red-600 text-xl py-3 px-8">SOLD OUT</Badge>
                         </div>

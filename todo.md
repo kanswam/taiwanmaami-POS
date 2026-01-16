@@ -539,3 +539,11 @@ Orders fixed:
   - Shows "✅ Paid (Razorpay)" green badge for Razorpay orders
   - Shows "💰 Pay at Counter" amber badge for in-store pending payment orders
   - Staff can immediately see which orders are pre-paid vs need payment collection
+
+
+## Workshop Image Display Fix (Jan 16)
+
+- [x] Fixed workshop image not showing on Events page
+  - The imageUrl was stored correctly in database but not rendered in the card
+  - Added image display at top of workshop card with proper aspect ratio
+  - Shows "SOLD OUT" overlay on image if workshop is sold out
