@@ -689,3 +689,9 @@ Orders fixed:
   - Current code uses Input type="datetime-local" which is optional
 - [x] Customer seeing "Please fill in this field" error - FIXED (need to publish)
 - [x] Investigated - NOT related to Palladium closure, just unpublished code
+
+## Skip Scheduling Button (Jan 17)
+
+- [x] Add "Prepare Now" / "Schedule Later" toggle buttons to checkout form
+- [x] Make it clear that time field is optional - datetime picker only shows when Schedule Later is selected
+- [x] Added helpful text: "Your order will be prepared immediately after payment" or "at the scheduled time"

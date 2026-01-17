@@ -913,21 +913,63 @@ export default function Checkout() {
 
               {/* Schedule Order */}
               <Card className="p-6">
-                <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                  <Clock className="w-5 h-5" />
-                  Schedule Order (Optional)
-                </h2>
-                <div>
-                  <Label htmlFor="scheduledTime">Preferred Time</Label>
-                  <Input
-                    id="scheduledTime"
-                    type="datetime-local"
-                    value={formData.scheduledTime}
-                    onChange={(e) => setFormData({ ...formData, scheduledTime: e.target.value })}
-                    min={new Date().toISOString().slice(0, 16)}
-                  />
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Leave empty for immediate preparation
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-lg font-semibold flex items-center gap-2">
+                    <Clock className="w-5 h-5" />
+                    Schedule Order (Optional)
+                  </h2>
+                  {formData.scheduledTime && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setFormData({ ...formData, scheduledTime: '' })}
+                      className="text-muted-foreground hover:text-foreground"
+                    >
+                      Clear
+                    </Button>
+                  )}
+                </div>
+                <div className="space-y-3">
+                  <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      variant={!formData.scheduledTime ? "default" : "outline"}
+                      className="flex-1"
+                      onClick={() => setFormData({ ...formData, scheduledTime: '' })}
+                    >
+                      Prepare Now
+                    </Button>
+                    <Button
+                      type="button"
+                      variant={formData.scheduledTime ? "default" : "outline"}
+                      className="flex-1"
+                      onClick={() => {
+                        // Set default to 30 mins from now
+                        const now = new Date();
+                        now.setMinutes(now.getMinutes() + 30);
+                        setFormData({ ...formData, scheduledTime: now.toISOString().slice(0, 16) });
+                      }}
+                    >
+                      Schedule Later
+                    </Button>
+                  </div>
+                  {formData.scheduledTime && (
+                    <div>
+                      <Label htmlFor="scheduledTime">Select Time</Label>
+                      <Input
+                        id="scheduledTime"
+                        type="datetime-local"
+                        value={formData.scheduledTime}
+                        onChange={(e) => setFormData({ ...formData, scheduledTime: e.target.value })}
+                        min={new Date().toISOString().slice(0, 16)}
+                      />
+                    </div>
+                  )}
+                  <p className="text-xs text-muted-foreground">
+                    {formData.scheduledTime 
+                      ? "Your order will be prepared at the scheduled time"
+                      : "Your order will be prepared immediately after payment"}
                   </p>
                 </div>
               </Card>
