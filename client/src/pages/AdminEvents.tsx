@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { toast } from "sonner";
-import { Calendar, Clock, MapPin, Users, Phone, Mail, IndianRupee, Plus, Trash2, ArrowLeft, Eye } from "lucide-react";
+import { Calendar, Clock, MapPin, Users, Phone, Mail, IndianRupee, Plus, Trash2, ArrowLeft, Eye, AlertCircle, X } from "lucide-react";
 import { Link } from "wouter";
 
 const inquiryStatusColors: Record<string, string> = {
@@ -1027,6 +1027,25 @@ function WorkshopBookingsDialog({
     },
     onError: (error) => toast.error(error.message),
   });
+  const cancelBooking = trpc.workshops.cancelBooking.useMutation({
+    onSuccess: () => {
+      toast.success("Booking cancelled and spot released");
+      refetch();
+    },
+    onError: (error) => toast.error(error.message),
+  });
+  
+  // Helper to get time since booking
+  const getTimeSinceBooking = (createdAt: string | Date) => {
+    const now = new Date();
+    const bookingTime = new Date(createdAt);
+    const diffMs = now.getTime() - bookingTime.getTime();
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffDays = Math.floor(diffHours / 24);
+    if (diffDays > 0) return `${diffDays}d ago`;
+    if (diffHours > 0) return `${diffHours}h ago`;
+    return 'Just now';
+  };
   
   // Helper to get date display for a booking
   const getDateDisplay = (booking: any) => {
@@ -1095,13 +1114,25 @@ function WorkshopBookingsDialog({
                 <TableHead>Tickets</TableHead>
                 <TableHead>Amount</TableHead>
                 <TableHead>Payment</TableHead>
-                <TableHead>Attended</TableHead>
+                <TableHead>Booked</TableHead>
+                <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {bookings.map((booking) => (
-                <TableRow key={booking.id}>
-                  <TableCell className="font-mono">{booking.bookingNumber}</TableCell>
+              {bookings.map((booking) => {
+                const timeSince = getTimeSinceBooking(booking.createdAt);
+                const isStale = booking.paymentStatus === 'pending' && 
+                  (new Date().getTime() - new Date(booking.createdAt).getTime()) > 2 * 60 * 60 * 1000; // 2 hours
+                return (
+                <TableRow key={booking.id} className={isStale ? 'bg-red-50' : ''}>
+                  <TableCell>
+                    <div>
+                      <p className="font-mono">{booking.bookingNumber}</p>
+                      {booking.paymentId && (
+                        <p className="text-xs text-muted-foreground">Pay: {booking.paymentId}</p>
+                      )}
+                    </div>
+                  </TableCell>
                   <TableCell>
                     <span className="text-sm bg-amber-100 text-amber-800 px-2 py-1 rounded">
                       {getDateDisplay(booking)}
@@ -1111,39 +1142,57 @@ function WorkshopBookingsDialog({
                     <div>
                       <p className="font-medium">{booking.customerName}</p>
                       <p className="text-xs text-muted-foreground">{booking.customerEmail}</p>
+                      <p className="text-xs text-muted-foreground">{booking.customerPhone}</p>
                     </div>
                   </TableCell>
                   <TableCell>{booking.ticketCount}</TableCell>
                   <TableCell>₹{(booking.totalAmount || 0).toLocaleString()}</TableCell>
                   <TableCell>
-                    <Select
-                      value={booking.paymentStatus}
-                      onValueChange={(value: "pending" | "paid" | "refunded") => 
-                        updatePayment.mutate({ workshopId, bookingId: booking.id, paymentStatus: value })
-                      }
-                    >
-                      <SelectTrigger className="w-[100px]">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="pending">Pending</SelectItem>
-                        <SelectItem value="paid">Paid</SelectItem>
-                        <SelectItem value="refunded">Refunded</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <div className="flex flex-col gap-1">
+                      <Select
+                        value={booking.paymentStatus}
+                        onValueChange={(value: "pending" | "paid" | "refunded") => 
+                          updatePayment.mutate({ workshopId, bookingId: booking.id, paymentStatus: value })
+                        }
+                      >
+                        <SelectTrigger className="w-[100px]">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="pending">Pending</SelectItem>
+                          <SelectItem value="paid">Paid</SelectItem>
+                          <SelectItem value="refunded">Refunded</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      {!booking.paymentId && booking.paymentStatus === 'pending' && (
+                        <span className="text-xs text-red-600 flex items-center gap-1">
+                          <AlertCircle className="h-3 w-3" /> No payment
+                        </span>
+                      )}
+                    </div>
                   </TableCell>
                   <TableCell>
-                    <input
-                      type="checkbox"
-                      checked={booking.attended || false}
-                      onChange={(e) => 
-                        updateAttendance.mutate({ workshopId, bookingId: booking.id, attended: e.target.checked })
-                      }
-                      className="h-4 w-4"
-                    />
+                    <div className={`text-sm ${isStale ? 'text-red-600 font-medium' : 'text-muted-foreground'}`}>
+                      {timeSince}
+                      {isStale && <span className="block text-xs">⚠️ Unpaid</span>}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                      onClick={() => {
+                        if (confirm(`Cancel booking for ${booking.customerName}? This will release the spot.`)) {
+                          cancelBooking.mutate({ bookingId: booking.id });
+                        }
+                      }}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
                   </TableCell>
                 </TableRow>
-              ))}
+              )})}
             </TableBody>
           </Table>
         )}

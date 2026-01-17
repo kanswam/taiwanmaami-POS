@@ -663,3 +663,10 @@ Orders fixed:
 
 - [x] Fix workshop booking amount showing ₹28.80 instead of ₹2,880
 - [x] Delete test booking data (John Doe, Test Customer)
+
+## Workshop Booking Management Features (Jan 17)
+
+- [x] Add Razorpay order ID to admin booking view (shows payment ID if exists)
+- [x] Add Cancel Booking button to release unpaid spots
+- [x] Add time since booking display to identify stale bookings (highlights unpaid >2hrs in red)
+- [x] Capacity logic already correct - only counts paid bookings (bookedCount incremented only after payment verified)

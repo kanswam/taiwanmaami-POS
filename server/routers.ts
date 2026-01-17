@@ -5761,6 +5761,40 @@ export const appRouter = router({
         return { success: true };
       }),
 
+    // Cancel booking (admin) - releases spot for unpaid bookings
+    cancelBooking: adminProcedure
+      .input(z.object({ bookingId: z.number() }))
+      .mutation(async ({ input }) => {
+        const database = await getDb();
+        if (!database) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Database not available' });
+        
+        // Get booking details first
+        const [booking] = await database.select().from(workshopBookings)
+          .where(eq(workshopBookings.id, input.bookingId));
+        
+        if (!booking) {
+          throw new TRPCError({ code: 'NOT_FOUND', message: 'Booking not found' });
+        }
+        
+        // If booking was paid, decrement the booked count
+        if (booking.paymentStatus === 'paid') {
+          await database.update(workshops)
+            .set({ bookedCount: sql`GREATEST(0, ${workshops.bookedCount} - ${booking.ticketCount})` })
+            .where(eq(workshops.id, booking.workshopId));
+          
+          if (booking.workshopDateId) {
+            await database.update(workshopDates)
+              .set({ bookedCount: sql`GREATEST(0, ${workshopDates.bookedCount} - ${booking.ticketCount})` })
+              .where(eq(workshopDates.id, booking.workshopDateId));
+          }
+        }
+        
+        // Delete the booking
+        await database.delete(workshopBookings).where(eq(workshopBookings.id, input.bookingId));
+        
+        return { success: true };
+      }),
+
     // Delete workshop (admin)
     delete: adminProcedure
       .input(z.object({ id: z.number() }))
