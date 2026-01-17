@@ -1146,7 +1146,7 @@ function WorkshopBookingsDialog({
                     </div>
                   </TableCell>
                   <TableCell>{booking.ticketCount}</TableCell>
-                  <TableCell>₹{(booking.totalAmount || 0).toLocaleString()}</TableCell>
+                  <TableCell>₹{((booking.totalAmount || 0) / 100).toLocaleString()}</TableCell>
                   <TableCell>
                     <div className="flex flex-col gap-1">
                       <Select

@@ -5428,7 +5428,7 @@ export const appRouter = router({
         
         const bookingNumber = `WS${Date.now().toString(36).toUpperCase()}`;
         
-        // Create booking with pending payment status (store amount in rupees)
+        // Create booking with pending payment status (store amount in paise)
         const [insertedBooking] = await database.insert(workshopBookings).values({
           workshopId: input.workshopId,
           workshopDateId: input.workshopDateId || null,
@@ -5437,7 +5437,7 @@ export const appRouter = router({
           customerEmail: input.customerEmail,
           customerPhone: input.customerPhone,
           ticketCount: input.ticketCount,
-          totalAmount: totalAmountRupees,
+          totalAmount: totalAmountPaise,
           paymentStatus: 'pending',
           specialRequirements: input.specialRequirements || null,
         }).$returningId();

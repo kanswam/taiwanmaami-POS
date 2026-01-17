@@ -670,3 +670,12 @@ Orders fixed:
 - [x] Add Cancel Booking button to release unpaid spots
 - [x] Add time since booking display to identify stale bookings (highlights unpaid >2hrs in red)
 - [x] Capacity logic already correct - only counts paid bookings (bookedCount incremented only after payment verified)
+
+
+## Workshop Booking Display Fixes (Jan 17)
+
+- [x] Add Date column showing which workshop session date was booked
+- [x] Ensure Cancel booking button (X) is visible in Actions column
+- [x] Ensure "No payment" warning shows under Pending status
+- [x] Add time since booking with stale unpaid booking warning
+- [ ] Publish changes to production

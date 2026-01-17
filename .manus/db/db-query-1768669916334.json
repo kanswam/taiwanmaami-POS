@@ -1,0 +1,37 @@
+{
+  "query": "SELECT id, bookingNumber, customerName, ticketCount, totalAmount, paymentStatus, createdAt FROM workshop_bookings ORDER BY createdAt DESC LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT id, bookingNumber, customerName, ticketCount, totalAmount, paymentStatus, createdAt FROM workshop_bookings ORDER BY createdAt DESC LIMIT 10;",
+  "rows": [
+    {
+      "id": "90001",
+      "bookingNumber": "WSMKIJBYEP",
+      "customerName": "Theresa Hu",
+      "ticketCount": "1",
+      "totalAmount": "2880",
+      "paymentStatus": "pending",
+      "createdAt": "2026-01-17 16:41:58"
+    },
+    {
+      "id": "60001",
+      "bookingNumber": "WSMKGZ91XI",
+      "customerName": "Shreya D jain ",
+      "ticketCount": "1",
+      "totalAmount": "2880",
+      "paymentStatus": "pending",
+      "createdAt": "2026-01-16 14:32:04"
+    },
+    {
+      "id": "30001",
+      "bookingNumber": "WSMKFVAEFY",
+      "customerName": "Testing ",
+      "ticketCount": "2",
+      "totalAmount": "5760",
+      "paymentStatus": "pending",
+      "createdAt": "2026-01-15 19:53:22"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tbookingNumber\tcustomerName\tticketCount\ttotalAmount\tpaymentStatus\tcreatedAt\n90001\tWSMKIJBYEP\tTheresa Hu\t1\t2880\tpending\t2026-01-17 16:41:58\n60001\tWSMKGZ91XI\tShreya D jain \t1\t2880\tpending\t2026-01-16 14:32:04\n30001\tWSMKFVAEFY\tTesting \t2\t5760\tpending\t2026-01-15 19:53:22\n",
+  "stderr": "",
+  "execution_time_ms": 1527
+}
