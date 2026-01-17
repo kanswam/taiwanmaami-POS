@@ -657,3 +657,9 @@ Orders fixed:
   - Note: Backend sends deliveryCharge correctly in receipt data
   - Issue is in the PRINTER SOFTWARE (desktop app) - not rendering the deliveryCharge field
   - Printer software needs to be updated to display deliveryCharge line item
+
+
+## Bug Fix - Workshop Booking Amount Display (Jan 17)
+
+- [x] Fix workshop booking amount showing ₹28.80 instead of ₹2,880
+- [x] Delete test booking data (John Doe, Test Customer)

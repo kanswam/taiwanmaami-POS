@@ -1114,7 +1114,7 @@ function WorkshopBookingsDialog({
                     </div>
                   </TableCell>
                   <TableCell>{booking.ticketCount}</TableCell>
-                  <TableCell>₹{((booking.totalAmount || 0) / 100).toLocaleString()}</TableCell>
+                  <TableCell>₹{(booking.totalAmount || 0).toLocaleString()}</TableCell>
                   <TableCell>
                     <Select
                       value={booking.paymentStatus}
