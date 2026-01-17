@@ -679,3 +679,13 @@ Orders fixed:
 - [x] Ensure "No payment" warning shows under Pending status
 - [x] Add time since booking with stale unpaid booking warning
 - [ ] Publish changes to production
+
+
+## CRITICAL BUG - T.Nagar Dine-in Orders Blocked (Jan 17)
+
+- [x] Fix checkout form validation blocking T.Nagar dine-in orders
+  - Root cause: Production site not published with latest code
+  - Old code had Select dropdown for Preferred Time that was incorrectly required
+  - Current code uses Input type="datetime-local" which is optional
+- [x] Customer seeing "Please fill in this field" error - FIXED (need to publish)
+- [x] Investigated - NOT related to Palladium closure, just unpublished code
