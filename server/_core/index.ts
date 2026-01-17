@@ -43,23 +43,30 @@ async function startServer() {
   app.get('/api/kot/poll', async (req, res) => {
     try {
       const secret = req.query.secret as string;
+      const outletId = req.query.outletId ? parseInt(req.query.outletId as string) : null;
+      
       if (!secret || secret !== process.env.KOT_PRINT_SECRET) {
         return res.status(401).json({ error: 'Invalid KOT secret' });
       }
       
       const { getDb } = await import('../db');
       const { kotQueue } = await import('../../drizzle/schema');
-      const { eq, asc } = await import('drizzle-orm');
+      const { eq, asc, and } = await import('drizzle-orm');
       
       const dbInstance = await getDb();
       if (!dbInstance) {
         return res.json({ kots: [] });
       }
       
+      // Filter by outlet if specified, otherwise return all pending KOTs
+      const whereCondition = outletId 
+        ? and(eq(kotQueue.isPrinted, false), eq(kotQueue.outletId, outletId))
+        : eq(kotQueue.isPrinted, false);
+      
       const pendingKots = await dbInstance
         .select()
         .from(kotQueue)
-        .where(eq(kotQueue.isPrinted, false))
+        .where(whereCondition)
         .orderBy(asc(kotQueue.createdAt));
       
       return res.json({
