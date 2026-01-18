@@ -1,0 +1,9 @@
+{
+  "query": "CREATE TABLE IF NOT EXISTS `backup_logs` (\n  `id` int AUTO_INCREMENT NOT NULL,\n  `backupKey` varchar(500) NOT NULL,\n  `backupUrl` text,\n  `size` int NOT NULL DEFAULT 0,\n  `tablesBackedUp` int NOT NULL DEFAULT 0,\n  `totalRows` int NOT NULL DEFAULT 0,\n  `status` enum('success', 'failed') NOT NULL DEFAULT 'success',\n  `errorMessage` text,\n  `triggeredBy` enum('scheduled', 'manual') NOT NULL DEFAULT 'scheduled',\n  `createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  PRIMARY KEY (`id`)\n);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute CREATE TABLE IF NOT EXISTS `backup_logs` (\n  `id` int AUTO_INCREMENT NOT NULL,\n  `backupKey` varchar(500) NOT NULL,\n  `backupUrl` text,\n  `size` int NOT NULL DEFAULT 0,\n  `tablesBackedUp` int NOT NULL DEFAULT 0,\n  `totalRows` int NOT NULL DEFAULT 0,\n  `status` enum('success', 'failed') NOT NULL DEFAULT 'success',\n  `errorMessage` text,\n  `triggeredBy` enum('scheduled', 'manual') NOT NULL DEFAULT 'scheduled',\n  `createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  PRIMARY KEY (`id`)\n);",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 1693
+}

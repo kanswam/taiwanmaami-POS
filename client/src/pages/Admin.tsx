@@ -249,7 +249,7 @@ export default function Admin() {
                 <Button 
                   variant={['settings', 'bulk-upload', 'cms', 'admin-pin', 'refunds'].includes(activeTab) ? 'default' : 'outline'} 
                   size="sm" 
-                  className={`gap-2 ${!['settings', 'bulk-upload', 'cms', 'admin-pin', 'refunds'].includes(activeTab) ? 'border-transparent hover:bg-accent' : ''}`}
+                  className={`gap-2 ${!['settings', 'bulk-upload', 'cms', 'admin-pin', 'refunds', 'backup'].includes(activeTab) ? 'border-transparent hover:bg-accent' : ''}`}
                 >
                   <Settings className="w-4 h-4" />
                   Settings
@@ -268,6 +268,9 @@ export default function Admin() {
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setActiveTab('refunds')} className={activeTab === 'refunds' ? 'bg-accent' : ''}>
                   <RotateCcw className="w-4 h-4 mr-2" /> Refund Requests
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setActiveTab('backup')} className={activeTab === 'backup' ? 'bg-accent' : ''}>
+                  <History className="w-4 h-4 mr-2" /> Database Backup
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => setActiveTab('bulk-upload')} className={activeTab === 'bulk-upload' ? 'bg-accent' : ''}>
@@ -365,6 +368,10 @@ export default function Admin() {
 
           <TabsContent value="workshop-bookings">
             <WorkshopBookingsTab />
+          </TabsContent>
+
+          <TabsContent value="backup">
+            <BackupTab />
           </TabsContent>
         </Tabs>
       </div>
@@ -8020,6 +8027,207 @@ function WorkshopBookingsTab() {
           </table>
         </Card>
       )}
+    </div>
+  );
+}
+
+
+// Database Backup Tab Component
+function BackupTab() {
+  const [isBackingUp, setIsBackingUp] = useState(false);
+  const { data: backupHistory, refetch } = trpc.backup.getHistory.useQuery();
+  const createBackupMutation = trpc.backup.createBackup.useMutation({
+    onSuccess: (result) => {
+      if (result.success) {
+        toast.success(`Backup created successfully! ${result.totalRows} rows backed up.`);
+        refetch();
+      } else {
+        toast.error(`Backup failed: ${result.error}`);
+      }
+      setIsBackingUp(false);
+    },
+    onError: (error) => {
+      toast.error(`Backup failed: ${error.message}`);
+      setIsBackingUp(false);
+    },
+  });
+
+  const handleBackupNow = () => {
+    setIsBackingUp(true);
+    createBackupMutation.mutate();
+  };
+
+  const formatBytes = (bytes: number) => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
+
+  const formatDate = (date: Date | string) => {
+    const d = new Date(date);
+    return d.toLocaleDateString('en-IN', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex justify-between items-start">
+        <div>
+          <h2 className="text-2xl font-bold mb-2">Database Backup</h2>
+          <p className="text-muted-foreground">
+            Automated daily backups at 4:00 AM IST. Backups are retained for 90 days.
+          </p>
+        </div>
+        <Button 
+          onClick={handleBackupNow} 
+          disabled={isBackingUp}
+          className="gap-2"
+        >
+          {isBackingUp ? (
+            <>
+              <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
+              Backing up...
+            </>
+          ) : (
+            <>
+              <History className="h-4 w-4" />
+              Backup Now
+            </>
+          )}
+        </Button>
+      </div>
+
+      <Card className="p-6">
+        <h3 className="text-lg font-semibold mb-4">What's Included in Backups</h3>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 bg-green-500 rounded-full" />
+            <span>Orders & Order Items</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 bg-green-500 rounded-full" />
+            <span>Customers</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 bg-green-500 rounded-full" />
+            <span>Payments</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 bg-green-500 rounded-full" />
+            <span>Loyalty Stamps</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 bg-green-500 rounded-full" />
+            <span>Workshop Bookings</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 bg-green-500 rounded-full" />
+            <span>Event Orders</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 bg-green-500 rounded-full" />
+            <span>Products & Categories</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 bg-green-500 rounded-full" />
+            <span>Reviews</span>
+          </div>
+        </div>
+      </Card>
+
+      <Card className="p-6">
+        <h3 className="text-lg font-semibold mb-4">Backup History</h3>
+        {!backupHistory || backupHistory.length === 0 ? (
+          <div className="text-center py-8 text-muted-foreground">
+            <History className="h-12 w-12 mx-auto mb-4 opacity-50" />
+            <p>No backups yet. Click "Backup Now" to create your first backup.</p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b">
+                  <th className="text-left py-3 px-4 font-medium">Date</th>
+                  <th className="text-left py-3 px-4 font-medium">Status</th>
+                  <th className="text-left py-3 px-4 font-medium">Tables</th>
+                  <th className="text-left py-3 px-4 font-medium">Rows</th>
+                  <th className="text-left py-3 px-4 font-medium">Size</th>
+                  <th className="text-left py-3 px-4 font-medium">Type</th>
+                  <th className="text-left py-3 px-4 font-medium">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {backupHistory.map((backup) => (
+                  <tr key={backup.id} className="border-b hover:bg-muted/50">
+                    <td className="py-3 px-4">{formatDate(backup.createdAt)}</td>
+                    <td className="py-3 px-4">
+                      {backup.status === 'success' ? (
+                        <span className="inline-flex items-center gap-1 text-green-600">
+                          <div className="w-2 h-2 bg-green-500 rounded-full" />
+                          Success
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 text-red-600">
+                          <div className="w-2 h-2 bg-red-500 rounded-full" />
+                          Failed
+                        </span>
+                      )}
+                    </td>
+                    <td className="py-3 px-4">{backup.tablesBackedUp}</td>
+                    <td className="py-3 px-4">{backup.totalRows.toLocaleString()}</td>
+                    <td className="py-3 px-4">{formatBytes(backup.size)}</td>
+                    <td className="py-3 px-4">
+                      <span className={`text-xs px-2 py-1 rounded ${
+                        backup.triggeredBy === 'scheduled' 
+                          ? 'bg-blue-100 text-blue-700' 
+                          : 'bg-purple-100 text-purple-700'
+                      }`}>
+                        {backup.triggeredBy === 'scheduled' ? 'Scheduled' : 'Manual'}
+                      </span>
+                    </td>
+                    <td className="py-3 px-4">
+                      {backup.status === 'success' && backup.backupUrl && (
+                        <a 
+                          href={backup.backupUrl} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="text-primary hover:underline text-sm"
+                        >
+                          Download
+                        </a>
+                      )}
+                      {backup.status === 'failed' && backup.errorMessage && (
+                        <span className="text-red-500 text-sm" title={backup.errorMessage}>
+                          View Error
+                        </span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </Card>
+
+      <Card className="p-6 bg-amber-50 border-amber-200">
+        <h3 className="text-lg font-semibold mb-2 text-amber-800">Recovery Instructions</h3>
+        <p className="text-amber-700 text-sm mb-4">
+          If you need to restore data from a backup, follow these steps:
+        </p>
+        <ol className="list-decimal list-inside text-sm text-amber-700 space-y-2">
+          <li>Download the backup JSON file from the history above</li>
+          <li>Contact support with the backup file and specify which data needs to be restored</li>
+          <li>Our team will verify and restore the data within 24 hours</li>
+        </ol>
+      </Card>
     </div>
   );
 }

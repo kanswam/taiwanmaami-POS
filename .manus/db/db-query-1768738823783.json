@@ -1,0 +1,50 @@
+{
+  "query": "SELECT \n  'orders' as table_name, COUNT(*) as row_count FROM orders\nUNION ALL SELECT 'order_items', COUNT(*) FROM order_items\nUNION ALL SELECT 'users', COUNT(*) FROM users\nUNION ALL SELECT 'payments', COUNT(*) FROM payments\nUNION ALL SELECT 'products', COUNT(*) FROM products\nUNION ALL SELECT 'stamp_transactions', COUNT(*) FROM stamp_transactions\nUNION ALL SELECT 'workshop_bookings', COUNT(*) FROM workshop_bookings\nUNION ALL SELECT 'reviews', COUNT(*) FROM reviews\nUNION ALL SELECT 'event_orders', COUNT(*) FROM event_orders\nUNION ALL SELECT 'guest_orders', COUNT(*) FROM guest_orders;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT \n  'orders' as table_name, COUNT(*) as row_count FROM orders\nUNION ALL SELECT 'order_items', COUNT(*) FROM order_items\nUNION ALL SELECT 'users', COUNT(*) FROM users\nUNION ALL SELECT 'payments', COUNT(*) FROM payments\nUNION ALL SELECT 'products', COUNT(*) FROM products\nUNION ALL SELECT 'stamp_transactions', COUNT(*) FROM stamp_transactions\nUNION ALL SELECT 'workshop_bookings', COUNT(*) FROM workshop_bookings\nUNION ALL SELECT 'reviews', COUNT(*) FROM reviews\nUNION ALL SELECT 'event_orders', COUNT(*) FROM event_orders\nUNION ALL SELECT 'guest_orders', COUNT(*) FROM guest_orders;",
+  "rows": [
+    {
+      "table_name": "order_items",
+      "row_count": "276"
+    },
+    {
+      "table_name": "payments",
+      "row_count": "57"
+    },
+    {
+      "table_name": "products",
+      "row_count": "116"
+    },
+    {
+      "table_name": "users",
+      "row_count": "56"
+    },
+    {
+      "table_name": "stamp_transactions",
+      "row_count": "60"
+    },
+    {
+      "table_name": "event_orders",
+      "row_count": "0"
+    },
+    {
+      "table_name": "reviews",
+      "row_count": "0"
+    },
+    {
+      "table_name": "orders",
+      "row_count": "114"
+    },
+    {
+      "table_name": "workshop_bookings",
+      "row_count": "3"
+    },
+    {
+      "table_name": "guest_orders",
+      "row_count": "64"
+    }
+  ],
+  "messages": [],
+  "stdout": "table_name\trow_count\norder_items\t276\npayments\t57\nproducts\t116\nusers\t56\nstamp_transactions\t60\nevent_orders\t0\nreviews\t0\norders\t114\nworkshop_bookings\t3\nguest_orders\t64\n",
+  "stderr": "",
+  "execution_time_ms": 1612
+}

@@ -732,3 +732,27 @@ Orders fixed:
 - [x] Rangan Swamy's stamps from cancelled order - manually reset to 0
 - [x] Added automatic stamp deduction when order is cancelled
 - [x] Deduction recorded in stamp_transactions table with 'deduct' action
+
+
+## Automated Database Backup System (Jan 18)
+
+- [ ] Create backup script to export all tables to JSON
+- [ ] Integrate with S3 storage for backup file storage
+- [ ] Implement 90-day retention with auto-cleanup of old backups
+- [ ] Add email notifications for backup success/failure
+- [ ] Create admin UI for manual backup trigger
+- [ ] Create admin UI to view backup history and download backups
+- [ ] Set up scheduled daily backup at 4:00 AM IST
+- [ ] Test backup and restore process
+
+
+## Automated Database Backup System (Jan 18) - COMPLETED
+
+- [x] Create backup script with S3 storage
+- [x] Export all critical tables (18 tables including orders, customers, payments, products, etc.)
+- [x] Add email notifications for backup success/failure (notifies owner)
+- [x] Create admin UI with "Backup Now" button in Settings > Database Backup
+- [x] Show backup history with download links and error viewing
+- [x] Set up daily scheduled backup at 4:00 AM IST
+- [x] Implement 90-day retention with auto-cleanup
+- [x] Test backup: 739 rows, 573.7 KB, 18 tables - SUCCESS

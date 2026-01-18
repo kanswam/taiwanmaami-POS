@@ -1,0 +1,46 @@
+{
+  "query": "SELECT 'orders' as tbl, COUNT(*) as cnt FROM orders\nUNION ALL SELECT 'order_items', COUNT(*) FROM order_items\nUNION ALL SELECT 'users', COUNT(*) FROM users\nUNION ALL SELECT 'payments', COUNT(*) FROM payments\nUNION ALL SELECT 'products', COUNT(*) FROM products\nUNION ALL SELECT 'stamp_transactions', COUNT(*) FROM stamp_transactions\nUNION ALL SELECT 'workshop_bookings', COUNT(*) FROM workshop_bookings\nUNION ALL SELECT 'categories', COUNT(*) FROM categories\nUNION ALL SELECT 'addons', COUNT(*) FROM addons;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT 'orders' as tbl, COUNT(*) as cnt FROM orders\nUNION ALL SELECT 'order_items', COUNT(*) FROM order_items\nUNION ALL SELECT 'users', COUNT(*) FROM users\nUNION ALL SELECT 'payments', COUNT(*) FROM payments\nUNION ALL SELECT 'products', COUNT(*) FROM products\nUNION ALL SELECT 'stamp_transactions', COUNT(*) FROM stamp_transactions\nUNION ALL SELECT 'workshop_bookings', COUNT(*) FROM workshop_bookings\nUNION ALL SELECT 'categories', COUNT(*) FROM categories\nUNION ALL SELECT 'addons', COUNT(*) FROM addons;",
+  "rows": [
+    {
+      "tbl": "order_items",
+      "cnt": "276"
+    },
+    {
+      "tbl": "users",
+      "cnt": "56"
+    },
+    {
+      "tbl": "payments",
+      "cnt": "57"
+    },
+    {
+      "tbl": "products",
+      "cnt": "116"
+    },
+    {
+      "tbl": "orders",
+      "cnt": "114"
+    },
+    {
+      "tbl": "workshop_bookings",
+      "cnt": "3"
+    },
+    {
+      "tbl": "categories",
+      "cnt": "4"
+    },
+    {
+      "tbl": "stamp_transactions",
+      "cnt": "60"
+    },
+    {
+      "tbl": "addons",
+      "cnt": "12"
+    }
+  ],
+  "messages": [],
+  "stdout": "tbl\tcnt\norder_items\t276\nusers\t56\npayments\t57\nproducts\t116\norders\t114\nworkshop_bookings\t3\ncategories\t4\nstamp_transactions\t60\naddons\t12\n",
+  "stderr": "",
+  "execution_time_ms": 1583
+}

@@ -834,3 +834,20 @@ export const workshopWaitlist = mysqlTable("workshop_waitlist", {
 
 export type WorkshopWaitlist = typeof workshopWaitlist.$inferSelect;
 export type InsertWorkshopWaitlist = typeof workshopWaitlist.$inferInsert;
+
+// Backup Logs - Track database backups
+export const backupLogs = mysqlTable("backup_logs", {
+  id: int("id").autoincrement().primaryKey(),
+  backupKey: varchar("backupKey", { length: 500 }).notNull(),
+  backupUrl: text("backupUrl"),
+  size: int("size").default(0).notNull(), // Size in bytes
+  tablesBackedUp: int("tablesBackedUp").default(0).notNull(),
+  totalRows: int("totalRows").default(0).notNull(),
+  status: mysqlEnum("status", ["success", "failed"]).default("success").notNull(),
+  errorMessage: text("errorMessage"),
+  triggeredBy: mysqlEnum("triggeredBy", ["scheduled", "manual"]).default("scheduled").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type BackupLog = typeof backupLogs.$inferSelect;
+export type InsertBackupLog = typeof backupLogs.$inferInsert;

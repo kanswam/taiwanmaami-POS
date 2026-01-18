@@ -11,7 +11,7 @@ import { categories, subcategories, products, addons, orders, orderItems as orde
 import { eq, and, desc, asc, sql, or, gte } from "drizzle-orm";
 import { generateOrderNumber, calculateGst } from "@shared/types";
 // POS functionality removed - Employee Master import removed
-import { outletProducts, loyaltyRewards, stampTransactions, guestOrders, reviews, kotQueue, receiptQueue, productAuditLog, categoryAuditLog, complaints, eventInquiries, eventOrders, eventOrderItems, workshops, workshopBookings, workshopDates, workshopWaitlist } from "../drizzle/schema";
+import { outletProducts, loyaltyRewards, stampTransactions, guestOrders, reviews, kotQueue, receiptQueue, productAuditLog, categoryAuditLog, complaints, eventInquiries, eventOrders, eventOrderItems, workshops, workshopBookings, workshopDates, workshopWaitlist, backupLogs } from "../drizzle/schema";
 import { ENV } from './_core/env';
 import { notifyOwner } from './_core/notification';
 
@@ -5969,5 +5969,47 @@ export const appRouter = router({
         await database.delete(workshops).where(eq(workshops.id, input.id));
         return { success: true };
       }),
+  }),
+
+  // Backup management
+  backup: router({
+    // Create a manual backup (admin only)
+    createBackup: adminProcedure.mutation(async () => {
+      const { createBackup } = await import('./backup');
+      const result = await createBackup();
+      return result;
+    }),
+
+    // Get backup history from database
+    getHistory: adminProcedure.query(async () => {
+      const database = await getDb();
+      if (!database) return [];
+      
+      // Query backup_logs table if it exists, otherwise return empty
+      try {
+        const logs = await database.select().from(backupLogs)
+          .orderBy(desc(backupLogs.createdAt))
+          .limit(30);
+        return logs;
+      } catch {
+        return [];
+      }
+    }),
+
+    // Get download URL for a backup
+    getDownloadUrl: adminProcedure
+      .input(z.object({ backupKey: z.string() }))
+      .query(async ({ input }) => {
+        const { getBackupDownloadUrl } = await import('./backup');
+        const url = await getBackupDownloadUrl(input.backupKey);
+        return { url };
+      }),
+
+    // Run scheduled backup with notification (admin only)
+    runScheduledBackup: adminProcedure.mutation(async () => {
+      const { runScheduledBackup } = await import('./backup');
+      const result = await runScheduledBackup();
+      return result;
+    }),
   }),
 });
