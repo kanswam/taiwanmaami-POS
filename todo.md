@@ -711,3 +711,11 @@ Orders fixed:
 - [x] Custom items appear in order with "[Custom]" prefix
 - [x] Custom items tracked in order data and KOT printed
 - [x] Order totals automatically recalculated with GST
+
+
+## Bug Fix - Receipt Showing Cancelled Items (Jan 18)
+
+- [x] Fix tax invoice to exclude cancelled items from printed receipt
+- [x] Order 110: Cinnamon Vanilla Assam was cancelled but still showed on invoice
+- [x] Total was correct but item list should not include cancelled items
+- [x] Fixed both receipt queue and KOT reprint to filter out cancelled items

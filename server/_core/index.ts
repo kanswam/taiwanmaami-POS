@@ -139,8 +139,9 @@ async function startServer() {
         return res.status(404).json({ error: 'Order not found' });
       }
       
-      // Get order items with details
-      const items = await dbInstance.select().from(orderItems).where(eq(orderItems.orderId, orderId));
+      // Get order items with details (exclude cancelled items)
+      const allItems = await dbInstance.select().from(orderItems).where(eq(orderItems.orderId, orderId));
+      const items = allItems.filter(item => item.status !== 'cancelled');
       const itemIds = items.map(i => i.id);
       const itemAddons = itemIds.length > 0 
         ? await dbInstance.select().from(orderItemAddons).where(sql`${orderItemAddons.orderItemId} IN (${sql.join(itemIds.map(id => sql`${id}`), sql`, `)})`)
@@ -285,8 +286,9 @@ async function startServer() {
         return res.status(404).json({ error: 'Order not found' });
       }
       
-      // Get order items with details
-      const items = await dbInstance.select().from(orderItems).where(eq(orderItems.orderId, orderId));
+      // Get order items with details (exclude cancelled items)
+      const allItems = await dbInstance.select().from(orderItems).where(eq(orderItems.orderId, orderId));
+      const items = allItems.filter(item => item.status !== 'cancelled');
       const itemIds = items.map(i => i.id);
       const itemAddons = itemIds.length > 0 
         ? await dbInstance.select().from(orderItemAddons).where(sql`${orderItemAddons.orderItemId} IN (${sql.join(itemIds.map(id => sql`${id}`), sql`, `)})`)
