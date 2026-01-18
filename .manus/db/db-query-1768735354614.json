@@ -1,0 +1,16 @@
+{
+  "query": "SELECT st.userId, st.orderId, st.stamps, st.action\nFROM stamp_transactions st\nWHERE st.orderId = (SELECT id FROM orders WHERE orderNumber = '00107');",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT st.userId, st.orderId, st.stamps, st.action\nFROM stamp_transactions st\nWHERE st.orderId = (SELECT id FROM orders WHERE orderNumber = '00107');",
+  "rows": [
+    {
+      "userId": "18600730",
+      "orderId": "1110016",
+      "stamps": "2",
+      "action": "welcome"
+    }
+  ],
+  "messages": [],
+  "stdout": "userId\torderId\tstamps\taction\n18600730\t1110016\t2\twelcome\n",
+  "stderr": "",
+  "execution_time_ms": 1492
+}

@@ -1,0 +1,109 @@
+{
+  "query": "SELECT o.id, o.orderNumber, o.orderStatus, o.customerName, st.stamps, st.action, st.id as txId\nFROM orders o\nLEFT JOIN stamp_transactions st ON st.orderId = o.id\nWHERE o.customerName LIKE '%Rangan%' OR o.customerName LIKE '%Swamy%'\nORDER BY o.id DESC\nLIMIT 20;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT o.id, o.orderNumber, o.orderStatus, o.customerName, st.stamps, st.action, st.id as txId\nFROM orders o\nLEFT JOIN stamp_transactions st ON st.orderId = o.id\nWHERE o.customerName LIKE '%Rangan%' OR o.customerName LIKE '%Swamy%'\nORDER BY o.id DESC\nLIMIT 20;",
+  "rows": [
+    {
+      "id": "1110016",
+      "orderNumber": "00107",
+      "orderStatus": "cancelled",
+      "customerName": "Rangan K Swamy",
+      "stamps": "2",
+      "action": "welcome",
+      "txId": "750003"
+    },
+    {
+      "id": "1110015",
+      "orderNumber": "00106",
+      "orderStatus": "cancelled",
+      "customerName": "Kannan Swamy",
+      "stamps": "NULL",
+      "action": "NULL",
+      "txId": "NULL"
+    },
+    {
+      "id": "960003",
+      "orderNumber": "00067",
+      "orderStatus": "cancelled",
+      "customerName": "Kannan Swamy",
+      "stamps": "NULL",
+      "action": "NULL",
+      "txId": "NULL"
+    },
+    {
+      "id": "870011",
+      "orderNumber": "00045",
+      "orderStatus": "cancelled",
+      "customerName": "Kannan Swamy",
+      "stamps": "NULL",
+      "action": "NULL",
+      "txId": "NULL"
+    },
+    {
+      "id": "870009",
+      "orderNumber": "00043",
+      "orderStatus": "cancelled",
+      "customerName": "Kannan Swamy",
+      "stamps": "NULL",
+      "action": "NULL",
+      "txId": "NULL"
+    },
+    {
+      "id": "870008",
+      "orderNumber": "00042",
+      "orderStatus": "cancelled",
+      "customerName": "Kannan Swamy",
+      "stamps": "NULL",
+      "action": "NULL",
+      "txId": "NULL"
+    },
+    {
+      "id": "780011",
+      "orderNumber": "00020",
+      "orderStatus": "completed",
+      "customerName": "Kannan Swamy",
+      "stamps": "1",
+      "action": "earn",
+      "txId": "480001"
+    },
+    {
+      "id": "780009",
+      "orderNumber": "00018",
+      "orderStatus": "cancelled",
+      "customerName": "Kannan Swamy",
+      "stamps": "NULL",
+      "action": "NULL",
+      "txId": "NULL"
+    },
+    {
+      "id": "780008",
+      "orderNumber": "00017",
+      "orderStatus": "cancelled",
+      "customerName": "Kannan Swamy",
+      "stamps": "NULL",
+      "action": "NULL",
+      "txId": "NULL"
+    },
+    {
+      "id": "780007",
+      "orderNumber": "00016",
+      "orderStatus": "cancelled",
+      "customerName": "Kannan Swamy",
+      "stamps": "NULL",
+      "action": "NULL",
+      "txId": "NULL"
+    },
+    {
+      "id": "780001",
+      "orderNumber": "00010",
+      "orderStatus": "cancelled",
+      "customerName": "Kannan Swamy",
+      "stamps": "NULL",
+      "action": "NULL",
+      "txId": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\torderNumber\torderStatus\tcustomerName\tstamps\taction\ttxId\n1110016\t00107\tcancelled\tRangan K Swamy\t2\twelcome\t750003\n1110015\t00106\tcancelled\tKannan Swamy\tNULL\tNULL\tNULL\n960003\t00067\tcancelled\tKannan Swamy\tNULL\tNULL\tNULL\n870011\t00045\tcancelled\tKannan Swamy\tNULL\tNULL\tNULL\n870009\t00043\tcancelled\tKannan Swamy\tNULL\tNULL\tNULL\n870008\t00042\tcancelled\tKannan Swamy\tNULL\tNULL\tNULL\n780011\t00020\tcompleted\tKannan Swamy\t1\tearn\t480001\n780009\t00018\tcancelled\tKannan Swamy\tNULL\tNULL\tNULL\n780008\t00017\tcancelled\tKannan Swamy\tNULL\tNULL\tNULL\n780007\t00016\tcancelled\tKannan Swamy\tNULL\tNULL\tNULL\n780001\t00010\tcancelled\tKannan Swamy\tNULL\tNULL\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 1525
+}

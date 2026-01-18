@@ -1,0 +1,20 @@
+{
+  "query": "SELECT u.id as userId, u.name, st.id as stampTransactionId, st.orderId, st.stamps, st.action, o.orderNumber, o.orderStatus\nFROM users u\nLEFT JOIN stamp_transactions st ON st.userId = u.id\nLEFT JOIN orders o ON st.orderId = o.id\nWHERE u.name LIKE '%Rangan%';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT u.id as userId, u.name, st.id as stampTransactionId, st.orderId, st.stamps, st.action, o.orderNumber, o.orderStatus\nFROM users u\nLEFT JOIN stamp_transactions st ON st.userId = u.id\nLEFT JOIN orders o ON st.orderId = o.id\nWHERE u.name LIKE '%Rangan%';",
+  "rows": [
+    {
+      "userId": "18600730",
+      "name": "Rangan K Swamy",
+      "stampTransactionId": "750003",
+      "orderId": "1110016",
+      "stamps": "2",
+      "action": "welcome",
+      "orderNumber": "00107",
+      "orderStatus": "cancelled"
+    }
+  ],
+  "messages": [],
+  "stdout": "userId\tname\tstampTransactionId\torderId\tstamps\taction\torderNumber\torderStatus\n18600730\tRangan K Swamy\t750003\t1110016\t2\twelcome\t00107\tcancelled\n",
+  "stderr": "",
+  "execution_time_ms": 1616
+}

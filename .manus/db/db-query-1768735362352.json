@@ -1,0 +1,9 @@
+{
+  "query": "INSERT INTO stamp_transactions (userId, orderId, action, stamps, description)\nSELECT st.userId, st.orderId, 'deduct', -st.stamps, 'Stamps deducted - order cancelled'\nFROM stamp_transactions st\nWHERE st.orderId = (SELECT id FROM orders WHERE orderNumber = '00107')\nAND st.action = 'earn'\nAND NOT EXISTS (\n  SELECT 1 FROM stamp_transactions st2 \n  WHERE st2.orderId = st.orderId AND st2.action = 'deduct'\n);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute INSERT INTO stamp_transactions (userId, orderId, action, stamps, description)\nSELECT st.userId, st.orderId, 'deduct', -st.stamps, 'Stamps deducted - order cancelled'\nFROM stamp_transactions st\nWHERE st.orderId = (SELECT id FROM orders WHERE orderNumber = '00107')\nAND st.action = 'earn'\nAND NOT EXISTS (\n  SELECT 1 FROM stamp_transactions st2 \n  WHERE st2.orderId = st.orderId AND st2.action = 'deduct'\n);",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 1569
+}

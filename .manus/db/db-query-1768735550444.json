@@ -1,0 +1,9 @@
+{
+  "query": "INSERT INTO stamp_transactions (userId, orderId, action, stamps, description)\nSELECT st.userId, st.orderId, 'deduct', -st.stamps, 'Stamps deducted - order cancelled (manual fix)'\nFROM stamp_transactions st\nJOIN users u ON st.userId = u.id\nWHERE u.name LIKE '%Rangan%' AND st.action = 'earn';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute INSERT INTO stamp_transactions (userId, orderId, action, stamps, description)\nSELECT st.userId, st.orderId, 'deduct', -st.stamps, 'Stamps deducted - order cancelled (manual fix)'\nFROM stamp_transactions st\nJOIN users u ON st.userId = u.id\nWHERE u.name LIKE '%Rangan%' AND st.action = 'earn';",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 1521
+}

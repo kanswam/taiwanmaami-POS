@@ -1,0 +1,20 @@
+{
+  "query": "SELECT * FROM stamp_transactions WHERE orderId = (SELECT id FROM orders WHERE orderNumber = '00107');",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT * FROM stamp_transactions WHERE orderId = (SELECT id FROM orders WHERE orderNumber = '00107');",
+  "rows": [
+    {
+      "id": "750003",
+      "userId": "18600730",
+      "orderId": "1110016",
+      "action": "welcome",
+      "stamps": "2",
+      "orderTotal": "80850",
+      "description": "Earned 2 stamp(s) from order #00107",
+      "createdAt": "2026-01-17 17:37:53"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tuserId\torderId\taction\tstamps\torderTotal\tdescription\tcreatedAt\n750003\t18600730\t1110016\twelcome\t2\t80850\tEarned 2 stamp(s) from order #00107\t2026-01-17 17:37:53\n",
+  "stderr": "",
+  "execution_time_ms": 1534
+}

@@ -602,6 +602,57 @@ export const appRouter = router({
           }
         }
         
+        // Deduct stamps when order is cancelled (if stamps were previously awarded)
+        if (input.status === 'cancelled' && order && order.userId) {
+          // Check if this order has stamp transactions
+          const existingStampTx = await dbInstance!
+            .select()
+            .from(stampTransactions)
+            .where(and(
+              eq(stampTransactions.orderId, input.orderId),
+              eq(stampTransactions.action, 'earn')
+            ));
+          
+          if (existingStampTx.length > 0) {
+            // Calculate total stamps that were awarded for this order
+            const stampsToDeduct = existingStampTx.reduce((sum, tx) => sum + tx.stamps, 0);
+            
+            if (stampsToDeduct > 0) {
+              // Get current user stamp count
+              const [user] = await dbInstance!
+                .select({
+                  stampCount: users.stampCount,
+                  lifetimeStamps: users.lifetimeStamps,
+                })
+                .from(users)
+                .where(eq(users.id, order.userId));
+              
+              // Deduct stamps (don't go below 0)
+              const newStampCount = Math.max(0, (user?.stampCount || 0) - stampsToDeduct);
+              const newLifetimeStamps = Math.max(0, (user?.lifetimeStamps || 0) - stampsToDeduct);
+              
+              await dbInstance!
+                .update(users)
+                .set({
+                  stampCount: newStampCount,
+                  lifetimeStamps: newLifetimeStamps,
+                })
+                .where(eq(users.id, order.userId));
+              
+              // Record stamp deduction transaction
+              await dbInstance!.insert(stampTransactions).values({
+                userId: order.userId,
+                orderId: input.orderId,
+                action: 'deduct',
+                stamps: -stampsToDeduct,
+                orderTotal: order.totalAmount,
+                description: `Stamps deducted - order #${order.orderNumber} cancelled`,
+                createdAt: new Date(),
+              });
+            }
+          }
+        }
+        
         return { success: true };
       }),
 

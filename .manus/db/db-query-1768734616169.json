@@ -1,0 +1,80 @@
+{
+  "query": "SELECT id, orderNumber, orderStatus, customerName, userId\nFROM orders\nWHERE orderStatus = 'cancelled'\nORDER BY orderNumber DESC\nLIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT id, orderNumber, orderStatus, customerName, userId\nFROM orders\nWHERE orderStatus = 'cancelled'\nORDER BY orderNumber DESC\nLIMIT 10;",
+  "rows": [
+    {
+      "id": "1110016",
+      "orderNumber": "00107",
+      "orderStatus": "cancelled",
+      "customerName": "Rangan K Swamy",
+      "userId": "18600730"
+    },
+    {
+      "id": "1110015",
+      "orderNumber": "00106",
+      "orderStatus": "cancelled",
+      "customerName": "Kannan Swamy",
+      "userId": "15510360"
+    },
+    {
+      "id": "1110010",
+      "orderNumber": "00101",
+      "orderStatus": "cancelled",
+      "customerName": "NULL",
+      "userId": "0"
+    },
+    {
+      "id": "990005",
+      "orderNumber": "00075",
+      "orderStatus": "cancelled",
+      "customerName": "NULL",
+      "userId": "0"
+    },
+    {
+      "id": "960003",
+      "orderNumber": "00067",
+      "orderStatus": "cancelled",
+      "customerName": "Kannan Swamy",
+      "userId": "15510360"
+    },
+    {
+      "id": "960002",
+      "orderNumber": "00066",
+      "orderStatus": "cancelled",
+      "customerName": "Catalyst. co",
+      "userId": "17041607"
+    },
+    {
+      "id": "870019",
+      "orderNumber": "00053",
+      "orderStatus": "cancelled",
+      "customerName": "Shiju Wilson",
+      "userId": "17041948"
+    },
+    {
+      "id": "870018",
+      "orderNumber": "00052",
+      "orderStatus": "cancelled",
+      "customerName": "Shiju Wilson",
+      "userId": "17041948"
+    },
+    {
+      "id": "870011",
+      "orderNumber": "00045",
+      "orderStatus": "cancelled",
+      "customerName": "Kannan Swamy",
+      "userId": "15510360"
+    },
+    {
+      "id": "870009",
+      "orderNumber": "00043",
+      "orderStatus": "cancelled",
+      "customerName": "Kannan Swamy",
+      "userId": "15510360"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\torderNumber\torderStatus\tcustomerName\tuserId\n1110016\t00107\tcancelled\tRangan K Swamy\t18600730\n1110015\t00106\tcancelled\tKannan Swamy\t15510360\n1110010\t00101\tcancelled\tNULL\t0\n990005\t00075\tcancelled\tNULL\t0\n960003\t00067\tcancelled\tKannan Swamy\t15510360\n960002\t00066\tcancelled\tCatalyst. co\t17041607\n870019\t00053\tcancelled\tShiju Wilson\t17041948\n870018\t00052\tcancelled\tShiju Wilson\t17041948\n870011\t00045\tcancelled\tKannan Swamy\t15510360\n870009\t00043\tcancelled\tKannan Swamy\t15510360\n",
+  "stderr": "",
+  "execution_time_ms": 1519
+}

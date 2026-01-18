@@ -719,3 +719,16 @@ Orders fixed:
 - [x] Order 110: Cinnamon Vanilla Assam was cancelled but still showed on invoice
 - [x] Total was correct but item list should not include cancelled items
 - [x] Fixed both receipt queue and KOT reprint to filter out cancelled items
+
+## Bug Fix - Loyalty Stamps on Cancelled Orders (Jan 18)
+
+- [ ] Remove loyalty stamps from cancelled orders (e.g., Rangan Swamy)
+- [ ] Fix order cancellation logic to deduct stamps when order is cancelled
+- [ ] Cancelled orders should not carry loyalty stamps
+
+## Bug Fix - Loyalty Stamps on Cancelled Orders (Jan 18)
+
+- [x] Cancelled orders should not carry loyalty stamps
+- [x] Rangan Swamy's stamps from cancelled order - manually reset to 0
+- [x] Added automatic stamp deduction when order is cancelled
+- [x] Deduction recorded in stamp_transactions table with 'deduct' action

@@ -253,6 +253,13 @@
       "when": 1768489977873,
       "tag": "0035_medical_blindfold",
       "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "5",
+      "when": 1768734856213,
+      "tag": "0036_broken_captain_marvel",
+      "breakpoints": true
     }
   ]
 }

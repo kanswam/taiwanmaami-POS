@@ -1,0 +1,18 @@
+{
+  "query": "SELECT o.id, o.orderNumber, o.orderStatus, o.customerName, COALESCE(st.stamps, 0) as stamps, COALESCE(st.action, 'none') as action\nFROM orders o\nLEFT JOIN stamp_transactions st ON st.orderId = o.id AND st.action = 'earn'\nWHERE o.customerName LIKE '%Rangan%'\nORDER BY o.id DESC;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT o.id, o.orderNumber, o.orderStatus, o.customerName, COALESCE(st.stamps, 0) as stamps, COALESCE(st.action, 'none') as action\nFROM orders o\nLEFT JOIN stamp_transactions st ON st.orderId = o.id AND st.action = 'earn'\nWHERE o.customerName LIKE '%Rangan%'\nORDER BY o.id DESC;",
+  "rows": [
+    {
+      "id": "1110016",
+      "orderNumber": "00107",
+      "orderStatus": "cancelled",
+      "customerName": "Rangan K Swamy",
+      "stamps": "0",
+      "action": "none"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\torderNumber\torderStatus\tcustomerName\tstamps\taction\n1110016\t00107\tcancelled\tRangan K Swamy\t0\tnone\n",
+  "stderr": "",
+  "execution_time_ms": 1543
+}

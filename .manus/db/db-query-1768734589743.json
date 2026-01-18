@@ -1,0 +1,16 @@
+{
+  "query": "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'orders' AND COLUMN_NAME LIKE '%status%';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'orders' AND COLUMN_NAME LIKE '%status%';",
+  "rows": [
+    {
+      "COLUMN_NAME": "orderStatus"
+    },
+    {
+      "COLUMN_NAME": "paymentStatus"
+    }
+  ],
+  "messages": [],
+  "stdout": "COLUMN_NAME\norderStatus\npaymentStatus\n",
+  "stderr": "",
+  "execution_time_ms": 1511
+}

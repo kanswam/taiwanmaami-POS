@@ -1,0 +1,17 @@
+{
+  "query": "SELECT o.id as orderId, o.userId, o.orderNumber, o.orderStatus, o.customerName\nFROM orders o\nWHERE o.orderNumber = '00107';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT o.id as orderId, o.userId, o.orderNumber, o.orderStatus, o.customerName\nFROM orders o\nWHERE o.orderNumber = '00107';",
+  "rows": [
+    {
+      "orderId": "1110016",
+      "userId": "18600730",
+      "orderNumber": "00107",
+      "orderStatus": "cancelled",
+      "customerName": "Rangan K Swamy"
+    }
+  ],
+  "messages": [],
+  "stdout": "orderId\tuserId\torderNumber\torderStatus\tcustomerName\n1110016\t18600730\t00107\tcancelled\tRangan K Swamy\n",
+  "stderr": "",
+  "execution_time_ms": 1558
+}

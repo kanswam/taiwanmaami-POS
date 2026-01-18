@@ -1,0 +1,18 @@
+{
+  "query": "SELECT st.id, st.userId, st.orderId, st.action, st.stamps, st.description\nFROM stamp_transactions st\nJOIN users u ON st.userId = u.id\nWHERE u.name LIKE '%Rangan%';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT st.id, st.userId, st.orderId, st.action, st.stamps, st.description\nFROM stamp_transactions st\nJOIN users u ON st.userId = u.id\nWHERE u.name LIKE '%Rangan%';",
+  "rows": [
+    {
+      "id": "750003",
+      "userId": "18600730",
+      "orderId": "1110016",
+      "action": "welcome",
+      "stamps": "2",
+      "description": "Earned 2 stamp(s) from order #00107"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tuserId\torderId\taction\tstamps\tdescription\n750003\t18600730\t1110016\twelcome\t2\tEarned 2 stamp(s) from order #00107\n",
+  "stderr": "",
+  "execution_time_ms": 1521
+}
