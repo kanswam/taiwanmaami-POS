@@ -701,3 +701,13 @@ Orders fixed:
 - [x] Fix product modal not scrolling properly for Sweet Pillow Brioche items
 - [x] Ensure close button (X) is visible and accessible - Added custom close button with dark background that floats over the image
 - [x] Modal content scrollable with max-h-[90vh] overflow-y-auto
+
+## Custom Item Addition for Staff Orders (Jan 18)
+
+- [x] Add "+ Custom" button to Staff Orders page (next to Add Items button)
+- [x] Allow staff to enter custom item name (e.g., "Extra Egg")
+- [x] Allow staff to enter custom price (e.g., ₹25)
+- [x] Allow staff to enter quantity and optional notes
+- [x] Custom items appear in order with "[Custom]" prefix
+- [x] Custom items tracked in order data and KOT printed
+- [x] Order totals automatically recalculated with GST

@@ -898,9 +898,111 @@ export const appRouter = router({
         return { 
           success: true, 
           orderNumber: order.orderNumber,
-          newSubtotal,
-          newTotalAmount,
-          itemsAdded: newOrderItems.length,
+          newTotal: newTotalAmount,
+        };
+      }),
+
+    // Add custom item to existing order (for ad-hoc items like extra egg)
+    addCustomItemToOrder: publicProcedure
+      .input(z.object({
+        orderId: z.number(),
+        itemName: z.string().min(1),
+        price: z.number().min(0), // Price in paise
+        quantity: z.number().min(1).default(1),
+        notes: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const dbInstance = await getDb();
+        if (!dbInstance) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
+        
+        // Get current order
+        const [order] = await dbInstance.select().from(orders).where(eq(orders.id, input.orderId));
+        if (!order) throw new TRPCError({ code: 'NOT_FOUND', message: 'Order not found' });
+        
+        // Only allow adding items to pending payment orders (in-store)
+        if (order.paymentStatus !== 'pending') {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: 'Cannot add items to paid orders' });
+        }
+        
+        // Only allow adding to in-store orders
+        if (order.orderType !== 'instore') {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: 'Can only add items to in-store orders' });
+        }
+        
+        const lineTotal = input.price * input.quantity;
+        
+        // Insert custom order item with productId = 0 to indicate custom item
+        const [insertedItem] = await dbInstance.insert(orderItemsTable).values({
+          orderId: input.orderId,
+          productId: 0, // 0 indicates custom item
+          productName: `[Custom] ${input.itemName}`,
+          size: null,
+          withBoba: null,
+          sugarLevel: null,
+          iceLevel: null,
+          quantity: input.quantity,
+          unitPrice: input.price,
+          addonsTotal: 0,
+          lineTotal: lineTotal,
+          specialInstructions: input.notes || null,
+        }).$returningId();
+        
+        // Recalculate order totals
+        const newSubtotal = order.subtotal + lineTotal;
+        const discountedSubtotal = newSubtotal - (order.discountAmount || 0);
+        const newStateGst = Math.round(discountedSubtotal * 0.025);
+        const newCentralGst = Math.round(discountedSubtotal * 0.025);
+        const newTotalAmount = discountedSubtotal + newStateGst + newCentralGst + order.deliveryCharge;
+        
+        // Update order totals
+        await dbInstance
+          .update(orders)
+          .set({
+            subtotal: newSubtotal,
+            stateGst: newStateGst,
+            centralGst: newCentralGst,
+            totalAmount: newTotalAmount,
+          })
+          .where(eq(orders.id, input.orderId));
+        
+        // Queue supplementary KOT for custom item
+        const kotData = {
+          orderId: order.orderNumber,
+          orderType: order.orderType.toUpperCase(),
+          customerName: order.customerName || 'Guest',
+          customerPhone: order.customerPhone || '',
+          tableNumber: order.tableNumber || '',
+          specialInstructions: '',
+          isAddition: true,
+          isCustomItem: true,
+          items: [{
+            productName: `[Custom] ${input.itemName}`,
+            quantity: input.quantity,
+            price: input.price,
+            size: null,
+            withBoba: null,
+            sugarLevel: null,
+            iceLevel: null,
+            specialInstructions: input.notes || '',
+            addons: [],
+          }],
+          totalAmount: lineTotal,
+          createdAt: new Date().toISOString(),
+        };
+        
+        await dbInstance.insert(kotQueue).values({
+          orderId: order.id.toString(),
+          outletId: order.outletId || 1,
+          orderNumber: order.orderNumber,
+          kotData: kotData,
+          isPrinted: false,
+        });
+        
+        return { 
+          success: true, 
+          orderNumber: order.orderNumber,
+          newTotal: newTotalAmount,
+          itemName: input.itemName,
         };
       }),
 

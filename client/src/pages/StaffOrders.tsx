@@ -266,6 +266,18 @@ export default function StaffOrders() {
     open: false, item: null, order: null, reason: ''
   });
   
+  // Custom item dialog
+  const [customItemDialog, setCustomItemDialog] = useState<{ 
+    open: boolean; 
+    order: any; 
+    itemName: string; 
+    price: string; 
+    quantity: number;
+    notes: string;
+  }>({
+    open: false, order: null, itemName: '', price: '', quantity: 1, notes: ''
+  });
+  
   const utils = trpc.useUtils();
   
   // Fetch orders with filters and auto-refresh every 10 seconds
@@ -308,6 +320,17 @@ export default function StaffOrders() {
     },
     onError: (err) => {
       toast.error(err.message || 'Failed to cancel item');
+    },
+  });
+
+  const addCustomItem = trpc.orders.addCustomItemToOrder.useMutation({
+    onSuccess: (data) => {
+      toast.success(`Added "${data.itemName}" to order`);
+      utils.orders.getRecent.invalidate();
+      setCustomItemDialog({ open: false, order: null, itemName: '', price: '', quantity: 1, notes: '' });
+    },
+    onError: (err) => {
+      toast.error(err.message || 'Failed to add custom item');
     },
   });
 
@@ -694,14 +717,35 @@ export default function StaffOrders() {
             </Button>
             {/* Add Items button for active in-store orders */}
             {order.orderType === 'instore' && order.orderStatus !== 'completed' && order.orderStatus !== 'cancelled' && (
-              <Button 
-                variant="outline" 
-                size="icon" 
-                title="Add Items"
-                onClick={() => setAddItemsDialog({ open: true, order })}
-              >
-                <ShoppingBag className="w-4 h-4" />
-              </Button>
+              <>
+                <Button 
+                  variant="outline" 
+                  size="icon" 
+                  title="Add Menu Items"
+                  onClick={() => setAddItemsDialog({ open: true, order })}
+                >
+                  <ShoppingBag className="w-4 h-4" />
+                </Button>
+                {/* Add Custom Item button - for ad-hoc items like extra egg */}
+                {order.paymentStatus === 'pending' && (
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    className="text-xs"
+                    title="Add Custom Item (e.g., Extra Egg)"
+                    onClick={() => setCustomItemDialog({ 
+                      open: true, 
+                      order, 
+                      itemName: '', 
+                      price: '', 
+                      quantity: 1,
+                      notes: ''
+                    })}
+                  >
+                    + Custom
+                  </Button>
+                )}
+              </>
             )}
             {/* Collect Payment button - only for pending payment AND not completed/cancelled */}
             {order.orderType === 'instore' && order.paymentStatus === 'pending' && order.orderStatus !== 'completed' && order.orderStatus !== 'cancelled' && (
@@ -1148,6 +1192,123 @@ export default function StaffOrders() {
               disabled={cancelOrderItem.isPending}
             >
               {cancelOrderItem.isPending ? 'Cancelling...' : 'Cancel Item'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Custom Item Dialog - for ad-hoc items like extra egg */}
+      <Dialog open={customItemDialog.open} onOpenChange={(open) => {
+        if (!open) setCustomItemDialog({ open: false, order: null, itemName: '', price: '', quantity: 1, notes: '' });
+      }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Add Custom Item</DialogTitle>
+            <p className="text-sm text-muted-foreground">
+              Add an item not on the menu (e.g., Extra Egg, Extra Sauce)
+            </p>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div>
+              <label className="text-sm font-medium">Item Name *</label>
+              <Input
+                placeholder="e.g., Extra Egg, Extra Sauce"
+                value={customItemDialog.itemName}
+                onChange={(e) => setCustomItemDialog({ ...customItemDialog, itemName: e.target.value })}
+                autoFocus
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="text-sm font-medium">Price (₹) *</label>
+                <Input
+                  type="number"
+                  placeholder="25"
+                  min="0"
+                  step="1"
+                  value={customItemDialog.price}
+                  onChange={(e) => setCustomItemDialog({ ...customItemDialog, price: e.target.value })}
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium">Quantity</label>
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    className="h-9 w-9"
+                    onClick={() => setCustomItemDialog({ 
+                      ...customItemDialog, 
+                      quantity: Math.max(1, customItemDialog.quantity - 1) 
+                    })}
+                  >
+                    -
+                  </Button>
+                  <span className="w-8 text-center font-medium">{customItemDialog.quantity}</span>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    className="h-9 w-9"
+                    onClick={() => setCustomItemDialog({ 
+                      ...customItemDialog, 
+                      quantity: customItemDialog.quantity + 1 
+                    })}
+                  >
+                    +
+                  </Button>
+                </div>
+              </div>
+            </div>
+            <div>
+              <label className="text-sm font-medium">Notes (optional)</label>
+              <Input
+                placeholder="Any special notes"
+                value={customItemDialog.notes}
+                onChange={(e) => setCustomItemDialog({ ...customItemDialog, notes: e.target.value })}
+              />
+            </div>
+            {customItemDialog.price && parseFloat(customItemDialog.price) > 0 && (
+              <div className="bg-muted p-3 rounded-lg">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm">Total:</span>
+                  <span className="font-bold text-lg">
+                    {formatPrice(parseFloat(customItemDialog.price) * 100 * customItemDialog.quantity)}
+                  </span>
+                </div>
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => setCustomItemDialog({ open: false, order: null, itemName: '', price: '', quantity: 1, notes: '' })}
+            >
+              Cancel
+            </Button>
+            <Button 
+              onClick={() => {
+                if (!customItemDialog.itemName.trim()) {
+                  toast.error('Please enter an item name');
+                  return;
+                }
+                const priceNum = parseFloat(customItemDialog.price);
+                if (isNaN(priceNum) || priceNum < 0) {
+                  toast.error('Please enter a valid price');
+                  return;
+                }
+                addCustomItem.mutate({
+                  orderId: customItemDialog.order.id,
+                  itemName: customItemDialog.itemName.trim(),
+                  price: Math.round(priceNum * 100), // Convert to paise
+                  quantity: customItemDialog.quantity,
+                  notes: customItemDialog.notes.trim() || undefined,
+                });
+              }}
+              disabled={addCustomItem.isPending || !customItemDialog.itemName.trim() || !customItemDialog.price}
+            >
+              {addCustomItem.isPending ? 'Adding...' : 'Add Item'}
             </Button>
           </DialogFooter>
         </DialogContent>
