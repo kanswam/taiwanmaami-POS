@@ -695,3 +695,9 @@ Orders fixed:
 - [x] Add "Prepare Now" / "Schedule Later" toggle buttons to checkout form
 - [x] Make it clear that time field is optional - datetime picker only shows when Schedule Later is selected
 - [x] Added helpful text: "Your order will be prepared immediately after payment" or "at the scheduled time"
+
+## Product Modal Scroll/Close Bug (Jan 18)
+
+- [x] Fix product modal not scrolling properly for Sweet Pillow Brioche items
+- [x] Ensure close button (X) is visible and accessible - Added custom close button with dark background that floats over the image
+- [x] Modal content scrollable with max-h-[90vh] overflow-y-auto

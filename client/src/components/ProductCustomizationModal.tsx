@@ -380,7 +380,19 @@ export function ProductCustomizationModal({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-0">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-0" showCloseButton={false}>
+        {/* Custom Close Button - Always visible over image */}
+        <button
+          onClick={onClose}
+          className="absolute top-3 right-3 z-50 bg-black/60 hover:bg-black/80 text-white rounded-full p-2 transition-colors shadow-lg"
+          aria-label="Close"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+        
         {/* Product Image Gallery - Full width at top */}
         {productImages.length > 0 && (
           <div className="relative w-full bg-secondary">
