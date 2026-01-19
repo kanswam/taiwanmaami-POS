@@ -851,3 +851,19 @@ export const backupLogs = mysqlTable("backup_logs", {
 
 export type BackupLog = typeof backupLogs.$inferSelect;
 export type InsertBackupLog = typeof backupLogs.$inferInsert;
+
+// Content Pages - Store T&Cs, Privacy Policy, and other editable content
+export const contentPages = mysqlTable("content_pages", {
+  id: int("id").autoincrement().primaryKey(),
+  slug: varchar("slug", { length: 100 }).notNull().unique(), // e.g., "terms-and-conditions", "privacy-policy"
+  title: varchar("title", { length: 255 }).notNull(),
+  content: text("content").notNull(), // HTML content from rich text editor
+  metaDescription: varchar("metaDescription", { length: 500 }), // SEO meta description
+  isPublished: boolean("isPublished").default(true).notNull(),
+  lastEditedBy: varchar("lastEditedBy", { length: 255 }), // User who last edited
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type ContentPage = typeof contentPages.$inferSelect;
+export type InsertContentPage = typeof contentPages.$inferInsert;

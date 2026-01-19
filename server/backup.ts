@@ -1,16 +1,42 @@
 import { getDb } from "./db";
 import { 
+  // Core business data
   orders, orderItems, orderItemAddons,
   users, payments, 
-  stampTransactions, loyaltyRewards,
-  workshopBookings, workshops, workshopDates,
+  // Loyalty system
+  stampTransactions, loyaltyRewards, loyaltyTransactions,
+  // Workshop & Events
+  workshopBookings, workshops, workshopDates, workshopWaitlist,
   eventOrders, eventOrderItems, eventInquiries,
+  // Product catalog
   products, categories, subcategories, addons,
-  reviews, backupLogs
+  productAddons, categoryAddons, subcategoryAddons,
+  customizationOptions,
+  // Customer data
+  addresses, guestOrders,
+  // Discounts & Promotions
+  discounts, discountUsage, discountAuthorizations,
+  // Store configuration
+  storeLocations, outletProducts, deliveryAreas,
+  // POS system
+  posSessions, posAuditLog, adminPins,
+  // Print queues
+  kotQueue, receiptQueue,
+  // Site settings
+  siteSettings,
+  // Audit logs
+  productAuditLog, categoryAuditLog, orderAuditLog,
+  // Complaints & Refunds
+  complaints, refundRequests,
+  // Reviews
+  reviews,
+  // Content pages (T&Cs, policies)
+  contentPages,
+  // Backup logs (meta)
+  backupLogs
 } from "../drizzle/schema";
 import { storagePut, storageGet } from "./storage";
 import { notifyOwner } from "./_core/notification";
-// Backup utility for Taiwan Maami database
 
 // Backup configuration
 const RETENTION_DAYS = 90;
@@ -37,6 +63,19 @@ interface BackupMetadata {
 }
 
 /**
+ * Safely query a table, returning empty array if table doesn't exist or has schema issues
+ */
+async function safeQuery<T>(db: any, table: any, tableName: string): Promise<T[]> {
+  try {
+    const data = await db.select().from(table);
+    return data as T[];
+  } catch (error) {
+    console.log(`Warning: Could not backup table ${tableName}:`, error);
+    return [];
+  }
+}
+
+/**
  * Export all database tables to JSON and upload to S3
  */
 export async function createBackup(): Promise<BackupResult> {
@@ -54,105 +93,230 @@ export async function createBackup(): Promise<BackupResult> {
     const backupData: Record<string, unknown[]> = {};
     let totalRows = 0;
     
-    // Critical business data
-    const ordersData = await db.select().from(orders);
+    // ========== CRITICAL BUSINESS DATA ==========
+    
+    // Orders
+    const ordersData = await safeQuery(db, orders, "orders");
     backupData.orders = ordersData;
     totalRows += ordersData.length;
     
-    const orderItemsData = await db.select().from(orderItems);
+    const orderItemsData = await safeQuery(db, orderItems, "order_items");
     backupData.orderItems = orderItemsData;
     totalRows += orderItemsData.length;
     
-    const orderItemAddonsData = await db.select().from(orderItemAddons);
+    const orderItemAddonsData = await safeQuery(db, orderItemAddons, "order_item_addons");
     backupData.orderItemAddons = orderItemAddonsData;
     totalRows += orderItemAddonsData.length;
     
-    // Customer data
-    const usersData = await db.select().from(users);
+    // ========== CUSTOMER DATA ==========
+    
+    const usersData = await safeQuery(db, users, "users");
     backupData.users = usersData;
     totalRows += usersData.length;
     
-    // Payment data
-    const paymentsData = await db.select().from(payments);
+    const addressesData = await safeQuery(db, addresses, "addresses");
+    backupData.addresses = addressesData;
+    totalRows += addressesData.length;
+    
+    const guestOrdersData = await safeQuery(db, guestOrders, "guest_orders");
+    backupData.guestOrders = guestOrdersData;
+    totalRows += guestOrdersData.length;
+    
+    // ========== PAYMENT DATA ==========
+    
+    const paymentsData = await safeQuery(db, payments, "payments");
     backupData.payments = paymentsData;
     totalRows += paymentsData.length;
     
-    // Loyalty data
-    const stampTransactionsData = await db.select().from(stampTransactions);
+    // ========== LOYALTY SYSTEM ==========
+    
+    const stampTransactionsData = await safeQuery(db, stampTransactions, "stamp_transactions");
     backupData.stampTransactions = stampTransactionsData;
     totalRows += stampTransactionsData.length;
     
-    const loyaltyRewardsData = await db.select().from(loyaltyRewards);
+    const loyaltyRewardsData = await safeQuery(db, loyaltyRewards, "loyalty_rewards");
     backupData.loyaltyRewards = loyaltyRewardsData;
     totalRows += loyaltyRewardsData.length;
     
-    // Workshop data
-    const workshopsData = await db.select().from(workshops);
+    const loyaltyTransactionsData = await safeQuery(db, loyaltyTransactions, "loyalty_transactions");
+    backupData.loyaltyTransactions = loyaltyTransactionsData;
+    totalRows += loyaltyTransactionsData.length;
+    
+    // ========== WORKSHOP & EVENT DATA ==========
+    
+    const workshopsData = await safeQuery(db, workshops, "workshops");
     backupData.workshops = workshopsData;
     totalRows += workshopsData.length;
     
-    const workshopDatesData = await db.select().from(workshopDates);
+    const workshopDatesData = await safeQuery(db, workshopDates, "workshop_dates");
     backupData.workshopDates = workshopDatesData;
     totalRows += workshopDatesData.length;
     
-    const workshopBookingsData = await db.select().from(workshopBookings);
+    const workshopBookingsData = await safeQuery(db, workshopBookings, "workshop_bookings");
     backupData.workshopBookings = workshopBookingsData;
     totalRows += workshopBookingsData.length;
     
-    // Event data - wrapped in try-catch for schema compatibility
-    try {
-      const eventOrdersData = await db.select().from(eventOrders);
-      backupData.eventOrders = eventOrdersData;
-      totalRows += eventOrdersData.length;
-    } catch {
-      backupData.eventOrders = [];
-    }
+    const workshopWaitlistData = await safeQuery(db, workshopWaitlist, "workshop_waitlist");
+    backupData.workshopWaitlist = workshopWaitlistData;
+    totalRows += workshopWaitlistData.length;
     
-    try {
-      const eventOrderItemsData = await db.select().from(eventOrderItems);
-      backupData.eventOrderItems = eventOrderItemsData;
-      totalRows += eventOrderItemsData.length;
-    } catch {
-      backupData.eventOrderItems = [];
-    }
+    const eventOrdersData = await safeQuery(db, eventOrders, "event_orders");
+    backupData.eventOrders = eventOrdersData;
+    totalRows += eventOrdersData.length;
     
-    try {
-      const eventInquiriesData = await db.select().from(eventInquiries);
-      backupData.eventInquiries = eventInquiriesData;
-      totalRows += eventInquiriesData.length;
-    } catch {
-      backupData.eventInquiries = [];
-    }
+    const eventOrderItemsData = await safeQuery(db, eventOrderItems, "event_order_items");
+    backupData.eventOrderItems = eventOrderItemsData;
+    totalRows += eventOrderItemsData.length;
     
-    // Product catalog
-    const productsData = await db.select().from(products);
+    const eventInquiriesData = await safeQuery(db, eventInquiries, "event_inquiries");
+    backupData.eventInquiries = eventInquiriesData;
+    totalRows += eventInquiriesData.length;
+    
+    // ========== PRODUCT CATALOG ==========
+    
+    const productsData = await safeQuery(db, products, "products");
     backupData.products = productsData;
     totalRows += productsData.length;
     
-    const categoriesData = await db.select().from(categories);
+    const categoriesData = await safeQuery(db, categories, "categories");
     backupData.categories = categoriesData;
     totalRows += categoriesData.length;
     
-    const subcategoriesData = await db.select().from(subcategories);
+    const subcategoriesData = await safeQuery(db, subcategories, "subcategories");
     backupData.subcategories = subcategoriesData;
     totalRows += subcategoriesData.length;
     
-    const addonsData = await db.select().from(addons);
+    const addonsData = await safeQuery(db, addons, "addons");
     backupData.addons = addonsData;
     totalRows += addonsData.length;
     
-    // Reviews
-    const reviewsData = await db.select().from(reviews);
+    const productAddonsData = await safeQuery(db, productAddons, "product_addons");
+    backupData.productAddons = productAddonsData;
+    totalRows += productAddonsData.length;
+    
+    const categoryAddonsData = await safeQuery(db, categoryAddons, "category_addons");
+    backupData.categoryAddons = categoryAddonsData;
+    totalRows += categoryAddonsData.length;
+    
+    const subcategoryAddonsData = await safeQuery(db, subcategoryAddons, "subcategory_addons");
+    backupData.subcategoryAddons = subcategoryAddonsData;
+    totalRows += subcategoryAddonsData.length;
+    
+    const customizationOptionsData = await safeQuery(db, customizationOptions, "customization_options");
+    backupData.customizationOptions = customizationOptionsData;
+    totalRows += customizationOptionsData.length;
+    
+    // ========== DISCOUNTS & PROMOTIONS ==========
+    
+    const discountsData = await safeQuery(db, discounts, "discounts");
+    backupData.discounts = discountsData;
+    totalRows += discountsData.length;
+    
+    const discountUsageData = await safeQuery(db, discountUsage, "discount_usage");
+    backupData.discountUsage = discountUsageData;
+    totalRows += discountUsageData.length;
+    
+    const discountAuthorizationsData = await safeQuery(db, discountAuthorizations, "discount_authorizations");
+    backupData.discountAuthorizations = discountAuthorizationsData;
+    totalRows += discountAuthorizationsData.length;
+    
+    // ========== STORE CONFIGURATION ==========
+    
+    const storeLocationsData = await safeQuery(db, storeLocations, "store_locations");
+    backupData.storeLocations = storeLocationsData;
+    totalRows += storeLocationsData.length;
+    
+    const outletProductsData = await safeQuery(db, outletProducts, "outlet_products");
+    backupData.outletProducts = outletProductsData;
+    totalRows += outletProductsData.length;
+    
+    const deliveryAreasData = await safeQuery(db, deliveryAreas, "delivery_areas");
+    backupData.deliveryAreas = deliveryAreasData;
+    totalRows += deliveryAreasData.length;
+    
+    // ========== POS SYSTEM ==========
+    
+    const posSessionsData = await safeQuery(db, posSessions, "pos_sessions");
+    backupData.posSessions = posSessionsData;
+    totalRows += posSessionsData.length;
+    
+    const posAuditLogData = await safeQuery(db, posAuditLog, "pos_audit_log");
+    backupData.posAuditLog = posAuditLogData;
+    totalRows += posAuditLogData.length;
+    
+    const adminPinsData = await safeQuery(db, adminPins, "admin_pins");
+    backupData.adminPins = adminPinsData;
+    totalRows += adminPinsData.length;
+    
+    // ========== PRINT QUEUES ==========
+    
+    const kotQueueData = await safeQuery(db, kotQueue, "kot_queue");
+    backupData.kotQueue = kotQueueData;
+    totalRows += kotQueueData.length;
+    
+    const receiptQueueData = await safeQuery(db, receiptQueue, "receipt_queue");
+    backupData.receiptQueue = receiptQueueData;
+    totalRows += receiptQueueData.length;
+    
+    // ========== SITE SETTINGS ==========
+    
+    const siteSettingsData = await safeQuery(db, siteSettings, "site_settings");
+    backupData.siteSettings = siteSettingsData;
+    totalRows += siteSettingsData.length;
+    
+    // ========== AUDIT LOGS ==========
+    
+    const productAuditLogData = await safeQuery(db, productAuditLog, "product_audit_log");
+    backupData.productAuditLog = productAuditLogData;
+    totalRows += productAuditLogData.length;
+    
+    const categoryAuditLogData = await safeQuery(db, categoryAuditLog, "category_audit_log");
+    backupData.categoryAuditLog = categoryAuditLogData;
+    totalRows += categoryAuditLogData.length;
+    
+    const orderAuditLogData = await safeQuery(db, orderAuditLog, "order_audit_log");
+    backupData.orderAuditLog = orderAuditLogData;
+    totalRows += orderAuditLogData.length;
+    
+    // ========== COMPLAINTS & REFUNDS ==========
+    
+    const complaintsData = await safeQuery(db, complaints, "complaints");
+    backupData.complaints = complaintsData;
+    totalRows += complaintsData.length;
+    
+    const refundRequestsData = await safeQuery(db, refundRequests, "refund_requests");
+    backupData.refundRequests = refundRequestsData;
+    totalRows += refundRequestsData.length;
+    
+    // ========== REVIEWS ==========
+    
+    const reviewsData = await safeQuery(db, reviews, "reviews");
     backupData.reviews = reviewsData;
     totalRows += reviewsData.length;
+    
+    // ========== CONTENT PAGES (T&Cs, Policies) ==========
+    
+    const contentPagesData = await safeQuery(db, contentPages, "content_pages");
+    backupData.contentPages = contentPagesData;
+    totalRows += contentPagesData.length;
+    
+    // ========== BACKUP LOGS (Meta) ==========
+    
+    const backupLogsData = await safeQuery(db, backupLogs, "backup_logs");
+    backupData.backupLogs = backupLogsData;
+    totalRows += backupLogsData.length;
     
     // Add metadata
     const backupPayload = {
       metadata: {
         createdAt: timestamp,
-        version: "1.0",
+        version: "2.0", // Updated version for comprehensive backup
         tablesBackedUp: Object.keys(backupData).length,
         totalRows,
+        tableList: Object.keys(backupData),
+        rowCounts: Object.fromEntries(
+          Object.entries(backupData).map(([key, value]) => [key, (value as unknown[]).length])
+        ),
       },
       data: backupData,
     };

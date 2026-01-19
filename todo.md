@@ -756,3 +756,13 @@ Orders fixed:
 - [x] Set up daily scheduled backup at 4:00 AM IST
 - [x] Implement 90-day retention with auto-cleanup
 - [x] Test backup: 739 rows, 573.7 KB, 18 tables - SUCCESS
+
+
+## Backup System Expansion (Jan 18)
+
+- [x] Create content_pages table for T&Cs, Privacy Policy, and other policy documents
+- [x] Extend backup to include all 45 database tables (was 18)
+- [x] Add addresses, discounts, discount_usage, store_locations, outlet_products
+- [x] Add site_settings, complaints, refund_requests, guest_orders
+- [x] Add addon mappings, customization_options, audit logs
+- [x] Test expanded backup - 1,602 rows, 1.23 MB verified
