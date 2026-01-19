@@ -843,7 +843,7 @@ export const backupLogs = mysqlTable("backup_logs", {
   size: int("size").default(0).notNull(), // Size in bytes
   tablesBackedUp: int("tablesBackedUp").default(0).notNull(),
   totalRows: int("totalRows").default(0).notNull(),
-  status: mysqlEnum("status", ["success", "failed"]).default("success").notNull(),
+  status: mysqlEnum("status", ["success", "failed", "restored"]).default("success").notNull(),
   errorMessage: text("errorMessage"),
   triggeredBy: mysqlEnum("triggeredBy", ["scheduled", "manual"]).default("scheduled").notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),

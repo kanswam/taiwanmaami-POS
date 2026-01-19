@@ -8035,6 +8035,11 @@ function WorkshopBookingsTab() {
 // Database Backup Tab Component
 function BackupTab() {
   const [isBackingUp, setIsBackingUp] = useState(false);
+  const [isRestoring, setIsRestoring] = useState(false);
+  const [restoreDialogOpen, setRestoreDialogOpen] = useState(false);
+  const [selectedBackup, setSelectedBackup] = useState<{ id: number; backupUrl: string; createdAt: Date | string } | null>(null);
+  const [confirmText, setConfirmText] = useState('');
+  
   const { data: backupHistory, refetch } = trpc.backup.getHistory.useQuery();
   const createBackupMutation = trpc.backup.createBackup.useMutation({
     onSuccess: (result) => {
@@ -8051,6 +8056,41 @@ function BackupTab() {
       setIsBackingUp(false);
     },
   });
+  
+  const restoreBackupMutation = trpc.backup.restoreFromBackup.useMutation({
+    onSuccess: (result) => {
+      if (result.success) {
+        toast.success(`Database restored successfully! ${result.totalRowsRestored} rows restored from ${result.tablesRestored} tables.`);
+        refetch();
+      } else {
+        toast.error(`Restore failed: ${result.error}`);
+      }
+      setIsRestoring(false);
+      setRestoreDialogOpen(false);
+      setSelectedBackup(null);
+      setConfirmText('');
+    },
+    onError: (error) => {
+      toast.error(`Restore failed: ${error.message}`);
+      setIsRestoring(false);
+    },
+  });
+  
+  const handleRestoreClick = (backup: { id: number; backupUrl: string | null; createdAt: Date | string }) => {
+    if (!backup.backupUrl) return;
+    setSelectedBackup({ id: backup.id, backupUrl: backup.backupUrl, createdAt: backup.createdAt });
+    setRestoreDialogOpen(true);
+    setConfirmText('');
+  };
+  
+  const handleConfirmRestore = () => {
+    if (!selectedBackup || confirmText !== 'RESTORE') return;
+    setIsRestoring(true);
+    restoreBackupMutation.mutate({ 
+      backupUrl: selectedBackup.backupUrl,
+      createPreRestoreBackup: true 
+    });
+  };
 
   const handleBackupNow = () => {
     setIsBackingUp(true);
@@ -8193,21 +8233,33 @@ function BackupTab() {
                       </span>
                     </td>
                     <td className="py-3 px-4">
-                      {backup.status === 'success' && backup.backupUrl && (
-                        <a 
-                          href={backup.backupUrl} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className="text-primary hover:underline text-sm"
-                        >
-                          Download
-                        </a>
-                      )}
-                      {backup.status === 'failed' && backup.errorMessage && (
-                        <span className="text-red-500 text-sm" title={backup.errorMessage}>
-                          View Error
-                        </span>
-                      )}
+                      <div className="flex items-center gap-2">
+                        {backup.status === 'success' && backup.backupUrl && (
+                          <>
+                            <a 
+                              href={backup.backupUrl} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="text-primary hover:underline text-sm"
+                            >
+                              Download
+                            </a>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleRestoreClick(backup)}
+                              className="text-amber-600 border-amber-300 hover:bg-amber-50"
+                            >
+                              Restore
+                            </Button>
+                          </>
+                        )}
+                        {backup.status === 'failed' && backup.errorMessage && (
+                          <span className="text-red-500 text-sm" title={backup.errorMessage}>
+                            View Error
+                          </span>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -8218,16 +8270,83 @@ function BackupTab() {
       </Card>
 
       <Card className="p-6 bg-amber-50 border-amber-200">
-        <h3 className="text-lg font-semibold mb-2 text-amber-800">Recovery Instructions</h3>
+        <h3 className="text-lg font-semibold mb-2 text-amber-800">One-Click Restore</h3>
         <p className="text-amber-700 text-sm mb-4">
-          If you need to restore data from a backup, follow these steps:
+          Click the "Restore" button next to any backup to restore your database to that point in time.
         </p>
-        <ol className="list-decimal list-inside text-sm text-amber-700 space-y-2">
-          <li>Download the backup JSON file from the history above</li>
-          <li>Contact support with the backup file and specify which data needs to be restored</li>
-          <li>Our team will verify and restore the data within 24 hours</li>
-        </ol>
+        <ul className="list-disc list-inside text-sm text-amber-700 space-y-2">
+          <li>A pre-restore backup is automatically created before restoration</li>
+          <li>You'll need to type "RESTORE" to confirm the action</li>
+          <li>All current data will be replaced with the backup data</li>
+        </ul>
       </Card>
+      
+      {/* Restore Confirmation Dialog */}
+      <Dialog open={restoreDialogOpen} onOpenChange={setRestoreDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-amber-600">⚠️ Confirm Database Restore</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+              <p className="text-sm text-amber-800 font-medium mb-2">You are about to restore from:</p>
+              <p className="text-sm text-amber-700">
+                {selectedBackup && new Date(selectedBackup.createdAt).toLocaleDateString('en-IN', {
+                  day: '2-digit',
+                  month: 'short',
+                  year: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit',
+                })}
+              </p>
+            </div>
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+              <p className="text-sm text-red-800 font-medium mb-2">⚠️ Warning:</p>
+              <ul className="text-sm text-red-700 list-disc list-inside space-y-1">
+                <li>All current data will be replaced</li>
+                <li>Any data created after this backup will be lost</li>
+                <li>A pre-restore backup will be created automatically</li>
+              </ul>
+            </div>
+            <div>
+              <label className="text-sm font-medium">Type RESTORE to confirm:</label>
+              <Input
+                value={confirmText}
+                onChange={(e) => setConfirmText(e.target.value.toUpperCase())}
+                placeholder="Type RESTORE"
+                className="mt-2"
+              />
+            </div>
+          </div>
+          <div className="flex justify-end gap-3">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setRestoreDialogOpen(false);
+                setSelectedBackup(null);
+                setConfirmText('');
+              }}
+              disabled={isRestoring}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleConfirmRestore}
+              disabled={confirmText !== 'RESTORE' || isRestoring}
+              className="bg-amber-600 hover:bg-amber-700"
+            >
+              {isRestoring ? (
+                <>
+                  <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full mr-2" />
+                  Restoring...
+                </>
+              ) : (
+                'Restore Database'
+              )}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

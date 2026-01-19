@@ -443,3 +443,314 @@ function formatBytes(bytes: number): string {
   const i = Math.floor(Math.log(bytes) / Math.log(k));
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
 }
+
+
+// ========== RESTORE FUNCTIONALITY ==========
+
+interface RestoreResult {
+  success: boolean;
+  tablesRestored?: number;
+  totalRowsRestored?: number;
+  preRestoreBackupKey?: string;
+  error?: string;
+  timestamp: string;
+}
+
+/**
+ * Table restore order - tables with foreign key dependencies must be restored after their parents
+ */
+const TABLE_RESTORE_ORDER = [
+  // 1. Independent tables (no foreign keys)
+  'categories',
+  'addons',
+  'customizationOptions',
+  'storeLocations',
+  'siteSettings',
+  'adminPins',
+  'discounts',
+  
+  // 2. Tables depending on categories
+  'subcategories',
+  'categoryAddons',
+  
+  // 3. Tables depending on subcategories
+  'subcategoryAddons',
+  
+  // 4. Products (depends on categories, subcategories)
+  'products',
+  'productAddons',
+  'outletProducts',
+  
+  // 5. Users (independent)
+  'users',
+  
+  // 6. Tables depending on users
+  'addresses',
+  'loyaltyRewards',
+  'loyaltyTransactions',
+  'stampTransactions',
+  'discountUsage',
+  'discountAuthorizations',
+  'reviews',
+  'complaints',
+  'refundRequests',
+  
+  // 7. Workshops
+  'workshops',
+  'workshopDates',
+  'workshopBookings',
+  'workshopWaitlist',
+  
+  // 8. Orders (depends on users, store_locations)
+  'orders',
+  'orderItems',
+  'orderItemAddons',
+  'guestOrders',
+  
+  // 9. Payments (depends on orders)
+  'payments',
+  
+  // 10. Events
+  'eventOrders',
+  'eventOrderItems',
+  'eventInquiries',
+  
+  // 11. Delivery areas (depends on store_locations)
+  'deliveryAreas',
+  
+  // 12. POS system
+  'posSessions',
+  'posAuditLog',
+  
+  // 13. Print queues
+  'kotQueue',
+  'receiptQueue',
+  
+  // 14. Audit logs
+  'productAuditLog',
+  'categoryAuditLog',
+  'orderAuditLog',
+  
+  // 15. Content pages
+  'contentPages',
+  
+  // 16. Backup logs (meta - restore last)
+  'backupLogs',
+];
+
+/**
+ * Map of backup data keys to database table schemas
+ */
+const TABLE_SCHEMA_MAP: Record<string, any> = {
+  orders,
+  orderItems,
+  orderItemAddons,
+  users,
+  addresses,
+  guestOrders,
+  payments,
+  stampTransactions,
+  loyaltyRewards,
+  loyaltyTransactions,
+  workshops,
+  workshopDates,
+  workshopBookings,
+  workshopWaitlist,
+  eventOrders,
+  eventOrderItems,
+  eventInquiries,
+  products,
+  categories,
+  subcategories,
+  addons,
+  productAddons,
+  categoryAddons,
+  subcategoryAddons,
+  customizationOptions,
+  discounts,
+  discountUsage,
+  discountAuthorizations,
+  storeLocations,
+  outletProducts,
+  deliveryAreas,
+  posSessions,
+  posAuditLog,
+  adminPins,
+  kotQueue,
+  receiptQueue,
+  siteSettings,
+  productAuditLog,
+  categoryAuditLog,
+  orderAuditLog,
+  complaints,
+  refundRequests,
+  reviews,
+  contentPages,
+  backupLogs,
+};
+
+/**
+ * Restore database from a backup file
+ * @param backupUrl - URL of the backup JSON file in S3
+ * @param createPreRestoreBackup - Whether to create a backup before restoring (default: true)
+ */
+export async function restoreFromBackup(
+  backupUrl: string,
+  createPreRestoreBackup: boolean = true
+): Promise<RestoreResult> {
+  const timestamp = new Date().toISOString();
+  let preRestoreBackupKey: string | undefined;
+  
+  try {
+    const db = await getDb();
+    if (!db) {
+      throw new Error("Database not available");
+    }
+    
+    // Step 1: Create a backup of current data before restore (safety net)
+    if (createPreRestoreBackup) {
+      console.log("Creating pre-restore backup...");
+      const preBackup = await createBackup();
+      if (preBackup.success) {
+        preRestoreBackupKey = preBackup.backupKey;
+        console.log(`Pre-restore backup created: ${preRestoreBackupKey}`);
+      } else {
+        console.warn("Warning: Could not create pre-restore backup, proceeding anyway");
+      }
+    }
+    
+    // Step 2: Fetch the backup JSON from S3
+    console.log(`Fetching backup from: ${backupUrl}`);
+    const response = await fetch(backupUrl);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch backup: ${response.statusText}`);
+    }
+    
+    const backupPayload = await response.json();
+    
+    // Validate backup structure
+    if (!backupPayload.metadata || !backupPayload.data) {
+      throw new Error("Invalid backup format: missing metadata or data");
+    }
+    
+    const backupData = backupPayload.data;
+    const metadata = backupPayload.metadata;
+    
+    console.log(`Restoring backup from ${metadata.createdAt}`);
+    console.log(`Tables to restore: ${metadata.tablesBackedUp}, Total rows: ${metadata.totalRows}`);
+    
+    // Step 3: Restore tables in dependency order
+    let tablesRestored = 0;
+    let totalRowsRestored = 0;
+    
+    // Disable foreign key checks for the restore operation
+    await db.execute(sql`SET FOREIGN_KEY_CHECKS = 0`);
+    
+    try {
+      for (const tableKey of TABLE_RESTORE_ORDER) {
+        const tableData = backupData[tableKey];
+        const tableSchema = TABLE_SCHEMA_MAP[tableKey];
+        
+        if (!tableData || !tableSchema) {
+          continue; // Skip if table not in backup or not mapped
+        }
+        
+        if (!Array.isArray(tableData) || tableData.length === 0) {
+          continue; // Skip empty tables
+        }
+        
+        try {
+          // Delete existing data
+          await db.delete(tableSchema);
+          
+          // Insert backup data in batches of 100 to avoid query size limits
+          const batchSize = 100;
+          for (let i = 0; i < tableData.length; i += batchSize) {
+            const batch = tableData.slice(i, i + batchSize);
+            
+            // Convert date strings back to Date objects for timestamp fields
+            const processedBatch = batch.map((row: any) => {
+              const processed = { ...row };
+              for (const [key, value] of Object.entries(processed)) {
+                // Convert ISO date strings back to Date objects
+                if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/.test(value)) {
+                  processed[key] = new Date(value);
+                }
+              }
+              return processed;
+            });
+            
+            await db.insert(tableSchema).values(processedBatch);
+          }
+          
+          tablesRestored++;
+          totalRowsRestored += tableData.length;
+          console.log(`Restored ${tableKey}: ${tableData.length} rows`);
+        } catch (tableError) {
+          console.error(`Error restoring table ${tableKey}:`, tableError);
+          // Continue with other tables
+        }
+      }
+    } finally {
+      // Re-enable foreign key checks
+      await db.execute(sql`SET FOREIGN_KEY_CHECKS = 1`);
+    }
+    
+    // Step 4: Log the restore operation
+    await db.insert(backupLogs).values({
+      backupKey: `restore-${Date.now()}`,
+      backupUrl,
+      size: 0,
+      tablesBackedUp: tablesRestored,
+      totalRows: totalRowsRestored,
+      status: "restored",
+      triggeredBy: "manual",
+    });
+    
+    // Step 5: Send notification
+    await notifyOwner({
+      title: "🔄 Database Restore Completed",
+      content: `Database has been restored from backup.
+
+**Restore Details:**
+- Backup Date: ${metadata.createdAt}
+- Tables Restored: ${tablesRestored}
+- Total Rows Restored: ${totalRowsRestored}
+- Pre-Restore Backup: ${preRestoreBackupKey || 'Not created'}
+
+If you notice any issues, you can restore from the pre-restore backup.`,
+    });
+    
+    return {
+      success: true,
+      tablesRestored,
+      totalRowsRestored,
+      preRestoreBackupKey,
+      timestamp,
+    };
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    
+    // Send failure notification
+    await notifyOwner({
+      title: "❌ Database Restore Failed",
+      content: `Database restore failed!
+
+**Error:** ${errorMessage}
+**Time:** ${timestamp}
+**Pre-Restore Backup:** ${preRestoreBackupKey || 'Not created'}
+
+Your data has not been modified. Please check the error and try again.`,
+    });
+    
+    return {
+      success: false,
+      error: errorMessage,
+      preRestoreBackupKey,
+      timestamp,
+    };
+  }
+}
+
+// Import sql for raw queries
+import { sql } from "drizzle-orm";

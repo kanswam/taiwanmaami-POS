@@ -6011,5 +6011,17 @@ export const appRouter = router({
       const result = await runScheduledBackup();
       return result;
     }),
+
+    // Restore from a backup (admin only)
+    restoreFromBackup: adminProcedure
+      .input(z.object({ 
+        backupUrl: z.string(),
+        createPreRestoreBackup: z.boolean().default(true)
+      }))
+      .mutation(async ({ input }) => {
+        const { restoreFromBackup } = await import('./backup');
+        const result = await restoreFromBackup(input.backupUrl, input.createPreRestoreBackup);
+        return result;
+      }),
   }),
 });

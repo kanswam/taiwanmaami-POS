@@ -766,3 +766,15 @@ Orders fixed:
 - [x] Add site_settings, complaints, refund_requests, guest_orders
 - [x] Add addon mappings, customization_options, audit logs
 - [x] Test expanded backup - 1,602 rows, 1.23 MB verified
+
+
+## One-Click Database Restore (Jan 19)
+
+- [x] Create restore function in backup.ts to import JSON data back to database
+- [x] Add restore API endpoint with admin authentication
+- [x] Add Restore button to backup history in Admin UI
+- [x] Add confirmation dialog requiring typed "RESTORE" confirmation
+- [x] Auto-create backup before restore for safety
+- [x] Send email notification on restore completion
+- [x] Add vitest tests for restore functionality
+- [x] Update backup_logs schema to include 'restored' status
