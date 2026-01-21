@@ -830,3 +830,15 @@ Orders fixed:
 - 120 production orders protected (isTestData=false)
 - 0 test orders (safe to delete)
 - All future orders default to production (isTestData=false)
+
+## Outlet Selection Flow Fix (Jan 21)
+
+- [x] CRITICAL: Fix outlet selection flow for Dine-in/Pickup orders
+  - [x] Changed from modal-based to blocking screen approach
+  - [x] Menu is completely hidden until outlet is selected
+  - [x] Outlet selection resets when switching between order types
+  - [x] Delivery mode works without outlet selection (auto T.Nagar)
+  - [x] Dine-in shows "Select Your Location" blocking screen
+  - [x] Pickup shows "Select Your Location" blocking screen
+  - [x] No way to bypass outlet selection for Dine-in/Pickup
+

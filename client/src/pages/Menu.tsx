@@ -465,9 +465,8 @@ export default function Menu() {
             <div className="flex gap-2 justify-center">
               <button
                 onClick={() => {
-                  // Show outlet selection modal for Dine In
-                  setPendingOrderType('instore');
-                  setShowOutletModal(true);
+                  // Set order type to instore - the blocking screen will show until outlet is selected
+                  setOrderType('instore');
                 }}
                 className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
                   state.orderType === 'instore'
@@ -491,9 +490,8 @@ export default function Menu() {
               </button>
               <button
                 onClick={() => {
-                  // Show outlet selection modal for Pickup
-                  setPendingOrderType('pickup');
-                  setShowOutletModal(true);
+                  // Set order type to pickup - the blocking screen will show until outlet is selected
+                  setOrderType('pickup');
                 }}
                 className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
                   state.orderType === 'pickup'
@@ -609,6 +607,65 @@ export default function Menu() {
         </div>
       </div>
 
+      {/* Check if outlet selection is required */}
+      {((state.orderType === 'instore' && !instoreOutlet) || (state.orderType === 'pickup' && !pickupOutlet)) ? (
+        /* Block menu access until outlet is selected */
+        <div className="container py-12">
+          <div className="max-w-md mx-auto text-center">
+            <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-primary/10 flex items-center justify-center">
+              <MapPin className="w-10 h-10 text-primary" />
+            </div>
+            <h2 className="text-2xl font-bold mb-3">Select Your Location</h2>
+            <p className="text-muted-foreground mb-8">
+              {state.orderType === 'instore' 
+                ? 'Please select which outlet you are dining at to view the menu.'
+                : 'Please select which outlet you want to pick up from to view the menu.'}
+            </p>
+            <div className="space-y-4">
+              <button
+                onClick={() => {
+                  if (state.orderType === 'instore') {
+                    setInstoreOutlet('palladium');
+                  } else {
+                    setPickupOutlet('palladium');
+                  }
+                }}
+                className="w-full flex items-center gap-4 p-4 rounded-xl border-2 border-border hover:border-primary hover:bg-primary/5 transition-all group"
+              >
+                <div className="w-14 h-14 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <Store className="w-7 h-7 text-primary" />
+                </div>
+                <div className="text-left flex-1">
+                  <h3 className="font-bold text-lg group-hover:text-primary transition-colors">Palladium Mall</h3>
+                  <p className="text-sm text-muted-foreground">Velachery, Chennai</p>
+                </div>
+                <ChevronRight className="w-6 h-6 text-muted-foreground group-hover:text-primary transition-colors" />
+              </button>
+              <button
+                onClick={() => {
+                  if (state.orderType === 'instore') {
+                    setInstoreOutlet('tnagar');
+                  } else {
+                    setPickupOutlet('tnagar');
+                  }
+                }}
+                className="w-full flex items-center gap-4 p-4 rounded-xl border-2 border-border hover:border-primary hover:bg-primary/5 transition-all group"
+              >
+                <div className="w-14 h-14 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <Store className="w-7 h-7 text-primary" />
+                </div>
+                <div className="text-left flex-1">
+                  <h3 className="font-bold text-lg group-hover:text-primary transition-colors">T. Nagar</h3>
+                  <p className="text-sm text-muted-foreground">Chennai</p>
+                </div>
+                <ChevronRight className="w-6 h-6 text-muted-foreground group-hover:text-primary transition-colors" />
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : (
+        /* Show menu when outlet is selected or order type is delivery */
+        <>
       {/* Category Pills - More prominent */}
       <div className="sticky top-[120px] sm:top-[104px] z-30 bg-background border-b border-border shadow-sm">
         <div className="container py-3 overflow-x-auto">
@@ -706,6 +763,8 @@ export default function Menu() {
             </Button>
           </Link>
         </div>
+      )}
+        </>  
       )}
 
       {/* Outlet Selection Modal */}
