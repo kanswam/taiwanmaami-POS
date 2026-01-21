@@ -807,3 +807,10 @@ Orders fixed:
   - [x] KOT prints ONLY at selected outlet
   - [x] outletId passed from frontend to backend
   - [x] KOT queue uses correct outletId (1=Palladium, 2=T.Nagar)
+
+## Data Cleanup & UX Fix (Jan 21)
+
+- [x] Delete all test data from the system (132 orders, 318 order items, 150 KOT queue, 140 receipt queue)
+- [x] Force outlet selection first for Dine-in/Pickup before showing menu
+  - Added modal dialog that appears when clicking Dine In or Pickup
+  - Customer must select outlet (Palladium Mall or T. Nagar) before viewing menu

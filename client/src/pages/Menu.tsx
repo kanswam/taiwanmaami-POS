@@ -8,7 +8,8 @@ import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { trpc } from '@/lib/trpc';
 import { useCart } from '@/contexts/CartContext';
-import { Search, ShoppingCart, Truck, Store, ChevronRight, ArrowLeft, Home, AlertCircle } from 'lucide-react';
+import { Search, ShoppingCart, Truck, Store, ChevronRight, ArrowLeft, Home, AlertCircle, MapPin } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Link } from 'wouter';
 import { formatPrice } from '@shared/types';
 
@@ -63,6 +64,8 @@ export default function Menu() {
   const [selectedCategory, setSelectedCategory] = useState(initialCategory);
   const [selectedSubcategory, setSelectedSubcategory] = useState<string | null>(initialSubcategory);
   const [searchQuery, setSearchQuery] = useState('');
+  const [showOutletModal, setShowOutletModal] = useState(false);
+  const [pendingOrderType, setPendingOrderType] = useState<'instore' | 'pickup' | null>(null);
   const [showAddToOrderBanner, setShowAddToOrderBanner] = useState(false);
   const { state, setOrderType, setTableNumber, tableNumber, setPickupOutlet, pickupOutlet, setInstoreOutlet, instoreOutlet, itemCount, total, setActiveOrderId } = useCart();
   
@@ -461,7 +464,11 @@ export default function Menu() {
             <p className="text-xs font-medium text-muted-foreground mb-2 text-center">Ordering for:</p>
             <div className="flex gap-2 justify-center">
               <button
-                onClick={() => setOrderType('instore')}
+                onClick={() => {
+                  // Show outlet selection modal for Dine In
+                  setPendingOrderType('instore');
+                  setShowOutletModal(true);
+                }}
                 className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
                   state.orderType === 'instore'
                     ? 'bg-primary text-white shadow-md scale-105'
@@ -483,7 +490,11 @@ export default function Menu() {
                 <span>Delivery</span>
               </button>
               <button
-                onClick={() => setOrderType('pickup')}
+                onClick={() => {
+                  // Show outlet selection modal for Pickup
+                  setPendingOrderType('pickup');
+                  setShowOutletModal(true);
+                }}
                 className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
                   state.orderType === 'pickup'
                     ? 'bg-primary text-white shadow-md scale-105'
@@ -696,6 +707,71 @@ export default function Menu() {
           </Link>
         </div>
       )}
+
+      {/* Outlet Selection Modal */}
+      <Dialog open={showOutletModal} onOpenChange={setShowOutletModal}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-xl">
+              <MapPin className="w-6 h-6 text-primary" />
+              Select Your Location
+            </DialogTitle>
+            <DialogDescription>
+              {pendingOrderType === 'instore' 
+                ? 'Choose which outlet you are dining at'
+                : 'Choose which outlet you want to pick up from'}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <button
+              onClick={() => {
+                if (pendingOrderType === 'instore') {
+                  setOrderType('instore');
+                  setInstoreOutlet('palladium');
+                } else if (pendingOrderType === 'pickup') {
+                  setOrderType('pickup');
+                  setPickupOutlet('palladium');
+                }
+                setShowOutletModal(false);
+                setPendingOrderType(null);
+              }}
+              className="flex items-center gap-4 p-4 rounded-xl border-2 border-border hover:border-primary hover:bg-primary/5 transition-all group"
+            >
+              <div className="w-16 h-16 rounded-lg bg-primary/10 flex items-center justify-center">
+                <Store className="w-8 h-8 text-primary" />
+              </div>
+              <div className="text-left flex-1">
+                <h3 className="font-bold text-lg group-hover:text-primary transition-colors">Palladium Mall</h3>
+                <p className="text-sm text-muted-foreground">Velachery, Chennai</p>
+              </div>
+              <ChevronRight className="w-6 h-6 text-muted-foreground group-hover:text-primary transition-colors" />
+            </button>
+            <button
+              onClick={() => {
+                if (pendingOrderType === 'instore') {
+                  setOrderType('instore');
+                  setInstoreOutlet('tnagar');
+                } else if (pendingOrderType === 'pickup') {
+                  setOrderType('pickup');
+                  setPickupOutlet('tnagar');
+                }
+                setShowOutletModal(false);
+                setPendingOrderType(null);
+              }}
+              className="flex items-center gap-4 p-4 rounded-xl border-2 border-border hover:border-primary hover:bg-primary/5 transition-all group"
+            >
+              <div className="w-16 h-16 rounded-lg bg-primary/10 flex items-center justify-center">
+                <Store className="w-8 h-8 text-primary" />
+              </div>
+              <div className="text-left flex-1">
+                <h3 className="font-bold text-lg group-hover:text-primary transition-colors">T. Nagar</h3>
+                <p className="text-sm text-muted-foreground">Chennai</p>
+              </div>
+              <ChevronRight className="w-6 h-6 text-muted-foreground group-hover:text-primary transition-colors" />
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
