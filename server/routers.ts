@@ -1604,6 +1604,67 @@ export const appRouter = router({
       return { success: true };
     }),
 
+    // SAFE delete test data only - NEVER deletes production data
+    safeDeleteTestData: adminProcedure
+      .input(z.object({
+        confirmationCode: z.string(), // Must be "DELETE_TEST_DATA"
+      }))
+      .mutation(async ({ input }) => {
+        if (input.confirmationCode !== "DELETE_TEST_DATA") {
+          throw new TRPCError({ 
+            code: 'BAD_REQUEST', 
+            message: 'Invalid confirmation code. Must type DELETE_TEST_DATA to proceed.' 
+          });
+        }
+        
+        const { safeDeleteTestData, hasProductionData } = await import('./safeDelete');
+        
+        // Check what data exists
+        const dataCheck = await hasProductionData();
+        
+        if (dataCheck.testCount === 0) {
+          return {
+            success: false,
+            message: 'No test data found to delete.',
+            productionCount: dataCheck.productionCount,
+            testCount: 0,
+            deletedOrders: 0,
+            deletedOrderItems: 0,
+          };
+        }
+        
+        // Perform safe deletion
+        const result = await safeDeleteTestData();
+        
+        return {
+          success: result.success,
+          message: result.error || `Deleted ${result.deletedOrders} test orders`,
+          productionCount: dataCheck.productionCount,
+          testCount: dataCheck.testCount,
+          deletedOrders: result.deletedOrders,
+          deletedOrderItems: result.deletedOrderItems,
+          backupUrl: result.backupUrl,
+        };
+      }),
+
+    // Mark specific orders as test data
+    markOrdersAsTestData: adminProcedure
+      .input(z.object({
+        orderIds: z.array(z.number()),
+      }))
+      .mutation(async ({ input }) => {
+        const { markOrdersAsTestData } = await import('./safeDelete');
+        const result = await markOrdersAsTestData(input.orderIds);
+        return result;
+      }),
+
+    // Check production vs test data counts
+    checkDataStatus: adminProcedure
+      .query(async () => {
+        const { hasProductionData } = await import('./safeDelete');
+        return await hasProductionData();
+      }),
+
     // Category management
     createCategory: adminProcedure
       .input(z.object({

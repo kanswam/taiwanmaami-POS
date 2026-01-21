@@ -814,3 +814,19 @@ Orders fixed:
 - [x] Force outlet selection first for Dine-in/Pickup before showing menu
   - Added modal dialog that appears when clicking Dine In or Pickup
   - Customer must select outlet (Palladium Mall or T. Nagar) before viewing menu
+
+## Production Data Safeguards (Jan 21) - CRITICAL
+
+- [x] Add isTestData flag to orders table (and order_items)
+- [x] Create safe delete function that only deletes test data (server/safeDelete.ts)
+- [x] Set up automated 4 AM daily backup (scheduled task)
+- [x] Email notification when backup completes (via notifyOwner)
+- [x] Require confirmation code "DELETE_TEST_DATA" before any delete
+- [x] Auto-backup before any delete operation
+- [x] Keep 90 days of backup history
+- [x] Added admin endpoints: safeDeleteTestData, markOrdersAsTestData, checkDataStatus
+
+**Current Status:**
+- 120 production orders protected (isTestData=false)
+- 0 test orders (safe to delete)
+- All future orders default to production (isTestData=false)

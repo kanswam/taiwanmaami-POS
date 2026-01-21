@@ -228,6 +228,8 @@ export const orders = mysqlTable("orders", {
   refundProcessedBy: int("refundProcessedBy"),
   // Idempotency key to prevent duplicate orders on network retry
   idempotencyKey: varchar("idempotencyKey", { length: 100 }).unique(),
+  // Test data flag - NEVER delete orders where isTestData = false
+  isTestData: boolean("isTestData").default(false).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
   completedAt: timestamp("completedAt"),
@@ -253,6 +255,8 @@ export const orderItems = mysqlTable("order_items", {
   cancelledAt: timestamp("cancelledAt"),
   cancelledBy: int("cancelledBy"),
   cancellationReason: text("cancellationReason"),
+  // Test data flag - NEVER delete order items where isTestData = false
+  isTestData: boolean("isTestData").default(false).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 
