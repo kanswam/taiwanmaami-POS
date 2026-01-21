@@ -792,3 +792,18 @@ Orders fixed:
 - [x] Created receipt-printer-palladium.mjs client
 - [x] Created Windows batch files for auto-start
 - [x] Created PALLADIUM-PRINTER-SETUP.md guide
+
+## Outlet-Based Order Flow (Jan 21)
+
+- [x] Order type selection flow:
+  - [x] Customer selects order type first (Dine-in, Pickup, Delivery)
+  - [x] Delivery → Automatically T. Nagar (no outlet choice)
+  - [x] Dine-in/Pickup → Show outlet selection (T. Nagar or Palladium)
+- [x] Menu filtering by outlet:
+  - [x] Products filtered by availableAtPalladium/availableAtTnagar fields
+  - [x] Subcategories filtered by outlet availability
+  - [x] Added availableAtTnagar column to products table
+- [x] KOT routing:
+  - [x] KOT prints ONLY at selected outlet
+  - [x] outletId passed from frontend to backend
+  - [x] KOT queue uses correct outletId (1=Palladium, 2=T.Nagar)

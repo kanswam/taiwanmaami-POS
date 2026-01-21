@@ -173,6 +173,7 @@ export const appRouter = router({
       .input(z.object({
         orderType: z.enum(['instore', 'delivery', 'pickup']),
         tableNumber: z.string().optional(), // For in-store orders
+        outletId: z.number().optional(), // 1 = Palladium, 2 = T.Nagar
         customerName: z.string().optional(),
         customerPhone: z.string().optional(),
         items: z.array(z.object({
@@ -256,6 +257,9 @@ export const appRouter = router({
         const nextNum = maxNum + 1;
         const orderNumber = String(nextNum).padStart(5, '0');
 
+        // Determine outletId: Delivery always from T.Nagar (2), otherwise use provided outletId
+        const outletId = input.orderType === 'delivery' ? 2 : (input.outletId || 2);
+        
         // Create order
         const [orderResult] = await dbInstance!.insert(orders).values({
           orderNumber,
@@ -264,6 +268,7 @@ export const appRouter = router({
           customerPhone: input.customerPhone,
           orderType: input.orderType,
           tableNumber: input.orderType === 'instore' ? input.tableNumber : null,
+          outletId,
           subtotal,
           stateGst: gst.stateGst,
           centralGst: gst.centralGst,
@@ -341,7 +346,7 @@ export const appRouter = router({
             
             await dbInstance!.insert(kotQueue).values({
               orderId: orderId.toString(),
-              outletId: 2, // T Nagar outlet
+              outletId: outletId, // Route to selected outlet (1=Palladium, 2=T.Nagar)
               orderNumber,
               kotData: kotData,
               isPrinted: false,
@@ -390,7 +395,7 @@ export const appRouter = router({
             
             await dbInstance!.insert(kotQueue).values({
               orderId: orderId.toString(),
-              outletId: 2, // T Nagar outlet
+              outletId: outletId, // Route to selected outlet (1=Palladium, 2=T.Nagar)
               orderNumber,
               kotData: kotData,
               isPrinted: false,

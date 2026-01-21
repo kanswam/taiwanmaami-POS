@@ -214,10 +214,17 @@ export default function Checkout() {
         return;
       }
 
+      // Determine outlet ID: 1 = Palladium, 2 = T.Nagar
+      // Delivery is always from T.Nagar
+      const outletId = state.orderType === 'delivery' 
+        ? 2 
+        : selectedOutlet === 'palladium' ? 1 : 2;
+      
       // Create new order
       const orderData = await createOrder.mutateAsync({
         orderType: state.orderType,
         tableNumber: state.orderType === 'instore' ? formData.tableNumber || undefined : undefined,
+        outletId,
         items: state.items.map(item => ({
           productId: item.productId,
           productName: item.productName,

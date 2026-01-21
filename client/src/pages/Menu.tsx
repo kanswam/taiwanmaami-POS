@@ -133,23 +133,36 @@ export default function Menu() {
     });
   }, [menuData, selectedCategory, currentOutlet]);
 
-  // Get products for selected subcategory
+  // Get products for selected subcategory (filtered by outlet availability)
   const subcategoryProducts = useMemo(() => {
     if (!menuData || !selectedSubcategory) return [];
     const subcategory = menuData.subcategories.find(s => s.slug === selectedSubcategory);
     if (!subcategory) return [];
-    return menuData.products.filter(p => p.subcategoryId === subcategory.id);
-  }, [menuData, selectedSubcategory]);
+    return menuData.products.filter(p => {
+      if (p.subcategoryId !== subcategory.id) return false;
+      // Filter by outlet availability
+      const prod = p as any;
+      if (currentOutlet === 'palladium' && prod.availableAtPalladium === false) return false;
+      if (currentOutlet === 'tnagar' && prod.availableAtTnagar === false) return false;
+      return true;
+    });
+  }, [menuData, selectedSubcategory, currentOutlet]);
 
-  // Search results across all products
+  // Search results across all products (filtered by outlet availability)
   const searchResults = useMemo(() => {
     if (!menuData || !searchQuery) return [];
     const query = searchQuery.toLowerCase();
-    return menuData.products.filter(p => 
-      p.name.toLowerCase().includes(query) ||
-      p.chineseName?.toLowerCase().includes(query)
-    );
-  }, [menuData, searchQuery]);
+    return menuData.products.filter(p => {
+      const matchesSearch = p.name.toLowerCase().includes(query) ||
+        p.chineseName?.toLowerCase().includes(query);
+      if (!matchesSearch) return false;
+      // Filter by outlet availability
+      const prod = p as any;
+      if (currentOutlet === 'palladium' && prod.availableAtPalladium === false) return false;
+      if (currentOutlet === 'tnagar' && prod.availableAtTnagar === false) return false;
+      return true;
+    });
+  }, [menuData, searchQuery, currentOutlet]);
 
   // Get subcategory info
   const getSubcategory = (slug: string) => menuData?.subcategories.find(s => s.slug === slug);
@@ -486,40 +499,82 @@ export default function Menu() {
 
           <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
 
-            {/* Table Number for In-store */}
+            {/* Outlet selector for In-store orders */}
             {state.orderType === 'instore' && (
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-medium text-muted-foreground">Table:</span>
-                <Input
-                  placeholder="#"
-                  value={tableNumber || ''}
-                  onChange={(e) => setTableNumber(e.target.value || null)}
-                  className="w-16 text-center font-bold"
-                  maxLength={3}
-                />
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium text-muted-foreground">Location:</span>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setInstoreOutlet('palladium')}
+                      className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
+                        instoreOutlet === 'palladium'
+                          ? 'bg-primary text-white shadow-md'
+                          : 'bg-white border border-border hover:border-primary/50 text-muted-foreground hover:text-primary'
+                      }`}
+                    >
+                      Palladium Mall
+                    </button>
+                    <button
+                      onClick={() => setInstoreOutlet('tnagar')}
+                      className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
+                        instoreOutlet === 'tnagar'
+                          ? 'bg-primary text-white shadow-md'
+                          : 'bg-white border border-border hover:border-primary/50 text-muted-foreground hover:text-primary'
+                      }`}
+                    >
+                      T. Nagar
+                    </button>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium text-muted-foreground">Table:</span>
+                  <Input
+                    placeholder="#"
+                    value={tableNumber || ''}
+                    onChange={(e) => setTableNumber(e.target.value || null)}
+                    className="w-16 text-center font-bold"
+                    maxLength={3}
+                  />
+                </div>
               </div>
             )}
 
-            {/* Pickup outlet selector - currently only T Nagar available */}
+            {/* Outlet selector for Pickup orders */}
             {state.orderType === 'pickup' && (
               <div className="flex items-center gap-3">
                 <span className="text-sm font-medium text-muted-foreground">Pickup from:</span>
-                <button
-                  onClick={() => setPickupOutlet('tnagar')}
-                  className="px-3 py-1.5 rounded-lg text-sm font-medium bg-primary text-white shadow-md"
-                  disabled
-                >
-                  T Nagar
-                </button>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setPickupOutlet('palladium')}
+                    className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
+                      pickupOutlet === 'palladium'
+                        ? 'bg-primary text-white shadow-md'
+                        : 'bg-white border border-border hover:border-primary/50 text-muted-foreground hover:text-primary'
+                    }`}
+                  >
+                    Palladium Mall
+                  </button>
+                  <button
+                    onClick={() => setPickupOutlet('tnagar')}
+                    className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
+                      pickupOutlet === 'tnagar'
+                        ? 'bg-primary text-white shadow-md'
+                        : 'bg-white border border-border hover:border-primary/50 text-muted-foreground hover:text-primary'
+                    }`}
+                  >
+                    T. Nagar
+                  </button>
+                </div>
               </div>
             )}
 
-            {/* Delivery radius notice */}
+            {/* Delivery - automatically T Nagar only */}
             {state.orderType === 'delivery' && (
               deliveryEnabled ? (
                 <div className="flex items-center gap-2 px-3 py-2 bg-primary/10 border border-primary/20 rounded-lg">
                   <Truck className="w-5 h-5 text-primary" />
-                  <span className="font-semibold text-primary">Delivery from T Nagar (within {deliveryRadius}km)</span>
+                  <span className="font-semibold text-primary">Delivery from T. Nagar only (within {deliveryRadius}km)</span>
                 </div>
               ) : (
                 <div className="flex items-center gap-2 px-4 py-3 bg-red-100 border-2 border-red-300 rounded-lg">
