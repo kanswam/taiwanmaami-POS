@@ -1450,10 +1450,10 @@ export const appRouter = router({
           eq(orders.orderStatus, 'completed'),
         ];
         
-        // Add outlet filter - this website only handles T Nagar orders (outletId 2)
+        // Add outlet filter - Palladium is outletId 1, T.Nagar is outletId 2
         if (input.outlet && input.outlet !== 'all') {
-          // T Nagar is outletId 2
-          conditions.push(eq(orders.outletId, 2));
+          const outletId = input.outlet === 'palladium' ? 1 : 2;
+          conditions.push(eq(orders.outletId, outletId));
         }
         
         // Add payment method filter
@@ -1478,11 +1478,38 @@ export const appRouter = router({
           .where(and(...conditions))
           .orderBy(desc(orders.createdAt));
         
+        // Get workshop bookings with paid status in date range
+        const workshopConditions = [
+          sql`${workshopBookings.createdAt} >= ${startDate}`,
+          sql`${workshopBookings.createdAt} <= ${endDate}`,
+          eq(workshopBookings.paymentStatus, 'paid'),
+        ];
+        
+        // Add payment method filter for workshops if specified
+        if (input.paymentMethod && input.paymentMethod !== 'all') {
+          workshopConditions.push(sql`${workshopBookings.paymentMethod} = ${input.paymentMethod}`);
+        }
+        
+        const paidWorkshopBookings = await dbInstance
+          .select({
+            id: workshopBookings.id,
+            bookingNumber: workshopBookings.bookingNumber,
+            customerName: workshopBookings.customerName,
+            totalAmount: workshopBookings.totalAmount,
+            paymentMethod: workshopBookings.paymentMethod,
+            ticketCount: workshopBookings.ticketCount,
+            createdAt: workshopBookings.createdAt,
+          })
+          .from(workshopBookings)
+          .where(and(...workshopConditions))
+          .orderBy(desc(workshopBookings.createdAt));
+        
         // Calculate summary by payment method
         const summary: Record<string, { count: number; total: number }> = {};
         let grandTotal = 0;
         let totalOrders = 0;
         
+        // Add orders to summary
         for (const order of completedOrders) {
           const method = order.paymentMethod || 'unknown';
           if (!summary[method]) {
@@ -1494,11 +1521,42 @@ export const appRouter = router({
           totalOrders++;
         }
         
+        // Add workshop bookings to summary
+        let workshopTotal = 0;
+        let workshopCount = 0;
+        for (const booking of paidWorkshopBookings) {
+          const method = booking.paymentMethod || 'unknown';
+          if (!summary[method]) {
+            summary[method] = { count: 0, total: 0 };
+          }
+          summary[method].count++;
+          summary[method].total += booking.totalAmount;
+          grandTotal += booking.totalAmount;
+          workshopTotal += booking.totalAmount;
+          workshopCount++;
+        }
+        
         return {
           orders: completedOrders,
+          workshopBookings: paidWorkshopBookings.map(b => ({
+            id: b.id,
+            orderNumber: b.bookingNumber,
+            customerName: b.customerName,
+            totalAmount: b.totalAmount,
+            paymentMethod: b.paymentMethod,
+            paymentProofUrl: null,
+            outletId: 2, // Workshops are at T.Nagar
+            createdAt: b.createdAt,
+            orderType: 'workshop' as const,
+            ticketCount: b.ticketCount,
+          })),
           summary,
           grandTotal,
-          totalOrders,
+          totalOrders: totalOrders + workshopCount,
+          workshopStats: {
+            count: workshopCount,
+            total: workshopTotal,
+          },
           dateRange: {
             start: startDate.toISOString(),
             end: endDate.toISOString(),

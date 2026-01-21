@@ -885,3 +885,15 @@ Orders fixed:
   - [x] Order #133 is in 'ready' status, not 'completed' - Payment Report only shows completed orders
   - [x] Order #134 shows "Not Recorded" because it's a Pay at Counter order with no payment collected
   - [x] This is correct behavior - Payment Report is for financial reconciliation of completed orders
+
+## Payment Report Improvements (Jan 21)
+
+- [x] Add workshop payments to Payment Report
+  - [x] Workshop bookings now included in report (shown with purple highlight)
+  - [x] Workshop bookings show ticket count and payment method
+- [x] Verify outlet attribution in Payment Report
+  - [x] Fixed outlet filter to properly filter by Palladium (outletId 1) or T.Nagar (outletId 2)
+  - [x] Orders now show correct outlet name based on outletId
+- [x] Added Razorpay to payment method options
+  - [x] Added Razorpay filter option
+  - [x] Added Razorpay label and icon

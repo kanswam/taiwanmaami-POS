@@ -6330,6 +6330,7 @@ function PaymentReportTab() {
     cash: 'Cash',
     upi: 'GPay / UPI',
     card: 'Card',
+    razorpay: 'Razorpay',
     swiggy_dineout: 'Swiggy Dineout',
     zomato_dineout: 'Zomato Dineout',
     eazydiner: 'EazyDiner',
@@ -6341,6 +6342,7 @@ function PaymentReportTab() {
     cash: '💵',
     upi: '📱',
     card: '💳',
+    razorpay: '💳',
     swiggy_dineout: '🟠',
     zomato_dineout: '🔴',
     eazydiner: '🟣',
@@ -6352,7 +6354,7 @@ function PaymentReportTab() {
     if (!reportData?.orders) return;
     
     const headers = ['Order #', 'Date', 'Customer', 'Amount', 'Payment Method', 'Outlet', 'Order Type'];
-    const rows = reportData.orders.map(order => [
+    const orderRows = reportData.orders.map(order => [
       order.orderNumber,
       new Date(order.createdAt).toLocaleString(),
       order.customerName || 'Guest',
@@ -6362,7 +6364,18 @@ function PaymentReportTab() {
       order.orderType,
     ]);
     
-    const csvContent = [headers, ...rows].map(row => row.join(',')).join('\n');
+    // Add workshop bookings to export
+    const workshopRows = (reportData.workshopBookings || []).map((booking: any) => [
+      booking.orderNumber,
+      new Date(booking.createdAt).toLocaleString(),
+      booking.customerName || 'Guest',
+      (booking.totalAmount / 100).toFixed(2),
+      paymentMethodLabels[booking.paymentMethod || 'unknown'],
+      'T Nagar',
+      `Workshop (${booking.ticketCount} tickets)`,
+    ]);
+    
+    const csvContent = [headers, ...orderRows, ...workshopRows].map(row => row.join(',')).join('\n');
     const blob = new Blob([csvContent], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -6421,6 +6434,7 @@ function PaymentReportTab() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Methods</SelectItem>
+                <SelectItem value="razorpay">Razorpay</SelectItem>
                 <SelectItem value="cash">Cash</SelectItem>
                 <SelectItem value="upi">GPay / UPI</SelectItem>
                 <SelectItem value="card">Card</SelectItem>
@@ -6503,7 +6517,7 @@ function PaymentReportTab() {
         <h3 className="font-semibold mb-4">Order Details</h3>
         {isLoading ? (
           <p className="text-center py-8 text-muted-foreground">Loading...</p>
-        ) : !reportData?.orders?.length ? (
+        ) : !reportData?.orders?.length && !reportData?.workshopBookings?.length ? (
           <p className="text-center py-8 text-muted-foreground">No completed orders found for this period</p>
         ) : (
           <div className="overflow-x-auto">
@@ -6520,7 +6534,7 @@ function PaymentReportTab() {
                 </tr>
               </thead>
               <tbody>
-                {reportData.orders.map((order) => (
+                {reportData?.orders?.map((order) => (
                   <tr key={order.id} className="border-b hover:bg-muted/50">
                     <td className="py-2 px-2 font-mono">{order.orderNumber}</td>
                     <td className="py-2 px-2">
@@ -6558,6 +6572,39 @@ function PaymentReportTab() {
                     <td className="py-2 px-2">
                       {order.outletId === 1 ? 'Palladium Mall' : 'T Nagar'}
                     </td>
+                  </tr>
+                ))}
+                {/* Workshop Bookings */}
+                {reportData?.workshopBookings?.map((booking: any) => (
+                  <tr key={`workshop-${booking.id}`} className="border-b hover:bg-muted/50 bg-purple-50">
+                    <td className="py-2 px-2 font-mono">
+                      <span className="inline-flex items-center gap-1">
+                        <span className="text-purple-600">🎓</span>
+                        {booking.orderNumber}
+                      </span>
+                    </td>
+                    <td className="py-2 px-2">
+                      {new Date(booking.createdAt).toLocaleDateString('en-IN', {
+                        day: '2-digit',
+                        month: 'short',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })}
+                    </td>
+                    <td className="py-2 px-2">{booking.customerName || 'Guest'}</td>
+                    <td className="py-2 px-2 text-right font-medium">
+                      ₹{(booking.totalAmount / 100).toFixed(2)}
+                    </td>
+                    <td className="py-2 px-2">
+                      <span className="inline-flex items-center gap-1">
+                        <span>{paymentMethodIcons[booking.paymentMethod || 'unknown']}</span>
+                        <span>{paymentMethodLabels[booking.paymentMethod || 'unknown']}</span>
+                      </span>
+                    </td>
+                    <td className="py-2 px-2">
+                      <span className="text-purple-600 text-xs">Workshop ({booking.ticketCount} tickets)</span>
+                    </td>
+                    <td className="py-2 px-2">T Nagar</td>
                   </tr>
                 ))}
               </tbody>
