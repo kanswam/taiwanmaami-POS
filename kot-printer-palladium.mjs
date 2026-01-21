@@ -11,6 +11,9 @@
  */
 
 import net from 'net';
+import { exec } from 'child_process';
+import { existsSync } from 'fs';
+import path from 'path';
 
 // Configuration
 const CONFIG = {
@@ -30,6 +33,12 @@ const CONFIG = {
   
   // Polling interval (milliseconds)
   pollInterval: 5000, // Check every 5 seconds
+  
+  // Audio alert settings
+  enableSound: true,
+  soundFile: null, // Optional: path to custom WAV file (e.g., 'C:\\alert.wav')
+  beepCount: 3, // Number of beeps for alert
+  beepDelay: 200, // Delay between beeps in ms
 };
 
 // ESC/POS commands for thermal printer
@@ -254,6 +263,52 @@ async function markPrinted(kotId) {
 }
 
 /**
+ * Play audio alert when new KOT arrives
+ */
+function playAlert() {
+  if (!CONFIG.enableSound) return;
+  
+  // Check for custom sound file first
+  if (CONFIG.soundFile && existsSync(CONFIG.soundFile)) {
+    // Play custom WAV file on Windows
+    const soundPath = path.resolve(CONFIG.soundFile);
+    exec(`powershell -c "(New-Object Media.SoundPlayer '${soundPath}').PlaySync()"`, (err) => {
+      if (err) console.log('Sound file playback failed, using system beep');
+    });
+    return;
+  }
+  
+  // Use Windows system sounds or PowerShell beep
+  const isWindows = process.platform === 'win32';
+  
+  if (isWindows) {
+    // Multiple beeps using PowerShell for louder alert
+    const beepCommands = [];
+    for (let i = 0; i < CONFIG.beepCount; i++) {
+      beepCommands.push('[console]::beep(1000, 300)');
+      if (i < CONFIG.beepCount - 1) {
+        beepCommands.push(`Start-Sleep -Milliseconds ${CONFIG.beepDelay}`);
+      }
+    }
+    exec(`powershell -c "${beepCommands.join('; ')}"`, (err) => {
+      if (err) {
+        // Fallback to ASCII bell
+        for (let i = 0; i < CONFIG.beepCount; i++) {
+          process.stdout.write('\x07');
+        }
+      }
+    });
+  } else {
+    // Linux/Mac - use ASCII bell multiple times
+    for (let i = 0; i < CONFIG.beepCount; i++) {
+      process.stdout.write('\x07');
+    }
+  }
+  
+  console.log('🔔 ALERT: New KOT received!');
+}
+
+/**
  * Main polling loop
  */
 async function startPolling() {
@@ -272,8 +327,8 @@ async function startPolling() {
     if (kots.length > 0) {
       console.log(`📋 Found ${kots.length} pending KOT(s) for Palladium`);
       
-      // Play sound alert (Windows beep)
-      console.log('\x07'); // ASCII bell character - makes system beep
+      // Play sound alert
+      playAlert();
       
       for (const kot of kots) {
         try {

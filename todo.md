@@ -842,3 +842,11 @@ Orders fixed:
   - [x] Pickup shows "Select Your Location" blocking screen
   - [x] No way to bypass outlet selection for Dine-in/Pickup
 
+
+## KOT Printer Audio Alert (Jan 21)
+
+- [x] Add audio alert/bell sound to KOT printer when new order arrives
+  - [x] Play sound when KOT is printed (3 beeps at 1000Hz)
+  - [x] Use system beep or optional custom WAV file for notification
+  - [x] Configurable beep count and delay
+
