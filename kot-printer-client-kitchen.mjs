@@ -1,12 +1,19 @@
 #!/usr/bin/env node
 /**
- * Taiwan Maami KOT Printer Client - KITCHEN
+ * Taiwan Maami KOT Printer Client - T. NAGAR KITCHEN
  * 
- * This application runs at the outlet and automatically prints KOTs
- * to the KITCHEN thermal printer when customers complete payment.
+ * Printer: KITCHEN
+ * IP: 192.168.1.22
+ * Port: 9100
+ * 
+ * This client polls for pending KOTs for T. Nagar (outlet ID 2)
+ * and prints them to the KITCHEN thermal printer.
  */
 
 import net from 'net';
+import { exec } from 'child_process';
+import { existsSync } from 'fs';
+import path from 'path';
 
 // Configuration
 const CONFIG = {
@@ -19,9 +26,19 @@ const CONFIG = {
   // KITCHEN Printer settings
   printerIp: '192.168.1.22',  // Kitchen printer IP
   printerPort: 9100,
+  printerName: 'KITCHEN',
+  
+  // Outlet ID for T. Nagar
+  outletId: 2,
   
   // Polling interval (milliseconds)
   pollInterval: 5000, // Check every 5 seconds
+  
+  // Audio alert settings
+  enableSound: true,
+  soundFile: null, // Optional: path to custom WAV file (e.g., 'C:\\alert.wav')
+  beepCount: 3, // Number of beeps for alert
+  beepDelay: 200, // Delay between beeps in ms
 };
 
 // ESC/POS commands for Essae PR-55
@@ -48,25 +65,25 @@ async function printToThermal(data) {
     const client = new net.Socket();
     
     client.connect(CONFIG.printerPort, CONFIG.printerIp, () => {
-      console.log(`Connected to KITCHEN printer at ${CONFIG.printerIp}:${CONFIG.printerPort}`);
+      console.log(`Connected to ${CONFIG.printerName} printer at ${CONFIG.printerIp}:${CONFIG.printerPort}`);
       client.write(data);
       client.end();
     });
     
     client.on('close', () => {
-      console.log('KITCHEN printer connection closed');
+      console.log(`${CONFIG.printerName} printer connection closed`);
       resolve();
     });
     
     client.on('error', (err) => {
-      console.error('KITCHEN printer error:', err.message);
+      console.error(`${CONFIG.printerName} printer error:`, err.message);
       reject(err);
     });
     
     // Timeout after 10 seconds
     client.setTimeout(10000, () => {
       client.destroy();
-      reject(new Error('KITCHEN printer connection timeout'));
+      reject(new Error(`${CONFIG.printerName} printer connection timeout`));
     });
   });
 }
@@ -86,6 +103,7 @@ function formatKOT(kot) {
   output += PRINTER_COMMANDS.ALIGN_CENTER;
   output += PRINTER_COMMANDS.BOLD_ON;
   output += 'TAIWAN MAAMI\n';
+  output += 'T. NAGAR - KITCHEN\n';
   output += PRINTER_COMMANDS.BOLD_OFF;
   output += 'Kitchen Order Ticket\n';
   output += PRINTER_COMMANDS.ALIGN_LEFT;
@@ -108,6 +126,13 @@ function formatKOT(kot) {
   output += `Customer: ${kotData.customerName}\n`;
   if (kotData.customerPhone) {
     output += `Phone: ${kotData.customerPhone}\n`;
+  }
+  
+  // Table number for dine-in
+  if (kotData.tableNumber) {
+    output += PRINTER_COMMANDS.BOLD_ON;
+    output += `Table: ${kotData.tableNumber}\n`;
+    output += PRINTER_COMMANDS.BOLD_OFF;
   }
   
   // Order type - prominent display
@@ -186,11 +211,12 @@ function formatKOT(kot) {
 }
 
 /**
- * Poll server for pending KOTs
+ * Poll server for pending KOTs (filtered by outlet)
  */
 async function pollKOTs() {
   try {
-    const response = await fetch(`${CONFIG.serverUrl}/api/kot/poll?secret=${CONFIG.kotSecret}`);
+    // Poll with outlet filter for T. Nagar (outlet ID 2)
+    const response = await fetch(`${CONFIG.serverUrl}/api/kot/poll?secret=${CONFIG.kotSecret}&outletId=${CONFIG.outletId}`);
     
     if (!response.ok) {
       if (response.status === 401) {
@@ -234,37 +260,87 @@ async function markPrinted(kotId) {
 }
 
 /**
+ * Play audio alert when new KOT arrives
+ */
+function playAlert() {
+  if (!CONFIG.enableSound) return;
+  
+  // Check for custom sound file first
+  if (CONFIG.soundFile && existsSync(CONFIG.soundFile)) {
+    // Play custom WAV file on Windows
+    const soundPath = path.resolve(CONFIG.soundFile);
+    exec(`powershell -c "(New-Object Media.SoundPlayer '${soundPath}').PlaySync()"`, (err) => {
+      if (err) console.log('Sound file playback failed, using system beep');
+    });
+    return;
+  }
+  
+  // Use Windows system sounds or PowerShell beep
+  const isWindows = process.platform === 'win32';
+  
+  if (isWindows) {
+    // Multiple beeps using PowerShell for louder alert
+    const beepCommands = [];
+    for (let i = 0; i < CONFIG.beepCount; i++) {
+      beepCommands.push('[console]::beep(1000, 300)');
+      if (i < CONFIG.beepCount - 1) {
+        beepCommands.push(`Start-Sleep -Milliseconds ${CONFIG.beepDelay}`);
+      }
+    }
+    exec(`powershell -c "${beepCommands.join('; ')}"`, (err) => {
+      if (err) {
+        // Fallback to ASCII bell
+        for (let i = 0; i < CONFIG.beepCount; i++) {
+          process.stdout.write('\x07');
+        }
+      }
+    });
+  } else {
+    // Linux/Mac - use ASCII bell multiple times
+    for (let i = 0; i < CONFIG.beepCount; i++) {
+      process.stdout.write('\x07');
+    }
+  }
+  
+  console.log('🔔 ALERT: New KOT received!');
+}
+
+/**
  * Main polling loop
  */
 async function startPolling() {
-  console.log('🖨️  Taiwan Maami KOT Printer Client - KITCHEN');
-  console.log('=====================================');
+  console.log('🖨️  Taiwan Maami KOT Printer Client - T. NAGAR KITCHEN');
+  console.log('======================================================');
   console.log(`Server: ${CONFIG.serverUrl}`);
-  console.log(`Printer: ${CONFIG.printerIp}:${CONFIG.printerPort}`);
+  console.log(`Printer: ${CONFIG.printerName} @ ${CONFIG.printerIp}:${CONFIG.printerPort}`);
+  console.log(`Outlet ID: ${CONFIG.outletId} (T. Nagar)`);
   console.log(`Poll interval: ${CONFIG.pollInterval}ms`);
-  console.log('=====================================\n');
-  console.log('✅ Started polling for KOTs (KITCHEN)...\n');
+  console.log('======================================================\n');
+  console.log('✅ Started polling for KOTs (T. NAGAR KITCHEN)...\n');
   
   setInterval(async () => {
     const kots = await pollKOTs();
     
     if (kots.length > 0) {
-      console.log(`📋 Found ${kots.length} pending KOT(s)`);
+      console.log(`📋 Found ${kots.length} pending KOT(s) for T. Nagar`);
       
-      // Play sound alert (Windows beep)
-      console.log('\x07'); // ASCII bell character - makes system beep
+      // Play sound alert
+      playAlert();
       
       for (const kot of kots) {
         try {
-          console.log(`\n🖨️  Printing KOT #${kot.id} to KITCHEN (Order: ${kot.orderNumber})...`);
+          console.log(`\n🖨️  Printing KOT #${kot.id} to ${CONFIG.printerName} (Order: ${kot.orderNumber})...`);
           
           // Format and print
           const printData = formatKOT(kot);
           await printToThermal(printData);
           
-          console.log(`✅ KOT #${kot.id} printed to KITCHEN successfully`);
+          // Mark as printed
+          await markPrinted(kot.id);
+          
+          console.log(`✅ KOT #${kot.id} printed to ${CONFIG.printerName} successfully`);
         } catch (error) {
-          console.error(`❌ Failed to print KOT #${kot.id} to KITCHEN:`, error.message);
+          console.error(`❌ Failed to print KOT #${kot.id} to ${CONFIG.printerName}:`, error.message);
         }
       }
     }
@@ -276,6 +352,6 @@ startPolling();
 
 // Handle graceful shutdown
 process.on('SIGINT', () => {
-  console.log('\n\n👋 Shutting down KITCHEN KOT printer client...');
+  console.log('\n\n👋 Shutting down T. NAGAR KITCHEN KOT printer client...');
   process.exit(0);
 });

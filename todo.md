@@ -850,3 +850,13 @@ Orders fixed:
   - [x] Use system beep or optional custom WAV file for notification
   - [x] Configurable beep count and delay
 
+
+## KOT Outlet Routing Bug (Jan 21)
+
+- [x] Fix KOT printing to only print at selected outlet
+  - [x] Order #133 printed at both Palladium and T.Nagar when Palladium was selected
+  - [x] Root cause: T.Nagar printer scripts were polling without outlet filter
+  - [x] Fixed kot-printer-client.mjs (BAR) to filter by outletId=2 (T.Nagar)
+  - [x] Fixed kot-printer-client-kitchen.mjs (KITCHEN) to filter by outletId=2 (T.Nagar)
+  - [x] Palladium script already had correct outletId=1 filter
+

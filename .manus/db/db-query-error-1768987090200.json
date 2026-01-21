@@ -1,0 +1,8 @@
+{
+  "query": "SELECT o.id, o.order_number, o.order_type, o.outlet_id, o.pickup_outlet, o.instore_outlet, o.created_at \nFROM orders o \nWHERE o.order_number = '00133' OR o.id = 133\nORDER BY o.id DESC LIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT o.id, o.order_number, o.order_type, o.outlet_id, o.pickup_outlet, o.instore_outlet, o.created_at \nFROM orders o \nWHERE o.order_number = '00133' OR o.id = 133\nORDER BY o.id DESC LIMIT 5;",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1054 (42S22) at line 1: Unknown column 'o.order_number' in 'where clause'"
+  ]
+}
