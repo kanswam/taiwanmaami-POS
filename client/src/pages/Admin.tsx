@@ -6358,7 +6358,7 @@ function PaymentReportTab() {
       order.customerName || 'Guest',
       (order.totalAmount / 100).toFixed(2),
       paymentMethodLabels[order.paymentMethod || 'unknown'],
-      'T Nagar',
+      order.outletId === 1 ? 'Palladium Mall' : 'T Nagar',
       order.orderType,
     ]);
     
@@ -6556,7 +6556,7 @@ function PaymentReportTab() {
                       )}
                     </td>
                     <td className="py-2 px-2">
-                      T Nagar
+                      {order.outletId === 1 ? 'Palladium Mall' : 'T Nagar'}
                     </td>
                   </tr>
                 ))}

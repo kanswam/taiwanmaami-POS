@@ -320,6 +320,11 @@ export default function Checkout() {
       // Generate idempotency key to prevent duplicate orders on network retry
       const idempotencyKey = `${formData.phone}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
       
+      // Determine outlet ID: 1 = Palladium, 2 = T.Nagar (same logic as logged-in checkout)
+      const guestOutletId = state.orderType === 'delivery' 
+        ? 2 
+        : selectedOutlet === 'palladium' ? 1 : 2;
+      
       const orderData = await createGuestOrder.mutateAsync({
         guestName: formData.name,
         guestPhone: formData.phone,
@@ -348,7 +353,7 @@ export default function Checkout() {
         area: formData.area || undefined,
         pincode: formData.pincode || undefined,
         pickupTime: formData.scheduledTime || undefined,
-        storeLocationId: formData.selectedStoreId || undefined,
+        storeLocationId: guestOutletId,
         specialInstructions: formData.notes || undefined,
         paymentMethod: state.orderType === 'delivery' ? 'online' : (paymentMethod === 'online' ? 'online' : 'cash_at_pickup'),
       });

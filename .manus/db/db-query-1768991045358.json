@@ -1,0 +1,30 @@
+{
+  "query": "SELECT id, orderNumber, orderType, outletId, orderStatus, paymentStatus, paymentMethod, createdAt FROM orders WHERE orderNumber IN ('00133', '00134');",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT id, orderNumber, orderType, outletId, orderStatus, paymentStatus, paymentMethod, createdAt FROM orders WHERE orderNumber IN ('00133', '00134');",
+  "rows": [
+    {
+      "id": "1230011",
+      "orderNumber": "00133",
+      "orderType": "pickup",
+      "outletId": "1",
+      "orderStatus": "completed",
+      "paymentStatus": "completed",
+      "paymentMethod": "razorpay",
+      "createdAt": "2026-01-21 09:06:57"
+    },
+    {
+      "id": "1230012",
+      "orderNumber": "00134",
+      "orderType": "instore",
+      "outletId": "1",
+      "orderStatus": "completed",
+      "paymentStatus": "pending",
+      "paymentMethod": "NULL",
+      "createdAt": "2026-01-21 09:48:55"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\torderNumber\torderType\toutletId\torderStatus\tpaymentStatus\tpaymentMethod\tcreatedAt\n1230011\t00133\tpickup\t1\tcompleted\tcompleted\trazorpay\t2026-01-21 09:06:57\n1230012\t00134\tinstore\t1\tcompleted\tpending\tNULL\t2026-01-21 09:48:55\n",
+  "stderr": "",
+  "execution_time_ms": 1520
+}

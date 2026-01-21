@@ -1,0 +1,40 @@
+{
+  "query": "SELECT k.id as kot_id, k.orderNumber, k.outletId as kot_outlet, k.isPrinted, o.outletId as order_outlet, o.orderType, o.paymentStatus, o.paymentMethod FROM kot_queue k JOIN orders o ON k.orderNumber = o.orderNumber WHERE k.orderNumber IN ('00133', '00134') ORDER BY k.orderNumber, k.id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT k.id as kot_id, k.orderNumber, k.outletId as kot_outlet, k.isPrinted, o.outletId as order_outlet, o.orderType, o.paymentStatus, o.paymentMethod FROM kot_queue k JOIN orders o ON k.orderNumber = o.orderNumber WHERE k.orderNumber IN ('00133', '00134') ORDER BY k.orderNumber, k.id;",
+  "rows": [
+    {
+      "kot_id": "900001",
+      "orderNumber": "00133",
+      "kot_outlet": "1",
+      "isPrinted": "1",
+      "order_outlet": "1",
+      "orderType": "pickup",
+      "paymentStatus": "completed",
+      "paymentMethod": "razorpay"
+    },
+    {
+      "kot_id": "900002",
+      "orderNumber": "00133",
+      "kot_outlet": "1",
+      "isPrinted": "1",
+      "order_outlet": "1",
+      "orderType": "pickup",
+      "paymentStatus": "completed",
+      "paymentMethod": "razorpay"
+    },
+    {
+      "kot_id": "900003",
+      "orderNumber": "00134",
+      "kot_outlet": "1",
+      "isPrinted": "1",
+      "order_outlet": "1",
+      "orderType": "instore",
+      "paymentStatus": "pending",
+      "paymentMethod": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "kot_id\torderNumber\tkot_outlet\tisPrinted\torder_outlet\torderType\tpaymentStatus\tpaymentMethod\n900001\t00133\t1\t1\t1\tpickup\tcompleted\trazorpay\n900002\t00133\t1\t1\t1\tpickup\tcompleted\trazorpay\n900003\t00134\t1\t1\t1\tinstore\tpending\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 1521
+}

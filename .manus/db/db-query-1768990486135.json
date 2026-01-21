@@ -1,0 +1,20 @@
+{
+  "query": "SELECT id, name, address FROM store_locations;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT id, name, address FROM store_locations;",
+  "rows": [
+    {
+      "id": "1",
+      "name": "Taiwan Maami - Palladium Mall",
+      "address": "Palladium Mall, 1st Floor, Velachery Main Road"
+    },
+    {
+      "id": "2",
+      "name": "Taiwan Maami - T Nagar",
+      "address": "Shop No. 5, Ground Floor, Pondy Bazaar"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\taddress\n1\tTaiwan Maami - Palladium Mall\tPalladium Mall, 1st Floor, Velachery Main Road\n2\tTaiwan Maami - T Nagar\tShop No. 5, Ground Floor, Pondy Bazaar\n",
+  "stderr": "",
+  "execution_time_ms": 1495
+}

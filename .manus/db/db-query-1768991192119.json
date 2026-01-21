@@ -1,0 +1,26 @@
+{
+  "query": "SELECT orderNumber, orderStatus, paymentStatus, paymentMethod, razorpayPaymentId, totalAmount FROM orders WHERE orderNumber IN ('00133', '00134');",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT orderNumber, orderStatus, paymentStatus, paymentMethod, razorpayPaymentId, totalAmount FROM orders WHERE orderNumber IN ('00133', '00134');",
+  "rows": [
+    {
+      "orderNumber": "00133",
+      "orderStatus": "completed",
+      "paymentStatus": "completed",
+      "paymentMethod": "razorpay",
+      "razorpayPaymentId": "pay_S6TQ85aL0viKyg",
+      "totalAmount": "40426"
+    },
+    {
+      "orderNumber": "00134",
+      "orderStatus": "completed",
+      "paymentStatus": "pending",
+      "paymentMethod": "NULL",
+      "razorpayPaymentId": "NULL",
+      "totalAmount": "79276"
+    }
+  ],
+  "messages": [],
+  "stdout": "orderNumber\torderStatus\tpaymentStatus\tpaymentMethod\trazorpayPaymentId\ttotalAmount\n00133\tcompleted\tcompleted\trazorpay\tpay_S6TQ85aL0viKyg\t40426\n00134\tcompleted\tpending\tNULL\tNULL\t79276\n",
+  "stderr": "",
+  "execution_time_ms": 1556
+}

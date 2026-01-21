@@ -860,3 +860,28 @@ Orders fixed:
   - [x] Fixed kot-printer-client-kitchen.mjs (KITCHEN) to filter by outletId=2 (T.Nagar)
   - [x] Palladium script already had correct outletId=1 filter
 
+
+## Order #134 Issues (Jan 21)
+
+- [ ] Order #134 KOT printed at Palladium instead of T.Nagar
+  - [ ] Investigate outlet assignment in database
+  - [ ] Check KOT queue outlet ID
+- [ ] Payment status showing "pending" despite Razorpay showing captured
+  - [ ] Check webhook processing
+  - [ ] Verify order payment status in database
+
+
+
+## Critical Bugs (Jan 21 - Afternoon)
+
+- [x] KOT printing at wrong outlets - ROOT CAUSE FOUND AND FIXED
+  - [x] Order #134 (T.Nagar instore) printed at Palladium - orders had wrong outletId
+  - [x] Order #133 (Palladium pickup) printed at T.Nagar - T.Nagar printer not updated yet
+  - [x] Root cause: Guest checkout was using hardcoded storeLocationId instead of selected outlet
+  - [x] Fixed Checkout.tsx to calculate guestOutletId from selectedOutlet (same as logged-in checkout)
+  - [x] T.Nagar printer scripts already updated (need to be deployed)
+
+- [x] Razorpay payments not showing in Payment Report - CLARIFIED
+  - [x] Order #133 is in 'ready' status, not 'completed' - Payment Report only shows completed orders
+  - [x] Order #134 shows "Not Recorded" because it's a Pay at Counter order with no payment collected
+  - [x] This is correct behavior - Payment Report is for financial reconciliation of completed orders

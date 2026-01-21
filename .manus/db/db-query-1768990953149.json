@@ -1,0 +1,40 @@
+{
+  "query": "SELECT k.id, k.orderId, k.orderNumber, k.outletId, k.isPrinted, k.createdAt, o.outletId as order_outletId, o.orderType FROM kot_queue k JOIN orders o ON k.orderNumber = o.orderNumber WHERE k.orderNumber IN ('00133', '00134') ORDER BY k.id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT k.id, k.orderId, k.orderNumber, k.outletId, k.isPrinted, k.createdAt, o.outletId as order_outletId, o.orderType FROM kot_queue k JOIN orders o ON k.orderNumber = o.orderNumber WHERE k.orderNumber IN ('00133', '00134') ORDER BY k.id;",
+  "rows": [
+    {
+      "id": "900001",
+      "orderId": "1230011",
+      "orderNumber": "00133",
+      "outletId": "1",
+      "isPrinted": "1",
+      "createdAt": "2026-01-21 09:06:57",
+      "order_outletId": "1",
+      "orderType": "pickup"
+    },
+    {
+      "id": "900002",
+      "orderId": "1230011",
+      "orderNumber": "00133",
+      "outletId": "1",
+      "isPrinted": "1",
+      "createdAt": "2026-01-21 09:08:24",
+      "order_outletId": "1",
+      "orderType": "pickup"
+    },
+    {
+      "id": "900003",
+      "orderId": "1230012",
+      "orderNumber": "00134",
+      "outletId": "1",
+      "isPrinted": "1",
+      "createdAt": "2026-01-21 09:48:56",
+      "order_outletId": "1",
+      "orderType": "instore"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\torderId\torderNumber\toutletId\tisPrinted\tcreatedAt\torder_outletId\torderType\n900001\t1230011\t00133\t1\t1\t2026-01-21 09:06:57\t1\tpickup\n900002\t1230011\t00133\t1\t1\t2026-01-21 09:08:24\t1\tpickup\n900003\t1230012\t00134\t1\t1\t2026-01-21 09:48:56\t1\tinstore\n",
+  "stderr": "",
+  "execution_time_ms": 1520
+}
