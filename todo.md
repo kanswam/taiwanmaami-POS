@@ -778,3 +778,17 @@ Orders fixed:
 - [x] Send email notification on restore completion
 - [x] Add vitest tests for restore functionality
 - [x] Update backup_logs schema to include 'restored' status
+
+## KOT Printer Configuration - Palladium Mall (Jan 19)
+
+- [x] Configure Palladium KOT printer (IP: 192.168.0.115, Name: BILL)
+- [x] KOT print triggers:
+  - [x] Delivery: After Razorpay payment success
+  - [x] In-Store (Pay at Counter): Upon order confirmation
+  - [x] In-Store (Razorpay): After Razorpay payment success
+  - [x] Pickup (any payment): Upon order confirmation
+- [x] Tax Invoice: Print after order marked Completed
+- [x] Created kot-printer-palladium.mjs client
+- [x] Created receipt-printer-palladium.mjs client
+- [x] Created Windows batch files for auto-start
+- [x] Created PALLADIUM-PRINTER-SETUP.md guide

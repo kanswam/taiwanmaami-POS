@@ -360,6 +360,55 @@ export const appRouter = router({
           }
         }
         
+        // For PICKUP orders, create KOT immediately on order confirmation
+        // Kitchen needs to start preparing so food is ready when customer arrives
+        if (input.orderType === 'pickup') {
+          try {
+            const kotData = {
+              orderId: orderNumber,
+              orderType: 'PICKUP',
+              customerName: input.customerName || ctx.user?.name || 'Guest',
+              customerPhone: input.customerPhone || '',
+              specialInstructions: input.specialInstructions || '',
+              items: input.items.map(item => ({
+                productName: item.productName,
+                quantity: item.quantity,
+                price: item.unitPrice,
+                size: item.size,
+                withBoba: item.withBoba,
+                sugarLevel: item.sugarLevel,
+                iceLevel: item.iceLevel,
+                specialInstructions: item.specialInstructions || '',
+                addons: item.addons.map(a => ({
+                  name: a.name,
+                  price: a.price,
+                })),
+              })),
+              totalAmount,
+              createdAt: new Date().toISOString(),
+            };
+            
+            await dbInstance!.insert(kotQueue).values({
+              orderId: orderId.toString(),
+              outletId: 2, // T Nagar outlet
+              orderNumber,
+              kotData: kotData,
+              isPrinted: false,
+            });
+          } catch (kotError) {
+            // CRITICAL: KOT queuing failed - notify owner immediately
+            console.error('CRITICAL: KOT queuing failed for pickup order', orderNumber, kotError);
+            try {
+              await notifyOwner({
+                title: `🚨 CRITICAL: KOT Failed for Pickup Order #${orderNumber}`,
+                content: `KOT could not be queued for pickup order #${orderNumber}. Customer: ${input.customerName || ctx.user?.name || 'Guest'}. Please manually print KOT from Admin panel immediately!`,
+              });
+            } catch (notifyError) {
+              console.error('Failed to send KOT failure notification', notifyError);
+            }
+          }
+        }
+        
         // Record discount usage if a first-time discount was applied
         if (appliedDiscount && appliedDiscount.firstTimeOnly && ctx.user?.id) {
           await db.recordDiscountUsage(appliedDiscount.id, ctx.user.id, orderId);
@@ -3191,6 +3240,67 @@ export const appRouter = router({
               await notifyOwner({
                 title: `🚨 CRITICAL: KOT Failed for Order #${orderNumber}`,
                 content: `KOT could not be queued for in-store order #${orderNumber}. Customer: ${input.guestName}, Table: ${input.tableNumber || 'N/A'}. Please manually print KOT from Admin panel immediately!`,
+              });
+            } catch (notifyError) {
+              console.error('Failed to send KOT failure notification', notifyError);
+            }
+          }
+        }
+        
+        // For PICKUP orders, create KOT immediately on order confirmation
+        // Kitchen needs to start preparing so food is ready when customer arrives
+        if (input.orderType === 'pickup') {
+          try {
+            // Build KOT data
+            const kotData = {
+              orderId: orderNumber,
+              orderType: 'PICKUP',
+              customerName: input.guestName,
+              customerPhone: input.guestPhone,
+              specialInstructions: input.specialInstructions || '',
+              items: input.items.map(item => ({
+                productName: item.productName,
+                quantity: item.quantity,
+                price: item.unitPrice,
+                size: item.size,
+                withBoba: item.withBoba,
+                sugarLevel: item.sugarLevel,
+                iceLevel: item.iceLevel,
+                specialInstructions: item.specialInstructions || '',
+                addons: item.addons.map(a => ({
+                  name: a.name,
+                  price: a.price,
+                })),
+              })),
+              totalAmount,
+              createdAt: new Date().toISOString(),
+            };
+            
+            await dbInstance!.insert(kotQueue).values({
+              orderId: orderId.toString(),
+              outletId: input.storeLocationId || 2, // Default to T Nagar (2)
+              orderNumber,
+              kotData: kotData,
+              isPrinted: false,
+            });
+            
+            // Send notification for pickup order
+            try {
+              const itemsList = input.items.map(i => `${i.quantity}x ${i.productName}`).join(', ');
+              await notifyOwner({
+                title: `🆕 New Pickup Order #${orderNumber}`,
+                content: `Customer: ${input.guestName}\nPhone: ${input.guestPhone}\nAmount: ₹${(totalAmount / 100).toFixed(2)}\nItems: ${itemsList}\n\nPickup order placed. Please prepare and notify customer when ready.`
+              });
+            } catch (notifyError) {
+              console.warn('[Order] Failed to send notification:', notifyError);
+            }
+          } catch (kotError) {
+            // CRITICAL: KOT queuing failed - notify owner immediately
+            console.error('CRITICAL: KOT queuing failed for pickup order', orderNumber, kotError);
+            try {
+              await notifyOwner({
+                title: `🚨 CRITICAL: KOT Failed for Pickup Order #${orderNumber}`,
+                content: `KOT could not be queued for pickup order #${orderNumber}. Customer: ${input.guestName}. Please manually print KOT from Admin panel immediately!`,
               });
             } catch (notifyError) {
               console.error('Failed to send KOT failure notification', notifyError);
