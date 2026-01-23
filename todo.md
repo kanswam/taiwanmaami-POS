@@ -955,3 +955,5 @@ Orders fixed:
   - [x] Write vitest tests for wholesale APIs (14 tests passing)
   - [x] Test with test data only (TEST_WHOLESALE_ prefix)
   - [x] Clean up test data after testing (afterAll hook)
+
+- [x] Add "Wholesale" link to main navigation header (next to Locations, Events)
