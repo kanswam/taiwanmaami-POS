@@ -1,0 +1,8 @@
+{
+  "query": "SELECT o.id, o.order_number, o.outlet_id, o.order_type, o.created_at, \n       k.id as kot_id, k.outlet_id as kot_outlet_id, k.status as kot_status, k.printed_at\nFROM orders o\nLEFT JOIN kot_queue k ON o.id = k.order_id\nWHERE o.order_number = '00137' OR o.id = 137\nORDER BY o.id, k.id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT o.id, o.order_number, o.outlet_id, o.order_type, o.created_at, \n       k.id as kot_id, k.outlet_id as kot_outlet_id, k.status as kot_status, k.printed_at\nFROM orders o\nLEFT JOIN kot_queue k ON o.id = k.order_id\nWHERE o.order_number = '00137' OR o.id = 137\nORDER BY o.id, k.id;",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1054 (42S22) at line 1: Unknown column 'k.order_id' in 'on clause'"
+  ]
+}

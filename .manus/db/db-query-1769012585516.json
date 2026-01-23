@@ -1,0 +1,80 @@
+{
+  "query": "SELECT id, orderNumber, outletId, orderType, createdAt FROM orders ORDER BY id DESC LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT id, orderNumber, outletId, orderType, createdAt FROM orders ORDER BY id DESC LIMIT 10;",
+  "rows": [
+    {
+      "id": "1230017",
+      "orderNumber": "00139",
+      "outletId": "2",
+      "orderType": "instore",
+      "createdAt": "2026-01-21 15:41:11"
+    },
+    {
+      "id": "1230016",
+      "orderNumber": "00138",
+      "outletId": "2",
+      "orderType": "instore",
+      "createdAt": "2026-01-21 14:23:32"
+    },
+    {
+      "id": "1230015",
+      "orderNumber": "00137",
+      "outletId": "2",
+      "orderType": "instore",
+      "createdAt": "2026-01-21 14:14:32"
+    },
+    {
+      "id": "1230014",
+      "orderNumber": "00136",
+      "outletId": "2",
+      "orderType": "instore",
+      "createdAt": "2026-01-21 13:33:22"
+    },
+    {
+      "id": "1230013",
+      "orderNumber": "00135",
+      "outletId": "2",
+      "orderType": "instore",
+      "createdAt": "2026-01-21 12:37:08"
+    },
+    {
+      "id": "1230012",
+      "orderNumber": "00134",
+      "outletId": "1",
+      "orderType": "instore",
+      "createdAt": "2026-01-21 09:48:55"
+    },
+    {
+      "id": "1230011",
+      "orderNumber": "00133",
+      "outletId": "1",
+      "orderType": "pickup",
+      "createdAt": "2026-01-21 09:06:57"
+    },
+    {
+      "id": "1230010",
+      "orderNumber": "00132",
+      "outletId": "2",
+      "orderType": "instore",
+      "createdAt": "2026-01-20 18:01:02"
+    },
+    {
+      "id": "1230009",
+      "orderNumber": "00130",
+      "outletId": "2",
+      "orderType": "instore",
+      "createdAt": "2026-01-20 20:25:00"
+    },
+    {
+      "id": "1230008",
+      "orderNumber": "00129",
+      "outletId": "2",
+      "orderType": "pickup",
+      "createdAt": "2026-01-20 19:07:00"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\torderNumber\toutletId\torderType\tcreatedAt\n1230017\t00139\t2\tinstore\t2026-01-21 15:41:11\n1230016\t00138\t2\tinstore\t2026-01-21 14:23:32\n1230015\t00137\t2\tinstore\t2026-01-21 14:14:32\n1230014\t00136\t2\tinstore\t2026-01-21 13:33:22\n1230013\t00135\t2\tinstore\t2026-01-21 12:37:08\n1230012\t00134\t1\tinstore\t2026-01-21 09:48:55\n1230011\t00133\t1\tpickup\t2026-01-21 09:06:57\n1230010\t00132\t2\tinstore\t2026-01-20 18:01:02\n1230009\t00130\t2\tinstore\t2026-01-20 20:25:00\n1230008\t00129\t2\tpickup\t2026-01-20 19:07:00\n",
+  "stderr": "",
+  "execution_time_ms": 1515
+}

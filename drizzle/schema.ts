@@ -872,3 +872,179 @@ export const contentPages = mysqlTable("content_pages", {
 
 export type ContentPage = typeof contentPages.$inferSelect;
 export type InsertContentPage = typeof contentPages.$inferInsert;
+
+
+// =============================================
+// WHOLESALE PORTAL TABLES
+// =============================================
+
+// Wholesale Product Categories
+export const wholesaleCategories = mysqlTable("wholesale_categories", {
+  id: int("id").autoincrement().primaryKey(),
+  name: varchar("name", { length: 100 }).notNull(),
+  slug: varchar("slug", { length: 100 }).notNull().unique(),
+  description: text("description"),
+  imageUrl: text("imageUrl"),
+  displayOrder: int("displayOrder").default(0).notNull(),
+  isActive: boolean("isActive").default(true).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type WholesaleCategory = typeof wholesaleCategories.$inferSelect;
+export type InsertWholesaleCategory = typeof wholesaleCategories.$inferInsert;
+
+// Wholesale Products
+export const wholesaleProducts = mysqlTable("wholesale_products", {
+  id: int("id").autoincrement().primaryKey(),
+  categoryId: int("categoryId").notNull(),
+  name: varchar("name", { length: 200 }).notNull(),
+  slug: varchar("slug", { length: 200 }).notNull().unique(),
+  description: text("description"),
+  specifications: text("specifications"), // Technical specs, ingredients, etc.
+  // Media
+  imageUrl: text("imageUrl"),
+  imageUrl2: text("imageUrl2"),
+  imageUrl3: text("imageUrl3"),
+  videoUrl: text("videoUrl"),
+  // Pricing (in paise)
+  basePrice: int("basePrice").notNull(), // Price per unit
+  unit: varchar("unit", { length: 50 }).notNull(), // kg, pack, case, piece, etc.
+  unitsPerCase: int("unitsPerCase"), // If sold in cases
+  // Bulk pricing tiers (JSON array: [{minQty: 10, price: 9000}, {minQty: 50, price: 8500}])
+  pricingTiers: json("pricingTiers"),
+  // Stock
+  stockQuantity: int("stockQuantity").default(0).notNull(),
+  lowStockThreshold: int("lowStockThreshold").default(10).notNull(),
+  // Flags
+  isActive: boolean("isActive").default(true).notNull(),
+  isFeatured: boolean("isFeatured").default(false).notNull(),
+  // Test data flag
+  isTestData: boolean("isTestData").default(false).notNull(),
+  displayOrder: int("displayOrder").default(0).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type WholesaleProduct = typeof wholesaleProducts.$inferSelect;
+export type InsertWholesaleProduct = typeof wholesaleProducts.$inferInsert;
+
+// Wholesale Customers (B2B buyers)
+export const wholesaleCustomers = mysqlTable("wholesale_customers", {
+  id: int("id").autoincrement().primaryKey(),
+  // Business info
+  businessName: varchar("businessName", { length: 255 }).notNull(),
+  gstNumber: varchar("gstNumber", { length: 20 }),
+  businessType: mysqlEnum("businessType", ["cafe", "restaurant", "retailer", "distributor", "caterer", "other"]).default("other"),
+  // Contact person
+  contactPerson: varchar("contactPerson", { length: 200 }).notNull(),
+  email: varchar("email", { length: 320 }).notNull().unique(),
+  phone: varchar("phone", { length: 20 }).notNull(),
+  // Address
+  addressLine1: text("addressLine1").notNull(),
+  addressLine2: text("addressLine2"),
+  city: varchar("city", { length: 100 }).default("Chennai").notNull(),
+  state: varchar("state", { length: 100 }).default("Tamil Nadu").notNull(),
+  pincode: varchar("pincode", { length: 10 }).notNull(),
+  // Auth
+  passwordHash: varchar("passwordHash", { length: 255 }).notNull(),
+  // Status
+  isVerified: boolean("isVerified").default(false).notNull(),
+  isActive: boolean("isActive").default(true).notNull(),
+  // Test data flag
+  isTestData: boolean("isTestData").default(false).notNull(),
+  // Metadata
+  notes: text("notes"), // Admin notes
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  lastLoginAt: timestamp("lastLoginAt"),
+});
+
+export type WholesaleCustomer = typeof wholesaleCustomers.$inferSelect;
+export type InsertWholesaleCustomer = typeof wholesaleCustomers.$inferInsert;
+
+// Wholesale Cart (persistent cart for logged-in customers)
+export const wholesaleCart = mysqlTable("wholesale_cart", {
+  id: int("id").autoincrement().primaryKey(),
+  customerId: int("customerId").notNull(),
+  productId: int("productId").notNull(),
+  quantity: int("quantity").default(1).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type WholesaleCartItem = typeof wholesaleCart.$inferSelect;
+export type InsertWholesaleCartItem = typeof wholesaleCart.$inferInsert;
+
+// Wholesale Orders
+export const wholesaleOrders = mysqlTable("wholesale_orders", {
+  id: int("id").autoincrement().primaryKey(),
+  orderNumber: varchar("orderNumber", { length: 20 }).notNull().unique(),
+  customerId: int("customerId").notNull(),
+  // Customer snapshot (in case customer info changes)
+  businessName: varchar("businessName", { length: 255 }).notNull(),
+  gstNumber: varchar("gstNumber", { length: 20 }),
+  contactPerson: varchar("contactPerson", { length: 200 }).notNull(),
+  email: varchar("email", { length: 320 }).notNull(),
+  phone: varchar("phone", { length: 20 }).notNull(),
+  // Pickup address (store location)
+  pickupLocation: text("pickupLocation"),
+  // Amounts (in paise)
+  subtotal: int("subtotal").notNull(),
+  cgst: int("cgst").notNull(), // Central GST (9%)
+  sgst: int("sgst").notNull(), // State GST (9%)
+  totalGst: int("totalGst").notNull(), // Total GST (18%)
+  totalAmount: int("totalAmount").notNull(),
+  // Payment
+  paymentStatus: mysqlEnum("paymentStatus", ["pending", "paid", "failed", "refunded"]).default("pending").notNull(),
+  paymentMethod: mysqlEnum("paymentMethod", ["razorpay", "bank_transfer", "cash"]).default("razorpay"),
+  razorpayOrderId: varchar("razorpayOrderId", { length: 100 }),
+  razorpayPaymentId: varchar("razorpayPaymentId", { length: 100 }),
+  // Order status
+  orderStatus: mysqlEnum("orderStatus", ["pending", "confirmed", "processing", "ready", "completed", "cancelled"]).default("pending").notNull(),
+  // Notes
+  customerNotes: text("customerNotes"),
+  adminNotes: text("adminNotes"),
+  // Test data flag
+  isTestData: boolean("isTestData").default(false).notNull(),
+  // Timestamps
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  completedAt: timestamp("completedAt"),
+});
+
+export type WholesaleOrder = typeof wholesaleOrders.$inferSelect;
+export type InsertWholesaleOrder = typeof wholesaleOrders.$inferInsert;
+
+// Wholesale Order Items
+export const wholesaleOrderItems = mysqlTable("wholesale_order_items", {
+  id: int("id").autoincrement().primaryKey(),
+  orderId: int("orderId").notNull(),
+  productId: int("productId").notNull(),
+  // Product snapshot
+  productName: varchar("productName", { length: 200 }).notNull(),
+  unit: varchar("unit", { length: 50 }).notNull(),
+  // Pricing
+  quantity: int("quantity").notNull(),
+  unitPrice: int("unitPrice").notNull(), // Price per unit at time of order (in paise)
+  lineTotal: int("lineTotal").notNull(), // quantity * unitPrice (in paise)
+  // Test data flag
+  isTestData: boolean("isTestData").default(false).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type WholesaleOrderItem = typeof wholesaleOrderItems.$inferSelect;
+export type InsertWholesaleOrderItem = typeof wholesaleOrderItems.$inferInsert;
+
+// Wholesale Password Reset Tokens
+export const wholesalePasswordResets = mysqlTable("wholesale_password_resets", {
+  id: int("id").autoincrement().primaryKey(),
+  customerId: int("customerId").notNull(),
+  token: varchar("token", { length: 100 }).notNull().unique(),
+  expiresAt: timestamp("expiresAt").notNull(),
+  usedAt: timestamp("usedAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type WholesalePasswordReset = typeof wholesalePasswordResets.$inferSelect;
+export type InsertWholesalePasswordReset = typeof wholesalePasswordResets.$inferInsert;

@@ -276,6 +276,10 @@ export default function Admin() {
                 <DropdownMenuItem onClick={() => setActiveTab('bulk-upload')} className={activeTab === 'bulk-upload' ? 'bg-accent' : ''}>
                   <Upload className="w-4 h-4 mr-2" /> Bulk Upload
                 </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => navigate('/admin/wholesale')}>
+                  <Package className="w-4 h-4 mr-2" /> Wholesale Portal
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </TabsList>

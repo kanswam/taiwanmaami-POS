@@ -32,6 +32,16 @@ import FAQ from "./pages/FAQ";
 import Events from "./pages/Events";
 import AdminEvents from "./pages/AdminEvents";
 import { CookieConsent } from "./components/CookieConsent";
+import { WholesaleAuthProvider } from "./contexts/WholesaleAuthContext";
+
+// Wholesale Pages
+import WholesaleLanding from "./pages/wholesale/WholesaleLanding";
+import WholesaleLogin from "./pages/wholesale/WholesaleLogin";
+import WholesaleRegister from "./pages/wholesale/WholesaleRegister";
+import WholesaleProducts from "./pages/wholesale/WholesaleProducts";
+import WholesaleCart from "./pages/wholesale/WholesaleCart";
+import WholesaleOrders from "./pages/wholesale/WholesaleOrders";
+import WholesaleAdmin from "./pages/admin/WholesaleAdmin";
 
 // Scroll to top on route change
 function ScrollToTop() {
@@ -72,11 +82,20 @@ function Router() {
       <Route path="/shipping" component={Shipping} />
       <Route path="/faq" component={FAQ} />
       
+      {/* Wholesale Routes */}
+      <Route path="/wholesale" component={WholesaleLanding} />
+      <Route path="/wholesale/login" component={WholesaleLogin} />
+      <Route path="/wholesale/register" component={WholesaleRegister} />
+      <Route path="/wholesale/products" component={WholesaleProducts} />
+      <Route path="/wholesale/cart" component={WholesaleCart} />
+      <Route path="/wholesale/orders" component={WholesaleOrders} />
+      
       {/* Admin Routes */}
       <Route path="/staff/orders" component={StaffOrders} />
       <Route path="/admin" component={Admin} />
       <Route path="/admin/analytics" component={Analytics} />
       <Route path="/admin/events" component={AdminEvents} />
+      <Route path="/admin/wholesale" component={WholesaleAdmin} />
       
       {/* Fallback */}
       <Route path="/404" component={NotFound} />
@@ -90,6 +109,7 @@ function App() {
   return (
     <ErrorBoundary>
       <ThemeProvider defaultTheme="light">
+        <WholesaleAuthProvider>
         <CartProvider>
           <TooltipProvider>
             <Toaster />
@@ -97,6 +117,7 @@ function App() {
             <CookieConsent />
           </TooltipProvider>
         </CartProvider>
+        </WholesaleAuthProvider>
       </ThemeProvider>
     </ErrorBoundary>
   );

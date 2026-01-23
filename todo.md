@@ -897,3 +897,61 @@ Orders fixed:
 - [x] Added Razorpay to payment method options
   - [x] Added Razorpay filter option
   - [x] Added Razorpay label and icon
+
+## Automated Daily Backup (Jan 21)
+
+- [x] Create database backup procedure (already exists in server/backup.ts)
+- [x] Set up email notification for backup failures (uses notifyOwner system)
+- [x] Schedule daily backup at 4am IST (cron: 0 0 4 * * *)
+- [x] Send alert to kannan.swamy@taiwanmaami.com on failure (via Manus notification system)
+
+
+## Wholesale Portal (Jan 24)
+
+- [x] Database schema for wholesale tables
+  - [x] wholesale_products (name, description, category, photos, videos, price, unit, stock)
+  - [x] wholesale_customers (business_name, gst_number, contact_person, email, phone, address)
+  - [x] wholesale_orders (customer_id, items, subtotal, gst, total, payment_status, shipping_status)
+  - [x] wholesale_order_items (order_id, product_id, quantity, unit_price, total)
+  - [x] wholesale_cart (customer_id, product_id, quantity)
+  - [x] wholesale_categories (name, slug, description, image_url)
+  - [x] wholesale_password_resets (customer_id, token, expires_at)
+
+- [x] Backend API endpoints
+  - [x] Wholesale product CRUD (admin)
+  - [x] Wholesale customer registration/login
+  - [x] Cart management (add, update, remove, get)
+  - [x] Order placement with Razorpay
+  - [x] Order history for customers
+  - [x] Admin order management
+
+- [x] Wholesale customer registration/login
+  - [x] Registration form (business name, GST, contact person, email, phone, address)
+  - [x] Login with email/password
+  - [x] Password reset functionality
+
+- [x] Wholesale product catalog pages
+  - [x] /wholesale landing page with value proposition
+  - [x] /wholesale/products catalog with category filters
+  - [x] Product detail page with photos/videos
+  - [x] Prices visible only after login
+
+- [x] Shopping cart and checkout
+  - [x] Add to cart functionality
+  - [x] Cart page with quantity adjustment
+  - [x] Checkout with business details
+  - [x] Razorpay payment integration
+  - [x] GST calculation (18%)
+  - [x] Order confirmation page
+
+- [x] Wholesale admin panel (accessible from Admin > Settings > Wholesale Portal)
+  - [x] Product management (add, edit, delete, stock)
+  - [x] Category management
+  - [x] Order management (view, update status)
+  - [x] Customer list
+  - [x] Dashboard with stats (orders, revenue, pending, customers)
+
+- [x] Testing
+  - [x] Write vitest tests for wholesale APIs (14 tests passing)
+  - [x] Test with test data only (TEST_WHOLESALE_ prefix)
+  - [x] Clean up test data after testing (afterAll hook)

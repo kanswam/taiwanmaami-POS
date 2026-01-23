@@ -13,6 +13,7 @@ import { generateOrderNumber, calculateGst } from "@shared/types";
 // POS functionality removed - Employee Master import removed
 import { outletProducts, loyaltyRewards, stampTransactions, guestOrders, reviews, kotQueue, receiptQueue, productAuditLog, categoryAuditLog, complaints, eventInquiries, eventOrders, eventOrderItems, workshops, workshopBookings, workshopDates, workshopWaitlist, backupLogs } from "../drizzle/schema";
 import { ENV } from './_core/env';
+import { wholesaleRouter } from './wholesaleRouter';
 import { notifyOwner } from './_core/notification';
 
 // Admin procedure - only allows admin role
@@ -6258,4 +6259,7 @@ export const appRouter = router({
         return result;
       }),
   }),
+
+  // Wholesale B2B Portal
+  wholesale: wholesaleRouter,
 });
