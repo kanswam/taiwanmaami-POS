@@ -957,3 +957,24 @@ Orders fixed:
   - [x] Clean up test data after testing (afterAll hook)
 
 - [x] Add "Wholesale" link to main navigation header (next to Locations, Events)
+
+## Wholesale Admin Enhancements (Jan 24)
+
+- [x] Full CRUD for wholesale categories
+  - [x] Create category with image upload
+  - [x] Edit category (name, description, image)
+  - [x] Delete category (with confirmation)
+  - [ ] Reorder categories (future enhancement)
+
+- [x] Full CRUD for wholesale products
+  - [x] Create product with photo/video upload
+  - [x] Edit product (all fields including media)
+  - [x] Delete product (with confirmation)
+  - [x] Multiple image upload per product (3 images)
+  - [x] Video upload support (50MB max)
+
+- [x] Media upload functionality
+  - [x] Cloudinary integration for wholesale images/videos
+  - [x] Image preview before upload
+  - [x] Video preview
+  - [x] Delete media from product/category (X button)

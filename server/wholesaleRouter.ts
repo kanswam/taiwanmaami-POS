@@ -1045,6 +1045,132 @@ export const wholesaleRouter = router({
         return { order: orders[0], items };
       }),
     
+    // Upload product image
+    uploadProductImage: adminProcedure
+      .input(z.object({
+        productId: z.number(),
+        imageBase64: z.string(),
+        mimeType: z.string(),
+        fileName: z.string(),
+        imageIndex: z.number().default(0), // 0 = main, 1 = second, 2 = third
+      }))
+      .mutation(async ({ input }) => {
+        const { hybridUpload } = await import('./hybridStorage');
+        const database = await getDb();
+        if (!database) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
+        
+        // Convert base64 to buffer
+        const base64Data = input.imageBase64.replace(/^data:[^;]+;base64,/, '');
+        const buffer = Buffer.from(base64Data, 'base64');
+        
+        // Generate unique file name
+        const ext = input.fileName.split('.').pop() || 'jpg';
+        const fileName = `wholesale-${input.productId}-img${input.imageIndex + 1}-${Date.now()}.${ext}`;
+        
+        // Upload to both S3 (backup) and Cloudinary (delivery)
+        const result = await hybridUpload(buffer, {
+          folder: 'wholesale-products',
+          fileName,
+          mimeType: input.mimeType,
+          tags: ['wholesale', `wholesale-product-${input.productId}`],
+        });
+        
+        // Use Cloudinary URL for delivery (optimized)
+        const url = result.deliveryUrl;
+        
+        // Update product with new image URL based on index
+        const updateData: Record<string, string> = {};
+        if (input.imageIndex === 0) {
+          updateData.imageUrl = url;
+        } else if (input.imageIndex === 1) {
+          updateData.imageUrl2 = url;
+        } else if (input.imageIndex === 2) {
+          updateData.imageUrl3 = url;
+        }
+        
+        await database.update(wholesaleProducts)
+          .set(updateData)
+          .where(eq(wholesaleProducts.id, input.productId));
+        
+        return { success: true, imageUrl: url };
+      }),
+    
+    // Upload product video
+    uploadProductVideo: adminProcedure
+      .input(z.object({
+        productId: z.number(),
+        videoBase64: z.string(),
+        mimeType: z.string(),
+        fileName: z.string(),
+      }))
+      .mutation(async ({ input }) => {
+        const { hybridUpload } = await import('./hybridStorage');
+        const database = await getDb();
+        if (!database) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
+        
+        // Convert base64 to buffer
+        const base64Data = input.videoBase64.replace(/^data:[^;]+;base64,/, '');
+        const buffer = Buffer.from(base64Data, 'base64');
+        
+        // Generate unique file name
+        const ext = input.fileName.split('.').pop() || 'mp4';
+        const fileName = `wholesale-${input.productId}-video-${Date.now()}.${ext}`;
+        
+        // Upload to storage
+        const result = await hybridUpload(buffer, {
+          folder: 'wholesale-products',
+          fileName,
+          mimeType: input.mimeType,
+          tags: ['wholesale', 'video', `wholesale-product-${input.productId}`],
+        });
+        
+        const url = result.deliveryUrl;
+        
+        await database.update(wholesaleProducts)
+          .set({ videoUrl: url })
+          .where(eq(wholesaleProducts.id, input.productId));
+        
+        return { success: true, videoUrl: url };
+      }),
+    
+    // Upload category image
+    uploadCategoryImage: adminProcedure
+      .input(z.object({
+        categoryId: z.number(),
+        imageBase64: z.string(),
+        mimeType: z.string(),
+        fileName: z.string(),
+      }))
+      .mutation(async ({ input }) => {
+        const { hybridUpload } = await import('./hybridStorage');
+        const database = await getDb();
+        if (!database) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
+        
+        // Convert base64 to buffer
+        const base64Data = input.imageBase64.replace(/^data:[^;]+;base64,/, '');
+        const buffer = Buffer.from(base64Data, 'base64');
+        
+        // Generate unique file name
+        const ext = input.fileName.split('.').pop() || 'jpg';
+        const fileName = `wholesale-category-${input.categoryId}-${Date.now()}.${ext}`;
+        
+        // Upload to storage
+        const result = await hybridUpload(buffer, {
+          folder: 'wholesale-categories',
+          fileName,
+          mimeType: input.mimeType,
+          tags: ['wholesale', 'category', `wholesale-category-${input.categoryId}`],
+        });
+        
+        const url = result.deliveryUrl;
+        
+        await database.update(wholesaleCategories)
+          .set({ imageUrl: url })
+          .where(eq(wholesaleCategories.id, input.categoryId));
+        
+        return { success: true, imageUrl: url };
+      }),
+    
     // Get sales summary
     getSalesSummary: adminProcedure
       .input(z.object({

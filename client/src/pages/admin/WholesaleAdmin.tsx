@@ -1,19 +1,19 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Link } from 'wouter';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Skeleton } from '@/components/ui/skeleton';
 import { 
   Package, Users, ShoppingCart, DollarSign, Plus, Edit, Trash2,
-  Eye, CheckCircle, Clock, XCircle, Truck, ArrowLeft, RefreshCw
+  Eye, Clock, ArrowLeft, RefreshCw, Upload, X, Image, Video, Loader2
 } from 'lucide-react';
 import { trpc } from '@/lib/trpc';
 import { toast } from 'sonner';
@@ -27,28 +27,48 @@ const statusConfig: Record<string, { label: string; color: string }> = {
   cancelled: { label: 'Cancelled', color: 'bg-red-100 text-red-800' },
 };
 
+interface CategoryForm {
+  id?: number;
+  name: string;
+  slug: string;
+  description: string;
+  imageUrl: string;
+  isActive: boolean;
+}
+
+interface ProductForm {
+  id?: number;
+  categoryId: number;
+  name: string;
+  slug: string;
+  description: string;
+  specifications: string;
+  imageUrl: string;
+  imageUrl2: string;
+  imageUrl3: string;
+  videoUrl: string;
+  basePrice: number;
+  unit: string;
+  stockQuantity: number;
+  isActive: boolean;
+  isFeatured: boolean;
+}
+
 export default function WholesaleAdmin() {
-  // Using sonner toast
   const [activeTab, setActiveTab] = useState('orders');
   const [selectedOrder, setSelectedOrder] = useState<number | null>(null);
-  const [editingCategory, setEditingCategory] = useState<{ id?: number; name: string; slug: string; description: string; isActive: boolean } | null>(null);
-  const [editingProduct, setEditingProduct] = useState<{
-    id?: number;
-    categoryId: number;
-    name: string;
-    slug: string;
-    description: string;
-    specifications: string;
-    imageUrl: string;
-    basePrice: number;
-    unit: string;
-    stockQuantity: number;
-    isActive: boolean;
-    isFeatured: boolean;
-  } | null>(null);
+  const [editingCategory, setEditingCategory] = useState<CategoryForm | null>(null);
+  const [editingProduct, setEditingProduct] = useState<ProductForm | null>(null);
+  const [uploadingImage, setUploadingImage] = useState<string | null>(null);
+  
+  const categoryImageRef = useRef<HTMLInputElement>(null);
+  const productImageRef1 = useRef<HTMLInputElement>(null);
+  const productImageRef2 = useRef<HTMLInputElement>(null);
+  const productImageRef3 = useRef<HTMLInputElement>(null);
+  const productVideoRef = useRef<HTMLInputElement>(null);
 
   // Queries
-  const { data: summary, isLoading: summaryLoading } = trpc.wholesale.admin.getSalesSummary.useQuery();
+  const { data: summary } = trpc.wholesale.admin.getSalesSummary.useQuery();
   const { data: orders, isLoading: ordersLoading, refetch: refetchOrders } = trpc.wholesale.admin.getOrders.useQuery();
   const { data: categories, isLoading: categoriesLoading, refetch: refetchCategories } = trpc.wholesale.admin.getCategories.useQuery();
   const { data: products, isLoading: productsLoading, refetch: refetchProducts } = trpc.wholesale.admin.getProducts.useQuery();
@@ -58,14 +78,14 @@ export default function WholesaleAdmin() {
     { enabled: !!selectedOrder }
   );
 
-  // Mutations
+  // Category Mutations
   const createCategoryMutation = trpc.wholesale.admin.createCategory.useMutation({
     onSuccess: () => {
       toast.success('Category created');
       refetchCategories();
       setEditingCategory(null);
     },
-    onError: (err: { message?: string }) => toast.error(err.message || 'Error'),
+    onError: (err) => toast.error(err.message || 'Error creating category'),
   });
 
   const updateCategoryMutation = trpc.wholesale.admin.updateCategory.useMutation({
@@ -74,7 +94,7 @@ export default function WholesaleAdmin() {
       refetchCategories();
       setEditingCategory(null);
     },
-    onError: (err: { message?: string }) => toast.error(err.message || 'Error'),
+    onError: (err) => toast.error(err.message || 'Error updating category'),
   });
 
   const deleteCategoryMutation = trpc.wholesale.admin.deleteCategory.useMutation({
@@ -82,16 +102,32 @@ export default function WholesaleAdmin() {
       toast.success('Category deleted');
       refetchCategories();
     },
-    onError: (err: { message?: string }) => toast.error(err.message || 'Error'),
+    onError: (err) => toast.error(err.message || 'Error deleting category'),
   });
 
+  const uploadCategoryImageMutation = trpc.wholesale.admin.uploadCategoryImage.useMutation({
+    onSuccess: (data) => {
+      toast.success('Image uploaded');
+      if (editingCategory) {
+        setEditingCategory({ ...editingCategory, imageUrl: data.imageUrl });
+      }
+      refetchCategories();
+      setUploadingImage(null);
+    },
+    onError: (err) => {
+      toast.error(err.message || 'Error uploading image');
+      setUploadingImage(null);
+    },
+  });
+
+  // Product Mutations
   const createProductMutation = trpc.wholesale.admin.createProduct.useMutation({
     onSuccess: () => {
       toast.success('Product created');
       refetchProducts();
       setEditingProduct(null);
     },
-    onError: (err: { message?: string }) => toast.error(err.message || 'Error'),
+    onError: (err) => toast.error(err.message || 'Error creating product'),
   });
 
   const updateProductMutation = trpc.wholesale.admin.updateProduct.useMutation({
@@ -100,7 +136,7 @@ export default function WholesaleAdmin() {
       refetchProducts();
       setEditingProduct(null);
     },
-    onError: (err: { message?: string }) => toast.error(err.message || 'Error'),
+    onError: (err) => toast.error(err.message || 'Error updating product'),
   });
 
   const deleteProductMutation = trpc.wholesale.admin.deleteProduct.useMutation({
@@ -108,7 +144,38 @@ export default function WholesaleAdmin() {
       toast.success('Product deleted');
       refetchProducts();
     },
-    onError: (err: { message?: string }) => toast.error(err.message || 'Error'),
+    onError: (err) => toast.error(err.message || 'Error deleting product'),
+  });
+
+  const uploadProductImageMutation = trpc.wholesale.admin.uploadProductImage.useMutation({
+    onSuccess: (data, variables) => {
+      toast.success('Image uploaded');
+      if (editingProduct) {
+        const key = variables.imageIndex === 0 ? 'imageUrl' : variables.imageIndex === 1 ? 'imageUrl2' : 'imageUrl3';
+        setEditingProduct({ ...editingProduct, [key]: data.imageUrl });
+      }
+      refetchProducts();
+      setUploadingImage(null);
+    },
+    onError: (err) => {
+      toast.error(err.message || 'Error uploading image');
+      setUploadingImage(null);
+    },
+  });
+
+  const uploadProductVideoMutation = trpc.wholesale.admin.uploadProductVideo.useMutation({
+    onSuccess: (data) => {
+      toast.success('Video uploaded');
+      if (editingProduct) {
+        setEditingProduct({ ...editingProduct, videoUrl: data.videoUrl });
+      }
+      refetchProducts();
+      setUploadingImage(null);
+    },
+    onError: (err) => {
+      toast.error(err.message || 'Error uploading video');
+      setUploadingImage(null);
+    },
   });
 
   const updateOrderStatusMutation = trpc.wholesale.admin.updateOrderStatus.useMutation({
@@ -116,7 +183,7 @@ export default function WholesaleAdmin() {
       toast.success('Order status updated');
       refetchOrders();
     },
-    onError: (err: { message?: string }) => toast.error(err.message || 'Error'),
+    onError: (err) => toast.error(err.message || 'Error updating order'),
   });
 
   const formatPrice = (price: number) => {
@@ -139,6 +206,210 @@ export default function WholesaleAdmin() {
 
   const generateSlug = (name: string) => {
     return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+  };
+
+  // Handle file upload for category image
+  const handleCategoryImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !editingCategory?.id) return;
+    
+    setUploadingImage('category');
+    const reader = new FileReader();
+    reader.onload = () => {
+      uploadCategoryImageMutation.mutate({
+        categoryId: editingCategory.id!,
+        imageBase64: reader.result as string,
+        mimeType: file.type,
+        fileName: file.name,
+      });
+    };
+    reader.readAsDataURL(file);
+  };
+
+  // Handle file upload for product images
+  const handleProductImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, imageIndex: number) => {
+    const file = e.target.files?.[0];
+    if (!file || !editingProduct?.id) return;
+    
+    setUploadingImage(`product-${imageIndex}`);
+    const reader = new FileReader();
+    reader.onload = () => {
+      uploadProductImageMutation.mutate({
+        productId: editingProduct.id!,
+        imageBase64: reader.result as string,
+        mimeType: file.type,
+        fileName: file.name,
+        imageIndex,
+      });
+    };
+    reader.readAsDataURL(file);
+  };
+
+  // Handle file upload for product video
+  const handleProductVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !editingProduct?.id) return;
+    
+    if (file.size > 50 * 1024 * 1024) {
+      toast.error('Video must be under 50MB');
+      return;
+    }
+    
+    setUploadingImage('video');
+    const reader = new FileReader();
+    reader.onload = () => {
+      uploadProductVideoMutation.mutate({
+        productId: editingProduct.id!,
+        videoBase64: reader.result as string,
+        mimeType: file.type,
+        fileName: file.name,
+      });
+    };
+    reader.readAsDataURL(file);
+  };
+
+  // Initialize new category form
+  const openNewCategory = () => {
+    setEditingCategory({
+      name: '',
+      slug: '',
+      description: '',
+      imageUrl: '',
+      isActive: true,
+    });
+  };
+
+  // Initialize edit category form
+  const openEditCategory = (category: { id: number; name: string; slug: string; description?: string | null; imageUrl?: string | null; isActive: boolean }) => {
+    setEditingCategory({
+      id: category.id,
+      name: category.name,
+      slug: category.slug,
+      description: category.description || '',
+      imageUrl: category.imageUrl || '',
+      isActive: category.isActive,
+    });
+  };
+
+  // Initialize new product form
+  const openNewProduct = () => {
+    setEditingProduct({
+      categoryId: categories?.[0]?.id || 0,
+      name: '',
+      slug: '',
+      description: '',
+      specifications: '',
+      imageUrl: '',
+      imageUrl2: '',
+      imageUrl3: '',
+      videoUrl: '',
+      basePrice: 0,
+      unit: 'pack',
+      stockQuantity: 0,
+      isActive: true,
+      isFeatured: false,
+    });
+  };
+
+  // Initialize edit product form
+  const openEditProduct = (product: {
+    id: number;
+    categoryId: number;
+    name: string;
+    slug: string;
+    description?: string | null;
+    specifications?: string | null;
+    imageUrl?: string | null;
+    imageUrl2?: string | null;
+    imageUrl3?: string | null;
+    videoUrl?: string | null;
+    basePrice: number;
+    unit: string;
+    stockQuantity: number;
+    isActive: boolean;
+    isFeatured?: boolean | null;
+  }) => {
+    setEditingProduct({
+      id: product.id,
+      categoryId: product.categoryId,
+      name: product.name,
+      slug: product.slug,
+      description: product.description || '',
+      specifications: product.specifications || '',
+      imageUrl: product.imageUrl || '',
+      imageUrl2: product.imageUrl2 || '',
+      imageUrl3: product.imageUrl3 || '',
+      videoUrl: product.videoUrl || '',
+      basePrice: product.basePrice,
+      unit: product.unit,
+      stockQuantity: product.stockQuantity,
+      isActive: product.isActive,
+      isFeatured: product.isFeatured || false,
+    });
+  };
+
+  // Save category
+  const saveCategory = () => {
+    if (!editingCategory) return;
+    if (editingCategory.id) {
+      updateCategoryMutation.mutate({
+        id: editingCategory.id,
+        name: editingCategory.name,
+        slug: editingCategory.slug,
+        description: editingCategory.description,
+        imageUrl: editingCategory.imageUrl,
+        isActive: editingCategory.isActive,
+      });
+    } else {
+      createCategoryMutation.mutate({
+        name: editingCategory.name,
+        slug: editingCategory.slug,
+        description: editingCategory.description,
+        imageUrl: editingCategory.imageUrl,
+        isActive: editingCategory.isActive,
+      });
+    }
+  };
+
+  // Save product
+  const saveProduct = () => {
+    if (!editingProduct) return;
+    if (editingProduct.id) {
+      updateProductMutation.mutate({
+        id: editingProduct.id,
+        categoryId: editingProduct.categoryId,
+        name: editingProduct.name,
+        slug: editingProduct.slug,
+        description: editingProduct.description,
+        specifications: editingProduct.specifications,
+        imageUrl: editingProduct.imageUrl,
+        imageUrl2: editingProduct.imageUrl2,
+        imageUrl3: editingProduct.imageUrl3,
+        videoUrl: editingProduct.videoUrl,
+        basePrice: editingProduct.basePrice,
+        unit: editingProduct.unit,
+        stockQuantity: editingProduct.stockQuantity,
+        isActive: editingProduct.isActive,
+        isFeatured: editingProduct.isFeatured,
+      });
+    } else {
+      createProductMutation.mutate({
+        categoryId: editingProduct.categoryId,
+        name: editingProduct.name,
+        slug: editingProduct.slug,
+        description: editingProduct.description,
+        specifications: editingProduct.specifications,
+        imageUrl: editingProduct.imageUrl,
+        imageUrl2: editingProduct.imageUrl2,
+        imageUrl3: editingProduct.imageUrl3,
+        videoUrl: editingProduct.videoUrl,
+        basePrice: editingProduct.basePrice,
+        unit: editingProduct.unit,
+        stockQuantity: editingProduct.stockQuantity,
+        isActive: editingProduct.isActive,
+        isFeatured: editingProduct.isFeatured,
+      });
+    }
   };
 
   return (
@@ -265,7 +536,7 @@ export default function WholesaleAdmin() {
                         createdAt: Date | string;
                       }) => (
                         <TableRow key={order.id}>
-                          <TableCell className="font-medium">{order.orderNumber}</TableCell>
+                          <TableCell className="font-mono">{order.orderNumber}</TableCell>
                           <TableCell>{order.businessName}</TableCell>
                           <TableCell>{formatPrice(order.totalAmount)}</TableCell>
                           <TableCell>
@@ -274,31 +545,36 @@ export default function WholesaleAdmin() {
                             </Badge>
                           </TableCell>
                           <TableCell>
-                            <Select
-                              value={order.orderStatus}
-                              onValueChange={(value) => updateOrderStatusMutation.mutate({
-                                orderId: order.id,
-                                orderStatus: value as 'pending' | 'confirmed' | 'processing' | 'ready' | 'completed' | 'cancelled',
-                              })}
-                            >
-                              <SelectTrigger className="w-32">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="pending">Pending</SelectItem>
-                                <SelectItem value="confirmed">Confirmed</SelectItem>
-                                <SelectItem value="processing">Processing</SelectItem>
-                                <SelectItem value="ready">Ready</SelectItem>
-                                <SelectItem value="completed">Completed</SelectItem>
-                                <SelectItem value="cancelled">Cancelled</SelectItem>
-                              </SelectContent>
-                            </Select>
+                            <Badge className={statusConfig[order.orderStatus]?.color || 'bg-gray-100'}>
+                              {statusConfig[order.orderStatus]?.label || order.orderStatus}
+                            </Badge>
                           </TableCell>
                           <TableCell className="text-sm">{formatDate(order.createdAt)}</TableCell>
                           <TableCell>
-                            <Button variant="ghost" size="sm" onClick={() => setSelectedOrder(order.id)}>
-                              <Eye className="h-4 w-4" />
-                            </Button>
+                            <div className="flex gap-1">
+                              <Button variant="ghost" size="sm" onClick={() => setSelectedOrder(order.id)}>
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                              <Select
+                                value={order.orderStatus}
+                                onValueChange={(value) => updateOrderStatusMutation.mutate({
+                                  orderId: order.id,
+                                  orderStatus: value as 'pending' | 'confirmed' | 'processing' | 'ready' | 'completed' | 'cancelled',
+                                })}
+                              >
+                                <SelectTrigger className="w-[120px] h-8">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="pending">Pending</SelectItem>
+                                  <SelectItem value="confirmed">Confirmed</SelectItem>
+                                  <SelectItem value="processing">Processing</SelectItem>
+                                  <SelectItem value="ready">Ready</SelectItem>
+                                  <SelectItem value="completed">Completed</SelectItem>
+                                  <SelectItem value="cancelled">Cancelled</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
                           </TableCell>
                         </TableRow>
                       ))}
@@ -314,22 +590,7 @@ export default function WholesaleAdmin() {
             <Card>
               <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle>Wholesale Products</CardTitle>
-                <Button 
-                  className="bg-amber-600 hover:bg-amber-700"
-                  onClick={() => setEditingProduct({
-                    categoryId: categories?.[0]?.id || 0,
-                    name: '',
-                    slug: '',
-                    description: '',
-                    specifications: '',
-                    imageUrl: '',
-                    basePrice: 0,
-                    unit: 'kg',
-                    stockQuantity: 0,
-                    isActive: true,
-                    isFeatured: false,
-                  })}
-                >
+                <Button className="bg-amber-600 hover:bg-amber-700" onClick={openNewProduct}>
                   <Plus className="h-4 w-4 mr-2" />
                   Add Product
                 </Button>
@@ -345,7 +606,8 @@ export default function WholesaleAdmin() {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Product</TableHead>
+                        <TableHead>Image</TableHead>
+                        <TableHead>Name</TableHead>
                         <TableHead>Category</TableHead>
                         <TableHead>Price</TableHead>
                         <TableHead>Stock</TableHead>
@@ -356,42 +618,45 @@ export default function WholesaleAdmin() {
                     <TableBody>
                       {products.map((product: {
                         id: number;
+                        categoryId: number;
                         name: string;
                         slug: string;
                         description?: string | null;
                         specifications?: string | null;
                         imageUrl?: string | null;
-                        categoryId: number;
+                        imageUrl2?: string | null;
+                        imageUrl3?: string | null;
+                        videoUrl?: string | null;
                         basePrice: number;
                         unit: string;
                         stockQuantity: number;
                         isActive: boolean;
-                        isFeatured?: boolean;
+                        isFeatured?: boolean | null;
                       }) => (
                         <TableRow key={product.id}>
                           <TableCell>
-                            <div className="flex items-center gap-3">
-                              {product.imageUrl ? (
-                                <img src={product.imageUrl} alt={product.name} className="w-10 h-10 rounded object-cover" />
-                              ) : (
-                                <div className="w-10 h-10 bg-gray-100 rounded flex items-center justify-center">
-                                  <Package className="h-5 w-5 text-gray-400" />
-                                </div>
-                              )}
-                              <div>
-                                <p className="font-medium">{product.name}</p>
-                                {product.isFeatured && <Badge className="bg-amber-100 text-amber-800 text-xs">Featured</Badge>}
+                            {product.imageUrl ? (
+                              <img src={product.imageUrl} alt={product.name} className="w-12 h-12 object-cover rounded" />
+                            ) : (
+                              <div className="w-12 h-12 bg-gray-100 rounded flex items-center justify-center">
+                                <Package className="h-6 w-6 text-gray-400" />
                               </div>
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            <div>
+                              <p className="font-medium">{product.name}</p>
+                              <p className="text-xs text-gray-500">/{product.unit}</p>
                             </div>
                           </TableCell>
                           <TableCell>
                             {categories?.find((c: { id: number }) => c.id === product.categoryId)?.name || '-'}
                           </TableCell>
-                          <TableCell>{formatPrice(product.basePrice)} / {product.unit}</TableCell>
+                          <TableCell>{formatPrice(product.basePrice)}</TableCell>
                           <TableCell>
-                            <span className={product.stockQuantity <= 10 ? 'text-red-600 font-medium' : ''}>
+                            <Badge className={product.stockQuantity > 10 ? 'bg-green-100 text-green-800' : product.stockQuantity > 0 ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'}>
                               {product.stockQuantity}
-                            </span>
+                            </Badge>
                           </TableCell>
                           <TableCell>
                             <Badge className={product.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}>
@@ -400,24 +665,7 @@ export default function WholesaleAdmin() {
                           </TableCell>
                           <TableCell>
                             <div className="flex gap-1">
-                              <Button 
-                                variant="ghost" 
-                                size="sm"
-                                onClick={() => setEditingProduct({
-                                  id: product.id,
-                                  categoryId: product.categoryId,
-                                  name: product.name,
-                                  slug: product.slug,
-                                  description: product.description || '',
-                                  specifications: product.specifications || '',
-                                  imageUrl: product.imageUrl || '',
-                                  basePrice: product.basePrice,
-                                  unit: product.unit,
-                                  stockQuantity: product.stockQuantity,
-                                  isActive: product.isActive,
-                                  isFeatured: product.isFeatured || false,
-                                })}
-                              >
+                              <Button variant="ghost" size="sm" onClick={() => openEditProduct(product)}>
                                 <Edit className="h-4 w-4" />
                               </Button>
                               <Button 
@@ -448,10 +696,7 @@ export default function WholesaleAdmin() {
             <Card>
               <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle>Product Categories</CardTitle>
-                <Button 
-                  className="bg-amber-600 hover:bg-amber-700"
-                  onClick={() => setEditingCategory({ name: '', slug: '', description: '', isActive: true })}
-                >
+                <Button className="bg-amber-600 hover:bg-amber-700" onClick={openNewCategory}>
                   <Plus className="h-4 w-4 mr-2" />
                   Add Category
                 </Button>
@@ -467,6 +712,7 @@ export default function WholesaleAdmin() {
                   <Table>
                     <TableHeader>
                       <TableRow>
+                        <TableHead>Image</TableHead>
                         <TableHead>Name</TableHead>
                         <TableHead>Slug</TableHead>
                         <TableHead>Description</TableHead>
@@ -480,9 +726,19 @@ export default function WholesaleAdmin() {
                         name: string;
                         slug: string;
                         description?: string | null;
+                        imageUrl?: string | null;
                         isActive: boolean;
                       }) => (
                         <TableRow key={category.id}>
+                          <TableCell>
+                            {category.imageUrl ? (
+                              <img src={category.imageUrl} alt={category.name} className="w-12 h-12 object-cover rounded" />
+                            ) : (
+                              <div className="w-12 h-12 bg-gray-100 rounded flex items-center justify-center">
+                                <Image className="h-6 w-6 text-gray-400" />
+                              </div>
+                            )}
+                          </TableCell>
                           <TableCell className="font-medium">{category.name}</TableCell>
                           <TableCell className="text-gray-500">{category.slug}</TableCell>
                           <TableCell className="max-w-xs truncate">{category.description || '-'}</TableCell>
@@ -493,17 +749,7 @@ export default function WholesaleAdmin() {
                           </TableCell>
                           <TableCell>
                             <div className="flex gap-1">
-                              <Button 
-                                variant="ghost" 
-                                size="sm"
-                                onClick={() => setEditingCategory({
-                                  id: category.id,
-                                  name: category.name,
-                                  slug: category.slug,
-                                  description: category.description || '',
-                                  isActive: category.isActive,
-                                })}
-                              >
+                              <Button variant="ghost" size="sm" onClick={() => openEditCategory(category)}>
                                 <Edit className="h-4 w-4" />
                               </Button>
                               <Button 
@@ -600,13 +846,60 @@ export default function WholesaleAdmin() {
 
       {/* Category Edit Dialog */}
       <Dialog open={!!editingCategory} onOpenChange={() => setEditingCategory(null)}>
-        <DialogContent>
+        <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle>{editingCategory?.id ? 'Edit Category' : 'Add Category'}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
+            {/* Category Image */}
             <div className="space-y-2">
-              <Label>Name</Label>
+              <Label>Category Image</Label>
+              <div className="flex items-start gap-4">
+                {editingCategory?.imageUrl ? (
+                  <div className="relative">
+                    <img src={editingCategory.imageUrl} alt="Category" className="w-24 h-24 object-cover rounded-lg" />
+                    <Button
+                      variant="destructive"
+                      size="icon"
+                      className="absolute -top-2 -right-2 h-6 w-6"
+                      onClick={() => setEditingCategory({ ...editingCategory, imageUrl: '' })}
+                    >
+                      <X className="h-3 w-3" />
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="w-24 h-24 bg-gray-100 rounded-lg flex items-center justify-center">
+                    <Image className="h-8 w-8 text-gray-400" />
+                  </div>
+                )}
+                <div className="flex-1">
+                  <input
+                    type="file"
+                    ref={categoryImageRef}
+                    className="hidden"
+                    accept="image/*"
+                    onChange={handleCategoryImageUpload}
+                  />
+                  <Button
+                    variant="outline"
+                    onClick={() => categoryImageRef.current?.click()}
+                    disabled={!editingCategory?.id || uploadingImage === 'category'}
+                  >
+                    {uploadingImage === 'category' ? (
+                      <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Uploading...</>
+                    ) : (
+                      <><Upload className="h-4 w-4 mr-2" /> Upload Image</>
+                    )}
+                  </Button>
+                  {!editingCategory?.id && (
+                    <p className="text-xs text-gray-500 mt-1">Save category first to upload image</p>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Name *</Label>
               <Input
                 value={editingCategory?.name || ''}
                 onChange={(e) => setEditingCategory(prev => prev ? {
@@ -642,17 +935,7 @@ export default function WholesaleAdmin() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setEditingCategory(null)}>Cancel</Button>
-            <Button
-              className="bg-amber-600 hover:bg-amber-700"
-              onClick={() => {
-                if (!editingCategory) return;
-                if (editingCategory.id) {
-                  updateCategoryMutation.mutate(editingCategory as { id: number; name?: string; slug?: string; description?: string; isActive?: boolean });
-                } else {
-                  createCategoryMutation.mutate(editingCategory);
-                }
-              }}
-            >
+            <Button className="bg-amber-600 hover:bg-amber-700" onClick={saveCategory}>
               {editingCategory?.id ? 'Update' : 'Create'}
             </Button>
           </DialogFooter>
@@ -661,127 +944,246 @@ export default function WholesaleAdmin() {
 
       {/* Product Edit Dialog */}
       <Dialog open={!!editingProduct} onOpenChange={() => setEditingProduct(null)}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{editingProduct?.id ? 'Edit Product' : 'Add Product'}</DialogTitle>
           </DialogHeader>
-          <div className="grid md:grid-cols-2 gap-4">
+          <div className="space-y-6">
+            {/* Product Images */}
             <div className="space-y-2">
-              <Label>Name</Label>
-              <Input
-                value={editingProduct?.name || ''}
-                onChange={(e) => setEditingProduct(prev => prev ? {
-                  ...prev,
-                  name: e.target.value,
-                  slug: prev.id ? prev.slug : generateSlug(e.target.value),
-                } : null)}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Slug</Label>
-              <Input
-                value={editingProduct?.slug || ''}
-                onChange={(e) => setEditingProduct(prev => prev ? { ...prev, slug: e.target.value } : null)}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Category</Label>
-              <Select
-                value={editingProduct?.categoryId?.toString() || ''}
-                onValueChange={(value) => setEditingProduct(prev => prev ? { ...prev, categoryId: parseInt(value) } : null)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select category" />
-                </SelectTrigger>
-                <SelectContent>
-                  {categories?.map((cat: { id: number; name: string }) => (
-                    <SelectItem key={cat.id} value={cat.id.toString()}>{cat.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label>Unit</Label>
-              <Input
-                value={editingProduct?.unit || ''}
-                onChange={(e) => setEditingProduct(prev => prev ? { ...prev, unit: e.target.value } : null)}
-                placeholder="e.g., kg, pack, box"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Base Price (in paise)</Label>
-              <Input
-                type="number"
-                value={editingProduct?.basePrice || 0}
-                onChange={(e) => setEditingProduct(prev => prev ? { ...prev, basePrice: parseInt(e.target.value) || 0 } : null)}
-              />
-              <p className="text-xs text-gray-500">Enter in paise (e.g., 10000 = ₹100)</p>
-            </div>
-            <div className="space-y-2">
-              <Label>Stock Quantity</Label>
-              <Input
-                type="number"
-                value={editingProduct?.stockQuantity || 0}
-                onChange={(e) => setEditingProduct(prev => prev ? { ...prev, stockQuantity: parseInt(e.target.value) || 0 } : null)}
-              />
-            </div>
-            <div className="md:col-span-2 space-y-2">
-              <Label>Image URL</Label>
-              <Input
-                value={editingProduct?.imageUrl || ''}
-                onChange={(e) => setEditingProduct(prev => prev ? { ...prev, imageUrl: e.target.value } : null)}
-                placeholder="https://..."
-              />
-            </div>
-            <div className="md:col-span-2 space-y-2">
-              <Label>Description</Label>
-              <Textarea
-                value={editingProduct?.description || ''}
-                onChange={(e) => setEditingProduct(prev => prev ? { ...prev, description: e.target.value } : null)}
-              />
-            </div>
-            <div className="md:col-span-2 space-y-2">
-              <Label>Specifications</Label>
-              <Textarea
-                value={editingProduct?.specifications || ''}
-                onChange={(e) => setEditingProduct(prev => prev ? { ...prev, specifications: e.target.value } : null)}
-                placeholder="Weight, dimensions, ingredients, etc."
-              />
-            </div>
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  id="productActive"
-                  checked={editingProduct?.isActive || false}
-                  onChange={(e) => setEditingProduct(prev => prev ? { ...prev, isActive: e.target.checked } : null)}
-                />
-                <Label htmlFor="productActive">Active</Label>
+              <Label>Product Images</Label>
+              <div className="grid grid-cols-3 gap-4">
+                {/* Image 1 */}
+                <div className="space-y-2">
+                  <p className="text-xs text-gray-500">Main Image</p>
+                  {editingProduct?.imageUrl ? (
+                    <div className="relative">
+                      <img src={editingProduct.imageUrl} alt="Product" className="w-full aspect-square object-cover rounded-lg" />
+                      <Button
+                        variant="destructive"
+                        size="icon"
+                        className="absolute -top-2 -right-2 h-6 w-6"
+                        onClick={() => setEditingProduct({ ...editingProduct, imageUrl: '' })}
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="w-full aspect-square bg-gray-100 rounded-lg flex items-center justify-center">
+                      <Image className="h-8 w-8 text-gray-400" />
+                    </div>
+                  )}
+                  <input type="file" ref={productImageRef1} className="hidden" accept="image/*" onChange={(e) => handleProductImageUpload(e, 0)} />
+                  <Button variant="outline" size="sm" className="w-full" onClick={() => productImageRef1.current?.click()} disabled={!editingProduct?.id || uploadingImage === 'product-0'}>
+                    {uploadingImage === 'product-0' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                  </Button>
+                </div>
+
+                {/* Image 2 */}
+                <div className="space-y-2">
+                  <p className="text-xs text-gray-500">Image 2</p>
+                  {editingProduct?.imageUrl2 ? (
+                    <div className="relative">
+                      <img src={editingProduct.imageUrl2} alt="Product" className="w-full aspect-square object-cover rounded-lg" />
+                      <Button
+                        variant="destructive"
+                        size="icon"
+                        className="absolute -top-2 -right-2 h-6 w-6"
+                        onClick={() => setEditingProduct({ ...editingProduct, imageUrl2: '' })}
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="w-full aspect-square bg-gray-100 rounded-lg flex items-center justify-center">
+                      <Image className="h-8 w-8 text-gray-400" />
+                    </div>
+                  )}
+                  <input type="file" ref={productImageRef2} className="hidden" accept="image/*" onChange={(e) => handleProductImageUpload(e, 1)} />
+                  <Button variant="outline" size="sm" className="w-full" onClick={() => productImageRef2.current?.click()} disabled={!editingProduct?.id || uploadingImage === 'product-1'}>
+                    {uploadingImage === 'product-1' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                  </Button>
+                </div>
+
+                {/* Image 3 */}
+                <div className="space-y-2">
+                  <p className="text-xs text-gray-500">Image 3</p>
+                  {editingProduct?.imageUrl3 ? (
+                    <div className="relative">
+                      <img src={editingProduct.imageUrl3} alt="Product" className="w-full aspect-square object-cover rounded-lg" />
+                      <Button
+                        variant="destructive"
+                        size="icon"
+                        className="absolute -top-2 -right-2 h-6 w-6"
+                        onClick={() => setEditingProduct({ ...editingProduct, imageUrl3: '' })}
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="w-full aspect-square bg-gray-100 rounded-lg flex items-center justify-center">
+                      <Image className="h-8 w-8 text-gray-400" />
+                    </div>
+                  )}
+                  <input type="file" ref={productImageRef3} className="hidden" accept="image/*" onChange={(e) => handleProductImageUpload(e, 2)} />
+                  <Button variant="outline" size="sm" className="w-full" onClick={() => productImageRef3.current?.click()} disabled={!editingProduct?.id || uploadingImage === 'product-2'}>
+                    {uploadingImage === 'product-2' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                  </Button>
+                </div>
               </div>
-              <div className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  id="productFeatured"
-                  checked={editingProduct?.isFeatured || false}
-                  onChange={(e) => setEditingProduct(prev => prev ? { ...prev, isFeatured: e.target.checked } : null)}
+              {!editingProduct?.id && (
+                <p className="text-xs text-gray-500">Save product first to upload images</p>
+              )}
+            </div>
+
+            {/* Product Video */}
+            <div className="space-y-2">
+              <Label>Product Video</Label>
+              <div className="flex items-start gap-4">
+                {editingProduct?.videoUrl ? (
+                  <div className="relative">
+                    <video src={editingProduct.videoUrl} className="w-32 h-24 object-cover rounded-lg" />
+                    <Button
+                      variant="destructive"
+                      size="icon"
+                      className="absolute -top-2 -right-2 h-6 w-6"
+                      onClick={() => setEditingProduct({ ...editingProduct, videoUrl: '' })}
+                    >
+                      <X className="h-3 w-3" />
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="w-32 h-24 bg-gray-100 rounded-lg flex items-center justify-center">
+                    <Video className="h-8 w-8 text-gray-400" />
+                  </div>
+                )}
+                <div className="flex-1">
+                  <input
+                    type="file"
+                    ref={productVideoRef}
+                    className="hidden"
+                    accept="video/*"
+                    onChange={handleProductVideoUpload}
+                  />
+                  <Button
+                    variant="outline"
+                    onClick={() => productVideoRef.current?.click()}
+                    disabled={!editingProduct?.id || uploadingImage === 'video'}
+                  >
+                    {uploadingImage === 'video' ? (
+                      <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Uploading...</>
+                    ) : (
+                      <><Upload className="h-4 w-4 mr-2" /> Upload Video</>
+                    )}
+                  </Button>
+                  <p className="text-xs text-gray-500 mt-1">Max 50MB. MP4 recommended.</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Product Details */}
+            <div className="grid md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Name *</Label>
+                <Input
+                  value={editingProduct?.name || ''}
+                  onChange={(e) => setEditingProduct(prev => prev ? {
+                    ...prev,
+                    name: e.target.value,
+                    slug: prev.id ? prev.slug : generateSlug(e.target.value),
+                  } : null)}
                 />
-                <Label htmlFor="productFeatured">Featured</Label>
+              </div>
+              <div className="space-y-2">
+                <Label>Slug</Label>
+                <Input
+                  value={editingProduct?.slug || ''}
+                  onChange={(e) => setEditingProduct(prev => prev ? { ...prev, slug: e.target.value } : null)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Category *</Label>
+                <Select
+                  value={editingProduct?.categoryId?.toString() || ''}
+                  onValueChange={(value) => setEditingProduct(prev => prev ? { ...prev, categoryId: parseInt(value) } : null)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories?.map((cat: { id: number; name: string }) => (
+                      <SelectItem key={cat.id} value={cat.id.toString()}>{cat.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Unit *</Label>
+                <Input
+                  value={editingProduct?.unit || ''}
+                  onChange={(e) => setEditingProduct(prev => prev ? { ...prev, unit: e.target.value } : null)}
+                  placeholder="e.g., kg, pack, box"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Base Price (₹) *</Label>
+                <Input
+                  type="number"
+                  value={(editingProduct?.basePrice || 0) / 100}
+                  onChange={(e) => setEditingProduct(prev => prev ? { ...prev, basePrice: Math.round(parseFloat(e.target.value) * 100) || 0 } : null)}
+                  step="0.01"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Stock Quantity</Label>
+                <Input
+                  type="number"
+                  value={editingProduct?.stockQuantity || 0}
+                  onChange={(e) => setEditingProduct(prev => prev ? { ...prev, stockQuantity: parseInt(e.target.value) || 0 } : null)}
+                />
+              </div>
+              <div className="md:col-span-2 space-y-2">
+                <Label>Description</Label>
+                <Textarea
+                  value={editingProduct?.description || ''}
+                  onChange={(e) => setEditingProduct(prev => prev ? { ...prev, description: e.target.value } : null)}
+                  rows={3}
+                />
+              </div>
+              <div className="md:col-span-2 space-y-2">
+                <Label>Specifications</Label>
+                <Textarea
+                  value={editingProduct?.specifications || ''}
+                  onChange={(e) => setEditingProduct(prev => prev ? { ...prev, specifications: e.target.value } : null)}
+                  placeholder="Weight, dimensions, ingredients, etc."
+                  rows={2}
+                />
+              </div>
+              <div className="flex items-center gap-6">
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    id="productActive"
+                    checked={editingProduct?.isActive || false}
+                    onChange={(e) => setEditingProduct(prev => prev ? { ...prev, isActive: e.target.checked } : null)}
+                  />
+                  <Label htmlFor="productActive">Active</Label>
+                </div>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    id="productFeatured"
+                    checked={editingProduct?.isFeatured || false}
+                    onChange={(e) => setEditingProduct(prev => prev ? { ...prev, isFeatured: e.target.checked } : null)}
+                  />
+                  <Label htmlFor="productFeatured">Featured</Label>
+                </div>
               </div>
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setEditingProduct(null)}>Cancel</Button>
-            <Button
-              className="bg-amber-600 hover:bg-amber-700"
-              onClick={() => {
-                if (!editingProduct) return;
-                if (editingProduct.id) {
-                  updateProductMutation.mutate(editingProduct as { id: number; categoryId?: number; name?: string; slug?: string; description?: string; specifications?: string; imageUrl?: string; basePrice?: number; unit?: string; stockQuantity?: number; isActive?: boolean; isFeatured?: boolean });
-                } else {
-                  createProductMutation.mutate(editingProduct);
-                }
-              }}
-            >
+            <Button className="bg-amber-600 hover:bg-amber-700" onClick={saveProduct}>
               {editingProduct?.id ? 'Update' : 'Create'}
             </Button>
           </DialogFooter>
