@@ -200,13 +200,15 @@ function AvailabilityPanel() {
               {isExpanded && (
                 <div className="divide-y">
                   {categoryProducts.map((product: any) => (
-                    <div key={product.id} className="p-4 flex items-center justify-between">
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium break-words">{product.name}</p>
-                        {product.chineseName && <p className="text-sm text-muted-foreground">{product.chineseName}</p>}
+                    <div key={product.id} className="p-4 flex items-center gap-3">
+                      <div className="flex-1 min-w-0 overflow-hidden">
+                        <p className="font-medium truncate">{product.name}</p>
+                        {product.chineseName && <p className="text-sm text-muted-foreground truncate">{product.chineseName}</p>}
                       </div>
-                      <div className="flex items-center gap-3 flex-shrink-0 ml-4">
-                        <span className="text-sm text-muted-foreground">{product.isAvailable ? 'Available' : 'Out'}</span>
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        <span className={`text-sm whitespace-nowrap ${product.isAvailable ? 'text-green-600' : 'text-red-500 font-medium'}`}>
+                          {product.isAvailable ? 'Available' : 'Out'}
+                        </span>
                         <Switch
                           checked={product.isAvailable !== false}
                           onCheckedChange={(checked) => toggleProductAvailability.mutate({ id: product.id, isAvailable: checked })}

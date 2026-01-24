@@ -1,0 +1,100 @@
+{
+  "query": "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'products' ORDER BY ORDINAL_POSITION;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'products' ORDER BY ORDINAL_POSITION;",
+  "rows": [
+    {
+      "COLUMN_NAME": "id"
+    },
+    {
+      "COLUMN_NAME": "subcategoryId"
+    },
+    {
+      "COLUMN_NAME": "name"
+    },
+    {
+      "COLUMN_NAME": "chineseName"
+    },
+    {
+      "COLUMN_NAME": "slug"
+    },
+    {
+      "COLUMN_NAME": "description"
+    },
+    {
+      "COLUMN_NAME": "imageUrl"
+    },
+    {
+      "COLUMN_NAME": "instorePrice"
+    },
+    {
+      "COLUMN_NAME": "deliveryPrice"
+    },
+    {
+      "COLUMN_NAME": "deliveryUnitMultiplier"
+    },
+    {
+      "COLUMN_NAME": "mochiPrice1pc"
+    },
+    {
+      "COLUMN_NAME": "mochiPrice2pc"
+    },
+    {
+      "COLUMN_NAME": "mochiPrice3pc"
+    },
+    {
+      "COLUMN_NAME": "isVegetarian"
+    },
+    {
+      "COLUMN_NAME": "isVegan"
+    },
+    {
+      "COLUMN_NAME": "containsEgg"
+    },
+    {
+      "COLUMN_NAME": "isInStock"
+    },
+    {
+      "COLUMN_NAME": "availableInstore"
+    },
+    {
+      "COLUMN_NAME": "availableDelivery"
+    },
+    {
+      "COLUMN_NAME": "displayOrder"
+    },
+    {
+      "COLUMN_NAME": "isActive"
+    },
+    {
+      "COLUMN_NAME": "createdAt"
+    },
+    {
+      "COLUMN_NAME": "updatedAt"
+    },
+    {
+      "COLUMN_NAME": "imageUrl2"
+    },
+    {
+      "COLUMN_NAME": "imageUrl3"
+    },
+    {
+      "COLUMN_NAME": "imageCropData"
+    },
+    {
+      "COLUMN_NAME": "useBasePrice"
+    },
+    {
+      "COLUMN_NAME": "availableAtPalladium"
+    },
+    {
+      "COLUMN_NAME": "isAvailable"
+    },
+    {
+      "COLUMN_NAME": "availableAtTnagar"
+    }
+  ],
+  "messages": [],
+  "stdout": "COLUMN_NAME\nid\nsubcategoryId\nname\nchineseName\nslug\ndescription\nimageUrl\ninstorePrice\ndeliveryPrice\ndeliveryUnitMultiplier\nmochiPrice1pc\nmochiPrice2pc\nmochiPrice3pc\nisVegetarian\nisVegan\ncontainsEgg\nisInStock\navailableInstore\navailableDelivery\ndisplayOrder\nisActive\ncreatedAt\nupdatedAt\nimageUrl2\nimageUrl3\nimageCropData\nuseBasePrice\navailableAtPalladium\nisAvailable\navailableAtTnagar\n",
+  "stderr": "",
+  "execution_time_ms": 1532
+}

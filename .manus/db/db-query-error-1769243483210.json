@@ -1,0 +1,8 @@
+{
+  "query": "SELECT p.id, p.name, p.isInStock, p.isAvailable, p.availableDelivery, p.availableInstore, s.name as subcategory, s.availableForDelivery\nFROM products p\nJOIN subcategories s ON p.subcategoryId = s.id\nWHERE s.name LIKE '%Mochi%' OR s.name LIKE '%Signature%'\nORDER BY s.name, p.name;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT p.id, p.name, p.isInStock, p.isAvailable, p.availableDelivery, p.availableInstore, s.name as subcategory, s.availableForDelivery\nFROM products p\nJOIN subcategories s ON p.subcategoryId = s.id\nWHERE s.name LIKE '%Mochi%' OR s.name LIKE '%Signature%'\nORDER BY s.name, p.name;",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1054 (42S22) at line 1: Unknown column 's.availablefordelivery' in 'field list'"
+  ]
+}

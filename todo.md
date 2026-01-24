@@ -978,3 +978,8 @@ Orders fixed:
   - [x] Image preview before upload
   - [x] Video preview
   - [x] Delete media from product/category (X button)
+
+## Bug Fix (Jan 24)
+
+- [x] Fix Signature Mochi products showing "Out of Stock" for delivery despite being marked available
+- [x] Fix Staff Orders availability toggle layout for mobile (toggle was cut off on narrow screens)
