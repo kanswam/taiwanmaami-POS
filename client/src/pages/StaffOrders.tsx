@@ -184,6 +184,34 @@ function AvailabilityPanel() {
           </p>
         </div>
 
+        {/* Expand/Collapse All Buttons */}
+        <div className="flex gap-2 mb-4">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              const allCategories = Object.keys(groupedSubcategories);
+              const newState: Record<string, boolean> = {};
+              allCategories.forEach(cat => { newState[cat] = true; });
+              setExpandedCategories(newState);
+            }}
+          >
+            Expand All
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              const allCategories = Object.keys(groupedSubcategories);
+              const newState: Record<string, boolean> = {};
+              allCategories.forEach(cat => { newState[cat] = false; });
+              setExpandedCategories(newState);
+            }}
+          >
+            Collapse All
+          </Button>
+        </div>
+
         {Object.entries(groupedSubcategories).map(([categoryName, subs]) => {
           const categoryProducts = products?.filter((p: any) => (subs as any[]).some(s => s.id === p.subcategoryId)) || [];
           if (categoryProducts.length === 0) return null;
@@ -194,29 +222,32 @@ function AvailabilityPanel() {
                 onClick={() => toggleCategoryExpanded(categoryName)}
                 className="w-full bg-muted hover:bg-muted/80 px-4 py-3 font-medium flex items-center justify-between transition-colors"
               >
-                <span>{categoryName}</span>
+                <span>{categoryName} ({categoryProducts.length} items)</span>
                 <ChevronDown className={`w-5 h-5 transition-transform ${isExpanded ? 'rotate-0' : '-rotate-90'}`} />
               </button>
               {isExpanded && (
                 <div className="divide-y">
-                  {categoryProducts.map((product: any) => (
-                    <div key={product.id} className="p-4 flex items-center gap-3">
-                      <div className="flex-1 min-w-0 overflow-hidden">
-                        <p className="font-medium truncate">{product.name}</p>
-                        {product.chineseName && <p className="text-sm text-muted-foreground truncate">{product.chineseName}</p>}
+                  {categoryProducts.map((product: any) => {
+                    const isProductAvailable = product.isAvailable === true || product.isAvailable === 1;
+                    return (
+                      <div key={product.id} className="p-4 flex items-center gap-3">
+                        <div className="flex-1 min-w-0 overflow-hidden">
+                          <p className="font-medium truncate">{product.name}</p>
+                          {product.chineseName && <p className="text-sm text-muted-foreground truncate">{product.chineseName}</p>}
+                        </div>
+                        <div className="flex items-center gap-3 flex-shrink-0">
+                          <span className={`text-sm whitespace-nowrap min-w-[70px] text-right ${isProductAvailable ? 'text-green-600' : 'text-red-500 font-medium'}`}>
+                            {isProductAvailable ? 'Available' : 'Out'}
+                          </span>
+                          <Switch
+                            checked={isProductAvailable}
+                            onCheckedChange={(checked) => toggleProductAvailability.mutate({ id: product.id, isAvailable: checked })}
+                            disabled={toggleProductAvailability.isPending}
+                          />
+                        </div>
                       </div>
-                      <div className="flex items-center gap-2 flex-shrink-0">
-                        <span className={`text-sm whitespace-nowrap ${product.isAvailable ? 'text-green-600' : 'text-red-500 font-medium'}`}>
-                          {product.isAvailable ? 'Available' : 'Out'}
-                        </span>
-                        <Switch
-                          checked={product.isAvailable !== false}
-                          onCheckedChange={(checked) => toggleProductAvailability.mutate({ id: product.id, isAvailable: checked })}
-                          disabled={toggleProductAvailability.isPending}
-                        />
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>

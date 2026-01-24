@@ -983,3 +983,9 @@ Orders fixed:
 
 - [x] Fix Signature Mochi products showing "Out of Stock" for delivery despite being marked available
 - [x] Fix Staff Orders availability toggle layout for mobile (toggle was cut off on narrow screens)
+
+## Staff Orders Availability Panel Fix (Jan 24)
+
+- [x] Fix toggle switch not showing for "Out" items (now uses explicit boolean check for isAvailable)
+- [x] Group products by category with collapsible sections (already existed, improved with item count)
+- [x] Add "Expand All" / "Collapse All" buttons like admin panel
