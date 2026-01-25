@@ -4726,6 +4726,183 @@ export const appRouter = router({
 
         return { summary, details };
       }),
+
+    // Razorpay Payment Reconciliation Report
+    getRazorpayReconciliation: adminProcedure
+      .input(z.object({
+        startDate: z.string(),
+        endDate: z.string(),
+        period: z.enum(['daily', 'weekly', 'monthly', 'custom']).default('daily'),
+      }))
+      .query(async ({ input }) => {
+        const dbInstance = await getDb();
+        if (!dbInstance) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Database not available' });
+
+        const startDate = new Date(input.startDate);
+        startDate.setHours(0, 0, 0, 0);
+        const endDate = new Date(input.endDate);
+        endDate.setHours(23, 59, 59, 999);
+
+        // Get all Razorpay payments with their orders
+        const razorpayOrders = await dbInstance
+          .select({
+            orderId: orders.id,
+            orderNumber: orders.orderNumber,
+            orderType: orders.orderType,
+            customerName: orders.customerName,
+            customerPhone: orders.customerPhone,
+            orderTotal: orders.totalAmount,
+            subtotal: orders.subtotal,
+            stateGst: orders.stateGst,
+            centralGst: orders.centralGst,
+            deliveryCharge: orders.deliveryCharge,
+            discountAmount: orders.discountAmount,
+            orderStatus: orders.orderStatus,
+            paymentStatus: orders.paymentStatus,
+            razorpayOrderId: orders.razorpayOrderId,
+            razorpayPaymentId: orders.razorpayPaymentId,
+            createdAt: orders.createdAt,
+            paymentId: payments.id,
+            paymentAmount: payments.amount,
+            paymentRazorpayId: payments.razorpayPaymentId,
+          })
+          .from(orders)
+          .leftJoin(payments, eq(orders.id, payments.orderId))
+          .where(and(
+            sql`${orders.createdAt} >= ${startDate}`,
+            sql`${orders.createdAt} <= ${endDate}`,
+            eq(orders.paymentMethod, 'razorpay'),
+          ))
+          .orderBy(desc(orders.createdAt));
+
+        // Process each order and calculate discrepancies
+        const reconciliationItems = razorpayOrders.map(order => {
+          const orderTotal = Number(order.orderTotal);
+          const paymentAmount = Number(order.paymentAmount) || 0;
+          const discrepancy = orderTotal - paymentAmount;
+          const hasDiscrepancy = paymentAmount > 0 && Math.abs(discrepancy) > 100; // More than ₹1 difference
+          const paymentMissing = paymentAmount === 0;
+
+          return {
+            orderId: order.orderId,
+            orderNumber: order.orderNumber,
+            orderType: order.orderType,
+            customerName: order.customerName || 'Guest',
+            customerPhone: order.customerPhone || '',
+            orderTotal,
+            subtotal: Number(order.subtotal),
+            gst: Number(order.stateGst) + Number(order.centralGst),
+            deliveryCharge: Number(order.deliveryCharge),
+            discountAmount: Number(order.discountAmount) || 0,
+            paymentAmount,
+            discrepancy,
+            hasDiscrepancy,
+            paymentMissing,
+            orderStatus: order.orderStatus,
+            paymentStatus: order.paymentStatus,
+            razorpayOrderId: order.razorpayOrderId || '',
+            razorpayPaymentId: order.razorpayPaymentId || order.paymentRazorpayId || '',
+            createdAt: order.createdAt,
+          };
+        });
+
+        // Calculate summary statistics
+        const totalOrders = reconciliationItems.length;
+        const totalExpected = reconciliationItems.reduce((sum, item) => sum + item.orderTotal, 0);
+        const totalCollected = reconciliationItems.reduce((sum, item) => sum + item.paymentAmount, 0);
+        const totalDiscrepancy = totalExpected - totalCollected;
+        const ordersWithDiscrepancy = reconciliationItems.filter(item => item.hasDiscrepancy || item.paymentMissing);
+        const discrepancyCount = ordersWithDiscrepancy.length;
+        const discrepancyAmount = ordersWithDiscrepancy.reduce((sum, item) => sum + item.discrepancy, 0);
+
+        // Group by date for daily breakdown
+        const dailyBreakdown: Record<string, { orders: number; expected: number; collected: number; discrepancy: number }> = {};
+        reconciliationItems.forEach(item => {
+          const dateStr = new Date(item.createdAt).toISOString().split('T')[0];
+          if (!dailyBreakdown[dateStr]) {
+            dailyBreakdown[dateStr] = { orders: 0, expected: 0, collected: 0, discrepancy: 0 };
+          }
+          dailyBreakdown[dateStr].orders++;
+          dailyBreakdown[dateStr].expected += item.orderTotal;
+          dailyBreakdown[dateStr].collected += item.paymentAmount;
+          dailyBreakdown[dateStr].discrepancy += item.discrepancy;
+        });
+
+        const dailySummary = Object.entries(dailyBreakdown)
+          .map(([date, stats]) => ({ date, ...stats }))
+          .sort((a, b) => a.date.localeCompare(b.date));
+
+        return {
+          items: reconciliationItems,
+          summary: {
+            totalOrders,
+            totalExpected,
+            totalCollected,
+            totalDiscrepancy,
+            discrepancyCount,
+            discrepancyAmount,
+          },
+          dailySummary,
+          dateRange: {
+            start: startDate.toISOString(),
+            end: endDate.toISOString(),
+          },
+        };
+      }),
+
+    // Fetch actual payment amount from Razorpay API
+    fetchRazorpayPaymentDetails: adminProcedure
+      .input(z.object({ paymentId: z.string() }))
+      .query(async ({ input }) => {
+        try {
+          const { fetchPaymentDetails } = await import('./razorpay');
+          const paymentDetails = await fetchPaymentDetails(input.paymentId);
+          return {
+            success: true,
+            payment: {
+              id: paymentDetails.id,
+              amount: paymentDetails.amount, // in paise
+              currency: paymentDetails.currency,
+              status: paymentDetails.status,
+              method: paymentDetails.method,
+              email: paymentDetails.email,
+              contact: paymentDetails.contact,
+              createdAt: new Date(paymentDetails.created_at * 1000).toISOString(),
+            },
+          };
+        } catch (error) {
+          return {
+            success: false,
+            error: error instanceof Error ? error.message : 'Failed to fetch payment details',
+          };
+        }
+      }),
+
+    // Bulk fetch Razorpay payment details for reconciliation
+    bulkFetchRazorpayPayments: adminProcedure
+      .input(z.object({ paymentIds: z.array(z.string()) }))
+      .mutation(async ({ input }) => {
+        const { fetchPaymentDetails } = await import('./razorpay');
+        const results: Record<string, { amount: number; status: string; error?: string }> = {};
+
+        for (const paymentId of input.paymentIds) {
+          try {
+            const details = await fetchPaymentDetails(paymentId);
+            results[paymentId] = {
+              amount: details.amount,
+              status: details.status,
+            };
+          } catch (error) {
+            results[paymentId] = {
+              amount: 0,
+              status: 'error',
+              error: error instanceof Error ? error.message : 'Failed to fetch',
+            };
+          }
+        }
+
+        return results;
+      }),
   }),
 
   // Customer management routes

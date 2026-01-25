@@ -1,0 +1,23 @@
+Razorpay Payment Reconciliation Report - Jan 18-25, 2026
+
+SUMMARY:
+- Total Orders: 6
+- Expected (Order Totals): ₹5,436.06
+- Recorded in DB: ₹0.00 (payments.amount field stores 0)
+- Payments Fetched from Razorpay API: 4
+- Total from Razorpay: ₹2,836.04
+- Actual Discrepancy: ₹2,600.02
+
+DISCREPANCY ANALYSIS:
+1. Order 00160 (Delivery): Order Total ₹589.26, Razorpay ₹489.26 → +₹100 missing (delivery charge)
+2. Order 00142 (Delivery): Order Total ₹1638.26, Razorpay ₹1538.26 → +₹100 missing (delivery charge)
+3. Order 00133 (Pickup): Order Total ₹404.26, Razorpay ₹404.26 → ₹0.00 (OK)
+4. Order 00129 (Pickup): Order Total ₹1107.76, No Payment ID → Missing payment record
+5. Order 00121 (Delivery): Order Total ₹1292.26, No Payment ID → Missing payment record
+6. Order 00116 (Pickup): Order Total ₹404.26, Razorpay ₹404.26 → ₹0.00 (OK)
+
+FINDINGS:
+- Delivery orders are consistently missing ₹100 delivery charge in Razorpay payments
+- This confirms the bug that was fixed: frontend was using stale displayTotal instead of backend totalAmount
+- Two orders have missing Payment IDs - these may have been paid via different method or have data issues
+- The fix applied today will prevent future delivery charge discrepancies

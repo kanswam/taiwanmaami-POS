@@ -1017,3 +1017,19 @@ Orders fixed:
 - Idempotency key now stable (phone + cart hash, no timestamp)
 - Orders auto-cancel if Razorpay script fails to load or payment initiation fails
 - All 5 unit tests passing
+
+
+## Payment Reconciliation Report (Jan 25)
+
+- [x] Create Razorpay payment reconciliation report for accountant
+  - [x] Backend procedure to fetch Razorpay payments with order totals
+  - [x] Compare payment.amount vs order.totalAmount for discrepancies
+  - [x] Date filtering: daily, weekly, monthly, custom range (Today, Yesterday, Last 7 Days, Last 30 Days + custom)
+  - [x] Summary stats: total collected, total expected, total discrepancy
+  - [x] Highlight orders with payment discrepancies (red background)
+  - [x] Admin UI in Reports dropdown → Razorpay Reconciliation
+  - [x] CSV export for accountant
+  - [x] Include Razorpay payment ID, order number, customer, amounts
+  - [x] Fetch actual amounts from Razorpay API (bulk fetch button)
+  - [x] Daily breakdown table
+  - [x] Show only discrepancies toggle filter

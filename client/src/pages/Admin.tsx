@@ -221,9 +221,9 @@ export default function Admin() {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button 
-                  variant={['analytics', 'audit', 'payment-report'].includes(activeTab) ? 'default' : 'outline'} 
+                  variant={['analytics', 'audit', 'payment-report', 'reconciliation'].includes(activeTab) ? 'default' : 'outline'} 
                   size="sm" 
-                  className={`gap-2 ${!['analytics', 'audit', 'payment-report'].includes(activeTab) ? 'border-transparent hover:bg-accent' : ''}`}
+                  className={`gap-2 ${!['analytics', 'audit', 'payment-report', 'reconciliation'].includes(activeTab) ? 'border-transparent hover:bg-accent' : ''}`}
                 >
                   <TrendingUp className="w-4 h-4" />
                   Reports
@@ -239,6 +239,10 @@ export default function Admin() {
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setActiveTab('audit')} className={activeTab === 'audit' ? 'bg-accent' : ''}>
                   <ClipboardList className="w-4 h-4 mr-2" /> Audit Log
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => setActiveTab('reconciliation')} className={activeTab === 'reconciliation' ? 'bg-accent' : ''}>
+                  <AlertCircle className="w-4 h-4 mr-2" /> Razorpay Reconciliation
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -356,6 +360,10 @@ export default function Admin() {
 
           <TabsContent value="payment-report">
             <PaymentReportTab />
+          </TabsContent>
+
+          <TabsContent value="reconciliation">
+            <ReconciliationTab />
           </TabsContent>
 
           <TabsContent value="event-inquiries">
@@ -8398,6 +8406,431 @@ function BackupTab() {
           </div>
         </DialogContent>
       </Dialog>
+    </div>
+  );
+}
+
+
+// Razorpay Payment Reconciliation Tab
+function ReconciliationTab() {
+  const [startDate, setStartDate] = useState(() => {
+    const today = new Date();
+    return today.toISOString().split('T')[0];
+  });
+  const [endDate, setEndDate] = useState(() => {
+    const today = new Date();
+    return today.toISOString().split('T')[0];
+  });
+  const [period, setPeriod] = useState<'daily' | 'weekly' | 'monthly' | 'custom'>('daily');
+  const [showOnlyDiscrepancies, setShowOnlyDiscrepancies] = useState(false);
+
+  // Quick period selectors
+  const setQuickPeriod = (type: 'today' | 'yesterday' | 'week' | 'month') => {
+    const today = new Date();
+    let start: Date;
+    let end: Date = today;
+
+    switch (type) {
+      case 'today':
+        start = today;
+        break;
+      case 'yesterday':
+        start = new Date(today);
+        start.setDate(start.getDate() - 1);
+        end = start;
+        break;
+      case 'week':
+        start = new Date(today);
+        start.setDate(start.getDate() - 7);
+        break;
+      case 'month':
+        start = new Date(today);
+        start.setMonth(start.getMonth() - 1);
+        break;
+      default:
+        start = today;
+    }
+
+    setStartDate(start.toISOString().split('T')[0]);
+    setEndDate(end.toISOString().split('T')[0]);
+  };
+
+  const { data: reconciliationData, isLoading, refetch } = trpc.analytics.getRazorpayReconciliation.useQuery({
+    startDate,
+    endDate,
+    period,
+  });
+
+  const bulkFetchMutation = trpc.analytics.bulkFetchRazorpayPayments.useMutation();
+  const [razorpayAmounts, setRazorpayAmounts] = useState<Record<string, number>>({});
+  const [isFetchingRazorpay, setIsFetchingRazorpay] = useState(false);
+
+  // Fetch actual amounts from Razorpay API
+  const fetchRazorpayAmounts = async () => {
+    if (!reconciliationData?.items) return;
+
+    const paymentIds = reconciliationData.items
+      .filter(item => item.razorpayPaymentId && item.razorpayPaymentId.startsWith('pay_'))
+      .map(item => item.razorpayPaymentId);
+
+    if (paymentIds.length === 0) {
+      toast.info('No Razorpay payment IDs found to fetch');
+      return;
+    }
+
+    setIsFetchingRazorpay(true);
+    try {
+      const results = await bulkFetchMutation.mutateAsync({ paymentIds });
+      const amounts: Record<string, number> = {};
+      Object.entries(results).forEach(([id, data]) => {
+        if (data.amount) {
+          amounts[id] = data.amount;
+        }
+      });
+      setRazorpayAmounts(amounts);
+      toast.success(`Fetched ${Object.keys(amounts).length} payment amounts from Razorpay`);
+    } catch (error) {
+      toast.error('Failed to fetch Razorpay payment details');
+    } finally {
+      setIsFetchingRazorpay(false);
+    }
+  };
+
+  // Export to CSV
+  const exportToCSV = () => {
+    if (!reconciliationData?.items?.length) return;
+
+    const headers = [
+      'Order #',
+      'Date',
+      'Customer',
+      'Phone',
+      'Order Type',
+      'Subtotal',
+      'GST',
+      'Delivery',
+      'Discount',
+      'Order Total',
+      'Payment Recorded',
+      'Razorpay Amount',
+      'Discrepancy',
+      'Status',
+      'Razorpay Order ID',
+      'Razorpay Payment ID',
+    ];
+
+    const rows = reconciliationData.items.map(item => {
+      const razorpayAmount = razorpayAmounts[item.razorpayPaymentId] || 0;
+      const actualDiscrepancy = item.orderTotal - razorpayAmount;
+      return [
+        item.orderNumber,
+        new Date(item.createdAt).toLocaleDateString('en-IN'),
+        item.customerName,
+        item.customerPhone,
+        item.orderType,
+        (item.subtotal / 100).toFixed(2),
+        (item.gst / 100).toFixed(2),
+        (item.deliveryCharge / 100).toFixed(2),
+        (item.discountAmount / 100).toFixed(2),
+        (item.orderTotal / 100).toFixed(2),
+        (item.paymentAmount / 100).toFixed(2),
+        razorpayAmount > 0 ? (razorpayAmount / 100).toFixed(2) : 'Not Fetched',
+        razorpayAmount > 0 ? (actualDiscrepancy / 100).toFixed(2) : 'N/A',
+        item.orderStatus,
+        item.razorpayOrderId,
+        item.razorpayPaymentId,
+      ];
+    });
+
+    const csvContent = [headers, ...rows].map(row => row.join(',')).join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `razorpay-reconciliation-${startDate}-to-${endDate}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success('Reconciliation report exported');
+  };
+
+  const filteredItems = showOnlyDiscrepancies
+    ? reconciliationData?.items?.filter(item => {
+        const razorpayAmount = razorpayAmounts[item.razorpayPaymentId] || 0;
+        if (razorpayAmount > 0) {
+          return Math.abs(item.orderTotal - razorpayAmount) > 100;
+        }
+        return item.paymentMissing || item.hasDiscrepancy;
+      })
+    : reconciliationData?.items;
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between flex-wrap gap-4">
+        <h2 className="text-2xl font-bold">Razorpay Payment Reconciliation</h2>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            onClick={fetchRazorpayAmounts}
+            disabled={isFetchingRazorpay || !reconciliationData?.items?.length}
+          >
+            {isFetchingRazorpay ? (
+              <>
+                <div className="animate-spin h-4 w-4 border-2 border-primary border-t-transparent rounded-full mr-2" />
+                Fetching...
+              </>
+            ) : (
+              <>
+                <RefreshCw className="w-4 h-4 mr-2" />
+                Fetch Razorpay Amounts
+              </>
+            )}
+          </Button>
+          <Button onClick={exportToCSV} disabled={!reconciliationData?.items?.length}>
+            <Upload className="w-4 h-4 mr-2" />
+            Export CSV
+          </Button>
+        </div>
+      </div>
+
+      {/* Date Filters */}
+      <Card className="p-4">
+        <div className="flex flex-wrap gap-4 items-end">
+          <div className="flex gap-2">
+            <Button size="sm" variant="outline" onClick={() => setQuickPeriod('today')}>Today</Button>
+            <Button size="sm" variant="outline" onClick={() => setQuickPeriod('yesterday')}>Yesterday</Button>
+            <Button size="sm" variant="outline" onClick={() => setQuickPeriod('week')}>Last 7 Days</Button>
+            <Button size="sm" variant="outline" onClick={() => setQuickPeriod('month')}>Last 30 Days</Button>
+          </div>
+          <div className="flex gap-4 items-end">
+            <div>
+              <Label className="text-xs">Start Date</Label>
+              <Input
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                className="w-40"
+              />
+            </div>
+            <div>
+              <Label className="text-xs">End Date</Label>
+              <Input
+                type="date"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+                className="w-40"
+              />
+            </div>
+            <Button onClick={() => refetch()}>
+              <Search className="w-4 h-4 mr-2" />
+              Search
+            </Button>
+          </div>
+          <div className="flex items-center gap-2 ml-auto">
+            <Switch
+              checked={showOnlyDiscrepancies}
+              onCheckedChange={setShowOnlyDiscrepancies}
+            />
+            <Label className="text-sm">Show only discrepancies</Label>
+          </div>
+        </div>
+      </Card>
+
+      {/* Summary Cards */}
+      {reconciliationData?.summary && (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <Card className="p-4">
+            <div className="text-sm text-muted-foreground">Total Orders</div>
+            <div className="text-2xl font-bold">{reconciliationData.summary.totalOrders}</div>
+          </Card>
+          <Card className="p-4">
+            <div className="text-sm text-muted-foreground">Expected (Order Totals)</div>
+            <div className="text-2xl font-bold text-blue-600">
+              ₹{(reconciliationData.summary.totalExpected / 100).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+            </div>
+          </Card>
+          <Card className="p-4">
+            <div className="text-sm text-muted-foreground">Recorded in DB</div>
+            <div className="text-2xl font-bold text-green-600">
+              ₹{(reconciliationData.summary.totalCollected / 100).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+            </div>
+          </Card>
+          <Card className="p-4 border-red-200 bg-red-50">
+            <div className="text-sm text-red-600">Discrepancy Count</div>
+            <div className="text-2xl font-bold text-red-600">
+              {reconciliationData.summary.discrepancyCount} orders
+            </div>
+          </Card>
+        </div>
+      )}
+
+      {/* Razorpay Fetched Summary */}
+      {Object.keys(razorpayAmounts).length > 0 && (
+        <Card className="p-4 border-purple-200 bg-purple-50">
+          <h3 className="font-semibold text-purple-800 mb-2">Razorpay API Data (Actual Collected)</h3>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div>
+              <div className="text-sm text-purple-600">Payments Fetched</div>
+              <div className="text-xl font-bold text-purple-800">{Object.keys(razorpayAmounts).length}</div>
+            </div>
+            <div>
+              <div className="text-sm text-purple-600">Total from Razorpay</div>
+              <div className="text-xl font-bold text-purple-800">
+                ₹{(Object.values(razorpayAmounts).reduce((a, b) => a + b, 0) / 100).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+              </div>
+            </div>
+            <div>
+              <div className="text-sm text-purple-600">Actual Discrepancy</div>
+              <div className="text-xl font-bold text-red-600">
+                ₹{((reconciliationData?.summary?.totalExpected || 0) - Object.values(razorpayAmounts).reduce((a, b) => a + b, 0)) / 100}
+              </div>
+            </div>
+          </div>
+        </Card>
+      )}
+
+      {/* Orders Table */}
+      <Card className="p-4">
+        <h3 className="font-semibold mb-4">Order Details ({filteredItems?.length || 0} orders)</h3>
+        {isLoading ? (
+          <p className="text-center py-8 text-muted-foreground">Loading...</p>
+        ) : !filteredItems?.length ? (
+          <p className="text-center py-8 text-muted-foreground">No Razorpay orders found for this period</p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b bg-muted/50">
+                  <th className="text-left py-2 px-2">Order #</th>
+                  <th className="text-left py-2 px-2">Date</th>
+                  <th className="text-left py-2 px-2">Customer</th>
+                  <th className="text-left py-2 px-2">Type</th>
+                  <th className="text-right py-2 px-2">Order Total</th>
+                  <th className="text-right py-2 px-2">Razorpay Amt</th>
+                  <th className="text-right py-2 px-2">Discrepancy</th>
+                  <th className="text-left py-2 px-2">Status</th>
+                  <th className="text-left py-2 px-2">Payment ID</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredItems?.map((item) => {
+                  const razorpayAmount = razorpayAmounts[item.razorpayPaymentId] || 0;
+                  const actualDiscrepancy = razorpayAmount > 0 ? item.orderTotal - razorpayAmount : item.discrepancy;
+                  const hasIssue = razorpayAmount > 0 ? Math.abs(actualDiscrepancy) > 100 : item.paymentMissing || item.hasDiscrepancy;
+
+                  return (
+                    <tr 
+                      key={item.orderId} 
+                      className={`border-b hover:bg-muted/50 ${hasIssue ? 'bg-red-50' : ''}`}
+                    >
+                      <td className="py-2 px-2 font-mono font-medium">{item.orderNumber}</td>
+                      <td className="py-2 px-2">
+                        {new Date(item.createdAt).toLocaleDateString('en-IN', {
+                          day: '2-digit',
+                          month: 'short',
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })}
+                      </td>
+                      <td className="py-2 px-2">
+                        <div>{item.customerName}</div>
+                        {item.customerPhone && (
+                          <div className="text-xs text-muted-foreground">{item.customerPhone}</div>
+                        )}
+                      </td>
+                      <td className="py-2 px-2 capitalize">{item.orderType}</td>
+                      <td className="py-2 px-2 text-right font-medium">
+                        ₹{(item.orderTotal / 100).toFixed(2)}
+                        {item.deliveryCharge > 0 && (
+                          <div className="text-xs text-muted-foreground">
+                            (incl. ₹{(item.deliveryCharge / 100).toFixed(0)} delivery)
+                          </div>
+                        )}
+                      </td>
+                      <td className="py-2 px-2 text-right">
+                        {razorpayAmount > 0 ? (
+                          <span className="font-medium text-green-600">
+                            ₹{(razorpayAmount / 100).toFixed(2)}
+                          </span>
+                        ) : item.razorpayPaymentId ? (
+                          <span className="text-muted-foreground text-xs">Click Fetch</span>
+                        ) : (
+                          <span className="text-red-500">No Payment ID</span>
+                        )}
+                      </td>
+                      <td className="py-2 px-2 text-right">
+                        {razorpayAmount > 0 ? (
+                          <span className={actualDiscrepancy > 100 ? 'text-red-600 font-bold' : 'text-green-600'}>
+                            {actualDiscrepancy > 0 ? '+' : ''}₹{(actualDiscrepancy / 100).toFixed(2)}
+                          </span>
+                        ) : (
+                          <span className="text-muted-foreground">-</span>
+                        )}
+                      </td>
+                      <td className="py-2 px-2">
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
+                          item.orderStatus === 'completed' ? 'bg-green-100 text-green-800' :
+                          item.orderStatus === 'cancelled' ? 'bg-red-100 text-red-800' :
+                          'bg-yellow-100 text-yellow-800'
+                        }`}>
+                          {item.orderStatus}
+                        </span>
+                      </td>
+                      <td className="py-2 px-2">
+                        {item.razorpayPaymentId ? (
+                          <code className="text-xs bg-muted px-1 py-0.5 rounded">
+                            {item.razorpayPaymentId.slice(0, 15)}...
+                          </code>
+                        ) : (
+                          <span className="text-red-500 text-xs">Missing</span>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </Card>
+
+      {/* Daily Breakdown */}
+      {reconciliationData?.dailySummary && reconciliationData.dailySummary.length > 1 && (
+        <Card className="p-4">
+          <h3 className="font-semibold mb-4">Daily Breakdown</h3>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b bg-muted/50">
+                  <th className="text-left py-2 px-2">Date</th>
+                  <th className="text-right py-2 px-2">Orders</th>
+                  <th className="text-right py-2 px-2">Expected</th>
+                  <th className="text-right py-2 px-2">Recorded</th>
+                  <th className="text-right py-2 px-2">Discrepancy</th>
+                </tr>
+              </thead>
+              <tbody>
+                {reconciliationData.dailySummary.map((day) => (
+                  <tr key={day.date} className="border-b hover:bg-muted/50">
+                    <td className="py-2 px-2 font-medium">
+                      {new Date(day.date).toLocaleDateString('en-IN', {
+                        weekday: 'short',
+                        day: '2-digit',
+                        month: 'short',
+                      })}
+                    </td>
+                    <td className="py-2 px-2 text-right">{day.orders}</td>
+                    <td className="py-2 px-2 text-right">₹{(day.expected / 100).toFixed(2)}</td>
+                    <td className="py-2 px-2 text-right">₹{(day.collected / 100).toFixed(2)}</td>
+                    <td className={`py-2 px-2 text-right font-medium ${day.discrepancy > 0 ? 'text-red-600' : 'text-green-600'}`}>
+                      {day.discrepancy > 0 ? '+' : ''}₹{(day.discrepancy / 100).toFixed(2)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </Card>
+      )}
     </div>
   );
 }
