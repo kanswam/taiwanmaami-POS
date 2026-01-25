@@ -8464,6 +8464,7 @@ function ReconciliationTab() {
   const bulkFetchMutation = trpc.analytics.bulkFetchRazorpayPayments.useMutation();
   const [razorpayAmounts, setRazorpayAmounts] = useState<Record<string, number>>({});
   const [isFetchingRazorpay, setIsFetchingRazorpay] = useState(false);
+  const [hasFetchedOnce, setHasFetchedOnce] = useState(false);
 
   // Fetch actual amounts from Razorpay API
   const fetchRazorpayAmounts = async () => {
@@ -8474,7 +8475,6 @@ function ReconciliationTab() {
       .map(item => item.razorpayPaymentId);
 
     if (paymentIds.length === 0) {
-      toast.info('No Razorpay payment IDs found to fetch');
       return;
     }
 
@@ -8488,13 +8488,26 @@ function ReconciliationTab() {
         }
       });
       setRazorpayAmounts(amounts);
-      toast.success(`Fetched ${Object.keys(amounts).length} payment amounts from Razorpay`);
     } catch (error) {
-      toast.error('Failed to fetch Razorpay payment details');
+      console.error('Failed to fetch Razorpay payment details:', error);
     } finally {
       setIsFetchingRazorpay(false);
     }
   };
+
+  // Reset fetch state when date range changes
+  useEffect(() => {
+    setHasFetchedOnce(false);
+    setRazorpayAmounts({});
+  }, [startDate, endDate]);
+
+  // Auto-fetch Razorpay amounts when data loads
+  useEffect(() => {
+    if (reconciliationData?.items && reconciliationData.items.length > 0 && !hasFetchedOnce && !isFetchingRazorpay) {
+      setHasFetchedOnce(true);
+      fetchRazorpayAmounts();
+    }
+  }, [reconciliationData?.items, hasFetchedOnce, isFetchingRazorpay]);
 
   // Export to CSV
   const exportToCSV = () => {

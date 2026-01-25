@@ -4785,13 +4785,35 @@ export const appRouter = router({
           ))
           .orderBy(desc(orders.createdAt));
 
-        // Process each order and calculate discrepancies
+        // Auto-fetch Razorpay payment amounts for orders that don't have them stored
+        const { fetchPaymentDetails } = await import('./razorpay');
+        const razorpayAmounts: Record<string, number> = {};
+        
+        for (const order of razorpayOrders) {
+          const paymentId = order.razorpayPaymentId || order.paymentRazorpayId;
+          if (paymentId && !razorpayAmounts[paymentId]) {
+            try {
+              const details = await fetchPaymentDetails(paymentId);
+              razorpayAmounts[paymentId] = details.amount; // in paise
+            } catch (error) {
+              console.error(`Failed to fetch Razorpay payment ${paymentId}:`, error);
+              razorpayAmounts[paymentId] = 0;
+            }
+          }
+        }
+
+        // Process each order and calculate discrepancies using actual Razorpay amounts
         const reconciliationItems = razorpayOrders.map(order => {
-          const orderTotal = Number(order.orderTotal);
-          const paymentAmount = Number(order.paymentAmount) || 0;
-          const discrepancy = orderTotal - paymentAmount;
-          const hasDiscrepancy = paymentAmount > 0 && Math.abs(discrepancy) > 100; // More than ₹1 difference
-          const paymentMissing = paymentAmount === 0;
+          const orderTotal = Number(order.orderTotal); // in paise
+          const paymentId = order.razorpayPaymentId || order.paymentRazorpayId || '';
+          // Use fetched Razorpay amount, fall back to DB stored amount
+          const razorpayAmount = paymentId ? (razorpayAmounts[paymentId] || 0) : 0;
+          const dbPaymentAmount = Number(order.paymentAmount) || 0;
+          // Prefer Razorpay amount if available, otherwise use DB amount
+          const actualCollected = razorpayAmount > 0 ? razorpayAmount : dbPaymentAmount;
+          const discrepancy = orderTotal - actualCollected;
+          const hasDiscrepancy = actualCollected > 0 && Math.abs(discrepancy) > 100; // More than ₹1 difference
+          const paymentMissing = !paymentId;
 
           return {
             orderId: order.orderId,
@@ -4804,14 +4826,16 @@ export const appRouter = router({
             gst: Number(order.stateGst) + Number(order.centralGst),
             deliveryCharge: Number(order.deliveryCharge),
             discountAmount: Number(order.discountAmount) || 0,
-            paymentAmount,
+            paymentAmount: actualCollected, // Now contains actual Razorpay amount
+            razorpayAmount, // Explicit Razorpay fetched amount
+            dbPaymentAmount, // What was stored in DB
             discrepancy,
             hasDiscrepancy,
             paymentMissing,
             orderStatus: order.orderStatus,
             paymentStatus: order.paymentStatus,
             razorpayOrderId: order.razorpayOrderId || '',
-            razorpayPaymentId: order.razorpayPaymentId || order.paymentRazorpayId || '',
+            razorpayPaymentId: paymentId,
             createdAt: order.createdAt,
           };
         });

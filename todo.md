@@ -1059,3 +1059,13 @@ Orders fixed:
   - [x] Fix AdminEvents.tsx Date rendering and type errors
   - [x] Fix Admin.tsx type errors
   - [x] Fix CartContext.tsx type comparison errors
+
+
+## Razorpay Reconciliation Report Fix (Jan 25)
+
+- [x] Fix reconciliation report to be actually useful
+  - [x] Auto-fetch Razorpay payment amounts when report loads
+  - [x] Display actual collected amounts vs expected amounts
+  - [x] Calculate and show discrepancies properly
+  - [x] Update summary stats to show real totals
+  - [x] Reset and re-fetch when date range changes
