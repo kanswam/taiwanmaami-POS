@@ -4771,6 +4771,7 @@ export const appRouter = router({
             paymentStatus: orders.paymentStatus,
             razorpayOrderId: orders.razorpayOrderId,
             razorpayPaymentId: orders.razorpayPaymentId,
+            paymentMethod: orders.paymentMethod,
             createdAt: orders.createdAt,
             paymentId: payments.id,
             paymentAmount: payments.amount,
@@ -4781,7 +4782,11 @@ export const appRouter = router({
           .where(and(
             sql`${orders.createdAt} >= ${startDate}`,
             sql`${orders.createdAt} <= ${endDate}`,
-            eq(orders.paymentMethod, 'razorpay'),
+            // Include ALL orders that have Razorpay payment ID OR paymentMethod is razorpay
+            or(
+              eq(orders.paymentMethod, 'razorpay'),
+              sql`${orders.razorpayPaymentId} IS NOT NULL AND ${orders.razorpayPaymentId} != ''`
+            ),
           ))
           .orderBy(desc(orders.createdAt));
 
@@ -4836,6 +4841,7 @@ export const appRouter = router({
             paymentStatus: order.paymentStatus,
             razorpayOrderId: order.razorpayOrderId || '',
             razorpayPaymentId: paymentId,
+            paymentMethod: order.paymentMethod || 'unknown',
             createdAt: order.createdAt,
           };
         });

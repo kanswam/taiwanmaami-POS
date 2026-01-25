@@ -1,0 +1,58 @@
+{
+  "query": "SELECT \n  paymentMethod,\n  COUNT(*) as order_count,\n  SUM(CASE WHEN razorpayPaymentId IS NOT NULL AND razorpayPaymentId != '' THEN 1 ELSE 0 END) as has_razorpay_id,\n  SUM(CASE WHEN razorpayPaymentId IS NULL OR razorpayPaymentId = '' THEN 1 ELSE 0 END) as missing_razorpay_id\nFROM orders \nWHERE createdAt >= '2026-01-01'\nGROUP BY paymentMethod;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT \n  paymentMethod,\n  COUNT(*) as order_count,\n  SUM(CASE WHEN razorpayPaymentId IS NOT NULL AND razorpayPaymentId != '' THEN 1 ELSE 0 END) as has_razorpay_id,\n  SUM(CASE WHEN razorpayPaymentId IS NULL OR razorpayPaymentId = '' THEN 1 ELSE 0 END) as missing_razorpay_id\nFROM orders \nWHERE createdAt >= '2026-01-01'\nGROUP BY paymentMethod;",
+  "rows": [
+    {
+      "paymentMethod": "upi",
+      "order_count": "45",
+      "has_razorpay_id": "4",
+      "missing_razorpay_id": "41"
+    },
+    {
+      "paymentMethod": "card",
+      "order_count": "33",
+      "has_razorpay_id": "7",
+      "missing_razorpay_id": "26"
+    },
+    {
+      "paymentMethod": "NULL",
+      "order_count": "33",
+      "has_razorpay_id": "0",
+      "missing_razorpay_id": "33"
+    },
+    {
+      "paymentMethod": "cash",
+      "order_count": "33",
+      "has_razorpay_id": "0",
+      "missing_razorpay_id": "33"
+    },
+    {
+      "paymentMethod": "razorpay",
+      "order_count": "9",
+      "has_razorpay_id": "6",
+      "missing_razorpay_id": "3"
+    },
+    {
+      "paymentMethod": "swiggy_dineout",
+      "order_count": "11",
+      "has_razorpay_id": "1",
+      "missing_razorpay_id": "10"
+    },
+    {
+      "paymentMethod": "zomato_dineout",
+      "order_count": "13",
+      "has_razorpay_id": "0",
+      "missing_razorpay_id": "13"
+    },
+    {
+      "paymentMethod": "other",
+      "order_count": "4",
+      "has_razorpay_id": "2",
+      "missing_razorpay_id": "2"
+    }
+  ],
+  "messages": [],
+  "stdout": "paymentMethod\torder_count\thas_razorpay_id\tmissing_razorpay_id\nupi\t45\t4\t41\ncard\t33\t7\t26\nNULL\t33\t0\t33\ncash\t33\t0\t33\nrazorpay\t9\t6\t3\nswiggy_dineout\t11\t1\t10\nzomato_dineout\t13\t0\t13\nother\t4\t2\t2\n",
+  "stderr": "",
+  "execution_time_ms": 1590
+}

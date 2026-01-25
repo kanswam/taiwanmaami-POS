@@ -8717,6 +8717,7 @@ function ReconciliationTab() {
                   <th className="text-left py-2 px-2">Date</th>
                   <th className="text-left py-2 px-2">Customer</th>
                   <th className="text-left py-2 px-2">Type</th>
+                  <th className="text-left py-2 px-2">Payment</th>
                   <th className="text-right py-2 px-2">Order Total</th>
                   <th className="text-right py-2 px-2">Razorpay Amt</th>
                   <th className="text-right py-2 px-2">Discrepancy</th>
@@ -8751,6 +8752,16 @@ function ReconciliationTab() {
                         )}
                       </td>
                       <td className="py-2 px-2 capitalize">{item.orderType}</td>
+                      <td className="py-2 px-2">
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
+                          item.paymentMethod === 'razorpay' ? 'bg-blue-100 text-blue-800' :
+                          item.paymentMethod === 'card' ? 'bg-purple-100 text-purple-800' :
+                          item.paymentMethod === 'upi' ? 'bg-green-100 text-green-800' :
+                          'bg-gray-100 text-gray-800'
+                        }`}>
+                          {item.paymentMethod || 'unknown'}
+                        </span>
+                      </td>
                       <td className="py-2 px-2 text-right font-medium">
                         ₹{(item.orderTotal / 100).toFixed(2)}
                         {item.deliveryCharge > 0 && (

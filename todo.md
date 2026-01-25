@@ -1069,3 +1069,13 @@ Orders fixed:
   - [x] Calculate and show discrepancies properly
   - [x] Update summary stats to show real totals
   - [x] Reset and re-fetch when date range changes
+
+
+## Reconciliation Report - Missing Payments Issue (Jan 25)
+
+- [x] Fix reconciliation report to show ALL Razorpay payments
+  - [x] Include orders with razorpayPaymentId regardless of paymentMethod field
+  - [x] Include in-store orders that were paid via Razorpay (card, upi, etc.)
+  - [x] Added paymentMethod column to show how each order was recorded
+  - [x] Investigated orders 129 and 121: paymentMethod=razorpay but razorpayPaymentId=null (old bug)
+  - [ ] Add unmatched Razorpay payments section for orphan payments (future enhancement)
