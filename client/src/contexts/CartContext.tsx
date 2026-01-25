@@ -136,15 +136,15 @@ function cartReducer(state: CartState, action: CartAction): CartState {
           orderType: newOrderType, 
           items: adjustedItems,
           pickupOutlet: newOrderType === 'pickup' ? null : state.pickupOutlet,
-          instoreOutlet: newOrderType === 'instore' ? null : state.instoreOutlet,
+          instoreOutlet: null, // Clear instore outlet when switching to delivery/pickup
         };
       }
       // Clear outlet when switching to instore to force re-selection
       return { 
         ...state, 
         orderType: newOrderType,
-        pickupOutlet: newOrderType === 'pickup' ? null : state.pickupOutlet,
-        instoreOutlet: newOrderType === 'instore' ? null : state.instoreOutlet,
+        pickupOutlet: null, // Clear pickup outlet when switching to instore
+        instoreOutlet: null, // Clear instore outlet to force re-selection
       };
     }
     case 'SET_TABLE_NUMBER':

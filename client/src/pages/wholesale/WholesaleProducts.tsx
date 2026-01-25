@@ -205,19 +205,7 @@ export default function WholesaleProducts() {
           </div>
         ) : (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {filteredProducts.map((product: {
-              id: number;
-              name: string;
-              slug: string;
-              description?: string | null;
-              imageUrl?: string | null;
-              videoUrl?: string | null;
-              unit: string;
-              stockQuantity: number;
-              isFeatured?: boolean;
-              basePrice?: number;
-              pricingTiers?: Array<{ minQty: number; price: number }> | null;
-            }) => (
+            {filteredProducts.map((product) => (
               <Card key={product.id} className="overflow-hidden hover:shadow-lg transition-shadow group">
                 <div className="relative h-48 bg-gray-100">
                   {product.imageUrl ? (

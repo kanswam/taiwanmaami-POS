@@ -819,7 +819,7 @@ export default function Events() {
                 const availableSeats = (workshop.maxCapacity || workshop.totalCapacity || 0) - (workshop.bookedCount || workshop.ticketsSold || 0);
                 const isSoldOut = availableSeats <= 0;
                 const isEarlyBird = workshop.earlyBirdPrice && workshop.earlyBirdDeadline && 
-                  new Date().toISOString().split('T')[0] <= workshop.earlyBirdDeadline;
+                  new Date().toISOString().split('T')[0] <= String(workshop.earlyBirdDeadline);
 
                 return (
                   <Card key={workshop.id} className={`overflow-hidden shadow-xl max-w-4xl mx-auto ${isSoldOut ? 'opacity-75' : ''}`}>
@@ -918,7 +918,7 @@ export default function Events() {
                               <div>
                                 <div className="flex items-center justify-center gap-3">
                                   <span className="text-4xl font-bold text-green-600">₹{(workshop.earlyBirdPrice! / 100).toFixed(0)}</span>
-                                  <span className="text-xl text-muted-foreground line-through">₹{(workshop.price / 100).toFixed(0)}</span>
+                                  <span className="text-xl text-muted-foreground line-through">₹{((workshop.price || 0) / 100).toFixed(0)}</span>
                                 </div>
                                 <p className="text-sm text-muted-foreground mt-1">per person</p>
                                 <p className="text-sm text-green-600 font-medium mt-2">
@@ -927,7 +927,7 @@ export default function Events() {
                               </div>
                             ) : (
                               <div>
-                                <span className="text-4xl font-bold">₹{(workshop.price / 100).toFixed(0)}</span>
+                                <span className="text-4xl font-bold">₹{((workshop.price || 0) / 100).toFixed(0)}</span>
                                 <p className="text-sm text-muted-foreground mt-1">per person</p>
                               </div>
                             )}
@@ -1104,9 +1104,9 @@ export default function Events() {
                 <div className="flex justify-between items-center">
                   <span className="text-muted-foreground">Total Amount:</span>
                   <span className="text-xl font-bold">
-                    ₹{((selectedWorkshopData.earlyBirdPrice && selectedWorkshopData.earlyBirdDeadline && new Date().toISOString().split('T')[0] <= selectedWorkshopData.earlyBirdDeadline 
+                    ₹{((selectedWorkshopData.earlyBirdPrice && selectedWorkshopData.earlyBirdDeadline && new Date().toISOString().split('T')[0] <= String(selectedWorkshopData.earlyBirdDeadline) 
                       ? selectedWorkshopData.earlyBirdPrice 
-                      : selectedWorkshopData.price) * bookingForm.ticketCount / 100).toFixed(0)}
+                      : (selectedWorkshopData.price || 0)) * bookingForm.ticketCount / 100).toFixed(0)}
                   </span>
                 </div>
               </div>

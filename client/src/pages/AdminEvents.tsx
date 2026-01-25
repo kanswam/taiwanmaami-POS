@@ -417,7 +417,7 @@ function WorkshopsTab({
                 <div className="space-y-2 text-sm">
                   <div className="flex items-center gap-2">
                     <Calendar className="h-4 w-4 text-muted-foreground" />
-                    <span>{workshop.workshopDate}</span>
+                    <span>{String(workshop.workshopDate)}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Clock className="h-4 w-4 text-muted-foreground" />
@@ -556,8 +556,8 @@ function CreateOrderDialog({
               <Label>Event Type *</Label>
               <Select 
                 value={formData.eventType}
-                onValueChange={(value: "wedding" | "corporate" | "school" | "private" | "other") => 
-                  setFormData({ ...formData, eventType: value })
+                onValueChange={(value) => 
+                  setFormData({ ...formData, eventType: value as typeof formData.eventType })
                 }
               >
                 <SelectTrigger>
@@ -729,8 +729,8 @@ function OrderDetailsDialog({
             <div className="grid grid-cols-5 gap-4">
               <Select 
                 value={newItem.itemType}
-                onValueChange={(value: "beverage" | "food" | "staff" | "delivery" | "equipment" | "other") => 
-                  setNewItem({ ...newItem, itemType: value })
+                onValueChange={(value) => 
+                  setNewItem({ ...newItem, itemType: value as typeof newItem.itemType })
                 }
               >
                 <SelectTrigger>

@@ -2285,7 +2285,7 @@ function AddItemsToOrderForm({ orderId, orderNumber, onSuccess, onCancel }: {
   
   const addItemsToOrder = trpc.orders.addItemsToOrder.useMutation({
     onSuccess: (data) => {
-      toast.success(`Added ${data.itemsAdded} item(s). New total: ${formatPrice(data.newTotalAmount)}`);
+      toast.success(`Items added. New total: ${formatPrice(data.newTotal)}`);
       onSuccess();
     },
     onError: (err) => toast.error(err.message),
@@ -6653,7 +6653,7 @@ function EventInquiriesTab() {
   const [adminNotes, setAdminNotes] = useState("");
   const [newStatus, setNewStatus] = useState<string>("");
 
-  const { data: inquiries, isLoading } = trpc.events.getInquiries.useQuery({ status: statusFilter });
+  const { data: inquiries, isLoading } = trpc.events.getInquiries.useQuery({ status: statusFilter as "all" | "new" | "contacted" | "quoted" | "confirmed" | "cancelled" | undefined });
   
   const updateStatusMutation = trpc.events.updateInquiryStatus.useMutation({
     onSuccess: () => {
@@ -6906,7 +6906,7 @@ function EventOrdersTab() {
     unitPrice: 0,
   });
 
-  const { data: orders, isLoading } = trpc.events.getOrders.useQuery({ status: statusFilter });
+  const { data: orders, isLoading } = trpc.events.getOrders.useQuery({ status: statusFilter as "all" | "draft" | "quoted" | "confirmed" | "in_progress" | "completed" | "cancelled" | undefined });
   const { data: orderDetails } = trpc.events.getOrder.useQuery(
     { id: selectedOrder?.id },
     { enabled: !!selectedOrder }

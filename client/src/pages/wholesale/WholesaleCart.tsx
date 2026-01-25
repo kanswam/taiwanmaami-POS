@@ -124,7 +124,7 @@ export default function WholesaleCart() {
   const calculateItemPrice = (item: {
     basePrice: number;
     quantity: number;
-    pricingTiers?: Array<{ minQty: number; price: number }> | string | null;
+    pricingTiers?: unknown;
   }) => {
     let unitPrice = item.basePrice;
     
@@ -246,18 +246,7 @@ export default function WholesaleCart() {
                 </Button>
               </div>
 
-              {cartItems.map((item: {
-                id: number;
-                productId: number;
-                productName: string;
-                productSlug: string;
-                imageUrl?: string | null;
-                basePrice: number;
-                unit: string;
-                quantity: number;
-                pricingTiers?: Array<{ minQty: number; price: number }> | string | null;
-                stockQuantity: number;
-              }) => {
+              {cartItems.map((item) => {
                 const { unitPrice, lineTotal } = calculateItemPrice(item);
                 
                 return (
