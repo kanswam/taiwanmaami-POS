@@ -1033,3 +1033,17 @@ Orders fixed:
   - [x] Fetch actual amounts from Razorpay API (bulk fetch button)
   - [x] Daily breakdown table
   - [x] Show only discrepancies toggle filter
+
+
+## Bug Fixes (Jan 25 - Part 2)
+
+- [x] Store actual Razorpay payment amounts in payments table
+  - [x] Updated verifyPayment procedure to fetch payment from Razorpay API
+  - [x] Now stores actual collected amount (in paise) in payments.amount field
+  - [x] Eliminates need to fetch from Razorpay API for reconciliation
+- [x] Fix TypeScript errors (reduced from 523 to 17)
+  - [x] Added missing AppRouter type export in routers.ts
+  - [x] Fixed events.getOrder return type to include order property
+  - [x] Fixed Admin.tsx orderDetails property accesses
+  - [x] Fixed AdminEvents.tsx updateBookingAttendance procedure name
+  - [ ] Remaining 17 errors in wholesale pricingTiers types (pre-existing, non-blocking)

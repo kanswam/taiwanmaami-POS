@@ -7090,21 +7090,21 @@ function EventOrdersTab() {
                 <div>
                   <h4 className="font-semibold mb-2">Customer Details</h4>
                   <div className="space-y-1 text-sm">
-                    <p><strong>Name:</strong> {orderDetails.customerName}</p>
-                    <p><strong>Email:</strong> {orderDetails.customerEmail}</p>
-                    <p><strong>Phone:</strong> {orderDetails.customerPhone}</p>
-                    {orderDetails.companyName && (
-                      <p><strong>Company:</strong> {orderDetails.companyName}</p>
+                    <p><strong>Name:</strong> {orderDetails.order.customerName}</p>
+                    <p><strong>Email:</strong> {orderDetails.order.customerEmail}</p>
+                    <p><strong>Phone:</strong> {orderDetails.order.customerPhone}</p>
+                    {orderDetails.order.companyName && (
+                      <p><strong>Company:</strong> {orderDetails.order.companyName}</p>
                     )}
                   </div>
                 </div>
                 <div>
                   <h4 className="font-semibold mb-2">Event Details</h4>
                   <div className="space-y-1 text-sm">
-                    <p><strong>Type:</strong> {orderDetails.eventType}</p>
-                    <p><strong>Date:</strong> {orderDetails.eventDate} {orderDetails.eventTime}</p>
-                    <p><strong>Venue:</strong> {orderDetails.venue}</p>
-                    <p><strong>Guests:</strong> {orderDetails.guestCount}</p>
+                    <p><strong>Type:</strong> {orderDetails.order.eventType}</p>
+                    <p><strong>Date:</strong> {orderDetails.order.eventDate} {orderDetails.order.eventTime}</p>
+                    <p><strong>Venue:</strong> {orderDetails.order.venue}</p>
+                    <p><strong>Guests:</strong> {orderDetails.order.guestCount}</p>
                   </div>
                 </div>
               </div>
@@ -7167,34 +7167,34 @@ function EventOrdersTab() {
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
                     <span>Subtotal:</span>
-                    <span>₹{(orderDetails.subtotal / 100).toFixed(2)}</span>
+                    <span>₹{(orderDetails.order.subtotal / 100).toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span>GST (18%):</span>
-                    <span>₹{(orderDetails.gstAmount / 100).toFixed(2)}</span>
+                    <span>₹{(orderDetails.order.gstAmount / 100).toFixed(2)}</span>
                   </div>
-                  {orderDetails.discountAmount > 0 && (
+                  {(orderDetails.order.discountAmount || 0) > 0 && (
                     <div className="flex justify-between text-green-600">
                       <span>Discount:</span>
-                      <span>-₹{(orderDetails.discountAmount / 100).toFixed(2)}</span>
+                      <span>-₹{(orderDetails.order.discountAmount / 100).toFixed(2)}</span>
                     </div>
                   )}
                   <div className="flex justify-between font-semibold text-lg border-t pt-2">
                     <span>Total:</span>
-                    <span>₹{(orderDetails.totalAmount / 100).toFixed(2)}</span>
+                    <span>₹{(orderDetails.order.totalAmount / 100).toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span>Advance ({orderDetails.advancePercentage}%):</span>
-                    <span className={orderDetails.advancePaid ? "text-green-600" : ""}>
-                      ₹{(orderDetails.advanceAmount / 100).toFixed(2)}
-                      {orderDetails.advancePaid && " ✓"}
+                    <span>Advance ({orderDetails.order.advancePercentage}%):</span>
+                    <span className={orderDetails.order.advancePaid ? "text-green-600" : ""}>
+                      ₹{(orderDetails.order.advanceAmount / 100).toFixed(2)}
+                      {orderDetails.order.advancePaid && " ✓"}
                     </span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span>Balance:</span>
-                    <span className={orderDetails.balancePaid ? "text-green-600" : ""}>
-                      ₹{(orderDetails.balanceAmount / 100).toFixed(2)}
-                      {orderDetails.balancePaid && " ✓"}
+                    <span className={orderDetails.order.balancePaid ? "text-green-600" : ""}>
+                      ₹{(orderDetails.order.balanceAmount / 100).toFixed(2)}
+                      {orderDetails.order.balancePaid && " ✓"}
                     </span>
                   </div>
                 </div>
@@ -7203,7 +7203,7 @@ function EventOrdersTab() {
               {/* Actions */}
               <div className="flex items-center gap-2 flex-wrap">
                 <Select 
-                  value={orderDetails.status}
+                  value={orderDetails.order.status}
                   onValueChange={(value) => updateStatusMutation.mutate({ id: selectedOrder.id, status: value as any })}
                 >
                   <SelectTrigger className="w-40">
@@ -7220,7 +7220,7 @@ function EventOrdersTab() {
                 <Button 
                   variant="outline"
                   onClick={() => {
-                    const doc = generateEventDocument(orderDetails, orderDetails.items, 'quotation');
+                    const doc = generateEventDocument(orderDetails.order as any, orderDetails.items, 'quotation');
                     const blob = new Blob([doc], { type: 'text/html' });
                     const url = URL.createObjectURL(blob);
                     const a = document.createElement('a');
@@ -7236,7 +7236,7 @@ function EventOrdersTab() {
                 <Button 
                   variant="outline"
                   onClick={() => {
-                    const doc = generateEventDocument(orderDetails, orderDetails.items, 'invoice');
+                    const doc = generateEventDocument(orderDetails.order as any, orderDetails.items, 'invoice');
                     const blob = new Blob([doc], { type: 'text/html' });
                     const url = URL.createObjectURL(blob);
                     const a = document.createElement('a');
@@ -7249,7 +7249,7 @@ function EventOrdersTab() {
                   <FileText className="w-4 h-4 mr-1" />
                   Invoice
                 </Button>
-                {!orderDetails.advancePaid && (
+                {!orderDetails.order.advancePaid && (
                   <Button 
                     variant="outline"
                     onClick={() => recordPaymentMutation.mutate({ id: selectedOrder.id, paymentType: "advance" })}
@@ -7257,7 +7257,7 @@ function EventOrdersTab() {
                     Record Advance Payment
                   </Button>
                 )}
-                {orderDetails.advancePaid && !orderDetails.balancePaid && (
+                {orderDetails.order.advancePaid && !orderDetails.order.balancePaid && (
                   <Button 
                     variant="outline"
                     onClick={() => recordPaymentMutation.mutate({ id: selectedOrder.id, paymentType: "balance" })}

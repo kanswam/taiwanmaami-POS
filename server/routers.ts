@@ -1327,7 +1327,7 @@ export const appRouter = router({
         razorpaySignature: z.string(),
       }))
       .mutation(async ({ input }) => {
-        const { verifyPaymentSignature } = await import('./razorpay');
+        const { verifyPaymentSignature, fetchPaymentDetails } = await import('./razorpay');
         const dbInstance = await getDb();
         if (!dbInstance) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
         
@@ -1342,12 +1342,22 @@ export const appRouter = router({
           throw new TRPCError({ code: 'BAD_REQUEST', message: 'Invalid payment signature' });
         }
         
-        // Update order payment status
+        // Fetch actual payment amount from Razorpay API
+        let actualPaymentAmount = 0;
+        try {
+          const paymentDetails = await fetchPaymentDetails(input.razorpayPaymentId);
+          actualPaymentAmount = paymentDetails.amount; // Amount in paise
+        } catch (error) {
+          console.error('Failed to fetch Razorpay payment details:', error);
+          // Continue with 0 if fetch fails - reconciliation report can still fetch later
+        }
+        
+        // Update order payment status with actual amount from Razorpay
         await dbInstance!.insert(payments).values({
           orderId: input.orderId,
           paymentMethod: 'razorpay',
           paymentStatus: 'success',
-          amount: 0, // Will be updated from order
+          amount: actualPaymentAmount, // Actual amount collected from Razorpay
           razorpayPaymentId: input.razorpayPaymentId,
           razorpaySignature: input.razorpaySignature,
         });
@@ -5396,7 +5406,7 @@ export const appRouter = router({
 
           if (order.paymentMethod === 'cash') {
             cashOrders++;
-          } else if (order.paymentMethod === 'online') {
+          } else if (order.paymentMethod === 'razorpay' || order.paymentMethod === 'upi' || order.paymentMethod === 'card') {
             onlineOrders++;
           }
 
@@ -5600,7 +5610,7 @@ export const appRouter = router({
         const items = await database.select().from(eventOrderItems)
           .where(eq(eventOrderItems.eventOrderId, input.id));
         
-        return { ...order[0], items };
+        return { order: order[0], items };
       }),
 
     // Add item to event order (admin)
@@ -6190,8 +6200,10 @@ export const appRouter = router({
           content: `Payment confirmed for ${booking.customerName}\n\nBooking #: ${booking.bookingNumber}\nTickets: ${booking.ticketCount}\nAmount: ₹${(booking.totalAmount / 100).toFixed(2)}\nPayment ID: ${input.razorpayPaymentId}${invoiceUrl ? `\n\nInvoice: ${invoiceUrl}` : ''}`,
         });
         
-        // Use selected date info if available
-        const returnDate = selectedDateInfo?.sessionDate || workshop?.workshopDate;
+        // Use selected date info if available - convert to ISO string for frontend
+        const returnDate = selectedDateInfo?.sessionDate 
+          ? new Date(selectedDateInfo.sessionDate).toISOString() 
+          : (workshop?.workshopDate ? new Date(workshop.workshopDate).toISOString() : '');
         const returnTime = selectedDateInfo 
           ? `${selectedDateInfo.startTime} - ${selectedDateInfo.endTime}` 
           : (workshop ? `${workshop.startTime} - ${workshop.endTime}` : '');
@@ -6471,3 +6483,5 @@ export const appRouter = router({
   // Wholesale B2B Portal
   wholesale: wholesaleRouter,
 });
+
+export type AppRouter = typeof appRouter;

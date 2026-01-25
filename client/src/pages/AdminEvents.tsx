@@ -977,8 +977,8 @@ function CreateWorkshopDialog({
               <Label>Status</Label>
               <Select 
                 value={formData.status}
-                onValueChange={(value: "draft" | "published" | "cancelled" | "completed") => 
-                  setFormData({ ...formData, status: value })
+                onValueChange={(value: "draft" | "published") => 
+                  setFormData({ ...formData, status: value as "draft" })
                 }
               >
                 <SelectTrigger>
@@ -1020,7 +1020,7 @@ function WorkshopBookingsDialog({
     },
     onError: (error) => toast.error(error.message),
   });
-  const updateAttendance = trpc.workshops.updateBookingAttendance.useMutation({
+  const updateAttendance = trpc.workshops.updateAttendance.useMutation({
     onSuccess: () => {
       toast.success("Attendance updated");
       refetch();
@@ -1152,7 +1152,7 @@ function WorkshopBookingsDialog({
                       <Select
                         value={booking.paymentStatus}
                         onValueChange={(value: "pending" | "paid" | "refunded") => 
-                          updatePayment.mutate({ workshopId, bookingId: booking.id, paymentStatus: value })
+                          updatePayment.mutate({ bookingId: booking.id, paymentStatus: value })
                         }
                       >
                         <SelectTrigger className="w-[100px]">
