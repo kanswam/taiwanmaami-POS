@@ -1235,6 +1235,37 @@ export const appRouter = router({
         return activeOrder || null;
       }),
 
+    // Cancel a pending order (used when payment fails or is abandoned)
+    cancelOrder: publicProcedure
+      .input(z.object({ 
+        orderId: z.number(),
+        reason: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const dbInstance = await getDb();
+        if (!dbInstance) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
+        
+        // Get order
+        const [order] = await dbInstance.select().from(orders).where(eq(orders.id, input.orderId));
+        if (!order) throw new TRPCError({ code: 'NOT_FOUND', message: 'Order not found' });
+        
+        // Only cancel pending orders (not completed or already cancelled)
+        if (order.orderStatus === 'completed' || order.orderStatus === 'cancelled') {
+          return { success: false, message: 'Cannot cancel completed or already cancelled orders' };
+        }
+        
+        // Update order status to cancelled
+        await dbInstance
+          .update(orders)
+          .set({ 
+            orderStatus: 'cancelled',
+            staffNotes: input.reason ? `Auto-cancelled: ${input.reason}` : 'Auto-cancelled: Payment failed',
+          })
+          .where(eq(orders.id, input.orderId));
+        
+        return { success: true, message: 'Order cancelled' };
+      }),
+
     getById: adminProcedure
       .input(z.object({ orderId: z.number() }))
       .query(async ({ input }) => {

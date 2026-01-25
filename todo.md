@@ -989,3 +989,31 @@ Orders fixed:
 - [x] Fix toggle switch not showing for "Out" items (now uses explicit boolean check for isAvailable)
 - [x] Group products by category with collapsible sections (already existed, improved with item count)
 - [x] Add "Expand All" / "Collapse All" buttons like admin panel
+
+
+## CRITICAL: Payment Amount Bug Fix (Jan 25)
+
+- [x] Fix delivery charge not included in Razorpay payment amount
+  - [x] Use backend totalAmount (which includes delivery) for Razorpay instead of frontend displayTotal
+  - [x] Verify amount sent to Razorpay matches order totalAmount
+- [x] Fix stale displayTotal causing wrong payment amounts
+  - [x] Pass orderData.totalAmount from backend response to handleRazorpayPayment
+- [x] Fix idempotency key to prevent duplicate orders
+  - [x] Remove timestamp from idempotency key
+  - [x] Use stable key based on phone + cart hash
+- [x] Add Razorpay script load check before creating order
+- [x] Cancel order if Razorpay payment initiation fails
+- [x] Added cancelOrder procedure to backend for auto-cancellation on payment failure
+- [ ] Add payment amount to payments table (future enhancement)
+
+**Revenue Loss Report:**
+- 7 delivery orders affected
+- Total delivery charges not collected: ₹650
+- Order 184 also has additional ₹404 discrepancy (stale cart issue)
+
+**Fix Applied:**
+- Checkout.tsx now uses orderData.totalAmount from backend (which includes delivery charges)
+- Both logged-in and guest checkout flows fixed
+- Idempotency key now stable (phone + cart hash, no timestamp)
+- Orders auto-cancel if Razorpay script fails to load or payment initiation fails
+- All 5 unit tests passing

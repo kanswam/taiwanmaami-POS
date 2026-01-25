@@ -82,8 +82,25 @@ export default function Checkout() {
     };
   }, []);
 
+  // Mutation to cancel order if payment fails
+  const cancelOrder = trpc.orders.cancelOrder.useMutation();
+  
   const handleRazorpayPayment = useCallback(async (orderId: number, orderNumber: string, amount: number) => {
     try {
+      // Check if Razorpay script is loaded
+      if (!window.Razorpay) {
+        toast.error('Payment system not loaded. Please refresh the page and try again.');
+        // Cancel the pending order since payment can\'t proceed
+        try {
+          await cancelOrder.mutateAsync({ orderId, reason: 'Payment system not loaded' });
+        } catch (e) {
+          console.error('Failed to cancel order:', e);
+        }
+        setIsSubmitting(false);
+        submissionLockRef.current = false;
+        return;
+      }
+      
       // Create Razorpay order
       const paymentOrder = await createPaymentOrder.mutateAsync({ orderId, orderNumber, amount });
       
@@ -132,9 +149,16 @@ export default function Checkout() {
       razorpay.open();
     } catch (err: any) {
       toast.error(err.message || 'Failed to initiate payment');
+      // Cancel the pending order since payment initiation failed
+      try {
+        await cancelOrder.mutateAsync({ orderId, reason: 'Payment initiation failed' });
+      } catch (e) {
+        console.error('Failed to cancel order:', e);
+      }
       setIsSubmitting(false);
+      submissionLockRef.current = false;
     }
-  }, [createPaymentOrder, verifyPayment, formData, clearCart, navigate]);
+  }, [createPaymentOrder, verifyPayment, cancelOrder, formData, clearCart, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -255,8 +279,9 @@ export default function Checkout() {
 
       // Delivery orders must pay online
       if (state.orderType === 'delivery' || paymentMethod === 'online') {
-        // Initiate Razorpay payment
-        await handleRazorpayPayment(orderData.orderId, orderData.orderNumber, displayTotal);
+        // Initiate Razorpay payment - use orderData.totalAmount which includes delivery charges
+        // CRITICAL: Do NOT use displayTotal as it doesn't include delivery charges added by backend
+        await handleRazorpayPayment(orderData.orderId, orderData.orderNumber, orderData.totalAmount);
       } else {
         // Cash at pickup/counter - KOT is already created in backend for in-store orders
         clearCart();
@@ -317,8 +342,10 @@ export default function Checkout() {
     setIsSubmitting(true);
 
     try {
-      // Generate idempotency key to prevent duplicate orders on network retry
-      const idempotencyKey = `${formData.phone}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      // Generate stable idempotency key based on cart contents to prevent duplicate orders
+      // Using cart hash instead of timestamp ensures retries reuse the same order
+      const cartHash = state.items.map(i => `${i.productId}-${i.quantity}-${i.size || ''}`).join('|');
+      const idempotencyKey = `${formData.phone}-${cartHash}`;
       
       // Determine outlet ID: 1 = Palladium, 2 = T.Nagar (same logic as logged-in checkout)
       const guestOutletId = state.orderType === 'delivery' 
@@ -359,8 +386,9 @@ export default function Checkout() {
       });
 
       // For delivery or online payment, initiate Razorpay
+      // CRITICAL: Use orderData.totalAmount which includes delivery charges from backend
       if (state.orderType === 'delivery' || paymentMethod === 'online') {
-        await handleRazorpayPayment(orderData.orderId, orderData.orderNumber, displayTotal);
+        await handleRazorpayPayment(orderData.orderId, orderData.orderNumber, orderData.totalAmount);
       } else {
         clearCart();
         toast.success(state.orderType === 'instore' ? 'Order placed! Pay at counter.' : 'Order placed! Pay at pickup.');
