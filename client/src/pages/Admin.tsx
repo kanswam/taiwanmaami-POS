@@ -8467,7 +8467,7 @@ function ReconciliationTab() {
   const [isFetchingRazorpay, setIsFetchingRazorpay] = useState(false);
   const [hasFetchedOnce, setHasFetchedOnce] = useState(false);
   const [reconcileDialogOpen, setReconcileDialogOpen] = useState(false);
-  const [selectedOrderForReconcile, setSelectedOrderForReconcile] = useState<{orderId: number; orderNumber: string; discrepancy: number} | null>(null);
+  const [selectedOrderForReconcile, setSelectedOrderForReconcile] = useState<{orderId: number; orderNumber: string; discrepancy: number; isWriteOff?: boolean} | null>(null);
   const [reconcileNote, setReconcileNote] = useState('');
 
   // Fetch actual amounts from Razorpay API
@@ -8499,22 +8499,25 @@ function ReconciliationTab() {
     }
   };
 
-  // Handle marking order as reconciled
+  // Handle marking order as reconciled or written off
   const handleMarkReconciled = async () => {
     if (!selectedOrderForReconcile || !reconcileNote.trim()) return;
+    
+    const isWriteOff = selectedOrderForReconcile.isWriteOff || false;
     
     try {
       await markReconciledMutation.mutateAsync({
         orderId: selectedOrderForReconcile.orderId,
         note: reconcileNote,
+        isWriteOff,
       });
-      toast.success(`Order ${selectedOrderForReconcile.orderNumber} marked as reconciled`);
+      toast.success(`Order ${selectedOrderForReconcile.orderNumber} ${isWriteOff ? 'written off' : 'marked as reconciled'}`);
       setReconcileDialogOpen(false);
       setSelectedOrderForReconcile(null);
       setReconcileNote('');
       refetch();
     } catch (error) {
-      toast.error('Failed to mark order as reconciled');
+      toast.error(`Failed to ${isWriteOff ? 'write off' : 'mark as reconciled'}`);
     }
   };
 
@@ -8752,8 +8755,11 @@ function ReconciliationTab() {
               <tbody>
                 {filteredItems?.map((item) => {
                   const razorpayAmount = razorpayAmounts[item.razorpayPaymentId] || 0;
-                  const actualDiscrepancy = razorpayAmount > 0 ? item.orderTotal - razorpayAmount : item.discrepancy;
-                  const hasIssue = razorpayAmount > 0 ? Math.abs(actualDiscrepancy) > 100 : item.paymentMissing || item.hasDiscrepancy;
+                  const rawDiscrepancy = razorpayAmount > 0 ? item.orderTotal - razorpayAmount : item.discrepancy;
+                  // If reconciled or written off, show ₹0 discrepancy
+                  const isSettled = (item as any).isReconciled || (item as any).isWrittenOff;
+                  const actualDiscrepancy = isSettled ? 0 : rawDiscrepancy;
+                  const hasIssue = isSettled ? false : (razorpayAmount > 0 ? Math.abs(rawDiscrepancy) > 100 : item.paymentMissing || item.hasDiscrepancy);
 
                   return (
                     <tr 
@@ -8837,22 +8843,45 @@ function ReconciliationTab() {
                           <span className="text-green-600 text-xs flex items-center gap-1" title={(item as any).reconciliationNote || ''}>
                             <Check className="w-3 h-3" /> Reconciled
                           </span>
+                        ) : (item as any).isWrittenOff ? (
+                          <span className="text-orange-600 text-xs flex items-center gap-1" title={(item as any).reconciliationNote || ''}>
+                            <X className="w-3 h-3" /> Written Off
+                          </span>
                         ) : hasIssue ? (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="h-6 text-xs"
-                            onClick={() => {
-                              setSelectedOrderForReconcile({
-                                orderId: item.orderId,
-                                orderNumber: item.orderNumber,
-                                discrepancy: actualDiscrepancy,
-                              });
-                              setReconcileDialogOpen(true);
-                            }}
-                          >
-                            Mark Reconciled
-                          </Button>
+                          <div className="flex gap-1">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="h-6 text-xs"
+                              onClick={() => {
+                                setSelectedOrderForReconcile({
+                                  orderId: item.orderId,
+                                  orderNumber: item.orderNumber,
+                                  discrepancy: rawDiscrepancy,
+                                  isWriteOff: false,
+                                });
+                                setReconcileDialogOpen(true);
+                              }}
+                            >
+                              Reconciled
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="h-6 text-xs text-orange-600 border-orange-300 hover:bg-orange-50"
+                              onClick={() => {
+                                setSelectedOrderForReconcile({
+                                  orderId: item.orderId,
+                                  orderNumber: item.orderNumber,
+                                  discrepancy: rawDiscrepancy,
+                                  isWriteOff: true,
+                                });
+                                setReconcileDialogOpen(true);
+                              }}
+                            >
+                              Write Off
+                            </Button>
+                          </div>
                         ) : (
                           <span className="text-muted-foreground text-xs">-</span>
                         )}
@@ -8909,7 +8938,9 @@ function ReconciliationTab() {
       <Dialog open={reconcileDialogOpen} onOpenChange={setReconcileDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Mark Order as Reconciled</DialogTitle>
+            <DialogTitle>
+              {selectedOrderForReconcile?.isWriteOff ? 'Write Off Discrepancy' : 'Mark Order as Reconciled'}
+            </DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             {selectedOrderForReconcile && (
@@ -8920,12 +8951,22 @@ function ReconciliationTab() {
                     ₹{(selectedOrderForReconcile.discrepancy / 100).toFixed(2)}
                   </span>
                 </p>
+                {selectedOrderForReconcile.isWriteOff && (
+                  <div className="bg-orange-50 border border-orange-200 rounded-md p-3 text-sm text-orange-800">
+                    <strong>Write Off:</strong> This will mark the discrepancy as a loss that cannot be recovered. Use this for delivery fees that were not collected and cannot be charged to the customer.
+                  </div>
+                )}
                 <div>
-                  <label className="text-sm font-medium">Reconciliation Note</label>
+                  <label className="text-sm font-medium">
+                    {selectedOrderForReconcile.isWriteOff ? 'Write-off Reason' : 'Reconciliation Note'}
+                  </label>
                   <textarea
                     className="w-full mt-1 p-2 border rounded-md text-sm"
                     rows={3}
-                    placeholder="e.g., Customer paid ₹504.24 via QR code on 27 Jan 2026"
+                    placeholder={selectedOrderForReconcile.isWriteOff 
+                      ? 'e.g., Delivery fee not collected due to payment bug - cannot recover'
+                      : 'e.g., Customer paid ₹504.24 via QR code on 27 Jan 2026'
+                    }
                     value={reconcileNote}
                     onChange={(e) => setReconcileNote(e.target.value)}
                   />
@@ -8940,8 +8981,14 @@ function ReconciliationTab() {
             <Button
               onClick={handleMarkReconciled}
               disabled={!reconcileNote.trim() || markReconciledMutation.isPending}
+              className={selectedOrderForReconcile?.isWriteOff ? 'bg-orange-600 hover:bg-orange-700' : ''}
             >
-              {markReconciledMutation.isPending ? 'Saving...' : 'Mark as Reconciled'}
+              {markReconciledMutation.isPending 
+                ? 'Saving...' 
+                : selectedOrderForReconcile?.isWriteOff 
+                  ? 'Write Off' 
+                  : 'Mark as Reconciled'
+              }
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -4874,7 +4874,8 @@ export const appRouter = router({
             paymentMethod: order.paymentMethod || 'unknown',
             reconciliationNote: order.reconciliationNote || null,
             reconciledAt: order.reconciledAt || null,
-            isReconciled: !!order.reconciledAt,
+            isReconciled: !!order.reconciledAt && !order.reconciliationNote?.startsWith('[WRITE-OFF]'),
+            isWrittenOff: !!order.reconciledAt && order.reconciliationNote?.startsWith('[WRITE-OFF]'),
             createdAt: order.createdAt,
           };
         });
@@ -4951,11 +4952,12 @@ export const appRouter = router({
         }
       }),
 
-    // Mark an order as reconciled (discrepancy resolved)
+    // Mark an order as reconciled (discrepancy resolved) or written off (loss accepted)
     markOrderReconciled: adminProcedure
       .input(z.object({
         orderId: z.number(),
-        note: z.string().min(1, 'Reconciliation note is required'),
+        note: z.string().min(1, 'Note is required'),
+        isWriteOff: z.boolean().optional().default(false),
       }))
       .mutation(async ({ ctx, input }) => {
         const dbInstance = await getDb();
@@ -4970,19 +4972,24 @@ export const appRouter = router({
           throw new TRPCError({ code: 'NOT_FOUND', message: 'Order not found' });
         }
 
+        // Prefix note with type for clarity
+        const notePrefix = input.isWriteOff ? '[WRITE-OFF] ' : '[RECONCILED] ';
+        const fullNote = notePrefix + input.note;
+
         await dbInstance
           .update(orders)
           .set({
-            reconciliationNote: input.note,
+            reconciliationNote: fullNote,
             reconciledAt: new Date(),
             reconciledBy: ctx.user.id,
           })
           .where(eq(orders.id, input.orderId));
 
+        const action = input.isWriteOff ? 'written off' : 'marked as reconciled';
         return {
           success: true,
           orderNumber: order.orderNumber,
-          message: `Order ${order.orderNumber} marked as reconciled`,
+          message: `Order ${order.orderNumber} ${action}`,
         };
       }),
 

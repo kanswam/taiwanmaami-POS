@@ -1102,3 +1102,13 @@ Orders fixed:
   - [ ] Add "Mark Reconciled" button in reconciliation report for orders with discrepancies
   - [ ] Show reconciled status and note in the report
   - [ ] Filter option to hide reconciled orders
+
+
+## Reconciliation Report Fixes (Jan 27)
+
+- [x] Show ₹0 discrepancy for reconciled/written-off orders
+- [x] Add "Write Off" option for unrecoverable discrepancies (different from Reconciled)
+  - [x] Write Off = loss accepted, cannot be recovered (orange badge)
+  - [x] Reconciled = payment received through alternative means (green badge)
+- [x] Different dialog content for Write Off vs Reconciled
+- [x] Notes prefixed with [WRITE-OFF] or [RECONCILED] for clarity
