@@ -1079,3 +1079,16 @@ Orders fixed:
   - [x] Added paymentMethod column to show how each order was recorded
   - [x] Investigated orders 129 and 121: paymentMethod=razorpay but razorpayPaymentId=null (old bug)
   - [ ] Add unmatched Razorpay payments section for orphan payments (future enhancement)
+
+
+## CRITICAL BUG: Unpaid Delivery Order Created (Jan 27)
+
+- [x] Investigate order #199 - delivery order created without payment
+  - [x] Check database for payment status and razorpayPaymentId (both null)
+  - [x] Root cause: Order created first, then Razorpay payment initiated - if payment fails, order remains unpaid
+  - [x] Staff manually changed status to "preparing" without payment verification
+- [x] Fix checkout flow to prevent unpaid delivery orders
+  - [x] Added server-side validation in updateStatus procedure
+  - [x] Delivery orders cannot be prepared/completed unless paymentStatus = 'completed'
+  - [x] Pickup orders with online payment also require payment verification
+  - [x] Error message guides staff to wait for payment or cancel the order

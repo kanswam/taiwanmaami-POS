@@ -1,0 +1,24 @@
+{
+  "query": "SELECT id, orderNumber, orderType, paymentMethod, paymentStatus, orderStatus, razorpayOrderId, razorpayPaymentId, totalAmount, customerName, customerPhone, createdAt FROM orders WHERE orderNumber = '00199';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT id, orderNumber, orderType, paymentMethod, paymentStatus, orderStatus, razorpayOrderId, razorpayPaymentId, totalAmount, customerName, customerPhone, createdAt FROM orders WHERE orderNumber = '00199';",
+  "rows": [
+    {
+      "id": "1410003",
+      "orderNumber": "00199",
+      "orderType": "delivery",
+      "paymentMethod": "NULL",
+      "paymentStatus": "pending",
+      "orderStatus": "preparing",
+      "razorpayOrderId": "NULL",
+      "razorpayPaymentId": "NULL",
+      "totalAmount": "54176",
+      "customerName": "ASMITHA M ACHARYA 231601009",
+      "customerPhone": "8825473286",
+      "createdAt": "2026-01-27 11:24:20"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\torderNumber\torderType\tpaymentMethod\tpaymentStatus\torderStatus\trazorpayOrderId\trazorpayPaymentId\ttotalAmount\tcustomerName\tcustomerPhone\tcreatedAt\n1410003\t00199\tdelivery\tNULL\tpending\tpreparing\tNULL\tNULL\t54176\tASMITHA M ACHARYA 231601009\t8825473286\t2026-01-27 11:24:20\n",
+  "stderr": "",
+  "execution_time_ms": 1556
+}

@@ -520,6 +520,34 @@ export const appRouter = router({
           .from(orders)
           .where(eq(orders.id, input.orderId));
         
+        if (!order) {
+          throw new TRPCError({ code: 'NOT_FOUND', message: 'Order not found' });
+        }
+        
+        // CRITICAL: Prevent delivery orders from being prepared without payment
+        // Delivery orders MUST be paid online before preparation can start
+        if (order.orderType === 'delivery' && 
+            input.status !== 'pending' && 
+            input.status !== 'cancelled' &&
+            order.paymentStatus !== 'completed') {
+          throw new TRPCError({ 
+            code: 'PRECONDITION_FAILED', 
+            message: 'Cannot prepare delivery order - payment not verified. Please wait for payment confirmation or cancel the order.' 
+          });
+        }
+        
+        // For pickup orders with online payment selected, also require payment before preparation
+        if (order.orderType === 'pickup' && 
+            order.paymentMethod === 'razorpay' &&
+            input.status !== 'pending' && 
+            input.status !== 'cancelled' &&
+            order.paymentStatus !== 'completed') {
+          throw new TRPCError({ 
+            code: 'PRECONDITION_FAILED', 
+            message: 'Cannot prepare order - online payment not verified. Please wait for payment confirmation or cancel the order.' 
+          });
+        }
+        
         await db.updateOrderStatus(input.orderId, input.status);
         
         // Update payment method and proof if provided (for completed in-store orders)
