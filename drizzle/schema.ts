@@ -230,6 +230,10 @@ export const orders = mysqlTable("orders", {
   idempotencyKey: varchar("idempotencyKey", { length: 100 }).unique(),
   // Test data flag - NEVER delete orders where isTestData = false
   isTestData: boolean("isTestData").default(false).notNull(),
+  // Reconciliation fields for payment discrepancy tracking
+  reconciliationNote: text("reconciliationNote"), // Note explaining how discrepancy was resolved
+  reconciledAt: timestamp("reconciledAt"), // When the order was marked as reconciled
+  reconciledBy: int("reconciledBy"), // Admin user ID who reconciled
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
   completedAt: timestamp("completedAt"),

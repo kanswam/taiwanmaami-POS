@@ -4800,6 +4800,8 @@ export const appRouter = router({
             razorpayOrderId: orders.razorpayOrderId,
             razorpayPaymentId: orders.razorpayPaymentId,
             paymentMethod: orders.paymentMethod,
+            reconciliationNote: orders.reconciliationNote,
+            reconciledAt: orders.reconciledAt,
             createdAt: orders.createdAt,
             paymentId: payments.id,
             paymentAmount: payments.amount,
@@ -4870,6 +4872,9 @@ export const appRouter = router({
             razorpayOrderId: order.razorpayOrderId || '',
             razorpayPaymentId: paymentId,
             paymentMethod: order.paymentMethod || 'unknown',
+            reconciliationNote: order.reconciliationNote || null,
+            reconciledAt: order.reconciledAt || null,
+            isReconciled: !!order.reconciledAt,
             createdAt: order.createdAt,
           };
         });
@@ -4944,6 +4949,41 @@ export const appRouter = router({
             error: error instanceof Error ? error.message : 'Failed to fetch payment details',
           };
         }
+      }),
+
+    // Mark an order as reconciled (discrepancy resolved)
+    markOrderReconciled: adminProcedure
+      .input(z.object({
+        orderId: z.number(),
+        note: z.string().min(1, 'Reconciliation note is required'),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const dbInstance = await getDb();
+        if (!dbInstance) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Database not available' });
+
+        const [order] = await dbInstance
+          .select({ id: orders.id, orderNumber: orders.orderNumber })
+          .from(orders)
+          .where(eq(orders.id, input.orderId));
+        
+        if (!order) {
+          throw new TRPCError({ code: 'NOT_FOUND', message: 'Order not found' });
+        }
+
+        await dbInstance
+          .update(orders)
+          .set({
+            reconciliationNote: input.note,
+            reconciledAt: new Date(),
+            reconciledBy: ctx.user.id,
+          })
+          .where(eq(orders.id, input.orderId));
+
+        return {
+          success: true,
+          orderNumber: order.orderNumber,
+          message: `Order ${order.orderNumber} marked as reconciled`,
+        };
       }),
 
     // Bulk fetch Razorpay payment details for reconciliation

@@ -8462,9 +8462,13 @@ function ReconciliationTab() {
   });
 
   const bulkFetchMutation = trpc.analytics.bulkFetchRazorpayPayments.useMutation();
+  const markReconciledMutation = trpc.analytics.markOrderReconciled.useMutation();
   const [razorpayAmounts, setRazorpayAmounts] = useState<Record<string, number>>({});
   const [isFetchingRazorpay, setIsFetchingRazorpay] = useState(false);
   const [hasFetchedOnce, setHasFetchedOnce] = useState(false);
+  const [reconcileDialogOpen, setReconcileDialogOpen] = useState(false);
+  const [selectedOrderForReconcile, setSelectedOrderForReconcile] = useState<{orderId: number; orderNumber: string; discrepancy: number} | null>(null);
+  const [reconcileNote, setReconcileNote] = useState('');
 
   // Fetch actual amounts from Razorpay API
   const fetchRazorpayAmounts = async () => {
@@ -8492,6 +8496,25 @@ function ReconciliationTab() {
       console.error('Failed to fetch Razorpay payment details:', error);
     } finally {
       setIsFetchingRazorpay(false);
+    }
+  };
+
+  // Handle marking order as reconciled
+  const handleMarkReconciled = async () => {
+    if (!selectedOrderForReconcile || !reconcileNote.trim()) return;
+    
+    try {
+      await markReconciledMutation.mutateAsync({
+        orderId: selectedOrderForReconcile.orderId,
+        note: reconcileNote,
+      });
+      toast.success(`Order ${selectedOrderForReconcile.orderNumber} marked as reconciled`);
+      setReconcileDialogOpen(false);
+      setSelectedOrderForReconcile(null);
+      setReconcileNote('');
+      refetch();
+    } catch (error) {
+      toast.error('Failed to mark order as reconciled');
     }
   };
 
@@ -8723,6 +8746,7 @@ function ReconciliationTab() {
                   <th className="text-right py-2 px-2">Discrepancy</th>
                   <th className="text-left py-2 px-2">Status</th>
                   <th className="text-left py-2 px-2">Payment ID</th>
+                  <th className="text-left py-2 px-2">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -8808,6 +8832,31 @@ function ReconciliationTab() {
                           <span className="text-red-500 text-xs">Missing</span>
                         )}
                       </td>
+                      <td className="py-2 px-2">
+                        {(item as any).isReconciled ? (
+                          <span className="text-green-600 text-xs flex items-center gap-1" title={(item as any).reconciliationNote || ''}>
+                            <Check className="w-3 h-3" /> Reconciled
+                          </span>
+                        ) : hasIssue ? (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-6 text-xs"
+                            onClick={() => {
+                              setSelectedOrderForReconcile({
+                                orderId: item.orderId,
+                                orderNumber: item.orderNumber,
+                                discrepancy: actualDiscrepancy,
+                              });
+                              setReconcileDialogOpen(true);
+                            }}
+                          >
+                            Mark Reconciled
+                          </Button>
+                        ) : (
+                          <span className="text-muted-foreground text-xs">-</span>
+                        )}
+                      </td>
                     </tr>
                   );
                 })}
@@ -8855,6 +8904,48 @@ function ReconciliationTab() {
           </div>
         </Card>
       )}
+
+      {/* Reconciliation Dialog */}
+      <Dialog open={reconcileDialogOpen} onOpenChange={setReconcileDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Mark Order as Reconciled</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            {selectedOrderForReconcile && (
+              <>
+                <p className="text-sm">
+                  Order <strong>{selectedOrderForReconcile.orderNumber}</strong> has a discrepancy of{' '}
+                  <span className="text-red-600 font-bold">
+                    ₹{(selectedOrderForReconcile.discrepancy / 100).toFixed(2)}
+                  </span>
+                </p>
+                <div>
+                  <label className="text-sm font-medium">Reconciliation Note</label>
+                  <textarea
+                    className="w-full mt-1 p-2 border rounded-md text-sm"
+                    rows={3}
+                    placeholder="e.g., Customer paid ₹504.24 via QR code on 27 Jan 2026"
+                    value={reconcileNote}
+                    onChange={(e) => setReconcileNote(e.target.value)}
+                  />
+                </div>
+              </>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setReconcileDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={handleMarkReconciled}
+              disabled={!reconcileNote.trim() || markReconciledMutation.isPending}
+            >
+              {markReconciledMutation.isPending ? 'Saving...' : 'Mark as Reconciled'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

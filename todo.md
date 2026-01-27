@@ -1092,3 +1092,13 @@ Orders fixed:
   - [x] Delivery orders cannot be prepared/completed unless paymentStatus = 'completed'
   - [x] Pickup orders with online payment also require payment verification
   - [x] Error message guides staff to wait for payment or cancel the order
+
+
+## Mark Orders as Reconciled Feature (Jan 27)
+
+- [ ] Add ability to mark orders as reconciled when discrepancies are settled
+  - [ ] Add reconciliationNote and reconciledAt fields to orders table
+  - [ ] Create backend procedure to mark order as reconciled with note
+  - [ ] Add "Mark Reconciled" button in reconciliation report for orders with discrepancies
+  - [ ] Show reconciled status and note in the report
+  - [ ] Filter option to hide reconciled orders
