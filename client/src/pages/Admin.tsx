@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/_core/hooks/useAuth';
@@ -8840,13 +8841,29 @@ function ReconciliationTab() {
                       </td>
                       <td className="py-2 px-2">
                         {(item as any).isReconciled ? (
-                          <span className="text-green-600 text-xs flex items-center gap-1" title={(item as any).reconciliationNote || ''}>
-                            <Check className="w-3 h-3" /> Reconciled
-                          </span>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <span className="text-green-600 text-xs flex items-center gap-1 cursor-help">
+                                <Check className="w-3 h-3" /> Reconciled
+                              </span>
+                            </TooltipTrigger>
+                            <TooltipContent side="top" className="max-w-xs">
+                              <p className="font-medium">Reconciliation Note:</p>
+                              <p>{(item as any).reconciliationNote?.replace('[RECONCILED] ', '') || 'No note recorded'}</p>
+                            </TooltipContent>
+                          </Tooltip>
                         ) : (item as any).isWrittenOff ? (
-                          <span className="text-orange-600 text-xs flex items-center gap-1" title={(item as any).reconciliationNote || ''}>
-                            <X className="w-3 h-3" /> Written Off
-                          </span>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <span className="text-orange-600 text-xs flex items-center gap-1 cursor-help">
+                                <X className="w-3 h-3" /> Written Off
+                              </span>
+                            </TooltipTrigger>
+                            <TooltipContent side="top" className="max-w-xs">
+                              <p className="font-medium">Write-off Reason:</p>
+                              <p>{(item as any).reconciliationNote?.replace('[WRITE-OFF] ', '') || 'No reason recorded'}</p>
+                            </TooltipContent>
+                          </Tooltip>
                         ) : hasIssue ? (
                           <div className="flex gap-1">
                             <Button

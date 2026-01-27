@@ -1112,3 +1112,6 @@ Orders fixed:
   - [x] Reconciled = payment received through alternative means (green badge)
 - [x] Different dialog content for Write Off vs Reconciled
 - [x] Notes prefixed with [WRITE-OFF] or [RECONCILED] for clarity
+
+- [x] Show reconciliation/write-off notes when hovering on the badge (tooltip)
+- [x] Allow viewing the recorded message for reconciled/written-off orders
