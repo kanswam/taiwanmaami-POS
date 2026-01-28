@@ -1,0 +1,66 @@
+{
+  "query": "SELECT id, areaName, pincode, deliveryCharge, isActive FROM delivery_areas ORDER BY areaName LIMIT 20;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT id, areaName, pincode, deliveryCharge, isActive FROM delivery_areas ORDER BY areaName LIMIT 20;",
+  "rows": [
+    {
+      "id": "3",
+      "areaName": "Adyar",
+      "pincode": "600020",
+      "deliveryCharge": "4000",
+      "isActive": "1"
+    },
+    {
+      "id": "8",
+      "areaName": "Alwarpet",
+      "pincode": "600018",
+      "deliveryCharge": "3500",
+      "isActive": "1"
+    },
+    {
+      "id": "4",
+      "areaName": "Anna Nagar",
+      "pincode": "600040",
+      "deliveryCharge": "5000",
+      "isActive": "1"
+    },
+    {
+      "id": "5",
+      "areaName": "Mylapore",
+      "pincode": "600004",
+      "deliveryCharge": "4000",
+      "isActive": "1"
+    },
+    {
+      "id": "7",
+      "areaName": "Nungambakkam",
+      "pincode": "600034",
+      "deliveryCharge": "4000",
+      "isActive": "1"
+    },
+    {
+      "id": "1",
+      "areaName": "T Nagar",
+      "pincode": "600017",
+      "deliveryCharge": "3000",
+      "isActive": "1"
+    },
+    {
+      "id": "6",
+      "areaName": "Triplicane",
+      "pincode": "600005",
+      "deliveryCharge": "4000",
+      "isActive": "1"
+    },
+    {
+      "id": "2",
+      "areaName": "Velachery",
+      "pincode": "600042",
+      "deliveryCharge": "3000",
+      "isActive": "1"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tareaName\tpincode\tdeliveryCharge\tisActive\n3\tAdyar\t600020\t4000\t1\n8\tAlwarpet\t600018\t3500\t1\n4\tAnna Nagar\t600040\t5000\t1\n5\tMylapore\t600004\t4000\t1\n7\tNungambakkam\t600034\t4000\t1\n1\tT Nagar\t600017\t3000\t1\n6\tTriplicane\t600005\t4000\t1\n2\tVelachery\t600042\t3000\t1\n",
+  "stderr": "",
+  "execution_time_ms": 2603
+}

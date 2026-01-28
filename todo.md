@@ -1198,3 +1198,9 @@ Orders fixed:
 - [x] Update birthday offer text to "FREE large boba drink (worth over ₹450) with any food or drink purchase"
 - [x] Add server-side validation to prevent birthday changes via API
 - [x] Add "Birthday cannot be changed once set" message on Profile page
+
+## Address Form Improvements (Jan 28)
+
+- [x] Change Area field from dropdown to text input with autocomplete
+- [x] Show locality names (e.g., "Triplicane") instead of just pincodes
+- [x] Auto-populate pincode field when locality is selected

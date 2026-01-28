@@ -516,27 +516,41 @@ export default function Profile() {
               />
             </div>
             <div>
-              <Label>Area *</Label>
-              <Select value={selectedArea} onValueChange={setSelectedArea}>
+              <Label>Locality / Area *</Label>
+              <Select 
+                value={selectedArea} 
+                onValueChange={(value) => {
+                  setSelectedArea(value);
+                  // Auto-populate pincode when area is selected
+                  const area = deliveryAreas?.find((a: any) => a.name === value);
+                  if (area) {
+                    setPincode(area.pincode);
+                  }
+                }}
+              >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select your area" />
+                  <SelectValue placeholder="Select your locality (e.g., Triplicane)" />
                 </SelectTrigger>
                 <SelectContent>
                   {deliveryAreas?.map((area: any) => (
                     <SelectItem key={area.id} value={area.name}>
-                      {area.name} - {area.pincode}
+                      {area.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
+              <p className="text-xs text-muted-foreground mt-1">
+                We currently deliver to select areas in Chennai
+              </p>
             </div>
             <div>
-              <Label htmlFor="pincode">Pincode *</Label>
+              <Label htmlFor="pincode">Pincode</Label>
               <Input
                 id="pincode"
                 value={pincode}
-                onChange={(e) => setPincode(e.target.value)}
-                placeholder="6-digit pincode"
+                readOnly
+                className="bg-muted"
+                placeholder="Auto-filled based on locality"
               />
             </div>
             <div>
