@@ -1815,7 +1815,7 @@ function generateOrderInvoice(order: any): string {
   <div class="footer">
     <p>Thank you for your order!</p>
     <p>Taiwan Maami - Crafted Daily. Enjoy Thoughtfully.</p>
-    <p>For queries: +91 98765 43210 | hello@taiwanmaami.com</p>
+    <p>For queries: +91 9150570557 | hello@taiwanmaami.com</p>
   </div>
 </body>
 </html>
@@ -4533,7 +4533,7 @@ function SiteSettingsTab() {
       setFreshnessDescription(settingsMap.freshness_description || 'Made to order, every time');
       setDeliveryTitle(settingsMap.delivery_title || 'Quick Delivery');
       setDeliveryDescription(settingsMap.delivery_description || 'Fast delivery across Chennai');
-      setStorePhone(settingsMap.store_phone || '+91 98765 43210');
+      setStorePhone(settingsMap.store_phone || '+91 9150570557');
       setStoreEmail(settingsMap.store_email || 'info@taiwanmaami.com');
       setStoreAddress(settingsMap.store_address || '34/8 Singarar Street, Triplicane, Chennai - 600005');
       setDeliveryRadius(settingsMap.delivery_radius || '15');
@@ -4723,7 +4723,7 @@ function SiteSettingsTab() {
             <Input
               value={storePhone}
               onChange={(e) => setStorePhone(e.target.value)}
-              placeholder="+91 98765 43210"
+              placeholder="+91 9150570557"
               className="mt-2"
             />
           </div>

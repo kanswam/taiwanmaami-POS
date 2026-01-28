@@ -114,7 +114,7 @@ function generateOrderInvoice(order: any): string {
   <div class="footer">
     <p>Thank you for your order!</p>
     <p>Taiwan Maami - Crafted Daily. Enjoy Thoughtfully.</p>
-    <p>For queries: +91 98765 43210 | hello@taiwanmaami.com</p>
+    <p>For queries: +91 9150570557 | hello@taiwanmaami.com</p>
   </div>
 </body>
 </html>`;
