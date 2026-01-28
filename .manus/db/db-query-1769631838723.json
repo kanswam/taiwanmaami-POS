@@ -1,0 +1,14 @@
+{
+  "query": "SELECT COUNT(*) as count, GROUP_CONCAT(areaName ORDER BY areaName SEPARATOR ', ') as sample_areas FROM delivery_areas LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT COUNT(*) as count, GROUP_CONCAT(areaName ORDER BY areaName SEPARATOR ', ') as sample_areas FROM delivery_areas LIMIT 10;",
+  "rows": [
+    {
+      "count": "73",
+      "sample_areas": "Abiramapuram, Adambakkam, Adyar, Alandur, Alwarpet, Ambattur, Anna Nagar, Anna Nagar East, Anna Nagar West, Anna Road, Ashok Nagar, Ayanavaram, Besant Nagar, Chepauk, Chetpet, Choolaimedu, Chromepet, Egmore, Ekkaduthangal, Fort St George, George Town, Gopalapuram, Greams Road, Guindy, Injambakkam, Jafferkhanpet, K K Nagar, Kilpauk, Kodambakkam, Kolathur, Kottivakkam, Kotturpuram, Luz, Manapakkam, Mandaveli, Medavakkam, Mogappair, Mylapore, Nandanam, Nanganallur, Neelankarai, Nungambakkam, OMR (Thoraipakkam), Padi, Palavakkam, Pallavaram, Park Town, Parrys Corner, Perambur, Perambur Barracks, Perungudi, Porur, R A Puram, Ramapuram, Royapuram, Saidapet, Shenoy Nagar, Sholinganallur, T Nagar, Tambaram, Taramani, Teynampet, Thiruvanmiyur, Thousand Lights, Tondiarpet, Triplicane, Vadapalani, Valasaravakkam, Velachery, Villivakkam, Virugambakkam, Washermanpet, West Mambalam"
+    }
+  ],
+  "messages": [],
+  "stdout": "count\tsample_areas\n73\tAbiramapuram, Adambakkam, Adyar, Alandur, Alwarpet, Ambattur, Anna Nagar, Anna Nagar East, Anna Nagar West, Anna Road, Ashok Nagar, Ayanavaram, Besant Nagar, Chepauk, Chetpet, Choolaimedu, Chromepet, Egmore, Ekkaduthangal, Fort St George, George Town, Gopalapuram, Greams Road, Guindy, Injambakkam, Jafferkhanpet, K K Nagar, Kilpauk, Kodambakkam, Kolathur, Kottivakkam, Kotturpuram, Luz, Manapakkam, Mandaveli, Medavakkam, Mogappair, Mylapore, Nandanam, Nanganallur, Neelankarai, Nungambakkam, OMR (Thoraipakkam), Padi, Palavakkam, Pallavaram, Park Town, Parrys Corner, Perambur, Perambur Barracks, Perungudi, Porur, R A Puram, Ramapuram, Royapuram, Saidapet, Shenoy Nagar, Sholinganallur, T Nagar, Tambaram, Taramani, Teynampet, Thiruvanmiyur, Thousand Lights, Tondiarpet, Triplicane, Vadapalani, Valasaravakkam, Velachery, Villivakkam, Virugambakkam, Washermanpet, West Mambalam\n",
+  "stderr": "",
+  "execution_time_ms": 1573
+}

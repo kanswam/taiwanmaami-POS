@@ -69,8 +69,8 @@ export default function Profile() {
     if (!areaSearch) return deliveryAreas;
     const search = areaSearch.toLowerCase();
     return deliveryAreas.filter((area: any) => {
-      if (!area || !area.name || !area.pincode) return false;
-      return area.name.toLowerCase().includes(search) || 
+      if (!area || !area.areaName || !area.pincode) return false;
+      return area.areaName.toLowerCase().includes(search) || 
         area.pincode.toString().includes(search);
     });
   }, [deliveryAreas, areaSearch]);
@@ -549,12 +549,12 @@ export default function Profile() {
                         type="button"
                         className="w-full px-3 py-2 text-left hover:bg-muted flex justify-between items-center"
                         onClick={() => {
-                          setSelectedArea(area.name);
+                          setSelectedArea(area.areaName);
                           setPincode(area.pincode);
                           setAreaSearch('');
                         }}
                       >
-                        <span>{area.name}</span>
+                        <span>{area.areaName}</span>
                         <span className="text-xs text-muted-foreground">{area.pincode}</span>
                       </button>
                     ))}
