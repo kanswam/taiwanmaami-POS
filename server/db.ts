@@ -75,6 +75,25 @@ export async function getUserById(id: number) {
   return result.length > 0 ? result[0] : undefined;
 }
 
+// Birthday functions
+export async function updateUserBirthday(userId: number, birthMonth: number, birthDay: number) {
+  const db = await getDb();
+  if (!db) return false;
+  await db.update(users).set({ birthMonth, birthDay }).where(eq(users.id, userId));
+  return true;
+}
+
+export async function getUserBirthday(userId: number) {
+  const db = await getDb();
+  if (!db) return null;
+  const result = await db.select({
+    birthMonth: users.birthMonth,
+    birthDay: users.birthDay,
+    birthdayCodeUsedYear: users.birthdayCodeUsedYear
+  }).from(users).where(eq(users.id, userId)).limit(1);
+  return result.length > 0 ? result[0] : null;
+}
+
 // Category functions
 export async function getCategories(activeOnly = true) {
   const db = await getDb();

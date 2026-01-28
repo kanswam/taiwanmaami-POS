@@ -1689,6 +1689,29 @@ export const appRouter = router({
       }),
   }),
 
+  // Profile routes
+  profile: router({
+    getBirthday: protectedProcedure.query(async ({ ctx }) => {
+      const birthday = await db.getUserBirthday(ctx.user.id);
+      return {
+        hasBirthday: !!(birthday?.birthMonth && birthday?.birthDay),
+        birthMonth: birthday?.birthMonth,
+        birthDay: birthday?.birthDay,
+        birthdayCodeUsedYear: birthday?.birthdayCodeUsedYear
+      };
+    }),
+
+    updateBirthday: protectedProcedure
+      .input(z.object({
+        birthMonth: z.number().min(1).max(12),
+        birthDay: z.number().min(1).max(31)
+      }))
+      .mutation(async ({ ctx, input }) => {
+        await db.updateUserBirthday(ctx.user.id, input.birthMonth, input.birthDay);
+        return { success: true };
+      }),
+  }),
+
   // Address routes
   addresses: router({
     getUserAddresses: protectedProcedure.query(async ({ ctx }) => {

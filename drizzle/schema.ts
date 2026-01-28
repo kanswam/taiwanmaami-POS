@@ -18,6 +18,10 @@ export const users = mysqlTable("users", {
   lastStampDate: timestamp("lastStampDate"),
   // Admin notes for customer
   notes: text("notes"),
+  // Birthday fields for birthday offer
+  birthMonth: int("birthMonth"), // 1-12
+  birthDay: int("birthDay"), // 1-31
+  birthdayCodeUsedYear: int("birthdayCodeUsedYear"), // Track which year they used their birthday code
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
   lastSignedIn: timestamp("lastSignedIn").defaultNow().notNull(),

@@ -32,6 +32,7 @@ import FAQ from "./pages/FAQ";
 import Events from "./pages/Events";
 import AdminEvents from "./pages/AdminEvents";
 import { CookieConsent } from "./components/CookieConsent";
+import { BirthdayPromptWrapper } from "./components/BirthdayPromptWrapper";
 import { WholesaleAuthProvider } from "./contexts/WholesaleAuthContext";
 
 // Wholesale Pages
@@ -115,6 +116,7 @@ function App() {
             <Toaster />
             <Router />
             <CookieConsent />
+            <BirthdayPromptWrapper />
           </TooltipProvider>
         </CartProvider>
         </WholesaleAuthProvider>

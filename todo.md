@@ -1131,3 +1131,18 @@ Orders fixed:
 - [x] Show delivery charge in order modal
 - [x] Add full price breakdown (Subtotal, Discount, GST, Delivery, Total)
 - [x] Add View/Download Invoice button to admin order details
+
+
+## Invoice Encoding Fix (Jan 28)
+
+- [x] Fix Rupee symbol encoding in tax invoice (added UTF-8 charset meta tag)
+- [x] Fix Chinese character encoding in tax invoice (UTF-8 charset)
+
+
+## New Features (Jan 28 - Batch 2)
+
+- [x] Verify BOBALOVE10 discount prevents reuse by same customer (already implemented)
+- [x] Add birthday capture feature (month/day) on login
+- [x] Show birthday offer prompt to encourage users to enter birthday
+- [x] Add View Invoice button to customer My Orders page
+- [x] Add Download Invoice capability for customers
