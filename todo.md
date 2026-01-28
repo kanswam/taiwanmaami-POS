@@ -1161,3 +1161,28 @@ Orders fixed:
 - [x] Add phone number: 9150570557
 - [x] Add email: hello@taiwanmaami.com
 - [x] Remove old Print Bill button (replaced with View Invoice in OrderConfirmation.tsx)
+
+
+## Customer Profile Page (Jan 28)
+
+- [ ] Create Customer Profile page with Taiwan Maami branding
+- [ ] Add name, phone, email editing
+- [ ] Add birthday month/day editing
+- [ ] Add saved delivery addresses management
+- [ ] Add loyalty stamp progress display
+- [ ] Investigate OAuth page branding customization (remove Manus reference)
+
+
+## Customer Profile Page (Jan 28)
+
+- [x] Create customer profile page at /profile
+- [x] Show/edit name, phone, email
+- [x] Show/edit birthday (month/day) for birthday offer
+- [x] Manage saved delivery addresses (add, edit, delete, set default)
+- [x] Display loyalty stamp progress (current stamps, lifetime stamps, free rewards earned)
+- [ ] Add link to profile from header/navigation
+- [x] Fix GSTIN on all invoices to 33AAKCT4782H1Z1
+- [x] Fix phone number on invoices to 9150570557
+- [x] Fix email on invoices to hello@taiwanmaami.com
+- [x] Remove old Print Bill button (replaced with View Invoice)
+- [ ] OAuth branding customization (Manus platform limitation - cannot be changed from our side)

@@ -1691,6 +1691,35 @@ export const appRouter = router({
 
   // Profile routes
   profile: router({
+    // Get full user profile
+    getProfile: protectedProcedure.query(async ({ ctx }) => {
+      const user = await db.getUserById(ctx.user.id);
+      const birthday = await db.getUserBirthday(ctx.user.id);
+      const loyaltyInfo = await db.getUserLoyaltyInfo(ctx.user.id);
+      return {
+        id: user?.id,
+        name: user?.name,
+        email: user?.email,
+        phone: user?.phone,
+        birthMonth: birthday?.birthMonth,
+        birthDay: birthday?.birthDay,
+        loyaltyStamps: loyaltyInfo?.currentStamps || 0,
+        totalStampsEarned: loyaltyInfo?.totalStampsEarned || 0,
+        freeRewardsEarned: loyaltyInfo?.freeRewardsEarned || 0
+      };
+    }),
+
+    // Update user profile (name, phone)
+    updateProfile: protectedProcedure
+      .input(z.object({
+        name: z.string().min(1).optional(),
+        phone: z.string().optional()
+      }))
+      .mutation(async ({ ctx, input }) => {
+        await db.updateUserProfile(ctx.user.id, input);
+        return { success: true };
+      }),
+
     getBirthday: protectedProcedure.query(async ({ ctx }) => {
       const birthday = await db.getUserBirthday(ctx.user.id);
       return {

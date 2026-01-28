@@ -94,6 +94,42 @@ export async function getUserBirthday(userId: number) {
   return result.length > 0 ? result[0] : null;
 }
 
+// Get user loyalty info from users table
+export async function getUserLoyaltyInfo(userId: number) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  // Loyalty info is stored in users table (stampCount, lifetimeStamps)
+  const result = await db.select({
+    currentStamps: users.stampCount,
+    totalStampsEarned: users.lifetimeStamps,
+    loyaltyPoints: users.loyaltyPoints
+  }).from(users).where(eq(users.id, userId)).limit(1);
+  
+  // Calculate free rewards earned (every 10 stamps = 1 free drink)
+  const totalStamps = result.length > 0 ? result[0].totalStampsEarned : 0;
+  const freeRewardsEarned = Math.floor(totalStamps / 10);
+  
+  return result.length > 0 
+    ? { ...result[0], freeRewardsEarned } 
+    : { currentStamps: 0, totalStampsEarned: 0, freeRewardsEarned: 0 };
+}
+
+// Update user profile (name, phone)
+export async function updateUserProfile(userId: number, data: { name?: string; phone?: string }) {
+  const db = await getDb();
+  if (!db) return false;
+  
+  const updateData: Record<string, unknown> = {};
+  if (data.name !== undefined) updateData.name = data.name;
+  if (data.phone !== undefined) updateData.phone = data.phone;
+  
+  if (Object.keys(updateData).length > 0) {
+    await db.update(users).set(updateData).where(eq(users.id, userId));
+  }
+  return true;
+}
+
 // Category functions
 export async function getCategories(activeOnly = true) {
   const db = await getDb();

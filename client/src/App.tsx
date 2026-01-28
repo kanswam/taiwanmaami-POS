@@ -30,6 +30,7 @@ import Franchise from "./pages/Franchise";
 import Shipping from "./pages/Shipping";
 import FAQ from "./pages/FAQ";
 import Events from "./pages/Events";
+import Profile from "./pages/Profile";
 import AdminEvents from "./pages/AdminEvents";
 import { CookieConsent } from "./components/CookieConsent";
 import { BirthdayPromptWrapper } from "./components/BirthdayPromptWrapper";
@@ -70,6 +71,7 @@ function Router() {
       <Route path="/order-confirmation/:orderId" component={OrderConfirmation} />
       <Route path="/track" component={OrderTracking} />
       <Route path="/orders" component={Orders} />
+      <Route path="/profile" component={Profile} />
       <Route path="/events" component={Events} />
       
       {/* Content Pages */}
