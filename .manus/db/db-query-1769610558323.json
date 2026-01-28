@@ -1,0 +1,22 @@
+{
+  "query": "SELECT id, orderNumber, orderType, subtotal, stateGst, centralGst, deliveryCharge, totalAmount, paymentStatus, paymentMethod FROM orders WHERE orderNumber = '00206';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT id, orderNumber, orderType, subtotal, stateGst, centralGst, deliveryCharge, totalAmount, paymentStatus, paymentMethod FROM orders WHERE orderNumber = '00206';",
+  "rows": [
+    {
+      "id": "1470002",
+      "orderNumber": "00206",
+      "orderType": "delivery",
+      "subtotal": "173000",
+      "stateGst": "4325",
+      "centralGst": "4325",
+      "deliveryCharge": "10000",
+      "totalAmount": "174350",
+      "paymentStatus": "completed",
+      "paymentMethod": "razorpay"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\torderNumber\torderType\tsubtotal\tstateGst\tcentralGst\tdeliveryCharge\ttotalAmount\tpaymentStatus\tpaymentMethod\n1470002\t00206\tdelivery\t173000\t4325\t4325\t10000\t174350\tcompleted\trazorpay\n",
+  "stderr": "",
+  "execution_time_ms": 1569
+}

@@ -1678,6 +1678,147 @@ function CategoriesTab() {
   );
 }
 
+// Generate Tax Invoice HTML for an order
+function generateOrderInvoice(order: any): string {
+  const formatPrice = (paise: number) => `₹${(paise / 100).toFixed(2)}`;
+  const orderDate = new Date(order.createdAt).toLocaleDateString('en-IN', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+  
+  const items = order.items || [];
+  const itemsHtml = items.map((item: any) => `
+    <tr>
+      <td style="padding: 8px; border-bottom: 1px solid #eee;">
+        ${item.product?.name || item.productName || 'Unknown'}
+        ${item.size ? `<br><small style="color: #666;">Size: ${item.size}</small>` : ''}
+        ${item.addons ? `<br><small style="color: #666;">Add-ons: ${item.addons}</small>` : ''}
+      </td>
+      <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: center;">${item.quantity}</td>
+      <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: right;">${formatPrice(item.unitPrice || 0)}</td>
+      <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: right;">${formatPrice(item.lineTotal || item.totalPrice || (item.unitPrice * item.quantity))}</td>
+    </tr>
+  `).join('');
+  
+  return `
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Tax Invoice - Order #${order.orderNumber}</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+    .header { text-align: center; border-bottom: 2px solid #B45309; padding-bottom: 20px; margin-bottom: 20px; }
+    .header h1 { color: #B45309; margin: 0; }
+    .header p { margin: 5px 0; color: #666; }
+    .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+    .info-box { background: #f9f9f9; padding: 15px; border-radius: 8px; }
+    .info-box h3 { margin: 0 0 10px 0; color: #333; font-size: 14px; }
+    .info-box p { margin: 5px 0; font-size: 13px; }
+    table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+    th { background: #B45309; color: white; padding: 10px; text-align: left; }
+    .totals { background: #f9f9f9; padding: 15px; border-radius: 8px; }
+    .totals-row { display: flex; justify-content: space-between; padding: 5px 0; }
+    .totals-row.total { font-weight: bold; font-size: 18px; border-top: 2px solid #B45309; padding-top: 10px; margin-top: 10px; }
+    .discount { color: #16a34a; }
+    .footer { text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; color: #666; font-size: 12px; }
+    @media print { body { padding: 0; } }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>Taiwan Maami</h1>
+    <p>Thamarai Foods and Trading Private Limited</p>
+    <p>GSTIN: 33AADCT4567A1ZH</p>
+    <p style="font-size: 18px; font-weight: bold; margin-top: 10px;">TAX INVOICE</p>
+  </div>
+  
+  <div class="info-grid">
+    <div class="info-box">
+      <h3>Invoice Details</h3>
+      <p><strong>Invoice No:</strong> INV-${order.orderNumber}</p>
+      <p><strong>Order No:</strong> #${order.orderNumber}</p>
+      <p><strong>Date:</strong> ${orderDate}</p>
+      <p><strong>Order Type:</strong> ${order.orderType === 'delivery' ? 'Delivery' : order.orderType === 'pickup' ? 'Pickup' : 'Dine-in'}</p>
+    </div>
+    <div class="info-box">
+      <h3>Customer Details</h3>
+      <p><strong>Name:</strong> ${order.customerName || 'Guest'}</p>
+      <p><strong>Phone:</strong> ${order.customerPhone || 'N/A'}</p>
+      ${order.deliveryAddress ? `<p><strong>Address:</strong> ${order.deliveryAddress}</p>` : ''}
+    </div>
+  </div>
+  
+  <table>
+    <thead>
+      <tr>
+        <th>Item</th>
+        <th style="text-align: center;">Qty</th>
+        <th style="text-align: right;">Unit Price</th>
+        <th style="text-align: right;">Amount</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${itemsHtml}
+    </tbody>
+  </table>
+  
+  <div class="totals">
+    <div class="totals-row">
+      <span>Subtotal</span>
+      <span>${formatPrice(order.subtotal || 0)}</span>
+    </div>
+    ${order.discountAmount > 0 ? `
+    <div class="totals-row discount">
+      <span>Discount ${order.discountCode ? `(${order.discountCode})` : ''}</span>
+      <span>-${formatPrice(order.discountAmount)}</span>
+    </div>
+    ` : ''}
+    ${order.manualDiscountAmount > 0 ? `
+    <div class="totals-row discount">
+      <span>Manual Discount ${order.manualDiscountReason ? `(${order.manualDiscountReason})` : ''}</span>
+      <span>-${formatPrice(order.manualDiscountAmount)}</span>
+    </div>
+    ` : ''}
+    <div class="totals-row">
+      <span>SGST (2.5%)</span>
+      <span>${formatPrice(order.stateGst || 0)}</span>
+    </div>
+    <div class="totals-row">
+      <span>CGST (2.5%)</span>
+      <span>${formatPrice(order.centralGst || 0)}</span>
+    </div>
+    ${order.deliveryCharge > 0 ? `
+    <div class="totals-row">
+      <span>Delivery Charge</span>
+      <span>${formatPrice(order.deliveryCharge)}</span>
+    </div>
+    ` : ''}
+    <div class="totals-row total">
+      <span>Total Amount</span>
+      <span>${formatPrice(order.totalAmount)}</span>
+    </div>
+  </div>
+  
+  ${order.razorpayPaymentId ? `
+  <div style="margin-top: 20px; padding: 10px; background: #f0fdf4; border-radius: 8px;">
+    <p style="margin: 0; color: #16a34a;"><strong>Payment Received</strong></p>
+    <p style="margin: 5px 0 0 0; font-size: 12px; color: #666;">Payment ID: ${order.razorpayPaymentId}</p>
+  </div>
+  ` : ''}
+  
+  <div class="footer">
+    <p>Thank you for your order!</p>
+    <p>Taiwan Maami - Crafted Daily. Enjoy Thoughtfully.</p>
+    <p>For queries: +91 98765 43210 | hello@taiwanmaami.com</p>
+  </div>
+</body>
+</html>
+  `;
+}
+
 // Orders Tab
 function OrdersTab() {
   const { data: orders, refetch } = trpc.orders.getRecent.useQuery({ limit: 100 });
@@ -2110,15 +2251,67 @@ function OrdersTab() {
                 </div>
               </div>
 
-              {/* Order Total */}
-              <div className="border-t pt-4">
-                <div className="flex justify-between items-center text-lg font-semibold">
+              {/* Price Breakdown */}
+              <div className="border-t pt-4 space-y-2">
+                <h4 className="font-semibold mb-2">Price Breakdown</h4>
+                
+                {/* Subtotal */}
+                <div className="flex justify-between text-sm">
+                  <span>Subtotal</span>
+                  <span>{formatPrice((orderDetails as any).subtotal || 0)}</span>
+                </div>
+                
+                {/* Discount */}
+                {((orderDetails as any).discountAmount > 0 || (orderDetails as any).discountCode) && (
+                  <div className="flex justify-between text-sm text-green-600">
+                    <span>
+                      Discount
+                      {(orderDetails as any).discountCode && (
+                        <span className="ml-1 text-xs bg-green-100 px-1.5 py-0.5 rounded">
+                          {(orderDetails as any).discountCode}
+                        </span>
+                      )}
+                    </span>
+                    <span>-{formatPrice((orderDetails as any).discountAmount || 0)}</span>
+                  </div>
+                )}
+                
+                {/* Manual Discount */}
+                {(orderDetails as any).manualDiscountAmount > 0 && (
+                  <div className="flex justify-between text-sm text-green-600">
+                    <span>
+                      Manual Discount
+                      {(orderDetails as any).manualDiscountReason && (
+                        <span className="ml-1 text-xs text-muted-foreground">({(orderDetails as any).manualDiscountReason})</span>
+                      )}
+                    </span>
+                    <span>-{formatPrice((orderDetails as any).manualDiscountAmount)}</span>
+                  </div>
+                )}
+                
+                {/* GST */}
+                <div className="flex justify-between text-sm text-muted-foreground">
+                  <span>SGST (2.5%)</span>
+                  <span>{formatPrice((orderDetails as any).stateGst || 0)}</span>
+                </div>
+                <div className="flex justify-between text-sm text-muted-foreground">
+                  <span>CGST (2.5%)</span>
+                  <span>{formatPrice((orderDetails as any).centralGst || 0)}</span>
+                </div>
+                
+                {/* Delivery Charge */}
+                {(orderDetails as any).deliveryCharge > 0 && (
+                  <div className="flex justify-between text-sm">
+                    <span>Delivery Charge</span>
+                    <span>{formatPrice((orderDetails as any).deliveryCharge)}</span>
+                  </div>
+                )}
+                
+                {/* Total */}
+                <div className="flex justify-between items-center text-lg font-semibold border-t pt-2 mt-2">
                   <span>Total</span>
                   <span>{formatPrice(orderDetails.totalAmount)}</span>
                 </div>
-                {(orderDetails as any).gstAmount > 0 && (
-                  <p className="text-sm text-muted-foreground text-right">Includes GST: {formatPrice((orderDetails as any).gstAmount)}</p>
-                )}
               </div>
 
               {/* Special Instructions */}
@@ -2128,6 +2321,24 @@ function OrdersTab() {
                   <p className="text-amber-700">{orderDetails.specialInstructions}</p>
                 </div>
               )}
+              
+              {/* View Invoice Button */}
+              <div className="border-t pt-4">
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => {
+                    // Generate and open invoice in new tab
+                    const invoiceHtml = generateOrderInvoice(orderDetails);
+                    const blob = new Blob([invoiceHtml], { type: 'text/html' });
+                    const url = URL.createObjectURL(blob);
+                    window.open(url, '_blank');
+                  }}
+                >
+                  <FileText className="w-4 h-4 mr-2" />
+                  View Tax Invoice
+                </Button>
+              </div>
             </div>
           ) : (
             <div className="flex items-center justify-center py-8">

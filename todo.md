@@ -1115,3 +1115,19 @@ Orders fixed:
 
 - [x] Show reconciliation/write-off notes when hovering on the badge (tooltip)
 - [x] Allow viewing the recorded message for reconciled/written-off orders
+
+
+## CRITICAL BUG - Delivery Fee Still Missing (Jan 28)
+
+- [ ] Order 00206 charged ₹1,743.50 instead of ₹1,843.50 (missing ₹100 delivery fee)
+- [ ] Investigate why previous fix is not working
+- [ ] Fix the payment amount calculation
+
+
+## Admin Order Details Enhancement (Jan 28)
+
+- [x] Show discount code used in order modal
+- [x] Show discount amount in order modal
+- [x] Show delivery charge in order modal
+- [x] Add full price breakdown (Subtotal, Discount, GST, Delivery, Total)
+- [x] Add View/Download Invoice button to admin order details
