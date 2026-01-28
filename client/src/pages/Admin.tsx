@@ -1733,7 +1733,8 @@ function generateOrderInvoice(order: any): string {
   <div class="header">
     <h1>Taiwan Maami</h1>
     <p>Thamarai Foods and Trading Private Limited</p>
-    <p>GSTIN: 33AADCT4567A1ZH</p>
+    <p>GSTIN: 33AAKCT4782H1Z1</p>
+    <p>Phone: +91 9150570557 | Email: hello@taiwanmaami.com</p>
     <p style="font-size: 18px; font-weight: bold; margin-top: 10px;">TAX INVOICE</p>
   </div>
   

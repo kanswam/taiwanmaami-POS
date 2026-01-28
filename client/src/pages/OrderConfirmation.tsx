@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Textarea } from '@/components/ui/textarea';
 import { trpc } from '@/lib/trpc';
 import { formatPrice } from '@shared/types';
-import { CheckCircle, Clock, MapPin, Phone, ArrowRight, RefreshCw, Printer, UtensilsCrossed } from 'lucide-react';
+import { CheckCircle, Clock, MapPin, Phone, ArrowRight, RefreshCw, FileText, UtensilsCrossed } from 'lucide-react';
 import { OrderTracker } from '@/components/OrderTracker';
 
 export default function OrderConfirmation() {
@@ -234,10 +234,13 @@ export default function OrderConfirmation() {
             <Button 
               variant="outline" 
               className="flex-1"
-              onClick={() => window.print()}
+              onClick={() => {
+                // Redirect to My Orders where they can view/download invoice
+                window.location.href = '/orders';
+              }}
             >
-              <Printer className="w-4 h-4 mr-2" />
-              Print Bill
+              <FileText className="w-4 h-4 mr-2" />
+              View Invoice
             </Button>
             <Link href="/orders" className="flex-1">
               <Button variant="outline" className="w-full">

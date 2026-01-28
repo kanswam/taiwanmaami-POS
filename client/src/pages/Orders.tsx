@@ -57,7 +57,8 @@ function generateOrderInvoice(order: any): string {
   <div class="invoice-header">
     <div class="company-name">Taiwan Maami</div>
     <div class="company-info">Thamarai Foods and Trading Private Limited</div>
-    <div class="company-info">GSTIN: 33AADCT4567A1ZH</div>
+    <div class="company-info">GSTIN: 33AAKCT4782H1Z1</div>
+    <div class="company-info">Phone: +91 9150570557 | Email: hello@taiwanmaami.com</div>
     <div class="invoice-title">TAX INVOICE</div>
     <div class="divider"></div>
   </div>

@@ -1153,3 +1153,11 @@ Orders fixed:
 - [x] Fix Rupee symbol showing as â,' instead of ₹ (used Unicode escape \u20B9)
 - [x] Fix Chinese characters showing as garbled text (added UTF-8 charset meta tag)
 - [x] Ensure proper UTF-8 encoding in HTML blob creation (charset=utf-8)
+
+
+## CRITICAL: Fix Company Details on Invoices (Jan 28)
+
+- [x] Fix GSTIN from 33AADCT4567A1ZH to 33AAKCT4782H1Z1
+- [x] Add phone number: 9150570557
+- [x] Add email: hello@taiwanmaami.com
+- [x] Remove old Print Bill button (replaced with View Invoice in OrderConfirmation.tsx)
