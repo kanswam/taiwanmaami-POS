@@ -1204,3 +1204,10 @@ Orders fixed:
 - [x] Change Area field from dropdown to text input with autocomplete
 - [x] Show locality names (e.g., "Triplicane") instead of just pincodes
 - [x] Auto-populate pincode field when locality is selected
+
+## Chennai Localities & Pincode Lookup (Jan 28)
+
+- [x] Find comprehensive Chennai localities and pincodes data (from India Post via GitHub)
+- [x] Populate delivery_areas table with 73 verified Chennai localities
+- [x] Implement searchable locality lookup with autocomplete
+- [x] Ensure all pincodes are correct and verified

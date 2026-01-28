@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Header } from '@/components/Header';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -61,6 +61,18 @@ export default function Profile() {
   const [selectedArea, setSelectedArea] = useState('');
   const [pincode, setPincode] = useState('');
   const [landmark, setLandmark] = useState('');
+  const [areaSearch, setAreaSearch] = useState('');
+  
+  // Filter delivery areas based on search
+  const filteredAreas = useMemo(() => {
+    if (!deliveryAreas) return [];
+    if (!areaSearch) return deliveryAreas;
+    const search = areaSearch.toLowerCase();
+    return deliveryAreas.filter((area: any) => 
+      area.name.toLowerCase().includes(search) || 
+      area.pincode.includes(search)
+    );
+  }, [deliveryAreas, areaSearch]);
   
   // Mutations
   const updateProfileMutation = trpc.profile.updateProfile.useMutation({
@@ -517,30 +529,44 @@ export default function Profile() {
             </div>
             <div>
               <Label>Locality / Area *</Label>
-              <Select 
-                value={selectedArea} 
-                onValueChange={(value) => {
-                  setSelectedArea(value);
-                  // Auto-populate pincode when area is selected
-                  const area = deliveryAreas?.find((a: any) => a.name === value);
-                  if (area) {
-                    setPincode(area.pincode);
-                  }
-                }}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select your locality (e.g., Triplicane)" />
-                </SelectTrigger>
-                <SelectContent>
-                  {deliveryAreas?.map((area: any) => (
-                    <SelectItem key={area.id} value={area.name}>
-                      {area.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="relative">
+                <Input
+                  value={selectedArea || areaSearch}
+                  onChange={(e) => {
+                    setAreaSearch(e.target.value);
+                    setSelectedArea('');
+                    setPincode('');
+                  }}
+                  placeholder="Type to search (e.g., Triplicane, T Nagar...)"
+                  className="mb-1"
+                />
+                {areaSearch && !selectedArea && filteredAreas.length > 0 && (
+                  <div className="absolute z-50 w-full bg-white border rounded-md shadow-lg max-h-48 overflow-y-auto">
+                    {filteredAreas.slice(0, 10).map((area: any) => (
+                      <button
+                        key={area.id}
+                        type="button"
+                        className="w-full px-3 py-2 text-left hover:bg-muted flex justify-between items-center"
+                        onClick={() => {
+                          setSelectedArea(area.name);
+                          setPincode(area.pincode);
+                          setAreaSearch('');
+                        }}
+                      >
+                        <span>{area.name}</span>
+                        <span className="text-xs text-muted-foreground">{area.pincode}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+                {areaSearch && !selectedArea && filteredAreas.length === 0 && (
+                  <div className="absolute z-50 w-full bg-white border rounded-md shadow-lg p-3 text-sm text-muted-foreground">
+                    No matching areas found. We currently deliver to select areas in Chennai.
+                  </div>
+                )}
+              </div>
               <p className="text-xs text-muted-foreground mt-1">
-                We currently deliver to select areas in Chennai
+                {deliveryAreas?.length || 0} Chennai localities available
               </p>
             </div>
             <div>
