@@ -65,13 +65,14 @@ export default function Profile() {
   
   // Filter delivery areas based on search
   const filteredAreas = useMemo(() => {
-    if (!deliveryAreas) return [];
+    if (!deliveryAreas || !Array.isArray(deliveryAreas)) return [];
     if (!areaSearch) return deliveryAreas;
     const search = areaSearch.toLowerCase();
-    return deliveryAreas.filter((area: any) => 
-      area.name.toLowerCase().includes(search) || 
-      area.pincode.includes(search)
-    );
+    return deliveryAreas.filter((area: any) => {
+      if (!area || !area.name || !area.pincode) return false;
+      return area.name.toLowerCase().includes(search) || 
+        area.pincode.toString().includes(search);
+    });
   }, [deliveryAreas, areaSearch]);
   
   // Mutations
