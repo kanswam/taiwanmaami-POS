@@ -1680,7 +1680,7 @@ function CategoriesTab() {
 
 // Generate Tax Invoice HTML for an order
 function generateOrderInvoice(order: any): string {
-  const formatPrice = (paise: number) => `₹${(paise / 100).toFixed(2)}`;
+  const formatPrice = (paise: number) => `\u20B9${(paise / 100).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   const orderDate = new Date(order.createdAt).toLocaleDateString('en-IN', {
     day: '2-digit',
     month: 'short',
@@ -1705,8 +1705,10 @@ function generateOrderInvoice(order: any): string {
   
   return `
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
   <title>Tax Invoice - Order #${order.orderNumber}</title>
   <style>
     body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
@@ -2330,7 +2332,7 @@ function OrdersTab() {
                   onClick={() => {
                     // Generate and open invoice in new tab
                     const invoiceHtml = generateOrderInvoice(orderDetails);
-                    const blob = new Blob([invoiceHtml], { type: 'text/html' });
+                    const blob = new Blob([invoiceHtml], { type: 'text/html;charset=utf-8' });
                     const url = URL.createObjectURL(blob);
                     window.open(url, '_blank');
                   }}

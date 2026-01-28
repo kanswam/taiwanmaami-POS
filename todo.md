@@ -1146,3 +1146,10 @@ Orders fixed:
 - [x] Show birthday offer prompt to encourage users to enter birthday
 - [x] Add View Invoice button to customer My Orders page
 - [x] Add Download Invoice capability for customers
+
+
+## CRITICAL: Invoice Encoding Bug (Jan 28)
+
+- [x] Fix Rupee symbol showing as â,' instead of ₹ (used Unicode escape \u20B9)
+- [x] Fix Chinese characters showing as garbled text (added UTF-8 charset meta tag)
+- [x] Ensure proper UTF-8 encoding in HTML blob creation (charset=utf-8)
