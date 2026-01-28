@@ -1191,3 +1191,10 @@ Orders fixed:
 ## Profile Link in Navigation (Jan 28)
 
 - [x] Add Profile link/icon to Header for logged-in users (desktop and mobile)
+
+## Birthday Feature Updates (Jan 28)
+
+- [x] Lock birthday editing after first entry (users cannot change birthday once set)
+- [x] Update birthday offer text to "FREE large boba drink (worth over ₹450) with any food or drink purchase"
+- [x] Add server-side validation to prevent birthday changes via API
+- [x] Add "Birthday cannot be changed once set" message on Profile page

@@ -1736,6 +1736,14 @@ export const appRouter = router({
         birthDay: z.number().min(1).max(31)
       }))
       .mutation(async ({ ctx, input }) => {
+        // Check if birthday is already set - prevent changes
+        const existingBirthday = await db.getUserBirthday(ctx.user.id);
+        if (existingBirthday?.birthMonth && existingBirthday?.birthDay) {
+          throw new TRPCError({ 
+            code: 'FORBIDDEN', 
+            message: 'Birthday cannot be changed once set. Please contact support if you need to update it.' 
+          });
+        }
         await db.updateUserBirthday(ctx.user.id, input.birthMonth, input.birthDay);
         return { success: true };
       }),

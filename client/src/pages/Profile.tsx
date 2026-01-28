@@ -292,10 +292,10 @@ export default function Profile() {
               <Cake className="w-5 h-5 text-pink-500" />
               Birthday
             </h2>
-            {!isEditingBirthday && (
+            {!isEditingBirthday && !profile?.birthMonth && (
               <Button variant="outline" size="sm" onClick={() => setIsEditingBirthday(true)}>
                 <Edit2 className="w-4 h-4 mr-2" />
-                {profile?.birthMonth ? 'Edit' : 'Add'}
+                Add
               </Button>
             )}
           </div>
@@ -304,7 +304,7 @@ export default function Profile() {
             <div className="space-y-4">
               <div className="p-4 bg-pink-50 rounded-lg border border-pink-100">
                 <p className="text-sm text-pink-700">
-                  🎂 Share your birthday and get a <strong>FREE regular boba drink</strong> (up to ₹350) during your birthday week!
+                  🎂 Share your birthday and get a <strong>FREE large boba drink</strong> (worth over ₹450) with any food or drink purchase during your birthday week!
                 </p>
               </div>
               <div className="grid grid-cols-2 gap-4">
@@ -364,14 +364,19 @@ export default function Profile() {
           ) : (
             <div>
               {profile?.birthMonth && profile?.birthDay ? (
-                <div className="flex items-center gap-3 p-3 bg-pink-50 rounded-lg">
-                  <Gift className="w-5 h-5 text-pink-500" />
-                  <div>
-                    <p className="text-sm text-muted-foreground">Your Birthday</p>
-                    <p className="font-medium">
-                      {MONTHS.find(m => m.value === profile.birthMonth)?.label} {profile.birthDay}
-                    </p>
+                <div className="space-y-3">
+                  <div className="flex items-center gap-3 p-3 bg-pink-50 rounded-lg">
+                    <Gift className="w-5 h-5 text-pink-500" />
+                    <div>
+                      <p className="text-sm text-muted-foreground">Your Birthday</p>
+                      <p className="font-medium">
+                        {MONTHS.find(m => m.value === profile.birthMonth)?.label} {profile.birthDay}
+                      </p>
+                    </div>
                   </div>
+                  <p className="text-xs text-muted-foreground">
+                    Birthday cannot be changed once set. Contact us if you need to update it.
+                  </p>
                 </div>
               ) : (
                 <div className="p-4 bg-muted/50 rounded-lg text-center">
