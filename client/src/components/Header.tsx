@@ -116,6 +116,12 @@ export function Header() {
             {/* User menu */}
             {isAuthenticated ? (
               <div className="hidden md:flex items-center gap-2">
+                <Link href="/profile">
+                  <Button variant="ghost" size="sm">
+                    <User className="w-4 h-4 mr-1" />
+                    Profile
+                  </Button>
+                </Link>
                 <Link href="/orders">
                   <Button variant="ghost" size="sm">
                     My Orders
@@ -206,6 +212,14 @@ export function Header() {
 
                   {isAuthenticated ? (
                     <>
+                      <Link
+                        href="/profile"
+                        onClick={() => setMobileMenuOpen(false)}
+                        className="flex items-center gap-3 p-3 rounded-lg hover:bg-secondary"
+                      >
+                        <User className="w-5 h-5" />
+                        My Profile
+                      </Link>
                       <Link
                         href="/orders"
                         onClick={() => setMobileMenuOpen(false)}

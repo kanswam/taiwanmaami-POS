@@ -1186,3 +1186,8 @@ Orders fixed:
 - [x] Fix email on invoices to hello@taiwanmaami.com
 - [x] Remove old Print Bill button (replaced with View Invoice)
 - [ ] OAuth branding customization (Manus platform limitation - cannot be changed from our side)
+
+
+## Profile Link in Navigation (Jan 28)
+
+- [x] Add Profile link/icon to Header for logged-in users (desktop and mobile)
