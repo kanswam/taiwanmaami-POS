@@ -1577,6 +1577,8 @@ export const appRouter = router({
         // Calculate summary by payment method
         const summary: Record<string, { count: number; total: number }> = {};
         let grandTotal = 0;
+        let collectedRevenue = 0; // Actual money collected (excludes gifts)
+        let promotionalValue = 0; // Value of complimentary/birthday gift orders
         let totalOrders = 0;
         
         // Add orders to summary
@@ -1588,6 +1590,13 @@ export const appRouter = router({
           summary[method].count++;
           summary[method].total += order.totalAmount;
           grandTotal += order.totalAmount;
+          
+          // Track collected vs promotional separately
+          if (method === 'birthday_gift' || method === 'complimentary') {
+            promotionalValue += order.totalAmount;
+          } else {
+            collectedRevenue += order.totalAmount;
+          }
           totalOrders++;
         }
         
@@ -1622,6 +1631,8 @@ export const appRouter = router({
           })),
           summary,
           grandTotal,
+          collectedRevenue: collectedRevenue + workshopTotal, // Actual money collected
+          promotionalValue, // Value of birthday gifts and complimentary orders
           totalOrders: totalOrders + workshopCount,
           workshopStats: {
             count: workshopCount,

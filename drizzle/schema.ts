@@ -222,7 +222,7 @@ export const orders = mysqlTable("orders", {
   manualDiscountApprovedBy: int("manualDiscountApprovedBy"), // Admin user ID who approved
   staffNotes: text("staffNotes"), // Internal notes from staff about the order
   // Payment method for in-store orders (recorded at collection)
-  paymentMethod: mysqlEnum("paymentMethod", ["cash", "upi", "card", "razorpay", "swiggy_dineout", "zomato_dineout", "eazydiner", "other"]),
+  paymentMethod: mysqlEnum("paymentMethod", ["cash", "upi", "card", "razorpay", "swiggy_dineout", "zomato_dineout", "eazydiner", "birthday_gift", "complimentary", "other"]),
   // Payment proof screenshot URL (for non-cash payments)
   paymentProofUrl: text("paymentProofUrl"),
   refundAmount: int("refundAmount").default(0).notNull(),

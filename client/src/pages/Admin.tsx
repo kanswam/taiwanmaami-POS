@@ -2191,7 +2191,15 @@ function OrdersTab() {
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Payment</p>
-                  <p className="font-medium capitalize">{(orderDetails as any).paymentMethod || 'N/A'} - {orderDetails.paymentStatus}</p>
+                  <p className="font-medium capitalize">
+                    {(orderDetails as any).paymentMethod === 'birthday_gift' ? (
+                      <span className="text-amber-600">🎂 Birthday Gift</span>
+                    ) : (orderDetails as any).paymentMethod === 'complimentary' ? (
+                      <span className="text-amber-600">🎁 Complimentary</span>
+                    ) : (
+                      <>{(orderDetails as any).paymentMethod || 'N/A'} - {orderDetails.paymentStatus}</>
+                    )}
+                  </p>
                 </div>
                 <div className="col-span-2">
                   <p className="text-sm text-muted-foreground">Order Time</p>
@@ -6561,6 +6569,8 @@ function PaymentReportTab() {
     swiggy_dineout: 'Swiggy Dineout',
     zomato_dineout: 'Zomato Dineout',
     eazydiner: 'EazyDiner',
+    birthday_gift: 'Birthday Gift',
+    complimentary: 'Complimentary',
     other: 'Other',
     unknown: 'Not Recorded',
   };
@@ -6573,6 +6583,8 @@ function PaymentReportTab() {
     swiggy_dineout: '🟠',
     zomato_dineout: '🔴',
     eazydiner: '🟣',
+    birthday_gift: '🎂',
+    complimentary: '🎁',
     other: '📋',
     unknown: '❓',
   };
@@ -6688,20 +6700,28 @@ function PaymentReportTab() {
               ₹{(reportData.grandTotal / 100).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
             </p>
           </Card>
-          {Object.entries(reportData.summary).slice(0, 2).map(([method, data]) => (
-            <Card key={method} className="p-4">
+          <Card className="p-4 border-green-200 bg-green-50">
+            <p className="text-sm text-muted-foreground flex items-center gap-2">
+              <span>💰</span>
+              Amount Collected
+            </p>
+            <p className="text-xl font-bold text-green-700">
+              ₹{((reportData.collectedRevenue || reportData.grandTotal) / 100).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+            </p>
+            <p className="text-xs text-muted-foreground">Actual payments received</p>
+          </Card>
+          {(reportData.promotionalValue || 0) > 0 && (
+            <Card className="p-4 border-amber-200 bg-amber-50">
               <p className="text-sm text-muted-foreground flex items-center gap-2">
-                <span>{paymentMethodIcons[method] || '💰'}</span>
-                {paymentMethodLabels[method] || method}
+                <span>🎁</span>
+                Promotional Gifts
               </p>
-              <p className="text-xl font-bold">
-                {data.count} orders
+              <p className="text-xl font-bold text-amber-700">
+                ₹{((reportData.promotionalValue || 0) / 100).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
               </p>
-              <p className="text-sm text-muted-foreground">
-                ₹{(data.total / 100).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-              </p>
+              <p className="text-xs text-muted-foreground">Birthday gifts & complimentary</p>
             </Card>
-          ))}
+          )}
         </div>
       )}
 

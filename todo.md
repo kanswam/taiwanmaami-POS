@@ -1211,3 +1211,12 @@ Orders fixed:
 - [x] Populate delivery_areas table with 73 verified Chennai localities
 - [x] Implement searchable locality lookup with autocomplete
 - [x] Ensure all pincodes are correct and verified
+
+
+## Birthday Gift Order Handling (Jan 29)
+- [x] Add "Birthday Gift" payment type for complimentary orders
+- [x] Update order #214 payment status to show as "Birthday Gift" instead of "N/A - Pending"
+- [x] Update payment reports to categorize birthday gifts separately
+- [x] Exclude birthday gift orders from "Not Recorded" category
+- [x] Show birthday gifts as promotional/complimentary in sales totals
+- [x] Ensure collected revenue reflects actual payments (excluding gifts)
