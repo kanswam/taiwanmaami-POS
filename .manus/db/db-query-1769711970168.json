@@ -1,0 +1,17 @@
+{
+  "query": "SELECT id, orderNumber, paymentMethod, paymentStatus, totalAmount FROM orders WHERE orderNumber = '00214' OR id = 214;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT id, orderNumber, paymentMethod, paymentStatus, totalAmount FROM orders WHERE orderNumber = '00214' OR id = 214;",
+  "rows": [
+    {
+      "id": "1500004",
+      "orderNumber": "00214",
+      "paymentMethod": "birthday_gift",
+      "paymentStatus": "completed",
+      "totalAmount": "48826"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\torderNumber\tpaymentMethod\tpaymentStatus\ttotalAmount\n1500004\t00214\tbirthday_gift\tcompleted\t48826\n",
+  "stderr": "",
+  "execution_time_ms": 1573
+}
