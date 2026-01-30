@@ -1243,3 +1243,7 @@ Orders fixed:
 
 ## Hero Section Update (Jan 30)
 - [x] Replace "Order Now" button with "Order Online & Save" green banner in hero section
+
+## WhatsApp Number Update (Jan 30)
+- [x] Change WhatsApp button to T Nagar shop number (9150570557) instead of owner number
+- [x] Verify footer has both contact numbers displayed (already has both)
