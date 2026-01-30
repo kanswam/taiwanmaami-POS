@@ -1,0 +1,54 @@
+{
+  "query": "SELECT * FROM workshop_dates ORDER BY sessionDate;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT * FROM workshop_dates ORDER BY sessionDate;",
+  "rows": [
+    {
+      "id": "1",
+      "workshopId": "60001",
+      "sessionDate": "2026-02-07",
+      "startTime": "11:00",
+      "endTime": "14:00",
+      "maxCapacity": "8",
+      "bookedCount": "0",
+      "isActive": "1",
+      "createdAt": "2026-01-16 10:55:22"
+    },
+    {
+      "id": "2",
+      "workshopId": "60001",
+      "sessionDate": "2026-02-14",
+      "startTime": "11:00",
+      "endTime": "14:00",
+      "maxCapacity": "8",
+      "bookedCount": "1",
+      "isActive": "1",
+      "createdAt": "2026-01-16 10:55:22"
+    },
+    {
+      "id": "3",
+      "workshopId": "60001",
+      "sessionDate": "2026-02-21",
+      "startTime": "11:00",
+      "endTime": "14:00",
+      "maxCapacity": "8",
+      "bookedCount": "0",
+      "isActive": "1",
+      "createdAt": "2026-01-16 10:55:22"
+    },
+    {
+      "id": "4",
+      "workshopId": "60001",
+      "sessionDate": "2026-02-28",
+      "startTime": "11:00",
+      "endTime": "14:00",
+      "maxCapacity": "8",
+      "bookedCount": "0",
+      "isActive": "1",
+      "createdAt": "2026-01-16 10:55:22"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tworkshopId\tsessionDate\tstartTime\tendTime\tmaxCapacity\tbookedCount\tisActive\tcreatedAt\n1\t60001\t2026-02-07\t11:00\t14:00\t8\t0\t1\t2026-01-16 10:55:22\n2\t60001\t2026-02-14\t11:00\t14:00\t8\t1\t1\t2026-01-16 10:55:22\n3\t60001\t2026-02-21\t11:00\t14:00\t8\t0\t1\t2026-01-16 10:55:22\n4\t60001\t2026-02-28\t11:00\t14:00\t8\t0\t1\t2026-01-16 10:55:22\n",
+  "stderr": "",
+  "execution_time_ms": 1501
+}

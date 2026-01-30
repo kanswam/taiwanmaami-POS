@@ -1223,3 +1223,16 @@ Orders fixed:
 
 ## Google Analytics Integration (Jan 30)
 - [x] Add Google Analytics tracking code (G-LN94GLCCQG) to website
+
+## Traffic & Conversion Improvements (Jan 30)
+- [ ] Add "Order Online & Save" promotional banner to homepage
+- [ ] Add floating WhatsApp order button
+- [ ] Update Biang Biang workshop banner - remove dates 7, 21, 28 Feb
+- [ ] Disable workshop bookings for removed dates (7, 21, 28 Feb)
+
+## Traffic & Conversion Improvements (Jan 30)
+- [x] Add "Order Online & Save" promotional banner on homepage
+- [x] Add floating WhatsApp order button (links to 919150570557)
+- [x] Update Biang Biang workshop banner to show only Feb 14
+- [x] Disable bookings for Feb 7, 21, 28 workshop dates (isActive = 0)
+- [x] Add Google Analytics tracking code (G-LN94GLCCQG)

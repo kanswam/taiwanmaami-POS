@@ -33,6 +33,7 @@ import Events from "./pages/Events";
 import Profile from "./pages/Profile";
 import AdminEvents from "./pages/AdminEvents";
 import { CookieConsent } from "./components/CookieConsent";
+import { WhatsAppButton } from "./components/WhatsAppButton";
 import { BirthdayPromptWrapper } from "./components/BirthdayPromptWrapper";
 import { WholesaleAuthProvider } from "./contexts/WholesaleAuthContext";
 
@@ -119,6 +120,7 @@ function App() {
             <Router />
             <CookieConsent />
             <BirthdayPromptWrapper />
+            <WhatsAppButton />
           </TooltipProvider>
         </CartProvider>
         </WholesaleAuthProvider>

@@ -174,7 +174,7 @@ export default function Home() {
                     <div className="flex flex-wrap items-center gap-3 text-sm opacity-90 mt-1">
                       <span className="flex items-center gap-1">
                         <Calendar className="w-4 h-4" />
-                        Every Saturday in Feb (7, 14, 21, 28)
+                        Saturday, 14th February
                       </span>
                       <span className="flex items-center gap-1">
                         <Clock className="w-4 h-4" />
@@ -279,6 +279,29 @@ export default function Home() {
               </div>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* Order Online & Save Banner */}
+      <section className="py-6 bg-gradient-to-r from-green-600 to-emerald-500">
+        <div className="container">
+          <Link href="/menu">
+            <div className="flex flex-col md:flex-row items-center justify-between gap-4 text-white cursor-pointer hover:opacity-90 transition-opacity">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center">
+                  <ShoppingBag className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="text-lg md:text-xl font-bold">Order Online & Save!</h3>
+                  <p className="text-sm opacity-90">Skip the queue • Earn loyalty stamps • Get exclusive offers</p>
+                </div>
+              </div>
+              <Button className="bg-white text-green-600 hover:bg-white/90 font-semibold shadow-lg">
+                Order Now
+                <ArrowRight className="w-4 h-4 ml-2" />
+              </Button>
+            </div>
+          </Link>
         </div>
       </section>
 

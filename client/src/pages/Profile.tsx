@@ -28,7 +28,7 @@ const MONTHS = [
 ];
 
 export default function Profile() {
-  const { user, isLoading: authLoading } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const utils = trpc.useUtils();
   
   // Profile data
