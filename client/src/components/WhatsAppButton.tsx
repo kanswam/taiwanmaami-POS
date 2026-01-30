@@ -1,7 +1,7 @@
 import { MessageCircle } from 'lucide-react';
 
 export function WhatsAppButton() {
-  const phoneNumber = '919150570557'; // Taiwan Maami T Nagar WhatsApp
+  const phoneNumber = '917845053909'; // Taiwan Maami Owner WhatsApp
   const message = encodeURIComponent('Hi! I would like to place an order from Taiwan Maami.');
   const whatsappUrl = `https://wa.me/${phoneNumber}?text=${message}`;
 

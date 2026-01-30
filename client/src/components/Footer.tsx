@@ -60,9 +60,17 @@ export function Footer() {
             </div>
             <div className="mt-6">
               <h4 className="font-semibold mb-2">Contact</h4>
-              <a href="mailto:hello@taiwanmaami.com" className="text-sm text-background/70 hover:text-background">
-                hello@taiwanmaami.com
-              </a>
+              <div className="space-y-1 text-sm text-background/70">
+                <a href="mailto:hello@taiwanmaami.com" className="block hover:text-background">
+                  hello@taiwanmaami.com
+                </a>
+                <a href="tel:+917845053909" className="block hover:text-background">
+                  +91 78450 53909
+                </a>
+                <a href="tel:+919150570557" className="block hover:text-background">
+                  +91 91505 70557 (T Nagar)
+                </a>
+              </div>
             </div>
           </div>
           

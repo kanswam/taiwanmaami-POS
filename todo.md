@@ -1236,3 +1236,7 @@ Orders fixed:
 - [x] Update Biang Biang workshop banner to show only Feb 14
 - [x] Disable bookings for Feb 7, 21, 28 workshop dates (isActive = 0)
 - [x] Add Google Analytics tracking code (G-LN94GLCCQG)
+
+## Contact Numbers Update (Jan 30)
+- [x] Update WhatsApp button to use owner's number (7845053909)
+- [x] Add contact numbers section to footer (7845053909 and 9150570557)
