@@ -1220,3 +1220,6 @@ Orders fixed:
 - [x] Exclude birthday gift orders from "Not Recorded" category
 - [x] Show birthday gifts as promotional/complimentary in sales totals
 - [x] Ensure collected revenue reflects actual payments (excluding gifts)
+
+## Google Analytics Integration (Jan 30)
+- [x] Add Google Analytics tracking code (G-LN94GLCCQG) to website
