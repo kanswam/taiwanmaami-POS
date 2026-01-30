@@ -85,6 +85,7 @@ export function Footer() {
               <li><Link href="/refund" className="hover:text-background">Refund Policy</Link></li>
               <li><Link href="/shipping" className="hover:text-background">Shipping Policy</Link></li>
               <li><Link href="/faq" className="hover:text-background">FAQ</Link></li>
+              <li><Link href="/blog" className="hover:text-background">Blog</Link></li>
               <li><Link href="/franchise" className="hover:text-background">Franchise Opportunity</Link></li>
               <li><Link href="/events" className="hover:text-background">Events & Workshops</Link></li>
             </ul>

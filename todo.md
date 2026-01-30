@@ -1247,3 +1247,25 @@ Orders fixed:
 ## WhatsApp Number Update (Jan 30)
 - [x] Change WhatsApp button to T Nagar shop number (9150570557) instead of owner number
 - [x] Verify footer has both contact numbers displayed (already has both)
+
+## Blog Section & SEO Articles (Jan 30)
+- [ ] Create blog page with article listing
+- [ ] Write draft article: "What is Bubble Tea? A Complete Guide"
+- [ ] Write draft article: "Best Bubble Tea Flavors to Try in Chennai"
+- [ ] Write draft article: "Taiwan Maami - Our Story"
+- [ ] Add blog link to navigation
+- [ ] Verify footer has both phone numbers (production needs publishing)
+
+## Blog Section (Jan 30)
+
+- [x] Create blog_articles database table with SEO fields
+- [x] Add blog router with CRUD procedures (getPublished, getBySlug, getAll, create, update, delete)
+- [x] Create public Blog listing page at /blog
+- [x] Create BlogArticle page for individual articles at /blog/:slug
+- [x] Add static SEO articles as fallback content (What is Bubble Tea, Best Flavors, Our Story)
+- [x] Create AdminBlog page for article management at /admin/blog
+- [x] Add article status workflow: draft → pending_review → published
+- [x] Add "Submit for Review" button for Theresa approval workflow
+- [x] Add Blog link to navigation menu (added to footer quick links)
+- [x] Fix Footer contact section to show shop phone number (both Footer.tsx and Home.tsx updated)
+

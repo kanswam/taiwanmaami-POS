@@ -11,7 +11,7 @@ import { categories, subcategories, products, addons, orders, orderItems as orde
 import { eq, and, desc, asc, sql, or, gte } from "drizzle-orm";
 import { generateOrderNumber, calculateGst } from "@shared/types";
 // POS functionality removed - Employee Master import removed
-import { outletProducts, loyaltyRewards, stampTransactions, guestOrders, reviews, kotQueue, receiptQueue, productAuditLog, categoryAuditLog, complaints, eventInquiries, eventOrders, eventOrderItems, workshops, workshopBookings, workshopDates, workshopWaitlist, backupLogs } from "../drizzle/schema";
+import { outletProducts, loyaltyRewards, stampTransactions, guestOrders, reviews, kotQueue, receiptQueue, productAuditLog, categoryAuditLog, complaints, eventInquiries, eventOrders, eventOrderItems, workshops, workshopBookings, workshopDates, workshopWaitlist, backupLogs, blogArticles } from "../drizzle/schema";
 import { ENV } from './_core/env';
 import { wholesaleRouter } from './wholesaleRouter';
 import { notifyOwner } from './_core/notification';
@@ -6653,6 +6653,155 @@ export const appRouter = router({
         const { restoreFromBackup } = await import('./backup');
         const result = await restoreFromBackup(input.backupUrl, input.createPreRestoreBackup);
         return result;
+      }),
+  }),
+
+  // Blog for SEO
+  blog: router({
+    // Get published articles (public)
+    getPublished: publicProcedure
+      .input(z.object({ limit: z.number().default(10), offset: z.number().default(0) }).optional())
+      .query(async ({ input }) => {
+        const database = await getDb();
+        if (!database) return { articles: [], total: 0 };
+        
+        const limit = input?.limit || 10;
+        const offset = input?.offset || 0;
+        
+        const articles = await database.select()
+          .from(blogArticles)
+          .where(eq(blogArticles.status, 'published'))
+          .orderBy(desc(blogArticles.publishedAt))
+          .limit(limit)
+          .offset(offset);
+        
+        const countResult = await database.select({ count: sql<number>`count(*)` })
+          .from(blogArticles)
+          .where(eq(blogArticles.status, 'published'));
+        
+        return { articles: serializeDateArray(articles), total: countResult[0]?.count || 0 };
+      }),
+
+    // Get single article by slug (public)
+    getBySlug: publicProcedure
+      .input(z.object({ slug: z.string() }))
+      .query(async ({ input }) => {
+        const database = await getDb();
+        if (!database) throw new TRPCError({ code: 'NOT_FOUND' });
+        
+        const [article] = await database.select()
+          .from(blogArticles)
+          .where(eq(blogArticles.slug, input.slug));
+        
+        if (!article) throw new TRPCError({ code: 'NOT_FOUND' });
+        
+        // Increment view count for published articles
+        if (article.status === 'published') {
+          await database.update(blogArticles)
+            .set({ viewCount: sql`${blogArticles.viewCount} + 1` })
+            .where(eq(blogArticles.id, article.id));
+        }
+        
+        return serializeDates(article);
+      }),
+
+    // Get all articles (admin only)
+    getAll: adminProcedure
+      .input(z.object({ status: z.enum(['draft', 'pending_review', 'published', 'archived']).optional() }).optional())
+      .query(async ({ input }) => {
+        const database = await getDb();
+        if (!database) return [];
+        
+        let query = database.select().from(blogArticles).orderBy(desc(blogArticles.updatedAt));
+        
+        if (input?.status) {
+          const articles = await database.select()
+            .from(blogArticles)
+            .where(eq(blogArticles.status, input.status))
+            .orderBy(desc(blogArticles.updatedAt));
+          return serializeDateArray(articles);
+        }
+        
+        const articles = await query;
+        return serializeDateArray(articles);
+      }),
+
+    // Create article (admin only)
+    create: adminProcedure
+      .input(z.object({
+        title: z.string().min(1),
+        slug: z.string().min(1),
+        excerpt: z.string().optional(),
+        content: z.string().min(1),
+        metaTitle: z.string().optional(),
+        metaDescription: z.string().optional(),
+        keywords: z.string().optional(),
+        imageUrl: z.string().optional(),
+        authorName: z.string().optional(),
+        status: z.enum(['draft', 'pending_review', 'published', 'archived']).default('draft'),
+      }))
+      .mutation(async ({ input }) => {
+        const database = await getDb();
+        if (!database) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
+        
+        const publishedAt = input.status === 'published' ? new Date() : null;
+        
+        const [result] = await database.insert(blogArticles).values({
+          ...input,
+          publishedAt,
+        });
+        
+        return { id: result.insertId };
+      }),
+
+    // Update article (admin only)
+    update: adminProcedure
+      .input(z.object({
+        id: z.number(),
+        title: z.string().min(1).optional(),
+        slug: z.string().min(1).optional(),
+        excerpt: z.string().optional(),
+        content: z.string().optional(),
+        metaTitle: z.string().optional(),
+        metaDescription: z.string().optional(),
+        keywords: z.string().optional(),
+        imageUrl: z.string().optional(),
+        authorName: z.string().optional(),
+        status: z.enum(['draft', 'pending_review', 'published', 'archived']).optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const database = await getDb();
+        if (!database) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
+        
+        const { id, ...updateData } = input;
+        
+        // If publishing, set publishedAt
+        if (updateData.status === 'published') {
+          const [existing] = await database.select({ publishedAt: blogArticles.publishedAt })
+            .from(blogArticles)
+            .where(eq(blogArticles.id, id));
+          
+          if (!existing?.publishedAt) {
+            (updateData as any).publishedAt = new Date();
+          }
+        }
+        
+        await database.update(blogArticles)
+          .set(updateData)
+          .where(eq(blogArticles.id, id));
+        
+        return { success: true };
+      }),
+
+    // Delete article (admin only)
+    delete: adminProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        const database = await getDb();
+        if (!database) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
+        
+        await database.delete(blogArticles).where(eq(blogArticles.id, input.id));
+        return { success: true };
       }),
   }),
 

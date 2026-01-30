@@ -29,9 +29,12 @@ import Testimonials from "./pages/Testimonials";
 import Franchise from "./pages/Franchise";
 import Shipping from "./pages/Shipping";
 import FAQ from "./pages/FAQ";
+import Blog from "./pages/Blog";
+import BlogArticle from "./pages/BlogArticle";
 import Events from "./pages/Events";
 import Profile from "./pages/Profile";
 import AdminEvents from "./pages/AdminEvents";
+import AdminBlog from "./pages/AdminBlog";
 import { CookieConsent } from "./components/CookieConsent";
 import { WhatsAppButton } from "./components/WhatsAppButton";
 import { BirthdayPromptWrapper } from "./components/BirthdayPromptWrapper";
@@ -85,6 +88,8 @@ function Router() {
       <Route path="/franchise" component={Franchise} />
       <Route path="/shipping" component={Shipping} />
       <Route path="/faq" component={FAQ} />
+      <Route path="/blog" component={Blog} />
+      <Route path="/blog/:id" component={BlogArticle} />
       
       {/* Wholesale Routes */}
       <Route path="/wholesale" component={WholesaleLanding} />
@@ -99,6 +104,7 @@ function Router() {
       <Route path="/admin" component={Admin} />
       <Route path="/admin/analytics" component={Analytics} />
       <Route path="/admin/events" component={AdminEvents} />
+      <Route path="/admin/blog" component={AdminBlog} />
       <Route path="/admin/wholesale" component={WholesaleAdmin} />
       
       {/* Fallback */}

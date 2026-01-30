@@ -1056,3 +1056,25 @@ export const wholesalePasswordResets = mysqlTable("wholesale_password_resets", {
 
 export type WholesalePasswordReset = typeof wholesalePasswordResets.$inferSelect;
 export type InsertWholesalePasswordReset = typeof wholesalePasswordResets.$inferInsert;
+
+// Blog Articles for SEO
+export const blogArticles = mysqlTable("blog_articles", {
+  id: int("id").autoincrement().primaryKey(),
+  title: varchar("title", { length: 255 }).notNull(),
+  slug: varchar("slug", { length: 255 }).notNull().unique(),
+  excerpt: text("excerpt"), // Short summary for listing pages
+  content: text("content").notNull(), // Full article content (HTML or Markdown)
+  metaTitle: varchar("metaTitle", { length: 100 }), // SEO meta title
+  metaDescription: varchar("metaDescription", { length: 160 }), // SEO meta description
+  keywords: text("keywords"), // Comma-separated SEO keywords
+  imageUrl: text("imageUrl"), // Featured image
+  authorName: varchar("authorName", { length: 100 }).default("Taiwan Maami"),
+  status: mysqlEnum("status", ["draft", "pending_review", "published", "archived"]).default("draft").notNull(),
+  publishedAt: timestamp("publishedAt"),
+  viewCount: int("viewCount").default(0).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type BlogArticle = typeof blogArticles.$inferSelect;
+export type InsertBlogArticle = typeof blogArticles.$inferInsert;
