@@ -230,18 +230,20 @@ export default function Home() {
               <p className="text-lg sm:text-xl text-white/90 mb-8">
                 {heroDescription}
               </p>
-              <div className="flex flex-col sm:flex-row gap-4">
-                <Button 
-                  size="lg" 
-                  className="bg-white text-primary hover:bg-white/90 w-full sm:w-auto"
-                  onClick={() => {
-                    document.getElementById('order-options')?.scrollIntoView({ behavior: 'smooth' });
-                  }}
-                >
-                  Order Now
-                  <ArrowRight className="ml-2 w-5 h-5" />
-                </Button>
-              </div>
+              <Link href="/menu" className="inline-block">
+                <div className="bg-gradient-to-r from-green-600 to-emerald-500 rounded-xl p-4 sm:p-5 shadow-lg hover:shadow-xl transition-all hover:scale-[1.02] cursor-pointer">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center">
+                      <ShoppingBag className="w-6 h-6 text-white" />
+                    </div>
+                    <div className="text-white">
+                      <h3 className="text-lg sm:text-xl font-bold">Order Online & Save!</h3>
+                      <p className="text-sm opacity-90">Skip the queue • Earn loyalty stamps • Get exclusive offers</p>
+                    </div>
+                    <ArrowRight className="w-6 h-6 text-white ml-2 hidden sm:block" />
+                  </div>
+                </div>
+              </Link>
             </div>
           </div>
         </div>

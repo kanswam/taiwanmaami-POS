@@ -1240,3 +1240,6 @@ Orders fixed:
 ## Contact Numbers Update (Jan 30)
 - [x] Update WhatsApp button to use owner's number (7845053909)
 - [x] Add contact numbers section to footer (7845053909 and 9150570557)
+
+## Hero Section Update (Jan 30)
+- [x] Replace "Order Now" button with "Order Online & Save" green banner in hero section
