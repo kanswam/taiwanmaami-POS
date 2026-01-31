@@ -7,7 +7,8 @@ import { useCart } from '@/contexts/CartContext';
 import { trpc } from '@/lib/trpc';
 import { formatPrice, isOutletOpen } from '@shared/types';
 import { Minus, Plus, Trash2, ArrowLeft, ShoppingBag, Tag } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { trackViewCart, trackBeginCheckout, trackApplyDiscount, toGA4Item } from '@/lib/analytics';
 import { toast } from 'sonner';
 
 export default function Cart() {
@@ -26,6 +27,36 @@ export default function Cart() {
 
   const [discountInput, setDiscountInput] = useState('');
   const [isApplyingDiscount, setIsApplyingDiscount] = useState(false);
+  const hasTrackedViewCart = useRef(false);
+
+  // Track view_cart event when cart page loads with items
+  useEffect(() => {
+    if (itemCount > 0 && !hasTrackedViewCart.current) {
+      const ga4Items = state.items.map(item => toGA4Item({
+        id: item.productId,
+        name: item.productName,
+        category: 'Bubble Tea',
+        variant: item.size || undefined,
+        price: item.unitPrice + item.addonsTotal,
+        quantity: item.quantity,
+      }));
+      trackViewCart(ga4Items, subtotal / 100); // Convert paise to rupees
+      hasTrackedViewCart.current = true;
+    }
+  }, [itemCount, state.items, subtotal]);
+
+  // Track begin_checkout when proceeding to checkout
+  const handleProceedToCheckout = () => {
+    const ga4Items = state.items.map(item => toGA4Item({
+      id: item.productId,
+      name: item.productName,
+      category: 'Bubble Tea',
+      variant: item.size || undefined,
+      price: item.unitPrice + item.addonsTotal,
+      quantity: item.quantity,
+    }));
+    trackBeginCheckout(ga4Items, total / 100, state.discountCode || undefined);
+  };
 
   // Check ordering hours based on selected outlet and order type
   const selectedOutlet = state.orderType === 'instore' 
@@ -47,6 +78,7 @@ export default function Cart() {
     const result = await validateDiscount.refetch();
     if (result.data?.valid && result.data.discountAmount !== undefined) {
       applyDiscount(discountInput, result.data.discountAmount);
+      trackApplyDiscount(discountInput, true);
       toast.success('Discount applied!');
     } else {
       toast.error(result.data?.message || 'Invalid discount code');
@@ -292,7 +324,7 @@ export default function Cart() {
                 </div>
               ) : (
                 <Link href="/checkout">
-                  <Button className="w-full mt-6 h-12 text-lg">
+                  <Button className="w-full mt-6 h-12 text-lg" onClick={handleProceedToCheckout}>
                     Proceed to Checkout
                   </Button>
                 </Link>

@@ -1,9 +1,13 @@
-import { MessageCircle } from 'lucide-react';
+import { trackWhatsAppOrder } from '@/lib/analytics';
 
 export function WhatsAppButton() {
   const phoneNumber = '919150570557'; // Taiwan Maami T Nagar Shop WhatsApp
   const message = encodeURIComponent('Hi! I would like to place an order from Taiwan Maami.');
   const whatsappUrl = `https://wa.me/${phoneNumber}?text=${message}`;
+
+  const handleClick = () => {
+    trackWhatsAppOrder();
+  };
 
   return (
     <a
@@ -12,6 +16,7 @@ export function WhatsAppButton() {
       rel="noopener noreferrer"
       className="fixed bottom-6 right-6 z-50 flex items-center gap-2 bg-green-500 hover:bg-green-600 text-white px-4 py-3 rounded-full shadow-lg transition-all duration-300 hover:scale-105 group"
       aria-label="Order via WhatsApp"
+      onClick={handleClick}
     >
       <svg 
         viewBox="0 0 24 24" 

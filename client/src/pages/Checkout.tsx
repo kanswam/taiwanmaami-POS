@@ -1,5 +1,6 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useLocation } from 'wouter';
+import { trackPurchase, trackAddShippingInfo, trackAddPaymentInfo, toGA4Item } from '@/lib/analytics';
 import { Header } from '@/components/Header';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -119,6 +120,21 @@ export default function Checkout() {
               razorpayOrderId: response.razorpay_order_id,
               razorpayPaymentId: response.razorpay_payment_id,
               razorpaySignature: response.razorpay_signature,
+            });
+            
+            // Track GA4 purchase event
+            const ga4Items = state.items.map(item => toGA4Item({
+              id: item.productId,
+              name: item.productName,
+              category: 'Bubble Tea',
+              variant: item.size || undefined,
+              price: (item.unitPrice + item.addonsTotal) / 100,
+              quantity: item.quantity,
+            }));
+            trackPurchase(orderNumber, ga4Items, amount / 100, {
+              tax: gst.total / 100,
+              shipping: state.orderType === 'delivery' ? 100 : 0,
+              coupon: state.discountCode || undefined,
             });
             
             clearCart();
@@ -284,6 +300,20 @@ export default function Checkout() {
         await handleRazorpayPayment(orderData.orderId, orderData.orderNumber, orderData.totalAmount);
       } else {
         // Cash at pickup/counter - KOT is already created in backend for in-store orders
+        // Track GA4 purchase event for cash orders
+        const ga4Items = state.items.map(item => toGA4Item({
+          id: item.productId,
+          name: item.productName,
+          category: 'Bubble Tea',
+          variant: item.size || undefined,
+          price: (item.unitPrice + item.addonsTotal) / 100,
+          quantity: item.quantity,
+        }));
+        trackPurchase(orderData.orderNumber, ga4Items, orderData.totalAmount / 100, {
+          tax: gst.total / 100,
+          coupon: state.discountCode || undefined,
+        });
+        
         clearCart();
         toast.success(state.orderType === 'instore' ? 'Order placed! Pay at counter.' : 'Order placed! Pay at pickup.');
         navigate(`/order-confirmation/${orderData.orderNumber}`);

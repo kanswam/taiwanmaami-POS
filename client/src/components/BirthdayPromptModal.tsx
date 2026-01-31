@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { trpc } from '@/lib/trpc';
 import { Gift, Cake } from 'lucide-react';
+import { trackBirthdaySignup } from '@/lib/analytics';
 
 const MONTHS = [
   { value: '1', label: 'January' },
@@ -32,6 +33,8 @@ export function BirthdayPromptModal({ open, onClose }: BirthdayPromptModalProps)
 
   const updateBirthday = trpc.profile.updateBirthday.useMutation({
     onSuccess: () => {
+      // Track GA4 lead generation event
+      trackBirthdaySignup(parseInt(month), parseInt(day));
       onClose();
     },
     onError: (error) => {

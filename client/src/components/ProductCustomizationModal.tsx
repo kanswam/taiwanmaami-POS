@@ -1,5 +1,6 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { trackViewItem, toGA4Item } from '@/lib/analytics';
 import { Button } from '@/components/ui/button';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
@@ -96,6 +97,28 @@ export function ProductCustomizationModal({
       setQuantity(2);
     }
   }, [isDelivery, isMochiProduct]);
+
+  // Track view_item event when modal opens
+  const hasTrackedViewItem = useRef(false);
+  useEffect(() => {
+    if (open && !hasTrackedViewItem.current) {
+      const price = isDelivery 
+        ? (product.deliveryPrice || product.instorePrice || 0) 
+        : (product.instorePrice || product.deliveryPrice || 0);
+      trackViewItem(toGA4Item({
+        id: product.id,
+        name: product.name,
+        category: category?.name || 'Bubble Tea',
+        price: price / 100, // Convert paise to rupees
+        quantity: 1,
+      }));
+      hasTrackedViewItem.current = true;
+    }
+    // Reset when modal closes
+    if (!open) {
+      hasTrackedViewItem.current = false;
+    }
+  }, [open, product, category, isDelivery]);
   
   // Coconut Cream Cap option for all Iced Beverages (not just lattes)
   const [wantCoconutCreamCap, setWantCoconutCreamCap] = useState(false);

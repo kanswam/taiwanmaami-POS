@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useReducer, useEffect, ReactNode, useState } from 'react';
 import { CartItem, calculateGst, GST_RATE } from '@shared/types';
+import { trackAddToCart, trackRemoveFromCart, toGA4Item } from '@/lib/analytics';
 
 interface CartState {
   items: CartItem[];
@@ -220,8 +221,34 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const value: CartContextValue = {
     state,
-    addItem: (item) => dispatch({ type: 'ADD_ITEM', payload: item }),
-    removeItem: (id) => dispatch({ type: 'REMOVE_ITEM', payload: id }),
+    addItem: (item) => {
+      dispatch({ type: 'ADD_ITEM', payload: item });
+      // Track GA4 add_to_cart event
+      trackAddToCart(toGA4Item({
+        id: item.productId,
+        name: item.productName,
+        category: 'Bubble Tea',
+        variant: item.size || undefined,
+        price: item.unitPrice + item.addonsTotal,
+        quantity: item.quantity,
+      }));
+    },
+    removeItem: (id) => {
+      // Find item before removing for tracking
+      const itemToRemove = state.items.find(item => item.id === id);
+      dispatch({ type: 'REMOVE_ITEM', payload: id });
+      // Track GA4 remove_from_cart event
+      if (itemToRemove) {
+        trackRemoveFromCart(toGA4Item({
+          id: itemToRemove.productId,
+          name: itemToRemove.productName,
+          category: 'Bubble Tea',
+          variant: itemToRemove.size || undefined,
+          price: itemToRemove.unitPrice + itemToRemove.addonsTotal,
+          quantity: itemToRemove.quantity,
+        }));
+      }
+    },
     updateQuantity: (id, quantity) => dispatch({ type: 'UPDATE_QUANTITY', payload: { id, quantity } }),
     clearCart: () => dispatch({ type: 'CLEAR_CART' }),
     setOrderType: (type) => dispatch({ type: 'SET_ORDER_TYPE', payload: type }),

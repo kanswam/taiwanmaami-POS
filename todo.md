@@ -1274,3 +1274,15 @@ Orders fixed:
 
 - [x] Remove duplicate "Order Online & Save!" banner from landing page (keep only the one in hero section)
 
+
+## GA4 E-commerce & Traffic Optimization (Jan 31)
+
+- [x] Create GA4 analytics utility with e-commerce event functions (client/src/lib/analytics.ts)
+- [x] Add view_item event when viewing product details (ProductCustomizationModal)
+- [x] Add add_to_cart event when adding items to cart (CartContext)
+- [x] Add view_cart event when viewing cart page (Cart.tsx)
+- [x] Add begin_checkout event when starting checkout (Cart.tsx)
+- [x] Add purchase event when order is completed (Checkout.tsx - both online and cash)
+- [x] Add lead generation tracking (birthday signup, WhatsApp order clicks)
+- [ ] Test events in GA4 Realtime DebugView
+
