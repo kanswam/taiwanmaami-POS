@@ -739,6 +739,45 @@ export const appRouter = router({
         return { success: true };
       }),
 
+    // Staff can manually confirm payment for delivery orders (QR code payment, etc.)
+    confirmPaymentManually: staffProcedure
+      .input(z.object({
+        orderId: z.number(),
+        paymentMethod: z.enum(['upi', 'cash', 'card', 'other']).default('upi'),
+        notes: z.string().optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const dbInstance = await getDb();
+        if (!dbInstance) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
+        
+        // Get order details
+        const [order] = await dbInstance
+          .select()
+          .from(orders)
+          .where(eq(orders.id, input.orderId));
+        
+        if (!order) {
+          throw new TRPCError({ code: 'NOT_FOUND', message: 'Order not found' });
+        }
+        
+        // Only allow manual confirmation for pending delivery/pickup orders
+        if (order.paymentStatus === 'completed') {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: 'Payment already confirmed' });
+        }
+        
+        // Update payment status to completed
+        await dbInstance
+          .update(orders)
+          .set({
+            paymentStatus: 'completed',
+            paymentMethod: input.paymentMethod,
+            staffNotes: input.notes ? `[Manual Payment] ${input.notes}` : `[Manual Payment Confirmed by ${ctx.user.name || 'Staff'}]`,
+          })
+          .where(eq(orders.id, input.orderId));
+        
+        return { success: true, message: 'Payment confirmed manually' };
+      }),
+
     // Staff can view recent orders
     getRecent: staffProcedure
       .input(z.object({ 

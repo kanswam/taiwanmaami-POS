@@ -1,0 +1,60 @@
+{
+  "query": "SELECT id, orderType, paymentStatus FROM orders ORDER BY id DESC LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT id, orderType, paymentStatus FROM orders ORDER BY id DESC LIMIT 10;",
+  "rows": [
+    {
+      "id": "1590006",
+      "orderType": "delivery",
+      "paymentStatus": "pending"
+    },
+    {
+      "id": "1590005",
+      "orderType": "instore",
+      "paymentStatus": "pending"
+    },
+    {
+      "id": "1590004",
+      "orderType": "instore",
+      "paymentStatus": "pending"
+    },
+    {
+      "id": "1590003",
+      "orderType": "instore",
+      "paymentStatus": "completed"
+    },
+    {
+      "id": "1590002",
+      "orderType": "instore",
+      "paymentStatus": "completed"
+    },
+    {
+      "id": "1590001",
+      "orderType": "pickup",
+      "paymentStatus": "completed"
+    },
+    {
+      "id": "1560006",
+      "orderType": "instore",
+      "paymentStatus": "pending"
+    },
+    {
+      "id": "1560005",
+      "orderType": "instore",
+      "paymentStatus": "pending"
+    },
+    {
+      "id": "1560004",
+      "orderType": "instore",
+      "paymentStatus": "pending"
+    },
+    {
+      "id": "1560003",
+      "orderType": "pickup",
+      "paymentStatus": "pending"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\torderType\tpaymentStatus\n1590006\tdelivery\tpending\n1590005\tinstore\tpending\n1590004\tinstore\tpending\n1590003\tinstore\tcompleted\n1590002\tinstore\tcompleted\n1590001\tpickup\tcompleted\n1560006\tinstore\tpending\n1560005\tinstore\tpending\n1560004\tinstore\tpending\n1560003\tpickup\tpending\n",
+  "stderr": "",
+  "execution_time_ms": 1497
+}

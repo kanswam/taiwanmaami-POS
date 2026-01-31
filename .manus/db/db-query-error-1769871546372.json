@@ -1,0 +1,8 @@
+{
+  "query": "UPDATE orders SET payment_status = 'completed', payment_method = 'upi', staff_notes = '[Manual Payment Confirmed via QR Code]' WHERE order_number = '00230';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute UPDATE orders SET payment_status = 'completed', payment_method = 'upi', staff_notes = '[Manual Payment Confirmed via QR Code]' WHERE order_number = '00230';",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1054 (42S22) at line 1: Unknown column 'order_number' in 'where clause'"
+  ]
+}

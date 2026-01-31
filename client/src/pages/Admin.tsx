@@ -1902,6 +1902,16 @@ function OrdersTab() {
     onError: (err) => toast.error(err.message),
   });
 
+  // Manual payment confirmation for delivery orders (QR code payment)
+  // @ts-ignore - confirmPaymentManually is defined in routers.ts but tRPC types may not be regenerated yet
+  const confirmPaymentManually = trpc.orders.confirmPaymentManually?.useMutation({
+    onSuccess: () => {
+      toast.success('Payment confirmed! Order can now be prepared.');
+      refetch();
+    },
+    onError: (err: any) => toast.error(err.message),
+  });
+
   const handleApplyDiscount = () => {
     if (!discountOrderId || !discountValue) return;
     
@@ -2060,6 +2070,21 @@ function OrdersTab() {
                           disabled={updatePaymentStatus.isPending}
                         >
                           💰 Collect Payment
+                        </Button>
+                      )}
+                      {/* Confirm Payment button - for delivery/pickup orders with pending payment (QR code payment) */}
+                      {confirmPaymentManually && (order.orderType === 'delivery' || order.orderType === 'pickup') && order.paymentStatus === 'pending' && order.orderStatus !== 'completed' && order.orderStatus !== 'cancelled' && (
+                        <Button
+                          size="sm"
+                          className="bg-emerald-600 hover:bg-emerald-700 text-white"
+                          onClick={() => {
+                            if (confirm('Confirm that payment has been received via QR code/UPI?')) {
+                              confirmPaymentManually.mutate({ orderId: order.id, paymentMethod: 'upi' });
+                            }
+                          }}
+                          disabled={confirmPaymentManually.isPending}
+                        >
+                          ✅ Confirm Payment
                         </Button>
                       )}
                       {/* Reprint KOT button */}

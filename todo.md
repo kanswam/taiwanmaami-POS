@@ -1286,3 +1286,18 @@ Orders fixed:
 - [x] Add lead generation tracking (birthday signup, WhatsApp order clicks)
 - [ ] Test events in GA4 Realtime DebugView
 
+
+## Manual Payment Override (Jan 31)
+
+- [ ] Add manual payment confirmation for delivery orders (staff can confirm QR code payment)
+- [ ] Add "Confirm Payment" button in Admin/Staff Orders for pending delivery orders
+- [ ] Update order status to allow progression after manual payment confirmation
+
+
+
+## Manual Payment Override (Jan 31)
+
+- [x] Add confirmPaymentManually procedure to server (server/routers.ts)
+- [x] Add Confirm Payment button to Admin orders page for delivery/pickup orders
+- [x] Manually confirmed payment for Order #230 via database
+
