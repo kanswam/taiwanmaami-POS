@@ -1269,3 +1269,8 @@ Orders fixed:
 - [x] Add Blog link to navigation menu (added to footer quick links)
 - [x] Fix Footer contact section to show shop phone number (both Footer.tsx and Home.tsx updated)
 
+
+## Bug Fixes (Jan 31)
+
+- [x] Remove duplicate "Order Online & Save!" banner from landing page (keep only the one in hero section)
+
