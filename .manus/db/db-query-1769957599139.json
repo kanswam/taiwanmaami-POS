@@ -1,0 +1,9 @@
+{
+  "query": "UPDATE users SET stampCount = 0, lifetimeStamps = 0, lastStampDate = NULL WHERE id = 16200143;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute UPDATE users SET stampCount = 0, lifetimeStamps = 0, lastStampDate = NULL WHERE id = 16200143;",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 1493
+}

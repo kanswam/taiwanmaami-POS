@@ -1301,3 +1301,10 @@ Orders fixed:
 - [x] Add Confirm Payment button to Admin orders page for delivery/pickup orders
 - [x] Manually confirmed payment for Order #230 via database
 
+
+
+## Staff Stamp Prevention (Jan 31)
+
+- [x] Reset Rinold's stamps to 0 (current and lifetime)
+- [x] Add check in stamp-earning logic to skip staff/admin accounts
+

@@ -1,0 +1,22 @@
+{
+  "query": "SELECT id, openId, name, phone, email, role, stampCount, lifetimeStamps, lastStampDate, createdAt FROM users WHERE name LIKE '%Rinold%' OR name LIKE '%rinold%';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT id, openId, name, phone, email, role, stampCount, lifetimeStamps, lastStampDate, createdAt FROM users WHERE name LIKE '%Rinold%' OR name LIKE '%rinold%';",
+  "rows": [
+    {
+      "id": "16200143",
+      "openId": "cAPYMABDXAdS8vfS74mbtF",
+      "name": "Rinold Thousen",
+      "phone": "NULL",
+      "email": "rinoldthousen94@gmail.com",
+      "role": "staff",
+      "stampCount": "4",
+      "lifetimeStamps": "24",
+      "lastStampDate": "2026-02-01 09:18:45",
+      "createdAt": "2026-01-06 09:31:31"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\topenId\tname\tphone\temail\trole\tstampCount\tlifetimeStamps\tlastStampDate\tcreatedAt\n16200143\tcAPYMABDXAdS8vfS74mbtF\tRinold Thousen\tNULL\trinoldthousen94@gmail.com\tstaff\t4\t24\t2026-02-01 09:18:45\t2026-01-06 09:31:31\n",
+  "stderr": "",
+  "execution_time_ms": 1515
+}

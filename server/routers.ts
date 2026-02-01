@@ -612,14 +612,20 @@ export const appRouter = router({
         if (input.status === 'completed' && order && order.userId) {
           const orderTotal = order.totalAmount || 0;
           
-          // Get current user stamp count
+          // Get current user info including role
           const [user] = await dbInstance!
             .select({
               stampCount: users.stampCount,
               lifetimeStamps: users.lifetimeStamps,
+              role: users.role,
             })
             .from(users)
             .where(eq(users.id, order.userId));
+          
+          // Staff and admin accounts should not earn stamps
+          if (user?.role === 'staff' || user?.role === 'admin') {
+            // Skip stamp awarding for staff/admin
+          } else {
           
           const isFirstOrder = (user?.lifetimeStamps || 0) === 0;
           let stampsEarned = Math.floor(orderTotal / 45000); // 1 stamp per ₹450
@@ -683,6 +689,7 @@ export const appRouter = router({
                 .where(eq(users.id, order.userId));
             }
           }
+          } // Close else block for staff/admin check
         }
         
         // Deduct stamps when order is cancelled (if stamps were previously awarded)
@@ -3127,6 +3134,17 @@ export const appRouter = router({
       }))
       .mutation(async ({ ctx, input }) => {
         const dbInstance = await getDb();
+        
+        // Staff and admin accounts should not earn stamps
+        if (ctx.user.role === 'staff' || ctx.user.role === 'admin') {
+          return {
+            stampsEarned: 0,
+            currentStamps: 0,
+            rewardsCreated: 0,
+            isFirstOrder: false,
+            skippedReason: 'Staff/admin accounts do not earn loyalty stamps',
+          };
+        }
         
         // Get current user stamp count
         const [user] = await dbInstance!
