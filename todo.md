@@ -1308,3 +1308,24 @@ Orders fixed:
 - [x] Reset Rinold's stamps to 0 (current and lifetime)
 - [x] Add check in stamp-earning logic to skip staff/admin accounts
 
+
+## Walk-in Account & Staff Stamp Reset (Feb 1)
+
+- [x] Create "Walk-in Customer" account for staff to use when entering orders (ID: 20610643)
+- [x] Check all staff accounts and reset their stamps to 0 (11 accounts reset)
+
+
+## Physical to Digital Stamp Transfer (Feb 1)
+
+- [ ] Add server procedure for manual stamp adjustment (addStampsToCustomer)
+- [ ] Add UI in admin Customers section to add stamps to customer accounts
+- [ ] Test the feature
+
+
+
+## Physical to Digital Stamp Transfer (Feb 1)
+
+- [x] Add server procedure for manual stamp adjustment (addStamps in customers router)
+- [x] Add UI in admin panel for staff to add stamps to customer accounts
+- [x] Staff can transfer physical loyalty card stamps to digital accounts
+

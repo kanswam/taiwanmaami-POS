@@ -5332,6 +5332,57 @@ export const appRouter = router({
         return { success: true };
       }),
 
+    // Add stamps to customer (for transferring physical loyalty card stamps to digital)
+    addStamps: staffProcedure
+      .input(z.object({
+        customerId: z.number(),
+        stamps: z.number().min(1).max(10),
+        reason: z.string().optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const dbInstance = await getDb();
+        if (!dbInstance) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
+
+        // Get current user
+        const [customer] = await dbInstance.select().from(users).where(eq(users.id, input.customerId));
+        if (!customer) {
+          throw new TRPCError({ code: 'NOT_FOUND', message: 'Customer not found' });
+        }
+
+        // Don't allow adding stamps to staff/admin accounts
+        if (customer.role === 'staff' || customer.role === 'admin') {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: 'Cannot add stamps to staff or admin accounts' });
+        }
+
+        // Update stamp count
+        const newStampCount = (customer.stampCount || 0) + input.stamps;
+        const newLifetimeStamps = (customer.lifetimeStamps || 0) + input.stamps;
+
+        await dbInstance.update(users).set({
+          stampCount: newStampCount,
+          lifetimeStamps: newLifetimeStamps,
+          lastStampDate: new Date(),
+        }).where(eq(users.id, input.customerId));
+
+        // Record the stamp transaction
+        const { stampTransactions } = await import('../drizzle/schema.js');
+        await dbInstance.insert(stampTransactions).values({
+          userId: input.customerId,
+          orderId: null,
+          action: 'bonus',
+          stamps: input.stamps,
+          orderTotal: 0,
+          description: input.reason || `Physical card transfer by ${ctx.user.name}`,
+          createdAt: new Date(),
+        });
+
+        return { 
+          success: true, 
+          newStampCount,
+          message: `Added ${input.stamps} stamps to ${customer.name}'s account` 
+        };
+      }),
+
     // Get customer order history
     getOrderHistory: adminProcedure
       .input(z.object({

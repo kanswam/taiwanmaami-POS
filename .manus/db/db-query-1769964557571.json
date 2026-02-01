@@ -1,0 +1,98 @@
+{
+  "query": "SELECT id, name, phone, role, stampCount, lifetimeStamps FROM users WHERE role IN ('staff', 'admin') ORDER BY name;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT id, name, phone, role, stampCount, lifetimeStamps FROM users WHERE role IN ('staff', 'admin') ORDER BY name;",
+  "rows": [
+    {
+      "id": "18840705",
+      "name": "1060 Vindhiya",
+      "phone": "NULL",
+      "role": "staff",
+      "stampCount": "0",
+      "lifetimeStamps": "0"
+    },
+    {
+      "id": "18360071",
+      "name": "biakmawi771",
+      "phone": "NULL",
+      "role": "staff",
+      "stampCount": "0",
+      "lifetimeStamps": "0"
+    },
+    {
+      "id": "16200107",
+      "name": "Boichong Kipgen",
+      "phone": "NULL",
+      "role": "staff",
+      "stampCount": "1",
+      "lifetimeStamps": "1"
+    },
+    {
+      "id": "15510360",
+      "name": "Kannan Swamy",
+      "phone": "NULL",
+      "role": "admin",
+      "stampCount": "5",
+      "lifetimeStamps": "5"
+    },
+    {
+      "id": "16410062",
+      "name": "Lokesh kanna M P",
+      "phone": "NULL",
+      "role": "staff",
+      "stampCount": "4",
+      "lifetimeStamps": "4"
+    },
+    {
+      "id": "17040807",
+      "name": "MUJAMMIL.M",
+      "phone": "NULL",
+      "role": "staff",
+      "stampCount": "0",
+      "lifetimeStamps": "0"
+    },
+    {
+      "id": "16200386",
+      "name": "Naveen Kumar",
+      "phone": "NULL",
+      "role": "staff",
+      "stampCount": "0",
+      "lifetimeStamps": "0"
+    },
+    {
+      "id": "16620012",
+      "name": "Ringsoli Khempraei",
+      "phone": "NULL",
+      "role": "staff",
+      "stampCount": "0",
+      "lifetimeStamps": "0"
+    },
+    {
+      "id": "16200143",
+      "name": "Rinold Thousen",
+      "phone": "NULL",
+      "role": "staff",
+      "stampCount": "2",
+      "lifetimeStamps": "2"
+    },
+    {
+      "id": "16680498",
+      "name": "Sakthivel chinnathambi",
+      "phone": "NULL",
+      "role": "staff",
+      "stampCount": "0",
+      "lifetimeStamps": "0"
+    },
+    {
+      "id": "15510362",
+      "name": "Theresa Hu Cy",
+      "phone": "NULL",
+      "role": "admin",
+      "stampCount": "0",
+      "lifetimeStamps": "0"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\tphone\trole\tstampCount\tlifetimeStamps\n18840705\t1060 Vindhiya\tNULL\tstaff\t0\t0\n18360071\tbiakmawi771\tNULL\tstaff\t0\t0\n16200107\tBoichong Kipgen\tNULL\tstaff\t1\t1\n15510360\tKannan Swamy\tNULL\tadmin\t5\t5\n16410062\tLokesh kanna M P\tNULL\tstaff\t4\t4\n17040807\tMUJAMMIL.M\tNULL\tstaff\t0\t0\n16200386\tNaveen Kumar\tNULL\tstaff\t0\t0\n16620012\tRingsoli Khempraei\tNULL\tstaff\t0\t0\n16200143\tRinold Thousen\tNULL\tstaff\t2\t2\n16680498\tSakthivel chinnathambi\tNULL\tstaff\t0\t0\n15510362\tTheresa Hu Cy\tNULL\tadmin\t0\t0\n",
+  "stderr": "",
+  "execution_time_ms": 1542
+}

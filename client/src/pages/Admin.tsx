@@ -4177,6 +4177,10 @@ function CustomersTab() {
   const [editingCustomer, setEditingCustomer] = useState<{ id: number; name: string; phone: string; email: string; storeCredit: number; notes: string } | null>(null);
   const [sortColumn, setSortColumn] = useState<'name' | 'totalOrders' | 'totalSpent' | 'stampCount' | 'lastOrderDate'>('totalSpent');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
+  const [showAddStampsDialog, setShowAddStampsDialog] = useState(false);
+  const [stampCustomer, setStampCustomer] = useState<{ id: number; name: string; currentStamps: number } | null>(null);
+  const [stampsToAdd, setStampsToAdd] = useState(1);
+  const [stampReason, setStampReason] = useState('Physical loyalty card transfer');
 
   const handleSort = (column: typeof sortColumn) => {
     if (sortColumn === column) {
@@ -4219,6 +4223,18 @@ function CustomersTab() {
       refetch();
     },
     onError: (err) => toast.error(err.message),
+  });
+
+  const addStamps = (trpc.customers as any).addStamps?.useMutation({
+    onSuccess: (data: any) => {
+      toast.success(data.message);
+      setShowAddStampsDialog(false);
+      setStampCustomer(null);
+      setStampsToAdd(1);
+      setStampReason('Physical loyalty card transfer');
+      refetch();
+    },
+    onError: (err: any) => toast.error(err.message || 'Failed to add stamps'),
   });
 
   const filteredCustomers = (customersData?.customers?.filter(customer => {
@@ -4339,23 +4355,44 @@ function CustomersTab() {
                   </td>
                   <td className="p-3 text-center">
                     {customer.type === 'registered' && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => {
-                          setEditingCustomer({
-                            id: customer.id,
-                            name: customer.name || '',
-                            phone: customer.phone || '',
-                            email: customer.email || '',
-                            storeCredit: customer.storeCredit || 0,
-                            notes: customer.notes || '',
-                          });
-                          setShowEditDialog(true);
-                        }}
-                      >
-                        <Edit className="w-4 h-4" />
-                      </Button>
+                      <div className="flex items-center justify-center gap-1">
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => {
+                                setStampCustomer({
+                                  id: customer.id,
+                                  name: customer.name || 'Customer',
+                                  currentStamps: customer.stampCount || 0,
+                                });
+                                setShowAddStampsDialog(true);
+                              }}
+                            >
+                              <Star className="w-4 h-4 text-amber-500" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>Add Stamps</TooltipContent>
+                        </Tooltip>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setEditingCustomer({
+                              id: customer.id,
+                              name: customer.name || '',
+                              phone: customer.phone || '',
+                              email: customer.email || '',
+                              storeCredit: customer.storeCredit || 0,
+                              notes: customer.notes || '',
+                            });
+                            setShowEditDialog(true);
+                          }}
+                        >
+                          <Edit className="w-4 h-4" />
+                        </Button>
+                      </div>
                     )}
                   </td>
                 </tr>
@@ -4498,6 +4535,74 @@ function CustomersTab() {
               }}
             >
               {updateCustomer.isPending ? 'Saving...' : 'Save Changes'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add Stamps Dialog */}
+      <Dialog open={showAddStampsDialog} onOpenChange={(open) => {
+        setShowAddStampsDialog(open);
+        if (!open) {
+          setStampCustomer(null);
+          setStampsToAdd(1);
+          setStampReason('Physical loyalty card transfer');
+        }
+      }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add Stamps - Physical Card Transfer</DialogTitle>
+          </DialogHeader>
+          {stampCustomer && (
+            <div className="space-y-4 py-4">
+              <div className="p-4 bg-amber-50 rounded-lg border border-amber-200">
+                <p className="font-medium text-amber-800">{stampCustomer.name}</p>
+                <p className="text-sm text-amber-600">Current stamps: {stampCustomer.currentStamps}/10</p>
+              </div>
+              <div>
+                <Label>Number of stamps to add</Label>
+                <Select value={String(stampsToAdd)} onValueChange={(v) => setStampsToAdd(parseInt(v))}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(n => (
+                      <SelectItem key={n} value={String(n)}>{n} stamp{n > 1 ? 's' : ''}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>Reason</Label>
+                <Input
+                  value={stampReason}
+                  onChange={(e) => setStampReason(e.target.value)}
+                  placeholder="Physical loyalty card transfer"
+                />
+              </div>
+              <div className="p-3 bg-muted rounded-lg">
+                <p className="text-sm">After adding: <strong>{stampCustomer.currentStamps + stampsToAdd}/10 stamps</strong></p>
+                {stampCustomer.currentStamps + stampsToAdd >= 10 && (
+                  <p className="text-sm text-green-600 mt-1">🎉 Customer will qualify for a free drink!</p>
+                )}
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowAddStampsDialog(false)}>Cancel</Button>
+            <Button
+              disabled={!stampCustomer || addStamps.isPending}
+              onClick={() => {
+                if (stampCustomer) {
+                  addStamps.mutate({
+                    customerId: stampCustomer.id,
+                    stamps: stampsToAdd,
+                    reason: stampReason,
+                  });
+                }
+              }}
+            >
+              {addStamps.isPending ? 'Adding...' : `Add ${stampsToAdd} Stamp${stampsToAdd > 1 ? 's' : ''}`}
             </Button>
           </DialogFooter>
         </DialogContent>
