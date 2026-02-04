@@ -1329,3 +1329,10 @@ Orders fixed:
 - [x] Add UI in admin panel for staff to add stamps to customer accounts
 - [x] Staff can transfer physical loyalty card stamps to digital accounts
 
+
+## Bug Fixes (Feb 4)
+
+- [x] Fix customer search in Admin Panel not finding customers
+  - Issue: Search was filtering client-side on limited results (100 customers)
+  - Solution: Pass search term to server-side query with debouncing, increased limit to 500
+  - Customer Additi (phone: 9884058200) now searchable by name or phone

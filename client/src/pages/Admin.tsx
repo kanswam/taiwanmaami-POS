@@ -4168,8 +4168,21 @@ function ComplaintsTab() {
 
 // Customers Tab Component
 function CustomersTab() {
-  const { data: customersData, refetch } = trpc.customers.getAll.useQuery();
   const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  
+  // Debounce search term to avoid too many API calls
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchTerm);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+  
+  const { data: customersData, refetch } = trpc.customers.getAll.useQuery({
+    search: debouncedSearch || undefined,
+    limit: 500, // Increase limit to show more customers
+  });
   const [typeFilter, setTypeFilter] = useState<'all' | 'registered' | 'guest'>('all');
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
