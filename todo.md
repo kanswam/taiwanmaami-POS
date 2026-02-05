@@ -1336,3 +1336,13 @@ Orders fixed:
   - Issue: Search was filtering client-side on limited results (100 customers)
   - Solution: Pass search term to server-side query with debouncing, increased limit to 500
   - Customer Additi (phone: 9884058200) now searchable by name or phone
+
+## Menu Updates (Feb 5)
+
+- [ ] Remove 'regular' size for Creme Caramel Oolong Latte (large only)
+- [ ] Remove 'regular' size for Creme Caramel Taro Latte (large only)
+
+## Menu Updates (Feb 5)
+
+- [x] Remove 'regular' size for Crème Caramel Milk Oolong (large only)
+- [x] Remove 'regular' size for Crème Caramel Taro Latte (large only)

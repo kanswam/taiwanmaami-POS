@@ -1,0 +1,54 @@
+{
+  "query": "SELECT id, name, slug, subcategoryId FROM products WHERE name LIKE '%Creme Caramel%' OR name LIKE '%Creme Cramel%';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT id, name, slug, subcategoryId FROM products WHERE name LIKE '%Creme Caramel%' OR name LIKE '%Creme Cramel%';",
+  "rows": [
+    {
+      "id": "75",
+      "name": "Strawberry Boba Creme Caramel",
+      "slug": "boba-creme-caramel",
+      "subcategoryId": "60002"
+    },
+    {
+      "id": "120002",
+      "name": "Crème Caramel Taro Latte ",
+      "slug": "crme-caramel-taro-latte-",
+      "subcategoryId": "5"
+    },
+    {
+      "id": "180001",
+      "name": "Original Boba Creme Caramel ",
+      "slug": "original-boba-creme-caramel-",
+      "subcategoryId": "60002"
+    },
+    {
+      "id": "180002",
+      "name": "Pineapple Boba Crème Caramel",
+      "slug": "pineapple-boba-crme-caramel",
+      "subcategoryId": "60002"
+    },
+    {
+      "id": "180003",
+      "name": "Mango Boba Crème Caramel",
+      "slug": "mango-boba-crme-caramel",
+      "subcategoryId": "60002"
+    },
+    {
+      "id": "180004",
+      "name": "Cherry Boba Crème Caramel",
+      "slug": "cherry-boba-crme-caramel",
+      "subcategoryId": "60002"
+    },
+    {
+      "id": "180005",
+      "name": "Blueberry Boba Crème Caramel ",
+      "slug": "blueberry-boba-crme-caramel-",
+      "subcategoryId": "60002"
+    }
+  ],
+  "messages": [
+    "120001\tCrème Caramel Milk Oolong \t\tcrme-caramel-milk-oolong-\t2"
+  ],
+  "stdout": "id\tname\tslug\tsubcategoryId\n75\tStrawberry Boba Creme Caramel\tboba-creme-caramel\t60002\n120001\tCrème Caramel Milk Oolong \t\tcrme-caramel-milk-oolong-\t2\n120002\tCrème Caramel Taro Latte \tcrme-caramel-taro-latte-\t5\n180001\tOriginal Boba Creme Caramel \toriginal-boba-creme-caramel-\t60002\n180002\tPineapple Boba Crème Caramel\tpineapple-boba-crme-caramel\t60002\n180003\tMango Boba Crème Caramel\tmango-boba-crme-caramel\t60002\n180004\tCherry Boba Crème Caramel\tcherry-boba-crme-caramel\t60002\n180005\tBlueberry Boba Crème Caramel \tblueberry-boba-crme-caramel-\t60002\n",
+  "stderr": "",
+  "execution_time_ms": 58
+}

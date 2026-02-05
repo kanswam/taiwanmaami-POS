@@ -123,6 +123,9 @@ export const products = mysqlTable("products", {
   availableDelivery: boolean("availableDelivery").default(true).notNull(),
   availableAtPalladium: boolean("availableAtPalladium").default(true).notNull(), // Product availability at Palladium outlet
   availableAtTnagar: boolean("availableAtTnagar").default(true).notNull(), // Product availability at T.Nagar outlet
+  // Size availability override (JSON array of sizes, null means all sizes from subcategory)
+  // Example: ["large"] means only large size available
+  availableSizes: json("availableSizes").$type<string[] | null>(),
   displayOrder: int("displayOrder").default(0).notNull(),
   isActive: boolean("isActive").default(true).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),

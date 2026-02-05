@@ -1,0 +1,47 @@
+{
+  "query": "SELECT id, name, slug FROM products WHERE name LIKE '%Creme Caramel%' OR name LIKE '%Crème Caramel%';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT id, name, slug FROM products WHERE name LIKE '%Creme Caramel%' OR name LIKE '%Crème Caramel%';",
+  "rows": [
+    {
+      "id": "75",
+      "name": "Strawberry Boba Creme Caramel",
+      "slug": "boba-creme-caramel"
+    },
+    {
+      "id": "120002",
+      "name": "Crème Caramel Taro Latte ",
+      "slug": "crme-caramel-taro-latte-"
+    },
+    {
+      "id": "180001",
+      "name": "Original Boba Creme Caramel ",
+      "slug": "original-boba-creme-caramel-"
+    },
+    {
+      "id": "180002",
+      "name": "Pineapple Boba Crème Caramel",
+      "slug": "pineapple-boba-crme-caramel"
+    },
+    {
+      "id": "180003",
+      "name": "Mango Boba Crème Caramel",
+      "slug": "mango-boba-crme-caramel"
+    },
+    {
+      "id": "180004",
+      "name": "Cherry Boba Crème Caramel",
+      "slug": "cherry-boba-crme-caramel"
+    },
+    {
+      "id": "180005",
+      "name": "Blueberry Boba Crème Caramel ",
+      "slug": "blueberry-boba-crme-caramel-"
+    }
+  ],
+  "messages": [
+    "120001\tCrème Caramel Milk Oolong \t\tcrme-caramel-milk-oolong-"
+  ],
+  "stdout": "id\tname\tslug\n75\tStrawberry Boba Creme Caramel\tboba-creme-caramel\n120001\tCrème Caramel Milk Oolong \t\tcrme-caramel-milk-oolong-\n120002\tCrème Caramel Taro Latte \tcrme-caramel-taro-latte-\n180001\tOriginal Boba Creme Caramel \toriginal-boba-creme-caramel-\n180002\tPineapple Boba Crème Caramel\tpineapple-boba-crme-caramel\n180003\tMango Boba Crème Caramel\tmango-boba-crme-caramel\n180004\tCherry Boba Crème Caramel\tcherry-boba-crme-caramel\n180005\tBlueberry Boba Crème Caramel \tblueberry-boba-crme-caramel-\n",
+  "stderr": "",
+  "execution_time_ms": 54
+}

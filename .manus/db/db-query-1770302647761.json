@@ -1,0 +1,40 @@
+{
+  "query": "SHOW TABLES LIKE '%menu%'; SHOW TABLES LIKE '%item%'; SHOW TABLES LIKE '%product%';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SHOW TABLES LIKE '%menu%'; SHOW TABLES LIKE '%item%'; SHOW TABLES LIKE '%product%';",
+  "rows": [
+    {
+      "Tables_in_7xKVuVPoe4TavcqcxPZkpC (%item%)": "event_order_items"
+    },
+    {
+      "Tables_in_7xKVuVPoe4TavcqcxPZkpC (%item%)": "order_item_addons"
+    },
+    {
+      "Tables_in_7xKVuVPoe4TavcqcxPZkpC (%item%)": "order_items"
+    },
+    {
+      "Tables_in_7xKVuVPoe4TavcqcxPZkpC (%item%)": "wholesale_order_items"
+    },
+    {
+      "Tables_in_7xKVuVPoe4TavcqcxPZkpC (%item%)": "Tables_in_7xKVuVPoe4TavcqcxPZkpC (%product%)"
+    },
+    {
+      "Tables_in_7xKVuVPoe4TavcqcxPZkpC (%item%)": "outlet_products"
+    },
+    {
+      "Tables_in_7xKVuVPoe4TavcqcxPZkpC (%item%)": "product_addons"
+    },
+    {
+      "Tables_in_7xKVuVPoe4TavcqcxPZkpC (%item%)": "product_audit_log"
+    },
+    {
+      "Tables_in_7xKVuVPoe4TavcqcxPZkpC (%item%)": "products"
+    },
+    {
+      "Tables_in_7xKVuVPoe4TavcqcxPZkpC (%item%)": "wholesale_products"
+    }
+  ],
+  "messages": [],
+  "stdout": "Tables_in_7xKVuVPoe4TavcqcxPZkpC (%item%)\nevent_order_items\norder_item_addons\norder_items\nwholesale_order_items\nTables_in_7xKVuVPoe4TavcqcxPZkpC (%product%)\noutlet_products\nproduct_addons\nproduct_audit_log\nproducts\nwholesale_products\n",
+  "stderr": "",
+  "execution_time_ms": 69
+}

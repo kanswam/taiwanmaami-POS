@@ -24,6 +24,7 @@ interface ProductCustomizationModalProps {
     imageUrl3?: string | null;
     instorePrice?: number | null;
     deliveryPrice?: number | null;
+    availableSizes?: string[] | null; // Product-specific size restrictions
   };
   subcategory: {
     id: number;
@@ -98,6 +99,16 @@ export function ProductCustomizationModal({
     }
   }, [isDelivery, isMochiProduct]);
 
+  // Initialize size to first available size when product has size restrictions
+  useEffect(() => {
+    if (product.availableSizes && product.availableSizes.length > 0) {
+      // If current size is not in available sizes, switch to first available
+      if (!product.availableSizes.includes(size)) {
+        setSize(product.availableSizes[0] as Size);
+      }
+    }
+  }, [product.id, product.availableSizes]);
+
   // Track view_item event when modal opens
   const hasTrackedViewItem = useRef(false);
   useEffect(() => {
@@ -169,8 +180,10 @@ export function ProductCustomizationModal({
     return 4500; // large
   };
 
-  // Available sizes (Regular and Large only)
-  const availableSizes = SIZES;
+  // Available sizes - filter by product-specific restrictions if set
+  const availableSizes = product.availableSizes && product.availableSizes.length > 0
+    ? SIZES.filter(s => product.availableSizes!.includes(s.value))
+    : SIZES;
 
   // Get addons by type
   const bobaFlavorAddons = addonsData?.filter(a => a.type === 'boba_flavor') || [];

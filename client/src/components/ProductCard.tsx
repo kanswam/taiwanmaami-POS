@@ -21,6 +21,7 @@ interface ProductCardProps {
     containsEgg?: boolean;
     isActive?: boolean;
     isInStock?: boolean;
+    availableSizes?: string[] | null; // Product-specific size restrictions
   };
   subcategory: {
     id: number;

@@ -1,0 +1,181 @@
+{
+  "query": "SELECT table_name FROM information_schema.tables WHERE table_schema = DATABASE();",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT table_name FROM information_schema.tables WHERE table_schema = DATABASE();",
+  "rows": [
+    {
+      "table_name": "__drizzle_migrations"
+    },
+    {
+      "table_name": "users"
+    },
+    {
+      "table_name": "kot_queue"
+    },
+    {
+      "table_name": "addons"
+    },
+    {
+      "table_name": "addresses"
+    },
+    {
+      "table_name": "categories"
+    },
+    {
+      "table_name": "customization_options"
+    },
+    {
+      "table_name": "delivery_areas"
+    },
+    {
+      "table_name": "discounts"
+    },
+    {
+      "table_name": "guest_orders"
+    },
+    {
+      "table_name": "loyalty_rewards"
+    },
+    {
+      "table_name": "loyalty_transactions"
+    },
+    {
+      "table_name": "order_item_addons"
+    },
+    {
+      "table_name": "order_items"
+    },
+    {
+      "table_name": "orders"
+    },
+    {
+      "table_name": "outlet_products"
+    },
+    {
+      "table_name": "payments"
+    },
+    {
+      "table_name": "pos_audit_log"
+    },
+    {
+      "table_name": "pos_sessions"
+    },
+    {
+      "table_name": "product_addons"
+    },
+    {
+      "table_name": "products"
+    },
+    {
+      "table_name": "stamp_transactions"
+    },
+    {
+      "table_name": "store_locations"
+    },
+    {
+      "table_name": "subcategories"
+    },
+    {
+      "table_name": "reviews"
+    },
+    {
+      "table_name": "site_settings"
+    },
+    {
+      "table_name": "product_audit_log"
+    },
+    {
+      "table_name": "category_audit_log"
+    },
+    {
+      "table_name": "category_addons"
+    },
+    {
+      "table_name": "subcategory_addons"
+    },
+    {
+      "table_name": "receipt_queue"
+    },
+    {
+      "table_name": "complaints"
+    },
+    {
+      "table_name": "admin_pins"
+    },
+    {
+      "table_name": "discount_authorizations"
+    },
+    {
+      "table_name": "refund_requests"
+    },
+    {
+      "table_name": "adminPins"
+    },
+    {
+      "table_name": "refundRequests"
+    },
+    {
+      "table_name": "discountAuthorizations"
+    },
+    {
+      "table_name": "order_audit_log"
+    },
+    {
+      "table_name": "event_inquiries"
+    },
+    {
+      "table_name": "workshops"
+    },
+    {
+      "table_name": "event_orders"
+    },
+    {
+      "table_name": "event_order_items"
+    },
+    {
+      "table_name": "workshop_bookings"
+    },
+    {
+      "table_name": "discount_usage"
+    },
+    {
+      "table_name": "workshop_dates"
+    },
+    {
+      "table_name": "workshop_waitlist"
+    },
+    {
+      "table_name": "backup_logs"
+    },
+    {
+      "table_name": "content_pages"
+    },
+    {
+      "table_name": "wholesale_categories"
+    },
+    {
+      "table_name": "wholesale_products"
+    },
+    {
+      "table_name": "wholesale_customers"
+    },
+    {
+      "table_name": "wholesale_cart"
+    },
+    {
+      "table_name": "wholesale_orders"
+    },
+    {
+      "table_name": "wholesale_order_items"
+    },
+    {
+      "table_name": "wholesale_password_resets"
+    },
+    {
+      "table_name": "blog_articles"
+    }
+  ],
+  "messages": [],
+  "stdout": "table_name\n__drizzle_migrations\nusers\nkot_queue\naddons\naddresses\ncategories\ncustomization_options\ndelivery_areas\ndiscounts\nguest_orders\nloyalty_rewards\nloyalty_transactions\norder_item_addons\norder_items\norders\noutlet_products\npayments\npos_audit_log\npos_sessions\nproduct_addons\nproducts\nstamp_transactions\nstore_locations\nsubcategories\nreviews\nsite_settings\nproduct_audit_log\ncategory_audit_log\ncategory_addons\nsubcategory_addons\nreceipt_queue\ncomplaints\nadmin_pins\ndiscount_authorizations\nrefund_requests\nadminPins\nrefundRequests\ndiscountAuthorizations\norder_audit_log\nevent_inquiries\nworkshops\nevent_orders\nevent_order_items\nworkshop_bookings\ndiscount_usage\nworkshop_dates\nworkshop_waitlist\nbackup_logs\ncontent_pages\nwholesale_categories\nwholesale_products\nwholesale_customers\nwholesale_cart\nwholesale_orders\nwholesale_order_items\nwholesale_password_resets\nblog_articles\n",
+  "stderr": "",
+  "execution_time_ms": 63
+}
