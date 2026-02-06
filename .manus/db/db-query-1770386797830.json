@@ -1,0 +1,22 @@
+{
+  "query": "SHOW TABLES LIKE '%discount%';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SHOW TABLES LIKE '%discount%';",
+  "rows": [
+    {
+      "Tables_in_7xKVuVPoe4TavcqcxPZkpC (%discount%)": "discountAuthorizations"
+    },
+    {
+      "Tables_in_7xKVuVPoe4TavcqcxPZkpC (%discount%)": "discount_authorizations"
+    },
+    {
+      "Tables_in_7xKVuVPoe4TavcqcxPZkpC (%discount%)": "discount_usage"
+    },
+    {
+      "Tables_in_7xKVuVPoe4TavcqcxPZkpC (%discount%)": "discounts"
+    }
+  ],
+  "messages": [],
+  "stdout": "Tables_in_7xKVuVPoe4TavcqcxPZkpC (%discount%)\ndiscountAuthorizations\ndiscount_authorizations\ndiscount_usage\ndiscounts\n",
+  "stderr": "",
+  "execution_time_ms": 53
+}

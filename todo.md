@@ -1346,3 +1346,7 @@ Orders fixed:
 
 - [x] Remove 'regular' size for Crème Caramel Milk Oolong (large only)
 - [x] Remove 'regular' size for Crème Caramel Taro Latte (large only)
+
+## Bug Fixes (Feb 6)
+
+- [x] Fix BOBALOVE10 discount code showing as invalid when customers apply it (removed delivery-only restriction, kept first-time-only)

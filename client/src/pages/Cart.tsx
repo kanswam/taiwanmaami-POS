@@ -67,8 +67,10 @@ export default function Cart() {
   const outletStatus = isOutletOpen(selectedOutlet, state.orderType);
   const isOutsideOrderingHours = !outletStatus.available;
 
+  // Map cart orderType to discount validation orderType
+  const discountOrderType = state.orderType === 'instore' ? 'dine_in' : state.orderType as 'delivery' | 'pickup' | 'dine_in';
   const validateDiscount = trpc.discounts.validate.useQuery(
-    { code: discountInput, subtotal: subtotal || 0, orderType: state.orderType as 'delivery' | 'pickup' | 'dine_in' },
+    { code: discountInput, subtotal: subtotal || 0, orderType: discountOrderType },
     { enabled: false }
   );
 

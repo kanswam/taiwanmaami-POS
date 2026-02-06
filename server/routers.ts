@@ -232,7 +232,9 @@ export const appRouter = router({
             }
             // Validate order type restriction
             if (discount.orderTypeRestriction && discount.orderTypeRestriction !== 'all') {
-              if (discount.orderTypeRestriction !== input.orderType) {
+              // Map 'instore' to 'dine_in' for comparison with discount restriction
+              const mappedOrderType = input.orderType === 'instore' ? 'dine_in' : input.orderType;
+              if (discount.orderTypeRestriction !== mappedOrderType) {
                 discount.isActive = false; // Mark as not applicable
               }
             }

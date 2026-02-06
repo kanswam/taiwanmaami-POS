@@ -1,0 +1,37 @@
+{
+  "query": "SHOW TABLES LIKE '%discount%'; SELECT TABLE_NAME FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME LIKE '%discount%';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SHOW TABLES LIKE '%discount%'; SELECT TABLE_NAME FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME LIKE '%discount%';",
+  "rows": [
+    {
+      "Tables_in_7xKVuVPoe4TavcqcxPZkpC (%discount%)": "discountAuthorizations"
+    },
+    {
+      "Tables_in_7xKVuVPoe4TavcqcxPZkpC (%discount%)": "discount_authorizations"
+    },
+    {
+      "Tables_in_7xKVuVPoe4TavcqcxPZkpC (%discount%)": "discount_usage"
+    },
+    {
+      "Tables_in_7xKVuVPoe4TavcqcxPZkpC (%discount%)": "discounts"
+    },
+    {
+      "Tables_in_7xKVuVPoe4TavcqcxPZkpC (%discount%)": "TABLE_NAME"
+    },
+    {
+      "Tables_in_7xKVuVPoe4TavcqcxPZkpC (%discount%)": "discounts"
+    },
+    {
+      "Tables_in_7xKVuVPoe4TavcqcxPZkpC (%discount%)": "discount_authorizations"
+    },
+    {
+      "Tables_in_7xKVuVPoe4TavcqcxPZkpC (%discount%)": "discountAuthorizations"
+    },
+    {
+      "Tables_in_7xKVuVPoe4TavcqcxPZkpC (%discount%)": "discount_usage"
+    }
+  ],
+  "messages": [],
+  "stdout": "Tables_in_7xKVuVPoe4TavcqcxPZkpC (%discount%)\ndiscountAuthorizations\ndiscount_authorizations\ndiscount_usage\ndiscounts\nTABLE_NAME\ndiscounts\ndiscount_authorizations\ndiscountAuthorizations\ndiscount_usage\n",
+  "stderr": "",
+  "execution_time_ms": 60
+}
