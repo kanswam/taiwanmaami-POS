@@ -1350,3 +1350,5 @@ Orders fixed:
 ## Bug Fixes (Feb 6)
 
 - [x] Fix BOBALOVE10 discount code showing as invalid when customers apply it (removed delivery-only restriction, kept first-time-only)
+
+- [x] Add BOBALOVE10 discount code promotion to the scrolling ticker banner
