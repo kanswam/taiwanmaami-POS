@@ -1,0 +1,159 @@
+{
+  "query": "SELECT s.id, s.name, c.name as categoryName, s.hasSizeVariants, s.hasBobaOption FROM subcategories s JOIN categories c ON s.categoryId = c.id ORDER BY c.name, s.name;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT s.id, s.name, c.name as categoryName, s.hasSizeVariants, s.hasBobaOption FROM subcategories s JOIN categories c ON s.categoryId = c.id ORDER BY c.name, s.name;",
+  "rows": [
+    {
+      "id": "7",
+      "name": "Hot Coffee & Cocoa ",
+      "categoryName": "Hot Beverages ",
+      "hasSizeVariants": "0",
+      "hasBobaOption": "0"
+    },
+    {
+      "id": "30004",
+      "name": "Iced Lavazza Coffee",
+      "categoryName": "Iced Beverages",
+      "hasSizeVariants": "1",
+      "hasBobaOption": "1"
+    },
+    {
+      "id": "4",
+      "name": "Matcha Blend",
+      "categoryName": "Iced Beverages",
+      "hasSizeVariants": "1",
+      "hasBobaOption": "1"
+    },
+    {
+      "id": "330001",
+      "name": "Organic Assam ",
+      "categoryName": "Iced Beverages",
+      "hasSizeVariants": "1",
+      "hasBobaOption": "1"
+    },
+    {
+      "id": "3",
+      "name": "Organic Green Tea",
+      "categoryName": "Iced Beverages",
+      "hasSizeVariants": "1",
+      "hasBobaOption": "1"
+    },
+    {
+      "id": "2",
+      "name": "Organic Oolong",
+      "categoryName": "Iced Beverages",
+      "hasSizeVariants": "1",
+      "hasBobaOption": "1"
+    },
+    {
+      "id": "30003",
+      "name": "Slush",
+      "categoryName": "Iced Beverages",
+      "hasSizeVariants": "1",
+      "hasBobaOption": "1"
+    },
+    {
+      "id": "5",
+      "name": "Taro Blend",
+      "categoryName": "Iced Beverages",
+      "hasSizeVariants": "1",
+      "hasBobaOption": "1"
+    },
+    {
+      "id": "11",
+      "name": "Flat Bread",
+      "categoryName": "Main Course",
+      "hasSizeVariants": "0",
+      "hasBobaOption": "0"
+    },
+    {
+      "id": "12",
+      "name": "Noodles Soup",
+      "categoryName": "Main Course",
+      "hasSizeVariants": "0",
+      "hasBobaOption": "0"
+    },
+    {
+      "id": "14",
+      "name": "Omelette ",
+      "categoryName": "Main Course",
+      "hasSizeVariants": "0",
+      "hasBobaOption": "0"
+    },
+    {
+      "id": "10",
+      "name": "Rice",
+      "categoryName": "Main Course",
+      "hasSizeVariants": "0",
+      "hasBobaOption": "0"
+    },
+    {
+      "id": "60004",
+      "name": "Saucy Noodles",
+      "categoryName": "Main Course",
+      "hasSizeVariants": "0",
+      "hasBobaOption": "0"
+    },
+    {
+      "id": "13",
+      "name": "Savoury Pillow Brioche",
+      "categoryName": "Main Course",
+      "hasSizeVariants": "0",
+      "hasBobaOption": "0"
+    },
+    {
+      "id": "540001",
+      "name": "Taiwan Maami ChickGozilla",
+      "categoryName": "Main Course",
+      "hasSizeVariants": "1",
+      "hasBobaOption": "1"
+    },
+    {
+      "id": "60002",
+      "name": "Boba Crème Caramel",
+      "categoryName": "Sweet Bites",
+      "hasSizeVariants": "0",
+      "hasBobaOption": "0"
+    },
+    {
+      "id": "8",
+      "name": "Fruit Mochi",
+      "categoryName": "Sweet Bites",
+      "hasSizeVariants": "0",
+      "hasBobaOption": "0"
+    },
+    {
+      "id": "180001",
+      "name": "Grilled Mochi   ",
+      "categoryName": "Sweet Bites",
+      "hasSizeVariants": "0",
+      "hasBobaOption": "0"
+    },
+    {
+      "id": "9",
+      "name": "Signature Mochi",
+      "categoryName": "Sweet Bites",
+      "hasSizeVariants": "0",
+      "hasBobaOption": "0"
+    },
+    {
+      "id": "120001",
+      "name": "Steamed Velvet Pancake ",
+      "categoryName": "Sweet Bites",
+      "hasSizeVariants": "0",
+      "hasBobaOption": "0"
+    },
+    {
+      "id": "60003",
+      "name": "Sweet Pillow Brioche ",
+      "categoryName": "Sweet Bites",
+      "hasSizeVariants": "0",
+      "hasBobaOption": "0"
+    }
+  ],
+  "messages": [
+    "6\tTea in Pot\t\tHot Beverages \t0\t0"
+  ],
+  "stdout": "id\tname\tcategoryName\thasSizeVariants\thasBobaOption\n7\tHot Coffee & Cocoa \tHot Beverages \t0\t0\n6\tTea in Pot\t\tHot Beverages \t0\t0\n30004\tIced Lavazza Coffee\tIced Beverages\t1\t1\n4\tMatcha Blend\tIced Beverages\t1\t1\n330001\tOrganic Assam \tIced Beverages\t1\t1\n3\tOrganic Green Tea\tIced Beverages\t1\t1\n2\tOrganic Oolong\tIced Beverages\t1\t1\n30003\tSlush\tIced Beverages\t1\t1\n5\tTaro Blend\tIced Beverages\t1\t1\n11\tFlat Bread\tMain Course\t0\t0\n12\tNoodles Soup\tMain Course\t0\t0\n14\tOmelette \tMain Course\t0\t0\n10\tRice\tMain Course\t0\t0\n60004\tSaucy Noodles\tMain Course\t0\t0\n13\tSavoury Pillow Brioche\tMain Course\t0\t0\n540001\tTaiwan Maami ChickGozilla\tMain Course\t1\t1\n60002\tBoba Crème Caramel\tSweet Bites\t0\t0\n8\tFruit Mochi\tSweet Bites\t0\t0\n180001\tGrilled Mochi   \tSweet Bites\t0\t0\n9\tSignature Mochi\tSweet Bites\t0\t0\n120001\tSteamed Velvet Pancake \tSweet Bites\t0\t0\n60003\tSweet Pillow Brioche \tSweet Bites\t0\t0\n",
+  "stderr": "",
+  "execution_time_ms": 51
+}

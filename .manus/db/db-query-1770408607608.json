@@ -1,0 +1,16 @@
+{
+  "query": "SELECT id, name, hasSizeVariants, hasBobaOption FROM subcategories WHERE id = 540001;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT id, name, hasSizeVariants, hasBobaOption FROM subcategories WHERE id = 540001;",
+  "rows": [
+    {
+      "id": "540001",
+      "name": "Taiwan Maami ChickGozilla",
+      "hasSizeVariants": "0",
+      "hasBobaOption": "0"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\thasSizeVariants\thasBobaOption\n540001\tTaiwan Maami ChickGozilla\t0\t0\n",
+  "stderr": "",
+  "execution_time_ms": 57
+}

@@ -1373,3 +1373,20 @@ Orders fixed:
 - [x] Updated previewMerge and executeMerge procedures with or(eq(orders.userId, 0), isNull(orders.userId))
 - [x] Added Vitest tests for guest account merge scenarios (two-guest rejection, guest source format)
 - [x] Verified merge preview shows correct data for Swathi's accounts
+
+## Merge UI Bug Fix (Feb 6 - continued)
+
+- [x] Fix target account search field not showing dropdown results when typing (confirmed working on dev)
+- [x] Guest account (phone 9025331599) appears correctly in target search results
+
+## Food Item Customization Bug (Feb 6)
+
+- [x] Fix food items showing beverage-specific options (Regular/Large 480ml/700ml, Boba, Boba Type)
+- [x] Food items (Main Course, etc.) should only show relevant customizations (e.g., eggs add-on)
+- [x] Beverage options (size, boba, sugar level, ice level) should only appear for drink categories
+
+## Schema Default Fix (Feb 6)
+
+- [x] Change hasSizeVariants default from true to false in schema
+- [x] Change hasBobaOption default from true to false in schema
+- [x] Push migration (applied via ALTER TABLE + schema update)

@@ -2,7 +2,7 @@
   "version": "5",
   "dialect": "mysql",
   "id": "20f142b8-6a09-4f4d-be84-8b96e49c686b",
-  "prevId": "4c8fe64b-75d9-407b-be2b-7890f5a09ac7",
+  "prevId": "fc6fd3a7-36ba-4bc2-85eb-1afa2f8e0d73",
   "tables": {
     "addons": {
       "name": "addons",
