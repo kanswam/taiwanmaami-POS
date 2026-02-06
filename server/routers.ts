@@ -8,7 +8,7 @@ import * as db from "./db";
 import { getDb, serializeDates, serializeDateArray } from "./db";
 import { seedDatabase } from "./seed";
 import { categories, subcategories, products, addons, orders, orderItems as orderItemsTable, orderItemAddons, payments, discounts, discountUsage, addresses, storeLocations, deliveryAreas, users, productAddons, loyaltyTransactions } from "../drizzle/schema";
-import { eq, and, desc, asc, sql, or, gte } from "drizzle-orm";
+import { eq, and, desc, asc, sql, or, gte, isNull } from "drizzle-orm";
 import { generateOrderNumber, calculateGst } from "@shared/types";
 // POS functionality removed - Employee Master import removed
 import { outletProducts, loyaltyRewards, stampTransactions, guestOrders, reviews, kotQueue, receiptQueue, productAuditLog, categoryAuditLog, complaints, eventInquiries, eventOrders, eventOrderItems, workshops, workshopBookings, workshopDates, workshopWaitlist, backupLogs, blogArticles } from "../drizzle/schema";
@@ -5412,38 +5412,74 @@ export const appRouter = router({
       }),
 
     // Preview merge - show what data will be transferred
+    // Supports both registered (numeric ID) and guest (string ID like 'guest_9025331599') accounts
     previewMerge: adminProcedure
       .input(z.object({
-        sourceId: z.number(), // Account to merge FROM (will be deactivated)
-        targetId: z.number(), // Account to merge INTO (will be kept)
+        sourceId: z.union([z.number(), z.string()]),
+        targetId: z.union([z.number(), z.string()]),
       }))
       .query(async ({ input }) => {
         const dbInstance = await getDb();
         if (!dbInstance) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
 
-        const [source] = await dbInstance.select().from(users).where(eq(users.id, input.sourceId));
-        const [target] = await dbInstance.select().from(users).where(eq(users.id, input.targetId));
+        const isSourceGuest = typeof input.sourceId === 'string' && String(input.sourceId).startsWith('guest_');
+        const isTargetGuest = typeof input.targetId === 'string' && String(input.targetId).startsWith('guest_');
 
-        if (!source) throw new TRPCError({ code: 'NOT_FOUND', message: 'Source account not found' });
-        if (!target) throw new TRPCError({ code: 'NOT_FOUND', message: 'Target account not found' });
-        if (source.id === target.id) throw new TRPCError({ code: 'BAD_REQUEST', message: 'Cannot merge an account with itself' });
-        if (source.role === 'admin' || source.role === 'staff') throw new TRPCError({ code: 'BAD_REQUEST', message: 'Cannot merge staff/admin accounts' });
-        if (target.role === 'admin' || target.role === 'staff') throw new TRPCError({ code: 'BAD_REQUEST', message: 'Cannot merge into staff/admin accounts' });
+        if (isSourceGuest && isTargetGuest) throw new TRPCError({ code: 'BAD_REQUEST', message: 'Cannot merge two guest accounts. At least one must be a registered account.' });
+        if (String(input.sourceId) === String(input.targetId)) throw new TRPCError({ code: 'BAD_REQUEST', message: 'Cannot merge an account with itself' });
 
-        // Count related records
-        const sourceOrders = await dbInstance.select().from(orders).where(eq(orders.userId, source.id));
-        const sourceAddresses = await dbInstance.select().from(addresses).where(eq(addresses.userId, source.id));
-        const sourceStampTxns = await dbInstance.select().from(stampTransactions).where(eq(stampTransactions.userId, source.id));
-        const sourceLoyaltyTxns = await dbInstance.select().from(loyaltyTransactions).where(eq(loyaltyTransactions.userId, source.id));
-        const sourceLoyaltyRewards = await dbInstance.select().from(loyaltyRewards).where(eq(loyaltyRewards.userId, source.id));
-        const sourceDiscountUsages = await dbInstance.select().from(discountUsage).where(eq(discountUsage.userId, source.id));
-        const sourceReviews = await dbInstance.select().from(reviews).where(eq(reviews.userId, source.id));
-        const sourceComplaints = await dbInstance.select().from(complaints).where(eq(complaints.userId, source.id));
-
-        const targetOrders = await dbInstance.select().from(orders).where(eq(orders.userId, target.id));
-
-        return {
-          source: {
+        // Build source data
+        let sourceData: any;
+        let sourceOrdersList: any[] = [];
+        if (isSourceGuest) {
+          const guestPhone = String(input.sourceId).replace('guest_', '');
+          // Find guest orders by phone
+          const guestOrderRecords = await dbInstance.select().from(orders).where(
+            and(or(eq(orders.userId, 0), isNull(orders.userId)), eq(orders.customerPhone, guestPhone))
+          );
+          // Also check guestOrders table
+          const guestOrderRecords2 = await dbInstance.select().from(guestOrders).where(eq(guestOrders.guestPhone, guestPhone));
+          sourceOrdersList = guestOrderRecords;
+          const totalSpent = guestOrderRecords.reduce((sum: number, o: any) => sum + (o.totalAmount || 0), 0);
+          sourceData = {
+            id: input.sourceId,
+            name: guestOrderRecords[0]?.customerName || guestOrderRecords2[0]?.guestName || 'Guest',
+            email: guestOrderRecords2[0]?.guestEmail || null,
+            phone: guestPhone,
+            loginMethod: 'guest',
+            stampCount: 0,
+            lifetimeStamps: 0,
+            storeCredit: 0,
+            loyaltyPoints: 0,
+            notes: null,
+            birthMonth: null,
+            birthDay: null,
+            orderCount: guestOrderRecords.length,
+            addressCount: 0,
+            stampTransactionCount: 0,
+            loyaltyTransactionCount: 0,
+            rewardCount: 0,
+            discountUsageCount: 0,
+            reviewCount: 0,
+            complaintCount: 0,
+            totalSpent,
+            isGuest: true,
+            createdAt: null,
+          };
+        } else {
+          const sourceId = Number(input.sourceId);
+          const [source] = await dbInstance.select().from(users).where(eq(users.id, sourceId));
+          if (!source) throw new TRPCError({ code: 'NOT_FOUND', message: 'Source account not found' });
+          if (source.role === 'admin' || source.role === 'staff') throw new TRPCError({ code: 'BAD_REQUEST', message: 'Cannot merge staff/admin accounts' });
+          sourceOrdersList = await dbInstance.select().from(orders).where(eq(orders.userId, source.id));
+          const sourceAddresses = await dbInstance.select().from(addresses).where(eq(addresses.userId, source.id));
+          const sourceStampTxns = await dbInstance.select().from(stampTransactions).where(eq(stampTransactions.userId, source.id));
+          const sourceLoyaltyTxns = await dbInstance.select().from(loyaltyTransactions).where(eq(loyaltyTransactions.userId, source.id));
+          const sourceLoyaltyRewards = await dbInstance.select().from(loyaltyRewards).where(eq(loyaltyRewards.userId, source.id));
+          const sourceDiscountUsages = await dbInstance.select().from(discountUsage).where(eq(discountUsage.userId, source.id));
+          const sourceReviews = await dbInstance.select().from(reviews).where(eq(reviews.userId, source.id));
+          const sourceComplaints = await dbInstance.select().from(complaints).where(eq(complaints.userId, source.id));
+          sourceData = {
             id: source.id,
             name: source.name,
             email: source.email,
@@ -5456,7 +5492,7 @@ export const appRouter = router({
             notes: source.notes,
             birthMonth: source.birthMonth,
             birthDay: source.birthDay,
-            orderCount: sourceOrders.length,
+            orderCount: sourceOrdersList.length,
             addressCount: sourceAddresses.length,
             stampTransactionCount: sourceStampTxns.length,
             loyaltyTransactionCount: sourceLoyaltyTxns.length,
@@ -5464,9 +5500,46 @@ export const appRouter = router({
             discountUsageCount: sourceDiscountUsages.length,
             reviewCount: sourceReviews.length,
             complaintCount: sourceComplaints.length,
+            isGuest: false,
             createdAt: source.createdAt,
-          },
-          target: {
+          };
+        }
+
+        // Build target data
+        let targetData: any;
+        let targetOrdersList: any[] = [];
+        if (isTargetGuest) {
+          const guestPhone = String(input.targetId).replace('guest_', '');
+          const guestOrderRecords = await dbInstance.select().from(orders).where(
+            and(or(eq(orders.userId, 0), isNull(orders.userId)), eq(orders.customerPhone, guestPhone))
+          );
+          const guestOrderRecords2 = await dbInstance.select().from(guestOrders).where(eq(guestOrders.guestPhone, guestPhone));
+          targetOrdersList = guestOrderRecords;
+          const totalSpent = guestOrderRecords.reduce((sum: number, o: any) => sum + (o.totalAmount || 0), 0);
+          targetData = {
+            id: input.targetId,
+            name: guestOrderRecords[0]?.customerName || guestOrderRecords2[0]?.guestName || 'Guest',
+            email: guestOrderRecords2[0]?.guestEmail || null,
+            phone: guestPhone,
+            loginMethod: 'guest',
+            stampCount: 0,
+            lifetimeStamps: 0,
+            storeCredit: 0,
+            loyaltyPoints: 0,
+            notes: null,
+            birthMonth: null,
+            birthDay: null,
+            orderCount: guestOrderRecords.length,
+            isGuest: true,
+            createdAt: null,
+          };
+        } else {
+          const targetId = Number(input.targetId);
+          const [target] = await dbInstance.select().from(users).where(eq(users.id, targetId));
+          if (!target) throw new TRPCError({ code: 'NOT_FOUND', message: 'Target account not found' });
+          if (target.role === 'admin' || target.role === 'staff') throw new TRPCError({ code: 'BAD_REQUEST', message: 'Cannot merge into staff/admin accounts' });
+          targetOrdersList = await dbInstance.select().from(orders).where(eq(orders.userId, target.id));
+          targetData = {
             id: target.id,
             name: target.name,
             email: target.email,
@@ -5479,137 +5552,179 @@ export const appRouter = router({
             notes: target.notes,
             birthMonth: target.birthMonth,
             birthDay: target.birthDay,
-            orderCount: targetOrders.length,
+            orderCount: targetOrdersList.length,
+            isGuest: false,
             createdAt: target.createdAt,
-          },
+          };
+        }
+
+        return {
+          source: sourceData,
+          target: targetData,
           mergePreview: {
-            stampCountAfterMerge: (source.stampCount || 0) + (target.stampCount || 0),
-            lifetimeStampsAfterMerge: (source.lifetimeStamps || 0) + (target.lifetimeStamps || 0),
-            storeCreditAfterMerge: (source.storeCredit || 0) + (target.storeCredit || 0),
-            loyaltyPointsAfterMerge: (source.loyaltyPoints || 0) + (target.loyaltyPoints || 0),
-            totalOrdersAfterMerge: sourceOrders.length + targetOrders.length,
+            stampCountAfterMerge: (sourceData.stampCount || 0) + (targetData.stampCount || 0),
+            lifetimeStampsAfterMerge: (sourceData.lifetimeStamps || 0) + (targetData.lifetimeStamps || 0),
+            storeCreditAfterMerge: (sourceData.storeCredit || 0) + (targetData.storeCredit || 0),
+            loyaltyPointsAfterMerge: (sourceData.loyaltyPoints || 0) + (targetData.loyaltyPoints || 0),
+            totalOrdersAfterMerge: sourceOrdersList.length + targetOrdersList.length,
             recordsToTransfer: {
-              orders: sourceOrders.length,
-              addresses: sourceAddresses.length,
-              stampTransactions: sourceStampTxns.length,
-              loyaltyTransactions: sourceLoyaltyTxns.length,
-              rewards: sourceLoyaltyRewards.length,
-              discountUsages: sourceDiscountUsages.length,
-              reviews: sourceReviews.length,
-              complaints: sourceComplaints.length,
+              orders: sourceOrdersList.length,
+              addresses: sourceData.addressCount || 0,
+              stampTransactions: sourceData.stampTransactionCount || 0,
+              loyaltyTransactions: sourceData.loyaltyTransactionCount || 0,
+              rewards: sourceData.rewardCount || 0,
+              discountUsages: sourceData.discountUsageCount || 0,
+              reviews: sourceData.reviewCount || 0,
+              complaints: sourceData.complaintCount || 0,
             },
           },
         };
       }),
 
-    // Execute the merge
+    // Execute the merge - supports both registered and guest accounts
     executeMerge: adminProcedure
       .input(z.object({
-        sourceId: z.number(),
-        targetId: z.number(),
+        sourceId: z.union([z.number(), z.string()]),
+        targetId: z.union([z.number(), z.string()]),
       }))
       .mutation(async ({ input, ctx }) => {
         const dbInstance = await getDb();
         if (!dbInstance) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
 
-        const [source] = await dbInstance.select().from(users).where(eq(users.id, input.sourceId));
-        const [target] = await dbInstance.select().from(users).where(eq(users.id, input.targetId));
+        const isSourceGuest = typeof input.sourceId === 'string' && String(input.sourceId).startsWith('guest_');
+        const isTargetGuest = typeof input.targetId === 'string' && String(input.targetId).startsWith('guest_');
 
-        if (!source) throw new TRPCError({ code: 'NOT_FOUND', message: 'Source account not found' });
-        if (!target) throw new TRPCError({ code: 'NOT_FOUND', message: 'Target account not found' });
-        if (source.id === target.id) throw new TRPCError({ code: 'BAD_REQUEST', message: 'Cannot merge an account with itself' });
-        if (source.role === 'admin' || source.role === 'staff') throw new TRPCError({ code: 'BAD_REQUEST', message: 'Cannot merge staff/admin accounts' });
-        if (target.role === 'admin' || target.role === 'staff') throw new TRPCError({ code: 'BAD_REQUEST', message: 'Cannot merge into staff/admin accounts' });
+        if (isSourceGuest && isTargetGuest) throw new TRPCError({ code: 'BAD_REQUEST', message: 'Cannot merge two guest accounts' });
+        if (String(input.sourceId) === String(input.targetId)) throw new TRPCError({ code: 'BAD_REQUEST', message: 'Cannot merge an account with itself' });
 
-        // 1. Transfer orders
-        await dbInstance.update(orders).set({ userId: target.id }).where(eq(orders.userId, source.id));
+        if (isSourceGuest) {
+          // GUEST → REGISTERED merge
+          const guestPhone = String(input.sourceId).replace('guest_', '');
+          const targetId = Number(input.targetId);
+          const [target] = await dbInstance.select().from(users).where(eq(users.id, targetId));
+          if (!target) throw new TRPCError({ code: 'NOT_FOUND', message: 'Target account not found' });
+          if (target.role === 'admin' || target.role === 'staff') throw new TRPCError({ code: 'BAD_REQUEST', message: 'Cannot merge into staff/admin accounts' });
 
-        // 2. Transfer addresses
-        await dbInstance.update(addresses).set({ userId: target.id }).where(eq(addresses.userId, source.id));
+          // Reassign guest orders (userId=0, matching phone) to target user
+          await dbInstance.update(orders).set({ userId: target.id }).where(
+            and(or(eq(orders.userId, 0), isNull(orders.userId)), eq(orders.customerPhone, guestPhone))
+          );
 
-        // 3. Transfer stamp transactions
-        await dbInstance.update(stampTransactions).set({ userId: target.id }).where(eq(stampTransactions.userId, source.id));
+          // Fill in phone if target doesn't have one
+          const updateFields: Record<string, any> = {};
+          if (!target.phone) updateFields.phone = guestPhone;
+          // Get guest name from orders if target has no name
+          if (!target.name) {
+            const [guestOrder] = await dbInstance.select().from(orders).where(eq(orders.customerPhone, guestPhone));
+            if (guestOrder?.customerName) updateFields.name = guestOrder.customerName;
+          }
+          if (Object.keys(updateFields).length > 0) {
+            await dbInstance.update(users).set(updateFields).where(eq(users.id, target.id));
+          }
 
-        // 4. Transfer loyalty transactions
-        await dbInstance.update(loyaltyTransactions).set({ userId: target.id }).where(eq(loyaltyTransactions.userId, source.id));
-
-        // 5. Transfer loyalty rewards
-        await dbInstance.update(loyaltyRewards).set({ userId: target.id }).where(eq(loyaltyRewards.userId, source.id));
-
-        // 6. Transfer discount usage
-        await dbInstance.update(discountUsage).set({ userId: target.id }).where(eq(discountUsage.userId, source.id));
-
-        // 7. Transfer reviews
-        await dbInstance.update(reviews).set({ userId: target.id }).where(eq(reviews.userId, source.id));
-
-        // 8. Transfer complaints
-        await dbInstance.update(complaints).set({ userId: target.id }).where(eq(complaints.userId, source.id));
-
-        // 9. Merge user data: combine stamps, credits, loyalty points, fill missing fields
-        const mergedStampCount = (source.stampCount || 0) + (target.stampCount || 0);
-        const mergedLifetimeStamps = (source.lifetimeStamps || 0) + (target.lifetimeStamps || 0);
-        const mergedStoreCredit = (source.storeCredit || 0) + (target.storeCredit || 0);
-        const mergedLoyaltyPoints = (source.loyaltyPoints || 0) + (target.loyaltyPoints || 0);
-
-        const updateFields: Record<string, any> = {
-          stampCount: mergedStampCount,
-          lifetimeStamps: mergedLifetimeStamps,
-          storeCredit: mergedStoreCredit,
-          loyaltyPoints: mergedLoyaltyPoints,
-        };
-
-        // Fill in missing fields from source (phone, email, name, birthday, notes)
-        if (!target.phone && source.phone) updateFields.phone = source.phone;
-        if (!target.email && source.email) updateFields.email = source.email;
-        if (!target.name && source.name) updateFields.name = source.name;
-        if (!target.birthMonth && source.birthMonth) {
-          updateFields.birthMonth = source.birthMonth;
-          updateFields.birthDay = source.birthDay;
-        }
-        if (source.notes) {
-          updateFields.notes = target.notes 
-            ? `${target.notes}\n---\nMerged from account #${source.id}: ${source.notes}`
-            : `Merged from account #${source.id}: ${source.notes}`;
-        }
-        // Use the most recent stamp date
-        if (source.lastStampDate && (!target.lastStampDate || source.lastStampDate > target.lastStampDate)) {
-          updateFields.lastStampDate = source.lastStampDate;
-        }
-
-        await dbInstance.update(users).set(updateFields).where(eq(users.id, target.id));
-
-        // 10. Record a stamp transaction for audit trail
-        if ((source.stampCount || 0) > 0) {
+          // Record audit trail
           await dbInstance.insert(stampTransactions).values({
             userId: target.id,
             orderId: null,
             action: 'bonus',
-            stamps: 0, // Not adding new stamps, just recording the merge event
+            stamps: 0,
             orderTotal: 0,
-            description: `Account merge: ${source.stampCount} stamps transferred from account #${source.id} (${source.name || source.phone || 'unknown'}) by admin ${ctx.user.name}`,
+            description: `Guest account merge: guest orders from phone ${guestPhone} reassigned to this account by admin ${ctx.user.name}`,
             createdAt: new Date(),
           });
-        }
 
-        // 11. Deactivate source account by marking it as merged
-        await dbInstance.update(users).set({
-          name: `[MERGED → #${target.id}] ${source.name || ''}`,
-          notes: `Account merged into #${target.id} (${target.name || target.email || target.phone}) on ${new Date().toISOString()} by admin ${ctx.user.name}. Original data: name=${source.name}, phone=${source.phone}, email=${source.email}, stamps=${source.stampCount}, storeCredit=${source.storeCredit}`,
-          stampCount: 0,
-          lifetimeStamps: 0,
-          storeCredit: 0,
-          loyaltyPoints: 0,
-        }).where(eq(users.id, source.id));
+        } else if (isTargetGuest) {
+          // REGISTERED → GUEST merge (less common but supported)
+          throw new TRPCError({ code: 'BAD_REQUEST', message: 'Cannot merge a registered account into a guest account. Please swap source and target.' });
 
-        return {
-          success: true,
-          message: `Successfully merged account #${source.id} (${source.name || source.phone}) into #${target.id} (${target.name || target.email || target.phone})`,
-          mergedData: {
+        } else {
+          // REGISTERED → REGISTERED merge (original logic)
+          const sourceId = Number(input.sourceId);
+          const targetId = Number(input.targetId);
+          const [source] = await dbInstance.select().from(users).where(eq(users.id, sourceId));
+          const [target] = await dbInstance.select().from(users).where(eq(users.id, targetId));
+
+          if (!source) throw new TRPCError({ code: 'NOT_FOUND', message: 'Source account not found' });
+          if (!target) throw new TRPCError({ code: 'NOT_FOUND', message: 'Target account not found' });
+          if (source.id === target.id) throw new TRPCError({ code: 'BAD_REQUEST', message: 'Cannot merge an account with itself' });
+          if (source.role === 'admin' || source.role === 'staff') throw new TRPCError({ code: 'BAD_REQUEST', message: 'Cannot merge staff/admin accounts' });
+          if (target.role === 'admin' || target.role === 'staff') throw new TRPCError({ code: 'BAD_REQUEST', message: 'Cannot merge into staff/admin accounts' });
+
+          // 1. Transfer orders
+          await dbInstance.update(orders).set({ userId: target.id }).where(eq(orders.userId, source.id));
+          // 2. Transfer addresses
+          await dbInstance.update(addresses).set({ userId: target.id }).where(eq(addresses.userId, source.id));
+          // 3. Transfer stamp transactions
+          await dbInstance.update(stampTransactions).set({ userId: target.id }).where(eq(stampTransactions.userId, source.id));
+          // 4. Transfer loyalty transactions
+          await dbInstance.update(loyaltyTransactions).set({ userId: target.id }).where(eq(loyaltyTransactions.userId, source.id));
+          // 5. Transfer loyalty rewards
+          await dbInstance.update(loyaltyRewards).set({ userId: target.id }).where(eq(loyaltyRewards.userId, source.id));
+          // 6. Transfer discount usage
+          await dbInstance.update(discountUsage).set({ userId: target.id }).where(eq(discountUsage.userId, source.id));
+          // 7. Transfer reviews
+          await dbInstance.update(reviews).set({ userId: target.id }).where(eq(reviews.userId, source.id));
+          // 8. Transfer complaints
+          await dbInstance.update(complaints).set({ userId: target.id }).where(eq(complaints.userId, source.id));
+
+          // 9. Merge user data
+          const mergedStampCount = (source.stampCount || 0) + (target.stampCount || 0);
+          const mergedLifetimeStamps = (source.lifetimeStamps || 0) + (target.lifetimeStamps || 0);
+          const mergedStoreCredit = (source.storeCredit || 0) + (target.storeCredit || 0);
+          const mergedLoyaltyPoints = (source.loyaltyPoints || 0) + (target.loyaltyPoints || 0);
+
+          const updateFields: Record<string, any> = {
             stampCount: mergedStampCount,
             lifetimeStamps: mergedLifetimeStamps,
             storeCredit: mergedStoreCredit,
             loyaltyPoints: mergedLoyaltyPoints,
-          },
+          };
+
+          if (!target.phone && source.phone) updateFields.phone = source.phone;
+          if (!target.email && source.email) updateFields.email = source.email;
+          if (!target.name && source.name) updateFields.name = source.name;
+          if (!target.birthMonth && source.birthMonth) {
+            updateFields.birthMonth = source.birthMonth;
+            updateFields.birthDay = source.birthDay;
+          }
+          if (source.notes) {
+            updateFields.notes = target.notes 
+              ? `${target.notes}\n---\nMerged from account #${source.id}: ${source.notes}`
+              : `Merged from account #${source.id}: ${source.notes}`;
+          }
+          if (source.lastStampDate && (!target.lastStampDate || source.lastStampDate > target.lastStampDate)) {
+            updateFields.lastStampDate = source.lastStampDate;
+          }
+
+          await dbInstance.update(users).set(updateFields).where(eq(users.id, target.id));
+
+          // 10. Audit trail
+          if ((source.stampCount || 0) > 0) {
+            await dbInstance.insert(stampTransactions).values({
+              userId: target.id,
+              orderId: null,
+              action: 'bonus',
+              stamps: 0,
+              orderTotal: 0,
+              description: `Account merge: ${source.stampCount} stamps transferred from account #${source.id} (${source.name || source.phone || 'unknown'}) by admin ${ctx.user.name}`,
+              createdAt: new Date(),
+            });
+          }
+
+          // 11. Deactivate source
+          await dbInstance.update(users).set({
+            name: `[MERGED → #${target.id}] ${source.name || ''}`,
+            notes: `Account merged into #${target.id} (${target.name || target.email || target.phone}) on ${new Date().toISOString()} by admin ${ctx.user.name}. Original data: name=${source.name}, phone=${source.phone}, email=${source.email}, stamps=${source.stampCount}, storeCredit=${source.storeCredit}`,
+            stampCount: 0,
+            lifetimeStamps: 0,
+            storeCredit: 0,
+            loyaltyPoints: 0,
+          }).where(eq(users.id, source.id));
+        }
+
+        return {
+          success: true,
+          message: `Accounts merged successfully`,
         };
       }),
   }),

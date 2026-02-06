@@ -1,0 +1,17 @@
+{
+  "query": "SELECT id, name, phone, email, role FROM users WHERE name LIKE '%Swathi%' OR name LIKE '%swathi%';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT id, name, phone, email, role FROM users WHERE name LIKE '%Swathi%' OR name LIKE '%swathi%';",
+  "rows": [
+    {
+      "id": "19290184",
+      "name": "Swathi Varadarajan",
+      "phone": "NULL",
+      "email": "swathivaradarajan@gmail.com",
+      "role": "customer"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\tphone\temail\trole\n19290184\tSwathi Varadarajan\tNULL\tswathivaradarajan@gmail.com\tcustomer\n",
+  "stderr": "",
+  "execution_time_ms": 49
+}

@@ -1360,3 +1360,16 @@ Orders fixed:
 - [x] Write Vitest tests for merge logic
 - [x] Build Admin UI for account merge (search, select, preview, confirm)
 - [x] End-to-end test on dev server
+
+## Merge UI Bug Fix (Feb 6)
+
+- [ ] Fix target account search field not working as searchable input
+- [ ] Ensure both duplicate accounts show in search results (source and target)
+
+## Guest Account Merge Fix (Feb 6)
+
+- [x] Fix guest order queries to handle both userId=0 AND userId IS NULL
+- [x] Guest account names now display correctly (e.g., "Swathi Varadarajan" instead of "Guest")
+- [x] Updated previewMerge and executeMerge procedures with or(eq(orders.userId, 0), isNull(orders.userId))
+- [x] Added Vitest tests for guest account merge scenarios (two-guest rejection, guest source format)
+- [x] Verified merge preview shows correct data for Swathi's accounts

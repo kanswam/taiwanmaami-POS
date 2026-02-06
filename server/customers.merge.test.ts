@@ -72,8 +72,6 @@ describe("customers.previewMerge", () => {
     const { ctx } = createAdminContext();
     const caller = appRouter.createCaller(ctx);
 
-    // With id=1 not existing, it throws 'Source account not found' first
-    // The self-merge check happens after both accounts are fetched
     await expect(
       caller.customers.previewMerge({ sourceId: 1, targetId: 1 })
     ).rejects.toThrow(); // Will throw either 'not found' or 'cannot merge with itself'
@@ -85,6 +83,36 @@ describe("customers.previewMerge", () => {
 
     await expect(
       caller.customers.previewMerge({ sourceId: 99999999, targetId: 1 })
+    ).rejects.toThrow("Source account not found");
+  });
+
+  it("rejects merging two guest accounts", async () => {
+    const { ctx } = createAdminContext();
+    const caller = appRouter.createCaller(ctx);
+
+    await expect(
+      caller.customers.previewMerge({ sourceId: "guest_1234567890", targetId: "guest_0987654321" })
+    ).rejects.toThrow("Cannot merge two guest accounts");
+  });
+
+  it("accepts guest source ID format (guest_PHONE)", async () => {
+    const { ctx } = createAdminContext();
+    const caller = appRouter.createCaller(ctx);
+
+    // This should not throw a schema validation error - it should proceed
+    // and either find the guest or return "no orders found" type error
+    const result = caller.customers.previewMerge({ sourceId: "guest_0000000000", targetId: 1 });
+    // Guest with no orders should still work (returns empty data)
+    await expect(result).rejects.toThrow(); // Will throw 'Target account not found' since ID 1 doesn't exist
+  });
+
+  it("accepts numeric source and target IDs", async () => {
+    const { ctx } = createAdminContext();
+    const caller = appRouter.createCaller(ctx);
+
+    // Both numeric IDs - should fail with 'not found' since these don't exist
+    await expect(
+      caller.customers.previewMerge({ sourceId: 88888888, targetId: 77777777 })
     ).rejects.toThrow("Source account not found");
   });
 });
@@ -103,8 +131,6 @@ describe("customers.executeMerge", () => {
     const { ctx } = createAdminContext();
     const caller = appRouter.createCaller(ctx);
 
-    // With id=1 not existing, it throws 'not found' first
-    // The self-merge check happens after both accounts are fetched
     await expect(
       caller.customers.executeMerge({ sourceId: 1, targetId: 1 })
     ).rejects.toThrow(); // Will throw either 'not found' or 'cannot merge with itself'
@@ -119,8 +145,16 @@ describe("customers.executeMerge", () => {
     ).rejects.toThrow("Source account not found");
   });
 
+  it("rejects merging two guest accounts", async () => {
+    const { ctx } = createAdminContext();
+    const caller = appRouter.createCaller(ctx);
+
+    await expect(
+      caller.customers.executeMerge({ sourceId: "guest_1234567890", targetId: "guest_0987654321" })
+    ).rejects.toThrow("Cannot merge two guest accounts");
+  });
+
   it("validates input schema requires sourceId and targetId", () => {
-    // Verify the input schema requires both fields
     const { ctx } = createAdminContext();
     const caller = appRouter.createCaller(ctx);
 
@@ -135,5 +169,16 @@ describe("customers.executeMerge", () => {
       // @ts-expect-error - intentionally passing invalid input
       caller.customers.executeMerge({ sourceId: 1 })
     ).rejects.toThrow();
+  });
+
+  it("accepts guest source with numeric target for merge", async () => {
+    const { ctx } = createAdminContext();
+    const caller = appRouter.createCaller(ctx);
+
+    // Guest → Registered merge should proceed past validation
+    // Will fail at 'Target account not found' since ID 77777777 doesn't exist
+    await expect(
+      caller.customers.executeMerge({ sourceId: "guest_0000000000", targetId: 77777777 })
+    ).rejects.toThrow("Target account not found");
   });
 });

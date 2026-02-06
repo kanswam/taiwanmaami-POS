@@ -4198,10 +4198,32 @@ function CustomersTab() {
   // Account Merge state
   const [showMergeDialog, setShowMergeDialog] = useState(false);
   const [mergeStep, setMergeStep] = useState<'select' | 'preview' | 'confirm'>('select');
-  const [mergeSource, setMergeSource] = useState<{ id: number; name: string } | null>(null);
-  const [mergeTarget, setMergeTarget] = useState<{ id: number; name: string } | null>(null);
+const [mergeSource, setMergeSource] = useState<{ id: number | string; name: string } | null>(null);
+   const [mergeTarget, setMergeTarget] = useState<{ id: number | string; name: string } | null>(null);
   const [mergeSearchSource, setMergeSearchSource] = useState('');
   const [mergeSearchTarget, setMergeSearchTarget] = useState('');
+  const [debouncedMergeSource, setDebouncedMergeSource] = useState('');
+  const [debouncedMergeTarget, setDebouncedMergeTarget] = useState('');
+
+  // Debounce merge search terms
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedMergeSource(mergeSearchSource), 300);
+    return () => clearTimeout(timer);
+  }, [mergeSearchSource]);
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedMergeTarget(mergeSearchTarget), 300);
+    return () => clearTimeout(timer);
+  }, [mergeSearchTarget]);
+
+  // Independent search queries for merge dialog
+  const mergeSourceResults = trpc.customers.getAll.useQuery(
+    { search: debouncedMergeSource, limit: 20 },
+    { enabled: debouncedMergeSource.length >= 2 && showMergeDialog && !mergeSource }
+  );
+  const mergeTargetResults = trpc.customers.getAll.useQuery(
+    { search: debouncedMergeTarget, limit: 20 },
+    { enabled: debouncedMergeTarget.length >= 2 && showMergeDialog && !mergeTarget }
+  );
 
   const handleSort = (column: typeof sortColumn) => {
     if (sortColumn === column) {
@@ -4634,12 +4656,9 @@ function CustomersTab() {
                     />
                     {mergeSearchSource.length >= 2 && (
                       <div className="max-h-40 overflow-y-auto border rounded-lg">
-                        {(customersData?.customers || []).filter((c: any) =>
-                          c.type === 'registered' &&
-                          c.id !== mergeTarget?.id &&
-                          (c.name?.toLowerCase().includes(mergeSearchSource.toLowerCase()) ||
-                           c.phone?.includes(mergeSearchSource) ||
-                           c.email?.toLowerCase().includes(mergeSearchSource.toLowerCase()))
+                        {mergeSourceResults.isLoading && <p className="p-2 text-sm text-muted-foreground">Searching...</p>}
+                        {(mergeSourceResults.data?.customers || []).filter((c: any) =>
+                          c.id !== mergeTarget?.id
                         ).map((c: any) => (
                           <div
                             key={c.id}
@@ -4687,12 +4706,9 @@ function CustomersTab() {
                     />
                     {mergeSearchTarget.length >= 2 && (
                       <div className="max-h-40 overflow-y-auto border rounded-lg">
-                        {(customersData?.customers || []).filter((c: any) =>
-                          c.type === 'registered' &&
-                          c.id !== mergeSource?.id &&
-                          (c.name?.toLowerCase().includes(mergeSearchTarget.toLowerCase()) ||
-                           c.phone?.includes(mergeSearchTarget) ||
-                           c.email?.toLowerCase().includes(mergeSearchTarget.toLowerCase()))
+                        {mergeTargetResults.isLoading && <p className="p-2 text-sm text-muted-foreground">Searching...</p>}
+                        {(mergeTargetResults.data?.customers || []).filter((c: any) =>
+                          c.id !== mergeSource?.id
                         ).map((c: any) => (
                           <div
                             key={c.id}
