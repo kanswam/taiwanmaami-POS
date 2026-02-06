@@ -1352,3 +1352,11 @@ Orders fixed:
 - [x] Fix BOBALOVE10 discount code showing as invalid when customers apply it (removed delivery-only restriction, kept first-time-only)
 
 - [x] Add BOBALOVE10 discount code promotion to the scrolling ticker banner
+
+## Account Merge Feature (Feb 6)
+
+- [x] Build server-side account merge logic (transfer stamps, credits, orders)
+- [x] Create admin tRPC procedure for merging accounts
+- [x] Write Vitest tests for merge logic
+- [x] Build Admin UI for account merge (search, select, preview, confirm)
+- [x] End-to-end test on dev server

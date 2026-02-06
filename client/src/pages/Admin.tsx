@@ -19,7 +19,7 @@ import {
   Plus, Edit, Trash2, ImageIcon, RefreshCw, Check, X, Search,
   ChevronDown, ChevronUp, Eye, EyeOff, Star, MessageSquare, Reply, Printer,
   ClipboardList, RotateCcw, History, Filter, BarChart3, UtensilsCrossed, AlertCircle, DollarSign, CreditCard, Users,
-  Settings, Layers, FileText, TrendingUp, Calendar, Ticket, Mail, Phone, MapPin, Clock, UserCheck, BookOpen
+  Settings, Layers, FileText, TrendingUp, Calendar, Ticket, Mail, Phone, MapPin, Clock, UserCheck, BookOpen, GitMerge, ArrowRight, AlertTriangle
 } from 'lucide-react';
 import { toast } from 'sonner';
 import {
@@ -4195,6 +4195,14 @@ function CustomersTab() {
   const [stampsToAdd, setStampsToAdd] = useState(1);
   const [stampReason, setStampReason] = useState('Physical loyalty card transfer');
 
+  // Account Merge state
+  const [showMergeDialog, setShowMergeDialog] = useState(false);
+  const [mergeStep, setMergeStep] = useState<'select' | 'preview' | 'confirm'>('select');
+  const [mergeSource, setMergeSource] = useState<{ id: number; name: string } | null>(null);
+  const [mergeTarget, setMergeTarget] = useState<{ id: number; name: string } | null>(null);
+  const [mergeSearchSource, setMergeSearchSource] = useState('');
+  const [mergeSearchTarget, setMergeSearchTarget] = useState('');
+
   const handleSort = (column: typeof sortColumn) => {
     if (sortColumn === column) {
       setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
@@ -4250,6 +4258,31 @@ function CustomersTab() {
     onError: (err: any) => toast.error(err.message || 'Failed to add stamps'),
   });
 
+  // Merge preview query
+  const mergePreview = (trpc.customers as any).previewMerge?.useQuery(
+    { sourceId: mergeSource?.id || 0, targetId: mergeTarget?.id || 0 },
+    { enabled: !!mergeSource && !!mergeTarget && mergeStep === 'preview' }
+  );
+
+  // Merge execution mutation
+  const executeMerge = (trpc.customers as any).executeMerge?.useMutation({
+    onSuccess: (data: any) => {
+      toast.success(data.message || 'Accounts merged successfully');
+      setShowMergeDialog(false);
+      resetMergeState();
+      refetch();
+    },
+    onError: (err: any) => toast.error(err.message || 'Failed to merge accounts'),
+  });
+
+  const resetMergeState = () => {
+    setMergeStep('select');
+    setMergeSource(null);
+    setMergeTarget(null);
+    setMergeSearchSource('');
+    setMergeSearchTarget('');
+  };
+
   const filteredCustomers = (customersData?.customers?.filter(customer => {
     const matchesSearch = !searchTerm || 
       customer.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -4292,10 +4325,16 @@ function CustomersTab() {
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <h2 className="text-lg font-semibold">Customer Database</h2>
-        <Button onClick={() => setShowAddDialog(true)}>
-          <Plus className="w-4 h-4 mr-2" />
-          Add Customer
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => { resetMergeState(); setShowMergeDialog(true); }}>
+            <GitMerge className="w-4 h-4 mr-2" />
+            Merge Accounts
+          </Button>
+          <Button onClick={() => setShowAddDialog(true)}>
+            <Plus className="w-4 h-4 mr-2" />
+            Add Customer
+          </Button>
+        </div>
       </div>
 
       <div className="flex gap-4 items-center">
@@ -4549,6 +4588,273 @@ function CustomersTab() {
             >
               {updateCustomer.isPending ? 'Saving...' : 'Save Changes'}
             </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Merge Accounts Dialog */}
+      <Dialog open={showMergeDialog} onOpenChange={(open) => {
+        setShowMergeDialog(open);
+        if (!open) resetMergeState();
+      }}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <GitMerge className="w-5 h-5" />
+              Merge Customer Accounts
+            </DialogTitle>
+          </DialogHeader>
+
+          {mergeStep === 'select' && (
+            <div className="space-y-6 py-4">
+              <p className="text-sm text-muted-foreground">
+                Select two customer accounts to merge. The <strong>source</strong> account's data (stamps, orders, credits) will be transferred to the <strong>target</strong> account. The source account will be deactivated after the merge.
+              </p>
+
+              {/* Source Account Selection */}
+              <div className="space-y-2">
+                <Label className="text-base font-semibold text-red-700">Source Account (will be deactivated)</Label>
+                <p className="text-xs text-muted-foreground">This is the old/duplicate account that will be merged and deactivated.</p>
+                {mergeSource ? (
+                  <div className="flex items-center justify-between p-3 bg-red-50 border border-red-200 rounded-lg">
+                    <div>
+                      <p className="font-medium">{mergeSource.name}</p>
+                      <p className="text-sm text-muted-foreground">ID: #{mergeSource.id}</p>
+                    </div>
+                    <Button variant="ghost" size="sm" onClick={() => setMergeSource(null)}>
+                      <X className="w-4 h-4" />
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <Input
+                      placeholder="Search by name, phone, or email..."
+                      value={mergeSearchSource}
+                      onChange={(e) => setMergeSearchSource(e.target.value)}
+                    />
+                    {mergeSearchSource.length >= 2 && (
+                      <div className="max-h-40 overflow-y-auto border rounded-lg">
+                        {(customersData?.customers || []).filter((c: any) =>
+                          c.type === 'registered' &&
+                          c.id !== mergeTarget?.id &&
+                          (c.name?.toLowerCase().includes(mergeSearchSource.toLowerCase()) ||
+                           c.phone?.includes(mergeSearchSource) ||
+                           c.email?.toLowerCase().includes(mergeSearchSource.toLowerCase()))
+                        ).map((c: any) => (
+                          <div
+                            key={c.id}
+                            className="p-2 hover:bg-secondary cursor-pointer border-b last:border-b-0"
+                            onClick={() => { setMergeSource({ id: c.id, name: c.name || c.phone || 'Unknown' }); setMergeSearchSource(''); }}
+                          >
+                            <p className="font-medium text-sm">{c.name || 'N/A'}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {c.phone || 'No phone'} | {c.email || 'No email'} | Stamps: {c.stampCount || 0} | Orders: {c.totalOrders}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {mergeSource && (
+                <div className="flex justify-center">
+                  <ArrowRight className="w-6 h-6 text-muted-foreground" />
+                </div>
+              )}
+
+              {/* Target Account Selection */}
+              <div className="space-y-2">
+                <Label className="text-base font-semibold text-green-700">Target Account (will be kept)</Label>
+                <p className="text-xs text-muted-foreground">This is the primary account that will receive all data from the source.</p>
+                {mergeTarget ? (
+                  <div className="flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded-lg">
+                    <div>
+                      <p className="font-medium">{mergeTarget.name}</p>
+                      <p className="text-sm text-muted-foreground">ID: #{mergeTarget.id}</p>
+                    </div>
+                    <Button variant="ghost" size="sm" onClick={() => setMergeTarget(null)}>
+                      <X className="w-4 h-4" />
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <Input
+                      placeholder="Search by name, phone, or email..."
+                      value={mergeSearchTarget}
+                      onChange={(e) => setMergeSearchTarget(e.target.value)}
+                    />
+                    {mergeSearchTarget.length >= 2 && (
+                      <div className="max-h-40 overflow-y-auto border rounded-lg">
+                        {(customersData?.customers || []).filter((c: any) =>
+                          c.type === 'registered' &&
+                          c.id !== mergeSource?.id &&
+                          (c.name?.toLowerCase().includes(mergeSearchTarget.toLowerCase()) ||
+                           c.phone?.includes(mergeSearchTarget) ||
+                           c.email?.toLowerCase().includes(mergeSearchTarget.toLowerCase()))
+                        ).map((c: any) => (
+                          <div
+                            key={c.id}
+                            className="p-2 hover:bg-secondary cursor-pointer border-b last:border-b-0"
+                            onClick={() => { setMergeTarget({ id: c.id, name: c.name || c.phone || 'Unknown' }); setMergeSearchTarget(''); }}
+                          >
+                            <p className="font-medium text-sm">{c.name || 'N/A'}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {c.phone || 'No phone'} | {c.email || 'No email'} | Stamps: {c.stampCount || 0} | Orders: {c.totalOrders}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {mergeStep === 'preview' && mergePreview?.data && (
+            <div className="space-y-4 py-4">
+              <div className="grid grid-cols-2 gap-4">
+                {/* Source Card */}
+                <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+                  <h4 className="font-semibold text-red-700 mb-2">Source (Deactivating)</h4>
+                  <div className="space-y-1 text-sm">
+                    <p><strong>Name:</strong> {mergePreview.data.source.name || 'N/A'}</p>
+                    <p><strong>Phone:</strong> {mergePreview.data.source.phone || 'N/A'}</p>
+                    <p><strong>Email:</strong> {mergePreview.data.source.email || 'N/A'}</p>
+                    <p><strong>Login:</strong> {mergePreview.data.source.loginMethod || 'N/A'}</p>
+                    <p><strong>Stamps:</strong> {mergePreview.data.source.stampCount}/10</p>
+                    <p><strong>Store Credit:</strong> {formatPrice(mergePreview.data.source.storeCredit)}</p>
+                    <p><strong>Orders:</strong> {mergePreview.data.source.orderCount}</p>
+                  </div>
+                </div>
+
+                {/* Target Card */}
+                <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+                  <h4 className="font-semibold text-green-700 mb-2">Target (Keeping)</h4>
+                  <div className="space-y-1 text-sm">
+                    <p><strong>Name:</strong> {mergePreview.data.target.name || 'N/A'}</p>
+                    <p><strong>Phone:</strong> {mergePreview.data.target.phone || 'N/A'}</p>
+                    <p><strong>Email:</strong> {mergePreview.data.target.email || 'N/A'}</p>
+                    <p><strong>Login:</strong> {mergePreview.data.target.loginMethod || 'N/A'}</p>
+                    <p><strong>Stamps:</strong> {mergePreview.data.target.stampCount}/10</p>
+                    <p><strong>Store Credit:</strong> {formatPrice(mergePreview.data.target.storeCredit)}</p>
+                    <p><strong>Orders:</strong> {mergePreview.data.target.orderCount}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Merge Result Preview */}
+              <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <h4 className="font-semibold text-blue-700 mb-2">After Merge (Target Account)</h4>
+                <div className="grid grid-cols-2 gap-2 text-sm">
+                  <p><strong>Stamps:</strong> {mergePreview.data.mergePreview.stampCountAfterMerge}/10</p>
+                  <p><strong>Store Credit:</strong> {formatPrice(mergePreview.data.mergePreview.storeCreditAfterMerge)}</p>
+                  <p><strong>Total Orders:</strong> {mergePreview.data.mergePreview.totalOrdersAfterMerge}</p>
+                  <p><strong>Loyalty Points:</strong> {mergePreview.data.mergePreview.loyaltyPointsAfterMerge}</p>
+                </div>
+              </div>
+
+              {/* Records to Transfer */}
+              <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
+                <h4 className="font-semibold text-amber-700 mb-2">Records to Transfer</h4>
+                <div className="grid grid-cols-2 gap-1 text-sm">
+                  <p>Orders: {mergePreview.data.mergePreview.recordsToTransfer.orders}</p>
+                  <p>Addresses: {mergePreview.data.mergePreview.recordsToTransfer.addresses}</p>
+                  <p>Stamp Transactions: {mergePreview.data.mergePreview.recordsToTransfer.stampTransactions}</p>
+                  <p>Loyalty Transactions: {mergePreview.data.mergePreview.recordsToTransfer.loyaltyTransactions}</p>
+                  <p>Rewards: {mergePreview.data.mergePreview.recordsToTransfer.rewards}</p>
+                  <p>Discount Usages: {mergePreview.data.mergePreview.recordsToTransfer.discountUsages}</p>
+                  <p>Reviews: {mergePreview.data.mergePreview.recordsToTransfer.reviews}</p>
+                  <p>Complaints: {mergePreview.data.mergePreview.recordsToTransfer.complaints}</p>
+                </div>
+              </div>
+
+              {/* Missing fields that will be filled */}
+              {(!mergePreview.data.target.phone && mergePreview.data.source.phone) ||
+               (!mergePreview.data.target.email && mergePreview.data.source.email) ? (
+                <div className="p-3 bg-purple-50 border border-purple-200 rounded-lg text-sm">
+                  <p className="font-medium text-purple-700 mb-1">Missing fields to be filled from source:</p>
+                  {!mergePreview.data.target.phone && mergePreview.data.source.phone && (
+                    <p>Phone: {mergePreview.data.source.phone}</p>
+                  )}
+                  {!mergePreview.data.target.email && mergePreview.data.source.email && (
+                    <p>Email: {mergePreview.data.source.email}</p>
+                  )}
+                </div>
+              ) : null}
+            </div>
+          )}
+
+          {mergeStep === 'preview' && mergePreview?.isLoading && (
+            <div className="py-8 text-center text-muted-foreground">Loading merge preview...</div>
+          )}
+
+          {mergeStep === 'preview' && mergePreview?.error && (
+            <div className="py-4 text-center text-red-600">
+              <AlertTriangle className="w-6 h-6 mx-auto mb-2" />
+              <p>{mergePreview.error.message}</p>
+            </div>
+          )}
+
+          {mergeStep === 'confirm' && (
+            <div className="space-y-4 py-4">
+              <div className="p-4 bg-red-50 border-2 border-red-300 rounded-lg">
+                <div className="flex items-start gap-3">
+                  <AlertTriangle className="w-6 h-6 text-red-600 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <h4 className="font-semibold text-red-700">This action cannot be undone</h4>
+                    <p className="text-sm text-red-600 mt-1">
+                      You are about to merge <strong>{mergeSource?.name}</strong> (#{mergeSource?.id}) into <strong>{mergeTarget?.name}</strong> (#{mergeTarget?.id}).
+                      All data from the source account will be transferred and the source account will be permanently deactivated.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <DialogFooter>
+            {mergeStep === 'select' && (
+              <>
+                <Button variant="outline" onClick={() => setShowMergeDialog(false)}>Cancel</Button>
+                <Button
+                  disabled={!mergeSource || !mergeTarget}
+                  onClick={() => setMergeStep('preview')}
+                >
+                  Preview Merge
+                </Button>
+              </>
+            )}
+            {mergeStep === 'preview' && (
+              <>
+                <Button variant="outline" onClick={() => setMergeStep('select')}>Back</Button>
+                <Button
+                  disabled={mergePreview?.isLoading || mergePreview?.error}
+                  variant="destructive"
+                  onClick={() => setMergeStep('confirm')}
+                >
+                  Proceed to Confirm
+                </Button>
+              </>
+            )}
+            {mergeStep === 'confirm' && (
+              <>
+                <Button variant="outline" onClick={() => setMergeStep('preview')}>Back</Button>
+                <Button
+                  variant="destructive"
+                  disabled={executeMerge?.isPending}
+                  onClick={() => {
+                    if (mergeSource && mergeTarget) {
+                      executeMerge.mutate({ sourceId: mergeSource.id, targetId: mergeTarget.id });
+                    }
+                  }}
+                >
+                  {executeMerge?.isPending ? 'Merging...' : 'Confirm Merge'}
+                </Button>
+              </>
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>
