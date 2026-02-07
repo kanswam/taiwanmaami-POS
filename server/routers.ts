@@ -5438,6 +5438,313 @@ export const appRouter = router({
 
         return { hourlyData, categoryNames };
       }),
+
+    // Business Recommendations - AI-powered insights from sales data
+    getBusinessRecommendations: adminProcedure
+      .input(z.object({
+        startDate: z.string(),
+        endDate: z.string(),
+      }))
+      .query(async ({ input }) => {
+        const dbInstance = await getDb();
+        if (!dbInstance) return { recommendations: [] };
+
+        const start = new Date(input.startDate);
+        const end = new Date(input.endDate);
+        end.setHours(23, 59, 59, 999);
+
+        // Get order data with items
+        const allOrders = await dbInstance.select({
+          id: orders.id,
+          totalAmount: orders.totalAmount,
+          createdAt: orders.createdAt,
+          orderType: orders.orderType,
+          orderStatus: orders.orderStatus,
+        }).from(orders)
+          .where(and(
+            gte(orders.createdAt, start),
+            sql`${orders.createdAt} <= ${end}`,
+            sql`${orders.orderStatus} NOT IN ('cancelled')`
+          ));
+
+        // Get item-level data
+        const itemData = await dbInstance.select({
+          productName: orderItemsTable.productName,
+          quantity: orderItemsTable.quantity,
+          unitPrice: orderItemsTable.unitPrice,
+          categoryName: categories.name,
+          subcategoryName: subcategories.name,
+          orderId: orderItemsTable.orderId,
+          orderCreatedAt: orders.createdAt,
+        }).from(orderItemsTable)
+          .innerJoin(orders, eq(orderItemsTable.orderId, orders.id))
+          .leftJoin(products, eq(orderItemsTable.productId, products.id))
+          .leftJoin(subcategories, eq(products.subcategoryId, subcategories.id))
+          .leftJoin(categories, eq(subcategories.categoryId, categories.id))
+          .where(and(
+            gte(orders.createdAt, start),
+            sql`${orders.createdAt} <= ${end}`,
+            sql`${orders.orderStatus} NOT IN ('cancelled')`
+          ));
+
+        const recommendations: { type: string; title: string; description: string; priority: 'high' | 'medium' | 'low'; icon: string }[] = [];
+
+        // 1. Day-of-week analysis
+        const dayRevenue: Record<number, number> = {};
+        const dayOrders: Record<number, number> = {};
+        const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+        allOrders.forEach(o => {
+          const day = new Date(o.createdAt!).getDay();
+          dayRevenue[day] = (dayRevenue[day] || 0) + (o.totalAmount || 0);
+          dayOrders[day] = (dayOrders[day] || 0) + 1;
+        });
+        const sortedDays = Object.entries(dayRevenue).sort(([,a], [,b]) => b - a);
+        if (sortedDays.length >= 2) {
+          const bestDay = dayNames[parseInt(sortedDays[0][0])];
+          const bestRev = sortedDays[0][1];
+          const worstDay = dayNames[parseInt(sortedDays[sortedDays.length - 1][0])];
+          const worstRev = sortedDays[sortedDays.length - 1][1];
+          const ratio = bestRev / (worstRev || 1);
+          if (ratio > 1.5) {
+            recommendations.push({
+              type: 'opportunity',
+              title: `${bestDay} is your strongest day`,
+              description: `${bestDay} generates ${ratio.toFixed(1)}x more revenue than ${worstDay}. Consider running special promotions on ${worstDay} to boost sales, or double down on ${bestDay} with premium offerings.`,
+              priority: 'high',
+              icon: 'calendar',
+            });
+          }
+        }
+
+        // Weekend vs weekday
+        const weekendRev = (dayRevenue[0] || 0) + (dayRevenue[6] || 0);
+        const weekdayRev = [1,2,3,4,5].reduce((s, d) => s + (dayRevenue[d] || 0), 0);
+        const weekendAvg = weekendRev / 2;
+        const weekdayAvg = weekdayRev / 5;
+        if (weekendAvg > weekdayAvg * 1.3) {
+          recommendations.push({
+            type: 'insight',
+            title: 'Weekends outperform weekdays significantly',
+            description: `Weekend average is ₹${(weekendAvg / 100).toLocaleString('en-IN', {maximumFractionDigits: 0})}/day vs weekday ₹${(weekdayAvg / 100).toLocaleString('en-IN', {maximumFractionDigits: 0})}/day. Consider weekday-only promotions (e.g., "Weekday Happy Hour" or loyalty bonus stamps) to drive mid-week traffic.`,
+            priority: 'medium',
+            icon: 'trending',
+          });
+        } else if (weekdayAvg > weekendAvg * 1.3) {
+          recommendations.push({
+            type: 'insight',
+            title: 'Weekdays are stronger than weekends',
+            description: `Weekday average is ₹${(weekdayAvg / 100).toLocaleString('en-IN', {maximumFractionDigits: 0})}/day vs weekend ₹${(weekendAvg / 100).toLocaleString('en-IN', {maximumFractionDigits: 0})}/day. Weekend events, family combos, or Instagram-worthy specials could boost weekend footfall.`,
+            priority: 'medium',
+            icon: 'trending',
+          });
+        }
+
+        // 2. Category performance
+        const catRevenue: Record<string, number> = {};
+        const catQuantity: Record<string, number> = {};
+        itemData.forEach(item => {
+          const cat = item.categoryName || 'Unknown';
+          catRevenue[cat] = (catRevenue[cat] || 0) + ((item.unitPrice || 0) * (item.quantity || 1));
+          catQuantity[cat] = (catQuantity[cat] || 0) + (item.quantity || 1);
+        });
+        const sortedCats = Object.entries(catRevenue).sort(([,a], [,b]) => b - a);
+        if (sortedCats.length >= 2) {
+          const topCat = sortedCats[0];
+          const bottomCat = sortedCats[sortedCats.length - 1];
+          recommendations.push({
+            type: 'focus',
+            title: `"${topCat[0]}" is your revenue driver`,
+            description: `"${topCat[0]}" accounts for ₹${(topCat[1] / 100).toLocaleString('en-IN', {maximumFractionDigits: 0})} in revenue. Consider expanding this category with new variants. "${bottomCat[0]}" is underperforming at ₹${(bottomCat[1] / 100).toLocaleString('en-IN', {maximumFractionDigits: 0})} — review pricing, visibility, or consider bundling with popular items.`,
+            priority: 'high',
+            icon: 'category',
+          });
+        }
+
+        // 3. Top product recommendations
+        const productRevenue: Record<string, { revenue: number; quantity: number; category: string }> = {};
+        itemData.forEach(item => {
+          const name = item.productName || 'Unknown';
+          if (!productRevenue[name]) productRevenue[name] = { revenue: 0, quantity: 0, category: item.categoryName || '' };
+          productRevenue[name].revenue += (item.unitPrice || 0) * (item.quantity || 1);
+          productRevenue[name].quantity += item.quantity || 1;
+        });
+        const sortedProducts = Object.entries(productRevenue).sort(([,a], [,b]) => b.revenue - a.revenue);
+        if (sortedProducts.length >= 3) {
+          const top3 = sortedProducts.slice(0, 3).map(([name]) => name);
+          recommendations.push({
+            type: 'action',
+            title: 'Feature your top 3 sellers prominently',
+            description: `${top3.join(', ')} are your best sellers. Ensure these are prominently featured on your menu, website hero section, and Instagram. Consider creating combo deals around these items.`,
+            priority: 'high',
+            icon: 'star',
+          });
+        }
+
+        // 4. Average order value analysis
+        const totalRevenue = allOrders.reduce((s, o) => s + (o.totalAmount || 0), 0);
+        const avgOrderValue = allOrders.length > 0 ? totalRevenue / allOrders.length : 0;
+        if (avgOrderValue > 0) {
+          const avgInRupees = avgOrderValue / 100;
+          if (avgInRupees < 500) {
+            recommendations.push({
+              type: 'action',
+              title: `Increase average order value (currently ₹${avgInRupees.toFixed(0)})`,
+              description: `Your AOV is ₹${avgInRupees.toFixed(0)}. Consider upselling strategies: "Add a boba drink for ₹X" prompts, combo meals, or minimum order thresholds for free delivery to push AOV above ₹500.`,
+              priority: 'medium',
+              icon: 'rupee',
+            });
+          } else {
+            recommendations.push({
+              type: 'insight',
+              title: `Healthy average order value: ₹${avgInRupees.toFixed(0)}`,
+              description: `Your AOV of ₹${avgInRupees.toFixed(0)} is solid. Maintain this by continuing to offer attractive combos and add-ons. Consider premium limited-edition items to push it even higher.`,
+              priority: 'low',
+              icon: 'rupee',
+            });
+          }
+        }
+
+        // 5. Order type analysis
+        const orderTypeCount: Record<string, number> = {};
+        allOrders.forEach(o => {
+          const t = o.orderType || 'instore';
+          orderTypeCount[t] = (orderTypeCount[t] || 0) + 1;
+        });
+        const totalOrders = allOrders.length;
+        const deliveryPct = ((orderTypeCount['delivery'] || 0) / totalOrders * 100);
+        const instorePct = ((orderTypeCount['instore'] || 0) / totalOrders * 100);
+        if (deliveryPct < 20 && totalOrders > 10) {
+          recommendations.push({
+            type: 'opportunity',
+            title: `Delivery orders are only ${deliveryPct.toFixed(0)}% of total`,
+            description: `Most orders are in-store (${instorePct.toFixed(0)}%). Growing delivery can significantly expand your reach. Consider: delivery-exclusive discounts, partnering with food aggregators, or promoting your WhatsApp ordering more on social media.`,
+            priority: 'medium',
+            icon: 'delivery',
+          });
+        }
+
+        // 6. Time-based insights
+        const hourCounts: Record<number, number> = {};
+        allOrders.forEach(o => {
+          const utcHour = new Date(o.createdAt!).getUTCHours();
+          const istHour = (utcHour + 5) % 24 + (new Date(o.createdAt!).getUTCMinutes() >= 30 ? 1 : 0);
+          const adjustedHour = istHour % 24;
+          hourCounts[adjustedHour] = (hourCounts[adjustedHour] || 0) + 1;
+        });
+        const lunchOrders = [11,12,13,14].reduce((s, h) => s + (hourCounts[h] || 0), 0);
+        const dinnerOrders = [18,19,20,21].reduce((s, h) => s + (hourCounts[h] || 0), 0);
+        if (lunchOrders < dinnerOrders * 0.5 && totalOrders > 20) {
+          recommendations.push({
+            type: 'opportunity',
+            title: 'Lunch is significantly weaker than dinner',
+            description: `Lunch (11-14) has ${lunchOrders} orders vs dinner (18-21) with ${dinnerOrders}. Consider lunch specials, office delivery partnerships, or "lunch combo" pricing to boost daytime traffic.`,
+            priority: 'high',
+            icon: 'clock',
+          });
+        }
+
+        // 7. Product mix / combo suggestions
+        const orderProducts: Record<number, string[]> = {};
+        itemData.forEach(item => {
+          if (!orderProducts[item.orderId]) orderProducts[item.orderId] = [];
+          orderProducts[item.orderId].push(item.productName || '');
+        });
+        const pairCounts: Record<string, number> = {};
+        Object.values(orderProducts).forEach(prods => {
+          const unique = Array.from(new Set(prods));
+          for (let i = 0; i < unique.length; i++) {
+            for (let j = i + 1; j < unique.length; j++) {
+              const key = [unique[i], unique[j]].sort().join(' + ');
+              pairCounts[key] = (pairCounts[key] || 0) + 1;
+            }
+          }
+        });
+        const topPairs = Object.entries(pairCounts).sort(([,a], [,b]) => b - a).slice(0, 3);
+        if (topPairs.length > 0 && topPairs[0][1] >= 3) {
+          recommendations.push({
+            type: 'action',
+            title: 'Create combo deals from popular pairings',
+            description: `Your customers frequently order: ${topPairs.map(([pair, count]) => `${pair} (${count}x)`).join(', ')}. Create official combo deals with a small discount to encourage even more cross-selling.`,
+            priority: 'high',
+            icon: 'combo',
+          });
+        }
+
+        // Sort by priority
+        const priorityOrder = { high: 0, medium: 1, low: 2 };
+        recommendations.sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority]);
+
+        return { recommendations };
+      }),
+
+    // Website Traffic Analytics - proxy to Umami API
+    getWebsiteTraffic: adminProcedure
+      .input(z.object({
+        startDate: z.string(),
+        endDate: z.string(),
+      }))
+      .query(async ({ input }) => {
+        const analyticsEndpoint = ENV.analyticsEndpoint;
+        const websiteId = ENV.analyticsWebsiteId;
+        
+        if (!analyticsEndpoint || !websiteId) {
+          return { error: 'Analytics not configured', stats: null, pageviews: null, referrers: null, browsers: null, os: null, devices: null, countries: null, pages: null, channels: null };
+        }
+
+        const startAt = new Date(input.startDate).getTime();
+        const endAt = new Date(input.endDate + 'T23:59:59.999Z').getTime();
+        const baseUrl = `${analyticsEndpoint}/api/websites/${websiteId}`;
+
+        const headers: Record<string, string> = {
+          'Accept': 'application/json',
+        };
+
+        try {
+          // Fetch all data in parallel
+          const [statsRes, pageviewsRes, referrerRes, browserRes, osRes, deviceRes, countryRes, pagesRes, channelRes, entryRes] = await Promise.all([
+            fetch(`${baseUrl}/stats?startAt=${startAt}&endAt=${endAt}`, { headers }),
+            fetch(`${baseUrl}/pageviews?startAt=${startAt}&endAt=${endAt}&unit=day&timezone=Asia/Kolkata`, { headers }),
+            fetch(`${baseUrl}/metrics?startAt=${startAt}&endAt=${endAt}&type=referrer`, { headers }),
+            fetch(`${baseUrl}/metrics?startAt=${startAt}&endAt=${endAt}&type=browser`, { headers }),
+            fetch(`${baseUrl}/metrics?startAt=${startAt}&endAt=${endAt}&type=os`, { headers }),
+            fetch(`${baseUrl}/metrics?startAt=${startAt}&endAt=${endAt}&type=device`, { headers }),
+            fetch(`${baseUrl}/metrics?startAt=${startAt}&endAt=${endAt}&type=country`, { headers }),
+            fetch(`${baseUrl}/metrics?startAt=${startAt}&endAt=${endAt}&type=path`, { headers }),
+            fetch(`${baseUrl}/metrics?startAt=${startAt}&endAt=${endAt}&type=channel`, { headers }),
+            fetch(`${baseUrl}/metrics?startAt=${startAt}&endAt=${endAt}&type=entry`, { headers }),
+          ]);
+
+          const [stats, pageviews, referrers, browsers, os, devices, countries, pages, channels, entries] = await Promise.all([
+            statsRes.ok ? statsRes.json() : null,
+            pageviewsRes.ok ? pageviewsRes.json() : null,
+            referrerRes.ok ? referrerRes.json() : null,
+            browserRes.ok ? browserRes.json() : null,
+            osRes.ok ? osRes.json() : null,
+            deviceRes.ok ? deviceRes.json() : null,
+            countryRes.ok ? countryRes.json() : null,
+            pagesRes.ok ? pagesRes.json() : null,
+            channelRes.ok ? channelRes.json() : null,
+            entryRes.ok ? entryRes.json() : null,
+          ]);
+
+          return {
+            error: null,
+            stats,
+            pageviews,
+            referrers: referrers || [],
+            browsers: browsers || [],
+            os: os || [],
+            devices: devices || [],
+            countries: countries || [],
+            pages: pages || [],
+            channels: channels || [],
+            entries: entries || [],
+          };
+        } catch (err) {
+          console.error('Umami API error:', err);
+          return { error: 'Failed to fetch analytics', stats: null, pageviews: null, referrers: null, browsers: null, os: null, devices: null, countries: null, pages: null, channels: null, entries: null };
+        }
+      }),
   }),
 
   // Customer management routes

@@ -26,6 +26,7 @@ import {
   BarChart3,
   Lightbulb,
   Layers,
+  Globe,
 } from "lucide-react";
 
 // Helper to format currency
@@ -175,6 +176,13 @@ export default function Analytics() {
       groupBy: 'daily',
     });
 
+  // Business recommendations
+  const { data: recommendationsData, isLoading: loadingRecommendations } = 
+    trpc.analytics.getBusinessRecommendations.useQuery({
+      startDate,
+      endDate,
+    });
+
   // Item-level analytics queries
   const [insightMetric, setInsightMetric] = useState<'quantity' | 'revenue'>('quantity');
 
@@ -280,6 +288,12 @@ export default function Analytics() {
             <h1 className="font-bold text-lg">Analytics Dashboard</h1>
           </div>
           <div className="flex items-center gap-2">
+            <Link href="/admin/traffic">
+              <Button variant="ghost" size="sm" className="text-primary-foreground hover:bg-primary-foreground/10">
+                <Globe className="h-4 w-4 mr-2" />
+                Website Traffic
+              </Button>
+            </Link>
             <Button 
               variant="ghost" 
               size="sm" 
@@ -947,6 +961,59 @@ export default function Analytics() {
 
           {/* Product Insights Tab */}
           <TabsContent value="insights" className="space-y-4">
+            {/* Business Recommendations */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Lightbulb className="h-5 w-5 text-yellow-500" />
+                  Business Recommendations
+                </CardTitle>
+                <CardDescription>Data-driven suggestions to improve sales and operations</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {loadingRecommendations ? (
+                  <div className="text-center py-8 text-muted-foreground">Analyzing your data...</div>
+                ) : recommendationsData?.recommendations && recommendationsData.recommendations.length > 0 ? (
+                  <div className="space-y-3">
+                    {recommendationsData.recommendations.map((rec, idx) => {
+                      const priorityColors = {
+                        high: 'border-l-red-500 bg-red-50 dark:bg-red-950/20',
+                        medium: 'border-l-yellow-500 bg-yellow-50 dark:bg-yellow-950/20',
+                        low: 'border-l-green-500 bg-green-50 dark:bg-green-950/20',
+                      };
+                      const priorityLabels = {
+                        high: 'High Priority',
+                        medium: 'Medium Priority',
+                        low: 'Good Standing',
+                      };
+                      const typeIcons: Record<string, string> = {
+                        opportunity: '\uD83C\uDFAF',
+                        insight: '\uD83D\uDCA1',
+                        focus: '\uD83D\uDD2D',
+                        action: '\u26A1',
+                      };
+                      return (
+                        <div key={idx} className={`border-l-4 rounded-lg p-4 ${priorityColors[rec.priority]}`}>
+                          <div className="flex items-start justify-between gap-2 mb-1">
+                            <h4 className="font-semibold text-sm flex items-center gap-2">
+                              <span>{typeIcons[rec.type] || '\uD83D\uDCCA'}</span>
+                              {rec.title}
+                            </h4>
+                            <Badge variant={rec.priority === 'high' ? 'destructive' : rec.priority === 'medium' ? 'default' : 'secondary'} className="text-xs shrink-0">
+                              {priorityLabels[rec.priority]}
+                            </Badge>
+                          </div>
+                          <p className="text-sm text-muted-foreground leading-relaxed">{rec.description}</p>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-muted-foreground">Not enough data to generate recommendations</div>
+                )}
+              </CardContent>
+            </Card>
+
             {/* Metric Toggle */}
             <div className="flex items-center gap-4 mb-2">
               <span className="text-sm font-medium text-muted-foreground">View by:</span>

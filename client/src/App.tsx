@@ -24,6 +24,7 @@ import StaffOrders from "./pages/StaffOrders";
 import MenuCategories from "./pages/MenuCategories";
 import CategorySubcategories from "./pages/CategorySubcategories";
 import Analytics from "./pages/Analytics";
+import WebTraffic from "./pages/WebTraffic";
 import Complaint from "./pages/Complaint";
 import Testimonials from "./pages/Testimonials";
 import Franchise from "./pages/Franchise";
@@ -103,6 +104,7 @@ function Router() {
       <Route path="/staff/orders" component={StaffOrders} />
       <Route path="/admin" component={Admin} />
       <Route path="/admin/analytics" component={Analytics} />
+      <Route path="/admin/traffic" component={WebTraffic} />
       <Route path="/admin/events" component={AdminEvents} />
       <Route path="/admin/blog" component={AdminBlog} />
       <Route path="/admin/wholesale" component={WholesaleAdmin} />

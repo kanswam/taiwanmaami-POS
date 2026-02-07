@@ -17,4 +17,7 @@ export const ENV = {
   razorpayKeySecret: process.env.RAZORPAY_KEY_SECRET ?? "",
   // JWT Secret for wholesale auth
   jwtSecret: process.env.JWT_SECRET ?? "",
+  // Umami Analytics
+  analyticsEndpoint: process.env.VITE_ANALYTICS_ENDPOINT ?? "",
+  analyticsWebsiteId: process.env.VITE_ANALYTICS_WEBSITE_ID ?? "",
 };

@@ -1431,3 +1431,21 @@ Orders fixed:
 - [x] Day-of-Week Insights (best/worst day, weekend vs weekday comparison)
 - [x] Time-of-Day Insights (peak hour, lunch vs dinner rush)
 - [x] Key Insights for product mix (top combos, cross-category ordering patterns)
+
+## AI Business Insights & Recommendations (Feb 7)
+
+- [x] Add actionable business recommendations section to Insights tab
+- [x] Generate insights from sales data (day-of-week patterns, product performance, combos)
+- [x] Suggest focus areas for improving sales (underperforming categories, peak time optimization)
+- [x] Recommend combo deals based on product mix analysis
+- [x] Highlight growth opportunities and areas needing attention
+
+## Website Traffic Analytics Page (Feb 7)
+
+- [x] Build separate Website Traffic Analytics page in admin
+- [x] Show traffic sources breakdown (Instagram, Google, Direct, WhatsApp, etc.)
+- [x] Show referrer analysis with focus on Instagram traffic
+- [x] Display page views and unique visitors over time
+- [x] Show device type breakdown (mobile vs desktop)
+- [x] Show top landing pages and user flow
+- [x] Add navigation link to traffic analytics from Sales Analytics header
