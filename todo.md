@@ -1449,3 +1449,25 @@ Orders fixed:
 - [x] Show device type breakdown (mobile vs desktop)
 - [x] Show top landing pages and user flow
 - [x] Add navigation link to traffic analytics from Sales Analytics header
+
+## Comprehensive Sales Analysis with Delivery Data (Feb 7)
+
+- [ ] Analyze ItemwiseDeliverySalesJan2026.xlsx (Swiggy/Zomato itemwise breakdown)
+- [ ] Analyze TNagarDeliverySalesJan2026.xlsx (T. Nagar delivery sales)
+- [ ] Combine website sales data with delivery platform data
+- [ ] Generate comprehensive analysis report with insights and recommendations
+- [ ] Deliver PDF report to user
+
+## Delivery Data Integration into Analytics Dashboard (Feb 7)
+
+- [x] Create database tables for delivery sales data (itemwise + summary)
+- [x] Build Excel upload endpoint to parse Petpooja reports (server-side ExcelJS parsing)
+- [x] Build combined analytics procedures (website + delivery)
+- [x] Add "All Channels" view to Analytics dashboard with channel breakdown
+- [x] Show combined top products, category comparison, AOV by channel
+- [x] Add delivery platform breakdown (Zomato vs Swiggy vs Dine-in)
+- [x] Add cross-channel insights and recommendations
+- [x] Add upload UI for Petpooja Excel files in admin
+- [x] Fix product name matching (trim whitespace for accurate merging)
+- [x] Fix date range overlap query for delivery period matching
+- [x] Add delivery channel insights to Business Recommendations (commission savings, AOV comparison, Swiggy growth, delivery-exclusive products)

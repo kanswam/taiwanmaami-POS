@@ -1,0 +1,19 @@
+{
+  "query": "SHOW TABLES LIKE 'delivery%';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SHOW TABLES LIKE 'delivery%';",
+  "rows": [
+    {
+      "Tables_in_7xKVuVPoe4TavcqcxPZkpC (delivery%)": "delivery_areas"
+    },
+    {
+      "Tables_in_7xKVuVPoe4TavcqcxPZkpC (delivery%)": "delivery_item_sales"
+    },
+    {
+      "Tables_in_7xKVuVPoe4TavcqcxPZkpC (delivery%)": "delivery_sales_uploads"
+    }
+  ],
+  "messages": [],
+  "stdout": "Tables_in_7xKVuVPoe4TavcqcxPZkpC (delivery%)\ndelivery_areas\ndelivery_item_sales\ndelivery_sales_uploads\n",
+  "stderr": "",
+  "execution_time_ms": 105
+}

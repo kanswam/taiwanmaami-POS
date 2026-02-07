@@ -212,6 +212,17 @@ export default function Analytics() {
       orderType,
     });
 
+  // Combined channel analytics
+  const { data: channelData, isLoading: loadingChannels, refetch: refetchChannels } = 
+    trpc.analytics.getCombinedChannelAnalytics.useQuery({
+      startDate,
+      endDate,
+    });
+
+  // Delivery upload state
+  const [uploadingDelivery, setUploadingDelivery] = useState(false);
+  const [uploadMessage, setUploadMessage] = useState('');
+
   // Handle date preset change
   const handleDatePresetChange = (preset: string) => {
     setDatePreset(preset);
@@ -511,12 +522,13 @@ export default function Analytics() {
 
         {/* Tabs for different reports */}
         <Tabs defaultValue="sales" className="space-y-4">
-          <TabsList className="grid w-full grid-cols-6">
+          <TabsList className="grid w-full grid-cols-7">
             <TabsTrigger value="sales">Sales</TabsTrigger>
             <TabsTrigger value="products">Products</TabsTrigger>
             <TabsTrigger value="customers">Customers</TabsTrigger>
             <TabsTrigger value="trends">Trends</TabsTrigger>
             <TabsTrigger value="insights">Insights</TabsTrigger>
+            <TabsTrigger value="channels">Channels</TabsTrigger>
             <TabsTrigger value="gst">GST Report</TabsTrigger>
           </TabsList>
 
@@ -1288,6 +1300,256 @@ export default function Analytics() {
                 )}
               </CardContent>
             </Card>
+          </TabsContent>
+
+          {/* Channels Tab - Combined Analytics */}
+          <TabsContent value="channels" className="space-y-4">
+            {/* Upload Section */}
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="flex items-center gap-2">
+                      <Layers className="h-5 w-5" />
+                      Delivery Data Upload
+                    </CardTitle>
+                    <CardDescription>Upload Petpooja Excel reports (Itemwise & Summary) to combine with website analytics</CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <Label>Period Label</Label>
+                      <Input id="deliveryPeriodLabel" placeholder="e.g., January 2026" defaultValue={`${new Date(startDate).toLocaleString('en-US', { month: 'long', year: 'numeric' })}`} />
+                    </div>
+                    <div>
+                      <Label>Itemwise Sales Excel</Label>
+                      <Input id="itemwiseFile" type="file" accept=".xlsx,.xls,.csv" />
+                    </div>
+                    <div>
+                      <Label>Summary Sales Excel</Label>
+                      <Input id="summaryFile" type="file" accept=".xlsx,.xls,.csv" />
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <Button 
+                      disabled={uploadingDelivery}
+                      onClick={async () => {
+                        setUploadingDelivery(true);
+                        setUploadMessage('');
+                        try {
+                          const periodLabel = (document.getElementById('deliveryPeriodLabel') as HTMLInputElement)?.value;
+                          const itemwiseInput = document.getElementById('itemwiseFile') as HTMLInputElement;
+                          const summaryInput = document.getElementById('summaryFile') as HTMLInputElement;
+                          
+                          if (!periodLabel) { setUploadMessage('Please enter a period label'); setUploadingDelivery(false); return; }
+                          if (!itemwiseInput?.files?.[0] && !summaryInput?.files?.[0]) { setUploadMessage('Please select at least one file'); setUploadingDelivery(false); return; }
+
+                          // Send files as multipart form data — server parses with ExcelJS
+                          const formData = new FormData();
+                          formData.append('periodLabel', periodLabel);
+                          formData.append('periodStart', startDate);
+                          formData.append('periodEnd', endDate);
+                          if (itemwiseInput?.files?.[0]) formData.append('itemwiseFile', itemwiseInput.files[0]);
+                          if (summaryInput?.files?.[0]) formData.append('summaryFile', summaryInput.files[0]);
+
+                          const response = await fetch('/api/delivery/upload', {
+                            method: 'POST',
+                            credentials: 'include',
+                            body: formData,
+                          });
+                          
+                          const result = await response.json();
+                          if (result.success) {
+                            setUploadMessage(`Uploaded ${result.itemCount} items for ${periodLabel}. ${result.updated ? 'Updated existing data.' : 'New period added.'}`);
+                            refetchChannels();
+                          } else {
+                            setUploadMessage(`Error: ${result.error}`);
+                          }
+                        } catch (err: any) {
+                          setUploadMessage(`Error: ${err.message}`);
+                        } finally {
+                          setUploadingDelivery(false);
+                        }
+                      }}
+                    >
+                      {uploadingDelivery ? 'Processing...' : 'Upload & Process'}
+                    </Button>
+                    {uploadMessage && (
+                      <span className={`text-sm ${uploadMessage.startsWith('Error') ? 'text-red-600' : 'text-green-600'}`}>
+                        {uploadMessage}
+                      </span>
+                    )}
+                  </div>
+                  {channelData?.deliveryPeriods && channelData.deliveryPeriods.length > 0 && (
+                    <div className="text-sm text-muted-foreground">
+                      Delivery data loaded for: {channelData.deliveryPeriods.join(', ')}
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Channel Overview */}
+            {loadingChannels ? (
+              <div className="text-center py-8 text-muted-foreground">Loading channel data...</div>
+            ) : channelData ? (
+              <>
+                {/* Summary Cards */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <Card>
+                    <CardContent className="pt-6">
+                      <div className="text-sm text-muted-foreground">Total Revenue (All Channels)</div>
+                      <div className="text-2xl font-bold mt-1">₹{(channelData.totalRevenue / 100).toLocaleString('en-IN', { minimumFractionDigits: 0 })}</div>
+                      <div className="text-xs text-muted-foreground mt-1">{channelData.totalOrders} orders</div>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardContent className="pt-6">
+                      <div className="text-sm text-muted-foreground">Average Order Value</div>
+                      <div className="text-2xl font-bold mt-1">₹{channelData.totalOrders > 0 ? Math.round(channelData.totalRevenue / channelData.totalOrders / 100).toLocaleString('en-IN') : '0'}</div>
+                      <div className="text-xs text-muted-foreground mt-1">Across all channels</div>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardContent className="pt-6">
+                      <div className="text-sm text-muted-foreground">Active Channels</div>
+                      <div className="text-2xl font-bold mt-1">{channelData.channels.length}</div>
+                      <div className="text-xs text-muted-foreground mt-1">{channelData.hasDeliveryData ? 'Delivery data included' : 'Upload delivery data for full picture'}</div>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* Channel Breakdown */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Revenue by Channel</CardTitle>
+                    <CardDescription>Breakdown of revenue across all sales channels</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      {channelData.channels.map((channel, idx) => {
+                        const pct = channelData.totalRevenue > 0 ? (channel.revenue / channelData.totalRevenue * 100) : 0;
+                        return (
+                          <div key={idx} className="space-y-2">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                <div className="w-3 h-3 rounded-full" style={{ backgroundColor: channel.color }} />
+                                <span className="font-medium">{channel.name}</span>
+                                <Badge variant="outline" className="text-xs">{channel.orders} orders</Badge>
+                              </div>
+                              <div className="text-right">
+                                <span className="font-bold">₹{(channel.revenue / 100).toLocaleString('en-IN', { minimumFractionDigits: 0 })}</span>
+                                <span className="text-muted-foreground text-sm ml-2">({pct.toFixed(1)}%)</span>
+                              </div>
+                            </div>
+                            <div className="w-full bg-muted rounded-full h-3">
+                              <div 
+                                className="h-3 rounded-full transition-all" 
+                                style={{ width: `${Math.max(pct, 1)}%`, backgroundColor: channel.color }}
+                              />
+                            </div>
+                            <div className="flex justify-between text-xs text-muted-foreground">
+                              <span>AOV: ₹{(channel.avgOrderValue / 100).toLocaleString('en-IN')}</span>
+                              {channel.gst > 0 && <span>GST: ₹{(channel.gst / 100).toLocaleString('en-IN')}</span>}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Product Comparison Across Channels */}
+                {channelData.productComparison.length > 0 && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Product Performance Across Channels</CardTitle>
+                      <CardDescription>Top products compared: Website vs Delivery platforms</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-sm">
+                          <thead>
+                            <tr className="border-b">
+                              <th className="text-left py-2 font-medium">Product</th>
+                              <th className="text-left py-2 font-medium">Category</th>
+                              <th className="text-right py-2 font-medium">Website Qty</th>
+                              <th className="text-right py-2 font-medium">Delivery Qty</th>
+                              <th className="text-right py-2 font-medium">Total Qty</th>
+                              <th className="text-right py-2 font-medium">Total Revenue</th>
+                              <th className="text-center py-2 font-medium">Channel Split</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {channelData.productComparison.map((product, idx) => (
+                              <tr key={idx} className="border-b hover:bg-muted/50">
+                                <td className="py-2 font-medium">{product.name}</td>
+                                <td className="py-2 text-muted-foreground">{product.category}</td>
+                                <td className="py-2 text-right">{product.websiteQty}</td>
+                                <td className="py-2 text-right">{product.deliveryQty}</td>
+                                <td className="py-2 text-right font-medium">{product.totalQty}</td>
+                                <td className="py-2 text-right">₹{(product.totalRevenue / 100).toLocaleString('en-IN')}</td>
+                                <td className="py-2">
+                                  <div className="flex items-center gap-1">
+                                    <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden flex">
+                                      <div className="h-full bg-amber-700" style={{ width: `${product.websiteShare}%` }} />
+                                      <div className="h-full bg-red-500" style={{ width: `${product.deliveryShare}%` }} />
+                                    </div>
+                                    <span className="text-xs text-muted-foreground w-16 text-right">
+                                      {product.websiteShare}:{product.deliveryShare}
+                                    </span>
+                                  </div>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                        <div className="flex items-center gap-4 mt-3 text-xs text-muted-foreground">
+                          <div className="flex items-center gap-1"><div className="w-3 h-2 bg-amber-700 rounded" /> Website</div>
+                          <div className="flex items-center gap-1"><div className="w-3 h-2 bg-red-500 rounded" /> Delivery</div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Cross-Channel Insights */}
+                {channelData.insights.length > 0 && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Lightbulb className="h-5 w-5 text-yellow-500" />
+                        Cross-Channel Insights
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-3">
+                        {channelData.insights.map((insight, idx) => (
+                          <div key={idx} className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
+                            <TrendingUp className="h-4 w-4 mt-0.5 text-amber-700 shrink-0" />
+                            <p className="text-sm">{insight}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {!channelData.hasDeliveryData && (
+                  <Card className="border-dashed">
+                    <CardContent className="pt-6">
+                      <div className="text-center py-4">
+                        <Layers className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
+                        <p className="text-muted-foreground">Upload your Petpooja delivery reports above to see combined channel analytics including Zomato and Swiggy data.</p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+              </>
+            ) : null}
           </TabsContent>
 
           {/* GST Report Tab */}

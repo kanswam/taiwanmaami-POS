@@ -6,6 +6,7 @@ import { createExpressMiddleware } from "@trpc/server/adapters/express";
 import { registerOAuthRoutes } from "./oauth";
 import { appRouter } from "../routers";
 import { handleSalesReportExport } from "../excelExport";
+import { handleDeliveryUpload, handleGetDeliveryUploads, handleDeleteDeliveryUpload, deliveryUploadMiddleware } from "../deliveryUpload";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
 
@@ -349,6 +350,11 @@ async function startServer() {
 
   // Excel Sales Report Export
   app.get('/api/export/sales-report', handleSalesReportExport as any);
+
+  // Delivery data upload/management
+  app.post('/api/delivery/upload', deliveryUploadMiddleware as any, handleDeliveryUpload as any);
+  app.get('/api/delivery/uploads', handleGetDeliveryUploads as any);
+  app.delete('/api/delivery/uploads/:id', handleDeleteDeliveryUpload as any);
 
   // tRPC API
   app.use(

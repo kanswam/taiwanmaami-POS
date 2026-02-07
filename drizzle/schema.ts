@@ -1081,3 +1081,58 @@ export const blogArticles = mysqlTable("blog_articles", {
 
 export type BlogArticle = typeof blogArticles.$inferSelect;
 export type InsertBlogArticle = typeof blogArticles.$inferInsert;
+
+
+// Delivery sales data uploads (from Petpooja POS - Zomato/Swiggy)
+export const deliverySalesUploads = mysqlTable("delivery_sales_uploads", {
+  id: int("id").autoincrement().primaryKey(),
+  periodLabel: varchar("periodLabel", { length: 50 }).notNull(), // e.g., "January 2026"
+  periodStart: timestamp("periodStart").notNull(),
+  periodEnd: timestamp("periodEnd").notNull(),
+  fileName: varchar("fileName", { length: 255 }),
+  // Summary data from TNagar report
+  totalOrders: int("totalOrders").default(0),
+  totalAmount: int("totalAmount").default(0), // in paise
+  totalDiscount: int("totalDiscount").default(0), // in paise
+  netSales: int("netSales").default(0), // in paise
+  totalTax: int("totalTax").default(0), // in paise
+  grandTotal: int("grandTotal").default(0), // in paise
+  // Channel breakdown
+  zomatoOrders: int("zomatoOrders").default(0),
+  zomatoAmount: int("zomatoAmount").default(0), // in paise
+  swiggyOrders: int("swiggyOrders").default(0),
+  swiggyAmount: int("swiggyAmount").default(0), // in paise
+  dineInOrders: int("dineInOrders").default(0),
+  dineInAmount: int("dineInAmount").default(0), // in paise
+  // Payment breakdown (in paise)
+  cashAmount: int("cashAmount").default(0),
+  cardAmount: int("cardAmount").default(0),
+  upiAmount: int("upiAmount").default(0),
+  swiggyDineoutAmount: int("swiggyDineoutAmount").default(0),
+  zomatoDineoutAmount: int("zomatoDineoutAmount").default(0),
+  // GST (in paise)
+  cgst: int("cgst").default(0),
+  sgst: int("sgst").default(0),
+  uploadedBy: int("uploadedBy"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type DeliverySalesUpload = typeof deliverySalesUploads.$inferSelect;
+
+// Delivery item-level sales data
+export const deliveryItemSales = mysqlTable("delivery_item_sales", {
+  id: int("id").autoincrement().primaryKey(),
+  uploadId: int("uploadId").notNull(), // FK to deliverySalesUploads
+  category: varchar("category", { length: 100 }).notNull(),
+  itemName: varchar("itemName", { length: 255 }).notNull(),
+  // Normalized base product name (without size/boba variants)
+  baseProductName: varchar("baseProductName", { length: 255 }),
+  itemCode: varchar("itemCode", { length: 50 }),
+  quantity: int("quantity").default(0).notNull(),
+  amount: int("amount").default(0).notNull(), // in paise
+  periodStart: timestamp("periodStart").notNull(),
+  periodEnd: timestamp("periodEnd").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type DeliveryItemSale = typeof deliveryItemSales.$inferSelect;

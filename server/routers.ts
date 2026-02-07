@@ -11,7 +11,7 @@ import { categories, subcategories, products, addons, orders, orderItems as orde
 import { eq, and, desc, asc, sql, or, gte, isNull } from "drizzle-orm";
 import { generateOrderNumber, calculateGst } from "@shared/types";
 // POS functionality removed - Employee Master import removed
-import { outletProducts, loyaltyRewards, stampTransactions, guestOrders, reviews, kotQueue, receiptQueue, productAuditLog, categoryAuditLog, complaints, eventInquiries, eventOrders, eventOrderItems, workshops, workshopBookings, workshopDates, workshopWaitlist, backupLogs, blogArticles } from "../drizzle/schema";
+import { outletProducts, loyaltyRewards, stampTransactions, guestOrders, reviews, kotQueue, receiptQueue, productAuditLog, categoryAuditLog, complaints, eventInquiries, eventOrders, eventOrderItems, workshops, workshopBookings, workshopDates, workshopWaitlist, backupLogs, blogArticles, deliverySalesUploads, deliveryItemSales } from "../drizzle/schema";
 import { ENV } from './_core/env';
 import { wholesaleRouter } from './wholesaleRouter';
 import { notifyOwner } from './_core/notification';
@@ -5670,6 +5670,134 @@ export const appRouter = router({
           });
         }
 
+        // 8. Delivery channel analysis (from Petpooja uploads)
+        const startDateStr = input.startDate;
+        const endDateStr = input.endDate;
+        const deliveryEnd = new Date(end.getTime() + 24 * 60 * 60 * 1000);
+        const deliveryUploads = await dbInstance.select()
+          .from(deliverySalesUploads)
+          .where(and(
+            sql`DATE(${deliverySalesUploads.periodStart}) >= ${startDateStr}`,
+            sql`DATE(${deliverySalesUploads.periodEnd}) <= DATE_ADD(${endDateStr}, INTERVAL 1 DAY)`
+          ));
+
+        if (deliveryUploads.length > 0) {
+          let zomatoOrders = 0, zomatoAmount = 0, swiggyOrders = 0, swiggyAmount = 0;
+          let dineInOrders = 0, dineInAmount = 0, deliveryGrandTotal = 0, deliveryTotalOrders = 0;
+          for (const u of deliveryUploads) {
+            zomatoOrders += u.zomatoOrders || 0;
+            zomatoAmount += u.zomatoAmount || 0;
+            swiggyOrders += u.swiggyOrders || 0;
+            swiggyAmount += u.swiggyAmount || 0;
+            dineInOrders += u.dineInOrders || 0;
+            dineInAmount += u.dineInAmount || 0;
+            deliveryGrandTotal += u.grandTotal || 0;
+            deliveryTotalOrders += u.totalOrders || 0;
+          }
+
+          // Channel mix insight
+          const websiteTotal = totalRevenue;
+          const allChannelRevenue = websiteTotal + deliveryGrandTotal;
+          const websitePct = allChannelRevenue > 0 ? Math.round(websiteTotal / allChannelRevenue * 100) : 0;
+          const zomatoPct = allChannelRevenue > 0 ? Math.round(zomatoAmount / allChannelRevenue * 100) : 0;
+          const swiggyPct = allChannelRevenue > 0 ? Math.round(swiggyAmount / allChannelRevenue * 100) : 0;
+
+          recommendations.push({
+            type: 'insight',
+            title: 'Multi-Channel Revenue Breakdown',
+            description: `Total across all channels: ₹${(allChannelRevenue / 100).toLocaleString('en-IN', {maximumFractionDigits: 0})} (${allOrders.length + deliveryTotalOrders} orders). Website: ${websitePct}%, Zomato: ${zomatoPct}%, Swiggy: ${swiggyPct}%. ${websitePct > 50 ? 'Website is your dominant channel — great for margins since you avoid aggregator commissions.' : 'Delivery platforms contribute the majority — consider strategies to shift more customers to direct ordering to save on commissions.'}`,
+            priority: 'high',
+            icon: 'channels',
+          });
+
+          // AOV comparison across channels
+          const websiteAOV = allOrders.length > 0 ? totalRevenue / allOrders.length / 100 : 0;
+          const zomatoAOV = zomatoOrders > 0 ? zomatoAmount / zomatoOrders / 100 : 0;
+          const swiggyAOV = swiggyOrders > 0 ? swiggyAmount / swiggyOrders / 100 : 0;
+          if (websiteAOV > 0 && zomatoAOV > 0) {
+            const higherChannel = websiteAOV > zomatoAOV ? 'Website' : 'Zomato';
+            const lowerChannel = websiteAOV > zomatoAOV ? 'Zomato' : 'Website';
+            const higherAOV = Math.max(websiteAOV, zomatoAOV);
+            const lowerAOV = Math.min(websiteAOV, zomatoAOV);
+            const diff = Math.round((higherAOV / lowerAOV - 1) * 100);
+            if (diff > 10) {
+              recommendations.push({
+                type: 'insight',
+                title: `${higherChannel} has ${diff}% higher AOV than ${lowerChannel}`,
+                description: `${higherChannel} AOV: ₹${Math.round(higherAOV)} vs ${lowerChannel}: ₹${Math.round(lowerAOV)}${swiggyAOV > 0 ? `, Swiggy: ₹${Math.round(swiggyAOV)}` : ''}. ${websiteAOV > zomatoAOV ? 'Direct orders are more valuable per transaction. Promote website ordering with loyalty rewards or exclusive items.' : 'Delivery customers spend more per order — consider offering premium combos on aggregator platforms.'}`,
+                priority: 'medium',
+                icon: 'rupee',
+              });
+            }
+          }
+
+          // Swiggy growth opportunity
+          if (swiggyOrders > 0 && zomatoOrders > 0 && swiggyOrders < zomatoOrders * 0.5) {
+            recommendations.push({
+              type: 'opportunity',
+              title: 'Swiggy growth opportunity',
+              description: `Swiggy has only ${Math.round(swiggyOrders / zomatoOrders * 100)}% of Zomato's order volume (${swiggyOrders} vs ${zomatoOrders}) but ${swiggyAOV > zomatoAOV ? 'a higher' : 'a comparable'} AOV. Consider investing in Swiggy promotions, featured listings, or exclusive deals to grow this channel.`,
+              priority: 'medium',
+              icon: 'growth',
+            });
+          }
+
+          // Delivery product insights
+          const deliveryItems = await dbInstance.select({
+            baseProductName: deliveryItemSales.baseProductName,
+            category: deliveryItemSales.category,
+            totalQty: sql<number>`SUM(${deliveryItemSales.quantity})`,
+            totalAmount: sql<number>`SUM(${deliveryItemSales.amount})`,
+          }).from(deliveryItemSales)
+            .where(sql`${deliveryItemSales.uploadId} IN (${sql.join(deliveryUploads.map(u => sql`${u.id}`), sql`, `)})`)
+            .groupBy(deliveryItemSales.baseProductName, deliveryItemSales.category)
+            .orderBy(sql`SUM(${deliveryItemSales.quantity}) DESC`);
+
+          // Find delivery-only bestsellers (not on website)
+          const websiteProductNames = new Set(Object.keys(productRevenue).map(n => n.trim().toLowerCase()));
+          const deliveryOnlyHits = deliveryItems
+            .filter(d => !websiteProductNames.has((d.baseProductName || '').trim().toLowerCase()) && Number(d.totalQty) >= 5)
+            .slice(0, 3);
+          if (deliveryOnlyHits.length > 0) {
+            recommendations.push({
+              type: 'focus',
+              title: 'Delivery-exclusive bestsellers',
+              description: `These products sell well on delivery but not on your website: ${deliveryOnlyHits.map(d => `${d.baseProductName} (${d.totalQty} sold)`).join(', ')}. Consider adding them to your website menu or creating special promotions around them.`,
+              priority: 'medium',
+              icon: 'delivery',
+            });
+          }
+
+          // Top delivery categories
+          const deliveryCatRevenue: Record<string, number> = {};
+          deliveryItems.forEach(d => {
+            const cat = d.category || 'Unknown';
+            deliveryCatRevenue[cat] = (deliveryCatRevenue[cat] || 0) + Number(d.totalAmount || 0);
+          });
+          const topDeliveryCats = Object.entries(deliveryCatRevenue).sort(([,a], [,b]) => b - a).slice(0, 3);
+          if (topDeliveryCats.length > 0) {
+            recommendations.push({
+              type: 'insight',
+              title: 'Top delivery categories',
+              description: `On delivery platforms, your top categories are: ${topDeliveryCats.map(([cat, rev]) => `${cat} (₹${(rev / 100).toLocaleString('en-IN', {maximumFractionDigits: 0})})`).join(', ')}. Ensure these categories have optimized photos and descriptions on Zomato/Swiggy for maximum conversion.`,
+              priority: 'low',
+              icon: 'category',
+            });
+          }
+
+          // Commission savings opportunity
+          const estimatedCommission = (zomatoAmount + swiggyAmount) * 0.25; // ~25% aggregator commission
+          if (estimatedCommission > 0) {
+            recommendations.push({
+              type: 'action',
+              title: `Estimated ₹${(estimatedCommission / 100).toLocaleString('en-IN', {maximumFractionDigits: 0})} in aggregator commissions`,
+              description: `At ~25% commission rate, you're paying approximately ₹${(estimatedCommission / 100).toLocaleString('en-IN', {maximumFractionDigits: 0})} to Zomato/Swiggy. Shifting even 20% of delivery orders to your website could save ₹${(estimatedCommission * 0.2 / 100).toLocaleString('en-IN', {maximumFractionDigits: 0})}. Promote your website with QR codes on packaging, social media, and in-store signage.`,
+              priority: 'high',
+              icon: 'rupee',
+            });
+          }
+        }
+
         // Sort by priority
         const priorityOrder = { high: 0, medium: 1, low: 2 };
         recommendations.sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority]);
@@ -5678,6 +5806,257 @@ export const appRouter = router({
       }),
 
     // Website Traffic Analytics - proxy to Umami API
+    // Combined channel analytics (website + delivery)
+    getCombinedChannelAnalytics: adminProcedure
+      .input(z.object({
+        startDate: z.string(),
+        endDate: z.string(),
+      }))
+      .query(async ({ input }) => {
+        const dbInstance = await getDb();
+        if (!dbInstance) return null;
+        const start = new Date(input.startDate);
+        const end = new Date(input.endDate);
+        end.setHours(23, 59, 59, 999);
+
+        // 1. Website orders
+        const websiteOrders = await dbInstance.select({
+          count: sql<number>`COUNT(*)`,
+          revenue: sql<number>`COALESCE(SUM(${orders.totalAmount}), 0)`,
+          avgOrder: sql<number>`COALESCE(AVG(${orders.totalAmount}), 0)`,
+          gst: sql<number>`COALESCE(SUM(COALESCE(${orders.stateGst}, 0) + COALESCE(${orders.centralGst}, 0)), 0)`,
+        }).from(orders)
+          .where(and(
+            sql`${orders.createdAt} >= ${start}`,
+            sql`${orders.createdAt} <= ${end}`,
+            sql`${orders.orderStatus} != 'cancelled'`
+          ));
+
+        // 2. Delivery data from uploads (use date-only comparison to avoid timezone issues)
+        const startDateStr = input.startDate; // YYYY-MM-DD
+        const endDateStr = input.endDate; // YYYY-MM-DD
+        const deliveryUploads = await dbInstance.select()
+          .from(deliverySalesUploads)
+          .where(and(
+            sql`DATE(${deliverySalesUploads.periodStart}) >= ${startDateStr}`,
+            sql`DATE(${deliverySalesUploads.periodEnd}) <= DATE_ADD(${endDateStr}, INTERVAL 1 DAY)`
+          ));
+
+        // Aggregate delivery data
+        let deliveryTotals = {
+          zomatoOrders: 0, zomatoAmount: 0,
+          swiggyOrders: 0, swiggyAmount: 0,
+          dineInOrders: 0, dineInAmount: 0,
+          totalOrders: 0, grandTotal: 0,
+          cgst: 0, sgst: 0,
+          cashAmount: 0, cardAmount: 0, upiAmount: 0,
+        };
+        for (const u of deliveryUploads) {
+          deliveryTotals.zomatoOrders += u.zomatoOrders || 0;
+          deliveryTotals.zomatoAmount += u.zomatoAmount || 0;
+          deliveryTotals.swiggyOrders += u.swiggyOrders || 0;
+          deliveryTotals.swiggyAmount += u.swiggyAmount || 0;
+          deliveryTotals.dineInOrders += u.dineInOrders || 0;
+          deliveryTotals.dineInAmount += u.dineInAmount || 0;
+          deliveryTotals.totalOrders += u.totalOrders || 0;
+          deliveryTotals.grandTotal += u.grandTotal || 0;
+          deliveryTotals.cgst += u.cgst || 0;
+          deliveryTotals.sgst += u.sgst || 0;
+          deliveryTotals.cashAmount += u.cashAmount || 0;
+          deliveryTotals.cardAmount += u.cardAmount || 0;
+          deliveryTotals.upiAmount += u.upiAmount || 0;
+        }
+
+        // 3. Delivery item-level data for product comparison
+        const deliveryItems = deliveryUploads.length > 0 
+          ? await dbInstance.select({
+              baseProductName: deliveryItemSales.baseProductName,
+              category: deliveryItemSales.category,
+              totalQty: sql<number>`SUM(${deliveryItemSales.quantity})`,
+              totalAmount: sql<number>`SUM(${deliveryItemSales.amount})`,
+            }).from(deliveryItemSales)
+              .where(sql`${deliveryItemSales.uploadId} IN (${sql.join(deliveryUploads.map(u => sql`${u.id}`), sql`, `)})`)
+              .groupBy(deliveryItemSales.baseProductName, deliveryItemSales.category)
+              .orderBy(sql`SUM(${deliveryItemSales.quantity}) DESC`)
+          : [];
+
+        // 4. Website item-level data for product comparison
+        const websiteItems = await dbInstance.select({
+          productName: products.name,
+          subcategoryName: subcategories.name,
+          totalQty: sql<number>`SUM(${orderItemsTable.quantity})`,
+          totalAmount: sql<number>`SUM(${orderItemsTable.quantity} * ${orderItemsTable.unitPrice})`,
+        }).from(orderItemsTable)
+          .innerJoin(orders, eq(orderItemsTable.orderId, orders.id))
+          .innerJoin(products, eq(orderItemsTable.productId, products.id))
+          .innerJoin(subcategories, eq(products.subcategoryId, subcategories.id))
+          .where(and(
+            sql`${orders.createdAt} >= ${start}`,
+            sql`${orders.createdAt} <= ${end}`,
+            sql`${orders.orderStatus} != 'cancelled'`
+          ))
+          .groupBy(products.name, subcategories.name)
+          .orderBy(sql`SUM(${orderItemsTable.quantity}) DESC`);
+
+        // 5. Workshop + Event revenue
+        const workshopRevenue = await dbInstance.select({
+          count: sql<number>`COUNT(*)`,
+          revenue: sql<number>`COALESCE(SUM(${workshopBookings.totalAmount}), 0)`,
+        }).from(workshopBookings)
+          .where(and(
+            sql`${workshopBookings.createdAt} >= ${start}`,
+            sql`${workshopBookings.createdAt} <= ${end}`,
+            sql`${workshopBookings.paymentStatus} = 'paid'`
+          ));
+
+        const eventRevenue = await dbInstance.select({
+          count: sql<number>`COUNT(*)`,
+          revenue: sql<number>`COALESCE(SUM(${eventOrders.totalAmount}), 0)`,
+        }).from(eventOrders)
+          .where(and(
+            sql`${eventOrders.createdAt} >= ${start}`,
+            sql`${eventOrders.createdAt} <= ${end}`,
+            sql`${eventOrders.status} IN ('confirmed', 'in_progress', 'completed')`
+          ));
+
+        // Build channel summary
+        const websiteRevenue = Number(websiteOrders[0]?.revenue || 0);
+        const websiteCount = Number(websiteOrders[0]?.count || 0);
+        const zomatoRevenue = deliveryTotals.zomatoAmount; // in paise
+        const swiggyRevenue = deliveryTotals.swiggyAmount; // in paise
+        const petpoojaDineIn = deliveryTotals.dineInAmount; // in paise
+        const workshopRev = Number(workshopRevenue[0]?.revenue || 0);
+        const eventRev = Number(eventRevenue[0]?.revenue || 0);
+
+        const channels = [
+          {
+            name: 'Website / Direct',
+            orders: websiteCount,
+            revenue: websiteRevenue, // in paise
+            avgOrderValue: websiteCount > 0 ? Math.round(websiteRevenue / websiteCount) : 0,
+            gst: Number(websiteOrders[0]?.gst || 0),
+            color: '#8B4513',
+          },
+          {
+            name: 'Zomato',
+            orders: deliveryTotals.zomatoOrders,
+            revenue: zomatoRevenue,
+            avgOrderValue: deliveryTotals.zomatoOrders > 0 ? Math.round(zomatoRevenue / deliveryTotals.zomatoOrders) : 0,
+            gst: 0, // GST included in delivery amounts
+            color: '#E23744',
+          },
+          {
+            name: 'Swiggy',
+            orders: deliveryTotals.swiggyOrders,
+            revenue: swiggyRevenue,
+            avgOrderValue: deliveryTotals.swiggyOrders > 0 ? Math.round(swiggyRevenue / deliveryTotals.swiggyOrders) : 0,
+            gst: 0,
+            color: '#FC8019',
+          },
+          {
+            name: 'Petpooja Dine-in (Fallback)',
+            orders: deliveryTotals.dineInOrders,
+            revenue: petpoojaDineIn,
+            avgOrderValue: deliveryTotals.dineInOrders > 0 ? Math.round(petpoojaDineIn / deliveryTotals.dineInOrders) : 0,
+            gst: 0,
+            color: '#6B7280',
+          },
+          {
+            name: 'Workshops',
+            orders: Number(workshopRevenue[0]?.count || 0),
+            revenue: workshopRev,
+            avgOrderValue: Number(workshopRevenue[0]?.count || 0) > 0 ? Math.round(workshopRev / Number(workshopRevenue[0]?.count || 0)) : 0,
+            gst: 0,
+            color: '#10B981',
+          },
+          {
+            name: 'Events',
+            orders: Number(eventRevenue[0]?.count || 0),
+            revenue: eventRev,
+            avgOrderValue: Number(eventRevenue[0]?.count || 0) > 0 ? Math.round(eventRev / Number(eventRevenue[0]?.count || 0)) : 0,
+            gst: 0,
+            color: '#8B5CF6',
+          },
+        ].filter(c => c.orders > 0 || c.revenue > 0);
+
+        const totalRevenue = channels.reduce((sum, c) => sum + c.revenue, 0);
+        const totalOrders = channels.reduce((sum, c) => sum + c.orders, 0);
+
+        // Build product comparison (top 15 products across channels)
+        const productMap = new Map<string, { name: string; websiteQty: number; websiteRevenue: number; deliveryQty: number; deliveryRevenue: number; category: string }>();
+        
+        for (const item of websiteItems) {
+          const key = (item.productName || '').trim().toLowerCase();
+          const existing = productMap.get(key) || { name: (item.productName || '').trim(), websiteQty: 0, websiteRevenue: 0, deliveryQty: 0, deliveryRevenue: 0, category: (item.subcategoryName || '').trim() };
+          existing.websiteQty += Number(item.totalQty || 0);
+          existing.websiteRevenue += Number(item.totalAmount || 0);
+          productMap.set(key, existing);
+        }
+        
+        for (const item of deliveryItems) {
+          const key = (item.baseProductName || '').trim().toLowerCase();
+          const existing = productMap.get(key) || { name: (item.baseProductName || '').trim(), websiteQty: 0, websiteRevenue: 0, deliveryQty: 0, deliveryRevenue: 0, category: (item.category || '').trim() };
+          existing.deliveryQty += Number(item.totalQty || 0);
+          existing.deliveryRevenue += Number(item.totalAmount || 0);
+          productMap.set(key, existing);
+        }
+
+        const productComparison = Array.from(productMap.values())
+          .map(p => ({
+            ...p,
+            totalQty: p.websiteQty + p.deliveryQty,
+            totalRevenue: p.websiteRevenue + p.deliveryRevenue,
+            websiteShare: p.websiteQty + p.deliveryQty > 0 ? Math.round((p.websiteQty / (p.websiteQty + p.deliveryQty)) * 100) : 0,
+            deliveryShare: p.websiteQty + p.deliveryQty > 0 ? Math.round((p.deliveryQty / (p.websiteQty + p.deliveryQty)) * 100) : 0,
+          }))
+          .sort((a, b) => b.totalQty - a.totalQty)
+          .slice(0, 20);
+
+        // Generate cross-channel insights
+        const insights: string[] = [];
+        
+        if (websiteCount > 0 && deliveryTotals.zomatoOrders > 0) {
+          const websiteAOV = websiteRevenue / websiteCount / 100;
+          const zomatoAOV = zomatoRevenue / deliveryTotals.zomatoOrders / 100;
+          if (websiteAOV > zomatoAOV * 1.1) {
+            insights.push(`Website AOV (₹${Math.round(websiteAOV)}) is ${Math.round((websiteAOV/zomatoAOV - 1) * 100)}% higher than Zomato (₹${Math.round(zomatoAOV)}) — your most profitable channel per order.`);
+          }
+        }
+
+        if (deliveryTotals.swiggyOrders > 0 && deliveryTotals.zomatoOrders > 0) {
+          const swiggyAOV = swiggyRevenue / deliveryTotals.swiggyOrders / 100;
+          const zomatoAOV = zomatoRevenue / deliveryTotals.zomatoOrders / 100;
+          if (swiggyAOV > zomatoAOV && deliveryTotals.swiggyOrders < deliveryTotals.zomatoOrders * 0.5) {
+            insights.push(`Swiggy has higher AOV (₹${Math.round(swiggyAOV)}) than Zomato (₹${Math.round(zomatoAOV)}) but only ${Math.round(deliveryTotals.swiggyOrders / deliveryTotals.zomatoOrders * 100)}% of the volume — growth opportunity.`);
+          }
+        }
+
+        // Products that sell better on delivery vs website
+        const deliveryStronger = productComparison.filter(p => p.deliveryShare > 65 && p.totalQty >= 5);
+        const websiteStronger = productComparison.filter(p => p.websiteShare > 65 && p.totalQty >= 5);
+        
+        if (deliveryStronger.length > 0) {
+          insights.push(`Products stronger on delivery: ${deliveryStronger.slice(0, 3).map(p => p.name).join(', ')} — consider promoting these on Zomato/Swiggy.`);
+        }
+        if (websiteStronger.length > 0) {
+          insights.push(`Products stronger on website/dine-in: ${websiteStronger.slice(0, 3).map(p => p.name).join(', ')} — these may not travel well for delivery.`);
+        }
+
+        const deliveryPct = totalRevenue > 0 ? Math.round((zomatoRevenue + swiggyRevenue) / totalRevenue * 100) : 0;
+        const websitePct = totalRevenue > 0 ? Math.round(websiteRevenue / totalRevenue * 100) : 0;
+        insights.push(`Channel mix: Website ${websitePct}% vs Delivery ${deliveryPct}% of total revenue.`);
+
+        return {
+          channels,
+          totalRevenue,
+          totalOrders,
+          productComparison,
+          insights,
+          hasDeliveryData: deliveryUploads.length > 0,
+          deliveryPeriods: deliveryUploads.map(u => u.periodLabel),
+        };
+      }),
+
     getWebsiteTraffic: adminProcedure
       .input(z.object({
         startDate: z.string(),

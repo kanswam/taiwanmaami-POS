@@ -1,0 +1,21 @@
+{
+  "query": "SELECT id, periodLabel, periodStart, periodEnd, totalOrders, grandTotal, zomatoOrders, swiggyOrders, dineInOrders FROM delivery_sales_uploads;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT id, periodLabel, periodStart, periodEnd, totalOrders, grandTotal, zomatoOrders, swiggyOrders, dineInOrders FROM delivery_sales_uploads;",
+  "rows": [
+    {
+      "id": "3",
+      "periodLabel": "January 2026",
+      "periodStart": "2026-01-08 00:00:00",
+      "periodEnd": "2026-02-07 00:00:00",
+      "totalOrders": "271",
+      "grandTotal": "23950900",
+      "zomatoOrders": "169",
+      "swiggyOrders": "60",
+      "dineInOrders": "42"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tperiodLabel\tperiodStart\tperiodEnd\ttotalOrders\tgrandTotal\tzomatoOrders\tswiggyOrders\tdineInOrders\n3\tJanuary 2026\t2026-01-08 00:00:00\t2026-02-07 00:00:00\t271\t23950900\t169\t60\t42\n",
+  "stderr": "",
+  "execution_time_ms": 58
+}

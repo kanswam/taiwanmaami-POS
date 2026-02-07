@@ -1,0 +1,130 @@
+{
+  "query": "SELECT id, itemName, baseProductName, category, quantity, amount FROM delivery_item_sales ORDER BY quantity DESC LIMIT 15;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT id, itemName, baseProductName, category, quantity, amount FROM delivery_item_sales ORDER BY quantity DESC LIMIT 15;",
+  "rows": [
+    {
+      "id": "87",
+      "itemName": "Biang Biang Noodles",
+      "baseProductName": "Biang Biang Noodles",
+      "category": "Noodles",
+      "quantity": "62",
+      "amount": "2730000"
+    },
+    {
+      "id": "1",
+      "itemName": "Classic Taiwan Milk Tea (Regular (yes Boba))",
+      "baseProductName": "Classic Taiwan Milk Tea",
+      "category": "Organic Black Tea",
+      "quantity": "25",
+      "amount": "989500"
+    },
+    {
+      "id": "113",
+      "itemName": "Original Boba Cream Caramel",
+      "baseProductName": "Original Boba Cream Caramel",
+      "category": "Boba Creme Caramel",
+      "quantity": "22",
+      "amount": "653000"
+    },
+    {
+      "id": "78",
+      "itemName": "Yaki Onigiri",
+      "baseProductName": "Yaki Onigiri",
+      "category": "Rice",
+      "quantity": "21",
+      "amount": "1026000"
+    },
+    {
+      "id": "100",
+      "itemName": "Strawberry (set Of 2)",
+      "baseProductName": "Strawberry (set Of 2)",
+      "category": "Fruit Mochi",
+      "quantity": "20",
+      "amount": "810250"
+    },
+    {
+      "id": "81",
+      "itemName": "Omurice",
+      "baseProductName": "Omurice",
+      "category": "Omelete",
+      "quantity": "19",
+      "amount": "900100"
+    },
+    {
+      "id": "102",
+      "itemName": "Mango (set Of 2)",
+      "baseProductName": "Mango (set Of 2)",
+      "category": "Fruit Mochi",
+      "quantity": "16",
+      "amount": "649900"
+    },
+    {
+      "id": "50",
+      "itemName": "Strawberry Matcha Latte (Regular (yes Boba))",
+      "baseProductName": "Strawberry Matcha Latte",
+      "category": "Matcha Blend",
+      "quantity": "12",
+      "amount": "502000"
+    },
+    {
+      "id": "80",
+      "itemName": "Omunoodles",
+      "baseProductName": "Omunoodles",
+      "category": "Omelete",
+      "quantity": "12",
+      "amount": "562300"
+    },
+    {
+      "id": "103",
+      "itemName": "Blueberry (set Of 2)",
+      "baseProductName": "Blueberry (set Of 2)",
+      "category": "Fruit Mochi",
+      "quantity": "11",
+      "amount": "449900"
+    },
+    {
+      "id": "86",
+      "itemName": "Stir-fried Veg Cong You Bing",
+      "baseProductName": "Stir-fried Veg Cong You Bing",
+      "category": "Cong You Bing",
+      "quantity": "10",
+      "amount": "465900"
+    },
+    {
+      "id": "3",
+      "itemName": "Classic Taiwan Milk Tea (Large (yes Boba))",
+      "baseProductName": "Classic Taiwan Milk Tea",
+      "category": "Organic Black Tea",
+      "quantity": "10",
+      "amount": "462000"
+    },
+    {
+      "id": "83",
+      "itemName": "Egg Cong You Bing",
+      "baseProductName": "Egg Cong You Bing",
+      "category": "Cong You Bing",
+      "quantity": "9",
+      "amount": "312400"
+    },
+    {
+      "id": "94",
+      "itemName": "Strawberry Conserve & Condensed Milk",
+      "baseProductName": "Strawberry Conserve & Condensed Milk",
+      "category": "Sweet Pillow Brioche",
+      "quantity": "9",
+      "amount": "408500"
+    },
+    {
+      "id": "105",
+      "itemName": "1 Mochi",
+      "baseProductName": "1 Mochi",
+      "category": "Fruit Mochi",
+      "quantity": "9",
+      "amount": "166500"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\titemName\tbaseProductName\tcategory\tquantity\tamount\n87\tBiang Biang Noodles\tBiang Biang Noodles\tNoodles\t62\t2730000\n1\tClassic Taiwan Milk Tea (Regular (yes Boba))\tClassic Taiwan Milk Tea\tOrganic Black Tea\t25\t989500\n113\tOriginal Boba Cream Caramel\tOriginal Boba Cream Caramel\tBoba Creme Caramel\t22\t653000\n78\tYaki Onigiri\tYaki Onigiri\tRice\t21\t1026000\n100\tStrawberry (set Of 2)\tStrawberry (set Of 2)\tFruit Mochi\t20\t810250\n81\tOmurice\tOmurice\tOmelete\t19\t900100\n102\tMango (set Of 2)\tMango (set Of 2)\tFruit Mochi\t16\t649900\n50\tStrawberry Matcha Latte (Regular (yes Boba))\tStrawberry Matcha Latte\tMatcha Blend\t12\t502000\n80\tOmunoodles\tOmunoodles\tOmelete\t12\t562300\n103\tBlueberry (set Of 2)\tBlueberry (set Of 2)\tFruit Mochi\t11\t449900\n86\tStir-fried Veg Cong You Bing\tStir-fried Veg Cong You Bing\tCong You Bing\t10\t465900\n3\tClassic Taiwan Milk Tea (Large (yes Boba))\tClassic Taiwan Milk Tea\tOrganic Black Tea\t10\t462000\n83\tEgg Cong You Bing\tEgg Cong You Bing\tCong You Bing\t9\t312400\n94\tStrawberry Conserve & Condensed Milk\tStrawberry Conserve & Condensed Milk\tSweet Pillow Brioche\t9\t408500\n105\t1 Mochi\t1 Mochi\tFruit Mochi\t9\t166500\n",
+  "stderr": "",
+  "execution_time_ms": 50
+}

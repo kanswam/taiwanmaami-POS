@@ -1,0 +1,100 @@
+{
+  "query": "SELECT id, uploadId, itemName, baseProductName, category, quantity, amount FROM delivery_item_sales LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT id, uploadId, itemName, baseProductName, category, quantity, amount FROM delivery_item_sales LIMIT 10;",
+  "rows": [
+    {
+      "id": "1",
+      "uploadId": "3",
+      "itemName": "Classic Taiwan Milk Tea (Regular (yes Boba))",
+      "baseProductName": "Classic Taiwan Milk Tea",
+      "category": "Organic Black Tea",
+      "quantity": "25",
+      "amount": "989500"
+    },
+    {
+      "id": "2",
+      "uploadId": "3",
+      "itemName": "Classic Taiwan Milk Tea (Regular (no Boba))",
+      "baseProductName": "Classic Taiwan Milk Tea",
+      "category": "Organic Black Tea",
+      "quantity": "2",
+      "amount": "69000"
+    },
+    {
+      "id": "3",
+      "uploadId": "3",
+      "itemName": "Classic Taiwan Milk Tea (Large (yes Boba))",
+      "baseProductName": "Classic Taiwan Milk Tea",
+      "category": "Organic Black Tea",
+      "quantity": "10",
+      "amount": "462000"
+    },
+    {
+      "id": "4",
+      "uploadId": "3",
+      "itemName": "Rose Milk Tea (Large (yes Boba))",
+      "baseProductName": "Rose Milk Tea",
+      "category": "Organic Black Tea",
+      "quantity": "1",
+      "amount": "44500"
+    },
+    {
+      "id": "5",
+      "uploadId": "3",
+      "itemName": "Hazlenut Milk Tea (Regular (YES BOBA))",
+      "baseProductName": "Hazlenut Milk Tea",
+      "category": "Organic Black Tea",
+      "quantity": "5",
+      "amount": "200500"
+    },
+    {
+      "id": "6",
+      "uploadId": "3",
+      "itemName": "Hazlenut Milk Tea (Large (YES BOBA))",
+      "baseProductName": "Hazlenut Milk Tea",
+      "category": "Organic Black Tea",
+      "quantity": "2",
+      "amount": "94000"
+    },
+    {
+      "id": "7",
+      "uploadId": "3",
+      "itemName": "Caramel Milk Tea (Regular (YES BOBA))",
+      "baseProductName": "Caramel Milk Tea",
+      "category": "Organic Black Tea",
+      "quantity": "4",
+      "amount": "156000"
+    },
+    {
+      "id": "8",
+      "uploadId": "3",
+      "itemName": "Caramel Milk Tea (Large (yes Boba))",
+      "baseProductName": "Caramel Milk Tea",
+      "category": "Organic Black Tea",
+      "quantity": "1",
+      "amount": "44500"
+    },
+    {
+      "id": "9",
+      "uploadId": "3",
+      "itemName": "English Cream Tea Latte (Regular (yes Boba))",
+      "baseProductName": "English Cream Tea Latte",
+      "category": "Organic Black Tea",
+      "quantity": "3",
+      "amount": "117500"
+    },
+    {
+      "id": "10",
+      "uploadId": "3",
+      "itemName": "Mocha Tea Latte (Large (yes Boba))",
+      "baseProductName": "Mocha Tea Latte",
+      "category": "Organic Black Tea",
+      "quantity": "2",
+      "amount": "89000"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tuploadId\titemName\tbaseProductName\tcategory\tquantity\tamount\n1\t3\tClassic Taiwan Milk Tea (Regular (yes Boba))\tClassic Taiwan Milk Tea\tOrganic Black Tea\t25\t989500\n2\t3\tClassic Taiwan Milk Tea (Regular (no Boba))\tClassic Taiwan Milk Tea\tOrganic Black Tea\t2\t69000\n3\t3\tClassic Taiwan Milk Tea (Large (yes Boba))\tClassic Taiwan Milk Tea\tOrganic Black Tea\t10\t462000\n4\t3\tRose Milk Tea (Large (yes Boba))\tRose Milk Tea\tOrganic Black Tea\t1\t44500\n5\t3\tHazlenut Milk Tea (Regular (YES BOBA))\tHazlenut Milk Tea\tOrganic Black Tea\t5\t200500\n6\t3\tHazlenut Milk Tea (Large (YES BOBA))\tHazlenut Milk Tea\tOrganic Black Tea\t2\t94000\n7\t3\tCaramel Milk Tea (Regular (YES BOBA))\tCaramel Milk Tea\tOrganic Black Tea\t4\t156000\n8\t3\tCaramel Milk Tea (Large (yes Boba))\tCaramel Milk Tea\tOrganic Black Tea\t1\t44500\n9\t3\tEnglish Cream Tea Latte (Regular (yes Boba))\tEnglish Cream Tea Latte\tOrganic Black Tea\t3\t117500\n10\t3\tMocha Tea Latte (Large (yes Boba))\tMocha Tea Latte\tOrganic Black Tea\t2\t89000\n",
+  "stderr": "",
+  "execution_time_ms": 85
+}
