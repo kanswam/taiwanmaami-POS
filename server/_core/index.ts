@@ -32,6 +32,151 @@ async function findAvailablePort(startPort: number = 3000): Promise<number> {
 async function startServer() {
   const app = express();
   const server = createServer(app);
+  // Razorpay webhook needs raw body for signature verification - must be before JSON parser
+  app.post('/api/razorpay/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
+    try {
+      const webhookSecret = process.env.RAZORPAY_KEY_SECRET || '';
+      const signature = req.headers['x-razorpay-signature'] as string;
+      const body = Buffer.isBuffer(req.body) ? req.body.toString('utf8') : (typeof req.body === 'string' ? req.body : JSON.stringify(req.body));
+      
+      if (!signature) {
+        console.error('[Razorpay Webhook] Missing signature header');
+        return res.status(400).json({ error: 'Missing signature' });
+      }
+      
+      // Verify webhook signature
+      const { verifyWebhookSignature } = await import('../razorpay');
+      const isValid = verifyWebhookSignature(body, signature, webhookSecret);
+      
+      if (!isValid) {
+        console.error('[Razorpay Webhook] Invalid signature');
+        return res.status(400).json({ error: 'Invalid signature' });
+      }
+      
+      const event = JSON.parse(body);
+      console.log(`[Razorpay Webhook] Received event: ${event.event}`);
+      
+      // Handle payment.captured event
+      if (event.event === 'payment.captured') {
+        const payment = event.payload.payment.entity;
+        const razorpayOrderId = payment.order_id;
+        const razorpayPaymentId = payment.id;
+        const amount = payment.amount; // in paise
+        const receipt = payment.notes?.orderid || '';
+        
+        console.log(`[Razorpay Webhook] Payment captured: ${razorpayPaymentId}, order: ${razorpayOrderId}, amount: ${amount}, receipt: ${receipt}`);
+        
+        const { getDb } = await import('../db');
+        const { orders, payments: paymentsTable, kotQueue, orderItems: orderItemsTable, orderItemAddons } = await import('../../drizzle/schema');
+        const { eq, sql } = await import('drizzle-orm');
+        
+        const dbInstance = await getDb();
+        if (!dbInstance) {
+          console.error('[Razorpay Webhook] Database not available');
+          return res.status(500).json({ error: 'Database not available' });
+        }
+        
+        // Find the order by razorpayOrderId or by receipt (orderNumber)
+        let order;
+        if (razorpayOrderId) {
+          const [found] = await dbInstance.select().from(orders).where(eq(orders.razorpayOrderId, razorpayOrderId));
+          order = found;
+        }
+        if (!order && receipt) {
+          const [found] = await dbInstance.select().from(orders).where(eq(orders.orderNumber, receipt));
+          order = found;
+        }
+        
+        if (!order) {
+          console.error(`[Razorpay Webhook] Order not found for razorpayOrderId: ${razorpayOrderId}, receipt: ${receipt}`);
+          return res.status(200).json({ status: 'order_not_found' });
+        }
+        
+        // Check if payment is already processed (idempotency)
+        if (order.paymentStatus === 'completed') {
+          console.log(`[Razorpay Webhook] Order ${order.orderNumber} already has completed payment, skipping`);
+          return res.status(200).json({ status: 'already_processed' });
+        }
+        
+        console.log(`[Razorpay Webhook] Updating order ${order.orderNumber} (id: ${order.id}) payment status to completed`);
+        
+        // Insert payment record
+        await dbInstance.insert(paymentsTable).values({
+          orderId: order.id,
+          paymentMethod: 'razorpay',
+          paymentStatus: 'success',
+          amount: amount,
+          razorpayPaymentId: razorpayPaymentId,
+          razorpaySignature: 'webhook',
+        });
+        
+        // Update order status
+        await dbInstance.update(orders)
+          .set({
+            orderStatus: 'confirmed',
+            paymentStatus: 'completed',
+            paymentMethod: 'razorpay',
+            razorpayOrderId: razorpayOrderId,
+            razorpayPaymentId: razorpayPaymentId,
+          })
+          .where(eq(orders.id, order.id));
+        
+        // Create KOT for kitchen printing (if not already created)
+        const existingKots = await dbInstance.select().from(kotQueue).where(eq(kotQueue.orderNumber, order.orderNumber));
+        if (existingKots.length === 0) {
+          const items = await dbInstance.select().from(orderItemsTable).where(eq(orderItemsTable.orderId, order.id));
+          const itemIds = items.map(i => i.id);
+          const itemAddons = itemIds.length > 0
+            ? await dbInstance.select().from(orderItemAddons).where(sql`${orderItemAddons.orderItemId} IN (${sql.join(itemIds.map(id => sql`${id}`), sql`, `)})`)
+            : [];
+          
+          const kotData = {
+            orderId: order.orderNumber,
+            orderType: order.orderType.toUpperCase(),
+            customerName: order.customerName || 'Guest',
+            customerPhone: order.customerPhone || '',
+            specialInstructions: order.specialInstructions || '',
+            items: items.filter(i => i.status !== 'cancelled').map(item => {
+              const addons = itemAddons.filter(a => a.orderItemId === item.id);
+              return {
+                productName: item.productName,
+                quantity: item.quantity,
+                price: item.unitPrice,
+                size: item.size,
+                withBoba: item.withBoba,
+                sugarLevel: item.sugarLevel,
+                iceLevel: item.iceLevel,
+                specialInstructions: item.specialInstructions || '',
+                addons: addons.map(a => ({ name: a.addonName, price: a.addonPrice })),
+              };
+            }),
+            totalAmount: order.totalAmount,
+            createdAt: new Date().toISOString(),
+          };
+          
+          await dbInstance.insert(kotQueue).values({
+            orderId: order.id.toString(),
+            outletId: order.outletId || 1,
+            orderNumber: order.orderNumber,
+            kotData: kotData,
+            isPrinted: false,
+          });
+          
+          console.log(`[Razorpay Webhook] KOT created for order ${order.orderNumber}`);
+        } else {
+          console.log(`[Razorpay Webhook] KOT already exists for order ${order.orderNumber}, skipping`);
+        }
+        
+        console.log(`[Razorpay Webhook] Order ${order.orderNumber} successfully updated via webhook`);
+      }
+      
+      return res.status(200).json({ status: 'ok' });
+    } catch (error) {
+      console.error('[Razorpay Webhook] Error:', error);
+      return res.status(200).json({ status: 'error_logged' });
+    }
+  });
+
   // Configure body parser with larger size limit for file uploads
   app.use(express.json({ limit: "50mb" }));
   app.use(express.urlencoded({ limit: "50mb", extended: true }));

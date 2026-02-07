@@ -72,6 +72,19 @@ export function getRazorpayKeyId(): string {
   return RAZORPAY_KEY_ID;
 }
 
+// Verify webhook signature from Razorpay
+export function verifyWebhookSignature(
+  body: string,
+  signature: string,
+  webhookSecret: string
+): boolean {
+  const expectedSignature = crypto
+    .createHmac('sha256', webhookSecret)
+    .update(body)
+    .digest('hex');
+  return expectedSignature === signature;
+}
+
 // Fetch payment details
 export async function fetchPaymentDetails(paymentId: string): Promise<any> {
   const auth = Buffer.from(`${RAZORPAY_KEY_ID}:${RAZORPAY_KEY_SECRET}`).toString('base64');

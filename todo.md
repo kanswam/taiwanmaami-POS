@@ -1471,3 +1471,21 @@ Orders fixed:
 - [x] Fix product name matching (trim whitespace for accurate merging)
 - [x] Fix date range overlap query for delivery period matching
 - [x] Add delivery channel insights to Business Recommendations (commission savings, AOV comparison, Swiggy growth, delivery-exclusive products)
+
+## CRITICAL BUG - Order #00302 Payment Not Captured (Feb 7)
+
+- [x] BUG: Order #00302 - Razorpay payment captured (₹908.50) but order shows payment pending, KOT didn't print
+- [x] Investigate Razorpay webhook/payment verification flow root cause
+  - Root cause: Frontend verifyPayment callback failed (customer likely closed browser after payment)
+  - razorpayOrderId was not saved at createPaymentOrder stage, only at verifyPayment
+- [x] Fix the immediate order #00302 to reflect correct payment status
+  - Updated paymentStatus to 'completed', orderStatus to 'confirmed'
+  - Created KOT and receipt queue entries
+- [x] Add Razorpay webhook endpoint (/api/razorpay/webhook) as safety net
+  - Handles payment.captured events server-side
+  - Verifies HMAC signature for security
+  - Updates order status, creates payment record, generates KOT
+  - Idempotent: skips if payment already processed
+  - Registered before JSON parser for raw body access
+- [x] Save razorpayOrderId at createPaymentOrder stage (not just verifyPayment)
+  - Ensures webhook can find order by razorpayOrderId even if frontend callback fails

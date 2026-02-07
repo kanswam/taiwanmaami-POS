@@ -1386,6 +1386,14 @@ export const appRouter = router({
           notes: { orderid: input.orderNumber },
         });
         
+        // Save razorpayOrderId immediately so webhook can find the order
+        const dbInstance = await getDb();
+        if (dbInstance) {
+          await dbInstance.update(orders)
+            .set({ razorpayOrderId: razorpayOrder.id })
+            .where(eq(orders.id, input.orderId));
+        }
+        
         return {
           razorpayOrderId: razorpayOrder.id,
           razorpayKeyId: getRazorpayKeyId(),
