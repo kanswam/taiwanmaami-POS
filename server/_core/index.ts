@@ -501,6 +501,68 @@ async function startServer() {
   app.get('/api/delivery/uploads', handleGetDeliveryUploads as any);
   app.delete('/api/delivery/uploads/:id', handleDeleteDeliveryUpload as any);
 
+  // ============ PAGEVIEW TRACKING ENDPOINT ============
+  // Lightweight endpoint for client-side analytics tracking
+  app.post('/api/track', async (req, res) => {
+    try {
+      const { sessionId, url, referrer, device, utmSource, utmMedium, utmCampaign } = req.body;
+      
+      if (!sessionId || !url) {
+        return res.status(400).json({ error: 'Missing required fields' });
+      }
+      
+      // Parse user agent for browser/OS
+      const ua = req.headers['user-agent'] || '';
+      let browser = 'Unknown';
+      let os = 'Unknown';
+      
+      if (ua.includes('Chrome') && !ua.includes('Edg')) browser = 'Chrome';
+      else if (ua.includes('Safari') && !ua.includes('Chrome')) browser = 'Safari';
+      else if (ua.includes('Firefox')) browser = 'Firefox';
+      else if (ua.includes('Edg')) browser = 'Edge';
+      else if (ua.includes('Opera') || ua.includes('OPR')) browser = 'Opera';
+      
+      if (ua.includes('Windows')) os = 'Windows';
+      else if (ua.includes('Mac OS')) os = 'macOS';
+      else if (ua.includes('Android')) os = 'Android';
+      else if (ua.includes('iPhone') || ua.includes('iPad')) os = 'iOS';
+      else if (ua.includes('Linux')) os = 'Linux';
+      
+      // Detect device type from user agent if not provided
+      let deviceType = device || 'desktop';
+      if (!device) {
+        if (/Mobile|Android.*Mobile|iPhone|iPod/.test(ua)) deviceType = 'mobile';
+        else if (/iPad|Android(?!.*Mobile)|Tablet/.test(ua)) deviceType = 'tablet';
+      }
+      
+      const { getDb } = await import('../db');
+      const { pageviews } = await import('../../drizzle/schema');
+      
+      const dbInstance = await getDb();
+      if (!dbInstance) {
+        return res.status(200).json({ ok: true }); // Silently succeed if DB unavailable
+      }
+      
+      await dbInstance.insert(pageviews).values({
+        sessionId: sessionId.substring(0, 64),
+        url: url.substring(0, 500),
+        referrer: referrer ? referrer.substring(0, 500) : null,
+        browser,
+        os,
+        device: deviceType as 'desktop' | 'mobile' | 'tablet',
+        utmSource: utmSource || null,
+        utmMedium: utmMedium || null,
+        utmCampaign: utmCampaign || null,
+      });
+      
+      return res.status(200).json({ ok: true });
+    } catch (error) {
+      // Never fail tracking - just log and return success
+      console.error('[Track] Error:', error);
+      return res.status(200).json({ ok: true });
+    }
+  });
+
   // tRPC API
   app.use(
     "/api/trpc",

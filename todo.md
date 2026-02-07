@@ -1489,3 +1489,25 @@ Orders fixed:
   - Registered before JSON parser for raw body access
 - [x] Save razorpayOrderId at createPaymentOrder stage (not just verifyPayment)
   - Ensures webhook can find order by razorpayOrderId even if frontend callback fails
+
+## Website Traffic Analytics - Self-hosted Tracking (Feb 7)
+
+- [x] BUG: Website Traffic Analytics page showing blank/zero data
+  - Root cause: Manus-managed Umami analytics API requires authentication credentials not available to the app
+  - All read API endpoints return 401 Unauthorized; share API endpoints return 404
+- [x] Build self-hosted pageview tracking system
+  - Created `pageviews` table in database (sessionId, url, referrer, browser, os, device, UTM params)
+  - Created `daily_traffic_stats` table for aggregated daily stats
+  - Added `/api/track` POST endpoint for recording pageviews (lightweight, non-blocking)
+  - Server-side browser/OS detection from User-Agent header
+- [x] Add client-side tracking hook (`usePageTracking`)
+  - Tracks page navigation via wouter location changes
+  - Generates anonymous session IDs (sessionStorage)
+  - Extracts UTM parameters from URL
+  - Detects device type (desktop/mobile/tablet)
+  - Uses sendBeacon API for reliability
+  - Excludes admin pages from tracking
+- [x] Replace Umami API calls with own database queries in `getWebsiteTraffic` procedure
+  - Calculates unique visitors, sessions, pageviews, avg duration
+  - Provides referrer, browser, OS, device, page, entry page, and UTM channel breakdowns
+- [x] Write vitest tests for pageview tracking (4 tests, all passing)

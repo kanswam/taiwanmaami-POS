@@ -82,14 +82,14 @@ export default function WebTraffic() {
       .reduce((sum: number, r: any) => sum + (r.y || 0), 0);
   }, [trafficData?.referrers]);
 
-  const totalVisitors = trafficData?.stats?.visitors?.value || trafficData?.stats?.uniques?.value || 0;
+  const totalVisitors = trafficData?.stats?.visitors?.value || 0;
   const totalPageviews = trafficData?.stats?.pageviews?.value || 0;
-  const totalVisits = trafficData?.stats?.visits?.value || trafficData?.stats?.sessions?.value || 0;
+  const totalVisits = trafficData?.stats?.visits?.value || 0;
   const bounceRate = trafficData?.stats?.bounces?.value && totalVisits > 0 
     ? ((trafficData.stats.bounces.value / totalVisits) * 100).toFixed(1) 
     : '0';
   const avgDuration = trafficData?.stats?.totaltime?.value && totalVisits > 0
-    ? Math.round(trafficData.stats.totaltime.value / totalVisits / 1000)
+    ? Math.round(trafficData.stats.totaltime.value / totalVisits)
     : 0;
 
   if (!isAuthenticated || user?.role !== 'admin') {

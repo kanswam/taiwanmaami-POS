@@ -1136,3 +1136,53 @@ export const deliveryItemSales = mysqlTable("delivery_item_sales", {
 });
 
 export type DeliveryItemSale = typeof deliveryItemSales.$inferSelect;
+
+// ============================================
+// Website Traffic Analytics (Self-hosted tracking)
+// ============================================
+
+// Pageview events - one row per pageview
+export const pageviews = mysqlTable("pageviews", {
+  id: int("id").autoincrement().primaryKey(),
+  // Session tracking
+  sessionId: varchar("sessionId", { length: 64 }).notNull(), // Anonymous session hash
+  // Page info
+  url: varchar("url", { length: 500 }).notNull(), // Page path (e.g., /menu, /checkout)
+  referrer: varchar("referrer", { length: 500 }), // Referrer URL
+  // Visitor info (anonymized)
+  country: varchar("country", { length: 10 }),
+  city: varchar("city", { length: 100 }),
+  browser: varchar("browser", { length: 50 }),
+  os: varchar("os", { length: 50 }),
+  device: mysqlEnum("device", ["desktop", "mobile", "tablet"]).default("desktop"),
+  // UTM tracking
+  utmSource: varchar("utmSource", { length: 200 }),
+  utmMedium: varchar("utmMedium", { length: 200 }),
+  utmCampaign: varchar("utmCampaign", { length: 200 }),
+  // Timestamps
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type Pageview = typeof pageviews.$inferSelect;
+export type InsertPageview = typeof pageviews.$inferInsert;
+
+// Daily aggregated stats for faster queries
+export const dailyTrafficStats = mysqlTable("daily_traffic_stats", {
+  id: int("id").autoincrement().primaryKey(),
+  date: date("date").notNull(), // YYYY-MM-DD
+  uniqueVisitors: int("uniqueVisitors").default(0).notNull(),
+  pageviews: int("pageviews").default(0).notNull(),
+  sessions: int("sessions").default(0).notNull(),
+  // Top referrers as JSON
+  topReferrers: json("topReferrers").$type<Array<{ source: string; count: number }>>(),
+  // Top pages as JSON
+  topPages: json("topPages").$type<Array<{ url: string; views: number }>>(),
+  // Device breakdown
+  desktopViews: int("desktopViews").default(0).notNull(),
+  mobileViews: int("mobileViews").default(0).notNull(),
+  tabletViews: int("tabletViews").default(0).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type DailyTrafficStat = typeof dailyTrafficStats.$inferSelect;
+export type InsertDailyTrafficStat = typeof dailyTrafficStats.$inferInsert;

@@ -1,0 +1,9 @@
+{
+  "query": "CREATE TABLE IF NOT EXISTS `pageviews` (\n  `id` int AUTO_INCREMENT NOT NULL,\n  `sessionId` varchar(64) NOT NULL,\n  `url` varchar(500) NOT NULL,\n  `referrer` varchar(500),\n  `country` varchar(10),\n  `city` varchar(100),\n  `browser` varchar(50),\n  `os` varchar(50),\n  `device` enum('desktop','mobile','tablet') DEFAULT 'desktop',\n  `utmSource` varchar(200),\n  `utmMedium` varchar(200),\n  `utmCampaign` varchar(200),\n  `createdAt` timestamp NOT NULL DEFAULT (now()),\n  CONSTRAINT `pageviews_id` PRIMARY KEY(`id`),\n  INDEX `idx_pageviews_session` (`sessionId`),\n  INDEX `idx_pageviews_created` (`createdAt`),\n  INDEX `idx_pageviews_url` (`url`(100))\n);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute CREATE TABLE IF NOT EXISTS `pageviews` (\n  `id` int AUTO_INCREMENT NOT NULL,\n  `sessionId` varchar(64) NOT NULL,\n  `url` varchar(500) NOT NULL,\n  `referrer` varchar(500),\n  `country` varchar(10),\n  `city` varchar(100),\n  `browser` varchar(50),\n  `os` varchar(50),\n  `device` enum('desktop','mobile','tablet') DEFAULT 'desktop',\n  `utmSource` varchar(200),\n  `utmMedium` varchar(200),\n  `utmCampaign` varchar(200),\n  `createdAt` timestamp NOT NULL DEFAULT (now()),\n  CONSTRAINT `pageviews_id` PRIMARY KEY(`id`),\n  INDEX `idx_pageviews_session` (`sessionId`),\n  INDEX `idx_pageviews_created` (`createdAt`),\n  INDEX `idx_pageviews_url` (`url`(100))\n);",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 574
+}

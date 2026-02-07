@@ -11,7 +11,7 @@ import { categories, subcategories, products, addons, orders, orderItems as orde
 import { eq, and, desc, asc, sql, or, gte, isNull } from "drizzle-orm";
 import { generateOrderNumber, calculateGst } from "@shared/types";
 // POS functionality removed - Employee Master import removed
-import { outletProducts, loyaltyRewards, stampTransactions, guestOrders, reviews, kotQueue, receiptQueue, productAuditLog, categoryAuditLog, complaints, eventInquiries, eventOrders, eventOrderItems, workshops, workshopBookings, workshopDates, workshopWaitlist, backupLogs, blogArticles, deliverySalesUploads, deliveryItemSales } from "../drizzle/schema";
+import { outletProducts, loyaltyRewards, stampTransactions, guestOrders, reviews, kotQueue, receiptQueue, productAuditLog, categoryAuditLog, complaints, eventInquiries, eventOrders, eventOrderItems, workshops, workshopBookings, workshopDates, workshopWaitlist, backupLogs, blogArticles, deliverySalesUploads, deliveryItemSales, pageviews as pageviewsTable } from "../drizzle/schema";
 import { ENV } from './_core/env';
 import { wholesaleRouter } from './wholesaleRouter';
 import { notifyOwner } from './_core/notification';
@@ -6071,65 +6071,169 @@ export const appRouter = router({
         endDate: z.string(),
       }))
       .query(async ({ input }) => {
-        const analyticsEndpoint = ENV.analyticsEndpoint;
-        const websiteId = ENV.analyticsWebsiteId;
-        
-        if (!analyticsEndpoint || !websiteId) {
-          return { error: 'Analytics not configured', stats: null, pageviews: null, referrers: null, browsers: null, os: null, devices: null, countries: null, pages: null, channels: null };
+        const dbInstance = await getDb();
+        if (!dbInstance) {
+          return { error: 'Database not available', stats: null, pageviews: null, referrers: [], browsers: [], os: [], devices: [], countries: [], pages: [], channels: [], entries: [] };
         }
 
-        const startAt = new Date(input.startDate).getTime();
-        const endAt = new Date(input.endDate + 'T23:59:59.999Z').getTime();
-        const baseUrl = `${analyticsEndpoint}/api/websites/${websiteId}`;
-
-        const headers: Record<string, string> = {
-          'Accept': 'application/json',
-        };
-
         try {
-          // Fetch all data in parallel
-          const [statsRes, pageviewsRes, referrerRes, browserRes, osRes, deviceRes, countryRes, pagesRes, channelRes, entryRes] = await Promise.all([
-            fetch(`${baseUrl}/stats?startAt=${startAt}&endAt=${endAt}`, { headers }),
-            fetch(`${baseUrl}/pageviews?startAt=${startAt}&endAt=${endAt}&unit=day&timezone=Asia/Kolkata`, { headers }),
-            fetch(`${baseUrl}/metrics?startAt=${startAt}&endAt=${endAt}&type=referrer`, { headers }),
-            fetch(`${baseUrl}/metrics?startAt=${startAt}&endAt=${endAt}&type=browser`, { headers }),
-            fetch(`${baseUrl}/metrics?startAt=${startAt}&endAt=${endAt}&type=os`, { headers }),
-            fetch(`${baseUrl}/metrics?startAt=${startAt}&endAt=${endAt}&type=device`, { headers }),
-            fetch(`${baseUrl}/metrics?startAt=${startAt}&endAt=${endAt}&type=country`, { headers }),
-            fetch(`${baseUrl}/metrics?startAt=${startAt}&endAt=${endAt}&type=path`, { headers }),
-            fetch(`${baseUrl}/metrics?startAt=${startAt}&endAt=${endAt}&type=channel`, { headers }),
-            fetch(`${baseUrl}/metrics?startAt=${startAt}&endAt=${endAt}&type=entry`, { headers }),
-          ]);
+          const startDate = new Date(input.startDate);
+          const endDate = new Date(input.endDate + 'T23:59:59.999Z');
 
-          const [stats, pageviews, referrers, browsers, os, devices, countries, pages, channels, entries] = await Promise.all([
-            statsRes.ok ? statsRes.json() : null,
-            pageviewsRes.ok ? pageviewsRes.json() : null,
-            referrerRes.ok ? referrerRes.json() : null,
-            browserRes.ok ? browserRes.json() : null,
-            osRes.ok ? osRes.json() : null,
-            deviceRes.ok ? deviceRes.json() : null,
-            countryRes.ok ? countryRes.json() : null,
-            pagesRes.ok ? pagesRes.json() : null,
-            channelRes.ok ? channelRes.json() : null,
-            entryRes.ok ? entryRes.json() : null,
-          ]);
+          // Query all pageviews in the date range
+          const allPageviews = await dbInstance.select().from(pageviewsTable)
+            .where(and(
+              sql`${pageviewsTable.createdAt} >= ${startDate}`,
+              sql`${pageviewsTable.createdAt} <= ${endDate}`
+            ));
+
+          // Calculate stats
+          const uniqueSessions = new Set(allPageviews.map(pv => pv.sessionId));
+          const totalPageviews = allPageviews.length;
+          const uniqueVisitors = uniqueSessions.size;
+          const sessions = uniqueSessions.size;
+
+          // Calculate avg duration (estimate based on session pageview spread)
+          const sessionTimestamps: Record<string, number[]> = {};
+          allPageviews.forEach(pv => {
+            if (!sessionTimestamps[pv.sessionId]) sessionTimestamps[pv.sessionId] = [];
+            sessionTimestamps[pv.sessionId].push(new Date(pv.createdAt).getTime());
+          });
+          let totalDuration = 0;
+          let sessionCount = 0;
+          Object.values(sessionTimestamps).forEach(timestamps => {
+            if (timestamps.length > 1) {
+              const duration = Math.max(...timestamps) - Math.min(...timestamps);
+              totalDuration += duration;
+              sessionCount++;
+            }
+          });
+          const avgDuration = sessionCount > 0 ? Math.round(totalDuration / sessionCount / 1000) : 0;
+
+          const stats = {
+            pageviews: { value: totalPageviews, prev: 0 },
+            visitors: { value: uniqueVisitors, prev: 0 },
+            visits: { value: sessions, prev: 0 },
+            bounces: { value: 0, prev: 0 },
+            totaltime: { value: avgDuration * sessions, prev: 0 },
+          };
+
+          // Daily pageview breakdown
+          const dailyMap: Record<string, { views: number; visitors: Set<string> }> = {};
+          allPageviews.forEach(pv => {
+            const day = new Date(pv.createdAt).toISOString().split('T')[0];
+            if (!dailyMap[day]) dailyMap[day] = { views: 0, visitors: new Set() };
+            dailyMap[day].views++;
+            dailyMap[day].visitors.add(pv.sessionId);
+          });
+          const pageviewsData = {
+            pageviews: Object.entries(dailyMap).sort().map(([date, data]) => ({ x: date, y: data.views })),
+            sessions: Object.entries(dailyMap).sort().map(([date, data]) => ({ x: date, y: data.visitors.size })),
+          };
+
+          // Referrer breakdown
+          const referrerMap: Record<string, number> = {};
+          allPageviews.forEach(pv => {
+            if (pv.referrer) {
+              try {
+                const hostname = new URL(pv.referrer).hostname || pv.referrer;
+                referrerMap[hostname] = (referrerMap[hostname] || 0) + 1;
+              } catch {
+                referrerMap[pv.referrer] = (referrerMap[pv.referrer] || 0) + 1;
+              }
+            }
+          });
+          const referrers = Object.entries(referrerMap)
+            .sort((a, b) => b[1] - a[1])
+            .map(([x, y]) => ({ x, y }));
+
+          // Browser breakdown
+          const browserMap: Record<string, number> = {};
+          allPageviews.forEach(pv => {
+            const b = pv.browser || 'Unknown';
+            browserMap[b] = (browserMap[b] || 0) + 1;
+          });
+          const browsers = Object.entries(browserMap)
+            .sort((a, b) => b[1] - a[1])
+            .map(([x, y]) => ({ x, y }));
+
+          // OS breakdown
+          const osMap: Record<string, number> = {};
+          allPageviews.forEach(pv => {
+            const o = pv.os || 'Unknown';
+            osMap[o] = (osMap[o] || 0) + 1;
+          });
+          const osData = Object.entries(osMap)
+            .sort((a, b) => b[1] - a[1])
+            .map(([x, y]) => ({ x, y }));
+
+          // Device breakdown
+          const deviceMap: Record<string, number> = {};
+          allPageviews.forEach(pv => {
+            const d = pv.device || 'desktop';
+            deviceMap[d] = (deviceMap[d] || 0) + 1;
+          });
+          const devices = Object.entries(deviceMap)
+            .sort((a, b) => b[1] - a[1])
+            .map(([x, y]) => ({ x, y }));
+
+          // Pages breakdown
+          const pageMap: Record<string, number> = {};
+          allPageviews.forEach(pv => {
+            pageMap[pv.url] = (pageMap[pv.url] || 0) + 1;
+          });
+          const pages = Object.entries(pageMap)
+            .sort((a, b) => b[1] - a[1])
+            .map(([x, y]) => ({ x, y }));
+
+          // Entry pages (first page per session)
+          const sessionFirstPage: Record<string, { url: string; time: number }> = {};
+          allPageviews.forEach(pv => {
+            const time = new Date(pv.createdAt).getTime();
+            if (!sessionFirstPage[pv.sessionId] || time < sessionFirstPage[pv.sessionId].time) {
+              sessionFirstPage[pv.sessionId] = { url: pv.url, time };
+            }
+          });
+          const entryMap: Record<string, number> = {};
+          Object.values(sessionFirstPage).forEach(({ url }) => {
+            entryMap[url] = (entryMap[url] || 0) + 1;
+          });
+          const entries = Object.entries(entryMap)
+            .sort((a, b) => b[1] - a[1])
+            .map(([x, y]) => ({ x, y }));
+
+          // UTM/Channel breakdown
+          const channelMap: Record<string, number> = {};
+          allPageviews.forEach(pv => {
+            if (pv.utmSource) {
+              const source = pv.utmSource.toLowerCase();
+              if (source.includes('instagram') || source.includes('ig')) channelMap['Instagram'] = (channelMap['Instagram'] || 0) + 1;
+              else if (source.includes('facebook') || source.includes('fb')) channelMap['Facebook'] = (channelMap['Facebook'] || 0) + 1;
+              else if (source.includes('google')) channelMap['Google'] = (channelMap['Google'] || 0) + 1;
+              else if (source.includes('whatsapp')) channelMap['WhatsApp'] = (channelMap['WhatsApp'] || 0) + 1;
+              else channelMap[pv.utmSource] = (channelMap[pv.utmSource] || 0) + 1;
+            }
+          });
+          const channels = Object.entries(channelMap)
+            .sort((a, b) => b[1] - a[1])
+            .map(([x, y]) => ({ x, y }));
 
           return {
             error: null,
             stats,
-            pageviews,
-            referrers: referrers || [],
-            browsers: browsers || [],
-            os: os || [],
-            devices: devices || [],
-            countries: countries || [],
-            pages: pages || [],
-            channels: channels || [],
-            entries: entries || [],
+            pageviews: pageviewsData,
+            referrers,
+            browsers,
+            os: osData,
+            devices,
+            countries: [],
+            pages,
+            channels,
+            entries,
           };
         } catch (err) {
-          console.error('Umami API error:', err);
-          return { error: 'Failed to fetch analytics', stats: null, pageviews: null, referrers: null, browsers: null, os: null, devices: null, countries: null, pages: null, channels: null, entries: null };
+          console.error('Traffic analytics error:', err);
+          return { error: 'Failed to fetch analytics', stats: null, pageviews: null, referrers: [], browsers: [], os: [], devices: [], countries: [], pages: [], channels: [], entries: [] };
         }
       }),
   }),

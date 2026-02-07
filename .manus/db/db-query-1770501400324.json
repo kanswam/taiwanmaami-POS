@@ -1,0 +1,9 @@
+{
+  "query": "CREATE TABLE IF NOT EXISTS `daily_traffic_stats` (\n  `id` int AUTO_INCREMENT NOT NULL,\n  `date` date NOT NULL,\n  `uniqueVisitors` int NOT NULL DEFAULT 0,\n  `pageviews` int NOT NULL DEFAULT 0,\n  `sessions` int NOT NULL DEFAULT 0,\n  `topReferrers` json,\n  `topPages` json,\n  `desktopViews` int NOT NULL DEFAULT 0,\n  `mobileViews` int NOT NULL DEFAULT 0,\n  `tabletViews` int NOT NULL DEFAULT 0,\n  `createdAt` timestamp NOT NULL DEFAULT (now()),\n  CONSTRAINT `daily_traffic_stats_id` PRIMARY KEY(`id`),\n  UNIQUE INDEX `idx_daily_stats_date` (`date`)\n);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute CREATE TABLE IF NOT EXISTS `daily_traffic_stats` (\n  `id` int AUTO_INCREMENT NOT NULL,\n  `date` date NOT NULL,\n  `uniqueVisitors` int NOT NULL DEFAULT 0,\n  `pageviews` int NOT NULL DEFAULT 0,\n  `sessions` int NOT NULL DEFAULT 0,\n  `topReferrers` json,\n  `topPages` json,\n  `desktopViews` int NOT NULL DEFAULT 0,\n  `mobileViews` int NOT NULL DEFAULT 0,\n  `tabletViews` int NOT NULL DEFAULT 0,\n  `createdAt` timestamp NOT NULL DEFAULT (now()),\n  CONSTRAINT `daily_traffic_stats_id` PRIMARY KEY(`id`),\n  UNIQUE INDEX `idx_daily_stats_date` (`date`)\n);",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 483
+}

@@ -38,6 +38,7 @@ import AdminEvents from "./pages/AdminEvents";
 import AdminBlog from "./pages/AdminBlog";
 import { CookieConsent } from "./components/CookieConsent";
 import { WhatsAppButton } from "./components/WhatsAppButton";
+import { usePageTracking } from "./hooks/usePageTracking";
 import { BirthdayPromptWrapper } from "./components/BirthdayPromptWrapper";
 import { WholesaleAuthProvider } from "./contexts/WholesaleAuthContext";
 
@@ -61,10 +62,17 @@ function ScrollToTop() {
   return null;
 }
 
+// Track pageviews for analytics
+function PageTracker() {
+  usePageTracking();
+  return null;
+}
+
 function Router() {
   return (
     <>
       <ScrollToTop />
+      <PageTracker />
       <Switch>
       {/* Public Routes */}
       <Route path="/" component={Home} />

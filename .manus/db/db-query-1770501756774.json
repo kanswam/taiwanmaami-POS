@@ -1,0 +1,114 @@
+{
+  "query": "DESCRIBE pageviews;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute DESCRIBE pageviews;",
+  "rows": [
+    {
+      "Field": "id",
+      "Type": "int(11)",
+      "Null": "NO",
+      "Key": "PRI",
+      "Default": "NULL",
+      "Extra": "auto_increment"
+    },
+    {
+      "Field": "sessionId",
+      "Type": "varchar(64)",
+      "Null": "NO",
+      "Key": "MUL",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "url",
+      "Type": "varchar(500)",
+      "Null": "NO",
+      "Key": "MUL",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "referrer",
+      "Type": "varchar(500)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "country",
+      "Type": "varchar(10)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "city",
+      "Type": "varchar(100)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "browser",
+      "Type": "varchar(50)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "os",
+      "Type": "varchar(50)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "device",
+      "Type": "enum('desktop','mobile','tablet')",
+      "Null": "YES",
+      "Key": "",
+      "Default": "desktop",
+      "Extra": ""
+    },
+    {
+      "Field": "utmSource",
+      "Type": "varchar(200)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "utmMedium",
+      "Type": "varchar(200)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "utmCampaign",
+      "Type": "varchar(200)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "createdAt",
+      "Type": "timestamp",
+      "Null": "NO",
+      "Key": "MUL",
+      "Default": "CURRENT_TIMESTAMP",
+      "Extra": ""
+    }
+  ],
+  "messages": [],
+  "stdout": "Field\tType\tNull\tKey\tDefault\tExtra\nid\tint(11)\tNO\tPRI\tNULL\tauto_increment\nsessionId\tvarchar(64)\tNO\tMUL\tNULL\t\nurl\tvarchar(500)\tNO\tMUL\tNULL\t\nreferrer\tvarchar(500)\tYES\t\tNULL\t\ncountry\tvarchar(10)\tYES\t\tNULL\t\ncity\tvarchar(100)\tYES\t\tNULL\t\nbrowser\tvarchar(50)\tYES\t\tNULL\t\nos\tvarchar(50)\tYES\t\tNULL\t\ndevice\tenum('desktop','mobile','tablet')\tYES\t\tdesktop\t\nutmSource\tvarchar(200)\tYES\t\tNULL\t\nutmMedium\tvarchar(200)\tYES\t\tNULL\t\nutmCampaign\tvarchar(200)\tYES\t\tNULL\t\ncreatedAt\ttimestamp\tNO\tMUL\tCURRENT_TIMESTAMP\t\n",
+  "stderr": "",
+  "execution_time_ms": 358
+}
