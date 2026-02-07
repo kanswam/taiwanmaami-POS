@@ -5,6 +5,7 @@ import net from "net";
 import { createExpressMiddleware } from "@trpc/server/adapters/express";
 import { registerOAuthRoutes } from "./oauth";
 import { appRouter } from "../routers";
+import { handleSalesReportExport } from "../excelExport";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
 
@@ -345,6 +346,9 @@ async function startServer() {
       return res.status(500).json({ error: 'Internal server error' });
     }
   });
+
+  // Excel Sales Report Export
+  app.get('/api/export/sales-report', handleSalesReportExport as any);
 
   // tRPC API
   app.use(

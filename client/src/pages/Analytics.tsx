@@ -22,6 +22,7 @@ import {
   Percent,
   Clock,
   ArrowLeft,
+  FileSpreadsheet,
 } from "lucide-react";
 
 // Helper to format currency
@@ -201,7 +202,7 @@ export default function Analytics() {
       headers.join(','),
       ...data.map(row => headers.map(h => {
         const val = row[h];
-        if (typeof val === 'number' && (h.toLowerCase().includes('revenue') || h.toLowerCase().includes('spent') || h.toLowerCase().includes('value'))) {
+        if (typeof val === 'number' && (h.toLowerCase().includes('revenue') || h.toLowerCase().includes('spent') || h.toLowerCase().includes('value') || h === 'cgst' || h === 'sgst' || h === 'gst' || h.toLowerCase().includes('amount') || h.toLowerCase().includes('price'))) {
           return (val / 100).toFixed(2);
         }
         return typeof val === 'string' && val.includes(',') ? `"${val}"` : String(val ?? '');
@@ -246,10 +247,38 @@ export default function Analytics() {
             </Link>
             <h1 className="font-bold text-lg">Analytics Dashboard</h1>
           </div>
-          <Button variant="ghost" size="sm" className="text-primary-foreground hover:bg-primary-foreground/10" onClick={() => refetchSummary()}>
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Refresh
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="text-primary-foreground hover:bg-primary-foreground/10"
+              onClick={async () => {
+                try {
+                  const url = `/api/export/sales-report?startDate=${startDate}&endDate=${endDate}`;
+                  const response = await fetch(url, { credentials: 'include' });
+                  if (!response.ok) throw new Error('Export failed');
+                  const blob = await response.blob();
+                  const downloadUrl = URL.createObjectURL(blob);
+                  const a = document.createElement('a');
+                  a.href = downloadUrl;
+                  a.download = `Taiwan_Maami_Sales_Report_${startDate}_to_${endDate}.xlsx`;
+                  document.body.appendChild(a);
+                  a.click();
+                  document.body.removeChild(a);
+                  URL.revokeObjectURL(downloadUrl);
+                } catch (err) {
+                  alert('Failed to export report. Please try again.');
+                }
+              }}
+            >
+              <FileSpreadsheet className="h-4 w-4 mr-2" />
+              Export Excel
+            </Button>
+            <Button variant="ghost" size="sm" className="text-primary-foreground hover:bg-primary-foreground/10" onClick={() => refetchSummary()}>
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Refresh
+            </Button>
+          </div>
         </div>
       </header>
 

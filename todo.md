@@ -1390,3 +1390,26 @@ Orders fixed:
 - [x] Change hasSizeVariants default from true to false in schema
 - [x] Change hasBobaOption default from true to false in schema
 - [x] Push migration (applied via ALTER TABLE + schema update)
+
+## GST Sales Report Excel Export (Feb 7)
+
+- [x] Build server-side Excel export endpoint that includes ALL revenue sources (orders + workshops + events)
+- [x] Include columns: Invoice Number, Date, Taxable Amount, CGST, SGST, Total GST, Total Amount, Payment Method, Source, Outlet
+- [x] Remove customer name from export (not needed for GST)
+- [x] Include workshop bookings (e.g., Biang Biang workshop ₹5,760) in the report
+- [x] Add Export to Excel button on analytics dashboard
+- [ ] Fix analytics dashboard totals to include workshop/event revenue
+- [x] Write tests for the export endpoint
+
+## Advanced Analytics Dashboard (Feb 7 - planned)
+
+- [ ] Dynamic item-level analysis (which items sell most on which days)
+- [ ] Product performance trends over time
+- [ ] Day-of-week and time-of-day analysis
+
+## GST Report Paise Bug Fix (Feb 7)
+
+- [x] Fix GST report CSV showing CGST/SGST in paise while taxableValue is in rupees
+- [x] Format Excel export with proper ₹ currency formatting (3 sheets: Sales Report, GST Summary, Payment Summary)
+- [x] Add totals row at the bottom of the Excel report
+- [x] Include workshop/event revenue in the comprehensive sales report
