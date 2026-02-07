@@ -1403,9 +1403,9 @@ Orders fixed:
 
 ## Advanced Analytics Dashboard (Feb 7 - planned)
 
-- [ ] Dynamic item-level analysis (which items sell most on which days)
+- [x] Dynamic item-level analysis (which items sell most on which days)
 - [ ] Product performance trends over time
-- [ ] Day-of-week and time-of-day analysis
+- [x] Day-of-week and time-of-day analysis
 
 ## GST Report Paise Bug Fix (Feb 7)
 
@@ -1413,3 +1413,21 @@ Orders fixed:
 - [x] Format Excel export with proper ₹ currency formatting (3 sheets: Sales Report, GST Summary, Payment Summary)
 - [x] Add totals row at the bottom of the Excel report
 - [x] Include workshop/event revenue in the comprehensive sales report
+
+## GST Report Formatting Fix (Feb 7)
+
+- [x] Changed GST report tab export to use the formatted Excel endpoint instead of raw CSV
+- [x] GST report now exports with proper column headers, styling, and totals via Excel
+
+## Item-Level Analytics Dashboard (Feb 7)
+
+- [x] Build backend procedures for item-level sales analysis
+- [x] Product performance ranking (top sellers by quantity and revenue)
+- [x] Day-of-week analysis heatmap (which products sell on which days)
+- [x] Time-of-day analysis (peak hours for different product categories) - with IST timezone fix
+- [x] Product mix analysis (what items are commonly ordered together)
+- [x] Build frontend UI with interactive heatmaps, data tables, and insights
+- [x] Correlation analysis between day-of-week and product sales
+- [x] Day-of-Week Insights (best/worst day, weekend vs weekday comparison)
+- [x] Time-of-Day Insights (peak hour, lunch vs dinner rush)
+- [x] Key Insights for product mix (top combos, cross-category ordering patterns)

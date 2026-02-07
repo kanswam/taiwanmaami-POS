@@ -4767,7 +4767,8 @@ export const appRouter = router({
         for (let i = 0; i < 24; i++) hourStats[i] = { revenue: 0, orders: 0 };
 
         matchingOrders.forEach(order => {
-          const hour = new Date(order.createdAt).getHours();
+          const utcDate = new Date(order.createdAt);
+          const hour = (utcDate.getUTCHours() + 5 + (utcDate.getUTCMinutes() + 30 >= 60 ? 1 : 0)) % 24;
           hourStats[hour].revenue += order.totalAmount;
           hourStats[hour].orders += 1;
         });
@@ -5147,6 +5148,295 @@ export const appRouter = router({
         }
 
         return results;
+      }),
+
+    // Item-level Sales Analysis with Day-of-Week Heatmap
+    getItemDayAnalysis: adminProcedure
+      .input(z.object({
+        startDate: z.string(),
+        endDate: z.string(),
+        categoryId: z.number().optional(),
+        subcategoryId: z.number().optional(),
+        orderType: z.enum(['all', 'instore', 'delivery', 'pickup']).default('all'),
+        metric: z.enum(['quantity', 'revenue']).default('quantity'),
+        limit: z.number().default(20),
+      }))
+      .query(async ({ input }) => {
+        const dbInstance = await getDb();
+        if (!dbInstance) return { products: [], dayTotals: [] };
+
+        let conditions: any[] = [
+          sql`${orders.orderStatus} != 'cancelled'`,
+          sql`${orders.createdAt} >= ${input.startDate}`,
+          sql`${orders.createdAt} <= ${input.endDate + ' 23:59:59'}`,
+        ];
+        if (input.orderType !== 'all') conditions.push(eq(orders.orderType, input.orderType));
+
+        const matchingOrders = await dbInstance.select({
+          id: orders.id,
+          createdAt: orders.createdAt,
+        }).from(orders).where(and(...conditions));
+        const orderIds = matchingOrders.map(o => o.id);
+        if (orderIds.length === 0) return { products: [], dayTotals: [] };
+
+        // Build order date map
+        const orderDateMap: Record<number, Date> = {};
+        matchingOrders.forEach(o => { orderDateMap[o.id] = new Date(o.createdAt); });
+
+        const items = await dbInstance
+          .select({
+            orderId: orderItemsTable.orderId,
+            productId: orderItemsTable.productId,
+            productName: orderItemsTable.productName,
+            quantity: orderItemsTable.quantity,
+            lineTotal: orderItemsTable.lineTotal,
+            subcategoryId: products.subcategoryId,
+            status: orderItemsTable.status,
+          })
+          .from(orderItemsTable)
+          .innerJoin(products, eq(orderItemsTable.productId, products.id))
+          .where(sql`${orderItemsTable.orderId} IN (${sql.join(orderIds, sql`, `)})`);
+
+        // Filter by category/subcategory
+        let filteredItems = items.filter(i => i.status === 'active' || !i.status);
+        if (input.subcategoryId) {
+          filteredItems = filteredItems.filter(i => i.subcategoryId === input.subcategoryId);
+        } else if (input.categoryId) {
+          const allSubs = await dbInstance.select().from(subcategories);
+          const subcatIds = allSubs.filter(s => s.categoryId === input.categoryId).map(s => s.id);
+          filteredItems = filteredItems.filter(i => subcatIds.includes(i.subcategoryId));
+        }
+
+        const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+        // Build product x day matrix
+        const productDayMap: Record<number, { name: string; total: number; totalRevenue: number; days: number[] }> = {};
+        const dayTotals = [0, 0, 0, 0, 0, 0, 0];
+
+        filteredItems.forEach(item => {
+          const orderDate = orderDateMap[item.orderId];
+          if (!orderDate) return;
+          const dayIdx = orderDate.getDay();
+
+          if (!productDayMap[item.productId]) {
+            productDayMap[item.productId] = { name: item.productName, total: 0, totalRevenue: 0, days: [0, 0, 0, 0, 0, 0, 0] };
+          }
+          productDayMap[item.productId].days[dayIdx] += item.quantity;
+          productDayMap[item.productId].total += item.quantity;
+          productDayMap[item.productId].totalRevenue += item.lineTotal;
+          dayTotals[dayIdx] += item.quantity;
+        });
+
+        // Sort and limit
+        const sortKey = input.metric === 'revenue' ? 'totalRevenue' : 'total';
+        const productList = Object.entries(productDayMap)
+          .map(([id, data]) => ({
+            id: Number(id),
+            name: data.name,
+            totalQuantity: data.total,
+            totalRevenue: data.totalRevenue,
+            days: data.days,
+          }))
+          .sort((a, b) => input.metric === 'revenue' ? b.totalRevenue - a.totalRevenue : b.totalQuantity - a.totalQuantity)
+          .slice(0, input.limit);
+
+        return {
+          products: productList,
+          dayTotals: dayNames.map((name, idx) => ({ day: name, total: dayTotals[idx] })),
+        };
+      }),
+
+    // Product Mix Analysis - what items are commonly ordered together
+    getProductMixAnalysis: adminProcedure
+      .input(z.object({
+        startDate: z.string(),
+        endDate: z.string(),
+        minOccurrences: z.number().default(3),
+        limit: z.number().default(20),
+      }))
+      .query(async ({ input }) => {
+        const dbInstance = await getDb();
+        if (!dbInstance) return { pairs: [], insights: [] };
+
+        let conditions: any[] = [
+          sql`${orders.orderStatus} != 'cancelled'`,
+          sql`${orders.createdAt} >= ${input.startDate}`,
+          sql`${orders.createdAt} <= ${input.endDate + ' 23:59:59'}`,
+        ];
+
+        const matchingOrders = await dbInstance.select({ id: orders.id }).from(orders).where(and(...conditions));
+        const orderIds = matchingOrders.map(o => o.id);
+        if (orderIds.length === 0) return { pairs: [], insights: [] };
+
+        const items = await dbInstance
+          .select({
+            orderId: orderItemsTable.orderId,
+            productId: orderItemsTable.productId,
+            productName: orderItemsTable.productName,
+            status: orderItemsTable.status,
+          })
+          .from(orderItemsTable)
+          .where(sql`${orderItemsTable.orderId} IN (${sql.join(orderIds, sql`, `)})`);
+
+        const activeItems = items.filter(i => i.status === 'active' || !i.status);
+
+        // Group items by order
+        const orderProducts: Record<number, { id: number; name: string }[]> = {};
+        activeItems.forEach(item => {
+          if (!orderProducts[item.orderId]) orderProducts[item.orderId] = [];
+          // Deduplicate within order
+          if (!orderProducts[item.orderId].find(p => p.id === item.productId)) {
+            orderProducts[item.orderId].push({ id: item.productId, name: item.productName });
+          }
+        });
+
+        // Count co-occurrences (pairs)
+        const pairCounts: Record<string, { productA: string; productB: string; count: number }> = {};
+        Object.values(orderProducts).forEach(prods => {
+          if (prods.length < 2) return;
+          for (let i = 0; i < prods.length; i++) {
+            for (let j = i + 1; j < prods.length; j++) {
+              const [a, b] = [prods[i], prods[j]].sort((x, y) => x.id - y.id);
+              const key = `${a.id}_${b.id}`;
+              if (!pairCounts[key]) pairCounts[key] = { productA: a.name, productB: b.name, count: 0 };
+              pairCounts[key].count++;
+            }
+          }
+        });
+
+        const pairs = Object.values(pairCounts)
+          .filter(p => p.count >= input.minOccurrences)
+          .sort((a, b) => b.count - a.count)
+          .slice(0, input.limit);
+
+        // Generate insights
+        const insights: string[] = [];
+        if (pairs.length > 0) {
+          insights.push(`"${pairs[0].productA}" and "${pairs[0].productB}" are ordered together most often (${pairs[0].count} times).`);
+        }
+        if (pairs.length > 2) {
+          const topPairs = pairs.slice(0, 3).map(p => `${p.productA} + ${p.productB}`);
+          insights.push(`Top combos: ${topPairs.join(', ')}.`);
+        }
+
+        // Category-level co-occurrence
+        const allSubs = await dbInstance.select().from(subcategories);
+        const allCats = await dbInstance.select().from(categories);
+        const prodSubMap: Record<number, number> = {};
+        const allProds = await dbInstance.select({ id: products.id, subcategoryId: products.subcategoryId }).from(products);
+        allProds.forEach(p => { prodSubMap[p.id] = p.subcategoryId; });
+        const subCatMap: Record<number, number> = {};
+        allSubs.forEach(s => { subCatMap[s.id] = s.categoryId; });
+        const catNameMap: Record<number, string> = {};
+        allCats.forEach(c => { catNameMap[c.id] = c.name; });
+
+        const catPairCounts: Record<string, { catA: string; catB: string; count: number }> = {};
+        Object.values(orderProducts).forEach(prods => {
+          const catIds = Array.from(new Set(prods.map(p => subCatMap[prodSubMap[p.id]]).filter(Boolean)));
+          if (catIds.length < 2) return;
+          for (let i = 0; i < catIds.length; i++) {
+            for (let j = i + 1; j < catIds.length; j++) {
+              const [a, b] = [catIds[i], catIds[j]].sort();
+              const key = `${a}_${b}`;
+              if (!catPairCounts[key]) catPairCounts[key] = { catA: catNameMap[a] || String(a), catB: catNameMap[b] || String(b), count: 0 };
+              catPairCounts[key].count++;
+            }
+          }
+        });
+
+        const topCatPair = Object.values(catPairCounts).sort((a, b) => b.count - a.count)[0];
+        if (topCatPair) {
+          insights.push(`${topCatPair.catA} + ${topCatPair.catB} categories are most commonly ordered together (${topCatPair.count} orders).`);
+        }
+
+        return { pairs, insights };
+      }),
+
+    // Hourly Product Category Analysis - what sells at what time
+    getHourlyProductAnalysis: adminProcedure
+      .input(z.object({
+        startDate: z.string(),
+        endDate: z.string(),
+        orderType: z.enum(['all', 'instore', 'delivery', 'pickup']).default('all'),
+      }))
+      .query(async ({ input }) => {
+        const dbInstance = await getDb();
+        if (!dbInstance) return { hourlyData: [], categoryNames: [] };
+
+        let conditions: any[] = [
+          sql`${orders.orderStatus} != 'cancelled'`,
+          sql`${orders.createdAt} >= ${input.startDate}`,
+          sql`${orders.createdAt} <= ${input.endDate + ' 23:59:59'}`,
+        ];
+        if (input.orderType !== 'all') conditions.push(eq(orders.orderType, input.orderType));
+
+        const matchingOrders = await dbInstance.select({
+          id: orders.id,
+          createdAt: orders.createdAt,
+        }).from(orders).where(and(...conditions));
+        const orderIds = matchingOrders.map(o => o.id);
+        if (orderIds.length === 0) return { hourlyData: [], categoryNames: [] };
+
+        // Convert UTC to IST (UTC+5:30) for hour extraction
+        const orderHourMap: Record<number, number> = {};
+        matchingOrders.forEach(o => {
+          const utcDate = new Date(o.createdAt);
+          const istHour = (utcDate.getUTCHours() + 5 + (utcDate.getUTCMinutes() + 30 >= 60 ? 1 : 0)) % 24;
+          orderHourMap[o.id] = istHour;
+        });
+
+        const items = await dbInstance
+          .select({
+            orderId: orderItemsTable.orderId,
+            quantity: orderItemsTable.quantity,
+            lineTotal: orderItemsTable.lineTotal,
+            subcategoryId: products.subcategoryId,
+            status: orderItemsTable.status,
+          })
+          .from(orderItemsTable)
+          .innerJoin(products, eq(orderItemsTable.productId, products.id))
+          .where(sql`${orderItemsTable.orderId} IN (${sql.join(orderIds, sql`, `)})`);
+
+        const activeItems = items.filter(i => i.status === 'active' || !i.status);
+
+        const allSubs = await dbInstance.select().from(subcategories);
+        const allCats = await dbInstance.select().from(categories);
+        const subCatMap: Record<number, number> = {};
+        allSubs.forEach(s => { subCatMap[s.id] = s.categoryId; });
+        const catNameMap: Record<number, string> = {};
+        allCats.forEach(c => { catNameMap[c.id] = c.name; });
+
+        // Build hour x category matrix
+        const hourCatMatrix: Record<number, Record<number, { quantity: number; revenue: number }>> = {};
+        for (let h = 0; h < 24; h++) hourCatMatrix[h] = {};
+
+        activeItems.forEach(item => {
+          const hour = orderHourMap[item.orderId];
+          if (hour === undefined) return;
+          const catId = subCatMap[item.subcategoryId];
+          if (!catId) return;
+          if (!hourCatMatrix[hour][catId]) hourCatMatrix[hour][catId] = { quantity: 0, revenue: 0 };
+          hourCatMatrix[hour][catId].quantity += item.quantity;
+          hourCatMatrix[hour][catId].revenue += item.lineTotal;
+        });
+
+        // Get unique category IDs that have data
+        const activeCatIds = Array.from(new Set(activeItems.map(i => subCatMap[i.subcategoryId]).filter(Boolean)));
+        const categoryNames = activeCatIds.map(id => ({ id, name: catNameMap[id] || String(id) }));
+
+        const hourlyData = Array.from({ length: 24 }, (_, h) => ({
+          hour: h,
+          hourLabel: `${String(h).padStart(2, '0')}:00`,
+          categories: activeCatIds.map(catId => ({
+            categoryId: catId,
+            quantity: hourCatMatrix[h][catId]?.quantity || 0,
+            revenue: hourCatMatrix[h][catId]?.revenue || 0,
+          })),
+          totalQuantity: Object.values(hourCatMatrix[h]).reduce((s, c) => s + c.quantity, 0),
+          totalRevenue: Object.values(hourCatMatrix[h]).reduce((s, c) => s + c.revenue, 0),
+        }));
+
+        return { hourlyData, categoryNames };
       }),
   }),
 

@@ -23,6 +23,9 @@ import {
   Clock,
   ArrowLeft,
   FileSpreadsheet,
+  BarChart3,
+  Lightbulb,
+  Layers,
 } from "lucide-react";
 
 // Helper to format currency
@@ -170,6 +173,35 @@ export default function Analytics() {
       startDate,
       endDate,
       groupBy: 'daily',
+    });
+
+  // Item-level analytics queries
+  const [insightMetric, setInsightMetric] = useState<'quantity' | 'revenue'>('quantity');
+
+  const { data: itemDayData, isLoading: loadingItemDay } = 
+    trpc.analytics.getItemDayAnalysis.useQuery({
+      startDate,
+      endDate,
+      categoryId: selectedCategory ?? undefined,
+      subcategoryId: selectedSubcategory ?? undefined,
+      orderType,
+      metric: insightMetric,
+      limit: 15,
+    });
+
+  const { data: productMixData, isLoading: loadingProductMix } = 
+    trpc.analytics.getProductMixAnalysis.useQuery({
+      startDate,
+      endDate,
+      minOccurrences: 2,
+      limit: 15,
+    });
+
+  const { data: hourlyProductData, isLoading: loadingHourlyProduct } = 
+    trpc.analytics.getHourlyProductAnalysis.useQuery({
+      startDate,
+      endDate,
+      orderType,
     });
 
   // Handle date preset change
@@ -465,11 +497,12 @@ export default function Analytics() {
 
         {/* Tabs for different reports */}
         <Tabs defaultValue="sales" className="space-y-4">
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-6">
             <TabsTrigger value="sales">Sales</TabsTrigger>
             <TabsTrigger value="products">Products</TabsTrigger>
             <TabsTrigger value="customers">Customers</TabsTrigger>
             <TabsTrigger value="trends">Trends</TabsTrigger>
+            <TabsTrigger value="insights">Insights</TabsTrigger>
             <TabsTrigger value="gst">GST Report</TabsTrigger>
           </TabsList>
 
@@ -912,6 +945,284 @@ export default function Analytics() {
             </Card>
           </TabsContent>
 
+          {/* Product Insights Tab */}
+          <TabsContent value="insights" className="space-y-4">
+            {/* Metric Toggle */}
+            <div className="flex items-center gap-4 mb-2">
+              <span className="text-sm font-medium text-muted-foreground">View by:</span>
+              <div className="flex gap-2">
+                <Button 
+                  variant={insightMetric === 'quantity' ? 'default' : 'outline'} 
+                  size="sm"
+                  onClick={() => setInsightMetric('quantity')}
+                >
+                  Quantity Sold
+                </Button>
+                <Button 
+                  variant={insightMetric === 'revenue' ? 'default' : 'outline'} 
+                  size="sm"
+                  onClick={() => setInsightMetric('revenue')}
+                >
+                  Revenue
+                </Button>
+              </div>
+            </div>
+
+            {/* Product x Day-of-Week Heatmap */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <BarChart3 className="h-5 w-5" />
+                  Product Sales by Day of Week
+                </CardTitle>
+                <CardDescription>Which products sell on which days — darker = higher {insightMetric === 'revenue' ? 'revenue' : 'quantity'}</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {loadingItemDay ? (
+                  <div className="text-center py-8 text-muted-foreground">Loading...</div>
+                ) : itemDayData?.products && itemDayData.products.length > 0 ? (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b">
+                          <th className="text-left py-2 px-3 font-medium min-w-[180px]">Product</th>
+                          {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+                            <th key={day} className="text-center py-2 px-2 font-medium w-16">{day}</th>
+                          ))}
+                          <th className="text-right py-2 px-3 font-medium">Total</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {itemDayData.products.map((product, idx) => {
+                          const maxVal = Math.max(...product.days);
+                          return (
+                            <tr key={product.id} className={idx % 2 === 0 ? 'bg-muted/30' : ''}>
+                              <td className="py-2 px-3 font-medium truncate max-w-[200px]" title={product.name}>{product.name}</td>
+                              {product.days.map((val, dayIdx) => {
+                                const intensity = maxVal > 0 ? val / maxVal : 0;
+                                const bgColor = intensity === 0 ? '' : 
+                                  intensity < 0.25 ? 'bg-green-100 dark:bg-green-900/30' :
+                                  intensity < 0.5 ? 'bg-green-200 dark:bg-green-800/40' :
+                                  intensity < 0.75 ? 'bg-green-300 dark:bg-green-700/50' :
+                                  'bg-green-500 dark:bg-green-600/60 text-white';
+                                return (
+                                  <td key={dayIdx} className={`text-center py-2 px-2 ${bgColor} rounded-sm`}>
+                                    {val > 0 ? val : '-'}
+                                  </td>
+                                );
+                              })}
+                              <td className="text-right py-2 px-3 font-bold">
+                                {insightMetric === 'revenue' ? formatCurrency(product.totalRevenue) : product.totalQuantity}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                      <tfoot>
+                        <tr className="border-t-2 font-bold">
+                          <td className="py-2 px-3">Day Total</td>
+                          {itemDayData.dayTotals.map((dt, idx) => (
+                            <td key={idx} className="text-center py-2 px-2">{dt.total}</td>
+                          ))}
+                          <td className="text-right py-2 px-3">
+                            {itemDayData.dayTotals.reduce((s, d) => s + d.total, 0)}
+                          </td>
+                        </tr>
+                      </tfoot>
+                    </table>
+
+                    {/* Day performance summary */}
+                    <div className="mt-4 p-4 bg-muted/50 rounded-lg">
+                      <h4 className="font-semibold flex items-center gap-2 mb-2">
+                        <Lightbulb className="h-4 w-4 text-yellow-500" />
+                        Day-of-Week Insights
+                      </h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
+                        {(() => {
+                          const sorted = [...itemDayData.dayTotals].sort((a, b) => b.total - a.total);
+                          const best = sorted[0];
+                          const worst = sorted[sorted.length - 1];
+                          return (
+                            <>
+                              <p><strong>Best day:</strong> {best?.day} ({best?.total} items sold)</p>
+                              <p><strong>Slowest day:</strong> {worst?.day} ({worst?.total} items sold)</p>
+                              <p><strong>Weekend vs Weekday:</strong> {(() => {
+                                const weekend = (itemDayData.dayTotals[0]?.total || 0) + (itemDayData.dayTotals[6]?.total || 0);
+                                const weekday = itemDayData.dayTotals.slice(1, 6).reduce((s, d) => s + d.total, 0);
+                                const weekendAvg = weekend / 2;
+                                const weekdayAvg = weekday / 5;
+                                return weekendAvg > weekdayAvg 
+                                  ? `Weekends avg ${weekendAvg.toFixed(0)} items/day vs weekdays ${weekdayAvg.toFixed(0)}`
+                                  : `Weekdays avg ${weekdayAvg.toFixed(0)} items/day vs weekends ${weekendAvg.toFixed(0)}`;
+                              })()}</p>
+                            </>
+                          );
+                        })()}
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-muted-foreground">No data available for the selected period</div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Hourly Category Analysis */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Clock className="h-5 w-5" />
+                  Sales by Hour of Day
+                </CardTitle>
+                <CardDescription>When each category sells throughout the day</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {loadingHourlyProduct ? (
+                  <div className="text-center py-8 text-muted-foreground">Loading...</div>
+                ) : hourlyProductData?.hourlyData && hourlyProductData.hourlyData.length > 0 ? (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b">
+                          <th className="text-left py-2 px-3 font-medium">Hour</th>
+                          {hourlyProductData.categoryNames.map(cat => (
+                            <th key={cat.id} className="text-center py-2 px-2 font-medium">{cat.name}</th>
+                          ))}
+                          <th className="text-right py-2 px-3 font-medium">Total</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {hourlyProductData.hourlyData
+                          .filter(h => h.totalQuantity > 0)
+                          .map((hourRow, idx) => {
+                            const maxCatVal = Math.max(...hourRow.categories.map(c => c.quantity));
+                            return (
+                              <tr key={hourRow.hour} className={idx % 2 === 0 ? 'bg-muted/30' : ''}>
+                                <td className="py-2 px-3 font-medium">{hourRow.hourLabel}</td>
+                                {hourRow.categories.map(cat => {
+                                  const intensity = maxCatVal > 0 ? cat.quantity / maxCatVal : 0;
+                                  const bgColor = intensity === 0 ? '' : 
+                                    intensity < 0.3 ? 'bg-blue-100 dark:bg-blue-900/30' :
+                                    intensity < 0.6 ? 'bg-blue-200 dark:bg-blue-800/40' :
+                                    'bg-blue-400 dark:bg-blue-600/60 text-white';
+                                  return (
+                                    <td key={cat.categoryId} className={`text-center py-2 px-2 ${bgColor} rounded-sm`}>
+                                      {cat.quantity > 0 ? cat.quantity : '-'}
+                                    </td>
+                                  );
+                                })}
+                                <td className="text-right py-2 px-3 font-bold">{hourRow.totalQuantity}</td>
+                              </tr>
+                            );
+                          })}
+                      </tbody>
+                    </table>
+
+                    {/* Peak hours insight */}
+                    <div className="mt-4 p-4 bg-muted/50 rounded-lg">
+                      <h4 className="font-semibold flex items-center gap-2 mb-2">
+                        <Lightbulb className="h-4 w-4 text-yellow-500" />
+                        Time-of-Day Insights
+                      </h4>
+                      <div className="text-sm space-y-1">
+                        {(() => {
+                          const activeHours = hourlyProductData.hourlyData.filter(h => h.totalQuantity > 0).sort((a, b) => b.totalQuantity - a.totalQuantity);
+                          const peak = activeHours[0];
+                          const lunchHours = hourlyProductData.hourlyData.filter(h => h.hour >= 11 && h.hour <= 14);
+                          const dinnerHours = hourlyProductData.hourlyData.filter(h => h.hour >= 18 && h.hour <= 21);
+                          const lunchTotal = lunchHours.reduce((s, h) => s + h.totalQuantity, 0);
+                          const dinnerTotal = dinnerHours.reduce((s, h) => s + h.totalQuantity, 0);
+                          return (
+                            <>
+                              {peak && <p><strong>Peak hour:</strong> {peak.hourLabel} ({peak.totalQuantity} items)</p>}
+                              <p><strong>Lunch rush (11-14):</strong> {lunchTotal} items | <strong>Dinner rush (18-21):</strong> {dinnerTotal} items</p>
+                              <p>{lunchTotal > dinnerTotal ? 'Lunch is your stronger period.' : dinnerTotal > lunchTotal ? 'Dinner is your stronger period.' : 'Lunch and dinner are equally busy.'}</p>
+                            </>
+                          );
+                        })()}
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-muted-foreground">No data available for the selected period</div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Product Mix / Co-occurrence Analysis */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Layers className="h-5 w-5" />
+                  Product Mix Analysis
+                </CardTitle>
+                <CardDescription>Which products are frequently ordered together — use for combo deals and upselling</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {loadingProductMix ? (
+                  <div className="text-center py-8 text-muted-foreground">Loading...</div>
+                ) : productMixData?.pairs && productMixData.pairs.length > 0 ? (
+                  <div>
+                    {/* Insights box */}
+                    {productMixData.insights && productMixData.insights.length > 0 && (
+                      <div className="mb-4 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+                        <h4 className="font-semibold flex items-center gap-2 mb-2 text-yellow-800 dark:text-yellow-200">
+                          <Lightbulb className="h-4 w-4" />
+                          Key Insights
+                        </h4>
+                        <ul className="text-sm space-y-1 text-yellow-700 dark:text-yellow-300">
+                          {productMixData.insights.map((insight, idx) => (
+                            <li key={idx}>• {insight}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
+                    {/* Pairs table */}
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b">
+                          <th className="text-left py-2 px-3 font-medium">Product A</th>
+                          <th className="text-center py-2 px-1 font-medium">+</th>
+                          <th className="text-left py-2 px-3 font-medium">Product B</th>
+                          <th className="text-right py-2 px-3 font-medium">Times Ordered Together</th>
+                          <th className="text-right py-2 px-3 font-medium">Strength</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {productMixData.pairs.map((pair, idx) => {
+                          const maxCount = productMixData.pairs[0]?.count || 1;
+                          const strength = pair.count / maxCount;
+                          return (
+                            <tr key={idx} className={idx % 2 === 0 ? 'bg-muted/30' : ''}>
+                              <td className="py-2 px-3">{pair.productA}</td>
+                              <td className="text-center py-2 px-1 text-muted-foreground">+</td>
+                              <td className="py-2 px-3">{pair.productB}</td>
+                              <td className="text-right py-2 px-3 font-bold">{pair.count}</td>
+                              <td className="text-right py-2 px-3">
+                                <div className="flex items-center justify-end gap-2">
+                                  <div className="w-16 h-2 bg-muted rounded-full overflow-hidden">
+                                    <div 
+                                      className="h-full bg-primary rounded-full" 
+                                      style={{ width: `${strength * 100}%` }}
+                                    />
+                                  </div>
+                                  <span className="text-xs text-muted-foreground w-8">{Math.round(strength * 100)}%</span>
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-muted-foreground">Not enough data to detect product combinations (need at least 2 co-occurrences)</div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
           {/* GST Report Tab */}
           <TabsContent value="gst" className="space-y-4">
             <Card>
@@ -923,9 +1234,26 @@ export default function Analytics() {
                   </div>
                   <Button 
                     variant="outline"
-                    onClick={() => exportToCSV(gstReport?.details as Record<string, unknown>[] || [], 'gst_report')}
+                    onClick={async () => {
+                      try {
+                        const url = `/api/export/sales-report?startDate=${startDate}&endDate=${endDate}`;
+                        const response = await fetch(url, { credentials: 'include' });
+                        if (!response.ok) throw new Error('Export failed');
+                        const blob = await response.blob();
+                        const downloadUrl = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = downloadUrl;
+                        a.download = `Taiwan_Maami_GST_Report_${startDate}_to_${endDate}.xlsx`;
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                        URL.revokeObjectURL(downloadUrl);
+                      } catch (err) {
+                        alert('Failed to export GST report. Please try again.');
+                      }
+                    }}
                   >
-                    <Download className="h-4 w-4 mr-2" />
+                    <FileSpreadsheet className="h-4 w-4 mr-2" />
                     Export for CA
                   </Button>
                 </div>
