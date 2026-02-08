@@ -1,0 +1,16 @@
+{
+  "query": "SELECT id, title, status, price FROM workshops ORDER BY id ASC;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT id, title, status, price FROM workshops ORDER BY id ASC;",
+  "rows": [
+    {
+      "id": "60001",
+      "title": "Biang Biang Noodle Workshop + Kung Fu Tea Experience ",
+      "status": "published",
+      "price": "320000"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\ttitle\tstatus\tprice\n60001\tBiang Biang Noodle Workshop + Kung Fu Tea Experience \tpublished\t320000\n",
+  "stderr": "",
+  "execution_time_ms": 364
+}

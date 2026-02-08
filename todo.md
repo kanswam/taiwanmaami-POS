@@ -1574,3 +1574,22 @@ Orders fixed:
 - [x] Add /api/payment/webhook route to match Razorpay Dashboard config
 - [x] Both /api/razorpay/webhook and /api/payment/webhook should work (shared handler function)
 - [x] Verify webhook handler processes events correctly at both URLs (0 TS errors)
+
+## Cleanup Test Workshops (Feb 8)
+
+- [x] Query all workshops in the database (found 15 total: 1 real + 13 test)
+- [x] Identify and delete test workshops (deleted 13 "Test Workshop" entries, all draft status)
+- [x] Verify the real workshop is untouched (ID 60001 "Biang Biang Noodle Workshop" with 4 bookings intact)
+
+## BUG - Addons Not Shown in Order Detail, Invoice, and KOT (Feb 8)
+
+- [x] BUG: Order #318 - Biang Biang Noodles shows ₹655 but addons (chicken, eggs) not listed
+- [x] Investigate how addons are stored in order_item_addons table
+  - Data is correct: Chicken Bites addon (₹240) stored in order_item_addons, addonsTotal=24000 paise
+- [x] Fix addon display in admin order detail modal (show addons under each item with blue text)
+- [x] Fix addon display in invoice/receipt PDF (addons listed with prices under each item)
+- [x] Fix addon display in KOT report (addons shown in detailed order list)
+- [x] Backend getById procedure now fetches addonsList for each order item
+- [x] KOT daily summary now includes addons in item data
+- [x] Receipt queue already had addons (was correct)
+- [x] Verify fix works - 0 TS errors, 21 loyalty tests passing

@@ -1690,18 +1690,27 @@ function generateOrderInvoice(order: any): string {
   });
   
   const items = order.items || [];
-  const itemsHtml = items.map((item: any) => `
+  const itemsHtml = items.map((item: any) => {
+    const addonsHtml = (item.addonsList && item.addonsList.length > 0)
+      ? item.addonsList.map((addon: any) => 
+          `<br><small style="color: #2563eb;">+ ${addon.addonName} (${formatPrice(addon.addonPrice)})</small>`
+        ).join('')
+      : '';
+    return `
     <tr>
       <td style="padding: 8px; border-bottom: 1px solid #eee;">
         ${item.product?.name || item.productName || 'Unknown'}
         ${item.size ? `<br><small style="color: #666;">Size: ${item.size}</small>` : ''}
-        ${item.addons ? `<br><small style="color: #666;">Add-ons: ${item.addons}</small>` : ''}
+        ${item.sugarLevel ? `<small style="color: #666;"> • Sugar: ${item.sugarLevel}</small>` : ''}
+        ${item.iceLevel ? `<small style="color: #666;"> • Ice: ${item.iceLevel}</small>` : ''}
+        ${addonsHtml}
       </td>
       <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: center;">${item.quantity}</td>
       <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: right;">${formatPrice(item.unitPrice || 0)}</td>
       <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: right;">${formatPrice(item.lineTotal || item.totalPrice || (item.unitPrice * item.quantity))}</td>
     </tr>
-  `).join('');
+  `;
+  }).join('');
   
   return `
 <!DOCTYPE html>
@@ -2257,8 +2266,15 @@ function OrdersTab() {
                           {item.sugarLevel && ` • Sugar: ${item.sugarLevel}`}
                           {item.iceLevel && ` • Ice: ${item.iceLevel}`}
                         </p>
-                        {item.addons && (
-                          <p className="text-sm text-muted-foreground">Add-ons: {item.addons}</p>
+                        {item.addonsList && item.addonsList.length > 0 && (
+                          <div className="mt-1">
+                            {item.addonsList.map((addon: any, aidx: number) => (
+                              <p key={aidx} className="text-sm text-muted-foreground flex justify-between">
+                                <span className="text-blue-600">+ {addon.addonName}</span>
+                                <span className="text-blue-600 ml-2">₹{(addon.addonPrice / 100).toFixed(0)}</span>
+                              </p>
+                            ))}
+                          </div>
                         )}
                         {item.specialInstructions && (
                           <p className="text-sm text-amber-600">Note: {item.specialInstructions}</p>
@@ -5913,7 +5929,7 @@ function KOTReportsTab() {
                       {expandedOrders.has(order.kotId) && (
                         <div className="p-4 bg-background border-t">
                           <div className="space-y-2">
-                            {order.items.map((item: { quantity: number; name: string; customizations?: string }, idx: number) => (
+                            {order.items.map((item: { quantity: number; name: string; customizations?: string; addons?: { name: string; price: number }[] }, idx: number) => (
                               <div key={idx} className="flex items-start gap-3 p-2 bg-muted/20 rounded">
                                 <div className="font-bold text-primary">{item.quantity}x</div>
                                 <div className="flex-1">
@@ -5921,6 +5937,15 @@ function KOTReportsTab() {
                                   {item.customizations && (
                                     <div className="text-sm text-muted-foreground mt-1">
                                       {item.customizations}
+                                    </div>
+                                  )}
+                                  {item.addons && item.addons.length > 0 && (
+                                    <div className="mt-1">
+                                      {item.addons.map((addon, aidx) => (
+                                        <div key={aidx} className="text-sm text-blue-600">
+                                          + {addon.name} (₹{(addon.price / 100).toFixed(0)})
+                                        </div>
+                                      ))}
                                     </div>
                                   )}
                                 </div>

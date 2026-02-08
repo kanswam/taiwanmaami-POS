@@ -1426,11 +1426,12 @@ export const appRouter = router({
           .from(orderItemsTable)
           .where(eq(orderItemsTable.orderId, input.orderId));
         
-        // Get product details for each item
+        // Get product details and addons for each item
         const itemsWithProducts = await Promise.all(
           items.map(async (item) => {
             const [product] = await dbInstance.select().from(products).where(eq(products.id, item.productId));
-            return { ...item, product };
+            const addons = await dbInstance.select().from(orderItemAddons).where(eq(orderItemAddons.orderItemId, item.id));
+            return { ...item, product, addonsList: addons };
           })
         );
         
@@ -4260,6 +4261,7 @@ export const appRouter = router({
                 item.sugarLevel ? `Sugar: ${item.sugarLevel}` : null,
                 item.iceLevel ? `Ice: ${item.iceLevel}` : null,
               ].filter(Boolean).join(', '),
+              addons: item.addons?.map((a: any) => ({ name: a.name, price: a.price })) || [],
             })) || [],
             totalItems: kotData.items?.reduce((sum: number, item: any) => sum + (item.quantity || 1), 0) || 0,
             createdAt: new Date(kot.createdAt).toISOString(),
