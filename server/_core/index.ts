@@ -32,8 +32,8 @@ async function findAvailablePort(startPort: number = 3000): Promise<number> {
 async function startServer() {
   const app = express();
   const server = createServer(app);
-  // Razorpay webhook needs raw body for signature verification - must be before JSON parser
-  app.post('/api/razorpay/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
+  // Razorpay webhook handler - shared between both URL paths
+  const razorpayWebhookHandler = async (req: any, res: any) => {
     try {
       const webhookSecret = process.env.RAZORPAY_KEY_SECRET || '';
       const signature = req.headers['x-razorpay-signature'] as string;
@@ -175,7 +175,11 @@ async function startServer() {
       console.error('[Razorpay Webhook] Error:', error);
       return res.status(200).json({ status: 'error_logged' });
     }
-  });
+  };
+
+  // Register webhook on both paths to match any Razorpay Dashboard config
+  app.post('/api/razorpay/webhook', express.raw({ type: 'application/json' }), razorpayWebhookHandler);
+  app.post('/api/payment/webhook', express.raw({ type: 'application/json' }), razorpayWebhookHandler);
 
   // Configure body parser with larger size limit for file uploads
   app.use(express.json({ limit: "50mb" }));

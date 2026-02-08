@@ -1568,3 +1568,9 @@ Orders fixed:
 - [x] Log all manual adjustments in stamp_transactions table (action: 'admin_deduct' for deductions)
 - [x] Auto-create rewards when stamps reach 10+ after manual adjustment
 - [x] Write vitest tests for the stamp adjustment feature (21 tests passing)
+
+## Razorpay Webhook URL Mismatch Fix (Feb 8)
+
+- [x] Add /api/payment/webhook route to match Razorpay Dashboard config
+- [x] Both /api/razorpay/webhook and /api/payment/webhook should work (shared handler function)
+- [x] Verify webhook handler processes events correctly at both URLs (0 TS errors)
