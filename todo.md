@@ -1535,3 +1535,22 @@ Orders fixed:
   - Regex check rejects phone number patterns (10+ consecutive digits)
   - Toast error: "Please enter a valid table number (e.g., 5 or A1), not a phone number"
 - [x] Ensure order #309 customer (hubertchiu) can complete their order
+
+
+## CRITICAL BUG - Loyalty Stamp Redemption Not Working (Feb 8)
+
+- [x] BUG: Customer Gary Chiang has 16 stamps but free drink reward was not automatically applied
+  - Root cause: addStamps procedure (physical card transfer) didn't check for 10-stamp threshold
+- [x] 10 stamps should = 1 free large drink, stamps should be deducted automatically
+- [x] Investigate current stamp redemption logic in ordering flow
+- [x] Fix automatic stamp redemption: detect 10+ stamps → apply free drink → deduct 10 stamps
+  - Fixed addStamps procedure to create rewards when stamps reach 10+
+  - Added REWARD: prefix discount code handling in createOrder
+  - Backend now redeems voucher, deducts 10 stamps, and logs transaction
+- [x] Manually fix Gary Chiang's stamps (deduct 10, set to 6)
+  - Created reward voucher REWARD-3A6BCF43 (expires May 9, 2026)
+- [x] Ensure the free drink discount appears in the order/checkout flow
+  - Added loyalty reward banner to Cart page with one-click "Apply" button
+  - Shows when logged-in customer has available unredeemed rewards
+  - Applies discount equal to the most expensive large drink in cart
+- [x] Test the complete redemption flow (13 vitest tests passing)

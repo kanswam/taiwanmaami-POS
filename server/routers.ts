@@ -219,7 +219,31 @@ export const appRouter = router({
 
         // Apply discount if code provided
         let appliedDiscount: Awaited<ReturnType<typeof db.getDiscountByCode>> = undefined;
-        if (input.discountCode) {
+        let loyaltyVoucherCode: string | null = null;
+        if (input.discountCode && input.discountCode.startsWith('REWARD:')) {
+          // Loyalty reward redemption
+          loyaltyVoucherCode = input.discountCode.replace('REWARD:', '');
+          if (ctx.user?.id) {
+            const [reward] = await dbInstance!.select().from(loyaltyRewards)
+              .where(and(
+                eq(loyaltyRewards.voucherCode, loyaltyVoucherCode),
+                eq(loyaltyRewards.userId, ctx.user.id),
+                eq(loyaltyRewards.isRedeemed, false)
+              ));
+            if (reward && new Date(reward.expiresAt) > new Date()) {
+              // Find the most expensive large drink in the order to make free
+              const largeDrinkItems = input.items.filter(item => item.size === 'large');
+              if (largeDrinkItems.length > 0) {
+                const mostExpensive = largeDrinkItems.reduce((max, item) => 
+                  item.unitPrice > max.unitPrice ? item : max, largeDrinkItems[0]);
+                discountAmount = mostExpensive.unitPrice;
+              }
+            } else {
+              // Invalid or expired reward, ignore
+              loyaltyVoucherCode = null;
+            }
+          }
+        } else if (input.discountCode) {
           const discount = await db.getDiscountByCode(input.discountCode);
           if (discount && discount.isActive) {
             // Validate first-time only restriction
@@ -421,6 +445,40 @@ export const appRouter = router({
         // Record discount usage if a first-time discount was applied
         if (appliedDiscount && appliedDiscount.firstTimeOnly && ctx.user?.id) {
           await db.recordDiscountUsage(appliedDiscount.id, ctx.user.id, orderId);
+        }
+        
+        // Redeem loyalty reward voucher if used
+        if (loyaltyVoucherCode && ctx.user?.id && discountAmount > 0) {
+          try {
+            // Mark reward as redeemed
+            await dbInstance!.update(loyaltyRewards).set({
+              isRedeemed: true,
+              redeemedAt: new Date(),
+              redeemedOrderId: orderId,
+            }).where(and(
+              eq(loyaltyRewards.voucherCode, loyaltyVoucherCode),
+              eq(loyaltyRewards.userId, ctx.user.id)
+            ));
+            
+            // Log stamp transaction for redemption
+            await dbInstance!.insert(stampTransactions).values({
+              userId: ctx.user.id,
+              orderId: orderId,
+              action: 'redeem',
+              stamps: -10,
+              orderTotal: totalAmount,
+              description: `Redeemed reward: Free Large Drink on order #${orderNumber}`,
+              createdAt: new Date(),
+            });
+            
+            // Deduct 10 stamps from user
+            const [currentUser] = await dbInstance!.select({ stampCount: users.stampCount }).from(users).where(eq(users.id, ctx.user.id));
+            const newStampCount = Math.max(0, (currentUser?.stampCount || 0) - 10);
+            await dbInstance!.update(users).set({ stampCount: newStampCount }).where(eq(users.id, ctx.user.id));
+          } catch (rewardErr) {
+            console.error('Failed to redeem loyalty reward:', rewardErr);
+            // Don't fail the order - the reward can be manually reconciled
+          }
         }
         
         return { orderId, orderNumber, totalAmount };
@@ -6485,10 +6543,46 @@ export const appRouter = router({
           createdAt: new Date(),
         });
 
+        // Check if stamps reached 10+ and create rewards
+        let currentStamps = newStampCount;
+        let rewardsCreated = 0;
+        while (currentStamps >= 10) {
+          const voucherCode = `REWARD${Date.now().toString(36).toUpperCase()}${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
+          await dbInstance.insert(loyaltyRewards).values({
+            userId: input.customerId,
+            rewardType: 'free_large_bubble_tea',
+            voucherCode: voucherCode,
+            isRedeemed: false,
+            expiresAt: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000), // 90 days
+          });
+          currentStamps -= 10;
+          rewardsCreated++;
+
+          // Record reward creation in stamp transactions
+          await dbInstance.insert(stampTransactions).values({
+            userId: input.customerId,
+            orderId: null,
+            action: 'redeem',
+            stamps: -10,
+            orderTotal: 0,
+            description: `Reward earned: Free Large Bubble Tea (voucher: ${voucherCode})`,
+            createdAt: new Date(),
+          });
+        }
+
+        // Update stamp count after creating rewards
+        if (rewardsCreated > 0) {
+          await dbInstance.update(users).set({ stampCount: currentStamps }).where(eq(users.id, input.customerId));
+        }
+
+        const finalStampCount = rewardsCreated > 0 ? currentStamps : newStampCount;
         return { 
           success: true, 
-          newStampCount,
-          message: `Added ${input.stamps} stamps to ${customer.name}'s account` 
+          newStampCount: finalStampCount,
+          rewardsCreated,
+          message: rewardsCreated > 0 
+            ? `Added ${input.stamps} stamps to ${customer.name}'s account. ${rewardsCreated} reward(s) created! Stamps remaining: ${finalStampCount}`
+            : `Added ${input.stamps} stamps to ${customer.name}'s account` 
         };
       }),
 

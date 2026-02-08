@@ -1,0 +1,52 @@
+{
+  "query": "SELECT * FROM users WHERE name LIKE '%Gary%' OR phone = '9626996264' LIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT * FROM users WHERE name LIKE '%Gary%' OR phone = '9626996264' LIMIT 5;",
+  "rows": [
+    {
+      "id": "21360525",
+      "openId": "manual_1770544410564_wdwqx26zz",
+      "name": "Gary ",
+      "email": "chinyeh0410@gmail.com",
+      "loginMethod": "manual",
+      "role": "customer",
+      "createdAt": "2026-02-08 09:53:30",
+      "updatedAt": "2026-02-08 09:56:41",
+      "lastSignedIn": "2026-02-08 09:53:30",
+      "phone": "9626996264",
+      "loyaltyPoints": "0",
+      "stampCount": "16",
+      "lifetimeStamps": "16",
+      "lastStampDate": "2026-02-08 09:56:42",
+      "storeCredit": "0",
+      "notes": "NULL",
+      "birthMonth": "NULL",
+      "birthDay": "NULL",
+      "birthdayCodeUsedYear": "NULL"
+    },
+    {
+      "id": "21360539",
+      "openId": "PKiESmpZvi8VAXcMRFs5kL",
+      "name": "[MERGED → #21360525] Gary Chiang",
+      "email": "chinyeh0410@gmail.com",
+      "loginMethod": "google",
+      "role": "customer",
+      "createdAt": "2026-02-08 09:55:01",
+      "updatedAt": "2026-02-08 10:06:34",
+      "lastSignedIn": "2026-02-08 10:06:34",
+      "phone": "NULL",
+      "loyaltyPoints": "0",
+      "stampCount": "6",
+      "lifetimeStamps": "6",
+      "lastStampDate": "2026-02-08 10:02:36",
+      "storeCredit": "0",
+      "notes": "Account merged into #21360525 (Gary ) on 2026-02-08T09:55:54.954Z by admin Theresa Hu Cy. Original data: name=Gary Chiang, phone=null, email=chinyeh0410@gmail.com, stamps=0, storeCredit=0",
+      "birthMonth": "NULL",
+      "birthDay": "NULL",
+      "birthdayCodeUsedYear": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\topenId\tname\temail\tloginMethod\trole\tcreatedAt\tupdatedAt\tlastSignedIn\tphone\tloyaltyPoints\tstampCount\tlifetimeStamps\tlastStampDate\tstoreCredit\tnotes\tbirthMonth\tbirthDay\tbirthdayCodeUsedYear\n21360525\tmanual_1770544410564_wdwqx26zz\tGary \tchinyeh0410@gmail.com\tmanual\tcustomer\t2026-02-08 09:53:30\t2026-02-08 09:56:41\t2026-02-08 09:53:30\t9626996264\t0\t16\t16\t2026-02-08 09:56:42\t0\tNULL\tNULL\tNULL\tNULL\n21360539\tPKiESmpZvi8VAXcMRFs5kL\t[MERGED → #21360525] Gary Chiang\tchinyeh0410@gmail.com\tgoogle\tcustomer\t2026-02-08 09:55:01\t2026-02-08 10:06:34\t2026-02-08 10:06:34\tNULL\t0\t6\t6\t2026-02-08 10:02:36\t0\tAccount merged into #21360525 (Gary ) on 2026-02-08T09:55:54.954Z by admin Theresa Hu Cy. Original data: name=Gary Chiang, phone=null, email=chinyeh0410@gmail.com, stamps=0, storeCredit=0\tNULL\tNULL\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 356
+}

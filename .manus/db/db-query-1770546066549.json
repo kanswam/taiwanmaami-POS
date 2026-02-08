@@ -1,0 +1,24 @@
+{
+  "query": "SELECT id, name, phone, stampCount, openId FROM users WHERE name LIKE '%Gary%' OR phone = '9626996264';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT id, name, phone, stampCount, openId FROM users WHERE name LIKE '%Gary%' OR phone = '9626996264';",
+  "rows": [
+    {
+      "id": "21360525",
+      "name": "Gary ",
+      "phone": "9626996264",
+      "stampCount": "16",
+      "openId": "manual_1770544410564_wdwqx26zz"
+    },
+    {
+      "id": "21360539",
+      "name": "[MERGED → #21360525] Gary Chiang",
+      "phone": "NULL",
+      "stampCount": "6",
+      "openId": "PKiESmpZvi8VAXcMRFs5kL"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\tphone\tstampCount\topenId\n21360525\tGary \t9626996264\t16\tmanual_1770544410564_wdwqx26zz\n21360539\t[MERGED → #21360525] Gary Chiang\tNULL\t6\tPKiESmpZvi8VAXcMRFs5kL\n",
+  "stderr": "",
+  "execution_time_ms": 380
+}

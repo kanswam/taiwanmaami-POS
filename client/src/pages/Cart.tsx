@@ -4,9 +4,10 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { useCart } from '@/contexts/CartContext';
+import { useAuth } from '@/_core/hooks/useAuth';
 import { trpc } from '@/lib/trpc';
 import { formatPrice, isOutletOpen } from '@shared/types';
-import { Minus, Plus, Trash2, ArrowLeft, ShoppingBag, Tag } from 'lucide-react';
+import { Minus, Plus, Trash2, ArrowLeft, ShoppingBag, Tag, Gift } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { trackViewCart, trackBeginCheckout, trackApplyDiscount, toGA4Item } from '@/lib/analytics';
 import { toast } from 'sonner';
@@ -25,9 +26,17 @@ export default function Cart() {
     itemCount,
   } = useCart();
 
+  const { isAuthenticated } = useAuth();
   const [discountInput, setDiscountInput] = useState('');
   const [isApplyingDiscount, setIsApplyingDiscount] = useState(false);
+  const [isApplyingReward, setIsApplyingReward] = useState(false);
   const hasTrackedViewCart = useRef(false);
+
+  // Fetch available loyalty rewards for logged-in users
+  const { data: availableRewards } = trpc.loyalty.getAvailableRewards.useQuery(
+    undefined,
+    { enabled: isAuthenticated }
+  );
 
   // Track view_cart event when cart page loads with items
   useEffect(() => {
@@ -241,6 +250,53 @@ export default function Cart() {
             <Card className="p-6 sticky top-24">
               <h2 className="text-lg font-semibold mb-4">Order Summary</h2>
 
+              {/* Loyalty Reward Banner */}
+              {isAuthenticated && availableRewards && availableRewards.length > 0 && !state.discountCode && (
+                <div className="mb-4 p-3 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
+                        <Gift className="w-5 h-5 text-green-600" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-semibold text-green-800">You have a FREE Large Drink!</p>
+                        <p className="text-xs text-green-600">Use your loyalty reward on this order</p>
+                      </div>
+                    </div>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="border-green-300 text-green-700 hover:bg-green-100"
+                      disabled={isApplyingReward}
+                      onClick={async () => {
+                        setIsApplyingReward(true);
+                        try {
+                          // Find the most expensive large drink in cart to make free
+                          const largeDrinks = state.items.filter(item => item.size === 'large');
+                          if (largeDrinks.length === 0) {
+                            toast.error('Add a large drink to your cart to use this reward');
+                            setIsApplyingReward(false);
+                            return;
+                          }
+                          // Apply as discount code with the voucher code
+                          const reward = availableRewards[0];
+                          const mostExpensiveLarge = largeDrinks.reduce((max, item) => 
+                            (item.unitPrice > max.unitPrice) ? item : max, largeDrinks[0]);
+                          // Apply the reward as a discount (price of the most expensive large drink)
+                          applyDiscount(`REWARD:${reward.voucherCode}`, mostExpensiveLarge.unitPrice);
+                          toast.success(`Free drink applied! ${mostExpensiveLarge.productName} (Large) is on us! 🎉`);
+                        } catch (err) {
+                          toast.error('Failed to apply reward');
+                        }
+                        setIsApplyingReward(false);
+                      }}
+                    >
+                      {isApplyingReward ? 'Applying...' : 'Apply'}
+                    </Button>
+                  </div>
+                </div>
+              )}
+
               {/* Discount Code */}
               {!state.discountCode ? (
                 <div className="flex gap-2 mb-4">
@@ -255,6 +311,16 @@ export default function Cart() {
                     disabled={isApplyingDiscount}
                   >
                     <Tag className="w-4 h-4" />
+                  </Button>
+                </div>
+              ) : state.discountCode.startsWith('REWARD:') ? (
+                <div className="flex items-center justify-between p-2 bg-green-50 rounded-lg mb-4">
+                  <div className="flex items-center gap-2">
+                    <Gift className="w-4 h-4 text-green-600" />
+                    <span className="text-sm font-medium text-green-600">🎉 Free Large Drink Applied!</span>
+                  </div>
+                  <Button variant="ghost" size="sm" onClick={removeDiscount}>
+                    Remove
                   </Button>
                 </div>
               ) : (

@@ -1,0 +1,30 @@
+{
+  "query": "SELECT id, name, email, phone, stampCount, lifetimeStamps, role, lastStampDate FROM users WHERE name LIKE '%Gary%' OR phone = '9626996264';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT id, name, email, phone, stampCount, lifetimeStamps, role, lastStampDate FROM users WHERE name LIKE '%Gary%' OR phone = '9626996264';",
+  "rows": [
+    {
+      "id": "21360525",
+      "name": "Gary ",
+      "email": "chinyeh0410@gmail.com",
+      "phone": "9626996264",
+      "stampCount": "16",
+      "lifetimeStamps": "16",
+      "role": "customer",
+      "lastStampDate": "2026-02-08 09:56:42"
+    },
+    {
+      "id": "21360539",
+      "name": "[MERGED → #21360525] Gary Chiang",
+      "email": "chinyeh0410@gmail.com",
+      "phone": "NULL",
+      "stampCount": "6",
+      "lifetimeStamps": "6",
+      "role": "customer",
+      "lastStampDate": "2026-02-08 10:02:36"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\temail\tphone\tstampCount\tlifetimeStamps\trole\tlastStampDate\n21360525\tGary \tchinyeh0410@gmail.com\t9626996264\t16\t16\tcustomer\t2026-02-08 09:56:42\n21360539\t[MERGED → #21360525] Gary Chiang\tchinyeh0410@gmail.com\tNULL\t6\t6\tcustomer\t2026-02-08 10:02:36\n",
+  "stderr": "",
+  "execution_time_ms": 393
+}
