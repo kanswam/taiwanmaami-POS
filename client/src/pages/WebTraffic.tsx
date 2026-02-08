@@ -36,6 +36,7 @@ const UTM_TEMPLATES = [
   { name: 'Instagram Bio', icon: Instagram, source: 'instagram', medium: 'bio', campaign: 'link_in_bio', color: 'text-pink-600' },
   { name: 'Instagram Story', icon: Instagram, source: 'instagram', medium: 'story', campaign: 'story_swipeup', color: 'text-pink-600' },
   { name: 'Instagram Post', icon: Instagram, source: 'instagram', medium: 'post', campaign: 'feed_post', color: 'text-pink-600' },
+  { name: 'Instagram Reel', icon: Instagram, source: 'instagram', medium: 'reel', campaign: 'reel_promo', color: 'text-pink-600' },
   { name: 'WhatsApp Share', icon: MessageCircle, source: 'whatsapp', medium: 'chat', campaign: 'whatsapp_share', color: 'text-green-600' },
   { name: 'WhatsApp Status', icon: MessageCircle, source: 'whatsapp', medium: 'status', campaign: 'whatsapp_status', color: 'text-green-600' },
   { name: 'Google Ads', icon: Search, source: 'google', medium: 'cpc', campaign: 'google_ads', color: 'text-blue-600' },
@@ -51,11 +52,61 @@ function UTMBuilder({ baseUrl }: { baseUrl: string }) {
   const [utmCampaign, setUtmCampaign] = useState('');
   const [utmContent, setUtmContent] = useState('');
   const [targetPage, setTargetPage] = useState('/');
+  const [menuCategory, setMenuCategory] = useState('');
+  const [menuSubcategory, setMenuSubcategory] = useState('');
   const [copiedIdx, setCopiedIdx] = useState<number | null>(null);
   const [copiedCustom, setCopiedCustom] = useState(false);
 
+  // Menu categories and subcategories for deep linking
+  const menuCategories = [
+    { slug: 'food', name: 'Food', subcategories: [
+      { slug: 'taiwan-maami-chickgozilla', name: 'Taiwan Maami ChickGozilla' },
+      { slug: 'onigiri', name: 'Rice' },
+      { slug: 'noodles', name: 'Noodles Soup' },
+      { slug: 'saucy-noodles', name: 'Saucy Noodles' },
+      { slug: 'flat-bread', name: 'Flat Bread' },
+      { slug: 'desserts', name: 'Omelette' },
+      { slug: 'pillow-brioche', name: 'Savoury Pillow Brioche' },
+    ]},
+    { slug: 'bubble-tea', name: 'Iced Beverages', subcategories: [
+      { slug: 'organic-assam', name: 'Organic Assam' },
+      { slug: 'oolong-tea', name: 'Organic Oolong' },
+      { slug: 'green-tea', name: 'Organic Green Tea' },
+      { slug: 'matcha', name: 'Matcha Blend' },
+      { slug: 'taro', name: 'Taro Blend' },
+      { slug: 'slush', name: 'Slush' },
+      { slug: 'iced-lavazza-coffee', name: 'Iced Lavazza Coffee' },
+    ]},
+    { slug: 'coffee', name: 'Hot Beverages', subcategories: [
+      { slug: 'iced-coffee', name: 'Tea in Pot' },
+      { slug: 'hot-coffee', name: 'Hot Coffee & Cocoa' },
+    ]},
+    { slug: 'mochis', name: 'Sweet Bites', subcategories: [
+      { slug: 'fruit-mochi', name: 'Fruit Mochi' },
+      { slug: 'signature-mochi', name: 'Signature Mochi' },
+      { slug: 'grilled-mochi', name: 'Grilled Mochi' },
+      { slug: 'boba-cr-me-caramel', name: 'Boba Crème Caramel' },
+      { slug: 'sweet-pillow-brioche', name: 'Sweet Pillow Brioche' },
+      { slug: 'souffl-pancake', name: 'Steamed Velvet Pancake' },
+    ]},
+  ];
+
+  const selectedCategoryData = menuCategories.find(c => c.slug === menuCategory);
+
   const buildUrl = (source: string, medium: string, campaign: string, content?: string, page?: string) => {
-    const url = new URL(page || targetPage, baseUrl);
+    let finalPage = page || targetPage;
+    // If target is menu and category/subcategory selected, build deep link
+    if (!page && targetPage === '/menu') {
+      if (menuCategory) {
+        const params = new URLSearchParams();
+        params.set('category', menuCategory);
+        if (menuSubcategory) {
+          params.set('subcategory', menuSubcategory);
+        }
+        finalPage = `/menu?${params.toString()}`;
+      }
+    }
+    const url = new URL(finalPage, baseUrl);
     url.searchParams.set('utm_source', source);
     url.searchParams.set('utm_medium', medium);
     url.searchParams.set('utm_campaign', campaign);
@@ -122,7 +173,7 @@ function UTMBuilder({ baseUrl }: { baseUrl: string }) {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <Label className="text-xs">Target Page</Label>
-            <Select value={targetPage} onValueChange={setTargetPage}>
+            <Select value={targetPage} onValueChange={(v) => { setTargetPage(v); if (v !== '/menu') { setMenuCategory(''); setMenuSubcategory(''); } }}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="/">Home Page</SelectItem>
@@ -133,6 +184,36 @@ function UTMBuilder({ baseUrl }: { baseUrl: string }) {
               </SelectContent>
             </Select>
           </div>
+          {targetPage === '/menu' && (
+            <>
+              <div>
+                <Label className="text-xs">Menu Category (optional — deep link)</Label>
+                <Select value={menuCategory} onValueChange={(v) => { setMenuCategory(v); setMenuSubcategory(''); }}>
+                  <SelectTrigger><SelectValue placeholder="All categories" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value=" ">All categories</SelectItem>
+                    {menuCategories.map(cat => (
+                      <SelectItem key={cat.slug} value={cat.slug}>{cat.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              {selectedCategoryData && (
+                <div>
+                  <Label className="text-xs">Subcategory (optional — specific product group)</Label>
+                  <Select value={menuSubcategory} onValueChange={setMenuSubcategory}>
+                    <SelectTrigger><SelectValue placeholder="All in category" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value=" ">All in {selectedCategoryData.name}</SelectItem>
+                      {selectedCategoryData.subcategories.map(sub => (
+                        <SelectItem key={sub.slug} value={sub.slug}>{sub.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+            </>
+          )}
           <div>
             <Label className="text-xs">Source (where the link is placed) *</Label>
             <Input placeholder="e.g. instagram, google, flyer" value={utmSource} onChange={e => setUtmSource(e.target.value)} />

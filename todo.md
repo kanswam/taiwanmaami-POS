@@ -1593,3 +1593,13 @@ Orders fixed:
 - [x] KOT daily summary now includes addons in item data
 - [x] Receipt queue already had addons (was correct)
 - [x] Verify fix works - 0 TS errors, 21 loyalty tests passing
+
+## UTM Link Builder - Deep Link to Specific Menu Items (Feb 8)
+
+- [x] Add subcategory/product deep-link support to UTM Link Builder
+- [x] Allow selecting specific menu subcategories (e.g., ChickGozilla) as target page
+  - When "Menu" is selected, category and subcategory dropdowns appear
+  - All 4 categories and 22 subcategories available for deep linking
+- [x] Ensure the generated URL lands directly on the correct subcategory/product section
+  - Menu page already reads category/subcategory URL params on load
+- [x] Added Instagram Reel quick template to UTM templates
