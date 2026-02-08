@@ -206,6 +206,7 @@ export const appRouter = router({
         const dbInstance = await getDb();
         if (!dbInstance) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
 
+        try {
         // Calculate totals
         const subtotal = input.items.reduce((sum, item) => sum + item.lineTotal, 0);
         const gst = calculateGst(subtotal);
@@ -423,6 +424,15 @@ export const appRouter = router({
         }
         
         return { orderId, orderNumber, totalAmount };
+        } catch (err: any) {
+          console.error('Order creation failed:', err);
+          // Never expose raw SQL errors to customers
+          if (err instanceof TRPCError) throw err;
+          throw new TRPCError({
+            code: 'INTERNAL_SERVER_ERROR',
+            message: 'Unable to place your order right now. Please try again or contact the store.',
+          });
+        }
       }),
 
     // Create KOT for in-store orders that skip payment
@@ -3417,6 +3427,7 @@ export const appRouter = router({
       .mutation(async ({ input }) => {
         const dbInstance = await getDb();
         
+        try {
         // Check for duplicate order using idempotency key
         if (input.idempotencyKey) {
           const [existingOrder] = await dbInstance!.select().from(orders).where(eq(orders.idempotencyKey, input.idempotencyKey)).limit(1);
@@ -3646,6 +3657,14 @@ export const appRouter = router({
           totalAmount,
           gstDetails,
         };
+        } catch (err: any) {
+          console.error('Guest order creation failed:', err);
+          if (err instanceof TRPCError) throw err;
+          throw new TRPCError({
+            code: 'INTERNAL_SERVER_ERROR',
+            message: 'Unable to place your order right now. Please try again or contact the store.',
+          });
+        }
       }),
 
     // Get guest order by order number and phone

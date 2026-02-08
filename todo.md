@@ -1511,3 +1511,27 @@ Orders fixed:
   - Calculates unique visitors, sessions, pageviews, avg duration
   - Provides referrer, browser, OS, device, page, entry page, and UTM channel breakdowns
 - [x] Write vitest tests for pageview tracking (4 tests, all passing)
+
+## UTM Link Builder & Razorpay Webhook Setup (Feb 8)
+
+- [x] Build UTM link builder tool in admin panel for generating marketing links
+- [x] Add pre-built UTM templates for Instagram, WhatsApp, Google, etc.
+- [x] Show UTM-tagged link copy functionality
+- [ ] Configure Razorpay webhook in Razorpay Dashboard for payment.captured events (requires user login to Razorpay Dashboard)
+
+
+## CRITICAL BUG - Order #309 SQL INSERT Failure (Feb 8)
+
+- [x] BUG: Order #309 - SQL INSERT into orders table fails, raw SQL error shown to customer
+- [x] Investigate column mismatch between Drizzle schema and actual database table
+  - Root cause: tableNumber varchar(10) too short, customer entered phone number (+919600175631 = 13 chars)
+- [x] Fix the root cause of the INSERT failure
+  - Widened tableNumber column to varchar(50) in both DB and Drizzle schema
+- [x] Add proper error handling so raw SQL errors are never shown to customers
+  - Added try-catch in both createOrder and guest.createOrder procedures
+  - Returns user-friendly "Failed to create order" message instead of raw SQL
+- [x] Add frontend validation for table number field
+  - maxLength=10 on input fields
+  - Regex check rejects phone number patterns (10+ consecutive digits)
+  - Toast error: "Please enter a valid table number (e.g., 5 or A1), not a phone number"
+- [x] Ensure order #309 customer (hubertchiu) can complete their order

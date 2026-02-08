@@ -20,7 +20,163 @@ import {
   ExternalLink,
   Instagram,
   RefreshCw,
+  Link2,
+  Copy,
+  Check,
+  Megaphone,
+  MessageCircle,
+  Search,
+  Mail,
+  QrCode,
 } from "lucide-react";
+import { Label } from "@/components/ui/label";
+import { toast } from 'sonner';
+
+const UTM_TEMPLATES = [
+  { name: 'Instagram Bio', icon: Instagram, source: 'instagram', medium: 'bio', campaign: 'link_in_bio', color: 'text-pink-600' },
+  { name: 'Instagram Story', icon: Instagram, source: 'instagram', medium: 'story', campaign: 'story_swipeup', color: 'text-pink-600' },
+  { name: 'Instagram Post', icon: Instagram, source: 'instagram', medium: 'post', campaign: 'feed_post', color: 'text-pink-600' },
+  { name: 'WhatsApp Share', icon: MessageCircle, source: 'whatsapp', medium: 'chat', campaign: 'whatsapp_share', color: 'text-green-600' },
+  { name: 'WhatsApp Status', icon: MessageCircle, source: 'whatsapp', medium: 'status', campaign: 'whatsapp_status', color: 'text-green-600' },
+  { name: 'Google Ads', icon: Search, source: 'google', medium: 'cpc', campaign: 'google_ads', color: 'text-blue-600' },
+  { name: 'Email Newsletter', icon: Mail, source: 'email', medium: 'newsletter', campaign: 'monthly_newsletter', color: 'text-orange-600' },
+  { name: 'Packaging QR Code', icon: QrCode, source: 'packaging', medium: 'qr_code', campaign: 'delivery_packaging', color: 'text-purple-600' },
+  { name: 'Flyer / Print', icon: Megaphone, source: 'print', medium: 'flyer', campaign: 'local_flyer', color: 'text-amber-600' },
+];
+
+function UTMBuilder({ baseUrl }: { baseUrl: string }) {
+
+  const [utmSource, setUtmSource] = useState('');
+  const [utmMedium, setUtmMedium] = useState('');
+  const [utmCampaign, setUtmCampaign] = useState('');
+  const [utmContent, setUtmContent] = useState('');
+  const [targetPage, setTargetPage] = useState('/');
+  const [copiedIdx, setCopiedIdx] = useState<number | null>(null);
+  const [copiedCustom, setCopiedCustom] = useState(false);
+
+  const buildUrl = (source: string, medium: string, campaign: string, content?: string, page?: string) => {
+    const url = new URL(page || targetPage, baseUrl);
+    url.searchParams.set('utm_source', source);
+    url.searchParams.set('utm_medium', medium);
+    url.searchParams.set('utm_campaign', campaign);
+    if (content) url.searchParams.set('utm_content', content);
+    return url.toString();
+  };
+
+  const customUrl = utmSource && utmMedium && utmCampaign 
+    ? buildUrl(utmSource, utmMedium, utmCampaign, utmContent || undefined)
+    : '';
+
+  const copyToClipboard = async (text: string, idx?: number) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      if (idx !== undefined) {
+        setCopiedIdx(idx);
+        setTimeout(() => setCopiedIdx(null), 2000);
+      } else {
+        setCopiedCustom(true);
+        setTimeout(() => setCopiedCustom(false), 2000);
+      }
+      toast.success('Link copied to clipboard!');
+    } catch {
+      toast.error('Copy failed. Please select and copy the link manually.');
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Quick Templates */}
+      <div>
+        <h4 className="font-semibold text-sm mb-3">Quick Templates — Click to copy</h4>
+        <p className="text-xs text-muted-foreground mb-4">Pre-built UTM links for common marketing channels. Use these in your Instagram bio, WhatsApp messages, packaging QR codes, etc.</p>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+          {UTM_TEMPLATES.map((tmpl, idx) => {
+            const url = buildUrl(tmpl.source, tmpl.medium, tmpl.campaign, undefined, '/');
+            const Icon = tmpl.icon;
+            return (
+              <div key={idx} className="border rounded-lg p-3 hover:bg-accent/50 transition-colors">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <Icon className={`h-4 w-4 ${tmpl.color}`} />
+                    <span className="text-sm font-medium">{tmpl.name}</span>
+                  </div>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="h-7 px-2"
+                    onClick={() => copyToClipboard(url, idx)}
+                  >
+                    {copiedIdx === idx ? <Check className="h-3 w-3 text-green-600" /> : <Copy className="h-3 w-3" />}
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground font-mono break-all leading-relaxed">{url}</p>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Custom Builder */}
+      <div className="border-t pt-6">
+        <h4 className="font-semibold text-sm mb-3">Custom UTM Link Builder</h4>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <Label className="text-xs">Target Page</Label>
+            <Select value={targetPage} onValueChange={setTargetPage}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="/">Home Page</SelectItem>
+                <SelectItem value="/menu">Menu</SelectItem>
+                <SelectItem value="/events">Events</SelectItem>
+                <SelectItem value="/about">About Us</SelectItem>
+                <SelectItem value="/wholesale">Wholesale</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <Label className="text-xs">Source (where the link is placed) *</Label>
+            <Input placeholder="e.g. instagram, google, flyer" value={utmSource} onChange={e => setUtmSource(e.target.value)} />
+          </div>
+          <div>
+            <Label className="text-xs">Medium (type of marketing) *</Label>
+            <Input placeholder="e.g. social, cpc, email, qr_code" value={utmMedium} onChange={e => setUtmMedium(e.target.value)} />
+          </div>
+          <div>
+            <Label className="text-xs">Campaign (specific promotion) *</Label>
+            <Input placeholder="e.g. valentines_2026, summer_sale" value={utmCampaign} onChange={e => setUtmCampaign(e.target.value)} />
+          </div>
+          <div className="md:col-span-2">
+            <Label className="text-xs">Content (optional — differentiate variations)</Label>
+            <Input placeholder="e.g. banner_top, cta_button, video_ad" value={utmContent} onChange={e => setUtmContent(e.target.value)} />
+          </div>
+        </div>
+        {customUrl && (
+          <div className="mt-4 p-3 bg-accent/50 rounded-lg">
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-xs font-medium">Generated Link:</span>
+              <Button variant="ghost" size="sm" className="h-7 px-2" onClick={() => copyToClipboard(customUrl)}>
+                {copiedCustom ? <><Check className="h-3 w-3 text-green-600 mr-1" /> Copied</> : <><Copy className="h-3 w-3 mr-1" /> Copy</>}
+              </Button>
+            </div>
+            <p className="text-xs font-mono break-all text-primary leading-relaxed">{customUrl}</p>
+          </div>
+        )}
+      </div>
+
+      {/* How it works */}
+      <div className="border-t pt-4">
+        <h4 className="font-semibold text-sm mb-2">How UTM Tracking Works</h4>
+        <div className="text-xs text-muted-foreground space-y-1">
+          <p><strong>utm_source</strong> — Identifies where the traffic comes from (instagram, google, whatsapp)</p>
+          <p><strong>utm_medium</strong> — The type of marketing channel (social, cpc, email, qr_code)</p>
+          <p><strong>utm_campaign</strong> — The specific campaign or promotion name</p>
+          <p><strong>utm_content</strong> — (Optional) Differentiates between variations of the same campaign</p>
+          <p className="mt-2 text-foreground">When a customer clicks a UTM-tagged link, the parameters are automatically captured and shown in the <strong>Social Media Traffic</strong> and <strong>Traffic Sources</strong> sections above.</p>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 const getDatePreset = (preset: string) => {
   const today = new Date();
@@ -466,6 +622,23 @@ export default function WebTraffic() {
                 </CardContent>
               </Card>
             </div>
+
+            {/* UTM Link Builder */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Link2 className="h-4 w-4" />
+                  UTM Link Builder
+                </CardTitle>
+                <CardDescription>
+                  Generate trackable marketing links for Instagram, WhatsApp, Google Ads, packaging QR codes, and more. 
+                  Traffic from these links will appear in the analytics above.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <UTMBuilder baseUrl="https://taiwanmaami.com" />
+              </CardContent>
+            </Card>
 
             {/* Traffic Insights */}
             <Card>

@@ -204,6 +204,11 @@ export default function Checkout() {
         submissionLockRef.current = false;
         return;
       }
+      if (formData.tableNumber.length > 10 || /^\+?\d{10,}$/.test(formData.tableNumber.replace(/\s/g, ''))) {
+        toast.error('Please enter a valid table number (e.g., 5 or A1), not a phone number');
+        submissionLockRef.current = false;
+        return;
+      }
     }
 
     if (state.orderType === 'delivery') {
@@ -356,6 +361,11 @@ export default function Checkout() {
     if (state.orderType === 'instore') {
       if (!formData.tableNumber) {
         toast.error('Please enter your table number');
+        submissionLockRef.current = false;
+        return;
+      }
+      if (formData.tableNumber.length > 10 || /^\+?\d{10,}$/.test(formData.tableNumber.replace(/\s/g, ''))) {
+        toast.error('Please enter a valid table number (e.g., 5 or A1), not a phone number');
         submissionLockRef.current = false;
         return;
       }
@@ -572,14 +582,15 @@ export default function Checkout() {
                     <h2 className="text-lg font-semibold mb-4">Table Number *</h2>
                     <div>
                       <Label htmlFor="guest-table">Enter your table number</Label>
-                      <Input
-                        id="guest-table"
-                        type="text"
-                        value={formData.tableNumber}
-                        onChange={(e) => setFormData({ ...formData, tableNumber: e.target.value })}
-                        placeholder="e.g., 5 or A1"
-                        required
-                      />
+                    <Input
+                      id="guest-table"
+                      type="text"
+                      value={formData.tableNumber}
+                      onChange={(e) => setFormData({ ...formData, tableNumber: e.target.value })}
+                      placeholder="e.g., 5 or A1"
+                      maxLength={10}
+                      required
+                    />
                     </div>
                   </Card>
                 )}
@@ -943,6 +954,7 @@ export default function Checkout() {
                       value={formData.tableNumber}
                       onChange={(e) => setFormData({ ...formData, tableNumber: e.target.value })}
                       placeholder="e.g., 5 or A1"
+                      maxLength={10}
                       required
                     />
                   </div>
