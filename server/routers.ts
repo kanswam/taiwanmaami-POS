@@ -6586,6 +6586,93 @@ export const appRouter = router({
         };
       }),
 
+    // Adjust stamps (add or deduct) for a customer - admin only
+    adjustStamps: adminProcedure
+      .input(z.object({
+        customerId: z.number(),
+        adjustment: z.number().min(-20).max(20).refine(v => v !== 0, 'Adjustment cannot be zero'),
+        reason: z.string().min(1, 'Reason is required'),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const dbInstance = await getDb();
+        if (!dbInstance) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
+
+        const [customer] = await dbInstance.select().from(users).where(eq(users.id, input.customerId));
+        if (!customer) {
+          throw new TRPCError({ code: 'NOT_FOUND', message: 'Customer not found' });
+        }
+
+        if (customer.role === 'staff' || customer.role === 'admin') {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: 'Cannot adjust stamps for staff or admin accounts' });
+        }
+
+        const currentStamps = customer.stampCount || 0;
+        let newStampCount = currentStamps + input.adjustment;
+        if (newStampCount < 0) newStampCount = 0;
+
+        // Update stamp count
+        await dbInstance.update(users).set({
+          stampCount: newStampCount,
+          ...(input.adjustment > 0 ? {
+            lifetimeStamps: (customer.lifetimeStamps || 0) + input.adjustment,
+            lastStampDate: new Date(),
+          } : {}),
+        }).where(eq(users.id, input.customerId));
+
+        // Record the stamp transaction
+        const { stampTransactions } = await import('../drizzle/schema.js');
+        await dbInstance.insert(stampTransactions).values({
+          userId: input.customerId,
+          orderId: null,
+          action: input.adjustment > 0 ? 'bonus' : 'admin_deduct',
+          stamps: input.adjustment,
+          orderTotal: 0,
+          description: `${input.reason} (by ${ctx.user.name})`,
+          createdAt: new Date(),
+        });
+
+        // If adding stamps, check if rewards should be created
+        let rewardsCreated = 0;
+        let finalStampCount = newStampCount;
+        if (input.adjustment > 0 && newStampCount >= 10) {
+          while (finalStampCount >= 10) {
+            const voucherCode = `REWARD${Date.now().toString(36).toUpperCase()}${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
+            await dbInstance.insert(loyaltyRewards).values({
+              userId: input.customerId,
+              rewardType: 'free_large_bubble_tea',
+              voucherCode: voucherCode,
+              isRedeemed: false,
+              expiresAt: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000),
+            });
+            finalStampCount -= 10;
+            rewardsCreated++;
+
+            await dbInstance.insert(stampTransactions).values({
+              userId: input.customerId,
+              orderId: null,
+              action: 'redeem',
+              stamps: -10,
+              orderTotal: 0,
+              description: `Reward earned: Free Large Bubble Tea (voucher: ${voucherCode})`,
+              createdAt: new Date(),
+            });
+          }
+          await dbInstance.update(users).set({ stampCount: finalStampCount }).where(eq(users.id, input.customerId));
+        }
+
+        const action = input.adjustment > 0 ? 'Added' : 'Deducted';
+        const absAdj = Math.abs(input.adjustment);
+        return {
+          success: true,
+          previousStamps: currentStamps,
+          newStampCount: finalStampCount,
+          rewardsCreated,
+          message: rewardsCreated > 0
+            ? `${action} ${absAdj} stamp(s). ${rewardsCreated} reward(s) created! Stamps: ${currentStamps} → ${finalStampCount}`
+            : `${action} ${absAdj} stamp(s) for ${customer.name}. Stamps: ${currentStamps} → ${finalStampCount}`,
+        };
+      }),
+
     // Get customer order history
     getOrderHistory: adminProcedure
       .input(z.object({

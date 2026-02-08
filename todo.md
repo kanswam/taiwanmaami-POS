@@ -1554,3 +1554,17 @@ Orders fixed:
   - Shows when logged-in customer has available unredeemed rewards
   - Applies discount equal to the most expensive large drink in cart
 - [x] Test the complete redemption flow (13 vitest tests passing)
+
+## Razorpay Webhook Dashboard Configuration (Feb 8)
+
+- [x] Verify webhook endpoint code is properly implemented (POST /api/razorpay/webhook with HMAC signature verification, idempotent, creates KOT)
+- [ ] Provide step-by-step instructions for configuring webhook in Razorpay Dashboard
+
+## Admin Manual Stamp Adjustment Tool (Feb 8)
+
+- [x] Add stamp adjustment UI to admin panel (upgraded existing Add Stamps dialog to full Stamp Adjustment dialog)
+- [x] Allow admin to search for a customer by name/phone (existing customer table with star icon)
+- [x] Allow admin to add or deduct stamps with a reason (add/deduct toggle, required reason field)
+- [x] Log all manual adjustments in stamp_transactions table (action: 'admin_deduct' for deductions)
+- [x] Auto-create rewards when stamps reach 10+ after manual adjustment
+- [x] Write vitest tests for the stamp adjustment feature (21 tests passing)

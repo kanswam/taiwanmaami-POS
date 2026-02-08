@@ -4194,6 +4194,7 @@ function CustomersTab() {
   const [stampCustomer, setStampCustomer] = useState<{ id: number; name: string; currentStamps: number } | null>(null);
   const [stampsToAdd, setStampsToAdd] = useState(1);
   const [stampReason, setStampReason] = useState('Physical loyalty card transfer');
+  const [stampMode, setStampMode] = useState<'add' | 'deduct'>('add');
 
   // Account Merge state
   const [showMergeDialog, setShowMergeDialog] = useState(false);
@@ -4275,9 +4276,23 @@ const [mergeSource, setMergeSource] = useState<{ id: number | string; name: stri
       setStampCustomer(null);
       setStampsToAdd(1);
       setStampReason('Physical loyalty card transfer');
+      setStampMode('add');
       refetch();
     },
     onError: (err: any) => toast.error(err.message || 'Failed to add stamps'),
+  });
+
+  const adjustStamps = (trpc.customers as any).adjustStamps?.useMutation({
+    onSuccess: (data: any) => {
+      toast.success(data.message);
+      setShowAddStampsDialog(false);
+      setStampCustomer(null);
+      setStampsToAdd(1);
+      setStampReason('Physical loyalty card transfer');
+      setStampMode('add');
+      refetch();
+    },
+    onError: (err: any) => toast.error(err.message || 'Failed to adjust stamps'),
   });
 
   // Merge preview query
@@ -4875,18 +4890,19 @@ const [mergeSource, setMergeSource] = useState<{ id: number | string; name: stri
         </DialogContent>
       </Dialog>
 
-      {/* Add Stamps Dialog */}
+      {/* Stamp Adjustment Dialog */}
       <Dialog open={showAddStampsDialog} onOpenChange={(open) => {
         setShowAddStampsDialog(open);
         if (!open) {
           setStampCustomer(null);
           setStampsToAdd(1);
           setStampReason('Physical loyalty card transfer');
+          setStampMode('add');
         }
       }}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Add Stamps - Physical Card Transfer</DialogTitle>
+            <DialogTitle>Stamp Adjustment</DialogTitle>
           </DialogHeader>
           {stampCustomer && (
             <div className="space-y-4 py-4">
@@ -4895,50 +4911,108 @@ const [mergeSource, setMergeSource] = useState<{ id: number | string; name: stri
                 <p className="text-sm text-amber-600">Current stamps: {stampCustomer.currentStamps}/10</p>
               </div>
               <div>
-                <Label>Number of stamps to add</Label>
+                <Label className="mb-2 block">Action</Label>
+                <div className="flex gap-2">
+                  <Button
+                    variant={stampMode === 'add' ? 'default' : 'outline'}
+                    size="sm"
+                    className={stampMode === 'add' ? 'bg-green-600 hover:bg-green-700' : ''}
+                    onClick={() => {
+                      setStampMode('add');
+                      setStampReason('Physical loyalty card transfer');
+                    }}
+                  >
+                    + Add Stamps
+                  </Button>
+                  <Button
+                    variant={stampMode === 'deduct' ? 'default' : 'outline'}
+                    size="sm"
+                    className={stampMode === 'deduct' ? 'bg-red-600 hover:bg-red-700' : ''}
+                    onClick={() => {
+                      setStampMode('deduct');
+                      setStampReason('Manual correction');
+                    }}
+                  >
+                    − Deduct Stamps
+                  </Button>
+                </div>
+              </div>
+              <div>
+                <Label>Number of stamps to {stampMode === 'add' ? 'add' : 'deduct'}</Label>
                 <Select value={String(stampsToAdd)} onValueChange={(v) => setStampsToAdd(parseInt(v))}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(n => (
+                    {(stampMode === 'deduct'
+                      ? Array.from({ length: Math.min(stampCustomer.currentStamps, 20) }, (_, i) => i + 1)
+                      : [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+                    ).map(n => (
                       <SelectItem key={n} value={String(n)}>{n} stamp{n > 1 ? 's' : ''}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
               <div>
-                <Label>Reason</Label>
+                <Label>Reason <span className="text-red-500">*</span></Label>
                 <Input
                   value={stampReason}
                   onChange={(e) => setStampReason(e.target.value)}
-                  placeholder="Physical loyalty card transfer"
+                  placeholder={stampMode === 'add' ? 'Physical loyalty card transfer' : 'Manual correction - reason'}
                 />
               </div>
-              <div className="p-3 bg-muted rounded-lg">
-                <p className="text-sm">After adding: <strong>{stampCustomer.currentStamps + stampsToAdd}/10 stamps</strong></p>
-                {stampCustomer.currentStamps + stampsToAdd >= 10 && (
+              <div className={`p-3 rounded-lg ${stampMode === 'deduct' ? 'bg-red-50 border border-red-200' : 'bg-muted'}`}>
+                <p className="text-sm">
+                  After {stampMode === 'add' ? 'adding' : 'deducting'}: <strong>
+                    {stampMode === 'add'
+                      ? stampCustomer.currentStamps + stampsToAdd
+                      : Math.max(0, stampCustomer.currentStamps - stampsToAdd)
+                    }/10 stamps
+                  </strong>
+                </p>
+                {stampMode === 'add' && stampCustomer.currentStamps + stampsToAdd >= 10 && (
                   <p className="text-sm text-green-600 mt-1">🎉 Customer will qualify for a free drink!</p>
+                )}
+                {stampMode === 'deduct' && (
+                  <p className="text-xs text-red-600 mt-1">This action will be logged with your name for audit purposes.</p>
                 )}
               </div>
             </div>
           )}
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowAddStampsDialog(false)}>Cancel</Button>
-            <Button
-              disabled={!stampCustomer || addStamps.isPending}
-              onClick={() => {
-                if (stampCustomer) {
-                  addStamps.mutate({
-                    customerId: stampCustomer.id,
-                    stamps: stampsToAdd,
-                    reason: stampReason,
-                  });
-                }
-              }}
-            >
-              {addStamps.isPending ? 'Adding...' : `Add ${stampsToAdd} Stamp${stampsToAdd > 1 ? 's' : ''}`}
-            </Button>
+            {stampMode === 'add' ? (
+              <Button
+                disabled={!stampCustomer || addStamps.isPending || !stampReason.trim()}
+                onClick={() => {
+                  if (stampCustomer) {
+                    addStamps.mutate({
+                      customerId: stampCustomer.id,
+                      stamps: stampsToAdd,
+                      reason: stampReason,
+                    });
+                  }
+                }}
+              >
+                {addStamps.isPending ? 'Adding...' : `Add ${stampsToAdd} Stamp${stampsToAdd > 1 ? 's' : ''}`}
+              </Button>
+            ) : (
+              <Button
+                variant="destructive"
+                disabled={!stampCustomer || adjustStamps.isPending || !stampReason.trim()}
+                onClick={() => {
+                  if (stampCustomer) {
+                    adjustStamps.mutate({
+                      customerId: stampCustomer.id,
+                      adjustment: -stampsToAdd,
+                      reason: stampReason,
+                    });
+                  }
+                }}
+              >
+                {adjustStamps.isPending ? 'Deducting...' : `Deduct ${stampsToAdd} Stamp${stampsToAdd > 1 ? 's' : ''}`}
+              </Button>
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>

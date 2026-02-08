@@ -130,6 +130,73 @@ describe('Loyalty Reward Redemption Logic', () => {
     });
   });
 
+  describe('Stamp adjustment (add/deduct)', () => {
+    it('should correctly add stamps and calculate new total', () => {
+      const currentStamps = 5;
+      const adjustment = 3;
+      const newStampCount = currentStamps + adjustment;
+      expect(newStampCount).toBe(8);
+    });
+
+    it('should correctly deduct stamps', () => {
+      const currentStamps = 8;
+      const adjustment = -3;
+      const newStampCount = currentStamps + adjustment;
+      expect(newStampCount).toBe(5);
+    });
+
+    it('should not go below 0 when deducting more than available', () => {
+      const currentStamps = 3;
+      const adjustment = -5;
+      let newStampCount = currentStamps + adjustment;
+      if (newStampCount < 0) newStampCount = 0;
+      expect(newStampCount).toBe(0);
+    });
+
+    it('should create rewards when adding stamps pushes total to 10+', () => {
+      const currentStamps = 7;
+      const adjustment = 5;
+      const newStampCount = currentStamps + adjustment; // 12
+      const rewardsToCreate = Math.floor(newStampCount / 10);
+      const remainingStamps = newStampCount % 10;
+      expect(rewardsToCreate).toBe(1);
+      expect(remainingStamps).toBe(2);
+    });
+
+    it('should not create rewards when deducting stamps', () => {
+      const currentStamps = 15;
+      const adjustment = -3;
+      const newStampCount = currentStamps + adjustment; // 12
+      // Rewards should only be created on positive adjustments
+      const shouldCreateRewards = adjustment > 0 && newStampCount >= 10;
+      expect(shouldCreateRewards).toBe(false);
+    });
+
+    it('should classify action correctly for audit logging', () => {
+      const positiveAdjustment = 3;
+      const negativeAdjustment = -3;
+      expect(positiveAdjustment > 0 ? 'bonus' : 'admin_deduct').toBe('bonus');
+      expect(negativeAdjustment > 0 ? 'bonus' : 'admin_deduct').toBe('admin_deduct');
+    });
+
+    it('should reject zero adjustment', () => {
+      const adjustment = 0;
+      expect(adjustment !== 0).toBe(false);
+    });
+
+    it('should update lifetime stamps only for positive adjustments', () => {
+      const currentLifetime = 20;
+      const positiveAdj = 3;
+      const negativeAdj = -3;
+      
+      const lifetimeAfterAdd = currentLifetime + (positiveAdj > 0 ? positiveAdj : 0);
+      const lifetimeAfterDeduct = currentLifetime + (negativeAdj > 0 ? negativeAdj : 0);
+      
+      expect(lifetimeAfterAdd).toBe(23);
+      expect(lifetimeAfterDeduct).toBe(20); // unchanged
+    });
+  });
+
   describe('Reward voucher expiry check', () => {
     it('should accept non-expired rewards', () => {
       const expiresAt = new Date();

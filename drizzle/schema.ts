@@ -424,7 +424,7 @@ export const stampTransactions = mysqlTable("stamp_transactions", {
   id: int("id").autoincrement().primaryKey(),
   userId: int("userId").notNull(),
   orderId: int("orderId"),
-  action: mysqlEnum("action", ["earn", "bonus", "welcome", "redeem", "expire", "deduct"]).notNull(),
+  action: mysqlEnum("action", ["earn", "bonus", "welcome", "redeem", "expire", "deduct", "admin_deduct"]).notNull(),
   stamps: int("stamps").notNull(), // positive for earn, negative for redeem
   orderTotal: int("orderTotal"), // in paise
   description: text("description"),
