@@ -1632,3 +1632,5 @@ Orders fixed:
 - [x] Add branded "Redirecting to secure login..." transition page before OAuth redirect
 - [x] Rearrange Explore our Menus tiles: Food (top-left), Iced Beverages (top-right), Hot Beverages (bottom-left), Asian Sweet Bites (bottom-right)
 - [x] Rename "Main Course" to "Food" in database site_settings
+
+- [x] Fix Hot Beverages category description typo ('n-store' → 'in-store')
