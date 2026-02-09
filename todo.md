@@ -1603,3 +1603,17 @@ Orders fixed:
 - [x] Ensure the generated URL lands directly on the correct subcategory/product section
   - Menu page already reads category/subcategory URL params on load
 - [x] Added Instagram Reel quick template to UTM templates
+
+## BUG - Intermittent "Permission denied: Redirect URI is not set" on Login (Feb 9)
+
+- [x] BUG: Users intermittently get "Permission denied: Redirect URI is not set" when clicking Login
+- [x] Investigate how login URL and redirect_uri parameter are constructed
+  - Root cause: window.location.origin can be empty/"null" on some mobile browsers (iOS Safari)
+  - getLoginUrl() was called eagerly during render, not at click time
+  - useAuth called getLoginUrl() as default parameter on every render
+- [x] Fix the redirect URI to be reliably set on every login attempt
+  - Added robust getReliableOrigin() with fallback to https://www.taiwanmaami.com
+  - Changed Header login from <a href> to onClick handler (URL generated at click time)
+  - Fixed useAuth to generate login URL lazily only when redirect is needed
+  - Added validation for oauthPortalUrl and appId before building URL
+- [x] 0 TypeScript errors, dev server running clean

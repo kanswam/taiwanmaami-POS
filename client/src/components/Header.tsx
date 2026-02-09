@@ -150,12 +150,10 @@ export function Header() {
                 </Button>
               </div>
             ) : (
-              <a href={getLoginUrl()} className="hidden md:block">
-                <Button variant="ghost" size="sm">
+              <Button variant="ghost" size="sm" className="hidden md:block" onClick={() => { window.location.href = getLoginUrl(); }}>
                   <User className="w-4 h-4 mr-2" />
                   Login
-                </Button>
-              </a>
+              </Button>
             )}
 
             {/* Mobile menu */}
@@ -264,12 +262,10 @@ export function Header() {
                       </Button>
                     </>
                   ) : (
-                    <a href={getLoginUrl()}>
-                      <Button className="w-full">
+                    <Button className="w-full" onClick={() => { window.location.href = getLoginUrl(); }}>
                         <User className="w-4 h-4 mr-2" />
                         Login
-                      </Button>
-                    </a>
+                    </Button>
                   )}
                 </div>
               </SheetContent>
