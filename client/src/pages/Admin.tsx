@@ -819,6 +819,7 @@ function ProductEditDialog({ product, onUpdate }: { product: any; onUpdate: () =
     isVegetarian: product.isVegetarian ?? true,
     isVegan: product.isVegan ?? false,
     containsEgg: product.containsEgg ?? false,
+    isNonVeg: product.isNonVeg ?? false,
     availableAtPalladium: product.availableAtPalladium ?? true,
   });
   // Multi-image support
@@ -888,6 +889,7 @@ function ProductEditDialog({ product, onUpdate }: { product: any; onUpdate: () =
       isVegetarian: formData.isVegetarian,
       isVegan: formData.isVegan,
       containsEgg: formData.containsEgg,
+      isNonVeg: formData.isNonVeg,
       availableAtPalladium: formData.availableAtPalladium,
       imageUrl: images[0] || null,
       imageUrl2: images[1] || null,
@@ -1017,6 +1019,16 @@ function ProductEditDialog({ product, onUpdate }: { product: any; onUpdate: () =
                 <span className="text-sm flex items-center gap-1">
                   <span className="w-3 h-3 rounded-full bg-yellow-400 border-2 border-yellow-500"></span>
                   Contains Egg
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Switch
+                  checked={formData.isNonVeg}
+                  onCheckedChange={(checked) => setFormData({ ...formData, isNonVeg: checked })}
+                />
+                <span className="text-sm flex items-center gap-1">
+                  <span className="w-3 h-3 rounded-full bg-red-600 border border-red-700"></span>
+                  Non-Veg
                 </span>
               </div>
             </div>
@@ -6379,6 +6391,7 @@ function CreateProductDialog({
     isVegetarian: true,
     isVegan: false,
     containsEgg: false,
+    isNonVeg: false,
   });
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -6426,6 +6439,7 @@ function CreateProductDialog({
       isVegetarian: true,
       isVegan: false,
       containsEgg: false,
+      isNonVeg: false,
     });
     setImagePreview(null);
   };
@@ -6482,6 +6496,7 @@ function CreateProductDialog({
       isVegetarian: formData.isVegetarian,
       isVegan: formData.isVegan,
       containsEgg: formData.containsEgg,
+      isNonVeg: formData.isNonVeg,
     });
   };
 
@@ -6659,6 +6674,14 @@ function CreateProductDialog({
                 id="create-egg"
               />
               <Label htmlFor="create-egg" className="cursor-pointer">Contains Egg</Label>
+            </div>
+            <div className="flex items-center gap-2">
+              <Switch
+                checked={formData.isNonVeg}
+                onCheckedChange={(v) => setFormData(prev => ({ ...prev, isNonVeg: v }))}
+                id="create-nonveg"
+              />
+              <Label htmlFor="create-nonveg" className="cursor-pointer text-red-600 font-semibold">Non-Veg</Label>
             </div>
           </div>
         </div>

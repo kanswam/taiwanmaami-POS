@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Leaf, Egg } from 'lucide-react';
+import { Leaf, Egg, Drumstick } from 'lucide-react';
 import { formatPrice } from '@shared/types';
 import { ProductCustomizationModal } from './ProductCustomizationModal';
 import { getImageForContext, getResponsiveSrcSet, isCloudinaryUrl } from '@/lib/imageOptimizer';
@@ -19,6 +19,7 @@ interface ProductCardProps {
     isVegetarian?: boolean;
     isVegan?: boolean;
     containsEgg?: boolean;
+    isNonVeg?: boolean;
     isActive?: boolean;
     isInStock?: boolean;
     availableSizes?: string[] | null; // Product-specific size restrictions
@@ -178,6 +179,12 @@ export function ProductCard({ product, subcategory, category, isDelivery = false
               <span className="badge-egg">
                 <Egg className="w-3 h-3 mr-1" />
                 Egg
+              </span>
+            )}
+            {product.isNonVeg && (
+              <span className="badge-nonveg">
+                <Drumstick className="w-3 h-3 mr-1" />
+                Non-Veg
               </span>
             )}
           </div>

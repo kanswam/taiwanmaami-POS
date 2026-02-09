@@ -114,6 +114,7 @@ export const products = mysqlTable("products", {
   isVegetarian: boolean("isVegetarian").default(true).notNull(),
   isVegan: boolean("isVegan").default(false).notNull(),
   containsEgg: boolean("containsEgg").default(false).notNull(),
+  isNonVeg: boolean("isNonVeg").default(false).notNull(),
   // Price inheritance
   useBasePrice: boolean("useBasePrice").default(true).notNull(), // If true, inherit price from subcategory
   // Availability

@@ -1647,3 +1647,13 @@ Orders fixed:
 - [x] Add per-page SEO meta tags to Home, Menu, About, Events, Blog, FAQ, Franchise, Testimonials
 - [x] Update sitemap.xml with all public pages including menu categories, events, blog, franchise
 - [x] Write vitest tests for all SEO optimizations (33 tests passing)
+
+## Non-Veg Dietary Label (Feb 9)
+
+- [x] Add 'isNonVeg' boolean field to products schema
+- [x] Push database migration (via direct SQL ALTER TABLE)
+- [x] Update ProductCard to display Non-Veg badge in red with Drumstick icon
+- [x] Update admin product management to include Non-Veg toggle (edit & create dialogs)
+- [x] Update server routers (createProduct & updateProduct) to accept isNonVeg
+- [x] Add .badge-nonveg CSS class (red #dc2626 background, white text)
+- [x] Write vitest tests for Non-Veg label (16 tests passing)

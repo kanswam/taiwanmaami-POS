@@ -2283,6 +2283,7 @@ export const appRouter = router({
         isVegetarian: z.boolean().default(true),
         isVegan: z.boolean().default(false),
         containsEgg: z.boolean().default(false),
+        isNonVeg: z.boolean().default(false),
         availableInstore: z.boolean().default(true),
         availableDelivery: z.boolean().default(true),
         displayOrder: z.number().default(0),
@@ -2329,6 +2330,7 @@ export const appRouter = router({
         isVegetarian: z.boolean().optional(),
         isVegan: z.boolean().optional(),
         containsEgg: z.boolean().optional(),
+        isNonVeg: z.boolean().optional(),
         useBasePrice: z.boolean().optional(),
       }))
       .mutation(async ({ input, ctx }) => {
