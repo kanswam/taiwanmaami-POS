@@ -92,9 +92,14 @@
       "url": "https://www.taiwanmaami.com",
       "telephone": "+91-91505-70557",
       "priceRange": "₹₹",
-      "servesCuisine": ["Taiwanese", "Bubble Tea", "Asian", "Street Food"],
+      "servesCuisine": ["Taiwanese", "Bubble Tea", "Asian", "Mochi", "Street Food"],
       "acceptsReservations": "false",
       "menu": "https://www.taiwanmaami.com/menu",
+      "hasMenu": {
+        "@type": "Menu",
+        "name": "Taiwan Maami Menu",
+        "url": "https://www.taiwanmaami.com/menu"
+      },
       "address": {
         "@type": "PostalAddress",
         "streetAddress": "New No. 29, Burkit Road",
@@ -115,6 +120,177 @@
           "opens": "12:00",
           "closes": "00:00"
         }
+      ]
+    }
+    </script>
+
+    <!-- Structured Data - Restaurant (Velachery / Palladium Mall) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Restaurant",
+      "name": "Taiwan Maami - Velachery",
+      "image": "https://www.taiwanmaami.com/images/shopfront.jpg",
+      "url": "https://www.taiwanmaami.com",
+      "telephone": "+91-89259-14303",
+      "priceRange": "₹₹",
+      "servesCuisine": ["Taiwanese", "Bubble Tea", "Asian", "Mochi", "Street Food"],
+      "acceptsReservations": "false",
+      "menu": "https://www.taiwanmaami.com/menu",
+      "hasMenu": {
+        "@type": "Menu",
+        "name": "Taiwan Maami Menu",
+        "url": "https://www.taiwanmaami.com/menu",
+        "hasMenuSection": [
+          {
+            "@type": "MenuSection",
+            "name": "Iced Beverages",
+            "description": "Organic whole-leaf bubble tea & Lavazza iced coffee",
+            "url": "https://www.taiwanmaami.com/menu?category=bubble-tea",
+            "hasMenuSection": [
+              { "@type": "MenuSection", "name": "Organic Assam", "description": "原片阿薩姆 - Classic Assam black tea with boba" },
+              { "@type": "MenuSection", "name": "Organic Oolong", "description": "原片有機烏龍 - Premium oolong tea with boba" },
+              { "@type": "MenuSection", "name": "Organic Green Tea", "description": "原片有機綠茶 - Fresh green tea with boba" },
+              { "@type": "MenuSection", "name": "Matcha Blend", "description": "抹茶特調 - Japanese matcha specialty drinks" },
+              { "@type": "MenuSection", "name": "Taro Blend", "description": "香芋特調 - Creamy taro specialty drinks" },
+              { "@type": "MenuSection", "name": "Iced Lavazza Coffee", "description": "冰咖啡 - Premium Lavazza iced coffee" }
+            ]
+          },
+          {
+            "@type": "MenuSection",
+            "name": "Hot Beverages",
+            "description": "Premium Lavazza coffee, organic tea & hot chocolate",
+            "url": "https://www.taiwanmaami.com/menu?category=coffee"
+          },
+          {
+            "@type": "MenuSection",
+            "name": "Food",
+            "description": "Iconic Asian street favourites - rice, noodles, flatbreads & brioche",
+            "url": "https://www.taiwanmaami.com/menu?category=food",
+            "hasMenuSection": [
+              { "@type": "MenuSection", "name": "Taiwan Maami ChickGozilla", "description": "Signature fried chicken dishes" },
+              { "@type": "MenuSection", "name": "Rice", "description": "飯 - Asian rice dishes" },
+              { "@type": "MenuSection", "name": "Noodles Soup", "description": "湯麵 - Comforting noodle soups" },
+              { "@type": "MenuSection", "name": "Saucy Noodles", "description": "拌麵 - Stir-fried noodles" },
+              { "@type": "MenuSection", "name": "Flat Bread", "description": "蔥油餅 - Traditional Taiwanese flatbreads" },
+              { "@type": "MenuSection", "name": "Omelette", "description": "日式奄列 - Japanese-style omelettes" },
+              { "@type": "MenuSection", "name": "Savoury Pillow Brioche", "description": "厚片吐司(鹹) - Fluffy savoury brioche" }
+            ]
+          },
+          {
+            "@type": "MenuSection",
+            "name": "Asian Sweet Bites",
+            "description": "Mochi, boba crème caramel & sweet pillow brioche",
+            "url": "https://www.taiwanmaami.com/menu?category=mochis",
+            "hasMenuSection": [
+              { "@type": "MenuSection", "name": "Fruit Mochi", "description": "水果雪梅娘系列 - Fresh fruit mochi" },
+              { "@type": "MenuSection", "name": "Signature Mochi", "description": "招牌雪莓娘系列 - Signature mochi flavours" },
+              { "@type": "MenuSection", "name": "Boba Crème Caramel", "description": "粉圓布丁 - Tapioca pearl pudding" },
+              { "@type": "MenuSection", "name": "Sweet Pillow Brioche", "description": "厚片吐司(甜) - Fluffy sweet brioche" }
+            ]
+          }
+        ]
+      },
+      "address": {
+        "@type": "PostalAddress",
+        "streetAddress": "First Floor, Palladium Mall, Velachery",
+        "addressLocality": "Chennai",
+        "addressRegion": "Tamil Nadu",
+        "postalCode": "600042",
+        "addressCountry": "IN"
+      },
+      "geo": {
+        "@type": "GeoCoordinates",
+        "latitude": 12.9716,
+        "longitude": 80.2209
+      },
+      "openingHoursSpecification": [
+        {
+          "@type": "OpeningHoursSpecification",
+          "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
+          "opens": "10:00",
+          "closes": "22:00"
+        }
+      ],
+      "aggregateRating": {
+        "@type": "AggregateRating",
+        "ratingValue": "4.5",
+        "reviewCount": "200",
+        "bestRating": "5"
+      }
+    }
+    </script>
+
+    <!-- Structured Data - FAQPage -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "What is Taiwan Maami?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Taiwan Maami is Chennai's premium Taiwanese bubble tea and Asian street food cafe, serving authentic boba tea made with organic whole-leaf tea and imported tapioca pearls from Taiwan, along with mochi, Asian rice dishes, noodles, and flatbreads."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Where is Taiwan Maami located in Chennai?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Taiwan Maami has two outlets in Chennai: 1) First Floor, Palladium Mall, Velachery (10 AM - 10 PM), and 2) Moutan by Taiwan Maami at New No. 29, Burkit Road, T Nagar (12 PM - 12 AM). Both locations offer dine-in, pickup, and delivery."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Does Taiwan Maami offer home delivery?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes! Taiwan Maami offers home delivery within 10 km of T Nagar, Chennai. Flat delivery fee of ₹100, with free delivery on orders above ₹2500. You can order directly from our website or via WhatsApp."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What is the Taiwan Maami loyalty programme?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Our loyalty programme rewards you with stamps for every ₹450 spent. Collect 10 stamps and receive a free drink! Stamps are tracked automatically when you log in and order through our website."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What types of bubble tea does Taiwan Maami serve?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "We serve organic whole-leaf bubble tea in varieties including Assam Black Tea, Oolong Tea, Green Tea, Matcha Blend, and Taro Blend. All teas are available in Petite, Regular, and Large sizes with optional boba (tapioca pearls) and customisable sugar and ice levels."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Does Taiwan Maami serve food besides bubble tea?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes! Our food menu includes ChickGozilla (signature fried chicken), Asian rice dishes, noodle soups, saucy noodles, Taiwanese flatbreads (蔥油餅), Japanese-style omelettes, and pillow brioche. We also serve fresh fruit mochi, signature mochi, and boba crème caramel desserts."
+          }
+        }
+      ]
+    }
+    </script>
+
+    <!-- Structured Data - BreadcrumbList -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://www.taiwanmaami.com/" },
+        { "@type": "ListItem", "position": 2, "name": "Menu", "item": "https://www.taiwanmaami.com/menu" },
+        { "@type": "ListItem", "position": 3, "name": "About Us", "item": "https://www.taiwanmaami.com/about" },
+        { "@type": "ListItem", "position": 4, "name": "Events", "item": "https://www.taiwanmaami.com/events" },
+        { "@type": "ListItem", "position": 5, "name": "Blog", "item": "https://www.taiwanmaami.com/blog" },
+        { "@type": "ListItem", "position": 6, "name": "Wholesale", "item": "https://www.taiwanmaami.com/wholesale" }
       ]
     }
     </script>

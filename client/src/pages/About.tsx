@@ -1,5 +1,6 @@
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
+import { SEO } from '@/components/SEO';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Link } from 'wouter';
@@ -15,6 +16,12 @@ export default function About() {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEO
+        title="About Us - Our Story & Outlets"
+        description="Learn about Taiwan Maami - Chennai's authentic Taiwanese bubble tea cafe. Visit our outlets at Palladium Mall Velachery & T Nagar. Premium organic tea, imported ingredients from Taiwan."
+        keywords="Taiwan Maami about, bubble tea cafe Chennai, Taiwanese cafe Chennai, Palladium Mall Velachery, T Nagar cafe"
+        canonicalPath="/about"
+      />
       <Header />
 
       {/* Hero Section */}

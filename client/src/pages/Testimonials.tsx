@@ -1,5 +1,6 @@
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
+import { SEO } from '@/components/SEO';
 import { Card } from '@/components/ui/card';
 import { trpc } from '@/lib/trpc';
 import { Star, Quote, ArrowLeft } from 'lucide-react';
@@ -25,6 +26,12 @@ export default function Testimonials() {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEO
+        title="Customer Reviews & Testimonials"
+        description="See what our customers say about Taiwan Maami. Read reviews about our bubble tea, mochi, Asian food, and service in Chennai."
+        keywords="Taiwan Maami reviews, bubble tea reviews Chennai, customer testimonials, boba tea ratings"
+        canonicalPath="/testimonials"
+      />
       <Header />
       
       <div className="container pt-24 pb-12">

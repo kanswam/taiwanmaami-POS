@@ -21,6 +21,7 @@ import { toast } from "sonner";
 import { Calendar, Clock, MapPin, Users, Ticket, ChefHat, PartyPopper, Phone, Mail, Instagram, Sparkles, CheckCircle2, ArrowRight, Heart, Building2, GraduationCap, UtensilsCrossed, ChevronLeft, ChevronRight, Star, Download, ExternalLink } from "lucide-react";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
+import { SEO } from "@/components/SEO";
 
 // Hero carousel images - using existing Taiwan Maami product images
 const heroCarouselImages = [
@@ -370,6 +371,12 @@ export default function Events() {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEO
+        title="Events & Workshops - Cooking Classes in Chennai"
+        description="Join Taiwan Maami's hands-on cooking workshops and events in Chennai. Learn to make authentic Taiwanese dishes, bubble tea, and Asian street food. Book your spot today!"
+        keywords="Taiwan Maami events, cooking workshop Chennai, bubble tea workshop, Taiwanese cooking class, food events Chennai"
+        canonicalPath="/events"
+      />
       <Header />
       
       {/* Hero Section with Carousel */}

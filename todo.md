@@ -1634,3 +1634,16 @@ Orders fixed:
 - [x] Rename "Main Course" to "Food" in database site_settings
 
 - [x] Fix Hot Beverages category description typo ('n-store' → 'in-store')
+
+## Google Search & SEO Optimization (Feb 9)
+
+- [x] Add Restaurant JSON-LD structured data for Velachery / Palladium Mall location
+- [x] Add hasMenu to T Nagar Restaurant JSON-LD and add Mochi to servesCuisine
+- [x] Add FoodMenu JSON-LD with all categories & subcategories (Iced Beverages, Hot Beverages, Food, Asian Sweet Bites)
+- [x] Add FAQPage JSON-LD structured data (6 common questions)
+- [x] Add BreadcrumbList JSON-LD structured data
+- [x] Create reusable SEO component (react-helmet-async) for dynamic per-page meta tags
+- [x] Add HelmetProvider wrapper in main.tsx
+- [x] Add per-page SEO meta tags to Home, Menu, About, Events, Blog, FAQ, Franchise, Testimonials
+- [x] Update sitemap.xml with all public pages including menu categories, events, blog, franchise
+- [x] Write vitest tests for all SEO optimizations (33 tests passing)

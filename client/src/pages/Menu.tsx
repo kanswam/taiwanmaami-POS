@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
 import { useSearch } from 'wouter';
 import { Header } from '@/components/Header';
+import { SEO } from '@/components/SEO';
 import { ProductCard } from '@/components/ProductCard';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -424,6 +425,12 @@ export default function Menu() {
 
   return (
     <div className="min-h-screen bg-background pb-24">
+      <SEO
+        title="Menu - Bubble Tea, Food & Mochi"
+        description="Browse Taiwan Maami's full menu. Organic bubble tea, matcha, taro drinks, Asian rice & noodles, Taiwanese flatbreads, fresh mochi & desserts. Order online for delivery in Chennai."
+        keywords="Taiwan Maami menu, bubble tea menu Chennai, boba menu, mochi menu, Asian food menu Chennai, matcha drinks, taro drinks"
+        canonicalPath="/menu"
+      />
       <Header />
 
       {/* Active Order Banner - shown when customer scans table QR and there's an existing order */}

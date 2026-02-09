@@ -2,6 +2,7 @@ import { Link } from 'wouter';
 import { Calendar, Clock, ArrowRight, Eye } from 'lucide-react';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
+import { SEO } from '@/components/SEO';
 import { trpc } from '@/lib/trpc';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -11,6 +12,12 @@ export default function Blog() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
+      <SEO
+        title="Blog - Bubble Tea Stories & Asian Food Culture"
+        description="Read Taiwan Maami's blog for stories about bubble tea culture, Asian food traditions, recipes, and the latest from our Chennai cafes."
+        keywords="Taiwan Maami blog, bubble tea blog, Asian food culture, Taiwanese food stories, boba tea articles"
+        canonicalPath="/blog"
+      />
       <Header />
       
       {/* Hero Section */}

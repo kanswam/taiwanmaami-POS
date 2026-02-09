@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Header } from '@/components/Header';
+import { SEO } from '@/components/SEO';
 import { LazyVideo } from '@/components/LazyVideo';
 import { trpc } from '@/lib/trpc';
 import { ArrowRight, MapPin, Clock, Star, Sparkles, Instagram, Phone, Navigation, Store, Truck, ShoppingBag, Facebook, Twitter, Youtube, Calendar, Users, Ticket } from 'lucide-react';
@@ -156,6 +157,11 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEO
+        description="Taiwan Maami - Chennai's premium Taiwanese bubble tea cafe. Organic whole-leaf boba tea, mochi, Asian street food. Order online for delivery, pickup or dine-in at T Nagar & Velachery."
+        keywords="bubble tea Chennai, Taiwan Maami, boba tea Chennai, mochi Chennai, Asian food Chennai, Taiwanese food Chennai, tapioca pearls, bubble tea delivery Chennai, T Nagar bubble tea, Velachery bubble tea"
+        canonicalPath="/"
+      />
       <Header />
 
       {/* Workshop Announcement Banner - Above Hero for Maximum Visibility */}

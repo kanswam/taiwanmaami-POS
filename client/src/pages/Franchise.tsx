@@ -1,5 +1,6 @@
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
+import { SEO } from '@/components/SEO';
 import { Card } from '@/components/ui/card';
 import { trpc } from '@/lib/trpc';
 import { Link } from 'wouter';
@@ -11,6 +12,12 @@ export default function Franchise() {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEO
+        title="Franchise Opportunity"
+        description="Partner with Taiwan Maami - India's premium Taiwanese bubble tea brand. Explore franchise opportunities and bring authentic boba tea to your city."
+        keywords="Taiwan Maami franchise, bubble tea franchise India, boba franchise opportunity, Taiwanese cafe franchise"
+        canonicalPath="/franchise"
+      />
       <Header />
 
       {/* Hero Section */}

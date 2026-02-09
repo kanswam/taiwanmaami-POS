@@ -1,4 +1,5 @@
 import { Header } from '@/components/Header';
+import { SEO } from '@/components/SEO';
 import { trpc } from '@/lib/trpc';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -7,6 +8,12 @@ export default function FAQ() {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEO
+        title="FAQ - Frequently Asked Questions"
+        description="Find answers to common questions about Taiwan Maami - ordering, delivery, loyalty programme, menu options, allergens, and more."
+        keywords="Taiwan Maami FAQ, bubble tea questions, delivery FAQ Chennai, loyalty programme FAQ"
+        canonicalPath="/faq"
+      />
       <Header />
       <main className="container py-12">
         <div className="max-w-3xl mx-auto">
