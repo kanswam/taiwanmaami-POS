@@ -30,7 +30,7 @@ export default function Home() {
   const [cat1Desc, setCat1Desc] = useState('Authentic Taiwanese bubble tea & premium coffee');
   const [cat2Name, setCat2Name] = useState('Hot Beverages');
   const [cat2Desc, setCat2Desc] = useState('Warm & comforting traditional drinks');
-  const [cat3Name, setCat3Name] = useState('Asian Rice-Noodles-Bread');
+  const [cat3Name, setCat3Name] = useState('Food');
   const [cat3Desc, setCat3Desc] = useState('Savory Asian street food favorites');
   const [cat4Name, setCat4Name] = useState('Asian Sweet Bites');
   const [cat4Desc, setCat4Desc] = useState('Delicious mochis & desserts');
@@ -100,8 +100,14 @@ export default function Home() {
   }, []);
 
   // Category cards with video backgrounds - links to /menu with category filter
-  // Using actual database slugs: bubble-tea, coffee, mochis, food
+  // Order: Food (top-left), Iced Beverages (top-right), Hot Beverages (bottom-left), Asian Sweet Bites (bottom-right)
   const menuCategories = [
+    {
+      name: cat3Name,
+      description: cat3Desc,
+      video: 'https://files.manuscdn.com/user_upload_by_module/session_file/114675165/bNweCHEHeGisBBOW.mp4',
+      href: '/menu?category=food',
+    },
     {
       name: cat1Name,
       description: cat1Desc,
@@ -113,12 +119,6 @@ export default function Home() {
       description: cat2Desc,
       video: 'https://files.manuscdn.com/user_upload_by_module/session_file/114675165/OXrITxhITgHnggSH.mp4',
       href: '/menu?category=coffee',
-    },
-    {
-      name: cat3Name,
-      description: cat3Desc,
-      video: 'https://files.manuscdn.com/user_upload_by_module/session_file/114675165/bNweCHEHeGisBBOW.mp4',
-      href: '/menu?category=food',
     },
     {
       name: cat4Name,

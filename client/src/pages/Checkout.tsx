@@ -16,7 +16,7 @@ import { ArrowLeft, MapPin, Clock, CreditCard, Banknote, Loader2, Gift, User, St
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { Link } from 'wouter';
-import { getLoginUrl } from '@/const';
+import { useLoginTransition } from '@/hooks/useLoginTransition';
 
 // Declare Razorpay types
 declare global {
@@ -28,6 +28,7 @@ declare global {
 export default function Checkout() {
   const [, navigate] = useLocation();
   const { isAuthenticated, user } = useAuth();
+  const { triggerLogin, transitionPortal } = useLoginTransition();
   const { state, subtotal, gst, total, clearCart, itemCount, tableNumber, setTableNumber, activeOrderId, setActiveOrderId } = useCart();
   const { data: stores } = trpc.stores.getAll.useQuery();
 
@@ -463,7 +464,7 @@ export default function Checkout() {
               {/* Login Option */}
               <Card 
                 className="p-6 cursor-pointer hover:border-primary transition-colors border-2"
-                onClick={() => window.location.href = getLoginUrl()}
+                onClick={triggerLogin}
               >
                 <div className="flex items-start gap-4">
                   <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
@@ -505,6 +506,7 @@ export default function Checkout() {
             </div>
           </div>
         </div>
+        {transitionPortal}
       </div>
     );
   }
@@ -790,7 +792,7 @@ export default function Checkout() {
 
                   <p className="text-xs text-muted-foreground text-center mt-4">
                     Want to earn rewards?{' '}
-                    <a href={getLoginUrl()} className="text-primary underline">Login instead</a>
+                    <a href="#" onClick={(e) => { e.preventDefault(); triggerLogin(); }} className="text-primary underline">Login instead</a>
                   </p>
                 </Card>
               </div>
@@ -1202,6 +1204,7 @@ export default function Checkout() {
           </div>
         </form>
       </div>
+      {transitionPortal}
     </div>
   );
 }

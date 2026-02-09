@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { useAuth } from '@/_core/hooks/useAuth';
 import { useCart } from '@/contexts/CartContext';
-import { getLoginUrl } from '@/const';
+import { useLoginTransition } from '@/hooks/useLoginTransition';
 import { Menu, ShoppingCart, User, LogOut, MapPin, Info, FileText, X, ClipboardList } from 'lucide-react';
 import { formatPrice } from '@shared/types';
 
@@ -13,6 +13,7 @@ export function Header() {
   const { user, isAuthenticated, logout } = useAuth();
   const { itemCount, total } = useCart();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { triggerLogin, transitionPortal } = useLoginTransition();
 
   const navLinks = [
     { href: '/#order-options', label: 'Menu' },
@@ -150,7 +151,7 @@ export function Header() {
                 </Button>
               </div>
             ) : (
-              <Button variant="ghost" size="sm" className="hidden md:block" onClick={() => { window.location.href = getLoginUrl(); }}>
+              <Button variant="ghost" size="sm" className="hidden md:block" onClick={triggerLogin}>
                   <User className="w-4 h-4 mr-2" />
                   Login
               </Button>
@@ -262,7 +263,7 @@ export function Header() {
                       </Button>
                     </>
                   ) : (
-                    <Button className="w-full" onClick={() => { window.location.href = getLoginUrl(); }}>
+                    <Button className="w-full" onClick={triggerLogin}>
                         <User className="w-4 h-4 mr-2" />
                         Login
                     </Button>
@@ -274,6 +275,7 @@ export function Header() {
         </div>
       </div>
     </header>
+      {transitionPortal}
     </div>
   );
 }

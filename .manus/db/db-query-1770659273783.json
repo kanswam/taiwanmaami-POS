@@ -1,0 +1,30 @@
+{
+  "query": "SELECT id, name, slug FROM categories ORDER BY id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT id, name, slug FROM categories ORDER BY id;",
+  "rows": [
+    {
+      "id": "1",
+      "name": "Iced Beverages",
+      "slug": "bubble-tea"
+    },
+    {
+      "id": "2",
+      "name": "Hot Beverages ",
+      "slug": "coffee"
+    },
+    {
+      "id": "3",
+      "name": "Sweet Bites",
+      "slug": "mochis"
+    },
+    {
+      "id": "4",
+      "name": "Food",
+      "slug": "food"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\tslug\n1\tIced Beverages\tbubble-tea\n2\tHot Beverages \tcoffee\n3\tSweet Bites\tmochis\n4\tFood\tfood\n",
+  "stderr": "",
+  "execution_time_ms": 351
+}

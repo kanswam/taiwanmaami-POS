@@ -1617,3 +1617,18 @@ Orders fixed:
   - Fixed useAuth to generate login URL lazily only when redirect is needed
   - Added validation for oauthPortalUrl and appId before building URL
 - [x] 0 TypeScript errors, dev server running clean
+
+## Remove Manus Branding from Login Flow (Feb 9)
+
+- [x] Search all frontend code for visible Manus references (buttons, labels, tooltips, footer)
+  - Only CDN URLs (files.manuscdn.com) found — not visible to customers
+  - Login buttons say "Login" with no Manus text
+  - No Manus branding in Header, Footer, Cart, Checkout, or any customer-facing page
+- [x] Remove or replace Manus branding in customer-facing UI (none found — site is clean)
+- [x] Draft request to Manus team for OAuth login page branding customization
+
+## Login Transition & Menu Tile Rearrangement (Feb 9)
+
+- [x] Add branded "Redirecting to secure login..." transition page before OAuth redirect
+- [x] Rearrange Explore our Menus tiles: Food (top-left), Iced Beverages (top-right), Hot Beverages (bottom-left), Asian Sweet Bites (bottom-right)
+- [x] Rename "Main Course" to "Food" in database site_settings

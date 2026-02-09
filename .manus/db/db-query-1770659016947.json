@@ -1,0 +1,42 @@
+{
+  "query": "SELECT `key`, `value` FROM site_settings WHERE `key` LIKE 'cat%';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT `key`, `value` FROM site_settings WHERE `key` LIKE 'cat%';",
+  "rows": [
+    {
+      "key": "cat1_name",
+      "value": "Iced Beverages"
+    },
+    {
+      "key": "cat1_desc",
+      "value": "Organic whole-leaf bubble tea & Lavazza coffee"
+    },
+    {
+      "key": "cat2_name",
+      "value": "Hot Beverages"
+    },
+    {
+      "key": "cat2_desc",
+      "value": "Ultimate comfort of premium tea, coffee, cocoa "
+    },
+    {
+      "key": "cat3_name",
+      "value": "Main Course"
+    },
+    {
+      "key": "cat3_desc",
+      "value": "Iconic Asian street favourites"
+    },
+    {
+      "key": "cat4_name",
+      "value": "Asian Sweet Bites"
+    },
+    {
+      "key": "cat4_desc",
+      "value": "Taiwan Maami's signature - mochi and more"
+    }
+  ],
+  "messages": [],
+  "stdout": "key\tvalue\ncat1_name\tIced Beverages\ncat1_desc\tOrganic whole-leaf bubble tea & Lavazza coffee\ncat2_name\tHot Beverages\ncat2_desc\tUltimate comfort of premium tea, coffee, cocoa \ncat3_name\tMain Course\ncat3_desc\tIconic Asian street favourites\ncat4_name\tAsian Sweet Bites\ncat4_desc\tTaiwan Maami's signature - mochi and more\n",
+  "stderr": "",
+  "execution_time_ms": 368
+}
