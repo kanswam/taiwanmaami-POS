@@ -8512,6 +8512,54 @@ export const appRouter = router({
         return { success: true };
       }),
 
+    // Upload blog featured image (admin only)
+    uploadImage: adminProcedure
+      .input(z.object({
+        articleId: z.number(),
+        imageBase64: z.string(), // base64 data URL
+      }))
+      .mutation(async ({ input }) => {
+        const database = await getDb();
+        if (!database) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
+        
+        const { articleId, imageBase64 } = input;
+        
+        // Validate article exists
+        const [article] = await database.select({ id: blogArticles.id })
+          .from(blogArticles)
+          .where(eq(blogArticles.id, articleId));
+        if (!article) throw new TRPCError({ code: 'NOT_FOUND', message: 'Article not found' });
+        
+        // Extract base64 data
+        const base64Match = imageBase64.match(/^data:image\/(\w+);base64,(.+)$/);
+        if (!base64Match) throw new TRPCError({ code: 'BAD_REQUEST', message: 'Invalid image data' });
+        
+        const ext = base64Match[1] === 'jpeg' ? 'jpg' : base64Match[1];
+        const buffer = Buffer.from(base64Match[2], 'base64');
+        
+        // Upload via hybrid storage (S3 + Cloudinary)
+        try {
+          const { hybridUpload } = await import('./hybridStorage');
+          const result = await hybridUpload(buffer, {
+            fileName: `blog-${articleId}-${Date.now()}.${ext}`,
+            folder: 'blog',
+            mimeType: `image/${ext === 'jpg' ? 'jpeg' : ext}`,
+            tags: ['blog', 'featured-image'],
+          });
+          
+          const imageUrl = result.deliveryUrl;
+          
+          await database.update(blogArticles)
+            .set({ imageUrl })
+            .where(eq(blogArticles.id, articleId));
+          
+          return { success: true, imageUrl };
+        } catch (err) {
+          console.error('[blog.uploadImage] Upload failed:', err);
+          throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to upload image' });
+        }
+      }),
+
     // Delete article (admin only)
     delete: adminProcedure
       .input(z.object({ id: z.number() }))

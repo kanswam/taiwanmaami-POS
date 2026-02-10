@@ -1677,3 +1677,14 @@ Orders fixed:
 - [x] Add visual elements (styled h2 with accent border, h3 with left border, drop cap, reading time)
 - [x] Improve blog listing card design (images now showing from CDN)
 - [ ] Add admin ability to upload/change blog featured images
+
+## Blog Image Upload in Admin (Feb 10)
+
+- [x] Add image upload button to blog edit dialog in Admin (drag & drop style uploader)
+- [x] Upload image to S3 via server endpoint (blog.uploadImage tRPC procedure)
+- [x] Update blog post imageUrl in database after upload
+- [x] Show current image preview in edit dialog (with replace/remove buttons)
+- [x] Allow replacing existing image
+- [x] Add image upload to create dialog (stores base64, uploads after article created)
+- [x] Show thumbnail in article list cards
+- [x] Write vitest tests (11 tests passing)
