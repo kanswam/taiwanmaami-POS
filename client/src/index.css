@@ -435,3 +435,209 @@
   display: inline-block;
   animation: marquee 20s linear infinite;
 }
+
+/* ========================================
+   Blog Article Content Styles
+   ======================================== */
+
+.blog-content {
+  font-size: 1.125rem;
+  line-height: 1.85;
+  color: var(--muted-foreground);
+}
+
+/* First paragraph - drop cap effect */
+.blog-content > p:first-of-type {
+  font-size: 1.2rem;
+  line-height: 1.8;
+  color: var(--foreground);
+}
+
+.blog-content > p:first-of-type::first-letter {
+  float: left;
+  font-size: 3.5rem;
+  line-height: 1;
+  font-weight: 700;
+  color: var(--primary);
+  margin-right: 0.5rem;
+  margin-top: 0.1rem;
+}
+
+/* Paragraphs */
+.blog-content p {
+  margin-bottom: 1.5rem;
+}
+
+/* Headings */
+.blog-content h2 {
+  font-size: 1.625rem;
+  font-weight: 700;
+  color: var(--foreground);
+  margin-top: 2.5rem;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid var(--primary);
+  display: inline-block;
+  width: 100%;
+  position: relative;
+}
+
+.blog-content h2::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 60px;
+  height: 2px;
+  background: var(--primary);
+}
+
+.blog-content h3 {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: var(--foreground);
+  margin-top: 2rem;
+  margin-bottom: 0.75rem;
+  padding-left: 0.75rem;
+  border-left: 3px solid var(--primary);
+}
+
+/* Links */
+.blog-content a {
+  color: var(--primary);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.2s;
+}
+
+.blog-content a:hover {
+  border-bottom-color: var(--primary);
+}
+
+/* Bold text */
+.blog-content strong {
+  color: var(--foreground);
+  font-weight: 600;
+}
+
+/* Italic text */
+.blog-content em {
+  color: var(--muted-foreground);
+  font-style: italic;
+}
+
+/* Lists */
+.blog-content ul,
+.blog-content ol {
+  margin: 1.25rem 0;
+  padding-left: 1.5rem;
+}
+
+.blog-content ul {
+  list-style: none;
+}
+
+.blog-content ul li {
+  position: relative;
+  padding-left: 1.25rem;
+  margin-bottom: 0.625rem;
+  color: var(--muted-foreground);
+}
+
+.blog-content ul li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.65rem;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--primary);
+}
+
+.blog-content ol li {
+  margin-bottom: 0.625rem;
+  color: var(--muted-foreground);
+}
+
+/* Blockquotes */
+.blog-content blockquote {
+  margin: 2rem 0;
+  padding: 1.25rem 1.5rem;
+  border-left: 4px solid var(--primary);
+  background: var(--primary-foreground);
+  background: oklch(0.95 0.01 25);
+  border-radius: 0 0.5rem 0.5rem 0;
+  font-style: italic;
+  color: var(--foreground);
+}
+
+.blog-content blockquote p {
+  margin-bottom: 0;
+}
+
+/* Horizontal rules as section dividers */
+.blog-content hr {
+  border: none;
+  height: 1px;
+  background: linear-gradient(to right, transparent, var(--border), transparent);
+  margin: 2.5rem 0;
+}
+
+/* Images within content */
+.blog-content img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 0.75rem;
+  margin: 1.5rem 0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+/* Code blocks */
+.blog-content code {
+  background: var(--muted);
+  padding: 0.15rem 0.4rem;
+  border-radius: 0.25rem;
+  font-size: 0.9em;
+}
+
+/* Tables */
+.blog-content table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.5rem 0;
+}
+
+.blog-content th,
+.blog-content td {
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--border);
+  text-align: left;
+}
+
+.blog-content th {
+  background: var(--muted);
+  font-weight: 600;
+  color: var(--foreground);
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .blog-content {
+    font-size: 1rem;
+    line-height: 1.75;
+  }
+  
+  .blog-content > p:first-of-type::first-letter {
+    font-size: 2.75rem;
+  }
+  
+  .blog-content h2 {
+    font-size: 1.375rem;
+    margin-top: 2rem;
+  }
+  
+  .blog-content h3 {
+    font-size: 1.15rem;
+  }
+}

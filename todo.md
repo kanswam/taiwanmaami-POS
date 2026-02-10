@@ -1668,3 +1668,12 @@ Orders fixed:
 - [x] Write Blog 5: Taiwanese Street Food & Asian Flavours — Beyond Bubble Tea
 - [x] Add SEO meta tags to all blog posts (metaTitle, metaDescription, keywords)
 - [x] Verify blog posts display correctly on the website (all 5 posts visible, content renders properly)
+
+## Blog Improvements (Feb 10)
+
+- [x] Add featured images to all 5 blog posts (uploaded to CDN, updated in database)
+- [x] Improve blog post page layout for better readability (hero image, breadcrumb, better structure)
+- [x] Improve blog post typography (line spacing, paragraph spacing, heading styles, drop cap)
+- [x] Add visual elements (styled h2 with accent border, h3 with left border, drop cap, reading time)
+- [x] Improve blog listing card design (images now showing from CDN)
+- [ ] Add admin ability to upload/change blog featured images

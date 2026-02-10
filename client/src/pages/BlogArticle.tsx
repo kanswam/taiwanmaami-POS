@@ -1,12 +1,19 @@
 import { Link, useParams, useLocation } from 'wouter';
-import { Calendar, Clock, ArrowLeft, Share2, Eye } from 'lucide-react';
+import { Calendar, Clock, ArrowLeft, Share2, Eye, User, ChevronRight } from 'lucide-react';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { trpc } from '@/lib/trpc';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
+
+// Estimate reading time from HTML content
+function estimateReadingTime(html: string): number {
+  const text = html.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
+  const words = text.split(' ').length;
+  return Math.max(1, Math.ceil(words / 200));
+}
 
 // Fallback static content for SEO articles (before database articles are added)
 const staticArticles: Record<string, {
@@ -154,7 +161,7 @@ export default function BlogArticle() {
     { slug },
     { 
       enabled: !!slug,
-      retry: false // Don't retry if not found - we'll use static fallback
+      retry: false
     }
   );
 
@@ -177,6 +184,11 @@ export default function BlogArticle() {
     createdAt: new Date(staticArticle.date),
     updatedAt: new Date(staticArticle.date),
   } : null);
+
+  const readingTime = useMemo(() => {
+    if (!article?.content) return 0;
+    return estimateReadingTime(article.content);
+  }, [article?.content]);
 
   const handleShare = async () => {
     const url = window.location.href;
@@ -201,14 +213,17 @@ export default function BlogArticle() {
       <div className="min-h-screen bg-background flex flex-col">
         <Header />
         <main className="flex-1 py-12">
-          <div className="container max-w-3xl">
+          <div className="container max-w-3xl mx-auto">
             <Skeleton className="h-8 w-32 mb-8" />
+            <Skeleton className="aspect-[21/9] w-full rounded-2xl mb-8" />
             <Skeleton className="h-12 w-full mb-4" />
             <Skeleton className="h-6 w-48 mb-8" />
             <div className="space-y-4">
               <Skeleton className="h-4 w-full" />
               <Skeleton className="h-4 w-full" />
               <Skeleton className="h-4 w-3/4" />
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-5/6" />
             </div>
           </div>
         </main>
@@ -243,27 +258,55 @@ export default function BlogArticle() {
     <div className="min-h-screen bg-background flex flex-col">
       <Header />
       
-      {/* Header */}
-      <header className="bg-gradient-to-br from-primary/10 to-secondary/10 py-8">
-        <div className="container max-w-3xl">
-          <Link href="/blog">
-            <Button variant="ghost" className="-ml-4 mb-6">
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to Blog
-            </Button>
-          </Link>
-          
-          <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
+      {/* Breadcrumb */}
+      <nav className="bg-muted/30 border-b border-border/50">
+        <div className="container max-w-4xl mx-auto py-3">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Link href="/" className="hover:text-primary transition-colors">Home</Link>
+            <ChevronRight className="w-3 h-3" />
+            <Link href="/blog" className="hover:text-primary transition-colors">Blog</Link>
+            <ChevronRight className="w-3 h-3" />
+            <span className="text-foreground/70 truncate max-w-[200px] md:max-w-none">{article.title}</span>
+          </div>
+        </div>
+      </nav>
+
+      {/* Hero Image */}
+      {article.imageUrl && (
+        <div className="w-full bg-muted/20">
+          <div className="container max-w-5xl mx-auto px-4 pt-8">
+            <div className="relative aspect-[21/9] rounded-2xl overflow-hidden shadow-lg">
+              <img 
+                src={article.imageUrl} 
+                alt={article.title}
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Article Header */}
+      <header className={`${article.imageUrl ? 'pt-8' : 'pt-12'} pb-6`}>
+        <div className="container max-w-3xl mx-auto">
+          {/* Title */}
+          <h1 className="text-3xl md:text-4xl lg:text-[2.75rem] font-bold text-foreground leading-tight mb-6">
             {article.title}
           </h1>
           
-          <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
-            {article.authorName && (
-              <span>By {article.authorName}</span>
-            )}
+          {/* Author & Meta Bar */}
+          <div className="flex flex-wrap items-center gap-x-5 gap-y-2 pb-6 border-b border-border/60">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-full bg-primary/15 flex items-center justify-center">
+                <User className="w-4 h-4 text-primary" />
+              </div>
+              <span className="text-sm font-medium text-foreground">{article.authorName || 'Taiwan Maami'}</span>
+            </div>
+            
             {article.publishedAt && (
-              <span className="flex items-center gap-1">
-                <Calendar className="w-4 h-4" />
+              <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                <Calendar className="w-3.5 h-3.5" />
                 {new Date(article.publishedAt).toLocaleDateString('en-IN', { 
                   day: 'numeric', 
                   month: 'long', 
@@ -271,56 +314,46 @@ export default function BlogArticle() {
                 })}
               </span>
             )}
+            
+            {readingTime > 0 && (
+              <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                <Clock className="w-3.5 h-3.5" />
+                {readingTime} min read
+              </span>
+            )}
+
             {dbArticle && (
-              <span className="flex items-center gap-1">
-                <Eye className="w-4 h-4" />
+              <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                <Eye className="w-3.5 h-3.5" />
                 {article.viewCount} views
               </span>
             )}
+
             <button 
               onClick={handleShare}
-              className="flex items-center gap-1 hover:text-primary transition-colors"
+              className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary transition-colors ml-auto"
             >
-              <Share2 className="w-4 h-4" />
+              <Share2 className="w-3.5 h-3.5" />
               Share
             </button>
           </div>
 
+          {/* Excerpt as styled lead paragraph */}
           {article.excerpt && (
-            <p className="mt-6 text-lg text-muted-foreground border-l-4 border-primary pl-4">
-              {article.excerpt}
-            </p>
+            <div className="mt-8 relative pl-5 border-l-[3px] border-primary/60">
+              <p className="text-lg md:text-xl leading-relaxed text-foreground/80 italic">
+                {article.excerpt}
+              </p>
+            </div>
           )}
         </div>
       </header>
 
-      {/* Featured Image */}
-      {article.imageUrl && (
-        <div className="container max-w-3xl py-8">
-          <img 
-            src={article.imageUrl} 
-            alt={article.title}
-            className="w-full h-auto rounded-xl"
-          />
-        </div>
-      )}
-
       {/* Article Content */}
-      <article className="py-8 flex-1">
-        <div className="container max-w-3xl">
+      <article className="pb-12 flex-1">
+        <div className="container max-w-3xl mx-auto">
           <div 
-            className="prose prose-lg max-w-none
-              prose-headings:text-foreground 
-              prose-h2:text-2xl prose-h2:font-bold prose-h2:mt-8 prose-h2:mb-4
-              prose-h3:text-xl prose-h3:font-semibold prose-h3:mt-6 prose-h3:mb-2
-              prose-p:text-muted-foreground prose-p:leading-relaxed
-              prose-a:text-primary prose-a:no-underline hover:prose-a:underline
-              prose-strong:text-foreground
-              prose-ul:text-muted-foreground prose-ul:my-4
-              prose-li:my-1
-              prose-em:text-muted-foreground
-              prose-blockquote:border-primary prose-blockquote:text-muted-foreground
-            "
+            className="blog-content"
             dangerouslySetInnerHTML={{ __html: article.content }}
           />
         </div>
@@ -328,14 +361,14 @@ export default function BlogArticle() {
 
       {/* Tags/Keywords */}
       {article.keywords && (
-        <section className="py-8 border-t border-border">
-          <div className="container max-w-3xl">
-            <h3 className="text-sm font-medium text-muted-foreground mb-3">Related Topics</h3>
+        <section className="py-8 border-t border-border/60">
+          <div className="container max-w-3xl mx-auto">
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-4">Related Topics</h3>
             <div className="flex flex-wrap gap-2">
               {article.keywords.split(',').map((keyword: string) => (
                 <span 
                   key={keyword.trim()}
-                  className="px-3 py-1 bg-primary/10 text-primary text-sm rounded-full"
+                  className="px-3 py-1.5 bg-primary/8 text-primary text-sm rounded-full border border-primary/15 hover:bg-primary/15 transition-colors cursor-default"
                 >
                   {keyword.trim()}
                 </span>
@@ -345,18 +378,26 @@ export default function BlogArticle() {
         </section>
       )}
 
-      {/* CTA */}
-      <section className="py-12 bg-primary/5">
-        <div className="container text-center">
-          <h2 className="text-2xl font-bold mb-4">Ready to Try Our Bubble Tea?</h2>
-          <p className="text-muted-foreground mb-6">
-            Order online and skip the queue. Earn loyalty stamps with every purchase!
+      {/* Back to Blog + CTA */}
+      <section className="py-12 bg-gradient-to-br from-primary/5 to-secondary/5 border-t border-border/30">
+        <div className="container max-w-3xl mx-auto text-center">
+          <h2 className="text-2xl md:text-3xl font-bold mb-3">Enjoyed this article?</h2>
+          <p className="text-muted-foreground mb-8 max-w-lg mx-auto">
+            Order online and experience the authentic Taiwanese flavours we write about. Earn loyalty stamps with every purchase!
           </p>
-          <Link href="/menu">
-            <Button className="bg-primary text-primary-foreground px-8 py-3 rounded-full font-semibold">
-              Order Now
-            </Button>
-          </Link>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <Link href="/menu">
+              <Button className="bg-primary text-primary-foreground px-8 py-3 rounded-full font-semibold text-base">
+                Order Now
+              </Button>
+            </Link>
+            <Link href="/blog">
+              <Button variant="outline" className="px-8 py-3 rounded-full font-semibold text-base">
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                More Articles
+              </Button>
+            </Link>
+          </div>
         </div>
       </section>
 
