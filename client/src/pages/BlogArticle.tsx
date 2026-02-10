@@ -1,12 +1,14 @@
 import { Link, useParams, useLocation } from 'wouter';
-import { Calendar, Clock, ArrowLeft, Share2, Eye, User, ChevronRight } from 'lucide-react';
+import { Calendar, Clock, ArrowLeft, Share2, Eye, User, ChevronRight, AlertTriangle } from 'lucide-react';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { trpc } from '@/lib/trpc';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { useEffect, useMemo } from 'react';
+import { useAuth } from '@/_core/hooks/useAuth';
 
 // Estimate reading time from HTML content
 function estimateReadingTime(html: string): number {
@@ -258,6 +260,24 @@ export default function BlogArticle() {
     <div className="min-h-screen bg-background flex flex-col">
       <Header />
       
+      {/* Draft/Preview Banner */}
+      {article.status && article.status !== 'published' && (
+        <div className="bg-amber-500/15 border-b-2 border-amber-500">
+          <div className="container max-w-4xl mx-auto py-3 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5 text-amber-600" />
+              <span className="font-semibold text-amber-800 dark:text-amber-300">
+                {article.status === 'draft' ? 'Draft Preview' : article.status === 'pending_review' ? 'Pending Review' : 'Archived'}
+              </span>
+              <span className="text-sm text-amber-700 dark:text-amber-400">— This article is not visible to the public</span>
+            </div>
+            <Badge variant="outline" className="border-amber-500 text-amber-700 dark:text-amber-300 uppercase text-xs">
+              {article.status.replace('_', ' ')}
+            </Badge>
+          </div>
+        </div>
+      )}
+
       {/* Breadcrumb */}
       <nav className="bg-muted/30 border-b border-border/50">
         <div className="container max-w-4xl mx-auto py-3">

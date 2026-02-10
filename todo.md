@@ -1693,3 +1693,10 @@ Orders fixed:
 
 - [x] Blog Management not visible in Admin navigation - added to Settings dropdown
 - [x] Blog Management link navigates to /admin/blog with image upload support
+
+## Blog Draft/Publish Workflow (Feb 10)
+
+- [x] Verify draft posts are filtered out from public blog page (getPublished only returns published)
+- [x] Fix getBySlug to block public access to draft articles (admin-only for non-published)
+- [x] Add draft/review preview banner on BlogArticle page for admin preview
+- [x] Set all 5 existing blog posts to draft status for user review

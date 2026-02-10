@@ -8404,7 +8404,7 @@ export const appRouter = router({
     // Get single article by slug (public)
     getBySlug: publicProcedure
       .input(z.object({ slug: z.string() }))
-      .query(async ({ input }) => {
+      .query(async ({ input, ctx }) => {
         const database = await getDb();
         if (!database) throw new TRPCError({ code: 'NOT_FOUND' });
         
@@ -8413,6 +8413,12 @@ export const appRouter = router({
           .where(eq(blogArticles.slug, input.slug));
         
         if (!article) throw new TRPCError({ code: 'NOT_FOUND' });
+        
+        // Only admins can view non-published articles
+        if (article.status !== 'published') {
+          const isAdmin = ctx.user?.role === 'admin';
+          if (!isAdmin) throw new TRPCError({ code: 'NOT_FOUND' });
+        }
         
         // Increment view count for published articles
         if (article.status === 'published') {
