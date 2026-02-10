@@ -268,6 +268,9 @@ export default function Admin() {
                 <DropdownMenuItem onClick={() => setActiveTab('cms')} className={activeTab === 'cms' ? 'bg-accent' : ''}>
                   <FileText className="w-4 h-4 mr-2" /> Content Pages
                 </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate('/admin/blog')}>
+                  <BookOpen className="w-4 h-4 mr-2" /> Blog Management
+                </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setActiveTab('admin-pin')} className={activeTab === 'admin-pin' ? 'bg-accent' : ''}>
                   <CreditCard className="w-4 h-4 mr-2" /> Admin PIN
                 </DropdownMenuItem>

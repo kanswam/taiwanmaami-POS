@@ -1688,3 +1688,8 @@ Orders fixed:
 - [x] Add image upload to create dialog (stores base64, uploads after article created)
 - [x] Show thumbnail in article list cards
 - [x] Write vitest tests (11 tests passing)
+
+## Bug Fix: Blog Management Missing from Admin (Feb 10)
+
+- [x] Blog Management not visible in Admin navigation - added to Settings dropdown
+- [x] Blog Management link navigates to /admin/blog with image upload support
