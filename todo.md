@@ -1657,3 +1657,14 @@ Orders fixed:
 - [x] Update server routers (createProduct & updateProduct) to accept isNonVeg
 - [x] Add .badge-nonveg CSS class (red #dc2626 background, white text)
 - [x] Write vitest tests for Non-Veg label (16 tests passing)
+
+## Blog Posts - SEO Content (Feb 10)
+
+- [x] Audit current blog system (schema, admin, display)
+- [x] Write Blog 1: The Story Behind Authentic Taiwanese Bubble Tea
+- [x] Write Blog 2: Taiwan Maami's Tea Journey — From Leaf to Cup
+- [x] Write Blog 3: How to Order Bubble Tea Like a Pro
+- [x] Write Blog 4: Behind the Menu: How We Created Our Signature Mochis
+- [x] Write Blog 5: Taiwanese Street Food & Asian Flavours — Beyond Bubble Tea
+- [x] Add SEO meta tags to all blog posts (metaTitle, metaDescription, keywords)
+- [x] Verify blog posts display correctly on the website (all 5 posts visible, content renders properly)

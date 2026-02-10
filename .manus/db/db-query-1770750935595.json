@@ -1,0 +1,55 @@
+{
+  "query": "SELECT id, title, slug, status, metaTitle, LEFT(metaDescription, 50) as metaDescPreview, publishedAt FROM blog_articles ORDER BY id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT id, title, slug, status, metaTitle, LEFT(metaDescription, 50) as metaDescPreview, publishedAt FROM blog_articles ORDER BY id;",
+  "rows": [
+    {
+      "id": "1",
+      "title": "The Story Behind Authentic Taiwanese Bubble Tea",
+      "slug": "story-behind-authentic-taiwanese-bubble-tea",
+      "status": "published",
+      "metaTitle": "The Story Behind Authentic Taiwanese Bubble Tea | Taiwan Maami Chennai",
+      "metaDescPreview": "Learn the real history of bubble tea from 1980s Ta",
+      "publishedAt": "2026-02-10 14:15:30"
+    },
+    {
+      "id": "2",
+      "title": "Taiwan Maami's Tea Journey — From Leaf to Cup",
+      "slug": "tea-journey-from-leaf-to-cup",
+      "status": "published",
+      "metaTitle": "From Leaf to Cup: How We Brew Authentic Taiwanese Tea | Taiwan Maami",
+      "metaDescPreview": "Explore Taiwan Maami's tea philosophy — from selec",
+      "publishedAt": "2026-02-10 14:15:30"
+    },
+    {
+      "id": "5",
+      "title": "How to Order Bubble Tea Like a Pro",
+      "slug": "how-to-order-bubble-tea-like-a-pro",
+      "status": "published",
+      "metaTitle": "How to Order Bubble Tea Like a Pro — Complete Guide | Taiwan Maami",
+      "metaDescPreview": "Your complete guide to ordering bubble tea: choose",
+      "publishedAt": "2026-02-10 14:15:30"
+    },
+    {
+      "id": "6",
+      "title": "Behind the Menu: How We Created Our Signature Mochis",
+      "slug": "behind-the-menu-signature-mochis",
+      "status": "published",
+      "metaTitle": "How We Created Our Signature Mochis | Taiwan Maami Chennai",
+      "metaDescPreview": "Behind the scenes of Taiwan Maami's signature moch",
+      "publishedAt": "2026-02-10 14:15:30"
+    },
+    {
+      "id": "7",
+      "title": "Taiwanese Street Food and Asian Flavours — Beyond Bubble Tea",
+      "slug": "taiwanese-street-food-asian-flavours-beyond-bubble-tea",
+      "status": "published",
+      "metaTitle": "Taiwanese Street Food & Asian Flavours Beyond Bubble Tea | Taiwan Maami",
+      "metaDescPreview": "Explore Taiwan's food culture beyond bubble tea — ",
+      "publishedAt": "2026-02-10 14:15:30"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\ttitle\tslug\tstatus\tmetaTitle\tmetaDescPreview\tpublishedAt\n1\tThe Story Behind Authentic Taiwanese Bubble Tea\tstory-behind-authentic-taiwanese-bubble-tea\tpublished\tThe Story Behind Authentic Taiwanese Bubble Tea | Taiwan Maami Chennai\tLearn the real history of bubble tea from 1980s Ta\t2026-02-10 14:15:30\n2\tTaiwan Maami's Tea Journey — From Leaf to Cup\ttea-journey-from-leaf-to-cup\tpublished\tFrom Leaf to Cup: How We Brew Authentic Taiwanese Tea | Taiwan Maami\tExplore Taiwan Maami's tea philosophy — from selec\t2026-02-10 14:15:30\n5\tHow to Order Bubble Tea Like a Pro\thow-to-order-bubble-tea-like-a-pro\tpublished\tHow to Order Bubble Tea Like a Pro — Complete Guide | Taiwan Maami\tYour complete guide to ordering bubble tea: choose\t2026-02-10 14:15:30\n6\tBehind the Menu: How We Created Our Signature Mochis\tbehind-the-menu-signature-mochis\tpublished\tHow We Created Our Signature Mochis | Taiwan Maami Chennai\tBehind the scenes of Taiwan Maami's signature moch\t2026-02-10 14:15:30\n7\tTaiwanese Street Food and Asian Flavours — Beyond Bubble Tea\ttaiwanese-street-food-asian-flavours-beyond-bubble-tea\tpublished\tTaiwanese Street Food & Asian Flavours Beyond Bubble Tea | Taiwan Maami\tExplore Taiwan's food culture beyond bubble tea — \t2026-02-10 14:15:30\n",
+  "stderr": "",
+  "execution_time_ms": 60
+}
