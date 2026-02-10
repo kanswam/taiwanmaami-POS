@@ -1700,3 +1700,7 @@ Orders fixed:
 - [x] Fix getBySlug to block public access to draft articles (admin-only for non-published)
 - [x] Add draft/review preview banner on BlogArticle page for admin preview
 - [x] Set all 5 existing blog posts to draft status for user review
+
+## Remove WhatsApp Button (Feb 10)
+
+- [x] Remove "Order via WhatsApp" floating button from the website
