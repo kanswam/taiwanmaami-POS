@@ -398,7 +398,7 @@ describe('Chatbot - Enhanced with Rich Cards', () => {
 
       const callArgs = mockInvokeLLM.mock.calls[0][0];
       const systemPrompt = callArgs.messages[0].content;
-      expect(systemPrompt).toContain('Product images and cards are automatically shown');
+      expect(systemPrompt).toContain('Use ONLY the data provided in the context sections below');
     });
   });
 });

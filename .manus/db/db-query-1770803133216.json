@@ -1,0 +1,54 @@
+{
+  "query": "SELECT w.id, w.title, w.workshopDate, w.startTime, w.endTime, w.status, wd.sessionDate, wd.startTime as sessionStart, wd.endTime as sessionEnd FROM workshops w LEFT JOIN workshop_dates wd ON wd.workshopId = w.id WHERE w.status = 'published';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT w.id, w.title, w.workshopDate, w.startTime, w.endTime, w.status, wd.sessionDate, wd.startTime as sessionStart, wd.endTime as sessionEnd FROM workshops w LEFT JOIN workshop_dates wd ON wd.workshopId = w.id WHERE w.status = 'published';",
+  "rows": [
+    {
+      "id": "60001",
+      "title": "Biang Biang Noodle Workshop + Kung Fu Tea Experience ",
+      "workshopDate": "2026-02-07 00:00:00",
+      "startTime": "11:00",
+      "endTime": "14:00",
+      "status": "published",
+      "sessionDate": "2026-02-07",
+      "sessionStart": "11:00",
+      "sessionEnd": "14:00"
+    },
+    {
+      "id": "60001",
+      "title": "Biang Biang Noodle Workshop + Kung Fu Tea Experience ",
+      "workshopDate": "2026-02-07 00:00:00",
+      "startTime": "11:00",
+      "endTime": "14:00",
+      "status": "published",
+      "sessionDate": "2026-02-14",
+      "sessionStart": "11:00",
+      "sessionEnd": "14:00"
+    },
+    {
+      "id": "60001",
+      "title": "Biang Biang Noodle Workshop + Kung Fu Tea Experience ",
+      "workshopDate": "2026-02-07 00:00:00",
+      "startTime": "11:00",
+      "endTime": "14:00",
+      "status": "published",
+      "sessionDate": "2026-02-21",
+      "sessionStart": "11:00",
+      "sessionEnd": "14:00"
+    },
+    {
+      "id": "60001",
+      "title": "Biang Biang Noodle Workshop + Kung Fu Tea Experience ",
+      "workshopDate": "2026-02-07 00:00:00",
+      "startTime": "11:00",
+      "endTime": "14:00",
+      "status": "published",
+      "sessionDate": "2026-02-28",
+      "sessionStart": "11:00",
+      "sessionEnd": "14:00"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\ttitle\tworkshopDate\tstartTime\tendTime\tstatus\tsessionDate\tsessionStart\tsessionEnd\n60001\tBiang Biang Noodle Workshop + Kung Fu Tea Experience \t2026-02-07 00:00:00\t11:00\t14:00\tpublished\t2026-02-07\t11:00\t14:00\n60001\tBiang Biang Noodle Workshop + Kung Fu Tea Experience \t2026-02-07 00:00:00\t11:00\t14:00\tpublished\t2026-02-14\t11:00\t14:00\n60001\tBiang Biang Noodle Workshop + Kung Fu Tea Experience \t2026-02-07 00:00:00\t11:00\t14:00\tpublished\t2026-02-21\t11:00\t14:00\n60001\tBiang Biang Noodle Workshop + Kung Fu Tea Experience \t2026-02-07 00:00:00\t11:00\t14:00\tpublished\t2026-02-28\t11:00\t14:00\n",
+  "stderr": "",
+  "execution_time_ms": 50
+}

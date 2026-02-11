@@ -218,7 +218,7 @@ async function getCategories(): Promise<{ data: any[]; cards: CategoryLink[] }> 
     type: 'category_link' as const,
     name: cat.name,
     slug: cat.slug,
-    link: `/menu?category=${encodeURIComponent(cat.name)}`,
+    link: `/menu?category=${cat.slug}`,
   }));
 
   return { data, cards };
@@ -284,7 +284,7 @@ async function getWorkshops(): Promise<{ data: any[]; cards: WorkshopCard[] }> {
   try {
     const { getDb } = await import('./db.js');
     const { workshops, workshopDates } = await import('../drizzle/schema.js');
-    const { eq, asc } = await import('drizzle-orm');
+    const { eq, asc, gte } = await import('drizzle-orm');
     const database = await getDb();
     if (!database) return { data: [], cards: [] };
 
@@ -292,25 +292,69 @@ async function getWorkshops(): Promise<{ data: any[]; cards: WorkshopCard[] }> {
       .where(eq(workshops.status, 'published'))
       .orderBy(asc(workshops.workshopDate));
 
-    const data = result.map(w => ({
+    // Fetch session dates for each workshop to get the NEXT upcoming session
+    const now = new Date();
+    const workshopsWithDates = await Promise.all(result.map(async (w) => {
+      const sessions = await database.select().from(workshopDates)
+        .where(eq(workshopDates.workshopId, w.id))
+        .orderBy(asc(workshopDates.sessionDate));
+
+      // Find the next upcoming session (session date >= today)
+      // Use IST (UTC+5:30) for date comparison since the business is in India
+      const todayIST = new Date(now.getTime() + (5.5 * 60 * 60 * 1000));
+      const todayStr = todayIST.toISOString().split('T')[0];
+      
+      const upcomingSessions = sessions.filter(s => {
+        const sessionDateStr = s.sessionDate instanceof Date 
+          ? s.sessionDate.toISOString().split('T')[0]
+          : String(s.sessionDate).split('T')[0];
+        return sessionDateStr >= todayStr;
+      });
+
+      const nextSession = upcomingSessions[0] || sessions[sessions.length - 1];
+      
+      // Format the session date in IST
+      let sessionDateFormatted = '';
+      if (nextSession) {
+        const sDate = nextSession.sessionDate instanceof Date 
+          ? nextSession.sessionDate 
+          : new Date(String(nextSession.sessionDate) + 'T05:30:00.000Z'); // Treat as IST
+        // Add IST offset to get correct local date
+        const istDate = new Date(sDate.getTime() + (5.5 * 60 * 60 * 1000));
+        sessionDateFormatted = istDate.toLocaleDateString('en-IN', { 
+          weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
+          timeZone: 'Asia/Kolkata'
+        });
+      }
+
+      return {
+        ...w,
+        nextSessionDate: sessionDateFormatted,
+        nextSessionTime: nextSession ? `${nextSession.startTime || w.startTime} - ${nextSession.endTime || w.endTime}` : `${w.startTime} - ${w.endTime}`,
+        upcomingSessionCount: upcomingSessions.length,
+      };
+    }));
+
+    const data = workshopsWithDates.map(w => ({
       title: w.title,
       description: w.shortDescription || w.description,
-      date: w.workshopDate ? new Date(w.workshopDate).toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) : '',
-      time: `${w.startTime} - ${w.endTime}`,
+      date: w.nextSessionDate,
+      time: w.nextSessionTime,
       price: (w.price || w.ticketPrice || 0) / 100,
       earlyBirdPrice: w.earlyBirdPrice ? w.earlyBirdPrice / 100 : null,
       venue: w.venue || w.location || '',
       instructor: w.instructorName || '',
       availableSeats: (w.maxCapacity || w.totalCapacity || 0) - (w.bookedCount || w.ticketsSold || 0),
+      upcomingSessions: w.upcomingSessionCount,
     }));
 
-    const cards: WorkshopCard[] = result.map(w => ({
+    const cards: WorkshopCard[] = workshopsWithDates.map(w => ({
       type: 'workshop' as const,
       title: w.title,
       description: w.shortDescription || (w.description ? w.description.substring(0, 120) + '...' : null),
       imageUrl: w.imageUrl || null,
-      date: w.workshopDate ? new Date(w.workshopDate).toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' }) : '',
-      time: `${w.startTime} - ${w.endTime}`,
+      date: w.nextSessionDate,
+      time: w.nextSessionTime,
       price: (w.price || w.ticketPrice || 0) / 100,
       earlyBirdPrice: w.earlyBirdPrice ? w.earlyBirdPrice / 100 : null,
       venue: w.venue || w.location || '',
@@ -533,25 +577,33 @@ const SYSTEM_PROMPT = `You are Maami Bot 🧋, the friendly ordering assistant f
 6. **Share blog content** — interesting articles about bubble tea, mochis, and Taiwanese food culture
 
 ## Important Rules
-- Use ONLY the data provided in the context sections below — never make up products or prices
+- Use ONLY the data provided in the context sections below — never make up products, prices, or dates
+- For workshops: use the EXACT date and time provided in the context — NEVER guess or infer dates
 - When showing products, include the price in ₹ (Indian Rupees)
 - Sizes are: Petite, Regular, Large (not all products have all sizes)
 - For bubble tea: customers can choose sugar level (0%, 25%, 50%, 75%, 100%) and ice level (No Ice, Less Ice, Regular Ice)
 - Mochis are sold in pairs (2 pieces) for delivery/pickup
-- When a customer seems ready to order, guide them to visit the Menu page at /menu to browse and add items to their cart
-- IMPORTANT: Product photo cards shown below your messages are STATIC DISPLAY ONLY — customers CANNOT tap, click, or interact with them. NEVER say "tap on", "click on", "select", or "choose from the cards below". Instead, say something like "Here are some options from our menu!" or "Check out these items!" and direct them to the Menu page to order.
+- When a customer seems ready to order, guide them to the Menu page to browse and add items to their cart
 - If asked about something you don't know, be honest and suggest they contact the store
 - Keep responses SHORT and scannable — use bullet points for lists of products
 - When listing products, show name, a brief description, and price range
 - Do NOT try to process payments or place orders — guide customers to use the website's ordering system
-- IMPORTANT: Product images and cards are automatically shown below your message. Do NOT describe images or say "here's a photo". Just mention products by name and the cards will appear.
 - When mentioning workshops, encourage customers to book by visiting the Events page
 - When relevant, mention blog articles the customer might enjoy reading
 
+## Menu Links (IMPORTANT)
+When directing customers to browse specific categories, use these exact markdown links:
+- Food: [Browse Food](/menu?category=food)
+- Iced Beverages: [Browse Iced Beverages](/menu?category=iced-beverages)
+- Hot Beverages: [Browse Hot Beverages](/menu?category=hot-beverages)
+- Sweet Bites: [Browse Sweet Bites](/menu?category=sweet-bites)
+- Full Menu: [Browse our full menu](/menu)
+Always include a relevant link when mentioning a category. Use the slug format (lowercase, hyphenated) — NEVER use the display name in the URL.
+
 ## Action-Oriented Responses
 - Always guide customers toward taking action: ordering, booking workshops, reading blog posts
-- For menu queries: "Tap on any item below to customize and order!"
-- For workshops: "Book your spot on our Events page before it sells out!"
+- For menu queries: Include a direct link to the relevant category, e.g. "Check out our [Iced Beverages](/menu?category=iced-beverages)!"
+- For workshops: "Book your spot on our [Events page](/events) before it sells out!"
 - For blog topics: "Check out our blog post for the full story!"
 
 ## Conversation Starters

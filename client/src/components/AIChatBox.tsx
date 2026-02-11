@@ -23,6 +23,7 @@ export type AIChatBoxProps = {
   height?: string | number;
   emptyStateMessage?: string;
   suggestedPrompts?: string[];
+  quickReplies?: string[];
 };
 
 // ─── Typing Animation Hook ─────────────────────────────────────────────
@@ -110,6 +111,7 @@ export function AIChatBox({
   height = "600px",
   emptyStateMessage = "Start a conversation with AI",
   suggestedPrompts,
+  quickReplies,
 }: AIChatBoxProps) {
   const [input, setInput] = useState("");
   const scrollAreaRef = useRef<HTMLDivElement>(null);
@@ -123,21 +125,8 @@ export function AIChatBox({
   // Filter out system messages
   const displayMessages = messages.filter((msg) => msg.role !== "system");
 
-  // Calculate min-height for last assistant message to push user message to top
-  const [minHeightForLastMessage, setMinHeightForLastMessage] = useState(0);
-
-  useEffect(() => {
-    if (containerRef.current && inputAreaRef.current) {
-      const containerHeight = containerRef.current.offsetHeight;
-      const inputHeight = inputAreaRef.current.offsetHeight;
-      const scrollAreaHeight = containerHeight - inputHeight;
-
-      const userMessageReservedHeight = 56;
-      const calculatedHeight = scrollAreaHeight - 32 - userMessageReservedHeight;
-
-      setMinHeightForLastMessage(Math.max(0, calculatedHeight));
-    }
-  }, []);
+  // Track if user is manually scrolling up (to avoid auto-scroll overriding)
+  const [userScrolledUp, setUserScrolledUp] = useState(false);
 
   // Determine the latest assistant message index for typing animation
   const latestAssistantIndex = (() => {
@@ -178,13 +167,34 @@ export function AIChatBox({
     }
   }, [displayMessages.length, scrollToBottom]);
 
-  // Keep scrolling during typing animation
+  // Keep scrolling during typing animation — but only if user hasn't scrolled up
   useEffect(() => {
-    if (latestAssistantIndex === lastTypedIndex && latestAssistantIndex >= 0) {
+    if (latestAssistantIndex === lastTypedIndex && latestAssistantIndex >= 0 && !userScrolledUp) {
       const interval = setInterval(scrollToBottom, 200);
       return () => clearInterval(interval);
     }
-  }, [latestAssistantIndex, lastTypedIndex, scrollToBottom]);
+  }, [latestAssistantIndex, lastTypedIndex, scrollToBottom, userScrolledUp]);
+
+  // Reset userScrolledUp when a new message is sent
+  useEffect(() => {
+    setUserScrolledUp(false);
+  }, [displayMessages.length]);
+
+  // Detect manual scroll up
+  useEffect(() => {
+    const viewport = scrollAreaRef.current?.querySelector(
+      '[data-radix-scroll-area-viewport]'
+    ) as HTMLDivElement;
+    if (!viewport) return;
+
+    const handleScroll = () => {
+      const isAtBottom = viewport.scrollHeight - viewport.scrollTop - viewport.clientHeight < 60;
+      setUserScrolledUp(!isAtBottom);
+    };
+
+    viewport.addEventListener('scroll', handleScroll, { passive: true });
+    return () => viewport.removeEventListener('scroll', handleScroll);
+  }, [displayMessages.length]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -218,7 +228,7 @@ export function AIChatBox({
       style={{ height }}
     >
       {/* Messages Area */}
-      <div ref={scrollAreaRef} className="flex-1 overflow-hidden">
+      <div ref={scrollAreaRef} className="flex-1 overflow-auto">
         {displayMessages.length === 0 ? (
           <div className="flex h-full flex-col p-4">
             <div className="flex flex-1 flex-col items-center justify-center gap-6 text-muted-foreground">
@@ -247,10 +257,7 @@ export function AIChatBox({
           <ScrollArea className="h-full">
             <div className="flex flex-col space-y-4 p-4">
               {displayMessages.map((message, index) => {
-                // Apply min-height to last message only if NOT loading
                 const isLastMessage = index === displayMessages.length - 1;
-                const shouldApplyMinHeight =
-                  isLastMessage && !isLoading && minHeightForLastMessage > 0;
 
                 // Determine if this assistant message should animate typing
                 const shouldAnimate =
@@ -267,11 +274,7 @@ export function AIChatBox({
                         ? "justify-end items-start"
                         : "justify-start items-start"
                     )}
-                    style={
-                      shouldApplyMinHeight
-                        ? { minHeight: `${minHeightForLastMessage}px` }
-                        : undefined
-                    }
+
                   >
                     {message.role === "assistant" && (
                       <div className="size-8 shrink-0 mt-1 rounded-full bg-primary/10 flex items-center justify-center">
@@ -311,11 +314,7 @@ export function AIChatBox({
               {isLoading && (
                 <div
                   className="flex items-start gap-3"
-                  style={
-                    minHeightForLastMessage > 0
-                      ? { minHeight: `${minHeightForLastMessage}px` }
-                      : undefined
-                  }
+
                 >
                   <div className="size-8 shrink-0 mt-1 rounded-full bg-primary/10 flex items-center justify-center">
                     <Sparkles className="size-4 text-primary" />
@@ -329,6 +328,21 @@ export function AIChatBox({
           </ScrollArea>
         )}
       </div>
+
+      {/* Quick Reply Chips */}
+      {quickReplies && quickReplies.length > 0 && !isLoading && displayMessages.length > 0 && (
+        <div className="flex gap-1.5 px-4 pt-2 pb-1 overflow-x-auto scrollbar-hide">
+          {quickReplies.map((reply, i) => (
+            <button
+              key={i}
+              onClick={() => onSendMessage(reply)}
+              className="shrink-0 text-xs px-3 py-1.5 rounded-full border border-primary/30 text-primary bg-primary/5 hover:bg-primary/10 transition-colors whitespace-nowrap"
+            >
+              {reply}
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* Input Area */}
       <form

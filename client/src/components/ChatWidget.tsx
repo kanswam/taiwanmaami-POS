@@ -13,6 +13,15 @@ const SUGGESTED_PROMPTS = [
   "Any workshops?",
 ];
 
+const QUICK_REPLIES = [
+  "🧋 Bubble Tea",
+  "🍡 Mochis",
+  "🍗 Food",
+  "📍 Store Hours",
+  "🎓 Workshops",
+  "🚚 Delivery Info",
+];
+
 export function ChatWidget() {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -130,6 +139,7 @@ export function ChatWidget() {
             height="min(450px, calc(100vh - 200px))"
             emptyStateMessage="Hi! I'm Maami Bot 🧋 How can I help you today?"
             suggestedPrompts={SUGGESTED_PROMPTS}
+            quickReplies={QUICK_REPLIES}
             className="border-0 rounded-none shadow-none"
           />
         </div>

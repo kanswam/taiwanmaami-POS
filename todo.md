@@ -1798,3 +1798,18 @@ Orders fixed:
 - [x] Remove cards from backend chatbot response (no longer needed)
 - [x] Add typing animation effect — bot response appears character by character
 - [x] Natural typing speed with slight randomness to feel human
+
+## Fix Category Links & Add Quick-Reply Chips (Feb 11)
+
+- [ ] Fix chatbot category links leading to empty menu page (wrong URL format)
+- [ ] Add quick-reply chips after bot responses (contextual suggestion buttons)
+- [ ] Add inline "Order Now" links in bot text for specific menu categories
+- [ ] Remove persist chat history suggestion (not valuable for food ordering)
+
+## Bug Fix - Workshop Date & Chat Scroll (Feb 11)
+
+- [x] Fix chatbot showing wrong workshop date (now uses workshop_dates session dates, shows next upcoming)
+- [x] Fix chat window not scrollable (removed minHeight, added scroll-up detection to pause auto-scroll)
+- [x] Fix category links using slug format instead of display name
+- [x] Add quick-reply chips after bot responses (Bubble Tea, Mochis, Food, Store Hours, Workshops, Delivery Info)
+- [x] Add inline menu links in bot text (system prompt now includes exact slug-based links)
