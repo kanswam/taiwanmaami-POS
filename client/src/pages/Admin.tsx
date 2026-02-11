@@ -398,7 +398,9 @@ export default function Admin() {
 // Products Tab
 function ProductsTab() {
   const utils = trpc.useUtils();
-  const { data: menuData, refetch } = trpc.menu.getFullMenu.useQuery({ isDelivery: false });
+  // Use admin-specific query that returns ALL products/subcategories/categories
+  // regardless of availability flags (so staff toggling availability doesn't hide items from admin)
+  const { data: menuData, refetch } = trpc.admin.getFullMenuAdmin.useQuery();
   const { data: allProductsData, refetch: refetchAll } = trpc.admin.getAllProducts.useQuery();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
@@ -433,7 +435,8 @@ function ProductsTab() {
       toast.success('Product updated');
       refetch();
       refetchAll();
-      // Invalidate menu cache so customer website reflects changes immediately
+      // Invalidate both admin and customer menu caches
+      utils.admin.getFullMenuAdmin.invalidate();
       utils.menu.getFullMenu.invalidate();
     },
     onError: (err) => toast.error(err.message),
@@ -452,7 +455,8 @@ function ProductsTab() {
       toast.success('Product reactivated');
       refetch();
       refetchAll();
-      // Invalidate menu cache so customer website reflects changes immediately
+      // Invalidate both admin and customer menu caches
+      utils.admin.getFullMenuAdmin.invalidate();
       utils.menu.getFullMenu.invalidate();
     },
     onError: (err) => toast.error(err.message),
@@ -810,7 +814,7 @@ function ProductsTab() {
 function ProductEditDialog({ product, onUpdate }: { product: any; onUpdate: () => void }) {
   const [open, setOpen] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const { data: menuData } = trpc.menu.getFullMenu.useQuery({ isDelivery: false });
+  const { data: menuData } = trpc.admin.getFullMenuAdmin.useQuery();
   const { data: canDeleteData } = trpc.admin.canDeleteProduct.useQuery({ id: product.id }, { enabled: open });
   const [formData, setFormData] = useState({
     name: product.name,
@@ -1247,7 +1251,9 @@ function ProductAddonsSection({ productId }: { productId: number }) {
 
 // Categories Tab
 function CategoriesTab() {
-  const { data: menuData, refetch } = trpc.menu.getFullMenu.useQuery({ isDelivery: false });
+  // Use admin-specific query that returns ALL categories/subcategories/products
+  // regardless of availability flags (so staff toggling availability doesn't hide items from admin)
+  const { data: menuData, refetch } = trpc.admin.getFullMenuAdmin.useQuery();
   const { data: allProducts } = trpc.admin.getAllProducts.useQuery();
   const [newCategoryName, setNewCategoryName] = useState('');
   const [newSubcategoryData, setNewSubcategoryData] = useState({ name: '', categoryId: 0 });
@@ -6404,7 +6410,8 @@ function CreateProductDialog({
   const createProduct = trpc.admin.createProduct.useMutation({
     onSuccess: (data) => {
       toast.success('Product created successfully!');
-      // Invalidate menu cache so changes reflect immediately
+      // Invalidate both admin and customer menu caches
+      utils.admin.getFullMenuAdmin.invalidate();
       utils.menu.getFullMenu.invalidate();
       onSuccess();
       if (imagePreview && data.id) {

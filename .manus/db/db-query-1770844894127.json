@@ -1,0 +1,9 @@
+{
+  "query": "\nUPDATE subcategories \nSET availableInstore = 1, availableDelivery = 1, availablePickup = 1 \nWHERE categoryId = 1;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute \nUPDATE subcategories \nSET availableInstore = 1, availableDelivery = 1, availablePickup = 1 \nWHERE categoryId = 1;\n",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 69
+}

@@ -1,0 +1,524 @@
+{
+  "query": "\nSELECT p.id, p.name, p.isActive, p.subcategoryId, s.name as subcatName, s.categoryId\nFROM products p \nJOIN subcategories s ON p.subcategoryId = s.id \nWHERE s.categoryId = 1\nORDER BY s.id, p.id;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute \nSELECT p.id, p.name, p.isActive, p.subcategoryId, s.name as subcatName, s.categoryId\nFROM products p \nJOIN subcategories s ON p.subcategoryId = s.id \nWHERE s.categoryId = 1\nORDER BY s.id, p.id;\n",
+  "rows": [
+    {
+      "id": "11",
+      "name": "Classic Taiwan Milk Oolong",
+      "isActive": "1",
+      "subcategoryId": "2",
+      "subcatName": "Organic Oolong",
+      "categoryId": "1"
+    },
+    {
+      "id": "12",
+      "name": "Saffron Milk Oolong",
+      "isActive": "1",
+      "subcategoryId": "2",
+      "subcatName": "Organic Oolong",
+      "categoryId": "1"
+    },
+    {
+      "id": "13",
+      "name": "Butterscotch Milk Oolong",
+      "isActive": "1",
+      "subcategoryId": "2",
+      "subcatName": "Organic Oolong",
+      "categoryId": "1"
+    },
+    {
+      "id": "14",
+      "name": "Cinnamon Chocolate Milk Oolong",
+      "isActive": "1",
+      "subcategoryId": "2",
+      "subcatName": "Organic Oolong",
+      "categoryId": "1"
+    },
+    {
+      "id": "15",
+      "name": "Classic Oolong Latte",
+      "isActive": "1",
+      "subcategoryId": "2",
+      "subcatName": "Organic Oolong",
+      "categoryId": "1"
+    },
+    {
+      "id": "16",
+      "name": "Tiramisu Oolong Latte",
+      "isActive": "1",
+      "subcategoryId": "2",
+      "subcatName": "Organic Oolong",
+      "categoryId": "1"
+    },
+    {
+      "id": "17",
+      "name": "Crème Brûlée Oolong Latte",
+      "isActive": "1",
+      "subcategoryId": "2",
+      "subcatName": "Organic Oolong",
+      "categoryId": "1"
+    },
+    {
+      "id": "18",
+      "name": "Rose Oolong Latte",
+      "isActive": "1",
+      "subcategoryId": "2",
+      "subcatName": "Organic Oolong",
+      "categoryId": "1"
+    },
+    {
+      "id": "19",
+      "name": "Blueberry Lemon Oolong (no milk)",
+      "isActive": "1",
+      "subcategoryId": "2",
+      "subcatName": "Organic Oolong",
+      "categoryId": "1"
+    },
+    {
+      "id": "20",
+      "name": "Classic Taiwan Green Tea",
+      "isActive": "1",
+      "subcategoryId": "3",
+      "subcatName": "Organic Green Tea",
+      "categoryId": "1"
+    },
+    {
+      "id": "21",
+      "name": "Virgin Pina Colada Green Tea",
+      "isActive": "1",
+      "subcategoryId": "3",
+      "subcatName": "Organic Green Tea",
+      "categoryId": "1"
+    },
+    {
+      "id": "22",
+      "name": "Virgin Mojito Green Tea",
+      "isActive": "1",
+      "subcategoryId": "3",
+      "subcatName": "Organic Green Tea",
+      "categoryId": "1"
+    },
+    {
+      "id": "23",
+      "name": "Mango Green Tea",
+      "isActive": "1",
+      "subcategoryId": "3",
+      "subcatName": "Organic Green Tea",
+      "categoryId": "1"
+    },
+    {
+      "id": "24",
+      "name": "Honey Lemon Green Tea",
+      "isActive": "1",
+      "subcategoryId": "3",
+      "subcatName": "Organic Green Tea",
+      "categoryId": "1"
+    },
+    {
+      "id": "25",
+      "name": "Pink Guava Green Tea",
+      "isActive": "1",
+      "subcategoryId": "3",
+      "subcatName": "Organic Green Tea",
+      "categoryId": "1"
+    },
+    {
+      "id": "26",
+      "name": "Strawberry Jelly Green Tea",
+      "isActive": "1",
+      "subcategoryId": "3",
+      "subcatName": "Organic Green Tea",
+      "categoryId": "1"
+    },
+    {
+      "id": "27",
+      "name": "Kiwi Green Tea",
+      "isActive": "1",
+      "subcategoryId": "3",
+      "subcatName": "Organic Green Tea",
+      "categoryId": "1"
+    },
+    {
+      "id": "28",
+      "name": "Lychee Green Tea",
+      "isActive": "1",
+      "subcategoryId": "3",
+      "subcatName": "Organic Green Tea",
+      "categoryId": "1"
+    },
+    {
+      "id": "29",
+      "name": "Yuzu Green Tea",
+      "isActive": "1",
+      "subcategoryId": "3",
+      "subcatName": "Organic Green Tea",
+      "categoryId": "1"
+    },
+    {
+      "id": "30",
+      "name": "Classic Matcha Latte",
+      "isActive": "1",
+      "subcategoryId": "4",
+      "subcatName": "Matcha Blend",
+      "categoryId": "1"
+    },
+    {
+      "id": "31",
+      "name": "Curacao Matcha Latte",
+      "isActive": "1",
+      "subcategoryId": "4",
+      "subcatName": "Matcha Blend",
+      "categoryId": "1"
+    },
+    {
+      "id": "32",
+      "name": "Strawberry Matcha Latte",
+      "isActive": "1",
+      "subcategoryId": "4",
+      "subcatName": "Matcha Blend",
+      "categoryId": "1"
+    },
+    {
+      "id": "33",
+      "name": "Vanilla Matcha Latte",
+      "isActive": "1",
+      "subcategoryId": "4",
+      "subcatName": "Matcha Blend",
+      "categoryId": "1"
+    },
+    {
+      "id": "34",
+      "name": "Coconut Matcha Latte",
+      "isActive": "1",
+      "subcategoryId": "4",
+      "subcatName": "Matcha Blend",
+      "categoryId": "1"
+    },
+    {
+      "id": "35",
+      "name": "Rose Matcha Latte",
+      "isActive": "1",
+      "subcategoryId": "4",
+      "subcatName": "Matcha Blend",
+      "categoryId": "1"
+    },
+    {
+      "id": "36",
+      "name": "Banoffee Matcha Latte",
+      "isActive": "1",
+      "subcategoryId": "4",
+      "subcatName": "Matcha Blend",
+      "categoryId": "1"
+    },
+    {
+      "id": "37",
+      "name": "Classic Taro Latte",
+      "isActive": "1",
+      "subcategoryId": "5",
+      "subcatName": "Taro Blend",
+      "categoryId": "1"
+    },
+    {
+      "id": "38",
+      "name": "Crème Brulee Taro Latte",
+      "isActive": "1",
+      "subcategoryId": "5",
+      "subcatName": "Taro Blend",
+      "categoryId": "1"
+    },
+    {
+      "id": "39",
+      "name": "Black Forest Taro Latte",
+      "isActive": "1",
+      "subcategoryId": "5",
+      "subcatName": "Taro Blend",
+      "categoryId": "1"
+    },
+    {
+      "id": "40",
+      "name": "Taro Matcha Latte",
+      "isActive": "1",
+      "subcategoryId": "5",
+      "subcatName": "Taro Blend",
+      "categoryId": "1"
+    },
+    {
+      "id": "41",
+      "name": "Coconut Taro Latte",
+      "isActive": "1",
+      "subcategoryId": "5",
+      "subcatName": "Taro Blend",
+      "categoryId": "1"
+    },
+    {
+      "id": "42",
+      "name": "Butterscotch Taro Latte",
+      "isActive": "1",
+      "subcategoryId": "5",
+      "subcatName": "Taro Blend",
+      "categoryId": "1"
+    },
+    {
+      "id": "120002",
+      "name": "Crème Caramel Taro Latte ",
+      "isActive": "1",
+      "subcategoryId": "5",
+      "subcatName": "Taro Blend",
+      "categoryId": "1"
+    },
+    {
+      "id": "77",
+      "name": "Mango Slush",
+      "isActive": "1",
+      "subcategoryId": "30003",
+      "subcatName": "Slush",
+      "categoryId": "1"
+    },
+    {
+      "id": "78",
+      "name": "Strawberry Slush",
+      "isActive": "1",
+      "subcategoryId": "30003",
+      "subcatName": "Slush",
+      "categoryId": "1"
+    },
+    {
+      "id": "79",
+      "name": "Lychee Slush",
+      "isActive": "1",
+      "subcategoryId": "30003",
+      "subcatName": "Slush",
+      "categoryId": "1"
+    },
+    {
+      "id": "80",
+      "name": "Kiwi Slush",
+      "isActive": "1",
+      "subcategoryId": "30003",
+      "subcatName": "Slush",
+      "categoryId": "1"
+    },
+    {
+      "id": "81",
+      "name": "Cherry Slush",
+      "isActive": "1",
+      "subcategoryId": "30003",
+      "subcatName": "Slush",
+      "categoryId": "1"
+    },
+    {
+      "id": "82",
+      "name": "Watermelon Slush",
+      "isActive": "1",
+      "subcategoryId": "30003",
+      "subcatName": "Slush",
+      "categoryId": "1"
+    },
+    {
+      "id": "83",
+      "name": "Virgin Piña Colada Slush",
+      "isActive": "1",
+      "subcategoryId": "30003",
+      "subcatName": "Slush",
+      "categoryId": "1"
+    },
+    {
+      "id": "84",
+      "name": "Virgin Mojito Slush",
+      "isActive": "1",
+      "subcategoryId": "30003",
+      "subcatName": "Slush",
+      "categoryId": "1"
+    },
+    {
+      "id": "150001",
+      "name": "Lemon Slush",
+      "isActive": "1",
+      "subcategoryId": "30003",
+      "subcatName": "Slush",
+      "categoryId": "1"
+    },
+    {
+      "id": "150002",
+      "name": "Honey Slush",
+      "isActive": "1",
+      "subcategoryId": "30003",
+      "subcatName": "Slush",
+      "categoryId": "1"
+    },
+    {
+      "id": "150003",
+      "name": "Curaçao Slush",
+      "isActive": "1",
+      "subcategoryId": "30003",
+      "subcatName": "Slush",
+      "categoryId": "1"
+    },
+    {
+      "id": "150004",
+      "name": "Pink Guava Slush",
+      "isActive": "1",
+      "subcategoryId": "30003",
+      "subcatName": "Slush",
+      "categoryId": "1"
+    },
+    {
+      "id": "150005",
+      "name": "Rose Slush ",
+      "isActive": "1",
+      "subcategoryId": "30003",
+      "subcatName": "Slush",
+      "categoryId": "1"
+    },
+    {
+      "id": "150006",
+      "name": "Coconut Slush ",
+      "isActive": "1",
+      "subcategoryId": "30003",
+      "subcatName": "Slush",
+      "categoryId": "1"
+    },
+    {
+      "id": "150007",
+      "name": "Jeera Masala",
+      "isActive": "1",
+      "subcategoryId": "30003",
+      "subcatName": "Slush",
+      "categoryId": "1"
+    },
+    {
+      "id": "150008",
+      "name": "Sweet Paan",
+      "isActive": "1",
+      "subcategoryId": "30003",
+      "subcatName": "Slush",
+      "categoryId": "1"
+    },
+    {
+      "id": "150009",
+      "name": "Macchiato",
+      "isActive": "1",
+      "subcategoryId": "30003",
+      "subcatName": "Slush",
+      "categoryId": "1"
+    },
+    {
+      "id": "43",
+      "name": "Iced Black Americano",
+      "isActive": "1",
+      "subcategoryId": "30004",
+      "subcatName": "Iced Lavazza Coffee",
+      "categoryId": "1"
+    },
+    {
+      "id": "44",
+      "name": "Iced Caffe Latte",
+      "isActive": "1",
+      "subcategoryId": "30004",
+      "subcatName": "Iced Lavazza Coffee",
+      "categoryId": "1"
+    },
+    {
+      "id": "45",
+      "name": "Iced Caffe Mocha",
+      "isActive": "1",
+      "subcategoryId": "30004",
+      "subcatName": "Iced Lavazza Coffee",
+      "categoryId": "1"
+    },
+    {
+      "id": "46",
+      "name": "Iced Hong Kong Style Yuen-Yeung",
+      "isActive": "1",
+      "subcategoryId": "30004",
+      "subcatName": "Iced Lavazza Coffee",
+      "categoryId": "1"
+    },
+    {
+      "id": "2",
+      "name": "Rose Milk Tea",
+      "isActive": "1",
+      "subcategoryId": "330001",
+      "subcatName": "Organic Assam ",
+      "categoryId": "1"
+    },
+    {
+      "id": "3",
+      "name": "Hazelnut Milk Tea",
+      "isActive": "1",
+      "subcategoryId": "330001",
+      "subcatName": "Organic Assam ",
+      "categoryId": "1"
+    },
+    {
+      "id": "4",
+      "name": "Caramel Milk Tea",
+      "isActive": "1",
+      "subcategoryId": "330001",
+      "subcatName": "Organic Assam ",
+      "categoryId": "1"
+    },
+    {
+      "id": "5",
+      "name": "Classic Tea Latte",
+      "isActive": "1",
+      "subcategoryId": "330001",
+      "subcatName": "Organic Assam ",
+      "categoryId": "1"
+    },
+    {
+      "id": "6",
+      "name": "English Cream Tea Latte",
+      "isActive": "1",
+      "subcategoryId": "330001",
+      "subcatName": "Organic Assam ",
+      "categoryId": "1"
+    },
+    {
+      "id": "7",
+      "name": "Mocha Tea Latte",
+      "isActive": "1",
+      "subcategoryId": "330001",
+      "subcatName": "Organic Assam ",
+      "categoryId": "1"
+    },
+    {
+      "id": "8",
+      "name": "Cinnamon Vanilla Tea Latte",
+      "isActive": "1",
+      "subcategoryId": "330001",
+      "subcatName": "Organic Assam ",
+      "categoryId": "1"
+    },
+    {
+      "id": "9",
+      "name": "Black Forest Tea Latte",
+      "isActive": "1",
+      "subcategoryId": "330001",
+      "subcatName": "Organic Assam ",
+      "categoryId": "1"
+    },
+    {
+      "id": "10",
+      "name": "Mint Lemon Assam (no milk)",
+      "isActive": "1",
+      "subcategoryId": "330001",
+      "subcatName": "Organic Assam ",
+      "categoryId": "1"
+    },
+    {
+      "id": "480001",
+      "name": "Classic Taiwan Milk Tea ",
+      "isActive": "1",
+      "subcategoryId": "330001",
+      "subcatName": "Organic Assam ",
+      "categoryId": "1"
+    }
+  ],
+  "messages": [
+    "120001\tCrème Caramel Milk Oolong \t\t1\t2\tOrganic Oolong\t1"
+  ],
+  "stdout": "id\tname\tisActive\tsubcategoryId\tsubcatName\tcategoryId\n11\tClassic Taiwan Milk Oolong\t1\t2\tOrganic Oolong\t1\n12\tSaffron Milk Oolong\t1\t2\tOrganic Oolong\t1\n13\tButterscotch Milk Oolong\t1\t2\tOrganic Oolong\t1\n14\tCinnamon Chocolate Milk Oolong\t1\t2\tOrganic Oolong\t1\n15\tClassic Oolong Latte\t1\t2\tOrganic Oolong\t1\n16\tTiramisu Oolong Latte\t1\t2\tOrganic Oolong\t1\n17\tCrème Brûlée Oolong Latte\t1\t2\tOrganic Oolong\t1\n18\tRose Oolong Latte\t1\t2\tOrganic Oolong\t1\n19\tBlueberry Lemon Oolong (no milk)\t1\t2\tOrganic Oolong\t1\n120001\tCrème Caramel Milk Oolong \t\t1\t2\tOrganic Oolong\t1\n20\tClassic Taiwan Green Tea\t1\t3\tOrganic Green Tea\t1\n21\tVirgin Pina Colada Green Tea\t1\t3\tOrganic Green Tea\t1\n22\tVirgin Mojito Green Tea\t1\t3\tOrganic Green Tea\t1\n23\tMango Green Tea\t1\t3\tOrganic Green Tea\t1\n24\tHoney Lemon Green Tea\t1\t3\tOrganic Green Tea\t1\n25\tPink Guava Green Tea\t1\t3\tOrganic Green Tea\t1\n26\tStrawberry Jelly Green Tea\t1\t3\tOrganic Green Tea\t1\n27\tKiwi Green Tea\t1\t3\tOrganic Green Tea\t1\n28\tLychee Green Tea\t1\t3\tOrganic Green Tea\t1\n29\tYuzu Green Tea\t1\t3\tOrganic Green Tea\t1\n30\tClassic Matcha Latte\t1\t4\tMatcha Blend\t1\n31\tCuracao Matcha Latte\t1\t4\tMatcha Blend\t1\n32\tStrawberry Matcha Latte\t1\t4\tMatcha Blend\t1\n33\tVanilla Matcha Latte\t1\t4\tMatcha Blend\t1\n34\tCoconut Matcha Latte\t1\t4\tMatcha Blend\t1\n35\tRose Matcha Latte\t1\t4\tMatcha Blend\t1\n36\tBanoffee Matcha Latte\t1\t4\tMatcha Blend\t1\n37\tClassic Taro Latte\t1\t5\tTaro Blend\t1\n38\tCrème Brulee Taro Latte\t1\t5\tTaro Blend\t1\n39\tBlack Forest Taro Latte\t1\t5\tTaro Blend\t1\n40\tTaro Matcha Latte\t1\t5\tTaro Blend\t1\n41\tCoconut Taro Latte\t1\t5\tTaro Blend\t1\n42\tButterscotch Taro Latte\t1\t5\tTaro Blend\t1\n120002\tCrème Caramel Taro Latte \t1\t5\tTaro Blend\t1\n77\tMango Slush\t1\t30003\tSlush\t1\n78\tStrawberry Slush\t1\t30003\tSlush\t1\n79\tLychee Slush\t1\t30003\tSlush\t1\n80\tKiwi Slush\t1\t30003\tSlush\t1\n81\tCherry Slush\t1\t30003\tSlush\t1\n82\tWatermelon Slush\t1\t30003\tSlush\t1\n83\tVirgin Piña Colada Slush\t1\t30003\tSlush\t1\n84\tVirgin Mojito Slush\t1\t30003\tSlush\t1\n150001\tLemon Slush\t1\t30003\tSlush\t1\n150002\tHoney Slush\t1\t30003\tSlush\t1\n150003\tCuraçao Slush\t1\t30003\tSlush\t1\n150004\tPink Guava Slush\t1\t30003\tSlush\t1\n150005\tRose Slush \t1\t30003\tSlush\t1\n150006\tCoconut Slush \t1\t30003\tSlush\t1\n150007\tJeera Masala\t1\t30003\tSlush\t1\n150008\tSweet Paan\t1\t30003\tSlush\t1\n150009\tMacchiato\t1\t30003\tSlush\t1\n43\tIced Black Americano\t1\t30004\tIced Lavazza Coffee\t1\n44\tIced Caffe Latte\t1\t30004\tIced Lavazza Coffee\t1\n45\tIced Caffe Mocha\t1\t30004\tIced Lavazza Coffee\t1\n46\tIced Hong Kong Style Yuen-Yeung\t1\t30004\tIced Lavazza Coffee\t1\n2\tRose Milk Tea\t1\t330001\tOrganic Assam \t1\n3\tHazelnut Milk Tea\t1\t330001\tOrganic Assam \t1\n4\tCaramel Milk Tea\t1\t330001\tOrganic Assam \t1\n5\tClassic Tea Latte\t1\t330001\tOrganic Assam \t1\n6\tEnglish Cream Tea Latte\t1\t330001\tOrganic Assam \t1\n7\tMocha Tea Latte\t1\t330001\tOrganic Assam \t1\n8\tCinnamon Vanilla Tea Latte\t1\t330001\tOrganic Assam \t1\n9\tBlack Forest Tea Latte\t1\t330001\tOrganic Assam \t1\n10\tMint Lemon Assam (no milk)\t1\t330001\tOrganic Assam \t1\n480001\tClassic Taiwan Milk Tea \t1\t330001\tOrganic Assam \t1\n",
+  "stderr": "",
+  "execution_time_ms": 73
+}

@@ -1923,6 +1923,21 @@ export const appRouter = router({
 
   // Admin routes
   admin: router({
+    // Get full menu for admin - NO availability filtering, shows everything
+    getFullMenuAdmin: staffProcedure.query(async () => {
+      const dbInstance = await getDb();
+      if (!dbInstance) return { categories: [], subcategories: [], products: [], addons: [] };
+
+      // Get ALL categories, subcategories, products without any availability filtering
+      const cats = await db.getCategories(false); // include inactive categories
+      const subs = await db.getSubcategories(undefined, false); // include inactive subcategories
+      const allProds = await dbInstance.select().from(products)
+        .orderBy(asc(products.displayOrder));
+      const adds = await db.getAddons();
+
+      return { categories: cats, subcategories: subs, products: allProds, addons: adds };
+    }),
+
     // Seed database
     seed: adminProcedure.mutation(async () => {
       await seedDatabase();

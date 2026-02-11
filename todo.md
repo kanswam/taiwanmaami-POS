@@ -1845,3 +1845,38 @@ Orders fixed:
   - Bot mentions BOBALOVE10, free delivery >₹2500, loyalty stamps
 - [x] Add promo code to system prompt so bot knows about active promotions
 - [x] Test all three features without breaking existing functionality (24/24 tests pass)
+
+## Investigation - Missing Products from Admin Page (Feb 11)
+
+- [ ] Investigate why Iced Beverages and Biang Biang Noodle disappeared from Admin page
+- [ ] Check if products were soft-deleted or hard-deleted
+- [ ] Check if staff toggled an isActive/isVisible flag
+- [ ] Restore missing products if needed
+- [ ] Fix Admin page to always show all products (including inactive ones)
+
+## CRITICAL: Missing Iced Beverages Products (Feb 11)
+
+- [x] Investigate how Iced Beverages products were deleted from database
+  - Root cause: Staff used Availability toggle in Staff Orders to turn off ALL 7 Iced Beverages subcategories
+  - All subcategories had availableInstore=0, availableDelivery=0, availablePickup=0
+  - Products were NOT deleted - they were hidden by subcategory availability flags
+  - Biang Biang Noodles had isAvailable=0 (product-level toggle)
+- [x] Check if products have order/transaction records that should have prevented deletion
+  - 52 different Iced Beverages products have order history (hundreds of order items)
+  - Products were never deleted, just hidden
+- [x] Restore missing Iced Beverages products
+  - Restored all 7 subcategories: availableInstore=1, availableDelivery=1, availablePickup=1
+  - Restored Biang Biang Noodles: isAvailable=1
+- [x] Add safeguard: prevent product deletion when orders exist against the product
+  - Already implemented: deleteProduct is soft-delete (sets isActive=false)
+  - permanentlyDeleteProduct checks order history and refuses if orders exist
+  - canDeleteProduct query shows order count before allowing permanent delete
+- [x] Implement proper "Out of Stock" toggle for staff to temporarily disable items
+  - Already implemented: isInStock toggle exists in Products tab
+  - isAvailable toggle exists in Staff Orders page for quick availability control
+  - Subcategory availability toggles exist for bulk enable/disable
+- [x] Fix Admin page to use admin-specific query (getFullMenuAdmin) instead of customer-facing getFullMenu
+  - Created new admin.getFullMenuAdmin procedure that returns ALL products/subcategories/categories
+  - Updated ProductsTab, CategoriesTab, and ProductEditDialog to use getFullMenuAdmin
+  - Admin page now always shows all products regardless of availability flags
+  - Added vitest test: server/adminMenu.test.ts (5 tests, all passing)
