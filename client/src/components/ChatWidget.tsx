@@ -1,8 +1,10 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { AIChatBox, type Message } from './AIChatBox';
-import { MessageCircle, X, Sparkles } from 'lucide-react';
+import { X, Sparkles } from 'lucide-react';
 import { trpc } from '@/lib/trpc';
 import { cn } from '@/lib/utils';
+
+const GREETING_LADY_URL = 'https://files.manuscdn.com/user_upload_by_module/session_file/114675165/cCIiqSZESwdbtugN.png';
 
 // Rich card types matching server response
 type ProductCard = {
@@ -72,7 +74,9 @@ export function ChatWidget() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [hasNewMessage, setHasNewMessage] = useState(false);
   const [hasInteracted, setHasInteracted] = useState(false);
+  const [showGreeting, setShowGreeting] = useState(false);
   const pulseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const greetingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const chatMutation = trpc.chatbot.chat.useMutation({
     onSuccess: (data) => {
@@ -101,7 +105,6 @@ export function ChatWidget() {
     const newMessages = [...messages, userMessage];
     setMessages(newMessages);
 
-    // Send only user/assistant messages (not system) to the server
     const conversationHistory = newMessages
       .filter(m => m.role !== 'system')
       .map(m => ({ role: m.role, content: m.content }));
@@ -112,19 +115,35 @@ export function ChatWidget() {
   const toggleChat = useCallback(() => {
     setIsOpen(prev => !prev);
     setHasNewMessage(false);
-  }, []);
+    if (!isOpen) {
+      setShowGreeting(false);
+    }
+  }, [isOpen]);
 
-  // Show a subtle pulse after 10 seconds if user hasn't interacted
+  // Show greeting tooltip after 5 seconds, pulse after 10
   useEffect(() => {
     if (!hasInteracted && !isOpen) {
+      greetingTimerRef.current = setTimeout(() => {
+        setShowGreeting(true);
+      }, 5000);
       pulseTimerRef.current = setTimeout(() => {
         setHasNewMessage(true);
       }, 10000);
     }
     return () => {
       if (pulseTimerRef.current) clearTimeout(pulseTimerRef.current);
+      if (greetingTimerRef.current) clearTimeout(greetingTimerRef.current);
     };
   }, [hasInteracted, isOpen]);
+
+  // Dismiss greeting tooltip on scroll
+  useEffect(() => {
+    const handleScroll = () => {
+      if (showGreeting) setShowGreeting(false);
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [showGreeting]);
 
   return (
     <>
@@ -173,32 +192,75 @@ export function ChatWidget() {
         </div>
       </div>
 
-      {/* Floating Action Button */}
+      {/* Greeting Speech Bubble */}
+      {showGreeting && !isOpen && (
+        <div
+          className={cn(
+            'fixed bottom-[120px] right-4 sm:bottom-[140px] sm:right-6 z-50',
+            'animate-in fade-in slide-in-from-bottom-2 duration-500'
+          )}
+        >
+          <div className="bg-white rounded-2xl shadow-xl px-4 py-3 max-w-[200px] relative border border-gray-100">
+            <p className="text-sm text-gray-800 font-medium leading-snug">
+              Nǐ hǎo! 👋 Need help with our menu?
+            </p>
+            {/* Speech bubble tail */}
+            <div className="absolute -bottom-2 right-8 w-4 h-4 bg-white border-r border-b border-gray-100 transform rotate-45" />
+          </div>
+        </div>
+      )}
+
+      {/* Floating Chat Button with Greeting Lady */}
       <button
         onClick={toggleChat}
         className={cn(
           'fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50',
-          'w-14 h-14 rounded-full shadow-lg',
-          'flex items-center justify-center',
           'transition-all duration-300 ease-in-out',
-          'hover:scale-110 active:scale-95',
-          isOpen
-            ? 'bg-gray-600 hover:bg-gray-700 rotate-0'
-            : 'bg-gradient-to-br from-[#c0392b] to-[#e74c3c] hover:from-[#a93226] hover:to-[#c0392b]'
+          'hover:scale-105 active:scale-95',
+          'focus:outline-none focus-visible:ring-2 focus-visible:ring-[#c0392b] focus-visible:ring-offset-2',
+          isOpen ? 'w-14 h-14' : 'w-[56px] h-[70px] sm:w-[64px] sm:h-[80px]'
         )}
         aria-label={isOpen ? 'Close chat' : 'Open chat assistant'}
       >
         {isOpen ? (
-          <X className="w-6 h-6 text-white" />
+          <div className="w-14 h-14 rounded-full bg-gray-600 hover:bg-gray-700 flex items-center justify-center shadow-lg">
+            <X className="w-6 h-6 text-white" />
+          </div>
         ) : (
-          <MessageCircle className="w-6 h-6 text-white" />
-        )}
+          <div className="relative group">
+            {/* Animated greeting lady image */}
+            <div className="chat-lady-bounce">
+              <img
+                src={GREETING_LADY_URL}
+                alt="Chat with us"
+                className="w-[56px] h-[70px] sm:w-[64px] sm:h-[80px] object-contain drop-shadow-lg transition-transform duration-300 group-hover:scale-110"
+                loading="eager"
+              />
+            </div>
 
-        {/* Notification dot */}
-        {hasNewMessage && !isOpen && (
-          <span className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white animate-pulse" />
+            {/* Notification dot */}
+            {hasNewMessage && (
+              <span className="absolute -top-1 -right-1 w-5 h-5 bg-green-500 rounded-full border-2 border-white animate-pulse flex items-center justify-center">
+                <span className="text-white text-[10px] font-bold">1</span>
+              </span>
+            )}
+          </div>
         )}
       </button>
+
+      {/* Inline styles for the gentle bounce animation */}
+      <style>{`
+        @keyframes chatLadyBounce {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-6px); }
+        }
+        .chat-lady-bounce {
+          animation: chatLadyBounce 3s ease-in-out infinite;
+        }
+        .chat-lady-bounce:hover {
+          animation-play-state: paused;
+        }
+      `}</style>
     </>
   );
 }

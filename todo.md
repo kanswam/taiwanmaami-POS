@@ -1761,3 +1761,29 @@ Orders fixed:
 - [x] Fix system prompt to tell LLM that product cards are static display-only (not tappable)
 - [x] LLM should NOT say "tap on any mochi" or "click to add to cart" since cards are just photos
 - [x] LLM should instead direct customers to visit the Menu page to order
+
+## Chatbot Greeting Image (Feb 11)
+
+- [x] Generate illustration of Chinese/Taiwanese woman greeting with folded hands
+- [x] Integrate image into chat widget bubble with CSS animation (gentle wave/bounce)
+- [x] Ensure it fits the Taiwan Maami brand aesthetic
+
+## Chatbot Greeting Lady - Image Update (Feb 11)
+
+- [ ] Regenerate illustration with bright red chipao (not dark red/gold pattern)
+- [ ] Hands in Indian namaste position (palms pressed together at chest)
+- [ ] Upload new image to CDN and update ChatWidget.tsx
+
+## Chatbot Greeting Lady - Image Upd- [x] Regenerate illustration with bright red chipao (not dark red/gold pattern)
+- [x] Hands in Indian Vanakkam position (palms pressed together at chest level)
+- [x] Upload new image to CDN and update ChatWidget.tsx## Chatbot Greeting Lady - Image Revision 2 (Feb 11)
+
+- [x] Qipao must have proper flower/floral pattern (not plain solid red)
+- [x] Woman must face forward (not turned to the side)
+- [x] Vanakkam greeting at chest level only (palms together at chest, NOT near face)
+- [x] Keep bright red color for the qipao
+
+## Chatbot Greeting Lady - Image Revision 3 (Feb 11)
+
+- [x] Add red pottu (bindi) on her forehead
+- [x] Ensure image is small enough to fit nicely at the bottom right corner
