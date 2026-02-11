@@ -1,0 +1,226 @@
+{
+  "query": "DESCRIBE subcategories;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute DESCRIBE subcategories;",
+  "rows": [
+    {
+      "Field": "id",
+      "Type": "int(11)",
+      "Null": "NO",
+      "Key": "PRI",
+      "Default": "NULL",
+      "Extra": "auto_increment"
+    },
+    {
+      "Field": "categoryId",
+      "Type": "int(11)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "name",
+      "Type": "varchar(100)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "chineseName",
+      "Type": "varchar(100)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "slug",
+      "Type": "varchar(100)",
+      "Null": "NO",
+      "Key": "UNI",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "description",
+      "Type": "text",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "imageUrl",
+      "Type": "text",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "basePricePetiteWithBoba",
+      "Type": "int(11)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "basePricePetiteNoBoba",
+      "Type": "int(11)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "basePriceRegularWithBoba",
+      "Type": "int(11)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "basePriceRegularNoBoba",
+      "Type": "int(11)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "basePriceLargeWithBoba",
+      "Type": "int(11)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "basePriceLargeNoBoba",
+      "Type": "int(11)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "deliveryPriceRegularWithBoba",
+      "Type": "int(11)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "deliveryPriceRegularNoBoba",
+      "Type": "int(11)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "deliveryPriceLargeWithBoba",
+      "Type": "int(11)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "deliveryPriceLargeNoBoba",
+      "Type": "int(11)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "hasSizeVariants",
+      "Type": "tinyint(1)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "hasBobaOption",
+      "Type": "tinyint(1)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "availableInstore",
+      "Type": "tinyint(1)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "1",
+      "Extra": ""
+    },
+    {
+      "Field": "availableDelivery",
+      "Type": "tinyint(1)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "1",
+      "Extra": ""
+    },
+    {
+      "Field": "displayOrder",
+      "Type": "int(11)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "isActive",
+      "Type": "tinyint(1)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "1",
+      "Extra": ""
+    },
+    {
+      "Field": "createdAt",
+      "Type": "timestamp",
+      "Null": "NO",
+      "Key": "",
+      "Default": "CURRENT_TIMESTAMP",
+      "Extra": ""
+    },
+    {
+      "Field": "availablePickup",
+      "Type": "tinyint(1)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "1",
+      "Extra": ""
+    },
+    {
+      "Field": "availableAtPalladium",
+      "Type": "tinyint(1)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "1",
+      "Extra": ""
+    },
+    {
+      "Field": "availableAtTnagar",
+      "Type": "tinyint(1)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "1",
+      "Extra": ""
+    }
+  ],
+  "messages": [],
+  "stdout": "Field\tType\tNull\tKey\tDefault\tExtra\nid\tint(11)\tNO\tPRI\tNULL\tauto_increment\ncategoryId\tint(11)\tNO\t\tNULL\t\nname\tvarchar(100)\tNO\t\tNULL\t\nchineseName\tvarchar(100)\tYES\t\tNULL\t\nslug\tvarchar(100)\tNO\tUNI\tNULL\t\ndescription\ttext\tYES\t\tNULL\t\nimageUrl\ttext\tYES\t\tNULL\t\nbasePricePetiteWithBoba\tint(11)\tYES\t\tNULL\t\nbasePricePetiteNoBoba\tint(11)\tYES\t\tNULL\t\nbasePriceRegularWithBoba\tint(11)\tYES\t\tNULL\t\nbasePriceRegularNoBoba\tint(11)\tYES\t\tNULL\t\nbasePriceLargeWithBoba\tint(11)\tYES\t\tNULL\t\nbasePriceLargeNoBoba\tint(11)\tYES\t\tNULL\t\ndeliveryPriceRegularWithBoba\tint(11)\tYES\t\tNULL\t\ndeliveryPriceRegularNoBoba\tint(11)\tYES\t\tNULL\t\ndeliveryPriceLargeWithBoba\tint(11)\tYES\t\tNULL\t\ndeliveryPriceLargeNoBoba\tint(11)\tYES\t\tNULL\t\nhasSizeVariants\ttinyint(1)\tNO\t\t0\t\nhasBobaOption\ttinyint(1)\tNO\t\t0\t\navailableInstore\ttinyint(1)\tNO\t\t1\t\navailableDelivery\ttinyint(1)\tNO\t\t1\t\ndisplayOrder\tint(11)\tNO\t\t0\t\nisActive\ttinyint(1)\tNO\t\t1\t\ncreatedAt\ttimestamp\tNO\t\tCURRENT_TIMESTAMP\t\navailablePickup\ttinyint(1)\tNO\t\t1\t\navailableAtPalladium\ttinyint(1)\tNO\t\t1\t\navailableAtTnagar\ttinyint(1)\tNO\t\t1\t\n",
+  "stderr": "",
+  "execution_time_ms": 51
+}

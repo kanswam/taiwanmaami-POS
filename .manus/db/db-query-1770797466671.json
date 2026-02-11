@@ -1,0 +1,40 @@
+{
+  "query": "SELECT name, isActive, description FROM products WHERE LOWER(name) LIKE '%chick%' OR LOWER(name) LIKE '%gozilla%' LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT name, isActive, description FROM products WHERE LOWER(name) LIKE '%chick%' OR LOWER(name) LIKE '%gozilla%' LIMIT 10;",
+  "rows": [
+    {
+      "name": "The Original ChickGozilla ",
+      "isActive": "1",
+      "description": "(non-veg) The one and only Original ChickGozilla. A giant, golden-fried chicken steak cooked to perfection. Crispy on the outside, juicy on the inside. No frills, all flavour. Allergen: gluten. "
+    },
+    {
+      "name": "ChickGozilla with Molten Cheesy Corn",
+      "isActive": "1",
+      "description": "(non-veg) The beast, unleashed. Our giant ChickGozilla gets the full treatment: a fiery Korean Gochujang glaze meets a glorious river of melted cheesy corn. This is maximum flavor, maximum crunch, and maximum satisfaction. Allergen: gluten, sesame"
+    },
+    {
+      "name": "ChickGozilla Power Salad",
+      "isActive": "1",
+      "description": "(non-veg) Who says salads are boring? We top a power-packed mix of fresh garden vegetables with our famous ChickGozilla chicken. A drizzle of sweet and zesty honey mustard dressing makes this the most satisfying and delicious salad you'll ever have. All the crunch, all the flavour, all in one bowl. Allergen: gluten, mustard"
+    },
+    {
+      "name": "Original Japanese ChickGozilla Curry Rice",
+      "isActive": "1",
+      "description": "(non-veg) Our signature ChickGozilla, chicken steak, served golden and crispy over fluffy Japanese rice, finished with a rich in-house Japanese curry simmered with aromatic spices for a smooth, mildly sweet, deeply comforting flavour. A hearty classic with a satisfying crunch in every bite. Allergen: dairy, gluten"
+    },
+    {
+      "name": "Coconut Japanese ChickGozilla Curry Rice ",
+      "isActive": "1",
+      "description": "(non-veg) Our signature ChickGozilla, chicken steak, served golden and crispy over fluffy Japanese rice, finished with a rich in-house Japanese curry simmered with aromatic spices for a smooth, mildly sweet, deeply comforting flavour. A hearty classic with a satisfying crunch in every bite. Allergen: dairy, gluten"
+    },
+    {
+      "name": "Spicy Japanese ChickGozilla Curry Rice",
+      "isActive": "1",
+      "description": "(non-veg) Our signature ChickGozilla, chicken steak, served golden and crispy over fluffy Japanese rice, finished with a rich in-house Japanese curry simmered with aromatic spices for a smooth, mildly sweet, deeply comforting flavour. A hearty classic with a satisfying crunch in every bite. Allergen: dairy, gluten"
+    }
+  ],
+  "messages": [],
+  "stdout": "name\tisActive\tdescription\nThe Original ChickGozilla \t1\t(non-veg) The one and only Original ChickGozilla. A giant, golden-fried chicken steak cooked to perfection. Crispy on the outside, juicy on the inside. No frills, all flavour. Allergen: gluten. \n\nChickGozilla with Molten Cheesy Corn\t1\t(non-veg) The beast, unleashed. Our giant ChickGozilla gets the full treatment: a fiery Korean Gochujang glaze meets a glorious river of melted cheesy corn. This is maximum flavor, maximum crunch, and maximum satisfaction. Allergen: gluten, sesame\nChickGozilla Power Salad\t1\t(non-veg) Who says salads are boring? We top a power-packed mix of fresh garden vegetables with our famous ChickGozilla chicken. A drizzle of sweet and zesty honey mustard dressing makes this the most satisfying and delicious salad you'll ever have. All the crunch, all the flavour, all in one bowl. Allergen: gluten, mustard\nOriginal Japanese ChickGozilla Curry Rice\t1\t(non-veg) Our signature ChickGozilla, chicken steak, served golden and crispy over fluffy Japanese rice, finished with a rich in-house Japanese curry simmered with aromatic spices for a smooth, mildly sweet, deeply comforting flavour. A hearty classic with a satisfying crunch in every bite. Allergen: dairy, gluten\nCoconut Japanese ChickGozilla Curry Rice \t1\t(non-veg) Our signature ChickGozilla, chicken steak, served golden and crispy over fluffy Japanese rice, finished with a rich in-house Japanese curry simmered with aromatic spices for a smooth, mildly sweet, deeply comforting flavour. A hearty classic with a satisfying crunch in every bite. Allergen: dairy, gluten\nSpicy Japanese ChickGozilla Curry Rice\t1\t(non-veg) Our signature ChickGozilla, chicken steak, served golden and crispy over fluffy Japanese rice, finished with a rich in-house Japanese curry simmered with aromatic spices for a smooth, mildly sweet, deeply comforting flavour. A hearty classic with a satisfying crunch in every bite. Allergen: dairy, gluten\n",
+  "stderr": "",
+  "execution_time_ms": 52
+}

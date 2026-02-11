@@ -1739,3 +1739,19 @@ Orders fixed:
 - [x] Build blog post card UI in chat widget (title, excerpt, read link)
 - [x] Update system prompt to instruct LLM to reference products by name for card matching
 - [x] Write vitest tests for enhanced chatbot (24 tests passing)
+
+## Bug Fix - Chatbot Mochi Search (Feb 11)
+
+- [x] Fix chatbot saying "no mochi items" when customer asks about mochis
+- [x] Root cause: plural handling - "mochis" didn't match "mochi" in product names
+
+## Bug Fix - Chatbot Search & Cards (Feb 11)
+
+- [x] Fix chatbot returning wrong products (chicken shown for bubble tea query)
+  - Replaced simple word matching with relevance scoring (name > subcategory > category > description)
+  - Added known phrase extraction ("bubble tea", "milk tea", etc.)
+  - Added bidirectional prefix matching ("chicken" matches "ChickGozilla")
+- [x] Fix chatbot not finding mochi products (plural stemming: mochis → mochi)
+- [x] Make product cards static (show photo only, no click navigation)
+- [x] Improve search relevance - match whole phrases before individual words
+- [x] Add fallback intent detection for query patterns ("do you have X?", "tell me about X")

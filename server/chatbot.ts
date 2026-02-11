@@ -77,18 +77,95 @@ async function searchMenu(query: string): Promise<{ results: any[]; cards: Produ
     }
   }
 
-  // Split query into words and match any word
-  const queryWords = query.toLowerCase().split(/\s+/).filter(w => w.length > 2);
+  const queryLower = query.toLowerCase().trim();
+  // Split into words, keep words with 2+ chars (allows "tea", etc.)
+  const queryWords = queryLower.split(/\s+/).filter(w => w.length >= 2);
   if (queryWords.length === 0) return { results: [], cards: [] };
 
-  const results = allProducts.filter(p => {
-    const searchable = [
-      p.name, p.description, p.subcategoryName, p.categoryName, p.chineseName
-    ].filter(Boolean).join(' ').toLowerCase();
-    return queryWords.some(word => searchable.includes(word));
+  // Generate word variants for fuzzy matching (simple stemming)
+  // e.g. "mochis" -> ["mochis", "mochi"], "teas" -> ["teas", "tea"]
+  const getVariants = (word: string): string[] => {
+    const variants = [word];
+    if (word.endsWith('s') && word.length > 3) variants.push(word.slice(0, -1));
+    if (word.endsWith('ies') && word.length > 4) variants.push(word.slice(0, -3) + 'y');
+    if (word.endsWith('es') && word.length > 4) variants.push(word.slice(0, -2));
+    // Also add plural if singular
+    if (!word.endsWith('s')) variants.push(word + 's');
+    return Array.from(new Set(variants));
+  };
+
+  const queryVariants = queryWords.map(w => getVariants(w));
+  // Also generate variants for the full phrase
+  const queryPhraseVariants = [queryLower];
+  if (queryLower.endsWith('s') && queryLower.length > 3) queryPhraseVariants.push(queryLower.slice(0, -1));
+  if (!queryLower.endsWith('s')) queryPhraseVariants.push(queryLower + 's');
+
+  // Helper: check if any variant of a word matches in text (bidirectional)
+  // "chicken" matches text containing "chick" prefix, and "chick" matches "chicken"
+  const matchesAny = (variants: string[], text: string): boolean => {
+    return variants.some(v => {
+      // Direct substring match
+      if (text.includes(v)) return true;
+      // Check if any word in the text starts with the query word (prefix match)
+      // e.g. query "chicken" -> text word "chickgozilla" starts with "chick" (first 5 chars match)
+      const textWords = text.split(/\s+/);
+      for (const tw of textWords) {
+        // If query word is a prefix of text word (min 4 chars)
+        if (v.length >= 4 && tw.startsWith(v)) return true;
+        // If text word is a prefix of query word (min 4 chars)
+        if (tw.length >= 4 && v.startsWith(tw)) return true;
+        // Shared prefix of at least 4 chars
+        if (v.length >= 4 && tw.length >= 4) {
+          let shared = 0;
+          for (let i = 0; i < Math.min(v.length, tw.length); i++) {
+            if (v[i] === tw[i]) shared++; else break;
+          }
+          if (shared >= 4) return true;
+        }
+      }
+      return false;
+    });
+  };
+
+  // Score each product for relevance
+  const scored = allProducts.map(p => {
+    // Build separate searchable fields for weighted matching
+    const nameLC = (p.name || '').toLowerCase();
+    const subcatLC = (p.subcategoryName || '').toLowerCase();
+    const catLC = (p.categoryName || '').toLowerCase();
+    const chineseLC = (p.chineseName || '').toLowerCase();
+    // Only use first 150 chars of description to avoid false matches from long text
+    const descLC = (p.description || '').substring(0, 150).toLowerCase();
+
+    let score = 0;
+
+    // 1. Full phrase match in name/subcategory (highest priority)
+    for (const phrase of queryPhraseVariants) {
+      if (nameLC.includes(phrase)) score += 100;
+      if (subcatLC.includes(phrase)) score += 80;
+      if (catLC.includes(phrase)) score += 60;
+    }
+
+    // 2. Individual word matches (with variants) — prioritize name/subcategory over description
+    for (const variants of queryVariants) {
+      if (matchesAny(variants, nameLC)) score += 20;
+      if (matchesAny(variants, subcatLC)) score += 15;
+      if (matchesAny(variants, catLC)) score += 10;
+      if (matchesAny(variants, chineseLC)) score += 10;
+      if (matchesAny(variants, descLC)) score += 3;
+    }
+
+    return { product: p, score };
   });
 
-  const topResults = results.slice(0, 8);
+  // Filter to products with a meaningful score (at least one name/category match)
+  // Minimum score of 10 ensures we don't return items only matching description loosely
+  const filtered = scored
+    .filter(s => s.score >= 10)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 8);
+
+  const topResults = filtered.map(s => s.product);
 
   const cards: ProductCard[] = topResults.map(p => ({
     type: 'product' as const,
@@ -363,14 +440,24 @@ function detectIntents(userMessage: string): Intent[] {
   const searchTerms = [
     'bubble tea', 'boba', 'milk tea', 'oolong', 'matcha', 'taro', 'mango', 'passion',
     'lychee', 'strawberry', 'peach', 'jasmine', 'green tea', 'black tea', 'coffee',
-    'latte', 'mochi', 'chicken', 'noodle', 'rice', 'croissant', 'salad', 'sandwich',
+    'latte', 'mochi', 'mochis', 'chicken', 'chickgozilla', 'chick gozilla',
+    'noodle', 'rice', 'croissant', 'salad', 'sandwich',
     'waffle', 'pancake', 'egg', 'chocolate', 'vanilla', 'caramel', 'oreo', 'cheese',
     'fruit', 'smoothie', 'frappe', 'cold', 'hot', 'iced', 'warm', 'drink', 'food',
     'snack', 'dessert', 'sweet', 'spicy', 'vegan', 'vegetarian', 'non-veg', 'nonveg',
     'falooda', 'kung fu', 'popcorn', 'drumstick', 'cutlet', 'biryani', 'noodles',
     'bread', 'toast', 'tea', 'beverages', 'lavazza', 'brioche', 'katsu', 'curry',
+    'rose', 'yuzu', 'honey', 'lemon', 'pina colada', 'mojito', 'creme', 'dragon',
+    'banoffee', 'blueberry', 'cherry', 'pineapple', 'rocher', 'ferrero',
   ];
   if (searchTerms.some(term => msg.includes(term))) {
+    intents.push('search_menu');
+  }
+
+  // Fallback: if message looks like a product query but didn't match known terms,
+  // still trigger search (e.g. "do you have X?", "I want X", "show me X")
+  const queryPatterns = /\b(do you have|can i get|i want|show me|tell me about|looking for|any|have you got)\b/;
+  if (!intents.includes('search_menu') && queryPatterns.test(msg)) {
     intents.push('search_menu');
   }
 
@@ -402,8 +489,24 @@ function detectIntents(userMessage: string): Intent[] {
 
 function extractSearchQuery(userMessage: string): string {
   const msg = userMessage.toLowerCase();
+
+  // First, check for known multi-word food terms and preserve them
+  const knownPhrases = [
+    'bubble tea', 'milk tea', 'green tea', 'black tea', 'oolong tea',
+    'kung fu tea', 'boba tea', 'fruit mochi', 'signature mochi',
+    'ice cream', 'power salad', 'curry rice', 'fried chicken',
+    'chicken steak', 'biang biang', 'creme caramel', 'boba creme',
+  ];
+  
+  // If the message contains a known phrase, use it as the primary query
+  for (const phrase of knownPhrases) {
+    if (msg.includes(phrase)) {
+      return phrase;
+    }
+  }
+
   // Remove common filler words
-  let cleaned = msg.replace(/\b(do you have|can i get|i want|i'd like|show me|what about|tell me about|any|some|the|a|an|is there|are there|looking for|find|search|what|your|most|best|good)\b/g, '').trim();
+  let cleaned = msg.replace(/\b(do you have|can i get|i want|i'd like|show me|what about|tell me about|any|some|the|a|an|is there|are there|looking for|find|search|what|your|most|best|good|please|got|sell|offer|serve|make|available|options|menu)\b/g, '').trim();
   // Remove punctuation
   cleaned = cleaned.replace(/[?!.,;:]+/g, '').trim();
   // Remove extra whitespace

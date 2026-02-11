@@ -1,0 +1,34 @@
+{
+  "query": "SELECT id, name FROM subcategories WHERE categoryId = 3 ORDER BY displayOrder;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT id, name FROM subcategories WHERE categoryId = 3 ORDER BY displayOrder;",
+  "rows": [
+    {
+      "id": "8",
+      "name": "Fruit Mochi"
+    },
+    {
+      "id": "9",
+      "name": "Signature Mochi"
+    },
+    {
+      "id": "180001",
+      "name": "Grilled Mochi   "
+    },
+    {
+      "id": "60002",
+      "name": "Boba Crème Caramel"
+    },
+    {
+      "id": "60003",
+      "name": "Sweet Pillow Brioche "
+    },
+    {
+      "id": "120001",
+      "name": "Steamed Velvet Pancake "
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\n8\tFruit Mochi\n9\tSignature Mochi\n180001\tGrilled Mochi   \n60002\tBoba Crème Caramel\n60003\tSweet Pillow Brioche \n120001\tSteamed Velvet Pancake \n",
+  "stderr": "",
+  "execution_time_ms": 48
+}

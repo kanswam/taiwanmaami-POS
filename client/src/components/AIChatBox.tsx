@@ -30,7 +30,6 @@ export type AIChatBoxProps = {
 // ─── Product Card Component ─────────────────────────────────────────────
 
 function ProductCardInline({ card }: { card: any }) {
-  const [, navigate] = useLocation();
   const price = card.pricePetite || card.priceRegular || card.priceLarge || 0;
   const priceDisplay = price > 0 ? `₹${(price / 100).toFixed(0)}` : '';
   const maxPrice = card.priceLarge || card.priceRegular || 0;
@@ -44,15 +43,14 @@ function ProductCardInline({ card }: { card: any }) {
     : null;
 
   return (
-    <button
-      onClick={() => navigate(`/menu?category=${encodeURIComponent(card.category)}&subcategory=${encodeURIComponent(card.subcategory)}`)}
-      className="flex items-center gap-3 p-2 rounded-lg bg-background/80 hover:bg-accent/50 transition-colors text-left w-full border border-border/30 cursor-pointer group"
+    <div
+      className="flex items-center gap-3 p-2 rounded-lg bg-background/80 text-left w-full border border-border/30"
     >
       {thumbUrl ? (
         <img
           src={thumbUrl}
           alt={card.name}
-          className="w-14 h-14 rounded-lg object-cover shrink-0 group-hover:scale-105 transition-transform"
+          className="w-14 h-14 rounded-lg object-cover shrink-0"
           loading="lazy"
         />
       ) : (
@@ -74,12 +72,9 @@ function ProductCardInline({ card }: { card: any }) {
         )}
         <div className="flex items-center justify-between mt-0.5">
           <span className="text-xs font-semibold text-[#c0392b]">{priceRange}</span>
-          <span className="text-[10px] text-muted-foreground flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-            View <ArrowRight className="w-2.5 h-2.5" />
-          </span>
         </div>
       </div>
-    </button>
+    </div>
   );
 }
 
