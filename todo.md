@@ -1715,3 +1715,7 @@ Orders fixed:
 - [x] Handle FAQs via LLM tool calls (delivery, hours, allergens, loyalty, promos, locations)
 - [x] Write vitest tests for chatbot endpoint (11 tests passing)
 - [x] Verify chatbot widget renders on site with zero TS errors
+
+## Add Blog to Main Navigation (Feb 11)
+
+- [x] Add "Blog" link to the main navigation header (desktop and mobile)

@@ -5,7 +5,7 @@ import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { useAuth } from '@/_core/hooks/useAuth';
 import { useCart } from '@/contexts/CartContext';
 import { useLoginTransition } from '@/hooks/useLoginTransition';
-import { Menu, ShoppingCart, User, LogOut, MapPin, Info, FileText, X, ClipboardList } from 'lucide-react';
+import { Menu, ShoppingCart, User, LogOut, MapPin, Info, FileText, X, ClipboardList, BookOpen } from 'lucide-react';
 import { formatPrice } from '@shared/types';
 
 export function Header() {
@@ -21,6 +21,7 @@ export function Header() {
     { href: '/#outlets', label: 'Locations' },
     { href: '/events', label: 'Events' },
     { href: '/wholesale', label: 'Wholesale' },
+    { href: '/blog', label: 'Blog' },
   ];
 
   const isActive = (href: string) => location === href;
@@ -204,6 +205,7 @@ export function Header() {
                       >
                         {link.href === '/menu' && <Menu className="w-5 h-5" />}
                         {link.href === '/about' && <Info className="w-5 h-5" />}
+                        {link.href === '/blog' && <BookOpen className="w-5 h-5" />}
                         {link.label}
                       </Link>
                     )
