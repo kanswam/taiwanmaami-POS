@@ -1801,10 +1801,10 @@ Orders fixed:
 
 ## Fix Category Links & Add Quick-Reply Chips (Feb 11)
 
-- [ ] Fix chatbot category links leading to empty menu page (wrong URL format)
-- [ ] Add quick-reply chips after bot responses (contextual suggestion buttons)
-- [ ] Add inline "Order Now" links in bot text for specific menu categories
-- [ ] Remove persist chat history suggestion (not valuable for food ordering)
+- [x] Fix chatbot category links leading to empty menu page (wrong URL format - now uses slugs)
+- [x] Add quick-reply chips after bot responses (contextual suggestion buttons)
+- [x] Add inline "Order Now" links in bot text for specific menu categories
+- [x] Remove persist chat history suggestion (not valuable for food ordering)
 
 ## Bug Fix - Workshop Date & Chat Scroll (Feb 11)
 
@@ -1827,3 +1827,21 @@ Orders fixed:
 - [x] Add explicit instruction: NEVER invent or guess addresses
 - [x] Test with Tamil location query to verify fix (responds correctly in Tamil)
 - [x] Test with "Anna Nagar branch?" query — correctly says no branch there
+
+## Chatbot Enhancements - Quick Replies, Inline Links, Promo Codes (Feb 11)
+
+- [x] Add quick-reply chips after each bot response (contextual suggestions)
+- [x] Generate smart quick-reply suggestions based on conversation context
+  - Context-aware: suggests Mochis/Food after bubble tea query, Bubble Tea after mochi query, etc.
+  - Returns different chips for store info, workshops, blog, categories, popular items
+- [x] Render quick-reply chips in AIChatBox above the input area
+- [x] Clicking a chip sends it as a user message
+- [x] Enhance system prompt for inline Order Now links in bot text
+  - Added "Inline Links" section requiring markdown links for all category mentions
+  - Bot now includes [Browse Iced Beverages](/menu?category=iced-beverages) etc.
+- [x] Bot includes markdown links to menu categories when mentioning products
+- [x] Add promo code awareness — bot proactively mentions BOBALOVE10 for first-time orders
+  - Added "Promotions & Promo Codes" section to system prompt
+  - Bot mentions BOBALOVE10, free delivery >₹2500, loyalty stamps
+- [x] Add promo code to system prompt so bot knows about active promotions
+- [x] Test all three features without breaking existing functionality (24/24 tests pass)

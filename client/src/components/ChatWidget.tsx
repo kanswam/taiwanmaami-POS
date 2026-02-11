@@ -13,19 +13,18 @@ const SUGGESTED_PROMPTS = [
   "Any workshops?",
 ];
 
-const QUICK_REPLIES = [
+const DEFAULT_QUICK_REPLIES = [
   "🧋 Bubble Tea",
   "🍡 Mochis",
   "🍗 Food",
-  "📍 Store Hours",
-  "🎓 Workshops",
-  "🚚 Delivery Info",
+  "📍 Store Info",
 ];
 
 export function ChatWidget() {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [hasNewMessage, setHasNewMessage] = useState(false);
+  const [quickReplies, setQuickReplies] = useState<string[]>(DEFAULT_QUICK_REPLIES);
   const [hasInteracted, setHasInteracted] = useState(false);
   const [showGreeting, setShowGreeting] = useState(false);
   const pulseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -37,6 +36,10 @@ export function ChatWidget() {
         role: 'assistant' as const,
         content: data.reply,
       }]);
+      // Update quick replies from backend response
+      if (data.quickReplies && data.quickReplies.length > 0) {
+        setQuickReplies(data.quickReplies);
+      }
       if (!isOpen) {
         setHasNewMessage(true);
       }
@@ -139,7 +142,7 @@ export function ChatWidget() {
             height="min(450px, calc(100vh - 200px))"
             emptyStateMessage="Hi! I'm Maami Bot 🧋 How can I help you today?"
             suggestedPrompts={SUGGESTED_PROMPTS}
-            quickReplies={QUICK_REPLIES}
+            quickReplies={quickReplies}
             className="border-0 rounded-none shadow-none"
           />
         </div>

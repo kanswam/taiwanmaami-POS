@@ -56,6 +56,7 @@ export type RichCard = ProductCard | WorkshopCard | BlogCard | CategoryLink;
 export type ChatbotResponse = {
   reply: string;
   cards: RichCard[];
+  quickReplies: string[];
 };
 
 // ─── Data Fetchers ─────────────────────────────────────────────────────────
@@ -613,6 +614,20 @@ Always include a relevant link when mentioning a category. Use the slug format (
 - For workshops: "Book your spot on our [Events page](/events) before it sells out!"
 - For blog topics: "Check out our blog post for the full story!"
 
+## Promotions & Promo Codes (PROACTIVELY MENTION)
+- **BOBALOVE10** — 10% off first online order. Mention this whenever a customer asks about ordering, delivery, prices, or discounts.
+- **Free delivery** on orders above ₹2500
+- **Loyalty Stamps** — Buy 10 bubble teas, get 1 FREE! Mention when customers seem interested in bubble tea.
+- When a customer is about to order or asks "how do I order?", ALWAYS mention: "Use code **BOBALOVE10** for 10% off your first order!"
+
+## Inline Links (ALWAYS INCLUDE)
+- When mentioning ANY product category, ALWAYS include a clickable link: e.g. "our delicious [Mochis](/menu?category=sweet-bites)" or "try our [Bubble Teas](/menu?category=iced-beverages)"
+- When mentioning the menu, link to [our menu](/menu)
+- When mentioning workshops, link to [Events page](/events)
+- When mentioning blog posts, link to [our Blog](/blog)
+- When mentioning locations, link to [Locations page](/locations)
+- NEVER just say "visit our menu page" — ALWAYS make it a clickable markdown link
+
 ## Conversation Starters
 When greeting, offer 2-3 quick options like:
 - Browse our menu categories
@@ -623,6 +638,51 @@ When greeting, offer 2-3 quick options like:
 - Use **bold** for product names and prices
 - Use bullet points for lists
 - Keep responses under 200 words unless the customer asks for detailed info`;
+
+// ─── Quick Reply Generation ───────────────────────────────────────────────
+
+function generateQuickReplies(intents: Intent[], userMessage: string): string[] {
+  const msg = userMessage.toLowerCase();
+  const replies: string[] = [];
+
+  // Based on what the user just asked about, suggest related follow-ups
+  if (intents.includes('search_menu')) {
+    // They searched for something — suggest related categories and ordering
+    if (msg.includes('tea') || msg.includes('boba') || msg.includes('bubble')) {
+      replies.push('🍡 Show me Mochis', '🍗 Food items', '🎉 Any promos?');
+    } else if (msg.includes('mochi') || msg.includes('sweet') || msg.includes('dessert')) {
+      replies.push('🧋 Bubble Tea', '🍗 Food items', '🚚 Delivery info');
+    } else if (msg.includes('chicken') || msg.includes('food') || msg.includes('noodle')) {
+      replies.push('🧋 Bubble Tea', '🍡 Mochis', '🎉 Any promos?');
+    } else {
+      replies.push('🧋 Bubble Tea', '🍡 Mochis', '🍗 Food');
+    }
+  } else if (intents.includes('get_store_info')) {
+    // They asked about store info — suggest menu and ordering
+    if (msg.includes('delivery') || msg.includes('order')) {
+      replies.push('📋 Full Menu', '🎉 Any promos?', '🧋 Popular drinks');
+    } else if (msg.includes('location') || msg.includes('where') || msg.includes('address')) {
+      replies.push('🕐 Store hours', '🚚 Delivery info', '📋 Full Menu');
+    } else if (msg.includes('hour') || msg.includes('open') || msg.includes('close')) {
+      replies.push('📍 Store locations', '🚚 Delivery info', '📋 Full Menu');
+    } else {
+      replies.push('📋 Full Menu', '🚚 Delivery info', '🎉 Any promos?');
+    }
+  } else if (intents.includes('get_workshops')) {
+    replies.push('📋 Full Menu', '🧋 Bubble Tea', '📍 Store locations');
+  } else if (intents.includes('get_blog')) {
+    replies.push('🧋 Bubble Tea', '🍡 Mochis', '🎓 Workshops');
+  } else if (intents.includes('get_categories')) {
+    replies.push('⭐ What\'s popular?', '🎉 Any promos?', '🚚 Delivery info');
+  } else if (intents.includes('get_popular_items')) {
+    replies.push('📋 Full Menu', '🎉 Any promos?', '🚚 Delivery info');
+  } else {
+    // General chat / greeting — show the main options
+    replies.push('🧋 Bubble Tea', '🍡 Mochis', '🍗 Food', '📍 Store Info');
+  }
+
+  return replies;
+}
 
 // ─── Main Chat Function ────────────────────────────────────────────────────
 
@@ -706,6 +766,9 @@ export async function chatWithBot(
 
   console.log('[Chatbot] Calling LLM with', contextParts.length, 'context parts and', allCards.length, 'cards');
 
+  // Generate context-aware quick reply suggestions
+  const quickReplies = generateQuickReplies(intents, lastUserMessage);
+
   // Build the system prompt with injected context
   let fullSystemPrompt = SYSTEM_PROMPT;
   if (contextParts.length > 0) {
@@ -742,18 +805,21 @@ export async function chatWithBot(
       return {
         reply: 'Sorry, I had trouble processing that. Could you try asking in a different way?',
         cards: [],
+        quickReplies: ['🧋 Bubble Tea', '📋 Full Menu', '📍 Store Info'],
       };
     }
 
     return {
       reply: replyText,
       cards: allCards,
+      quickReplies,
     };
   } catch (err) {
     console.error('[Chatbot] LLM invocation error:', err);
     return {
       reply: 'Sorry, I\'m having trouble right now. Please try again in a moment, or browse our menu directly!',
       cards: [],
+      quickReplies: ['🧋 Bubble Tea', '📋 Full Menu', '📍 Store Info'],
     };
   }
 }
