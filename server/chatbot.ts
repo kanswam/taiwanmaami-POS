@@ -1,106 +1,12 @@
-import { invokeLLM, type Message, type Tool, type ToolCall } from './_core/llm.js';
+import { invokeLLM, type Message } from './_core/llm.js';
 import * as db from './db.js';
 
-// ─── Tool Definitions ───────────────────────────────────────────────────────
+// ─── Data Fetchers ─────────────────────────────────────────────────────────
 
-const chatbotTools: Tool[] = [
-  {
-    type: 'function',
-    function: {
-      name: 'search_menu',
-      description: 'Search the Taiwan Maami menu for products matching a query. Use this when the customer asks about specific items, flavors, or types of drinks/food.',
-      parameters: {
-        type: 'object',
-        properties: {
-          query: {
-            type: 'string',
-            description: 'Search term (e.g., "mango", "black tea", "mochi", "chicken", "coffee")',
-          },
-          categoryFilter: {
-            type: 'string',
-            description: 'Optional category filter: "iced-beverages", "hot-beverages", "food", "sweet-bites"',
-          },
-        },
-        required: ['query'],
-        additionalProperties: false,
-      },
-    },
-  },
-  {
-    type: 'function',
-    function: {
-      name: 'get_categories',
-      description: 'Get all menu categories and subcategories. Use when customer wants to browse the menu or asks what types of items are available.',
-      parameters: {
-        type: 'object',
-        properties: {},
-        additionalProperties: false,
-      },
-    },
-  },
-  {
-    type: 'function',
-    function: {
-      name: 'get_product_details',
-      description: 'Get detailed information about a specific product including sizes, prices, and available customizations. Use when customer wants to know more about a specific item.',
-      parameters: {
-        type: 'object',
-        properties: {
-          productName: {
-            type: 'string',
-            description: 'The name of the product to look up',
-          },
-        },
-        required: ['productName'],
-        additionalProperties: false,
-      },
-    },
-  },
-  {
-    type: 'function',
-    function: {
-      name: 'get_popular_items',
-      description: 'Get the most popular/recommended items from the menu. Use when customer asks for recommendations or what\'s popular.',
-      parameters: {
-        type: 'object',
-        properties: {
-          count: {
-            type: 'number',
-            description: 'Number of items to return (default 5)',
-          },
-        },
-        additionalProperties: false,
-      },
-    },
-  },
-  {
-    type: 'function',
-    function: {
-      name: 'get_store_info',
-      description: 'Get store information including locations, hours, delivery info, and promotions. Use when customer asks about store details, delivery, or offers.',
-      parameters: {
-        type: 'object',
-        properties: {
-          topic: {
-            type: 'string',
-            enum: ['locations', 'hours', 'delivery', 'promotions', 'loyalty', 'allergens', 'general'],
-            description: 'The topic the customer is asking about',
-          },
-        },
-        required: ['topic'],
-        additionalProperties: false,
-      },
-    },
-  },
-];
-
-// ─── Tool Handlers ──────────────────────────────────────────────────────────
-
-async function handleSearchMenu(args: { query: string; categoryFilter?: string }): Promise<string> {
+async function searchMenu(query: string): Promise<any[]> {
   const categories = await db.getCategories();
   const subcategories = await db.getSubcategories();
-  
-  // Get all products with their subcategory info
+
   const allProducts: any[] = [];
   for (const sub of subcategories) {
     const products = await db.getProducts(sub.id);
@@ -114,30 +20,18 @@ async function handleSearchMenu(args: { query: string; categoryFilter?: string }
     }
   }
 
-  // Filter by category if specified
-  let filtered = allProducts;
-  if (args.categoryFilter) {
-    filtered = filtered.filter(p => 
-      p.categorySlug?.toLowerCase().includes(args.categoryFilter!.toLowerCase()) ||
-      p.categoryName?.toLowerCase().includes(args.categoryFilter!.toLowerCase())
-    );
-  }
+  // Split query into words and match any word
+  const queryWords = query.toLowerCase().split(/\s+/).filter(w => w.length > 2);
+  if (queryWords.length === 0) return [];
 
-  // Search by query
-  const query = args.query.toLowerCase();
-  const results = filtered.filter(p =>
-    p.name?.toLowerCase().includes(query) ||
-    p.description?.toLowerCase().includes(query) ||
-    p.subcategoryName?.toLowerCase().includes(query) ||
-    p.categoryName?.toLowerCase().includes(query) ||
-    p.chineseName?.toLowerCase().includes(query)
-  );
+  const results = allProducts.filter(p => {
+    const searchable = [
+      p.name, p.description, p.subcategoryName, p.categoryName, p.chineseName
+    ].filter(Boolean).join(' ').toLowerCase();
+    return queryWords.some(word => searchable.includes(word));
+  });
 
-  if (results.length === 0) {
-    return JSON.stringify({ found: false, message: `No products found matching "${args.query}"` });
-  }
-
-  const items = results.slice(0, 10).map(p => ({
+  return results.slice(0, 10).map(p => ({
     name: p.name,
     chineseName: p.chineseName || null,
     description: p.description || null,
@@ -150,95 +44,26 @@ async function handleSearchMenu(args: { query: string; categoryFilter?: string }
     isVegan: p.isVegan,
     containsEgg: p.containsEgg,
     isNonVeg: p.isNonVeg,
-    isActive: p.isActive,
     slug: p.slug,
   }));
-
-  return JSON.stringify({ found: true, count: results.length, items });
 }
 
-async function handleGetCategories(): Promise<string> {
+async function getCategories(): Promise<any[]> {
   const categories = await db.getCategories();
   const subcategories = await db.getSubcategories();
-
-  const result = categories.map(cat => ({
+  return categories.map(cat => ({
     name: cat.name,
     description: cat.description,
     subcategories: subcategories
       .filter(sub => sub.categoryId === cat.id)
       .map(sub => ({ name: sub.name, description: sub.description })),
   }));
-
-  return JSON.stringify(result);
 }
 
-async function handleGetProductDetails(args: { productName: string }): Promise<string> {
+async function getPopularItems(): Promise<any[]> {
   const categories = await db.getCategories();
   const subcategories = await db.getSubcategories();
-  
-  const allProducts: any[] = [];
-  for (const sub of subcategories) {
-    const products = await db.getProducts(sub.id);
-    for (const p of products) {
-      allProducts.push({
-        ...p,
-        subcategoryName: sub.name,
-        categoryName: categories.find(c => c.id === sub.categoryId)?.name || '',
-      });
-    }
-  }
 
-  const query = args.productName.toLowerCase();
-  const product = allProducts.find(p => 
-    p.name?.toLowerCase().includes(query) ||
-    p.slug?.toLowerCase().includes(query)
-  );
-
-  if (!product) {
-    return JSON.stringify({ found: false, message: `Product "${args.productName}" not found` });
-  }
-
-  // Get addons
-  const addons = await db.getAddons();
-  
-  // Get customization options
-  const customizations = await db.getCustomizationOptions();
-
-  return JSON.stringify({
-    found: true,
-    product: {
-      name: product.name,
-      chineseName: product.chineseName,
-      description: product.description,
-      category: product.categoryName,
-      subcategory: product.subcategoryName,
-      prices: {
-        petite: product.pricePetite,
-        regular: product.priceRegular,
-        large: product.priceLarge,
-      },
-      dietary: {
-        vegetarian: product.isVegetarian,
-        vegan: product.isVegan,
-        containsEgg: product.containsEgg,
-        nonVeg: product.isNonVeg,
-      },
-      hasBoba: product.hasBoba,
-      slug: product.slug,
-    },
-    customizations: {
-      sugarLevels: customizations.filter((c: any) => c.type === 'sugar').map((c: any) => c.name),
-      iceLevels: customizations.filter((c: any) => c.type === 'ice').map((c: any) => c.name),
-      addons: addons.slice(0, 8).map((a: any) => ({ name: a.name, price: a.price })),
-    },
-  });
-}
-
-async function handleGetPopularItems(args: { count?: number }): Promise<string> {
-  const count = args.count || 5;
-  const categories = await db.getCategories();
-  const subcategories = await db.getSubcategories();
-  
   const allProducts: any[] = [];
   for (const sub of subcategories) {
     const products = await db.getProducts(sub.id);
@@ -253,13 +78,12 @@ async function handleGetPopularItems(args: { count?: number }): Promise<string> 
     }
   }
 
-  // Pick featured/popular items (prioritize those with isFeatured flag, then random selection)
   const featured = allProducts.filter(p => p.isFeatured);
-  const popular = featured.length >= count 
-    ? featured.slice(0, count)
-    : [...featured, ...allProducts.filter(p => !p.isFeatured).slice(0, count - featured.length)];
+  const popular = featured.length >= 5
+    ? featured.slice(0, 5)
+    : [...featured, ...allProducts.filter(p => !p.isFeatured).slice(0, 5 - featured.length)];
 
-  const items = popular.slice(0, count).map(p => ({
+  return popular.map(p => ({
     name: p.name,
     description: p.description,
     category: p.categoryName,
@@ -270,12 +94,10 @@ async function handleGetPopularItems(args: { count?: number }): Promise<string> 
     isNonVeg: p.isNonVeg,
     slug: p.slug,
   }));
-
-  return JSON.stringify({ items });
 }
 
-function handleGetStoreInfo(args: { topic: string }): string {
-  const info: Record<string, any> = {
+function getStoreInfo(): Record<string, any> {
+  return {
     locations: {
       stores: [
         {
@@ -319,29 +141,66 @@ function handleGetStoreInfo(args: { topic: string }): string {
       website: 'https://www.taiwanmaami.com',
     },
   };
-
-  return JSON.stringify(info[args.topic] || info.general);
 }
 
-// ─── Tool Call Executor ─────────────────────────────────────────────────────
+// ─── Intent Detection ──────────────────────────────────────────────────────
 
-async function executeToolCall(toolCall: ToolCall): Promise<string> {
-  const args = JSON.parse(toolCall.function.arguments);
-  
-  switch (toolCall.function.name) {
-    case 'search_menu':
-      return handleSearchMenu(args);
-    case 'get_categories':
-      return handleGetCategories();
-    case 'get_product_details':
-      return handleGetProductDetails(args);
-    case 'get_popular_items':
-      return handleGetPopularItems(args);
-    case 'get_store_info':
-      return handleGetStoreInfo(args);
-    default:
-      return JSON.stringify({ error: `Unknown tool: ${toolCall.function.name}` });
+type Intent = 'search_menu' | 'get_categories' | 'get_popular_items' | 'get_store_info' | 'general_chat';
+
+function detectIntents(userMessage: string): Intent[] {
+  const msg = userMessage.toLowerCase();
+  const intents: Intent[] = [];
+
+  // Search menu intent — specific product/ingredient/flavor mentions
+  const searchTerms = [
+    'bubble tea', 'boba', 'milk tea', 'oolong', 'matcha', 'taro', 'mango', 'passion',
+    'lychee', 'strawberry', 'peach', 'jasmine', 'green tea', 'black tea', 'coffee',
+    'latte', 'mochi', 'chicken', 'noodle', 'rice', 'croissant', 'salad', 'sandwich',
+    'waffle', 'pancake', 'egg', 'chocolate', 'vanilla', 'caramel', 'oreo', 'cheese',
+    'fruit', 'smoothie', 'frappe', 'cold', 'hot', 'iced', 'warm', 'drink', 'food',
+    'snack', 'dessert', 'sweet', 'spicy', 'vegan', 'vegetarian', 'non-veg', 'nonveg',
+    'falooda', 'kung fu', 'popcorn', 'drumstick', 'cutlet', 'biryani', 'noodles',
+    'bread', 'toast', 'tea', 'beverages', 'lavazza',
+  ];
+  if (searchTerms.some(term => msg.includes(term))) {
+    intents.push('search_menu');
   }
+
+  // Popular items intent
+  const popularTerms = ['popular', 'best', 'recommend', 'suggestion', 'top', 'favourite', 'favorite', 'must try', 'must-try', 'bestseller', 'best seller', 'what should i', 'what do you suggest'];
+  if (popularTerms.some(term => msg.includes(term))) {
+    intents.push('get_popular_items');
+  }
+
+  // Categories intent
+  const categoryTerms = ['menu', 'categories', 'category', 'what do you have', 'what do you serve', 'what\'s available', 'browse', 'options', 'selection', 'full menu', 'show me'];
+  if (categoryTerms.some(term => msg.includes(term))) {
+    intents.push('get_categories');
+  }
+
+  // Store info intent
+  const storeTerms = ['location', 'address', 'where', 'hours', 'open', 'close', 'delivery', 'deliver', 'pickup', 'pick up', 'promotion', 'promo', 'discount', 'offer', 'coupon', 'code', 'loyalty', 'stamp', 'reward', 'allergen', 'allergy', 'allergic', 'gluten', 'nut', 'dairy', 'store', 'branch', 'outlet', 'contact', 'phone', 'call'];
+  if (storeTerms.some(term => msg.includes(term))) {
+    intents.push('get_store_info');
+  }
+
+  // Default to general chat if no specific intent detected
+  if (intents.length === 0) {
+    intents.push('general_chat');
+  }
+
+  return intents;
+}
+
+function extractSearchQuery(userMessage: string): string {
+  const msg = userMessage.toLowerCase();
+  // Remove common filler words
+  let cleaned = msg.replace(/\b(do you have|can i get|i want|i'd like|show me|what about|tell me about|any|some|the|a|an|is there|are there|looking for|find|search|what|your|most|best|good)\b/g, '').trim();
+  // Remove punctuation
+  cleaned = cleaned.replace(/[?!.,;:]+/g, '').trim();
+  // Remove extra whitespace
+  cleaned = cleaned.replace(/\s+/g, ' ').trim();
+  return cleaned || userMessage;
 }
 
 // ─── System Prompt ──────────────────────────────────────────────────────────
@@ -361,7 +220,7 @@ const SYSTEM_PROMPT = `You are Maami Bot 🧋, the friendly ordering assistant f
 4. **Answer questions** — store locations, hours, delivery info, promotions, loyalty program, allergens
 
 ## Important Rules
-- ALWAYS use the tools to look up real menu data — never make up products or prices
+- Use ONLY the data provided in the context sections below — never make up products or prices
 - When showing products, include the price in ₹ (Indian Rupees)
 - Sizes are: Petite, Regular, Large (not all products have all sizes)
 - For bubble tea: customers can choose sugar level (0%, 25%, 50%, 75%, 100%) and ice level (No Ice, Less Ice, Regular Ice)
@@ -383,70 +242,98 @@ When greeting, offer 2-3 quick options like:
 - Use bullet points for lists
 - Keep responses under 200 words unless the customer asks for detailed info`;
 
-// ─── Main Chat Function ─────────────────────────────────────────────────────
+// ─── Main Chat Function ────────────────────────────────────────────────────
 
 export async function chatWithBot(
   conversationHistory: Array<{ role: string; content: string }>
 ): Promise<string> {
-  // Build messages array with system prompt
+  // Get the latest user message for intent detection
+  const lastUserMessage = [...conversationHistory].reverse().find(m => m.role === 'user')?.content || '';
+
+  console.log('[Chatbot] User message:', lastUserMessage);
+
+  // Detect intents from the user message
+  const intents = detectIntents(lastUserMessage);
+  console.log('[Chatbot] Detected intents:', intents);
+
+  // Pre-fetch relevant data based on detected intents
+  const contextParts: string[] = [];
+
+  try {
+    for (const intent of intents) {
+      switch (intent) {
+        case 'search_menu': {
+          const query = extractSearchQuery(lastUserMessage);
+          console.log('[Chatbot] Search query:', query);
+          const results = await searchMenu(query);
+          if (results.length > 0) {
+            contextParts.push(`\n## MENU SEARCH RESULTS for "${query}"\n${JSON.stringify(results, null, 2)}`);
+          } else {
+            contextParts.push(`\n## MENU SEARCH for "${query}"\nNo products found matching this query. Suggest the customer browse the menu page or try different keywords.`);
+          }
+          break;
+        }
+        case 'get_categories': {
+          const cats = await getCategories();
+          contextParts.push(`\n## MENU CATEGORIES\n${JSON.stringify(cats, null, 2)}`);
+          break;
+        }
+        case 'get_popular_items': {
+          const popular = await getPopularItems();
+          contextParts.push(`\n## POPULAR ITEMS\n${JSON.stringify(popular, null, 2)}`);
+          break;
+        }
+        case 'get_store_info': {
+          const info = getStoreInfo();
+          contextParts.push(`\n## STORE INFORMATION\n${JSON.stringify(info, null, 2)}`);
+          break;
+        }
+        case 'general_chat':
+          // No extra data needed for general chat
+          break;
+      }
+    }
+  } catch (err) {
+    console.error('[Chatbot] Error fetching context data:', err);
+    // Continue with whatever context we have
+  }
+
+  console.log('[Chatbot] Calling LLM with', contextParts.length, 'context parts');
+
+  // Build the system prompt with injected context
+  let fullSystemPrompt = SYSTEM_PROMPT;
+  if (contextParts.length > 0) {
+    fullSystemPrompt += '\n\n# CONTEXT DATA (use this to answer the customer)\n' + contextParts.join('\n');
+  }
+
+  // Build messages for LLM (no tools — just direct text response)
   const messages: Message[] = [
-    { role: 'system', content: SYSTEM_PROMPT },
+    { role: 'system', content: fullSystemPrompt },
     ...conversationHistory.map(msg => ({
       role: msg.role as 'user' | 'assistant',
       content: msg.content,
     })),
   ];
 
-  // First LLM call — may return tool calls
-  let response = await invokeLLM({
-    messages,
-    tools: chatbotTools,
-    tool_choice: 'auto',
-  });
+  try {
+    const response = await invokeLLM({ messages });
 
-  let assistantMessage = response.choices[0]?.message;
-
-  // Handle tool calls (up to 3 rounds to prevent infinite loops)
-  let rounds = 0;
-  while (assistantMessage?.tool_calls && assistantMessage.tool_calls.length > 0 && rounds < 3) {
-    rounds++;
-
-    // Add assistant message with tool calls to conversation
-    messages.push({
-      role: 'assistant',
-      content: assistantMessage.content || '',
-    });
-
-    // Execute each tool call and add results
-    for (const toolCall of assistantMessage.tool_calls) {
-      const toolResult = await executeToolCall(toolCall);
-      messages.push({
-        role: 'tool',
-        content: toolResult,
-        tool_call_id: toolCall.id,
-      });
+    const content = response?.choices?.[0]?.message?.content;
+    if (typeof content === 'string' && content.trim().length > 0) {
+      return content;
+    }
+    if (Array.isArray(content)) {
+      const text = content
+        .filter((c): c is { type: 'text'; text: string } => c.type === 'text')
+        .map(c => c.text)
+        .join('\n');
+      if (text.trim().length > 0) return text;
     }
 
-    // Call LLM again with tool results
-    response = await invokeLLM({
-      messages,
-      tools: chatbotTools,
-      tool_choice: 'auto',
-    });
-
-    assistantMessage = response.choices[0]?.message;
+    console.error('[Chatbot] LLM returned empty content:', JSON.stringify(response?.choices?.[0]?.message));
+    return 'Sorry, I had trouble processing that. Could you try asking in a different way?';
+  } catch (err) {
+    console.error('[Chatbot] LLM invocation error:', err);
+    return 'Sorry, I\'m having trouble right now. Please try again in a moment, or browse our menu directly!';
   }
-
-  // Extract the final text response
-  const content = assistantMessage?.content;
-  if (typeof content === 'string') {
-    return content;
-  }
-  if (Array.isArray(content)) {
-    return content
-      .filter((c): c is { type: 'text'; text: string } => c.type === 'text')
-      .map(c => c.text)
-      .join('\n');
-  }
-  return 'Sorry, I had trouble processing that. Could you try again?';
 }
