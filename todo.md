@@ -1787,3 +1787,7 @@ Orders fixed:
 
 - [x] Add red pottu (bindi) on her forehead
 - [x] Ensure image is small enough to fit nicely at the bottom right corner
+
+## Chatbot Greeting - Add Tamil Vanakkam (Feb 11)
+
+- [x] Add வணக்கம் (Vanakkam) alongside Nǐ hǎo in the speech bubble

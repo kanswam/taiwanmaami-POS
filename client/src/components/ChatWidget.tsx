@@ -202,7 +202,7 @@ export function ChatWidget() {
         >
           <div className="bg-white rounded-2xl shadow-xl px-4 py-3 max-w-[200px] relative border border-gray-100">
             <p className="text-sm text-gray-800 font-medium leading-snug">
-              Nǐ hǎo! 👋 Need help with our menu?
+              Nǐ hǎo! வணக்கம்! 👋 Need help with our menu?
             </p>
             {/* Speech bubble tail */}
             <div className="absolute -bottom-2 right-8 w-4 h-4 bg-white border-r border-b border-gray-100 transform rotate-45" />
