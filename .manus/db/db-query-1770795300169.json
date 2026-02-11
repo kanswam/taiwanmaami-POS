@@ -1,0 +1,66 @@
+{
+  "query": "SELECT w.id, w.slug, w.title, w.shortDescription, w.location, w.duration, w.ticketPrice, w.maxCapacity, w.ticketsSold, wd.sessionDate, wd.startTime, wd.endTime FROM workshops w LEFT JOIN workshop_dates wd ON w.id = wd.workshopId WHERE w.status = 'published';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT w.id, w.slug, w.title, w.shortDescription, w.location, w.duration, w.ticketPrice, w.maxCapacity, w.ticketsSold, wd.sessionDate, wd.startTime, wd.endTime FROM workshops w LEFT JOIN workshop_dates wd ON w.id = wd.workshopId WHERE w.status = 'published';",
+  "rows": [
+    {
+      "id": "60001",
+      "slug": "biang-biang-noodle-workshop-kung-fu-tea-experience-1768478458591",
+      "title": "Biang Biang Noodle Workshop + Kung Fu Tea Experience ",
+      "shortDescription": "",
+      "location": "New No. 29 Burkit Road T nagar Chennai",
+      "duration": "3 hours",
+      "ticketPrice": "320000",
+      "maxCapacity": "8",
+      "ticketsSold": "0",
+      "sessionDate": "2026-02-07",
+      "startTime": "11:00",
+      "endTime": "14:00"
+    },
+    {
+      "id": "60001",
+      "slug": "biang-biang-noodle-workshop-kung-fu-tea-experience-1768478458591",
+      "title": "Biang Biang Noodle Workshop + Kung Fu Tea Experience ",
+      "shortDescription": "",
+      "location": "New No. 29 Burkit Road T nagar Chennai",
+      "duration": "3 hours",
+      "ticketPrice": "320000",
+      "maxCapacity": "8",
+      "ticketsSold": "0",
+      "sessionDate": "2026-02-14",
+      "startTime": "11:00",
+      "endTime": "14:00"
+    },
+    {
+      "id": "60001",
+      "slug": "biang-biang-noodle-workshop-kung-fu-tea-experience-1768478458591",
+      "title": "Biang Biang Noodle Workshop + Kung Fu Tea Experience ",
+      "shortDescription": "",
+      "location": "New No. 29 Burkit Road T nagar Chennai",
+      "duration": "3 hours",
+      "ticketPrice": "320000",
+      "maxCapacity": "8",
+      "ticketsSold": "0",
+      "sessionDate": "2026-02-21",
+      "startTime": "11:00",
+      "endTime": "14:00"
+    },
+    {
+      "id": "60001",
+      "slug": "biang-biang-noodle-workshop-kung-fu-tea-experience-1768478458591",
+      "title": "Biang Biang Noodle Workshop + Kung Fu Tea Experience ",
+      "shortDescription": "",
+      "location": "New No. 29 Burkit Road T nagar Chennai",
+      "duration": "3 hours",
+      "ticketPrice": "320000",
+      "maxCapacity": "8",
+      "ticketsSold": "0",
+      "sessionDate": "2026-02-28",
+      "startTime": "11:00",
+      "endTime": "14:00"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tslug\ttitle\tshortDescription\tlocation\tduration\tticketPrice\tmaxCapacity\tticketsSold\tsessionDate\tstartTime\tendTime\n60001\tbiang-biang-noodle-workshop-kung-fu-tea-experience-1768478458591\tBiang Biang Noodle Workshop + Kung Fu Tea Experience \t\tNew No. 29 Burkit Road T nagar Chennai\t3 hours\t320000\t8\t0\t2026-02-07\t11:00\t14:00\n60001\tbiang-biang-noodle-workshop-kung-fu-tea-experience-1768478458591\tBiang Biang Noodle Workshop + Kung Fu Tea Experience \t\tNew No. 29 Burkit Road T nagar Chennai\t3 hours\t320000\t8\t0\t2026-02-14\t11:00\t14:00\n60001\tbiang-biang-noodle-workshop-kung-fu-tea-experience-1768478458591\tBiang Biang Noodle Workshop + Kung Fu Tea Experience \t\tNew No. 29 Burkit Road T nagar Chennai\t3 hours\t320000\t8\t0\t2026-02-21\t11:00\t14:00\n60001\tbiang-biang-noodle-workshop-kung-fu-tea-experience-1768478458591\tBiang Biang Noodle Workshop + Kung Fu Tea Experience \t\tNew No. 29 Burkit Road T nagar Chennai\t3 hours\t320000\t8\t0\t2026-02-28\t11:00\t14:00\n",
+  "stderr": "",
+  "execution_time_ms": 56
+}

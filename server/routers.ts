@@ -8593,7 +8593,7 @@ export const appRouter = router({
       }))
       .mutation(async ({ input }) => {
         const response = await chatWithBot(input.messages);
-        return { reply: response };
+        return response;
       }),
   }),
 });

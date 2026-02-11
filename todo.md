@@ -1719,3 +1719,23 @@ Orders fixed:
 ## Add Blog to Main Navigation (Feb 11)
 
 - [x] Add "Blog" link to the main navigation header (desktop and mobile)
+
+## Chatbot Enhancements (Feb 11)
+
+- [x] Add workshop/event data fetching to chatbot with booking links
+- [x] Direct customers to specific menu category pages when asking about products (e.g., /menu?category=food for chicken)
+- [x] Reference blog posts when customers ask about bubble tea with brief description and link
+- [x] Test all new chatbot scenarios (workshops, product links, blog references)
+
+## Chatbot Enhancement - Product Photos & Rich Cards (Feb 11)
+
+- [x] Enhance chatbot backend to return structured product data (images, prices, links)
+- [x] Add workshop/event detection and data fetching to chatbot
+- [x] Add blog post integration to chatbot for bubble tea topics
+- [x] Add direct menu category links in chatbot responses
+- [x] Update chatbot tRPC response to include product cards alongside text reply
+- [x] Build rich product card UI in chat widget (photo, name, price, order link)
+- [x] Build workshop card UI in chat widget (title, date, price, book link)
+- [x] Build blog post card UI in chat widget (title, excerpt, read link)
+- [x] Update system prompt to instruct LLM to reference products by name for card matching
+- [x] Write vitest tests for enhanced chatbot (24 tests passing)

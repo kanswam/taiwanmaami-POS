@@ -1,0 +1,20 @@
+{
+  "query": "SELECT id, slug, title, shortDescription, status, location, duration, ticketPrice FROM workshops WHERE status = 'published' LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT id, slug, title, shortDescription, status, location, duration, ticketPrice FROM workshops WHERE status = 'published' LIMIT 10;",
+  "rows": [
+    {
+      "id": "60001",
+      "slug": "biang-biang-noodle-workshop-kung-fu-tea-experience-1768478458591",
+      "title": "Biang Biang Noodle Workshop + Kung Fu Tea Experience ",
+      "shortDescription": "",
+      "status": "published",
+      "location": "New No. 29 Burkit Road T nagar Chennai",
+      "duration": "3 hours",
+      "ticketPrice": "320000"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tslug\ttitle\tshortDescription\tstatus\tlocation\tduration\tticketPrice\n60001\tbiang-biang-noodle-workshop-kung-fu-tea-experience-1768478458591\tBiang Biang Noodle Workshop + Kung Fu Tea Experience \t\tpublished\tNew No. 29 Burkit Road T nagar Chennai\t3 hours\t320000\n",
+  "stderr": "",
+  "execution_time_ms": 112
+}
