@@ -1755,3 +1755,9 @@ Orders fixed:
 - [x] Make product cards static (show photo only, no click navigation)
 - [x] Improve search relevance - match whole phrases before individual words
 - [x] Add fallback intent detection for query patterns ("do you have X?", "tell me about X")
+
+## Bug Fix - Chatbot Says "Tap" on Static Cards (Feb 11)
+
+- [x] Fix system prompt to tell LLM that product cards are static display-only (not tappable)
+- [x] LLM should NOT say "tap on any mochi" or "click to add to cart" since cards are just photos
+- [x] LLM should instead direct customers to visit the Menu page to order

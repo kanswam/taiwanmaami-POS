@@ -538,7 +538,8 @@ const SYSTEM_PROMPT = `You are Maami Bot 🧋, the friendly ordering assistant f
 - Sizes are: Petite, Regular, Large (not all products have all sizes)
 - For bubble tea: customers can choose sugar level (0%, 25%, 50%, 75%, 100%) and ice level (No Ice, Less Ice, Regular Ice)
 - Mochis are sold in pairs (2 pieces) for delivery/pickup
-- When a customer seems ready to order, guide them to click on the product in the menu or tell them they can browse the menu page to add items to their cart
+- When a customer seems ready to order, guide them to visit the Menu page at /menu to browse and add items to their cart
+- IMPORTANT: Product photo cards shown below your messages are STATIC DISPLAY ONLY — customers CANNOT tap, click, or interact with them. NEVER say "tap on", "click on", "select", or "choose from the cards below". Instead, say something like "Here are some options from our menu!" or "Check out these items!" and direct them to the Menu page to order.
 - If asked about something you don't know, be honest and suggest they contact the store
 - Keep responses SHORT and scannable — use bullet points for lists of products
 - When listing products, show name, a brief description, and price range
@@ -590,7 +591,7 @@ export async function chatWithBot(
           console.log('[Chatbot] Search query:', query);
           const { results, cards } = await searchMenu(query);
           if (results.length > 0) {
-            contextParts.push(`\n## MENU SEARCH RESULTS for "${query}"\n${JSON.stringify(results, null, 2)}\n\nNote: Product photo cards are shown automatically below your message. Just mention products by name.`);
+            contextParts.push(`\n## MENU SEARCH RESULTS for "${query}"\n${JSON.stringify(results, null, 2)}\n\nNote: Product photo cards are shown as STATIC DISPLAY ONLY below your message. Customers CANNOT tap or click them. Just mention products by name and direct customers to the Menu page to order.`);
             allCards.push(...cards);
           } else {
             contextParts.push(`\n## MENU SEARCH for "${query}"\nNo products found matching this query. Suggest the customer browse the menu page or try different keywords.`);
@@ -605,7 +606,7 @@ export async function chatWithBot(
         }
         case 'get_popular_items': {
           const { results, cards } = await getPopularItems();
-          contextParts.push(`\n## POPULAR ITEMS\n${JSON.stringify(results, null, 2)}\n\nNote: Product photo cards are shown automatically below your message. Just mention products by name.`);
+          contextParts.push(`\n## POPULAR ITEMS\n${JSON.stringify(results, null, 2)}\n\nNote: Product photo cards are shown as STATIC DISPLAY ONLY below your message. Customers CANNOT tap or click them. Just mention products by name and direct customers to the Menu page to order.`);
           allCards.push(...cards);
           break;
         }
