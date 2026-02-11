@@ -1813,3 +1813,17 @@ Orders fixed:
 - [x] Fix category links using slug format instead of display name
 - [x] Add quick-reply chips after bot responses (Bubble Tea, Mochis, Food, Store Hours, Workshops, Delivery Info)
 - [x] Add inline menu links in bot text (system prompt now includes exact slug-based links)
+
+## Bug Fix - Chatbot Hallucinating Fake Store Address (Feb 11)
+
+- [x] Fix chatbot giving fake Anna Nagar address (W-122, 3rd Ave, W Block, Anna Nagar)
+  - Root cause: old address data (64 GN Chetty Rd) + weak guardrails let LLM hallucinate
+  - Fixed store data to exact addresses: New No. 29 Burkit Road + Palladium Mall Velachery
+  - Fixed hours: T Nagar 12PM-12AM, Palladium 10AM-10PM
+  - Fixed phone numbers per outlet
+- [x] Harden system prompt to ONLY allow the two real locations
+  - Added CRITICAL RULES section with explicit anti-hallucination instructions
+  - Added blacklist of neighborhoods (Anna Nagar, Adyar, Mylapore) to never mention
+- [x] Add explicit instruction: NEVER invent or guess addresses
+- [x] Test with Tamil location query to verify fix (responds correctly in Tamil)
+- [x] Test with "Anna Nagar branch?" query — correctly says no branch there

@@ -416,28 +416,33 @@ async function getBlogPosts(): Promise<{ data: any[]; cards: BlogCard[] }> {
 function getStoreInfo(): Record<string, any> {
   return {
     locations: {
+      IMPORTANT_NOTE: 'Taiwan Maami has EXACTLY 2 outlets. Do NOT mention any other locations. NEVER make up addresses.',
       stores: [
         {
-          name: 'Taiwan Maami - T. Nagar',
-          address: '64, G N Chetty Rd, T. Nagar, Chennai, Tamil Nadu 600017',
+          name: 'Moutan by Taiwan Maami - T. Nagar',
+          address: 'New No. 29, Burkit Road, T. Nagar, Chennai, Tamil Nadu 600017',
           phone: '+91 91505 70557',
-          mapLink: 'https://maps.google.com/?q=Taiwan+Maami+T+Nagar',
+          hours: '12:00 PM to 12:00 AM (Midnight), 7 days a week',
+          mapLink: 'https://maps.google.com/?q=Moutan+Taiwan+Maami+T+Nagar+Burkit+Road',
         },
         {
-          name: 'Taiwan Maami - Velachery (Palladium)',
-          address: 'Palladium Mall, 1, Velachery Main Rd, Velachery, Chennai, Tamil Nadu 600042',
-          phone: '+91 91505 70557',
-          mapLink: 'https://maps.google.com/?q=Taiwan+Maami+Velachery',
+          name: 'Taiwan Maami - Palladium Mall, Velachery',
+          address: 'First Floor, Palladium Mall, 1, Velachery Main Rd, Velachery, Chennai, Tamil Nadu 600042',
+          phone: '+91 89259 14303',
+          hours: '10:00 AM to 10:00 PM, 7 days a week',
+          mapLink: 'https://maps.google.com/?q=Taiwan+Maami+Palladium+Mall+Velachery',
         },
       ],
     },
     hours: {
-      message: 'Our stores are typically open from 11:00 AM to 10:00 PM, 7 days a week. Hours may vary on holidays. Please call the store to confirm.',
+      tNagar: 'T. Nagar (Moutan): 12:00 PM to 12:00 AM (Midnight), 7 days a week',
+      velachery: 'Palladium Mall, Velachery: 10:00 AM to 10:00 PM, 7 days a week',
+      note: 'Hours may vary on holidays. Please call the store to confirm.',
     },
     delivery: {
-      message: 'We offer delivery within a 15km radius of our stores. Flat delivery fee of ₹100 on all orders. Free delivery on orders above ₹2500. You can order through our website for delivery or pickup.',
+      message: 'We offer delivery within 10km of T. Nagar. Flat delivery fee of ₹100 on all orders. Free delivery on orders above ₹2500. You can order through our website for delivery or pickup.',
       minimumOrder: 'No minimum order for delivery.',
-      paymentOptions: ['Online Payment (Razorpay)', 'Cash at Pickup (for pickup orders only)'],
+      paymentOptions: ['Online Payment (Razorpay)'],
     },
     promotions: {
       current: [
@@ -454,7 +459,7 @@ function getStoreInfo(): Record<string, any> {
       message: 'Our products may contain milk, soy, gluten, eggs, and nuts. Mochi products contain glutinous rice flour. Our chicken products are Non-Veg. Please check individual product labels for dietary information (Vegetarian, Vegan, Contains Egg, Non-Veg). If you have specific allergies, please inform our staff.',
     },
     general: {
-      about: 'Taiwan Maami is Chennai\'s premier Taiwanese bubble tea and street food destination. We serve authentic Taiwanese beverages including bubble tea, oolong tea, matcha, taro drinks, and traditional Asian street food and mochis. We have two locations in Chennai - T. Nagar and Velachery (Palladium Mall).',
+      about: 'Taiwan Maami is Chennai\'s premier Taiwanese bubble tea and street food destination. We serve authentic Taiwanese beverages including bubble tea, oolong tea, matcha, taro drinks, and traditional Asian street food and mochis. We have EXACTLY two locations in Chennai - Moutan by Taiwan Maami at New No. 29, Burkit Road, T. Nagar AND Taiwan Maami at First Floor, Palladium Mall, Velachery. NO other locations exist.',
       website: 'https://www.taiwanmaami.com',
     },
   };
@@ -576,9 +581,11 @@ const SYSTEM_PROMPT = `You are Maami Bot 🧋, the friendly ordering assistant f
 5. **Share workshop info** — upcoming cooking workshops, dates, prices, and booking links
 6. **Share blog content** — interesting articles about bubble tea, mochis, and Taiwanese food culture
 
-## Important Rules
-- Use ONLY the data provided in the context sections below — never make up products, prices, or dates
+## CRITICAL RULES — NEVER VIOLATE THESE
+- Use ONLY the data provided in the context sections below — NEVER make up products, prices, dates, or addresses
 - For workshops: use the EXACT date and time provided in the context — NEVER guess or infer dates
+- For store locations: Taiwan Maami has EXACTLY 2 outlets — T. Nagar (Burkit Road) and Palladium Mall (Velachery). NEVER mention any other location. NEVER invent addresses. If you don't have the exact address from the context data, say "Please check our Locations page at /locations for the full address."
+- NEVER mention Anna Nagar, Adyar, Mylapore, or any other Chennai neighborhood as a store location
 - When showing products, include the price in ₹ (Indian Rupees)
 - Sizes are: Petite, Regular, Large (not all products have all sizes)
 - For bubble tea: customers can choose sugar level (0%, 25%, 50%, 75%, 100%) and ice level (No Ice, Less Ice, Regular Ice)
