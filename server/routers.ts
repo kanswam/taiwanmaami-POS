@@ -14,6 +14,7 @@ import { generateOrderNumber, calculateGst } from "@shared/types";
 import { outletProducts, loyaltyRewards, stampTransactions, guestOrders, reviews, kotQueue, receiptQueue, productAuditLog, categoryAuditLog, complaints, eventInquiries, eventOrders, eventOrderItems, workshops, workshopBookings, workshopDates, workshopWaitlist, backupLogs, blogArticles, deliverySalesUploads, deliveryItemSales, pageviews as pageviewsTable } from "../drizzle/schema";
 import { ENV } from './_core/env';
 import { wholesaleRouter } from './wholesaleRouter';
+import { chatWithBot } from './chatbot';
 import { notifyOwner } from './_core/notification';
 
 // Admin procedure - only allows admin role
@@ -8580,6 +8581,21 @@ export const appRouter = router({
 
   // Wholesale B2B Portal
   wholesale: wholesaleRouter,
+
+  // AI Chatbot Ordering Assistant
+  chatbot: router({
+    chat: publicProcedure
+      .input(z.object({
+        messages: z.array(z.object({
+          role: z.string(),
+          content: z.string(),
+        })),
+      }))
+      .mutation(async ({ input }) => {
+        const response = await chatWithBot(input.messages);
+        return { reply: response };
+      }),
+  }),
 });
 
 export type AppRouter = typeof appRouter;

@@ -1704,3 +1704,14 @@ Orders fixed:
 ## Remove WhatsApp Button (Feb 10)
 
 - [x] Remove "Order via WhatsApp" floating button from the website
+
+## LLM-Powered Chatbot Ordering Assistant (Feb 11)
+
+- [x] Audit existing AIChatBox component, cart context, and invokeLLM
+- [x] Build server-side chatbot tRPC endpoint with system prompt
+- [x] Add LLM tool calls: searchMenu, getProductDetails, getCategories, getPopularItems, getStoreInfo
+- [x] Build floating chat widget button (bottom-right, Taiwan Maami branded)
+- [x] Integrate chat with AIChatBox component and tRPC chatbot endpoint
+- [x] Handle FAQs via LLM tool calls (delivery, hours, allergens, loyalty, promos, locations)
+- [x] Write vitest tests for chatbot endpoint (11 tests passing)
+- [x] Verify chatbot widget renders on site with zero TS errors
