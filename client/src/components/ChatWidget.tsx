@@ -6,62 +6,6 @@ import { cn } from '@/lib/utils';
 
 const GREETING_LADY_URL = 'https://files.manuscdn.com/user_upload_by_module/session_file/114675165/cCIiqSZESwdbtugN.png';
 
-// Rich card types matching server response
-type ProductCard = {
-  type: 'product';
-  name: string;
-  chineseName?: string | null;
-  description?: string | null;
-  imageUrl?: string | null;
-  priceRegular?: number | null;
-  priceLarge?: number | null;
-  pricePetite?: number | null;
-  isVegetarian?: boolean;
-  isNonVeg?: boolean;
-  category: string;
-  categorySlug: string;
-  subcategory: string;
-  slug: string;
-};
-
-type WorkshopCard = {
-  type: 'workshop';
-  title: string;
-  description?: string | null;
-  imageUrl?: string | null;
-  date: string;
-  time: string;
-  price: number;
-  earlyBirdPrice?: number | null;
-  venue?: string | null;
-  availableSeats: number;
-  isSoldOut: boolean;
-  link: string;
-};
-
-type BlogCard = {
-  type: 'blog';
-  title: string;
-  excerpt?: string | null;
-  imageUrl?: string | null;
-  slug: string;
-  link: string;
-};
-
-type CategoryLink = {
-  type: 'category_link';
-  name: string;
-  slug: string;
-  link: string;
-};
-
-type RichCard = ProductCard | WorkshopCard | BlogCard | CategoryLink;
-
-// Extended message type that includes cards
-export type ChatMessage = Message & {
-  cards?: RichCard[];
-};
-
 const SUGGESTED_PROMPTS = [
   "What's popular?",
   "Show me iced teas",
@@ -71,7 +15,7 @@ const SUGGESTED_PROMPTS = [
 
 export function ChatWidget() {
   const [isOpen, setIsOpen] = useState(false);
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [hasNewMessage, setHasNewMessage] = useState(false);
   const [hasInteracted, setHasInteracted] = useState(false);
   const [showGreeting, setShowGreeting] = useState(false);
@@ -83,7 +27,6 @@ export function ChatWidget() {
       setMessages(prev => [...prev, {
         role: 'assistant' as const,
         content: data.reply,
-        cards: data.cards || [],
       }]);
       if (!isOpen) {
         setHasNewMessage(true);
@@ -101,7 +44,7 @@ export function ChatWidget() {
   const handleSendMessage = useCallback((content: string) => {
     if (!hasInteracted) setHasInteracted(true);
     
-    const userMessage: ChatMessage = { role: 'user', content };
+    const userMessage: Message = { role: 'user', content };
     const newMessages = [...messages, userMessage];
     setMessages(newMessages);
 

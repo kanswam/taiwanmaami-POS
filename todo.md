@@ -1791,3 +1791,10 @@ Orders fixed:
 ## Chatbot Greeting - Add Tamil Vanakkam (Feb 11)
 
 - [x] Add வணக்கம் (Vanakkam) alongside Nǐ hǎo in the speech bubble
+
+## Remove Static Product Cards & Add Typing Animation (Feb 11)
+
+- [x] Remove static product cards from chat UI (ProductCardInline, WorkshopCardInline, BlogCardInline, CategoryPill)
+- [x] Remove cards from backend chatbot response (no longer needed)
+- [x] Add typing animation effect — bot response appears character by character
+- [x] Natural typing speed with slight randomness to feel human

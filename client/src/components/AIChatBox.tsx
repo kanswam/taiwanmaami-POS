@@ -2,10 +2,9 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
-import { Loader2, Send, User, Sparkles, ExternalLink, Calendar, BookOpen, ArrowRight, Drumstick } from "lucide-react";
-import { useState, useEffect, useRef } from "react";
+import { Loader2, Send, User, Sparkles } from "lucide-react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Streamdown } from "streamdown";
-import { useLocation } from "wouter";
 
 /**
  * Message type matching server-side LLM Message interface
@@ -13,7 +12,6 @@ import { useLocation } from "wouter";
 export type Message = {
   role: "system" | "user" | "assistant";
   content: string;
-  cards?: any[];
 };
 
 export type AIChatBoxProps = {
@@ -27,199 +25,75 @@ export type AIChatBoxProps = {
   suggestedPrompts?: string[];
 };
 
-// ─── Product Card Component ─────────────────────────────────────────────
+// ─── Typing Animation Hook ─────────────────────────────────────────────
 
-function ProductCardInline({ card }: { card: any }) {
-  const price = card.pricePetite || card.priceRegular || card.priceLarge || 0;
-  const priceDisplay = price > 0 ? `₹${(price / 100).toFixed(0)}` : '';
-  const maxPrice = card.priceLarge || card.priceRegular || 0;
-  const priceRange = maxPrice > price && maxPrice > 0
-    ? `${priceDisplay} - ₹${(maxPrice / 100).toFixed(0)}`
-    : priceDisplay;
+function useTypingAnimation(fullText: string, isActive: boolean) {
+  const [displayedText, setDisplayedText] = useState('');
+  const [isTyping, setIsTyping] = useState(false);
+  const indexRef = useRef(0);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Build Cloudinary thumbnail URL (200px width for chat cards)
-  const thumbUrl = card.imageUrl
-    ? card.imageUrl.replace('/upload/', '/upload/w_200,h_200,c_fill,q_auto,f_auto/')
-    : null;
+  useEffect(() => {
+    if (!isActive || !fullText) {
+      setDisplayedText(fullText);
+      setIsTyping(false);
+      return;
+    }
 
-  return (
-    <div
-      className="flex items-center gap-3 p-2 rounded-lg bg-background/80 text-left w-full border border-border/30"
-    >
-      {thumbUrl ? (
-        <img
-          src={thumbUrl}
-          alt={card.name}
-          className="w-14 h-14 rounded-lg object-cover shrink-0"
-          loading="lazy"
-        />
-      ) : (
-        <div className="w-14 h-14 rounded-lg bg-muted flex items-center justify-center shrink-0">
-          <span className="text-2xl">🧋</span>
-        </div>
-      )}
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-1.5">
-          <span className="font-medium text-xs leading-tight truncate">{card.name}</span>
-          {card.isNonVeg && (
-            <span className="shrink-0 w-3.5 h-3.5 rounded-sm bg-red-600 flex items-center justify-center">
-              <Drumstick className="w-2 h-2 text-white" />
-            </span>
-          )}
-        </div>
-        {card.chineseName && (
-          <span className="text-[10px] text-muted-foreground block truncate">{card.chineseName}</span>
-        )}
-        <div className="flex items-center justify-between mt-0.5">
-          <span className="text-xs font-semibold text-[#c0392b]">{priceRange}</span>
-        </div>
-      </div>
-    </div>
-  );
+    // Reset for new text
+    indexRef.current = 0;
+    setDisplayedText('');
+    setIsTyping(true);
+
+    const typeNextChunk = () => {
+      if (indexRef.current >= fullText.length) {
+        setIsTyping(false);
+        return;
+      }
+
+      // Type 1-3 characters at a time for natural feel
+      const chunkSize = Math.random() < 0.3 ? 1 : Math.random() < 0.6 ? 2 : 3;
+      const nextIndex = Math.min(indexRef.current + chunkSize, fullText.length);
+      indexRef.current = nextIndex;
+      setDisplayedText(fullText.slice(0, nextIndex));
+
+      // Variable delay: slower after punctuation, faster for regular chars
+      const lastChar = fullText[nextIndex - 1];
+      let delay: number;
+      if (lastChar === '.' || lastChar === '!' || lastChar === '?') {
+        delay = 80 + Math.random() * 120; // pause after sentences
+      } else if (lastChar === ',' || lastChar === ';' || lastChar === ':') {
+        delay = 50 + Math.random() * 80; // slight pause after commas
+      } else if (lastChar === '\n') {
+        delay = 60 + Math.random() * 100; // pause at line breaks
+      } else {
+        delay = 15 + Math.random() * 30; // fast for regular chars
+      }
+
+      timerRef.current = setTimeout(typeNextChunk, delay);
+    };
+
+    // Small initial delay before typing starts
+    timerRef.current = setTimeout(typeNextChunk, 300);
+
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
+  }, [fullText, isActive]);
+
+  return { displayedText, isTyping };
 }
 
-// ─── Workshop Card Component ────────────────────────────────────────────
+// ─── Typing Message Component ──────────────────────────────────────────
 
-function WorkshopCardInline({ card }: { card: any }) {
-  const [, navigate] = useLocation();
-
-  return (
-    <button
-      onClick={() => navigate(card.link)}
-      className="flex items-center gap-3 p-2 rounded-lg bg-amber-50 hover:bg-amber-100/80 transition-colors text-left w-full border border-amber-200/50 cursor-pointer group"
-    >
-      {card.imageUrl ? (
-        <img
-          src={card.imageUrl.includes('/upload/') ? card.imageUrl.replace('/upload/', '/upload/w_120,h_120,c_fill,q_auto,f_auto/') : card.imageUrl}
-          alt={card.title}
-          className="w-14 h-14 rounded-lg object-cover shrink-0"
-          loading="lazy"
-        />
-      ) : (
-        <div className="w-14 h-14 rounded-lg bg-amber-100 flex items-center justify-center shrink-0">
-          <Calendar className="w-6 h-6 text-amber-600" />
-        </div>
-      )}
-      <div className="flex-1 min-w-0">
-        <span className="font-medium text-xs leading-tight line-clamp-1 text-amber-900">{card.title}</span>
-        <div className="flex items-center gap-2 mt-0.5">
-          <span className="text-[10px] text-amber-700">{card.date}</span>
-          <span className="text-[10px] text-amber-600">|</span>
-          <span className="text-[10px] text-amber-700">{card.time}</span>
-        </div>
-        <div className="flex items-center justify-between mt-0.5">
-          <span className="text-xs font-semibold text-amber-800">
-            {card.earlyBirdPrice ? `₹${card.earlyBirdPrice}` : `₹${card.price}`}
-            {card.isSoldOut && <span className="text-red-600 ml-1 font-bold">SOLD OUT</span>}
-          </span>
-          <span className="text-[10px] text-amber-600 flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-            Book <ArrowRight className="w-2.5 h-2.5" />
-          </span>
-        </div>
-      </div>
-    </button>
-  );
-}
-
-// ─── Blog Card Component ────────────────────────────────────────────────
-
-function BlogCardInline({ card }: { card: any }) {
-  const [, navigate] = useLocation();
+function TypingAssistantMessage({ content, isLatest }: { content: string; isLatest: boolean }) {
+  const { displayedText, isTyping } = useTypingAnimation(content, isLatest);
 
   return (
-    <button
-      onClick={() => navigate(card.link)}
-      className="flex items-center gap-3 p-2 rounded-lg bg-blue-50 hover:bg-blue-100/80 transition-colors text-left w-full border border-blue-200/50 cursor-pointer group"
-    >
-      {card.imageUrl ? (
-        <img
-          src={card.imageUrl}
-          alt={card.title}
-          className="w-14 h-14 rounded-lg object-cover shrink-0"
-          loading="lazy"
-        />
-      ) : (
-        <div className="w-14 h-14 rounded-lg bg-blue-100 flex items-center justify-center shrink-0">
-          <BookOpen className="w-6 h-6 text-blue-600" />
-        </div>
-      )}
-      <div className="flex-1 min-w-0">
-        <span className="font-medium text-xs leading-tight line-clamp-2 text-blue-900">{card.title}</span>
-        <span className="text-[10px] text-blue-600 flex items-center gap-0.5 mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
-          Read article <ArrowRight className="w-2.5 h-2.5" />
-        </span>
-      </div>
-    </button>
-  );
-}
-
-// ─── Category Link Component ────────────────────────────────────────────
-
-function CategoryLinkInline({ card }: { card: any }) {
-  const [, navigate] = useLocation();
-
-  return (
-    <button
-      onClick={() => navigate(card.link)}
-      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#c0392b]/10 hover:bg-[#c0392b]/20 text-[#c0392b] text-xs font-medium transition-colors cursor-pointer border border-[#c0392b]/20"
-    >
-      {card.name}
-      <ExternalLink className="w-3 h-3" />
-    </button>
-  );
-}
-
-// ─── Rich Cards Container ───────────────────────────────────────────────
-
-function RichCards({ cards }: { cards: any[] }) {
-  if (!cards || cards.length === 0) return null;
-
-  const productCards = cards.filter(c => c.type === 'product');
-  const workshopCards = cards.filter(c => c.type === 'workshop');
-  const blogCards = cards.filter(c => c.type === 'blog');
-  const categoryLinks = cards.filter(c => c.type === 'category_link');
-
-  return (
-    <div className="mt-2 space-y-2">
-      {/* Category links as pills */}
-      {categoryLinks.length > 0 && (
-        <div className="flex flex-wrap gap-1.5">
-          {categoryLinks.map((card, i) => (
-            <CategoryLinkInline key={`cat-${i}`} card={card} />
-          ))}
-        </div>
-      )}
-
-      {/* Product cards in a scrollable horizontal list or grid */}
-      {productCards.length > 0 && (
-        <div className="space-y-1.5">
-          {productCards.slice(0, 6).map((card, i) => (
-            <ProductCardInline key={`prod-${i}`} card={card} />
-          ))}
-          {productCards.length > 6 && (
-            <p className="text-[10px] text-muted-foreground text-center pt-1">
-              +{productCards.length - 6} more items — browse the menu for all options
-            </p>
-          )}
-        </div>
-      )}
-
-      {/* Workshop cards */}
-      {workshopCards.length > 0 && (
-        <div className="space-y-1.5">
-          {workshopCards.map((card, i) => (
-            <WorkshopCardInline key={`ws-${i}`} card={card} />
-          ))}
-        </div>
-      )}
-
-      {/* Blog cards */}
-      {blogCards.length > 0 && (
-        <div className="space-y-1.5">
-          {blogCards.map((card, i) => (
-            <BlogCardInline key={`blog-${i}`} card={card} />
-          ))}
-        </div>
+    <div className="prose prose-sm dark:prose-invert max-w-none">
+      <Streamdown>{displayedText}</Streamdown>
+      {isTyping && (
+        <span className="inline-block w-[2px] h-4 bg-foreground/60 ml-0.5 animate-pulse align-text-bottom" />
       )}
     </div>
   );
@@ -243,6 +117,9 @@ export function AIChatBox({
   const inputAreaRef = useRef<HTMLFormElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
+  // Track which message index is currently being typed
+  const [lastTypedIndex, setLastTypedIndex] = useState(-1);
+
   // Filter out system messages
   const displayMessages = messages.filter((msg) => msg.role !== "system");
 
@@ -262,8 +139,23 @@ export function AIChatBox({
     }
   }, []);
 
+  // Determine the latest assistant message index for typing animation
+  const latestAssistantIndex = (() => {
+    for (let i = displayMessages.length - 1; i >= 0; i--) {
+      if (displayMessages[i].role === 'assistant') return i;
+    }
+    return -1;
+  })();
+
+  // When a new assistant message appears, mark it for typing
+  useEffect(() => {
+    if (latestAssistantIndex >= 0 && latestAssistantIndex > lastTypedIndex) {
+      setLastTypedIndex(latestAssistantIndex);
+    }
+  }, [latestAssistantIndex, lastTypedIndex]);
+
   // Scroll to bottom helper function with smooth animation
-  const scrollToBottom = () => {
+  const scrollToBottom = useCallback(() => {
     const viewport = scrollAreaRef.current?.querySelector(
       '[data-radix-scroll-area-viewport]'
     ) as HTMLDivElement;
@@ -276,16 +168,23 @@ export function AIChatBox({
         });
       });
     }
-  };
+  }, []);
 
-  // Scroll when messages change (new cards loaded)
+  // Scroll when messages change or during typing
   useEffect(() => {
     if (displayMessages.length > 0) {
-      // Delay to allow cards to render
       const timer = setTimeout(scrollToBottom, 100);
       return () => clearTimeout(timer);
     }
-  }, [displayMessages.length]);
+  }, [displayMessages.length, scrollToBottom]);
+
+  // Keep scrolling during typing animation
+  useEffect(() => {
+    if (latestAssistantIndex === lastTypedIndex && latestAssistantIndex >= 0) {
+      const interval = setInterval(scrollToBottom, 200);
+      return () => clearInterval(interval);
+    }
+  }, [latestAssistantIndex, lastTypedIndex, scrollToBottom]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -353,6 +252,12 @@ export function AIChatBox({
                 const shouldApplyMinHeight =
                   isLastMessage && !isLoading && minHeightForLastMessage > 0;
 
+                // Determine if this assistant message should animate typing
+                const shouldAnimate =
+                  message.role === 'assistant' &&
+                  index === latestAssistantIndex &&
+                  index === lastTypedIndex;
+
                 return (
                   <div
                     key={index}
@@ -383,15 +288,10 @@ export function AIChatBox({
                       )}
                     >
                       {message.role === "assistant" ? (
-                        <>
-                          <div className="prose prose-sm dark:prose-invert max-w-none">
-                            <Streamdown>{message.content}</Streamdown>
-                          </div>
-                          {/* Rich cards below the message text */}
-                          {message.cards && message.cards.length > 0 && (
-                            <RichCards cards={message.cards} />
-                          )}
-                        </>
+                        <TypingAssistantMessage
+                          content={message.content}
+                          isLatest={shouldAnimate}
+                        />
                       ) : (
                         <p className="whitespace-pre-wrap text-sm">
                           {message.content}
