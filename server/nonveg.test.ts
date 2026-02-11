@@ -39,7 +39,7 @@ describe('Non-Veg Dietary Label', () => {
 
     it('should accept isNonVeg in updateProduct procedure', () => {
       const updateIdx = routersContent.indexOf('updateProduct');
-      const updateSection = routersContent.substring(updateIdx, updateIdx + 1000);
+      const updateSection = routersContent.substring(updateIdx, updateIdx + 1500);
       expect(updateSection).toContain('isNonVeg');
     });
   });

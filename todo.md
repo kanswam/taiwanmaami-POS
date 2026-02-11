@@ -1880,3 +1880,26 @@ Orders fixed:
   - Updated ProductsTab, CategoriesTab, and ProductEditDialog to use getFullMenuAdmin
   - Admin page now always shows all products regardless of availability flags
   - Added vitest test: server/adminMenu.test.ts (5 tests, all passing)
+
+## CRITICAL: Lock Down Product Deletion (Feb 11)
+
+- [x] Audit all product deletion/deactivation paths (backend + frontend)
+  - Found 4 paths: updateProduct(isActive), deleteProduct, permanentlyDeleteProduct, toggleActive switch
+- [x] Remove staff ability to delete/deactivate products entirely
+  - Staff/customer roles cannot call any delete/deactivate procedures (admin-only)
+- [x] Restrict deleteProduct (soft delete) to admin-only with double confirmation
+  - Now requires: type product name + type "DEACTIVATE" confirmation code
+- [x] Restrict permanentlyDeleteProduct to admin-only with double confirmation (type product name + confirm code)
+  - Now requires: type product name + type "DELETE-FOREVER" confirmation code
+  - Still blocks deletion if product has order history
+- [x] Update Admin UI: remove easy delete buttons, add strict double confirmation dialog
+  - Removed isActive toggle switch from products table (replaced with status badge)
+  - Removed isActive from updateProduct input schema
+  - Added Deactivate button with orange double-confirmation panel
+  - Added Delete Forever button with red double-confirmation panel
+  - Both require typing product name + confirmation code
+- [x] Ensure subcategory/category deletion also has safeguards (can't delete if products exist)
+  - Already implemented: categories/subcategories check for child products before deletion
+- [x] Write vitest tests for deletion lockdown
+  - 13 tests in server/productDeletion.test.ts (all passing)
+  - Tests: wrong code, wrong name, staff/customer rejection, order history protection, isActive stripping

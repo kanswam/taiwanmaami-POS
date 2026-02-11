@@ -515,9 +515,7 @@ function ProductsTab() {
     updateProduct.mutate({ id: productId, isInStock: !currentStatus });
   };
 
-  const toggleActive = (productId: number, currentStatus: boolean) => {
-    updateProduct.mutate({ id: productId, isActive: !currentStatus });
-  };
+  // toggleActive removed - product deactivation now requires double confirmation via ProductEditDialog
 
   const handleDragStart = (e: React.DragEvent, productId: number) => {
     setDraggedProduct(productId);
@@ -651,7 +649,7 @@ function ProductsTab() {
                       <th className="text-right p-3 text-sm font-medium">In-Store</th>
                       <th className="text-right p-3 text-sm font-medium">Delivery</th>
                       <th className="text-center p-3 text-sm font-medium">Stock</th>
-                      <th className="text-center p-3 text-sm font-medium">Active</th>
+                      <th className="text-center p-3 text-sm font-medium">Status</th>
                       <th className="text-center p-3 text-sm font-medium">Actions</th>
                     </tr>
                   </thead>
@@ -703,10 +701,15 @@ function ProductsTab() {
                           />
                         </td>
                         <td className="p-3 text-center">
-                          <Switch
-                            checked={product.isActive}
-                            onCheckedChange={() => toggleActive(product.id, product.isActive)}
-                          />
+                          {product.isActive ? (
+                            <span className="inline-flex items-center gap-1 text-xs font-medium text-green-700 bg-green-100 px-2 py-1 rounded-full">
+                              <Check className="w-3 h-3" /> Active
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 text-xs font-medium text-red-700 bg-red-100 px-2 py-1 rounded-full">
+                              <X className="w-3 h-3" /> Inactive
+                            </span>
+                          )}
                         </td>
                         <td className="p-3 text-center">
                           <ProductEditDialog product={product} onUpdate={refetch} />
@@ -813,7 +816,10 @@ function ProductsTab() {
 // Product Edit Dialog
 function ProductEditDialog({ product, onUpdate }: { product: any; onUpdate: () => void }) {
   const [open, setOpen] = useState(false);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showDeactivateConfirm, setShowDeactivateConfirm] = useState(false);
+  const [showPermanentDeleteConfirm, setShowPermanentDeleteConfirm] = useState(false);
+  const [confirmProductName, setConfirmProductName] = useState('');
+  const [confirmationCode, setConfirmationCode] = useState('');
   const { data: menuData } = trpc.admin.getFullMenuAdmin.useQuery();
   const { data: canDeleteData } = trpc.admin.canDeleteProduct.useQuery({ id: product.id }, { enabled: open });
   const [formData, setFormData] = useState({
@@ -837,14 +843,36 @@ function ProductEditDialog({ product, onUpdate }: { product: any; onUpdate: () =
   ]);
   const [uploading, setUploading] = useState(false);
 
-  const permanentlyDeleteProduct = trpc.admin.permanentlyDeleteProduct.useMutation({
+  const deactivateProduct = trpc.admin.deleteProduct.useMutation({
     onSuccess: () => {
-      toast.success('Product permanently deleted');
+      toast.success('Product deactivated successfully');
       setOpen(false);
+      setShowDeactivateConfirm(false);
+      setConfirmProductName('');
+      setConfirmationCode('');
       onUpdate();
     },
     onError: (err) => toast.error(err.message),
   });
+
+  const permanentlyDeleteProduct = trpc.admin.permanentlyDeleteProduct.useMutation({
+    onSuccess: () => {
+      toast.success('Product permanently deleted');
+      setOpen(false);
+      setShowPermanentDeleteConfirm(false);
+      setConfirmProductName('');
+      setConfirmationCode('');
+      onUpdate();
+    },
+    onError: (err) => toast.error(err.message),
+  });
+
+  const resetConfirmState = () => {
+    setShowDeactivateConfirm(false);
+    setShowPermanentDeleteConfirm(false);
+    setConfirmProductName('');
+    setConfirmationCode('');
+  };
 
   const updateProduct = trpc.admin.updateProduct.useMutation({
     onSuccess: () => {
@@ -1129,47 +1157,137 @@ function ProductEditDialog({ product, onUpdate }: { product: any; onUpdate: () =
           {/* Add-ons Section */}
           <ProductAddonsSection productId={product.id} />
         </div>
+        {/* Double Confirmation Deactivation Dialog */}
+        {showDeactivateConfirm && (
+          <div className="border-2 border-orange-400 bg-orange-50 rounded-lg p-4 space-y-3">
+            <div className="flex items-center gap-2 text-orange-800">
+              <AlertTriangle className="w-5 h-5" />
+              <h4 className="font-bold">Deactivate Product</h4>
+            </div>
+            <p className="text-sm text-orange-700">
+              This will hide <strong>"{product.name}"</strong> from all customers. You can reactivate it later.
+            </p>
+            <div className="space-y-2">
+              <Label className="text-sm font-medium text-orange-800">Type the product name to confirm:</Label>
+              <Input
+                value={confirmProductName}
+                onChange={(e) => setConfirmProductName(e.target.value)}
+                placeholder={product.name}
+                className="border-orange-300"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-sm font-medium text-orange-800">Type <strong>DEACTIVATE</strong> to confirm:</Label>
+              <Input
+                value={confirmationCode}
+                onChange={(e) => setConfirmationCode(e.target.value)}
+                placeholder="DEACTIVATE"
+                className="border-orange-300"
+              />
+            </div>
+            <div className="flex gap-2">
+              <Button
+                variant="destructive"
+                size="sm"
+                disabled={
+                  confirmProductName.trim().toLowerCase() !== product.name.trim().toLowerCase() ||
+                  confirmationCode !== 'DEACTIVATE' ||
+                  deactivateProduct.isPending
+                }
+                onClick={() => deactivateProduct.mutate({
+                  id: product.id,
+                  confirmProductName: confirmProductName.trim(),
+                  confirmationCode: confirmationCode,
+                })}
+              >
+                {deactivateProduct.isPending ? 'Deactivating...' : 'Confirm Deactivation'}
+              </Button>
+              <Button variant="outline" size="sm" onClick={resetConfirmState}>Cancel</Button>
+            </div>
+          </div>
+        )}
+
+        {/* Double Confirmation Permanent Delete Dialog */}
+        {showPermanentDeleteConfirm && (
+          <div className="border-2 border-red-400 bg-red-50 rounded-lg p-4 space-y-3">
+            <div className="flex items-center gap-2 text-red-800">
+              <AlertTriangle className="w-5 h-5" />
+              <h4 className="font-bold">PERMANENT DELETION</h4>
+            </div>
+            <p className="text-sm text-red-700">
+              <strong>WARNING:</strong> This will permanently remove <strong>"{product.name}"</strong> from the database. This action CANNOT be undone.
+            </p>
+            <div className="space-y-2">
+              <Label className="text-sm font-medium text-red-800">Type the product name to confirm:</Label>
+              <Input
+                value={confirmProductName}
+                onChange={(e) => setConfirmProductName(e.target.value)}
+                placeholder={product.name}
+                className="border-red-300"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-sm font-medium text-red-800">Type <strong>DELETE-FOREVER</strong> to confirm:</Label>
+              <Input
+                value={confirmationCode}
+                onChange={(e) => setConfirmationCode(e.target.value)}
+                placeholder="DELETE-FOREVER"
+                className="border-red-300"
+              />
+            </div>
+            <div className="flex gap-2">
+              <Button
+                variant="destructive"
+                size="sm"
+                disabled={
+                  confirmProductName.trim().toLowerCase() !== product.name.trim().toLowerCase() ||
+                  confirmationCode !== 'DELETE-FOREVER' ||
+                  permanentlyDeleteProduct.isPending
+                }
+                onClick={() => permanentlyDeleteProduct.mutate({
+                  id: product.id,
+                  confirmProductName: confirmProductName.trim(),
+                  confirmationCode: confirmationCode,
+                })}
+              >
+                {permanentlyDeleteProduct.isPending ? 'Deleting Forever...' : 'PERMANENTLY DELETE'}
+              </Button>
+              <Button variant="outline" size="sm" onClick={resetConfirmState}>Cancel</Button>
+            </div>
+          </div>
+        )}
+
         <div className="flex justify-between">
-          {/* Delete button - only show if product can be deleted (no order history) */}
-          <div>
+          <div className="flex gap-2">
+            {product.isActive ? (
+              <Button 
+                variant="ghost" 
+                className="text-orange-600 hover:text-orange-700 hover:bg-orange-50"
+                onClick={() => { resetConfirmState(); setShowDeactivateConfirm(true); }}
+                disabled={showDeactivateConfirm || showPermanentDeleteConfirm}
+              >
+                <EyeOff className="w-4 h-4 mr-2" />
+                Deactivate
+              </Button>
+            ) : null}
             {canDeleteData?.canDelete ? (
-              showDeleteConfirm ? (
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-destructive">Delete permanently?</span>
-                  <Button 
-                    variant="destructive" 
-                    size="sm"
-                    onClick={() => permanentlyDeleteProduct.mutate({ id: product.id })}
-                    disabled={permanentlyDeleteProduct.isPending}
-                  >
-                    {permanentlyDeleteProduct.isPending ? 'Deleting...' : 'Yes, Delete'}
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => setShowDeleteConfirm(false)}
-                  >
-                    No
-                  </Button>
-                </div>
-              ) : (
-                <Button 
-                  variant="ghost" 
-                  className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                  onClick={() => setShowDeleteConfirm(true)}
-                >
-                  <Trash2 className="w-4 h-4 mr-2" />
-                  Delete
-                </Button>
-              )
+              <Button 
+                variant="ghost" 
+                className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                onClick={() => { resetConfirmState(); setShowPermanentDeleteConfirm(true); }}
+                disabled={showDeactivateConfirm || showPermanentDeleteConfirm}
+              >
+                <Trash2 className="w-4 h-4 mr-2" />
+                Delete Forever
+              </Button>
             ) : canDeleteData ? (
-              <span className="text-xs text-muted-foreground">
-                Cannot delete - has {canDeleteData.orderCount} order(s)
+              <span className="text-xs text-muted-foreground self-center">
+                Cannot delete — has {canDeleteData.orderCount} order(s)
               </span>
             ) : null}
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
+            <Button variant="outline" onClick={() => { setOpen(false); resetConfirmState(); }}>Cancel</Button>
             <Button onClick={handleSubmit} disabled={updateProduct.isPending}>
               {updateProduct.isPending ? 'Saving...' : 'Save Changes'}
             </Button>

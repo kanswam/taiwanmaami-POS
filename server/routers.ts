@@ -2341,7 +2341,7 @@ export const appRouter = router({
         availableDelivery: z.boolean().optional(),
         availableAtPalladium: z.boolean().optional(),
         displayOrder: z.number().optional(),
-        isActive: z.boolean().optional(),
+        // isActive removed - product activation/deactivation requires dedicated deleteProduct/reactivateProduct with double confirmation
         subcategoryId: z.number().optional(),
         isVegetarian: z.boolean().optional(),
         isVegan: z.boolean().optional(),
@@ -2362,8 +2362,6 @@ export const appRouter = router({
         let action: 'update' | 'stock_in' | 'stock_out' | 'deactivate' | 'reactivate' | 'price_change' = 'update';
         if (data.isInStock !== undefined && data.isInStock !== currentProduct.isInStock) {
           action = data.isInStock ? 'stock_in' : 'stock_out';
-        } else if (data.isActive !== undefined && data.isActive !== currentProduct.isActive) {
-          action = data.isActive ? 'reactivate' : 'deactivate';
         } else if (data.instorePrice !== undefined || data.deliveryPrice !== undefined) {
           action = 'price_change';
         }
@@ -2387,8 +2385,10 @@ export const appRouter = router({
           });
         }
         
-        // Update the product
-        await dbInstance!.update(products).set(data).where(eq(products.id, id));
+        // Update the product (only if there are actual changes)
+        if (Object.keys(data).length > 0) {
+          await dbInstance!.update(products).set(data).where(eq(products.id, id));
+        }
         return { success: true };
       }),
 
@@ -2441,15 +2441,36 @@ export const appRouter = router({
         return { success: true, imageUrl: url, backupUrl: result.backupUrl };
       }),
 
+    // Deactivate product (soft delete) - requires double confirmation
+    // Admin must provide product name AND confirmation code
     deleteProduct: adminProcedure
-      .input(z.object({ id: z.number() }))
+      .input(z.object({ 
+        id: z.number(),
+        confirmProductName: z.string(), // Must match the product name exactly
+        confirmationCode: z.string(), // Must be "DEACTIVATE"
+      }))
       .mutation(async ({ input, ctx }) => {
+        if (input.confirmationCode !== 'DEACTIVATE') {
+          throw new TRPCError({ 
+            code: 'BAD_REQUEST', 
+            message: 'Invalid confirmation code. You must type DEACTIVATE to proceed.' 
+          });
+        }
+        
         const dbInstance = await getDb();
         if (!dbInstance) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
         
         // Get product for audit log
         const [product] = await dbInstance!.select().from(products).where(eq(products.id, input.id));
         if (!product) throw new TRPCError({ code: 'NOT_FOUND', message: 'Product not found' });
+        
+        // Verify product name matches (case-insensitive trim)
+        if (product.name.trim().toLowerCase() !== input.confirmProductName.trim().toLowerCase()) {
+          throw new TRPCError({ 
+            code: 'BAD_REQUEST', 
+            message: 'Product name does not match. Please type the exact product name to confirm.' 
+          });
+        }
         
         // Create audit log for deactivation (soft delete)
         await dbInstance!.insert(productAuditLog).values({
@@ -2464,6 +2485,7 @@ export const appRouter = router({
         });
         
         await dbInstance!.update(products).set({ isActive: false }).where(eq(products.id, input.id));
+        console.log(`[deleteProduct] Product ${input.id} (${product.name}) deactivated by ${ctx.user?.name} with double confirmation`);
         return { success: true };
       }),
 
@@ -2483,16 +2505,36 @@ export const appRouter = router({
         return { canDelete: !hasOrderHistory, orderCount: orderItems[0]?.count || 0 };
       }),
 
-    // Permanently delete a product (only if no order history)
+    // Permanently delete a product (only if no order history) - requires STRICT double confirmation
+    // Admin must type product name AND "DELETE-FOREVER" to proceed
     permanentlyDeleteProduct: adminProcedure
-      .input(z.object({ id: z.number() }))
+      .input(z.object({ 
+        id: z.number(),
+        confirmProductName: z.string(), // Must match the product name exactly
+        confirmationCode: z.string(), // Must be "DELETE-FOREVER"
+      }))
       .mutation(async ({ input, ctx }) => {
+        if (input.confirmationCode !== 'DELETE-FOREVER') {
+          throw new TRPCError({ 
+            code: 'BAD_REQUEST', 
+            message: 'Invalid confirmation code. You must type DELETE-FOREVER to proceed.' 
+          });
+        }
+        
         const dbInstance = await getDb();
         if (!dbInstance) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
         
         // Get product
         const [product] = await dbInstance!.select().from(products).where(eq(products.id, input.id));
         if (!product) throw new TRPCError({ code: 'NOT_FOUND', message: 'Product not found' });
+        
+        // Verify product name matches (case-insensitive trim)
+        if (product.name.trim().toLowerCase() !== input.confirmProductName.trim().toLowerCase()) {
+          throw new TRPCError({ 
+            code: 'BAD_REQUEST', 
+            message: 'Product name does not match. Please type the exact product name to confirm.' 
+          });
+        }
         
         // Check if product has any order history
         const orderItems = await dbInstance!.select({ count: sql<number>`COUNT(*)` })
@@ -2512,7 +2554,7 @@ export const appRouter = router({
         // Permanently delete the product
         await dbInstance!.delete(products).where(eq(products.id, input.id));
         
-        console.log(`[permanentlyDeleteProduct] Product ${input.id} (${product.name}) permanently deleted by ${ctx.user?.name}`);
+        console.log(`[permanentlyDeleteProduct] Product ${input.id} (${product.name}) PERMANENTLY deleted by ${ctx.user?.name} with double confirmation`);
         return { success: true };
       }),
 
