@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { useEffect, useState, useCallback, useRef, useMemo } from 'react';
 import { useLocation } from 'wouter';
 import { trackPurchase, trackAddShippingInfo, trackAddPaymentInfo, toGA4Item } from '@/lib/analytics';
 import { Header } from '@/components/Header';
@@ -11,7 +11,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useCart } from '@/contexts/CartContext';
 import { useAuth } from '@/_core/hooks/useAuth';
 import { trpc } from '@/lib/trpc';
-import { formatPrice, CHENNAI_AREAS, isOrderingAvailable, isOutletOpen, OUTLET_HOURS } from '@shared/types';
+import { formatPrice, CHENNAI_AREAS, isOrderingAvailable, isOutletOpen, OUTLET_HOURS, DELIVERY_CONFIG } from '@shared/types';
 import { ArrowLeft, MapPin, Clock, CreditCard, Banknote, Loader2, Gift, User, Stamp } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
@@ -331,8 +331,30 @@ export default function Checkout() {
     }
   };
 
-  // total from useCart already includes gst.total, so displayTotal should just be total
-  const displayTotal = total;
+  // Build delivery address string for charge calculation
+  const deliveryAddressString = useMemo(() => {
+    if (state.orderType !== 'delivery') return '';
+    const parts = [formData.addressLine1, formData.addressLine2, formData.area, 'Chennai', formData.pincode].filter(Boolean);
+    return parts.join(', ');
+  }, [state.orderType, formData.addressLine1, formData.addressLine2, formData.area, formData.pincode]);
+
+  // Query delivery charge based on address
+  const { data: deliveryChargeData, isLoading: isLoadingDeliveryCharge } = trpc.orders.getDeliveryCharge.useQuery(
+    { deliveryAddress: deliveryAddressString },
+    { 
+      enabled: state.orderType === 'delivery' && deliveryAddressString.length > 10,
+      staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+    }
+  );
+
+  // Check if order qualifies for free delivery
+  const isFreeDelivery = state.orderType === 'delivery' && subtotal >= DELIVERY_CONFIG.freeDeliveryThresholdPaise;
+
+  // Calculate display delivery charge
+  const displayDeliveryCharge = isFreeDelivery ? 0 : (deliveryChargeData?.chargePaise || 0);
+
+  // total from useCart already includes gst.total, so displayTotal should include delivery charge
+  const displayTotal = total + displayDeliveryCharge;
 
   // Guest checkout mutation
   const createGuestOrder = trpc.guest.createOrder.useMutation();
@@ -757,18 +779,33 @@ export default function Checkout() {
                     {state.orderType === 'delivery' && (
                       <>
                         <div className="flex justify-between">
-                          <span>Delivery (via Porter)</span>
-                          <span className="text-muted-foreground">Actual charges</span>
+                          <span>Delivery Charge</span>
+                          {isFreeDelivery ? (
+                            <span className="text-green-600 font-medium">FREE</span>
+                          ) : isLoadingDeliveryCharge ? (
+                            <span className="text-muted-foreground"><Loader2 className="w-3 h-3 inline animate-spin" /> Calculating...</span>
+                          ) : deliveryChargeData ? (
+                            <span>{formatPrice(deliveryChargeData.chargePaise)}</span>
+                          ) : (
+                            <span className="text-muted-foreground">Enter address</span>
+                          )}
                         </div>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          Delivery will be booked through Porter. Actual delivery charges will be added to your bill (no GST on delivery).
-                        </p>
+                        {!isFreeDelivery && deliveryChargeData && (
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {deliveryChargeData.distanceText} from T. Nagar ({deliveryChargeData.tierLabel})
+                          </p>
+                        )}
+                        {isFreeDelivery && (
+                          <p className="text-xs text-green-600 mt-1">
+                            Free delivery on orders above ₹2,500!
+                          </p>
+                        )}
                       </>
                     )}
                     <div className="border-t pt-2 mt-2">
                       <div className="flex justify-between font-semibold text-lg">
                         <span>Total</span>
-                        <span>{formatPrice(displayTotal)}{state.orderType === 'delivery' && ' + Delivery'}</span>
+                        <span>{formatPrice(displayTotal)}</span>
                       </div>
                     </div>
                   </div>
@@ -1137,18 +1174,33 @@ export default function Checkout() {
                   {state.orderType === 'delivery' && (
                     <>
                       <div className="flex justify-between">
-                        <span className="text-muted-foreground">Delivery (via Porter)</span>
-                        <span className="text-muted-foreground">Actual charges</span>
+                        <span className="text-muted-foreground">Delivery Charge</span>
+                        {isFreeDelivery ? (
+                          <span className="text-green-600 font-medium">FREE</span>
+                        ) : isLoadingDeliveryCharge ? (
+                          <span className="text-muted-foreground"><Loader2 className="w-3 h-3 inline animate-spin" /> Calculating...</span>
+                        ) : deliveryChargeData ? (
+                          <span>{formatPrice(deliveryChargeData.chargePaise)}</span>
+                        ) : (
+                          <span className="text-muted-foreground">Enter address</span>
+                        )}
                       </div>
-                      <p className="text-xs text-muted-foreground">
-                        Delivery booked via Porter. Actual charges added to bill (no GST).
-                      </p>
+                      {!isFreeDelivery && deliveryChargeData && (
+                        <p className="text-xs text-muted-foreground">
+                          {deliveryChargeData.distanceText} from T. Nagar ({deliveryChargeData.tierLabel})
+                        </p>
+                      )}
+                      {isFreeDelivery && (
+                        <p className="text-xs text-green-600">
+                          Free delivery on orders above ₹2,500!
+                        </p>
+                      )}
                     </>
                   )}
                   <hr />
                   <div className="flex justify-between text-lg font-semibold">
                     <span>Total</span>
-                    <span>{formatPrice(displayTotal)}{state.orderType === 'delivery' && ' + Delivery'}</span>
+                    <span>{formatPrice(displayTotal)}</span>
                   </div>
                 </div>
 
@@ -1198,6 +1250,7 @@ export default function Checkout() {
                   disabled={isSubmitting || itemCount === 0 || isOutsideOrderingHours}
                 >
                   {isSubmitting ? 'Processing...' : isOutsideOrderingHours ? 'Ordering Closed' : `Place Order - ${formatPrice(displayTotal)}`}
+
                 </Button>
               </Card>
             </div>

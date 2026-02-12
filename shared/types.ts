@@ -272,10 +272,17 @@ export const DELIVERY_CONFIG = {
     lng: 80.2341,
     name: 'T Nagar',
   },
-  // Maximum delivery radius in kilometers
-  maxRadiusKm: 15,
+  // Tiered delivery charges based on driving distance from T. Nagar
+  tiers: [
+    { maxKm: 10, chargeRupees: 100, label: 'Within 10 km' },
+    { maxKm: 15, chargeRupees: 200, label: '10–15 km' },
+    { maxKm: 25, chargeRupees: 300, label: '15–25 km' },
+    { maxKm: Infinity, chargeRupees: 400, label: 'Over 25 km' },
+  ],
+  // Free delivery threshold in paise
+  freeDeliveryThresholdPaise: 250000, // ₹2,500
   // Message to show customers
-  radiusMessage: 'Delivery available within 15km of T Nagar, Chennai',
+  radiusMessage: 'Delivery charges: ₹100 (0-10km), ₹200 (10-15km), ₹300 (15-25km), ₹400 (25+km). Free delivery on orders above ₹2,500!',
 } as const;
 
 // Haversine formula to calculate distance between two coordinates
@@ -298,30 +305,26 @@ export function calculateDistanceKm(
   return R * c;
 }
 
-// Check if delivery address is within service area
-export function isWithinDeliveryRadius(lat: number, lng: number): {
-  withinRadius: boolean;
+// Get delivery charge tier based on distance
+export function getDeliveryTier(distanceKm: number): {
+  chargeRupees: number;
+  label: string;
   distanceKm: number;
-  message: string;
 } {
-  const distance = calculateDistanceKm(
-    DELIVERY_CONFIG.hubLocation.lat,
-    DELIVERY_CONFIG.hubLocation.lng,
-    lat,
-    lng
-  );
-  
-  if (distance <= DELIVERY_CONFIG.maxRadiusKm) {
-    return {
-      withinRadius: true,
-      distanceKm: Math.round(distance * 10) / 10,
-      message: `Delivery available (${Math.round(distance * 10) / 10}km from T Nagar)`,
-    };
+  for (const tier of DELIVERY_CONFIG.tiers) {
+    if (distanceKm <= tier.maxKm) {
+      return {
+        chargeRupees: tier.chargeRupees,
+        label: tier.label,
+        distanceKm: Math.round(distanceKm * 10) / 10,
+      };
+    }
   }
-  
+  // Fallback to highest tier
+  const lastTier = DELIVERY_CONFIG.tiers[DELIVERY_CONFIG.tiers.length - 1];
   return {
-    withinRadius: false,
-    distanceKm: Math.round(distance * 10) / 10,
-    message: `Sorry, your location is ${Math.round(distance * 10) / 10}km away. We currently deliver within ${DELIVERY_CONFIG.maxRadiusKm}km of our T Nagar location.`,
+    chargeRupees: lastTier.chargeRupees,
+    label: lastTier.label,
+    distanceKm: Math.round(distanceKm * 10) / 10,
   };
 }

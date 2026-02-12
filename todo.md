@@ -1930,3 +1930,27 @@ Orders fixed:
 - [x] Fix the issue so reactivated products appear on customer menu
   - Fixed Zilla Wrap data: set isAvailable=1
   - Fixed reactivateProduct procedure: now also sets isAvailable=true when reactivating
+
+## Tiered Delivery Charges (Feb 12)
+
+- [x] Investigate current delivery charge logic in code
+  - Two places in routers.ts (line ~216 and ~3572) with flat ₹100
+  - Google Maps Distance Matrix API available via server/_core/map.ts
+  - Free delivery for orders ≥₹2500 stays
+- [x] Implement tiered delivery charges: 0-10km ₹100, 10-15km ₹200, 15-25km ₹300, 25+km ₹400
+  - Created server/deliveryCharge.ts with calculateDeliveryCharge() and getChargeForDistance()
+  - Uses Google Maps Distance Matrix API via server/_core/map.ts
+  - Updated both logged-in and guest order creation flows
+  - Fallback to ₹100 if API fails
+- [x] Do NOT modify order #357 (per user instruction)
+- [x] Update frontend checkout to show calculated delivery charge
+  - Added trpc.orders.getDeliveryCharge query triggered by address input
+  - Shows distance, tier label, and calculated charge
+  - Shows FREE for orders ≥₹2,500
+  - Updated Cart.tsx to show all 4 tiers
+- [x] Update chatbot knowledge base with delivery charge tiers
+  - Added "Delivery Charges" section to chatbot system prompt with exact tiers
+  - Updated Promotions section with distance-based delivery info
+- [x] Write tests for tiered delivery charge calculation
+  - 9 tests in server/deliveryCharge.test.ts (all passing)
+  - Tests: all 4 tiers, boundary values, labels, rounding

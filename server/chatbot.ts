@@ -441,15 +441,22 @@ function getStoreInfo(): Record<string, any> {
       note: 'Hours may vary on holidays. Please call the store to confirm.',
     },
     delivery: {
-      message: 'We offer delivery within 10km of T. Nagar. Flat delivery fee of ₹100 on all orders. Free delivery on orders above ₹2500. You can order through our website for delivery or pickup.',
+      message: 'We deliver across Chennai from our T. Nagar outlet! Delivery charges are distance-based: ₹100 within 10km, ₹200 for 10-15km, ₹300 for 15-25km, and ₹400 for over 25km. FREE delivery on orders above ₹2,500! You can order through our website for delivery or pickup.',
       minimumOrder: 'No minimum order for delivery.',
       paymentOptions: ['Online Payment (Razorpay)'],
+      deliveryCharges: [
+        { distance: 'Within 10 km', charge: '₹100' },
+        { distance: '10 to 15 km', charge: '₹200' },
+        { distance: '15 to 25 km', charge: '₹300' },
+        { distance: 'Over 25 km', charge: '₹400' },
+      ],
+      freeDelivery: 'Free delivery on orders above ₹2,500',
     },
     promotions: {
       current: [
         { code: 'BOBALOVE10', description: '10% off your first order' },
-        { description: 'Free delivery on orders above ₹2500' },
-        { description: '₹100 flat delivery within our delivery zone' },
+        { description: 'Free delivery on orders above ₹2,500' },
+        { description: 'Distance-based delivery: ₹100 (0-10km), ₹200 (10-15km), ₹300 (15-25km), ₹400 (25+km)' },
       ],
     },
     loyalty: {
@@ -614,9 +621,19 @@ Always include a relevant link when mentioning a category. Use the slug format (
 - For workshops: "Book your spot on our [Events page](/events) before it sells out!"
 - For blog topics: "Check out our blog post for the full story!"
 
+## Delivery Charges (IMPORTANT — USE THESE EXACT TIERS)
+Delivery charges are based on driving distance from our T. Nagar outlet:
+- **Within 10 km**: ₹100
+- **10 to 15 km**: ₹200
+- **15 to 25 km**: ₹300
+- **Over 25 km**: ₹400
+- **FREE delivery** on orders above ₹2,500!
+Always mention these tiers when customers ask about delivery charges or fees. The exact charge is calculated at checkout based on the customer's address.
+
 ## Promotions & Promo Codes (PROACTIVELY MENTION)
 - **BOBALOVE10** — 10% off first online order. Mention this whenever a customer asks about ordering, delivery, prices, or discounts.
-- **Free delivery** on orders above ₹2500
+- **Free delivery** on orders above ₹2,500
+- **Distance-based delivery**: ₹100 (0-10km), ₹200 (10-15km), ₹300 (15-25km), ₹400 (25+km)
 - **Loyalty Stamps** — Buy 10 bubble teas, get 1 FREE! Mention when customers seem interested in bubble tea.
 - When a customer is about to order or asks "how do I order?", ALWAYS mention: "Use code **BOBALOVE10** for 10% off your first order!"
 

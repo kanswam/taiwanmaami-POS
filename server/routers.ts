@@ -16,6 +16,7 @@ import { ENV } from './_core/env';
 import { wholesaleRouter } from './wholesaleRouter';
 import { chatWithBot } from './chatbot';
 import { notifyOwner } from './_core/notification';
+import { calculateDeliveryCharge } from './deliveryCharge';
 
 // Admin procedure - only allows admin role
 const adminProcedure = protectedProcedure.use(({ ctx, next }) => {
@@ -171,6 +172,24 @@ export const appRouter = router({
 
   // Order routes
   orders: router({
+    // Calculate delivery charge based on address distance from T. Nagar
+    getDeliveryCharge: publicProcedure
+      .input(z.object({
+        deliveryAddress: z.string().min(5),
+      }))
+      .query(async ({ input }) => {
+        const result = await calculateDeliveryCharge(input.deliveryAddress);
+        return {
+          chargePaise: result.chargePaise,
+          chargeRupees: result.chargePaise / 100,
+          tierLabel: result.tierLabel,
+          distanceKm: result.distanceKm,
+          distanceText: result.distanceText,
+          durationText: result.durationText,
+          usedFallback: result.usedFallback,
+        };
+      }),
+
     create: publicProcedure
       .input(z.object({
         orderType: z.enum(['instore', 'delivery', 'pickup']),
@@ -212,10 +231,18 @@ export const appRouter = router({
         const subtotal = input.items.reduce((sum, item) => sum + item.lineTotal, 0);
         const gst = calculateGst(subtotal);
         let discountAmount = 0;
-        // ₹100 flat delivery charge for delivery orders, FREE for orders above ₹2500
+        // Tiered delivery charge based on distance, FREE for orders above ₹2500
         let deliveryCharge = 0;
         if (input.orderType === 'delivery') {
-          deliveryCharge = subtotal >= 250000 ? 0 : 10000; // Free delivery for orders ≥₹2500
+          if (subtotal >= 250000) {
+            deliveryCharge = 0; // Free delivery for orders ≥₹2500
+          } else if (input.deliveryAddress) {
+            const chargeResult = await calculateDeliveryCharge(input.deliveryAddress);
+            deliveryCharge = chargeResult.chargePaise;
+            console.log(`[Order] Delivery charge: ${chargeResult.tierLabel} (${chargeResult.distanceKm}km, ${chargeResult.distanceText})`);
+          } else {
+            deliveryCharge = 10000; // Fallback ₹100 if no address
+          }
         }
 
         // Apply discount if code provided
@@ -3569,10 +3596,23 @@ export const appRouter = router({
         }
         
         const gstDetails = calculateGst(subtotal);
-        // ₹100 flat delivery charge for delivery orders, FREE for orders above ₹2500
+        // Tiered delivery charge based on distance, FREE for orders above ₹2500
         let deliveryCharge = 0;
         if (input.orderType === 'delivery') {
-          deliveryCharge = subtotal >= 250000 ? 0 : 10000; // Free delivery for orders ≥₹2500
+          if (subtotal >= 250000) {
+            deliveryCharge = 0; // Free delivery for orders ≥₹2500
+          } else {
+            const deliveryAddr = input.addressLine1 
+              ? `${input.addressLine1}${input.addressLine2 ? ', ' + input.addressLine2 : ''}, ${input.area}, Chennai - ${input.pincode}`
+              : '';
+            if (deliveryAddr) {
+              const chargeResult = await calculateDeliveryCharge(deliveryAddr);
+              deliveryCharge = chargeResult.chargePaise;
+              console.log(`[GuestOrder] Delivery charge: ${chargeResult.tierLabel} (${chargeResult.distanceKm}km, ${chargeResult.distanceText})`);
+            } else {
+              deliveryCharge = 10000; // Fallback ₹100 if no address
+            }
+          }
         }
         const totalAmount = subtotal + gstDetails.total + deliveryCharge;
         

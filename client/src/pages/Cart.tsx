@@ -401,8 +401,8 @@ export default function Cart() {
               <p className="text-xs text-muted-foreground text-center mt-4">
                 {state.orderType === 'delivery' 
                   ? (subtotal >= 250000 
-                    ? 'Free delivery on orders above ₹2500!' 
-                    : 'Free delivery on orders above ₹2500. ₹100 delivery charge applies.')
+                    ? 'Free delivery on orders above ₹2,500!' 
+                    : 'Delivery charges: ₹100 (0-10km), ₹200 (10-15km), ₹300 (15-25km), ₹400 (25+km). Free delivery on orders above ₹2,500!')
                   : '5% GST included in total.'
                 }
               </p>
