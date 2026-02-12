@@ -1954,3 +1954,21 @@ Orders fixed:
 - [x] Write tests for tiered delivery charge calculation
   - 9 tests in server/deliveryCharge.test.ts (all passing)
   - Tests: all 4 tiers, boundary values, labels, rounding
+
+## Staff Orders Availability Toggle Confirmation (Feb 12)
+
+- [x] Add confirmation dialog when staff toggles product availability off
+  - AlertDialog shows product name with orange warning
+  - Requires clicking "Yes, Hide Product" to confirm
+- [x] Add confirmation dialog when staff toggles subcategory availability off
+  - AlertDialog shows subcategory name, channel (In-Store/Delivery/Pickup), and product count
+  - Orange warning: "This will hide X products from customers immediately"
+  - Requires clicking "Yes, Hide from Customers" to confirm
+- [x] Show warning: "This will hide [name] from all customers. Are you sure?"
+- [x] For subcategory toggles, show count of affected products
+- [x] Turning ON does not require confirmation (instant)
+
+## Update Running Banner Ticker (Feb 12)
+
+- [x] Replace "₹100 Flat Delivery" text with tiered delivery pricing info
+- [x] Updated to "Delivery from ₹100 · Distance-based charges apply"

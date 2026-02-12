@@ -32,11 +32,11 @@ export function Header() {
       <div className="bg-primary text-white py-2 overflow-hidden">
         <div className="animate-marquee whitespace-nowrap">
           <span className="mx-8">⭐ 10 Stamps = 1 Free Drink · Loyalty Now Online</span>
-          <span className="mx-8">📍 ₹100 Flat Delivery Within 10 km of T. Nagar</span>
+          <span className="mx-8">📍 Delivery from ₹100 · Distance-based charges apply</span>
           <span className="mx-8">🚚 Free Delivery on Orders Above ₹2500</span>
           <span className="mx-8">🎉 Use code BOBALOVE10 for 10% off your first order!</span>
           <span className="mx-8">⭐ 10 Stamps = 1 Free Drink · Loyalty Now Online</span>
-          <span className="mx-8">📍 ₹100 Flat Delivery Within 10 km of T. Nagar</span>
+          <span className="mx-8">📍 Delivery from ₹100 · Distance-based charges apply</span>
           <span className="mx-8">🚚 Free Delivery on Orders Above ₹2500</span>
           <span className="mx-8">🎉 Use code BOBALOVE10 for 10% off your first order!</span>
         </div>

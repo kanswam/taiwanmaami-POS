@@ -20,6 +20,7 @@ import {
   X, Calendar, Hash, Camera, Upload, Image, ToggleLeft, Trash2, ChevronDown
 } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
+import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogAction, AlertDialogCancel } from '@/components/ui/alert-dialog';
 import { AddItemsDialog } from '@/components/AddItemsDialog';
 
 // Status flow for delivery orders
@@ -62,6 +63,15 @@ function AvailabilityPanel() {
   const { data: subcategories, isLoading } = trpc.menu.getSubcategories.useQuery();
   const { data: categories } = trpc.menu.getCategories.useQuery();
   const { data: products } = trpc.admin.getAllProducts.useQuery();
+
+  // Confirmation dialog state for subcategory toggles
+  const [subConfirm, setSubConfirm] = useState<{ open: boolean; sub: any; field: string; newValue: boolean; productCount: number }>({
+    open: false, sub: null, field: '', newValue: false, productCount: 0
+  });
+  // Confirmation dialog state for product toggles
+  const [prodConfirm, setProdConfirm] = useState<{ open: boolean; product: any; newValue: boolean }>({
+    open: false, product: null, newValue: false
+  });
   
   const toggleCategoryExpanded = (categoryName: string) => {
     setExpandedCategories(prev => ({
@@ -89,6 +99,34 @@ function AvailabilityPanel() {
       toast.error(err.message || 'Failed to update product availability');
     },
   });
+
+  const channelLabel = (field: string) => {
+    if (field === 'availableInstore') return 'In-Store';
+    if (field === 'availableDelivery') return 'Delivery';
+    if (field === 'availablePickup') return 'Pickup';
+    return field;
+  };
+
+  const handleSubcategoryToggle = (sub: any, field: string, checked: boolean) => {
+    if (checked) {
+      // Turning ON — no confirmation needed, just do it
+      toggleAvailability.mutate({ id: sub.id, [field]: true } as any);
+    } else {
+      // Turning OFF — show confirmation with product count
+      const subProducts = products?.filter((p: any) => p.subcategoryId === sub.id) || [];
+      setSubConfirm({ open: true, sub, field, newValue: false, productCount: subProducts.length });
+    }
+  };
+
+  const handleProductToggle = (product: any, checked: boolean) => {
+    if (checked) {
+      // Turning ON — no confirmation needed
+      toggleProductAvailability.mutate({ id: product.id, isAvailable: true });
+    } else {
+      // Turning OFF — show confirmation
+      setProdConfirm({ open: true, product, newValue: false });
+    }
+  };
 
   const getCategoryName = (categoryId: number) => {
     return categories?.find(c => c.id === categoryId)?.name || 'Unknown';
@@ -139,9 +177,7 @@ function AvailabilityPanel() {
                     <span className="text-xs text-muted-foreground text-center md:text-left md:w-16">In-store</span>
                     <Switch
                       checked={sub.availableInstore !== false}
-                      onCheckedChange={(checked) => {
-                        toggleAvailability.mutate({ id: sub.id, availableInstore: checked });
-                      }}
+                      onCheckedChange={(checked) => handleSubcategoryToggle(sub, 'availableInstore', checked)}
                       disabled={toggleAvailability.isPending}
                     />
                   </div>
@@ -149,9 +185,7 @@ function AvailabilityPanel() {
                     <span className="text-xs text-muted-foreground text-center md:text-left md:w-16">Delivery</span>
                     <Switch
                       checked={sub.availableDelivery !== false}
-                      onCheckedChange={(checked) => {
-                        toggleAvailability.mutate({ id: sub.id, availableDelivery: checked });
-                      }}
+                      onCheckedChange={(checked) => handleSubcategoryToggle(sub, 'availableDelivery', checked)}
                       disabled={toggleAvailability.isPending}
                     />
                   </div>
@@ -159,9 +193,7 @@ function AvailabilityPanel() {
                     <span className="text-xs text-muted-foreground text-center md:text-left md:w-16">Pickup</span>
                     <Switch
                       checked={sub.availablePickup !== false}
-                      onCheckedChange={(checked) => {
-                        toggleAvailability.mutate({ id: sub.id, availablePickup: checked });
-                      }}
+                      onCheckedChange={(checked) => handleSubcategoryToggle(sub, 'availablePickup', checked)}
                       disabled={toggleAvailability.isPending}
                     />
                   </div>
@@ -241,7 +273,7 @@ function AvailabilityPanel() {
                           </span>
                           <Switch
                             checked={isProductAvailable}
-                            onCheckedChange={(checked) => toggleProductAvailability.mutate({ id: product.id, isAvailable: checked })}
+                            onCheckedChange={(checked) => handleProductToggle(product, checked)}
                             disabled={toggleProductAvailability.isPending}
                           />
                         </div>
@@ -254,6 +286,80 @@ function AvailabilityPanel() {
           );
         })}
       </div>
+
+      {/* Subcategory Availability Confirmation Dialog */}
+      <AlertDialog open={subConfirm.open} onOpenChange={(open) => { if (!open) setSubConfirm({ open: false, sub: null, field: '', newValue: false, productCount: 0 }); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5 text-orange-500" />
+              Hide from Customers?
+            </AlertDialogTitle>
+            <AlertDialogDescription className="space-y-2">
+              <span className="block">
+                You are about to turn off <strong className="text-foreground">{channelLabel(subConfirm.field)}</strong> for <strong className="text-foreground">{subConfirm.sub?.name}</strong>.
+              </span>
+              <span className="block text-orange-600 font-medium">
+                This will hide {subConfirm.productCount} product{subConfirm.productCount !== 1 ? 's' : ''} from customers immediately.
+              </span>
+              <span className="block">
+                Are you sure you want to continue?
+              </span>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-orange-600 hover:bg-orange-700"
+              onClick={() => {
+                if (subConfirm.sub) {
+                  toggleAvailability.mutate({ id: subConfirm.sub.id, [subConfirm.field]: false } as any);
+                }
+                setSubConfirm({ open: false, sub: null, field: '', newValue: false, productCount: 0 });
+              }}
+            >
+              Yes, Hide from Customers
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Product Availability Confirmation Dialog */}
+      <AlertDialog open={prodConfirm.open} onOpenChange={(open) => { if (!open) setProdConfirm({ open: false, product: null, newValue: false }); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5 text-orange-500" />
+              Hide Product from Customers?
+            </AlertDialogTitle>
+            <AlertDialogDescription className="space-y-2">
+              <span className="block">
+                You are about to mark <strong className="text-foreground">{prodConfirm.product?.name}</strong> as unavailable.
+              </span>
+              <span className="block text-orange-600 font-medium">
+                This product will be hidden from all customers immediately.
+              </span>
+              <span className="block">
+                Are you sure you want to continue?
+              </span>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-orange-600 hover:bg-orange-700"
+              onClick={() => {
+                if (prodConfirm.product) {
+                  toggleProductAvailability.mutate({ id: prodConfirm.product.id, isAvailable: false });
+                }
+                setProdConfirm({ open: false, product: null, newValue: false });
+              }}
+            >
+              Yes, Hide Product
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
