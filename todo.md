@@ -2000,3 +2000,9 @@ Orders fixed:
 - [x] Write vitest tests for voice endpoints
   - 10 tests in server/voiceChat.test.ts (all passing)
   - Tests: TTS voice selection, input validation, procedure availability
+
+## BUG: Bot doesn't talk back (TTS not working) (Feb 12)
+
+- [x] Investigate TTS backend - Forge API /v1/audio/speech returns 404 (not supported)
+- [x] Check frontend audio playback in VoiceChatWidget - was relying on server TTS which always failed
+- [x] Fix: Replaced server-side TTS with browser Web Speech API (speechSynthesis) - works on all modern browsers, supports Tamil/Hindi/English and more

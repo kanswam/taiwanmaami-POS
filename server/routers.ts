@@ -18,7 +18,8 @@ import { chatWithBot } from './chatbot';
 import { notifyOwner } from './_core/notification';
 import { calculateDeliveryCharge } from './deliveryCharge';
 import { transcribeAudio } from './_core/voiceTranscription';
-import { textToSpeech, getVoiceForLanguage } from './tts';
+// TTS is handled client-side via browser Web Speech API
+// import { textToSpeech, getVoiceForLanguage } from './tts';
 import { storagePut } from './storage';
 
 // Admin procedure - only allows admin role
@@ -8737,31 +8738,8 @@ export const appRouter = router({
 
         console.log(`[VoiceChat] Bot reply: ${chatResponse.reply.substring(0, 100)}...`);
 
-        // Step 4: Convert bot reply to speech
-        // Strip markdown formatting for cleaner TTS output
-        const cleanText = chatResponse.reply
-          .replace(/\*\*([^*]+)\*\*/g, '$1')  // Remove bold
-          .replace(/\*([^*]+)\*/g, '$1')      // Remove italic
-          .replace(/#{1,6}\s/g, '')            // Remove headings
-          .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1') // Remove links, keep text
-          .replace(/[`~]/g, '')                // Remove code markers
-          .replace(/\n{3,}/g, '\n\n')          // Collapse multiple newlines
-          .trim();
-
-        const voice = getVoiceForLanguage(detectedLanguage);
-        const ttsResult = await textToSpeech({
-          text: cleanText,
-          voice,
-          speed: 1.0,
-        });
-
-        let audioResponseUrl: string | null = null;
-        if ('audioUrl' in ttsResult) {
-          audioResponseUrl = ttsResult.audioUrl;
-        } else {
-          console.error('[VoiceChat] TTS failed:', ttsResult.error);
-          // Continue without audio — text response still works
-        }
+        // TTS is handled client-side via browser Web Speech API
+        // Server-side TTS endpoint is not available on this platform
 
         return {
           // Transcription info
@@ -8771,8 +8749,8 @@ export const appRouter = router({
           reply: chatResponse.reply,
           cards: chatResponse.cards,
           quickReplies: chatResponse.quickReplies,
-          // Audio response
-          audioUrl: audioResponseUrl,
+          // Audio response (null — browser TTS handles playback)
+          audioUrl: null as string | null,
         };
       }),
 
