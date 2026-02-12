@@ -1903,3 +1903,19 @@ Orders fixed:
 - [x] Write vitest tests for deletion lockdown
   - 13 tests in server/productDeletion.test.ts (all passing)
   - Tests: wrong code, wrong name, staff/customer rejection, order history protection, isActive stripping
+
+## BUG: Iced Beverages products missing from customer menu (Feb 11 - second report)
+
+- [x] Investigate why only 2 out of 10 products show per subcategory (Organic Oolong, Assam, Green Tea)
+  - Root cause: Staff toggled isAvailable=0 on individual products via Staff Orders page
+  - Organic Oolong: 8/10 NOT-AVAILABLE, Organic Assam: 8/10, Organic Green Tea: 8/10
+- [x] Check product-level isAvailable, isInStock, isActive, availableInstore flags
+- [x] Fix affected products so all show on customer menu
+  - Restored isAvailable=1 for all Iced Beverages products (24 products restored)
+
+## BUG: No way to reactivate inactive products in Admin (Feb 12)
+
+- [x] Add Reactivate button in ProductEditDialog for inactive products
+- [x] Add quick Reactivate action in products table row for inactive products
+  - Inactive products now show a green "Reactivate" button in the Status column
+  - ProductEditDialog shows "Reactivate" button instead of "Deactivate" for inactive products

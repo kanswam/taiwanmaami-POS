@@ -706,9 +706,16 @@ function ProductsTab() {
                               <Check className="w-3 h-3" /> Active
                             </span>
                           ) : (
-                            <span className="inline-flex items-center gap-1 text-xs font-medium text-red-700 bg-red-100 px-2 py-1 rounded-full">
-                              <X className="w-3 h-3" /> Inactive
-                            </span>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="gap-1 text-xs border-green-500 text-green-700 hover:bg-green-50"
+                              onClick={() => reactivateProduct.mutate({ id: product.id })}
+                              disabled={reactivateProduct.isPending}
+                            >
+                              <RotateCcw className="w-3 h-3" />
+                              Reactivate
+                            </Button>
                           )}
                         </td>
                         <td className="p-3 text-center">
@@ -842,6 +849,15 @@ function ProductEditDialog({ product, onUpdate }: { product: any; onUpdate: () =
     product.imageUrl3 || null,
   ]);
   const [uploading, setUploading] = useState(false);
+
+  const reactivateProduct = trpc.admin.reactivateProduct.useMutation({
+    onSuccess: () => {
+      toast.success('Product reactivated successfully');
+      setOpen(false);
+      onUpdate();
+    },
+    onError: (err) => toast.error(err.message),
+  });
 
   const deactivateProduct = trpc.admin.deleteProduct.useMutation({
     onSuccess: () => {
@@ -1269,7 +1285,17 @@ function ProductEditDialog({ product, onUpdate }: { product: any; onUpdate: () =
                 <EyeOff className="w-4 h-4 mr-2" />
                 Deactivate
               </Button>
-            ) : null}
+            ) : (
+              <Button 
+                variant="ghost" 
+                className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                onClick={() => reactivateProduct.mutate({ id: product.id })}
+                disabled={reactivateProduct.isPending}
+              >
+                <RotateCcw className="w-4 h-4 mr-2" />
+                {reactivateProduct.isPending ? 'Reactivating...' : 'Reactivate'}
+              </Button>
+            )}
             {canDeleteData?.canDelete ? (
               <Button 
                 variant="ghost" 
