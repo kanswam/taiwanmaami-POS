@@ -1919,3 +1919,14 @@ Orders fixed:
 - [x] Add quick Reactivate action in products table row for inactive products
   - Inactive products now show a green "Reactivate" button in the Status column
   - ProductEditDialog shows "Reactivate" button instead of "Deactivate" for inactive products
+
+## BUG: Zilla Wrap not showing on customer menu after reactivation (Feb 12)
+
+- [x] Investigate why Zilla Wrap doesn't appear on customer menu despite isActive=true
+  - Root cause: isAvailable=0 (staff toggle) was not reset when product was reactivated
+  - getFullMenu filters by BOTH isActive AND isAvailable
+- [x] Check isAvailable, availableInstore, isInStock flags on Zilla Wrap
+  - isActive=1, isAvailable=0, isInStock=1, availableInstore=1, availableDelivery=1
+- [x] Fix the issue so reactivated products appear on customer menu
+  - Fixed Zilla Wrap data: set isAvailable=1
+  - Fixed reactivateProduct procedure: now also sets isAvailable=true when reactivating

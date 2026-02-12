@@ -1,0 +1,50 @@
+{
+  "query": "SHOW COLUMNS FROM products WHERE Field LIKE '%active%' OR Field LIKE '%available%' OR Field LIKE '%stock%'",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SHOW COLUMNS FROM products WHERE Field LIKE '%active%' OR Field LIKE '%available%' OR Field LIKE '%stock%'",
+  "rows": [
+    {
+      "Field": "availableInstore",
+      "Type": "tinyint(1)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "1",
+      "Extra": ""
+    },
+    {
+      "Field": "availableDelivery",
+      "Type": "tinyint(1)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "1",
+      "Extra": ""
+    },
+    {
+      "Field": "availableAtPalladium",
+      "Type": "tinyint(1)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "1",
+      "Extra": ""
+    },
+    {
+      "Field": "availableAtTnagar",
+      "Type": "tinyint(1)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "1",
+      "Extra": ""
+    },
+    {
+      "Field": "availableSizes",
+      "Type": "json",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    }
+  ],
+  "messages": [],
+  "stdout": "Field\tType\tNull\tKey\tDefault\tExtra\navailableInstore\ttinyint(1)\tNO\t\t1\t\navailableDelivery\ttinyint(1)\tNO\t\t1\t\navailableAtPalladium\ttinyint(1)\tNO\t\t1\t\navailableAtTnagar\ttinyint(1)\tNO\t\t1\t\navailableSizes\tjson\tYES\t\tNULL\t\n",
+  "stderr": "",
+  "execution_time_ms": 64
+}

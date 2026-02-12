@@ -2581,7 +2581,8 @@ export const appRouter = router({
           newValue: 'true',
         });
         
-        await dbInstance!.update(products).set({ isActive: true }).where(eq(products.id, input.id));
+        // When reactivating, also reset isAvailable to true so product appears on customer menu
+        await dbInstance!.update(products).set({ isActive: true, isAvailable: true }).where(eq(products.id, input.id));
         return { success: true };
       }),
 
