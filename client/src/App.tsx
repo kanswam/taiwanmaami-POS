@@ -37,7 +37,7 @@ import Profile from "./pages/Profile";
 import AdminEvents from "./pages/AdminEvents";
 import AdminBlog from "./pages/AdminBlog";
 import { CookieConsent } from "./components/CookieConsent";
-import { ChatWidget } from "./components/ChatWidget";
+import { VoiceChatWidget } from "./components/VoiceChatWidget";
 import { usePageTracking } from "./hooks/usePageTracking";
 import { BirthdayPromptWrapper } from "./components/BirthdayPromptWrapper";
 import { WholesaleAuthProvider } from "./contexts/WholesaleAuthContext";
@@ -136,7 +136,7 @@ function App() {
             <Router />
             <CookieConsent />
             <BirthdayPromptWrapper />
-            <ChatWidget />
+            <VoiceChatWidget />
           </TooltipProvider>
         </CartProvider>
         </WholesaleAuthProvider>

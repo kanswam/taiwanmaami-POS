@@ -17,6 +17,9 @@ import { wholesaleRouter } from './wholesaleRouter';
 import { chatWithBot } from './chatbot';
 import { notifyOwner } from './_core/notification';
 import { calculateDeliveryCharge } from './deliveryCharge';
+import { transcribeAudio } from './_core/voiceTranscription';
+import { textToSpeech, getVoiceForLanguage } from './tts';
+import { storagePut } from './storage';
 
 // Admin procedure - only allows admin role
 const adminProcedure = protectedProcedure.use(({ ctx, next }) => {
@@ -8692,6 +8695,114 @@ export const appRouter = router({
       .mutation(async ({ input }) => {
         const response = await chatWithBot(input.messages);
         return response;
+      }),
+
+    // Voice chat: receive audio URL → transcribe → chat → TTS → return audio + text
+    voiceChat: publicProcedure
+      .input(z.object({
+        audioUrl: z.string().url(),
+        conversationHistory: z.array(z.object({
+          role: z.string(),
+          content: z.string(),
+        })).optional(),
+      }))
+      .mutation(async ({ input }) => {
+        // Step 1: Transcribe the audio
+        const transcription = await transcribeAudio({
+          audioUrl: input.audioUrl,
+          prompt: 'Transcribe the customer\'s voice message. They may speak in English, Tamil, Hindi, Mandarin Chinese, or other languages.',
+        });
+
+        if ('error' in transcription) {
+          throw new TRPCError({
+            code: 'BAD_REQUEST',
+            message: transcription.error,
+            cause: transcription,
+          });
+        }
+
+        const userText = transcription.text;
+        const detectedLanguage = transcription.language || 'en';
+
+        console.log(`[VoiceChat] Transcribed (${detectedLanguage}): ${userText}`);
+
+        // Step 2: Build conversation history with the new transcribed message
+        const history = [
+          ...(input.conversationHistory || []),
+          { role: 'user', content: userText },
+        ];
+
+        // Step 3: Get chatbot response (it will auto-detect language from the user message)
+        const chatResponse = await chatWithBot(history);
+
+        console.log(`[VoiceChat] Bot reply: ${chatResponse.reply.substring(0, 100)}...`);
+
+        // Step 4: Convert bot reply to speech
+        // Strip markdown formatting for cleaner TTS output
+        const cleanText = chatResponse.reply
+          .replace(/\*\*([^*]+)\*\*/g, '$1')  // Remove bold
+          .replace(/\*([^*]+)\*/g, '$1')      // Remove italic
+          .replace(/#{1,6}\s/g, '')            // Remove headings
+          .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1') // Remove links, keep text
+          .replace(/[`~]/g, '')                // Remove code markers
+          .replace(/\n{3,}/g, '\n\n')          // Collapse multiple newlines
+          .trim();
+
+        const voice = getVoiceForLanguage(detectedLanguage);
+        const ttsResult = await textToSpeech({
+          text: cleanText,
+          voice,
+          speed: 1.0,
+        });
+
+        let audioResponseUrl: string | null = null;
+        if ('audioUrl' in ttsResult) {
+          audioResponseUrl = ttsResult.audioUrl;
+        } else {
+          console.error('[VoiceChat] TTS failed:', ttsResult.error);
+          // Continue without audio — text response still works
+        }
+
+        return {
+          // Transcription info
+          userText,
+          detectedLanguage,
+          // Bot response
+          reply: chatResponse.reply,
+          cards: chatResponse.cards,
+          quickReplies: chatResponse.quickReplies,
+          // Audio response
+          audioUrl: audioResponseUrl,
+        };
+      }),
+
+    // Upload audio from frontend for voice chat
+    uploadAudio: publicProcedure
+      .input(z.object({
+        audioBase64: z.string(),
+        mimeType: z.string().default('audio/webm'),
+      }))
+      .mutation(async ({ input }) => {
+        const buffer = Buffer.from(input.audioBase64, 'base64');
+        
+        // Check size (16MB limit)
+        const sizeMB = buffer.length / (1024 * 1024);
+        if (sizeMB > 16) {
+          throw new TRPCError({
+            code: 'BAD_REQUEST',
+            message: `Audio file too large (${sizeMB.toFixed(1)}MB). Maximum is 16MB.`,
+          });
+        }
+
+        const timestamp = Date.now();
+        const randomSuffix = Math.random().toString(36).substring(2, 8);
+        const ext = input.mimeType.includes('webm') ? 'webm' : 
+                    input.mimeType.includes('mp4') ? 'm4a' :
+                    input.mimeType.includes('ogg') ? 'ogg' : 'webm';
+        const fileKey = `voice-chat/input-${timestamp}-${randomSuffix}.${ext}`;
+
+        const { url } = await storagePut(fileKey, buffer, input.mimeType);
+        return { audioUrl: url };
       }),
   }),
 });

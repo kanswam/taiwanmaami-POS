@@ -1972,3 +1972,31 @@ Orders fixed:
 
 - [x] Replace "₹100 Flat Delivery" text with tiered delivery pricing info
 - [x] Updated to "Delivery from ₹100 · Distance-based charges apply"
+
+## Voice-First Multilingual Maami Bot (Feb 12)
+
+- [x] Research TTS API options (OpenAI TTS, browser Web Speech API, etc.)
+  - Using OpenAI-compatible TTS via Forge API with "nova" voice (warm & friendly)
+- [x] Build backend TTS endpoint to convert bot responses to speech
+  - Created server/tts.ts with textToSpeech() and getVoiceForLanguage()
+  - Uploads generated audio to S3 and returns public URL
+- [x] Integrate Whisper transcription for voice input (already available in template)
+  - voiceChat mutation: records audio → uploads to S3 → Whisper transcription → LLM → TTS → returns audio URL + text
+- [x] Auto-detect language from speech and respond in same language
+  - Whisper auto-detects language, passes it to LLM with instruction to respond in same language
+  - LLM system prompt updated with multilingual voice support section
+- [x] Build voice-first chat UI with mic button, waveform animation, and audio playback
+  - Created VoiceChatWidget.tsx replacing old ChatWidget
+  - Large pulsing mic button as primary interaction
+  - Visual states: idle, recording (red pulse), processing (spinner), playing (speaker animation)
+  - Auto-plays bot voice response
+  - Text input as secondary option
+  - Greeting bubble: "Nǐ hǎo! வணக்கம்! 👋 Tap to talk — I speak your language!"
+- [x] Update chatbot system prompt for multilingual voice responses (warm & friendly)
+  - Added "Multilingual Voice Support" section to system prompt
+  - Instructs bot to respond in same language, use shorter sentences for voice
+- [x] Support key languages: English, Tamil, Hindi, Mandarin Chinese
+  - All supported via Whisper (auto-detect) + LLM (multilingual) + TTS (multilingual)
+- [x] Write vitest tests for voice endpoints
+  - 10 tests in server/voiceChat.test.ts (all passing)
+  - Tests: TTS voice selection, input validation, procedure availability
