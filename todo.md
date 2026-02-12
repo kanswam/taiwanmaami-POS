@@ -2010,3 +2010,10 @@ Orders fixed:
 - [x] Updated greeting bubble to text-friendly message
 - [x] Updated header subtitle to "Your ordering assistant"
 - [x] Auto-focus text input when chat opens
+
+## Exclude staff from Top Customers analytics (Feb 12)
+
+- [x] Filter out staff member Rinold Thousen from Top Customers list
+- [x] Scalable approach: exclude ALL staff/admin users by role (not just Rinold)
+- [x] Exclusion works by both userId and phone number matching
+- [x] Added vitest tests for staff exclusion logic (4 tests passing)

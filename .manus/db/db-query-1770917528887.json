@@ -1,0 +1,31 @@
+{
+  "query": "SELECT * FROM users WHERE name LIKE '%Rinold%';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT * FROM users WHERE name LIKE '%Rinold%';",
+  "rows": [
+    {
+      "id": "16200143",
+      "openId": "cAPYMABDXAdS8vfS74mbtF",
+      "name": "Rinold Thousen",
+      "email": "rinoldthousen94@gmail.com",
+      "loginMethod": "google",
+      "role": "staff",
+      "createdAt": "2026-01-06 09:31:31",
+      "updatedAt": "2026-02-12 17:32:04",
+      "lastSignedIn": "2026-02-12 17:32:04",
+      "phone": "NULL",
+      "loyaltyPoints": "0",
+      "stampCount": "0",
+      "lifetimeStamps": "0",
+      "lastStampDate": "2026-02-01 15:04:37",
+      "storeCredit": "0",
+      "notes": "NULL",
+      "birthMonth": "NULL",
+      "birthDay": "NULL",
+      "birthdayCodeUsedYear": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\topenId\tname\temail\tloginMethod\trole\tcreatedAt\tupdatedAt\tlastSignedIn\tphone\tloyaltyPoints\tstampCount\tlifetimeStamps\tlastStampDate\tstoreCredit\tnotes\tbirthMonth\tbirthDay\tbirthdayCodeUsedYear\n16200143\tcAPYMABDXAdS8vfS74mbtF\tRinold Thousen\trinoldthousen94@gmail.com\tgoogle\tstaff\t2026-01-06 09:31:31\t2026-02-12 17:32:04\t2026-02-12 17:32:04\tNULL\t0\t0\t0\t2026-02-01 15:04:37\t0\tNULL\tNULL\tNULL\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 70
+}

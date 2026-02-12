@@ -4872,6 +4872,13 @@ export const appRouter = router({
         const dbInstance = await getDb();
         if (!dbInstance) return [];
 
+        // Get staff/admin user IDs to exclude from top customers
+        const staffUsers = await dbInstance.select({ id: users.id, phone: users.phone })
+          .from(users)
+          .where(or(eq(users.role, 'staff'), eq(users.role, 'admin')));
+        const staffUserIds = new Set(staffUsers.map(u => u.id));
+        const staffPhones = new Set(staffUsers.map(u => u.phone).filter(Boolean));
+
         let conditions: any[] = [sql`${orders.orderStatus} != 'cancelled'`];
         if (input?.startDate) conditions.push(sql`${orders.createdAt} >= ${input.startDate}`);
         if (input?.endDate) conditions.push(sql`${orders.createdAt} <= ${input.endDate + ' 23:59:59'}`);
@@ -4881,6 +4888,10 @@ export const appRouter = router({
 
         const customerStats: Record<string, { name: string; phone: string; orders: number; totalSpent: number }> = {};
         matchingOrders.forEach(order => {
+          // Skip orders from staff/admin users
+          if (order.userId && staffUserIds.has(order.userId)) return;
+          if (order.customerPhone && staffPhones.has(order.customerPhone)) return;
+
           const key = order.customerPhone || `user_${order.userId}`;
           if (!customerStats[key]) customerStats[key] = { 
             name: order.customerName || 'Guest', 

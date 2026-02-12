@@ -1,0 +1,70 @@
+{
+  "query": "SELECT id, name, role, phone FROM users WHERE role IN ('staff', 'admin');",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT id, name, role, phone FROM users WHERE role IN ('staff', 'admin');",
+  "rows": [
+    {
+      "id": "15510360",
+      "name": "Kannan Swamy",
+      "role": "admin",
+      "phone": "NULL"
+    },
+    {
+      "id": "15510362",
+      "name": "Theresa Hu Cy",
+      "role": "admin",
+      "phone": "NULL"
+    },
+    {
+      "id": "16200107",
+      "name": "Boichong Kipgen",
+      "role": "staff",
+      "phone": "NULL"
+    },
+    {
+      "id": "16200143",
+      "name": "Rinold Thousen",
+      "role": "staff",
+      "phone": "NULL"
+    },
+    {
+      "id": "16200386",
+      "name": "Naveen Kumar",
+      "role": "staff",
+      "phone": "NULL"
+    },
+    {
+      "id": "16620012",
+      "name": "Ringsoli Khempraei",
+      "role": "staff",
+      "phone": "NULL"
+    },
+    {
+      "id": "16680498",
+      "name": "Sakthivel chinnathambi",
+      "role": "staff",
+      "phone": "NULL"
+    },
+    {
+      "id": "18360071",
+      "name": "biakmawi771",
+      "role": "staff",
+      "phone": "NULL"
+    },
+    {
+      "id": "18840705",
+      "name": "1060 Vindhiya",
+      "role": "staff",
+      "phone": "NULL"
+    },
+    {
+      "id": "20610643",
+      "name": "Walk-in Customer",
+      "role": "staff",
+      "phone": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\trole\tphone\n15510360\tKannan Swamy\tadmin\tNULL\n15510362\tTheresa Hu Cy\tadmin\tNULL\n16200107\tBoichong Kipgen\tstaff\tNULL\n16200143\tRinold Thousen\tstaff\tNULL\n16200386\tNaveen Kumar\tstaff\tNULL\n16620012\tRingsoli Khempraei\tstaff\tNULL\n16680498\tSakthivel chinnathambi\tstaff\tNULL\n18360071\tbiakmawi771\tstaff\tNULL\n18840705\t1060 Vindhiya\tstaff\tNULL\n20610643\tWalk-in Customer\tstaff\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 56
+}

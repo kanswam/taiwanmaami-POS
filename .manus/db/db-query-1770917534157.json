@@ -1,0 +1,31 @@
+{
+  "query": "SELECT o.userId, o.customerName, o.customerPhone, COUNT(*) as orderCount, SUM(o.totalAmount) as totalSpent FROM orders o WHERE o.customerName LIKE '%Rinold%' OR o.customerPhone = '7085637756' GROUP BY o.userId, o.customerName, o.customerPhone;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT o.userId, o.customerName, o.customerPhone, COUNT(*) as orderCount, SUM(o.totalAmount) as totalSpent FROM orders o WHERE o.customerName LIKE '%Rinold%' OR o.customerPhone = '7085637756' GROUP BY o.userId, o.customerName, o.customerPhone;",
+  "rows": [
+    {
+      "userId": "NULL",
+      "customerName": "Guest",
+      "customerPhone": "7085637756",
+      "orderCount": "1",
+      "totalSpent": "83000"
+    },
+    {
+      "userId": "16200143",
+      "customerName": "Rinold Thousen",
+      "customerPhone": "7085637756",
+      "orderCount": "33",
+      "totalSpent": "3004074"
+    },
+    {
+      "userId": "16200143",
+      "customerName": "Rinold Thousen",
+      "customerPhone": "+91 70856 37756",
+      "orderCount": "1",
+      "totalSpent": "127576"
+    }
+  ],
+  "messages": [],
+  "stdout": "userId\tcustomerName\tcustomerPhone\torderCount\ttotalSpent\nNULL\tGuest\t7085637756\t1\t83000\n16200143\tRinold Thousen\t7085637756\t33\t3004074\n16200143\tRinold Thousen\t+91 70856 37756\t1\t127576\n",
+  "stderr": "",
+  "execution_time_ms": 67
+}
