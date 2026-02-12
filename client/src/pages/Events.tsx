@@ -52,7 +52,7 @@ const pastEvents = [
   {
     title: "Wedding Celebrations",
     description: "Create unforgettable moments with our premium wedding catering and event services. From intimate ceremonies to grand celebrations, we bring your vision to life with exquisite cuisine and impeccable service.",
-    image: "https://res.cloudinary.com/drpu1dbqk/image/upload/f_auto,q_auto/v1768284572/events/corporate-event.jpg",
+    image: "https://res.cloudinary.com/drpu1dbqk/image/upload/f_auto,q_auto/v1768284572https://files.manuscdn.com/user_upload_by_module/session_file/114675165/oYJCqVKJtKJXPqDV.jpg",
     icon: <Heart className="h-5 w-5" />,
     type: "Wedding",
     cta: "Plan Your Wedding",
@@ -61,7 +61,7 @@ const pastEvents = [
   {
     title: "Corporate Functions",
     description: "Impress your clients and team with sophisticated corporate catering. Our expert team delivers premium Asian cuisine and seamless service for conferences, gala dinners, and business gatherings.",
-    image: "https://res.cloudinary.com/drpu1dbqk/image/upload/f_auto,q_auto/v1768284574/events/wedding-event.jpg",
+    image: "https://res.cloudinary.com/drpu1dbqk/image/upload/f_auto,q_auto/v1768284574https://files.manuscdn.com/user_upload_by_module/session_file/114675165/gaVGmAQGfvzdLfvo.jpg",
     icon: <Building2 className="h-5 w-5" />,
     type: "Corporate",
     cta: "Plan Your Corporate Event",
@@ -70,7 +70,7 @@ const pastEvents = [
   {
     title: "School Events",
     description: "Bring joy and flavour to your school events. Our vibrant food stall and catering services create memorable experiences for students, families, and staff. Perfect for fairs, festivals, and fundraisers!",
-    image: "https://res.cloudinary.com/drpu1dbqk/image/upload/f_auto,q_auto/v1768284573/events/school-event.jpg",
+    image: "https://res.cloudinary.com/drpu1dbqk/image/upload/f_auto,q_auto/v1768284573https://files.manuscdn.com/user_upload_by_module/session_file/114675165/AhKEDpajDbldxQIF.jpg",
     icon: <GraduationCap className="h-5 w-5" />,
     type: "School",
     cta: "Plan Your School Event",

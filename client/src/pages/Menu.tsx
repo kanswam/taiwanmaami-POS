@@ -16,41 +16,41 @@ import { formatPrice } from '@shared/types';
 
 // Product image mapping
 const PRODUCT_IMAGES: Record<string, string> = {
-  'hazelnut-milk-tea': '/images/hazelnut-milk-tea.jpg',
-  'caramel-milk-tea': '/images/caramel-milk-tea.jpg',
-  'butterscotch-milk-oolong': '/images/butterscotch-milk-oolong.jpg',
-  'creme-brulee-oolong-latte': '/images/creme-brulee-oolong-latte.jpg',
-  'creme-caramel-taro-latte': '/images/creme-caramel-taro-latte.jpg',
-  'banoffee-matcha-latte': '/images/banoffee-matcha-latte.jpg',
-  'dragon-speck-mochi': '/images/dragon-speck-mochi.jpg',
-  'mango-mochi': '/images/mango-mochi.jpg',
-  'banoffee-mochi': '/images/banoffee-mochi.jpg',
-  'biang-biang-noodles': '/images/biang-biang-noodles.jpg',
-  'yaki-onigiri': '/images/yaki-onigiri.jpg',
-  'stir-fried-veg-cong-you-bing': '/images/stir-fried-veg-cong-you-bing.jpg',
-  'cheesy-corn-cong-you-bing': '/images/cheesy-corn-cong-you-bing.jpg',
-  'egg-cong-you-bing': '/images/egg-cong-you-bing.jpg',
-  'velvety-aubergine-stew-noodle': '/images/velvety-aubergine-stew-noodle.jpg',
-  'boba-creme-caramel': '/images/boba-creme-caramel.jpg',
+  'hazelnut-milk-tea': 'https://files.manuscdn.com/user_upload_by_module/session_file/114675165/WkPwhHgxpahbIVvi.jpg',
+  'caramel-milk-tea': 'https://files.manuscdn.com/user_upload_by_module/session_file/114675165/ycWWgbSAUZVoaeTy.jpg',
+  'butterscotch-milk-oolong': 'https://files.manuscdn.com/user_upload_by_module/session_file/114675165/pYbRhiNlPbOcebsT.jpg',
+  'creme-brulee-oolong-latte': 'https://files.manuscdn.com/user_upload_by_module/session_file/114675165/uefHOGNUJaQUNIhx.jpg',
+  'creme-caramel-taro-latte': 'https://files.manuscdn.com/user_upload_by_module/session_file/114675165/CdvihcYqWwSGVVqs.jpg',
+  'banoffee-matcha-latte': 'https://files.manuscdn.com/user_upload_by_module/session_file/114675165/FpNjaMkCtHPSSjAg.jpg',
+  'dragon-speck-mochi': 'https://files.manuscdn.com/user_upload_by_module/session_file/114675165/JIfaoWUoeItjtLNs.jpg',
+  'mango-mochi': 'https://files.manuscdn.com/user_upload_by_module/session_file/114675165/gijTUDecXirMLNbg.jpg',
+  'banoffee-mochi': 'https://files.manuscdn.com/user_upload_by_module/session_file/114675165/soALHhslexdCuzFf.jpg',
+  'biang-biang-noodles': 'https://files.manuscdn.com/user_upload_by_module/session_file/114675165/kTxbrdufpmJRQCdX.jpg',
+  'yaki-onigiri': 'https://files.manuscdn.com/user_upload_by_module/session_file/114675165/lQcSLUexheHdEdYh.jpg',
+  'stir-fried-veg-cong-you-bing': 'https://files.manuscdn.com/user_upload_by_module/session_file/114675165/AcVAopeVLVKfoKoM.jpg',
+  'cheesy-corn-cong-you-bing': 'https://files.manuscdn.com/user_upload_by_module/session_file/114675165/HzuOkwViKWywSApJ.jpg',
+  'egg-cong-you-bing': 'https://files.manuscdn.com/user_upload_by_module/session_file/114675165/NyxsfcZEQisPUFXb.jpg',
+  'velvety-aubergine-stew-noodle': 'https://files.manuscdn.com/user_upload_by_module/session_file/114675165/VumwBnugNbUPZfGP.jpg',
+  'boba-creme-caramel': 'https://files.manuscdn.com/user_upload_by_module/session_file/114675165/aJzlzKDqlmGFMmbT.jpg',
 };
 
 // Subcategory image mapping
 const SUBCATEGORY_IMAGES: Record<string, string> = {
-  'organic-black-tea': '/images/caramel-milk-tea.jpg',
-  'organic-oolong-tea': '/images/butterscotch-milk-oolong.jpg',
-  'organic-green-tea': '/images/cucumber-drink.jpg',
-  'matcha-blend': '/images/banoffee-matcha-latte.jpg',
-  'taro-blend': '/images/creme-caramel-taro-latte.jpg',
-  'iced-coffee': '/images/hazelnut-milk-tea.jpg',
-  'hot-coffee': '/images/hazelnut-milk-tea.jpg',
-  'fruit-mochi': '/images/mango-mochi.jpg',
-  'signature-mochi': '/images/dragon-speck-mochi.jpg',
-  'noodles': '/images/biang-biang-noodles.jpg',
-  'flat-bread': '/images/stir-fried-veg-cong-you-bing.jpg',
-  'onigiri': '/images/yaki-onigiri.jpg',
-  'desserts': '/images/boba-creme-caramel.jpg',
-  'pillow-brioche': '/images/egg-mayo-onigiri.jpg',
-  'fruit-slush': '/images/popping-boba.jpg',
+  'organic-black-tea': 'https://files.manuscdn.com/user_upload_by_module/session_file/114675165/ycWWgbSAUZVoaeTy.jpg',
+  'organic-oolong-tea': 'https://files.manuscdn.com/user_upload_by_module/session_file/114675165/pYbRhiNlPbOcebsT.jpg',
+  'organic-green-tea': 'https://files.manuscdn.com/user_upload_by_module/session_file/114675165/IWpHWvXBnTknigfp.jpg',
+  'matcha-blend': 'https://files.manuscdn.com/user_upload_by_module/session_file/114675165/FpNjaMkCtHPSSjAg.jpg',
+  'taro-blend': 'https://files.manuscdn.com/user_upload_by_module/session_file/114675165/CdvihcYqWwSGVVqs.jpg',
+  'iced-coffee': 'https://files.manuscdn.com/user_upload_by_module/session_file/114675165/WkPwhHgxpahbIVvi.jpg',
+  'hot-coffee': 'https://files.manuscdn.com/user_upload_by_module/session_file/114675165/WkPwhHgxpahbIVvi.jpg',
+  'fruit-mochi': 'https://files.manuscdn.com/user_upload_by_module/session_file/114675165/gijTUDecXirMLNbg.jpg',
+  'signature-mochi': 'https://files.manuscdn.com/user_upload_by_module/session_file/114675165/JIfaoWUoeItjtLNs.jpg',
+  'noodles': 'https://files.manuscdn.com/user_upload_by_module/session_file/114675165/kTxbrdufpmJRQCdX.jpg',
+  'flat-bread': 'https://files.manuscdn.com/user_upload_by_module/session_file/114675165/AcVAopeVLVKfoKoM.jpg',
+  'onigiri': 'https://files.manuscdn.com/user_upload_by_module/session_file/114675165/lQcSLUexheHdEdYh.jpg',
+  'desserts': 'https://files.manuscdn.com/user_upload_by_module/session_file/114675165/aJzlzKDqlmGFMmbT.jpg',
+  'pillow-brioche': 'https://files.manuscdn.com/user_upload_by_module/session_file/114675165/fwbObkBdJAfUquQz.jpg',
+  'fruit-slush': 'https://files.manuscdn.com/user_upload_by_module/session_file/114675165/wtAnUeYdJDFoSgKS.jpg',
 };
 
 export default function Menu() {
@@ -258,7 +258,7 @@ export default function Menu() {
 
           // Get a representative image from the first subcategory
           const firstSub = subcategories[0];
-          const imageUrl = firstSub?.imageUrl || SUBCATEGORY_IMAGES[firstSub?.slug] || '/images/shopfront.jpg';
+          const imageUrl = firstSub?.imageUrl || SUBCATEGORY_IMAGES[firstSub?.slug] || 'https://files.manuscdn.com/user_upload_by_module/session_file/114675165/fYHiyJVvyVYquZaW.jpg';
 
           return (
             <button
@@ -274,7 +274,7 @@ export default function Menu() {
                   decoding="async"
                   className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                   onError={(e) => {
-                    (e.target as HTMLImageElement).src = '/images/shopfront.jpg';
+                    (e.target as HTMLImageElement).src = 'https://files.manuscdn.com/user_upload_by_module/session_file/114675165/fYHiyJVvyVYquZaW.jpg';
                   }}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
@@ -331,7 +331,7 @@ export default function Menu() {
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
           {visibleSubcategories.map((subcategory) => {
             const productCount = menuData?.products.filter(p => p.subcategoryId === subcategory.id).length || 0;
-            const imageUrl = subcategory.imageUrl || SUBCATEGORY_IMAGES[subcategory.slug] || '/images/shopfront.jpg';
+            const imageUrl = subcategory.imageUrl || SUBCATEGORY_IMAGES[subcategory.slug] || 'https://files.manuscdn.com/user_upload_by_module/session_file/114675165/fYHiyJVvyVYquZaW.jpg';
             
             return (
               <button
@@ -347,7 +347,7 @@ export default function Menu() {
                     decoding="async"
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     onError={(e) => {
-                      (e.target as HTMLImageElement).src = '/images/shopfront.jpg';
+                      (e.target as HTMLImageElement).src = 'https://files.manuscdn.com/user_upload_by_module/session_file/114675165/fYHiyJVvyVYquZaW.jpg';
                     }}
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />

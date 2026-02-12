@@ -48,7 +48,7 @@ export function Header() {
           {/* Logo */}
           <Link href="/" className="flex items-center">
             <img 
-              src="/taiwan-maami-logo-full.png" 
+              src="https://files.manuscdn.com/user_upload_by_module/session_file/114675165/PNSTmVAGBQQgOlVy.png" 
               alt="Taiwan Maami" 
               fetchPriority="high"
               className="h-16 md:h-24 w-auto"

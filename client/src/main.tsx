@@ -28,7 +28,7 @@ function showLoginTransitionAndRedirect() {
     opacity: 0; transition: opacity 0.3s ease;
   `;
   overlay.innerHTML = `
-    <img src="/taiwan-maami-logo-full.png" alt="Taiwan Maami" style="height: 8rem; width: auto; margin-bottom: 1.5rem;" />
+    <img src="https://files.manuscdn.com/user_upload_by_module/session_file/114675165/PNSTmVAGBQQgOlVy.png" alt="Taiwan Maami" style="height: 8rem; width: auto; margin-bottom: 1.5rem;" />
     <div style="width: 2rem; height: 2rem; border: 3px solid #bd302c; border-top-color: transparent; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 1rem;"></div>
     <p style="font-size: 1rem; font-weight: 500; color: #3d2c24; letter-spacing: 0.025em;">Redirecting to secure login\u2026</p>
     <p style="font-size: 0.875rem; color: #7a6a5f; margin-top: 0.25rem;">You\u2019ll be right back</p>

@@ -214,11 +214,11 @@ export default function Home() {
             playsInline
             preload="metadata"
             className="w-full h-full object-cover"
-            poster="/images/interior2.jpg"
+            poster="https://files.manuscdn.com/user_upload_by_module/session_file/114675165/cuoZWmjPGnGiJcSS.jpg"
           >
             <source src="https://files.manuscdn.com/user_upload_by_module/session_file/114675165/ecOaguDqCiMAAaot.mp4" type="video/mp4" />
             <img
-              src="/images/interior2.jpg"
+              src="https://files.manuscdn.com/user_upload_by_module/session_file/114675165/cuoZWmjPGnGiJcSS.jpg"
               alt="Taiwan Maami Interior"
               className="w-full h-full object-cover"
             />
@@ -437,7 +437,7 @@ export default function Home() {
                 {/* Lazy Loaded Video Background */}
                 <LazyVideo
                   src={location.video}
-                  poster="/images/shopfront.jpg"
+                  poster="https://files.manuscdn.com/user_upload_by_module/session_file/114675165/fYHiyJVvyVYquZaW.jpg"
                   className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                   autoPlay
                   loop

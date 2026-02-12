@@ -500,7 +500,7 @@ export default function StaffOrders() {
   // Sound notification for new orders
   useEffect(() => {
     if (!audioRef.current) {
-      audioRef.current = new Audio('/sounds/notification.mp3');
+      audioRef.current = new Audio('https://files.manuscdn.com/user_upload_by_module/session_file/114675165/qyIoNUCfQZuBgFmR.mp3');
     }
   }, []);
 
