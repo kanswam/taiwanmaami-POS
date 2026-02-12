@@ -37,153 +37,12 @@ const LANGUAGE_NAMES: Record<string, string> = {
   gu: 'Gujarati',
 };
 
-// Map ISO language codes to BCP-47 language tags for speechSynthesis
-const LANG_TO_BCP47: Record<string, string[]> = {
-  en: ['en-IN', 'en-US', 'en-GB', 'en'],
-  ta: ['ta-IN', 'ta'],
-  hi: ['hi-IN', 'hi'],
-  zh: ['zh-CN', 'zh-TW', 'zh'],
-  ja: ['ja-JP', 'ja'],
-  ko: ['ko-KR', 'ko'],
-  fr: ['fr-FR', 'fr'],
-  de: ['de-DE', 'de'],
-  es: ['es-ES', 'es-MX', 'es'],
-  pt: ['pt-BR', 'pt-PT', 'pt'],
-  ar: ['ar-SA', 'ar'],
-  ru: ['ru-RU', 'ru'],
-  te: ['te-IN', 'te'],
-  kn: ['kn-IN', 'kn'],
-  ml: ['ml-IN', 'ml'],
-  mr: ['mr-IN', 'mr'],
-  bn: ['bn-IN', 'bn'],
-  gu: ['gu-IN', 'gu'],
-};
-
 const SUGGESTED_PROMPTS = [
   "🧋 What's popular?",
   "🍵 Show me iced teas",
   "🍡 Tell me about mochis",
   "📍 Store info",
 ];
-
-/**
- * Strip markdown formatting for cleaner TTS output
- */
-function cleanTextForSpeech(text: string): string {
-  return text
-    .replace(/\*\*([^*]+)\*\*/g, '$1')  // Remove bold
-    .replace(/\*([^*]+)\*/g, '$1')      // Remove italic
-    .replace(/#{1,6}\s/g, '')            // Remove headings
-    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1') // Remove links, keep text
-    .replace(/[`~]/g, '')                // Remove code markers
-    .replace(/[-•]\s/g, '')              // Remove bullet points
-    .replace(/\n{2,}/g, '. ')            // Replace multiple newlines with pause
-    .replace(/\n/g, '. ')               // Replace single newlines with pause
-    .replace(/₹(\d)/g, 'rupees $1')     // Pronounce currency
-    .replace(/\s{2,}/g, ' ')            // Collapse whitespace
-    .trim();
-}
-
-/**
- * Find the best voice for a given language from available speechSynthesis voices
- */
-function findVoiceForLanguage(lang: string): SpeechSynthesisVoice | null {
-  if (typeof window === 'undefined' || !window.speechSynthesis) return null;
-
-  const voices = window.speechSynthesis.getVoices();
-  if (voices.length === 0) return null;
-
-  const preferredTags = LANG_TO_BCP47[lang] || [lang];
-
-  // First pass: try to find a female voice matching the language (warmer tone)
-  for (const tag of preferredTags) {
-    const match = voices.find(
-      v => v.lang.toLowerCase().startsWith(tag.toLowerCase()) &&
-           (v.name.toLowerCase().includes('female') ||
-            v.name.toLowerCase().includes('woman') ||
-            v.name.toLowerCase().includes('zira') ||
-            v.name.toLowerCase().includes('samantha') ||
-            v.name.toLowerCase().includes('google') )
-    );
-    if (match) return match;
-  }
-
-  // Second pass: any voice matching the language
-  for (const tag of preferredTags) {
-    const match = voices.find(
-      v => v.lang.toLowerCase().startsWith(tag.toLowerCase())
-    );
-    if (match) return match;
-  }
-
-  // Fallback: English voice
-  if (lang !== 'en') {
-    return findVoiceForLanguage('en');
-  }
-
-  // Last resort: first available voice
-  return voices[0] || null;
-}
-
-/**
- * Speak text using the browser's Web Speech API
- */
-function speakText(text: string, lang: string = 'en'): Promise<void> {
-  return new Promise((resolve) => {
-    if (typeof window === 'undefined' || !window.speechSynthesis) {
-      console.warn('SpeechSynthesis not available');
-      resolve();
-      return;
-    }
-
-    // Cancel any ongoing speech
-    window.speechSynthesis.cancel();
-
-    const cleanText = cleanTextForSpeech(text);
-    if (!cleanText) {
-      resolve();
-      return;
-    }
-
-    // Truncate very long text for TTS (keep it under ~500 chars for responsiveness)
-    const truncated = cleanText.length > 500
-      ? cleanText.slice(0, 500) + '...'
-      : cleanText;
-
-    const utterance = new SpeechSynthesisUtterance(truncated);
-
-    const voice = findVoiceForLanguage(lang);
-    if (voice) {
-      utterance.voice = voice;
-      utterance.lang = voice.lang;
-    } else {
-      // Set lang tag even without a specific voice
-      const tags = LANG_TO_BCP47[lang];
-      utterance.lang = tags?.[0] || lang;
-    }
-
-    utterance.rate = 1.0;
-    utterance.pitch = 1.05; // Slightly higher for a warmer, friendlier tone
-    utterance.volume = 1.0;
-
-    utterance.onend = () => resolve();
-    utterance.onerror = (e) => {
-      console.warn('Speech synthesis error:', e.error);
-      resolve();
-    };
-
-    window.speechSynthesis.speak(utterance);
-  });
-}
-
-/**
- * Stop any ongoing speech
- */
-function stopSpeaking() {
-  if (typeof window !== 'undefined' && window.speechSynthesis) {
-    window.speechSynthesis.cancel();
-  }
-}
 
 export function VoiceChatWidget() {
   const [isOpen, setIsOpen] = useState(false);
@@ -198,8 +57,6 @@ export function VoiceChatWidget() {
   const [showGreeting, setShowGreeting] = useState(false);
   const [recordingDuration, setRecordingDuration] = useState(0);
   const [micPermissionDenied, setMicPermissionDenied] = useState(false);
-  const [isSpeaking, setIsSpeaking] = useState(false);
-  const [lastDetectedLang, setLastDetectedLang] = useState('en');
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
@@ -213,18 +70,6 @@ export function VoiceChatWidget() {
   const uploadAudioMutation = trpc.chatbot.uploadAudio.useMutation();
   const voiceChatMutation = trpc.chatbot.voiceChat.useMutation();
   const textChatMutation = trpc.chatbot.chat.useMutation();
-
-  // Pre-load voices on mount (some browsers need this)
-  useEffect(() => {
-    if (typeof window !== 'undefined' && window.speechSynthesis) {
-      // Trigger voice loading
-      window.speechSynthesis.getVoices();
-      // Some browsers fire voiceschanged event
-      window.speechSynthesis.onvoiceschanged = () => {
-        window.speechSynthesis.getVoices();
-      };
-    }
-  }, []);
 
   // Scroll to bottom
   const scrollToBottom = useCallback(() => {
@@ -243,19 +88,7 @@ export function VoiceChatWidget() {
     }
   }, [messages.length, scrollToBottom]);
 
-  // Speak bot response using browser TTS
-  const speakBotResponse = useCallback(async (text: string, lang?: string) => {
-    if (isMuted) return;
-    const speechLang = lang || lastDetectedLang || 'en';
-    setIsSpeaking(true);
-    try {
-      await speakText(text, speechLang);
-    } finally {
-      setIsSpeaking(false);
-    }
-  }, [isMuted, lastDetectedLang]);
-
-  // Auto-play audio response (S3 URL fallback — kept for backward compat)
+  // Auto-play audio response
   const playAudio = useCallback((url: string) => {
     if (isMuted) return;
     try {
@@ -270,22 +103,6 @@ export function VoiceChatWidget() {
       console.warn('Audio playback error:', err);
     }
   }, [isMuted]);
-
-  // Stop speech when muted
-  useEffect(() => {
-    if (isMuted) {
-      stopSpeaking();
-      setIsSpeaking(false);
-    }
-  }, [isMuted]);
-
-  // Stop speech when chat is closed
-  useEffect(() => {
-    if (!isOpen) {
-      stopSpeaking();
-      setIsSpeaking(false);
-    }
-  }, [isOpen]);
 
   // Show greeting tooltip after 5 seconds
   useEffect(() => {
@@ -310,10 +127,6 @@ export function VoiceChatWidget() {
   const startRecording = useCallback(async () => {
     try {
       setMicPermissionDenied(false);
-      // Stop any ongoing speech before recording
-      stopSpeaking();
-      setIsSpeaking(false);
-
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       
       // Try to use webm, fallback to whatever is supported
@@ -405,11 +218,6 @@ export function VoiceChatWidget() {
         conversationHistory,
       });
 
-      // Track detected language for future TTS
-      if (response.detectedLanguage) {
-        setLastDetectedLang(response.detectedLanguage);
-      }
-
       // Add user message (transcribed)
       const userMsg: ChatMessage = {
         role: 'user',
@@ -422,33 +230,27 @@ export function VoiceChatWidget() {
         role: 'assistant',
         content: response.reply,
         audioUrl: response.audioUrl,
-        detectedLanguage: response.detectedLanguage,
       };
 
       setMessages(prev => [...prev, userMsg, assistantMsg]);
 
-      // Speak the response using browser TTS (primary method)
-      // If server returned an audioUrl, try that first; otherwise use browser TTS
+      // Auto-play the response
       if (response.audioUrl) {
         playAudio(response.audioUrl);
-      } else {
-        speakBotResponse(response.reply, response.detectedLanguage);
       }
 
     } catch (err: any) {
       console.error('Voice chat error:', err);
-      const errorMsg = 'Sorry, I had trouble understanding that. Could you try again?';
       setMessages(prev => [...prev, {
         role: 'assistant',
-        content: errorMsg,
+        content: 'Sorry, I had trouble understanding that. Could you try again?',
       }]);
-      speakBotResponse(errorMsg, 'en');
     } finally {
       setIsProcessing(false);
     }
   };
 
-  // Handle text message
+  // Handle text message (fallback)
   const handleTextSend = useCallback(async () => {
     const text = textInput.trim();
     if (!text || isProcessing) return;
@@ -469,20 +271,15 @@ export function VoiceChatWidget() {
         content: response.reply,
       };
       setMessages(prev => [...prev, assistantMsg]);
-
-      // Speak the response using browser TTS
-      speakBotResponse(response.reply, lastDetectedLang);
     } catch (err) {
-      const errorMsg = "Sorry, I'm having trouble right now. Please try again!";
       setMessages(prev => [...prev, {
         role: 'assistant',
-        content: errorMsg,
+        content: 'Sorry, I\'m having trouble right now. Please try again!',
       }]);
-      speakBotResponse(errorMsg, 'en');
     } finally {
       setIsProcessing(false);
     }
-  }, [textInput, messages, isProcessing, hasInteracted, textChatMutation, speakBotResponse, lastDetectedLang]);
+  }, [textInput, messages, isProcessing, hasInteracted, textChatMutation]);
 
   // Handle suggested prompt click
   const handlePromptClick = useCallback((prompt: string) => {
@@ -499,18 +296,14 @@ export function VoiceChatWidget() {
         onSuccess: (response) => {
           setMessages(prev => [...prev, { role: 'assistant', content: response.reply }]);
           setIsProcessing(false);
-          // Speak the response
-          speakBotResponse(response.reply, lastDetectedLang);
         },
         onError: () => {
-          const errorMsg = 'Sorry, please try again!';
-          setMessages(prev => [...prev, { role: 'assistant', content: errorMsg }]);
+          setMessages(prev => [...prev, { role: 'assistant', content: 'Sorry, please try again!' }]);
           setIsProcessing(false);
-          speakBotResponse(errorMsg, 'en');
         },
       }
     );
-  }, [messages, hasInteracted, textChatMutation, speakBotResponse, lastDetectedLang]);
+  }, [messages, hasInteracted, textChatMutation]);
 
   const toggleChat = useCallback(() => {
     setIsOpen(prev => !prev);
@@ -523,18 +316,6 @@ export function VoiceChatWidget() {
     const s = seconds % 60;
     return `${m}:${s.toString().padStart(2, '0')}`;
   };
-
-  // Handle "Play again" — use browser TTS
-  const handlePlayAgain = useCallback((msg: ChatMessage) => {
-    if (isMuted) return;
-    // If there's an S3 audio URL, try that first
-    if (msg.audioUrl) {
-      playAudio(msg.audioUrl);
-    } else {
-      // Use browser TTS
-      speakBotResponse(msg.content, msg.detectedLanguage || lastDetectedLang);
-    }
-  }, [isMuted, playAudio, speakBotResponse, lastDetectedLang]);
 
   return (
     <>
@@ -558,7 +339,7 @@ export function VoiceChatWidget() {
               <div>
                 <h3 className="text-white font-semibold text-sm">Maami Bot</h3>
                 <p className="text-white/70 text-xs">
-                  {isRecording ? '🎙️ Listening...' : isProcessing ? '🤔 Thinking...' : isSpeaking ? '🔊 Speaking...' : 'Voice & text assistant'}
+                  {isRecording ? '🎙️ Listening...' : isProcessing ? '🤔 Thinking...' : 'Voice & text assistant'}
                 </p>
               </div>
             </div>
@@ -643,13 +424,13 @@ export function VoiceChatWidget() {
                         ) : (
                           <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
                         )}
-                        {msg.role === 'assistant' && (
+                        {msg.role === 'assistant' && msg.audioUrl && (
                           <button
-                            onClick={() => handlePlayAgain(msg)}
+                            onClick={() => playAudio(msg.audioUrl!)}
                             className="mt-1.5 flex items-center gap-1 text-[10px] text-[#c0392b] hover:text-[#c0392b]/80 transition-colors"
                           >
                             <Volume2 className="w-3 h-3" />
-                            {isSpeaking ? 'Speaking...' : 'Play again'}
+                            Play again
                           </button>
                         )}
                       </div>
@@ -792,18 +573,8 @@ export function VoiceChatWidget() {
                   )}
                 </button>
 
-                {/* Stop speaking button (shows when bot is speaking) */}
-                {isSpeaking ? (
-                  <button
-                    onClick={() => { stopSpeaking(); setIsSpeaking(false); }}
-                    className="p-2.5 rounded-full text-red-500 hover:bg-red-50 transition-all animate-pulse"
-                    aria-label="Stop speaking"
-                  >
-                    <VolumeX className="w-5 h-5" />
-                  </button>
-                ) : (
-                  <div className="w-10" />
-                )}
+                {/* Placeholder for symmetry */}
+                <div className="w-10" />
               </div>
             )}
           </div>
