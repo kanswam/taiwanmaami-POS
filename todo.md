@@ -2000,3 +2000,13 @@ Orders fixed:
 - [x] Write vitest tests for voice endpoints
   - 10 tests in server/voiceChat.test.ts (all passing)
   - Tests: TTS voice selection, input validation, procedure availability
+
+## Revert: Remove voice/TTS, keep text-only chatbot (Feb 12)
+
+- [x] Removed all speechSynthesis / Web Speech API code
+- [x] Removed voice recording, mic button, audio playback, mute button
+- [x] Kept text input always visible (no toggle needed)
+- [x] Kept suggested prompts and chat message display
+- [x] Updated greeting bubble to text-friendly message
+- [x] Updated header subtitle to "Your ordering assistant"
+- [x] Auto-focus text input when chat opens
