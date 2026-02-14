@@ -1,0 +1,9 @@
+{
+  "query": "UPDATE workshops SET status = 'completed' WHERE title LIKE '%Biang%' AND status = 'published';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute UPDATE workshops SET status = 'completed' WHERE title LIKE '%Biang%' AND status = 'published';",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 57
+}

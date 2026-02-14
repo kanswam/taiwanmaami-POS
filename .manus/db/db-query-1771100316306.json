@@ -1,0 +1,80 @@
+{
+  "query": "SELECT id, title, status FROM workshops ORDER BY id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT id, title, status FROM workshops ORDER BY id;",
+  "rows": [
+    {
+      "id": "60001",
+      "title": "Biang Biang Noodle Workshop + Kung Fu Tea Experience ",
+      "status": "completed"
+    },
+    {
+      "id": "240001",
+      "title": "Test Workshop",
+      "status": "draft"
+    },
+    {
+      "id": "270001",
+      "title": "Test Workshop",
+      "status": "draft"
+    },
+    {
+      "id": "270002",
+      "title": "Test Workshop",
+      "status": "draft"
+    },
+    {
+      "id": "270003",
+      "title": "Test Workshop",
+      "status": "draft"
+    },
+    {
+      "id": "300001",
+      "title": "Test Workshop",
+      "status": "draft"
+    },
+    {
+      "id": "300002",
+      "title": "Test Workshop",
+      "status": "draft"
+    },
+    {
+      "id": "300003",
+      "title": "Test Workshop",
+      "status": "draft"
+    },
+    {
+      "id": "300004",
+      "title": "Test Workshop",
+      "status": "draft"
+    },
+    {
+      "id": "300005",
+      "title": "Test Workshop",
+      "status": "draft"
+    },
+    {
+      "id": "330001",
+      "title": "Test Workshop",
+      "status": "draft"
+    },
+    {
+      "id": "330002",
+      "title": "Test Workshop",
+      "status": "draft"
+    },
+    {
+      "id": "330003",
+      "title": "Test Workshop",
+      "status": "draft"
+    },
+    {
+      "id": "330004",
+      "title": "Test Workshop",
+      "status": "draft"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\ttitle\tstatus\n60001\tBiang Biang Noodle Workshop + Kung Fu Tea Experience \tcompleted\n240001\tTest Workshop\tdraft\n270001\tTest Workshop\tdraft\n270002\tTest Workshop\tdraft\n270003\tTest Workshop\tdraft\n300001\tTest Workshop\tdraft\n300002\tTest Workshop\tdraft\n300003\tTest Workshop\tdraft\n300004\tTest Workshop\tdraft\n300005\tTest Workshop\tdraft\n330001\tTest Workshop\tdraft\n330002\tTest Workshop\tdraft\n330003\tTest Workshop\tdraft\n330004\tTest Workshop\tdraft\n",
+  "stderr": "",
+  "execution_time_ms": 50
+}

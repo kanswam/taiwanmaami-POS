@@ -1,0 +1,50 @@
+{
+  "query": "SELECT id, title, status, workshopDate, startTime, endTime FROM workshops ORDER BY workshopDate DESC LIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT id, title, status, workshopDate, startTime, endTime FROM workshops ORDER BY workshopDate DESC LIMIT 5;",
+  "rows": [
+    {
+      "id": "240001",
+      "title": "Test Workshop",
+      "status": "draft",
+      "workshopDate": "2026-02-20 00:00:00",
+      "startTime": "10:00",
+      "endTime": "13:00"
+    },
+    {
+      "id": "270001",
+      "title": "Test Workshop",
+      "status": "draft",
+      "workshopDate": "2026-02-20 00:00:00",
+      "startTime": "10:00",
+      "endTime": "13:00"
+    },
+    {
+      "id": "270002",
+      "title": "Test Workshop",
+      "status": "draft",
+      "workshopDate": "2026-02-20 00:00:00",
+      "startTime": "10:00",
+      "endTime": "13:00"
+    },
+    {
+      "id": "270003",
+      "title": "Test Workshop",
+      "status": "draft",
+      "workshopDate": "2026-02-20 00:00:00",
+      "startTime": "10:00",
+      "endTime": "13:00"
+    },
+    {
+      "id": "300001",
+      "title": "Test Workshop",
+      "status": "draft",
+      "workshopDate": "2026-02-20 00:00:00",
+      "startTime": "10:00",
+      "endTime": "13:00"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\ttitle\tstatus\tworkshopDate\tstartTime\tendTime\n240001\tTest Workshop\tdraft\t2026-02-20 00:00:00\t10:00\t13:00\n270001\tTest Workshop\tdraft\t2026-02-20 00:00:00\t10:00\t13:00\n270002\tTest Workshop\tdraft\t2026-02-20 00:00:00\t10:00\t13:00\n270003\tTest Workshop\tdraft\t2026-02-20 00:00:00\t10:00\t13:00\n300001\tTest Workshop\tdraft\t2026-02-20 00:00:00\t10:00\t13:00\n",
+  "stderr": "",
+  "execution_time_ms": 93
+}

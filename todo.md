@@ -2061,3 +2061,13 @@ Orders fixed:
 - [x] Added getDeliveryPeriods tRPC procedure to list all uploaded periods
 - [x] Upload handler now refreshes both channel data and periods list
 - [x] Write vitest tests for period selection logic (10 tests passing)
+
+## Remove Biang Biang Workshop Banner (Feb 14)
+
+- [x] Remove the workshop banner from the homepage — set Biang Biang workshop status to "completed" in DB
+- [x] Remove the "Book Your Spot" booking link — banner auto-hides when no published workshops exist
+- [x] Keep workshop/events infrastructure intact for future use and photo uploads
+
+## BUG: Grand Total in Upload History shows Unicode escape (Feb 14)
+
+- [x] Fix Grand Total column showing \u20B9 instead of ₹ symbol in Upload History table — was escaped Unicode, replaced with actual ₹ character

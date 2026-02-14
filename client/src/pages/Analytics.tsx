@@ -1524,7 +1524,7 @@ export default function Analytics() {
                             <td className="text-right py-2 text-orange-600">{p.swiggyOrders || 0}</td>
                             <td className="text-right py-2 text-gray-600">{p.dineInOrders || 0}</td>
                             <td className="text-right py-2 font-medium">
-                              \u20B9{((p.grandTotal || 0) / 100).toLocaleString('en-IN', { minimumFractionDigits: 0 })}
+                              ₹{((p.grandTotal || 0) / 100).toLocaleString('en-IN', { minimumFractionDigits: 0 })}
                             </td>
                             <td className="text-right py-2 text-muted-foreground text-xs">
                               {p.createdAt ? new Date(p.createdAt).toLocaleDateString() : '-'}
