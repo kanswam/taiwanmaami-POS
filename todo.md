@@ -2017,3 +2017,13 @@ Orders fixed:
 - [x] Scalable approach: exclude ALL staff/admin users by role (not just Rinold)
 - [x] Exclusion works by both userId and phone number matching
 - [x] Added vitest tests for staff exclusion logic (4 tests passing)
+
+## Color-Coded Order Cards & Tab Filters (Feb 14)
+
+- [x] Add tab filters to admin orders page: All, In-Store, Delivery, Pickup
+- [x] Color-code order cards by order type (delivery=blue, in-store=green, pickup=purple)
+- [x] Add visible order type badge with icon on each order card
+- [x] Color-coded left border on each row for instant visual scanning
+- [x] Active order count badges (pulsing red) on each tab
+- [x] Table number shown for in-store orders
+- [x] Write vitest tests for the new filtering logic (11 tests passing)

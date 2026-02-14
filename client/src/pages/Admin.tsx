@@ -2005,6 +2005,9 @@ function OrdersTab() {
     { enabled: !!selectedOrderId }
   );
   
+  // Order type filter
+  const [orderTypeFilter, setOrderTypeFilter] = useState<'all' | 'instore' | 'delivery' | 'pickup'>('all');
+  
   // Apply Discount state
   const [discountDialogOpen, setDiscountDialogOpen] = useState(false);
   const [discountOrderId, setDiscountOrderId] = useState<number | null>(null);
@@ -2114,6 +2117,43 @@ function OrdersTab() {
     cancelled: 'bg-red-100 text-red-800',
   };
 
+  // Order type visual config
+  const orderTypeConfig: Record<string, { label: string; badge: string; border: string; icon: string }> = {
+    instore: { label: 'In-Store', badge: 'bg-emerald-100 text-emerald-800 border-emerald-300', border: 'border-l-4 border-l-emerald-500', icon: '🏪' },
+    delivery: { label: 'Delivery', badge: 'bg-blue-100 text-blue-800 border-blue-300', border: 'border-l-4 border-l-blue-500', icon: '🚚' },
+    pickup: { label: 'Pickup', badge: 'bg-purple-100 text-purple-800 border-purple-300', border: 'border-l-4 border-l-purple-500', icon: '🛍️' },
+  };
+
+  // Filtered orders
+  const filteredOrders = useMemo(() => {
+    if (!orders) return [];
+    if (orderTypeFilter === 'all') return orders;
+    return orders.filter((o: any) => o.orderType === orderTypeFilter);
+  }, [orders, orderTypeFilter]);
+
+  // Order counts by type
+  const orderCounts = useMemo(() => {
+    if (!orders) return { all: 0, instore: 0, delivery: 0, pickup: 0 };
+    return {
+      all: orders.length,
+      instore: orders.filter((o: any) => o.orderType === 'instore').length,
+      delivery: orders.filter((o: any) => o.orderType === 'delivery').length,
+      pickup: orders.filter((o: any) => o.orderType === 'pickup').length,
+    };
+  }, [orders]);
+
+  // Count active (non-completed, non-cancelled) orders by type
+  const activeOrderCounts = useMemo(() => {
+    if (!orders) return { all: 0, instore: 0, delivery: 0, pickup: 0 };
+    const active = orders.filter((o: any) => o.orderStatus !== 'completed' && o.orderStatus !== 'cancelled');
+    return {
+      all: active.length,
+      instore: active.filter((o: any) => o.orderType === 'instore').length,
+      delivery: active.filter((o: any) => o.orderType === 'delivery').length,
+      pickup: active.filter((o: any) => o.orderType === 'pickup').length,
+    };
+  }, [orders]);
+
   // Get next status in workflow
   const getNextStatus = (currentStatus: string, orderType: string) => {
     const deliveryFlow = ['confirmed', 'preparing', 'ready', 'out_for_delivery', 'completed'];
@@ -2146,6 +2186,42 @@ function OrdersTab() {
         </Button>
       </div>
 
+      {/* Order Type Filter Tabs */}
+      <div className="flex gap-2 flex-wrap">
+        {[
+          { key: 'all' as const, label: 'All Orders', icon: '📋' },
+          { key: 'instore' as const, label: 'In-Store', icon: '🏪' },
+          { key: 'delivery' as const, label: 'Delivery', icon: '🚚' },
+          { key: 'pickup' as const, label: 'Pickup', icon: '🛍️' },
+        ].map(tab => (
+          <button
+            key={tab.key}
+            onClick={() => setOrderTypeFilter(tab.key)}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+              orderTypeFilter === tab.key
+                ? tab.key === 'instore' ? 'bg-emerald-100 text-emerald-800 ring-2 ring-emerald-400'
+                : tab.key === 'delivery' ? 'bg-blue-100 text-blue-800 ring-2 ring-blue-400'
+                : tab.key === 'pickup' ? 'bg-purple-100 text-purple-800 ring-2 ring-purple-400'
+                : 'bg-secondary text-foreground ring-2 ring-primary'
+                : 'bg-secondary/50 text-muted-foreground hover:bg-secondary'
+            }`}
+          >
+            <span>{tab.icon}</span>
+            <span>{tab.label}</span>
+            <span className={`ml-1 px-1.5 py-0.5 rounded-full text-xs font-bold ${
+              orderTypeFilter === tab.key ? 'bg-white/60' : 'bg-secondary'
+            }`}>
+              {orderCounts[tab.key]}
+            </span>
+            {activeOrderCounts[tab.key] > 0 && (
+              <span className="px-1.5 py-0.5 rounded-full text-xs font-bold bg-red-500 text-white animate-pulse">
+                {activeOrderCounts[tab.key]} active
+              </span>
+            )}
+          </button>
+        ))}
+      </div>
+
       <Card>
         <div className="overflow-x-auto">
           <table className="w-full">
@@ -2161,10 +2237,19 @@ function OrdersTab() {
               </tr>
             </thead>
             <tbody>
-              {orders?.map((order) => (
+              {filteredOrders.length === 0 && (
+                <tr>
+                  <td colSpan={7} className="p-8 text-center text-muted-foreground">
+                    No {orderTypeFilter !== 'all' ? orderTypeConfig[orderTypeFilter]?.label.toLowerCase() : ''} orders found
+                  </td>
+                </tr>
+              )}
+              {filteredOrders.map((order: any) => {
+                const typeConf = orderTypeConfig[order.orderType] || orderTypeConfig.instore;
+                return (
                 <tr 
                   key={order.id} 
-                  className="border-b hover:bg-secondary/50 cursor-pointer"
+                  className={`border-b hover:bg-secondary/50 cursor-pointer ${typeConf.border}`}
                   onClick={() => setSelectedOrderId(order.id)}
                 >
                   <td className="p-3 font-medium text-primary underline">{order.orderNumber}</td>
@@ -2174,7 +2259,14 @@ function OrdersTab() {
                       <p className="text-xs text-muted-foreground">{order.customerPhone}</p>
                     )}
                   </td>
-                  <td className="p-3 capitalize">{order.orderType}</td>
+                  <td className="p-3">
+                    <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-semibold border ${typeConf.badge}`}>
+                      {typeConf.icon} {typeConf.label}
+                    </span>
+                    {order.orderType === 'instore' && order.tableNumber && (
+                      <p className="text-xs text-muted-foreground mt-0.5">Table {order.tableNumber}</p>
+                    )}
+                  </td>
                   <td className="p-3 text-right font-medium">{formatPrice(order.totalAmount)}</td>
                   <td className="p-3">
                     <Select
@@ -2359,7 +2451,8 @@ function OrdersTab() {
                     </div>
                   </td>
                 </tr>
-              ))}
+              );
+              })}
             </tbody>
           </table>
         </div>
