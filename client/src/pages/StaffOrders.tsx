@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { Header } from '@/components/Header';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -22,6 +22,7 @@ import {
 import { Switch } from '@/components/ui/switch';
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogAction, AlertDialogCancel } from '@/components/ui/alert-dialog';
 import { AddItemsDialog } from '@/components/AddItemsDialog';
+import { useOrderNotification, playOrderNotification } from '@/hooks/useOrderNotification';
 
 // Status flow for delivery orders
 const statusFlow = {
@@ -367,9 +368,6 @@ function AvailabilityPanel() {
 export default function StaffOrders() {
   const { user, isAuthenticated } = useAuth();
   const [activeTab, setActiveTab] = useState('active');
-  const [soundEnabled, setSoundEnabled] = useState(true);
-  const [previousOrderCount, setPreviousOrderCount] = useState(0);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
   
   // Filters
   const [outletFilter, setOutletFilter] = useState<string>('all');
@@ -497,27 +495,8 @@ export default function StaffOrders() {
     onError: (err) => toast.error(err.message),
   });
 
-  // Sound notification for new orders
-  useEffect(() => {
-    if (!audioRef.current) {
-      audioRef.current = new Audio('https://files.manuscdn.com/user_upload_by_module/session_file/114675165/qyIoNUCfQZuBgFmR.mp3');
-    }
-  }, []);
-
-  useEffect(() => {
-    if (ordersData && soundEnabled) {
-      const activeOrders = ordersData.filter((o: any) => 
-        ['pending', 'confirmed', 'preparing', 'ready', 'out_for_delivery'].includes(o.orderStatus)
-      );
-      
-      if (activeOrders.length > previousOrderCount && previousOrderCount > 0) {
-        // New order arrived
-        audioRef.current?.play().catch(() => {});
-        toast.info('🔔 New order received!', { duration: 5000 });
-      }
-      setPreviousOrderCount(activeOrders.length);
-    }
-  }, [ordersData, soundEnabled, previousOrderCount]);
+  // Order notification sounds & auto-poll (synced with admin page chimes)
+  const { soundEnabled, toggleSound, newOrderIds } = useOrderNotification(ordersData, refetch, 20000);
 
   // Check access - allow staff and admin
   if (!isAuthenticated || (user?.role !== 'admin' && user?.role !== 'staff')) {
@@ -699,13 +678,19 @@ export default function StaffOrders() {
     const Icon = nextAction?.icon || CheckCircle;
     const isUrgent = order.orderStatus === 'pending' && 
       (Date.now() - new Date(order.createdAt).getTime()) > 5 * 60 * 1000; // 5 minutes
+    const isNew = newOrderIds.has(order.id);
     
     return (
-      <Card className={`p-4 mb-4 ${isUrgent ? 'ring-2 ring-red-500 animate-pulse' : ''}`}>
+      <Card className={`p-4 mb-4 ${isUrgent ? 'ring-2 ring-red-500 animate-pulse' : ''} ${isNew ? 'ring-2 ring-amber-400 bg-amber-50 animate-pulse' : ''}`}>
         <div className="flex items-start justify-between mb-3">
           <div>
             <div className="flex items-center gap-2 flex-wrap">
               <span className="font-bold text-xl">#{order.orderNumber}</span>
+              {isNew && (
+                <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-red-500 text-white animate-bounce">
+                  NEW!
+                </span>
+              )}
               <Badge variant="outline" className={statusColors[order.orderStatus]}>
                 {order.orderStatus.replace(/_/g, ' ')}
               </Badge>
@@ -936,14 +921,30 @@ export default function StaffOrders() {
           <div className="flex items-center gap-2">
             <Button 
               variant="outline" 
-              size="icon"
-              onClick={() => setSoundEnabled(!soundEnabled)}
-              title={soundEnabled ? 'Mute notifications' : 'Enable notifications'}
+              size="sm"
+              onClick={toggleSound}
+              className={soundEnabled ? 'border-green-500 text-green-700 hover:bg-green-50' : 'border-gray-300 text-gray-400'}
+              title={soundEnabled ? 'Sound alerts ON \u2014 click to mute' : 'Sound alerts OFF \u2014 click to enable'}
             >
-              {soundEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
+              {soundEnabled ? <><Volume2 className="w-4 h-4 mr-1" /> ON</> : <><VolumeX className="w-4 h-4 mr-1" /> OFF</>}
             </Button>
-            <Button variant="outline" onClick={() => refetch()}>
-              <RefreshCw className="w-4 h-4 mr-2" />
+            {soundEnabled && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => playOrderNotification('delivery')}
+                title="Test delivery alert sound"
+                className="text-xs text-muted-foreground"
+              >
+                Test \uD83D\uDD14
+              </Button>
+            )}
+            <span className="text-xs text-muted-foreground bg-secondary px-2 py-1 rounded-full flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+              Auto-refresh
+            </span>
+            <Button variant="outline" size="sm" onClick={() => refetch()}>
+              <RefreshCw className="w-4 h-4 mr-1" />
               Refresh
             </Button>
           </div>

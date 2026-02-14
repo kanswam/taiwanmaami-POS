@@ -2041,3 +2041,10 @@ Orders fixed:
 - [x] Add mute/unmute toggle with Sound ON/OFF button + Test button
 - [x] Sound preference persisted in localStorage
 - [x] 12 vitest tests passing for detection logic and preference persistence
+
+## Staff Orders Page - Notification Sounds (Feb 14)
+
+- [x] Add useOrderNotification hook to Staff Orders page (replaced old MP3-based system)
+- [x] Add sound toggle and test button to Staff Orders header (matching admin style)
+- [x] Add auto-refresh indicator to Staff Orders page (green pulse badge)
+- [x] Add visual highlight (amber pulse + NEW! badge) for new orders on Staff Orders
