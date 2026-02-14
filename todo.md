@@ -2048,3 +2048,16 @@ Orders fixed:
 - [x] Add sound toggle and test button to Staff Orders header (matching admin style)
 - [x] Add auto-refresh indicator to Staff Orders page (green pulse badge)
 - [x] Add visual highlight (amber pulse + NEW! badge) for new orders on Staff Orders
+
+## Channel Analytics - Period History & Cumulative Views (Feb 14)
+
+- [x] Investigate current delivery data schema and upload logic — already retains all periods
+- [x] Ensure all uploaded periods are retained (not overwritten) — confirmed, each period is a separate row
+- [x] Add period selector to Channels tab: Current Range, All Time, YTD, and individual period dropdown
+- [x] Add "All Time" cumulative view (from April 2024 to today)
+- [x] Add "Year to Date" cumulative view for current year
+- [x] Add Upload History table showing all past periods with order counts, Zomato/Swiggy/Dine-in breakdown, and grand total
+- [x] Click any period in history table to view its channel analytics
+- [x] Added getDeliveryPeriods tRPC procedure to list all uploaded periods
+- [x] Upload handler now refreshes both channel data and periods list
+- [x] Write vitest tests for period selection logic (10 tests passing)

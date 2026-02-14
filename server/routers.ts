@@ -6007,6 +6007,27 @@ export const appRouter = router({
         return { recommendations };
       }),
 
+    // List all delivery data upload periods for the period selector
+    getDeliveryPeriods: adminProcedure
+      .query(async () => {
+        const dbInstance = await getDb();
+        if (!dbInstance) return [];
+        const uploads = await dbInstance.select({
+          id: deliverySalesUploads.id,
+          periodLabel: deliverySalesUploads.periodLabel,
+          periodStart: deliverySalesUploads.periodStart,
+          periodEnd: deliverySalesUploads.periodEnd,
+          totalOrders: deliverySalesUploads.totalOrders,
+          grandTotal: deliverySalesUploads.grandTotal,
+          zomatoOrders: deliverySalesUploads.zomatoOrders,
+          swiggyOrders: deliverySalesUploads.swiggyOrders,
+          dineInOrders: deliverySalesUploads.dineInOrders,
+          createdAt: deliverySalesUploads.createdAt,
+        }).from(deliverySalesUploads)
+          .orderBy(sql`${deliverySalesUploads.periodStart} DESC`);
+        return uploads;
+      }),
+
     // Website Traffic Analytics - proxy to Umami API
     // Combined channel analytics (website + delivery)
     getCombinedChannelAnalytics: adminProcedure

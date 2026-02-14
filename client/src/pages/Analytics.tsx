@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { trpc } from "@/lib/trpc";
 import { Link } from "wouter";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -212,11 +212,42 @@ export default function Analytics() {
       orderType,
     });
 
+  // Channel analytics - separate date range for period selection
+  const [channelPeriod, setChannelPeriod] = useState<string>('current'); // 'current' | 'all_time' | 'ytd' | period id
+  const [channelStartDate, setChannelStartDate] = useState(startDate);
+  const [channelEndDate, setChannelEndDate] = useState(endDate);
+
+  // Fetch all delivery periods for the period selector
+  const { data: deliveryPeriods, refetch: refetchPeriods } = trpc.analytics.getDeliveryPeriods.useQuery();
+
+  // Update channel dates when period changes
+  useEffect(() => {
+    if (channelPeriod === 'current') {
+      setChannelStartDate(startDate);
+      setChannelEndDate(endDate);
+    } else if (channelPeriod === 'all_time') {
+      // Go back to business start (April 2024)
+      setChannelStartDate('2024-04-01');
+      setChannelEndDate(new Date().toISOString().split('T')[0]);
+    } else if (channelPeriod === 'ytd') {
+      const year = new Date().getFullYear();
+      setChannelStartDate(`${year}-01-01`);
+      setChannelEndDate(new Date().toISOString().split('T')[0]);
+    } else {
+      // Specific period - find it in deliveryPeriods
+      const period = deliveryPeriods?.find(p => String(p.id) === channelPeriod);
+      if (period) {
+        setChannelStartDate(new Date(period.periodStart).toISOString().split('T')[0]);
+        setChannelEndDate(new Date(period.periodEnd).toISOString().split('T')[0]);
+      }
+    }
+  }, [channelPeriod, startDate, endDate, deliveryPeriods]);
+
   // Combined channel analytics
   const { data: channelData, isLoading: loadingChannels, refetch: refetchChannels } = 
     trpc.analytics.getCombinedChannelAnalytics.useQuery({
-      startDate,
-      endDate,
+      startDate: channelStartDate,
+      endDate: channelEndDate,
     });
 
   // Delivery upload state
@@ -1365,6 +1396,7 @@ export default function Analytics() {
                           if (result.success) {
                             setUploadMessage(`Uploaded ${result.itemCount} items for ${periodLabel}. ${result.updated ? 'Updated existing data.' : 'New period added.'}`);
                             refetchChannels();
+                            refetchPeriods();
                           } else {
                             setUploadMessage(`Error: ${result.error}`);
                           }
@@ -1391,6 +1423,130 @@ export default function Analytics() {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Period Selector */}
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Calendar className="h-4 w-4" />
+                  View Period
+                </CardTitle>
+                <CardDescription>Select a time period to view channel analytics</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    variant={channelPeriod === 'current' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setChannelPeriod('current')}
+                  >
+                    Current Range ({startDate} to {endDate})
+                  </Button>
+                  <Button
+                    variant={channelPeriod === 'all_time' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setChannelPeriod('all_time')}
+                  >
+                    All Time
+                  </Button>
+                  <Button
+                    variant={channelPeriod === 'ytd' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setChannelPeriod('ytd')}
+                  >
+                    Year to Date ({new Date().getFullYear()})
+                  </Button>
+                  {deliveryPeriods && deliveryPeriods.length > 0 && (
+                    <Select value={channelPeriod.match(/^\d+$/) ? channelPeriod : ''} onValueChange={(val) => setChannelPeriod(val)}>
+                      <SelectTrigger className="w-[220px] h-9">
+                        <SelectValue placeholder="Select uploaded period..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {deliveryPeriods.map((p) => (
+                          <SelectItem key={p.id} value={String(p.id)}>
+                            {p.periodLabel} ({p.totalOrders} orders)
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                </div>
+                <div className="mt-2 text-xs text-muted-foreground">
+                  Showing data from <span className="font-medium">{channelStartDate}</span> to <span className="font-medium">{channelEndDate}</span>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Upload History */}
+            {deliveryPeriods && deliveryPeriods.length > 0 && (
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <FileSpreadsheet className="h-4 w-4" />
+                    Upload History
+                  </CardTitle>
+                  <CardDescription>All uploaded Petpooja data periods — click to view</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b">
+                          <th className="text-left py-2 font-medium">Period</th>
+                          <th className="text-right py-2 font-medium">Total Orders</th>
+                          <th className="text-right py-2 font-medium">Zomato</th>
+                          <th className="text-right py-2 font-medium">Swiggy</th>
+                          <th className="text-right py-2 font-medium">Dine-in</th>
+                          <th className="text-right py-2 font-medium">Grand Total</th>
+                          <th className="text-right py-2 font-medium">Uploaded</th>
+                          <th className="text-center py-2 font-medium">Action</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {deliveryPeriods.map((p) => (
+                          <tr 
+                            key={p.id} 
+                            className={`border-b hover:bg-muted/50 cursor-pointer transition-colors ${
+                              channelPeriod === String(p.id) ? 'bg-primary/5 font-medium' : ''
+                            }`}
+                            onClick={() => setChannelPeriod(String(p.id))}
+                          >
+                            <td className="py-2">
+                              <div className="flex items-center gap-2">
+                                {channelPeriod === String(p.id) && (
+                                  <span className="w-2 h-2 rounded-full bg-primary" />
+                                )}
+                                {p.periodLabel}
+                              </div>
+                            </td>
+                            <td className="text-right py-2">{p.totalOrders}</td>
+                            <td className="text-right py-2 text-red-600">{p.zomatoOrders || 0}</td>
+                            <td className="text-right py-2 text-orange-600">{p.swiggyOrders || 0}</td>
+                            <td className="text-right py-2 text-gray-600">{p.dineInOrders || 0}</td>
+                            <td className="text-right py-2 font-medium">
+                              \u20B9{((p.grandTotal || 0) / 100).toLocaleString('en-IN', { minimumFractionDigits: 0 })}
+                            </td>
+                            <td className="text-right py-2 text-muted-foreground text-xs">
+                              {p.createdAt ? new Date(p.createdAt).toLocaleDateString() : '-'}
+                            </td>
+                            <td className="text-center py-2">
+                              <Button
+                                variant={channelPeriod === String(p.id) ? 'default' : 'ghost'}
+                                size="sm"
+                                className="h-7 text-xs"
+                                onClick={(e) => { e.stopPropagation(); setChannelPeriod(String(p.id)); }}
+                              >
+                                {channelPeriod === String(p.id) ? 'Viewing' : 'View'}
+                              </Button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
             {/* Channel Overview */}
             {loadingChannels ? (
