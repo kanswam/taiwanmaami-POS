@@ -8,7 +8,7 @@ import * as db from "./db";
 import { getDb, serializeDates, serializeDateArray } from "./db";
 import { seedDatabase } from "./seed";
 import { categories, subcategories, products, addons, orders, orderItems as orderItemsTable, orderItemAddons, payments, discounts, discountUsage, addresses, storeLocations, deliveryAreas, users, productAddons, loyaltyTransactions } from "../drizzle/schema";
-import { eq, and, desc, asc, sql, or, gte, isNull } from "drizzle-orm";
+import { eq, and, desc, asc, sql, or, gte, lte, isNull } from "drizzle-orm";
 import { generateOrderNumber, calculateGst } from "@shared/types";
 // POS functionality removed - Employee Master import removed
 import { outletProducts, loyaltyRewards, stampTransactions, guestOrders, reviews, kotQueue, receiptQueue, productAuditLog, categoryAuditLog, complaints, eventInquiries, eventOrders, eventOrderItems, workshops, workshopBookings, workshopDates, workshopWaitlist, backupLogs, blogArticles, deliverySalesUploads, deliveryItemSales, pageviews as pageviewsTable } from "../drizzle/schema";
@@ -6031,15 +6031,25 @@ export const appRouter = router({
       }),
 
     getProcurementForecast: adminProcedure
-      .query(async () => {
+      .input(z.object({
+        startDate: z.string().optional(),
+        endDate: z.string().optional(),
+      }).optional())
+      .query(async ({ input }) => {
         const { getProcurementForecast } = await import('./predictions');
-        return getProcurementForecast();
+        const start = input?.startDate ? new Date(input.startDate) : undefined;
+        const end = input?.endDate ? new Date(input.endDate) : undefined;
+        return getProcurementForecast(start, end);
       }),
 
     getTrendAlerts: adminProcedure
-      .query(async () => {
+      .input(z.object({
+        endDate: z.string().optional(),
+      }).optional())
+      .query(async ({ input }) => {
         const { getTrendAlerts } = await import('./predictions');
-        return getTrendAlerts();
+        const end = input?.endDate ? new Date(input.endDate) : undefined;
+        return getTrendAlerts(end);
       }),
 
     getForecastAccuracy: adminProcedure
@@ -6067,7 +6077,30 @@ export const appRouter = router({
           createdAt: deliverySalesUploads.createdAt,
         }).from(deliverySalesUploads)
           .orderBy(sql`${deliverySalesUploads.periodStart} DESC`);
-        return uploads;
+        
+        // For each period, also get website order totals
+        const enriched = await Promise.all(uploads.map(async (u) => {
+          const start = u.periodStart;
+          const end = u.periodEnd;
+          const websiteResult = await dbInstance.select({
+            orderCount: sql<number>`COUNT(*)`,
+            totalAmount: sql<number>`COALESCE(SUM(${orders.totalAmount}), 0)`,
+          }).from(orders)
+            .where(and(
+              gte(orders.createdAt, start),
+              lte(orders.createdAt, end),
+              sql`${orders.orderStatus} != 'cancelled'`
+            ));
+          const websiteOrders = Number(websiteResult[0]?.orderCount) || 0;
+          const websiteAmount = Number(websiteResult[0]?.totalAmount) || 0;
+          return {
+            ...u,
+            websiteOrders,
+            websiteAmount,
+            combinedTotal: (Number(u.grandTotal) || 0) + websiteAmount,
+          };
+        }));
+        return enriched;
       }),
 
     // Website Traffic Analytics - proxy to Umami API

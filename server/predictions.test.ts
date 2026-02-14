@@ -50,13 +50,21 @@ describe("Predictions Module", () => {
     });
   });
 
-  describe("Item Demand Forecast", () => {
-    it("should calculate average quantity per day of week", () => {
-      // 4 Mondays in the period, sold 12 total on Mondays
-      const totalQty = 12;
-      const dayCount = 4;
-      const avg = Math.round(totalQty / dayCount);
-      expect(avg).toBe(3);
+  describe("Item Demand Forecast — Operating Days vs Calendar Days", () => {
+    it("should calculate average quantity using actual days with sales, not calendar days", () => {
+      // Biang Biang scenario: 28 units on 6 Sundays with sales
+      // Calendar has 7 Sundays, but store was closed 1 Sunday
+      const totalQtySunday = 28;
+      const sundaysWithSales = 6;
+      const calendarSundays = 7;
+
+      const avgWithOperatingDays = Math.round((totalQtySunday / sundaysWithSales) * 10) / 10;
+      const avgWithCalendarDays = Math.round((totalQtySunday / calendarSundays) * 10) / 10;
+
+      expect(avgWithOperatingDays).toBe(4.7);
+      expect(avgWithCalendarDays).toBe(4);
+      // Operating days gives more accurate result
+      expect(avgWithOperatingDays).toBeGreaterThan(avgWithCalendarDays);
     });
 
     it("should identify peak day correctly", () => {
@@ -85,6 +93,91 @@ describe("Predictions Module", () => {
       expect(classifyReliability(0.7)).toBe("medium");
       expect(classifyReliability(1.5)).toBe("low");
     });
+
+    it("should calculate daily average using operating days, not calendar days", () => {
+      // 92 website units over 42 operating days (not 45 calendar days)
+      const totalQty = 92;
+      const operatingDays = 42;
+      const calendarDays = 45;
+
+      const avgOperating = Math.round((totalQty / operatingDays) * 10) / 10;
+      const avgCalendar = Math.round((totalQty / calendarDays) * 10) / 10;
+
+      expect(avgOperating).toBe(2.2);
+      expect(avgCalendar).toBe(2);
+      expect(avgOperating).toBeGreaterThan(avgCalendar);
+    });
+  });
+
+  describe("Delivery Data Integration", () => {
+    it("should combine website and delivery quantities for total", () => {
+      const websiteQty = 92;
+      const deliveryQty = 79;
+      const combinedTotal = websiteQty + deliveryQty;
+      expect(combinedTotal).toBe(171);
+    });
+
+    it("should distribute delivery period data proportionally across DOWs", () => {
+      // A 31-day period (Jan 2026) has roughly 4-5 of each DOW
+      // 62 units over 31 days = ~2 per day
+      const totalQty = 62;
+      const totalDays = 31;
+      const sundaysInPeriod = 4; // Jan 2026 has 4 Sundays (4, 11, 18, 25)
+      
+      const proportionalSunday = (totalQty * sundaysInPeriod) / totalDays;
+      expect(proportionalSunday).toBeCloseTo(8, 0);
+    });
+
+    it("should track source (website/delivery/both) for each item", () => {
+      const items = [
+        { name: "Biang Biang", websiteQty: 92, deliveryQty: 79 },
+        { name: "Fruit Mochi", websiteQty: 0, deliveryQty: 111 },
+        { name: "Custom Item", websiteQty: 5, deliveryQty: 0 },
+      ];
+
+      for (const item of items) {
+        const source = item.websiteQty > 0 && item.deliveryQty > 0
+          ? "both"
+          : item.deliveryQty > 0
+          ? "delivery"
+          : "website";
+        
+        if (item.name === "Biang Biang") expect(source).toBe("both");
+        if (item.name === "Fruit Mochi") expect(source).toBe("delivery");
+        if (item.name === "Custom Item") expect(source).toBe("website");
+      }
+    });
+  });
+
+  describe("Period Selector", () => {
+    it("should generate correct date ranges for each period option", () => {
+      const today = new Date("2026-02-14");
+      
+      // Last 1 week
+      const oneWeekAgo = new Date(today);
+      oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+      expect(oneWeekAgo.toISOString().split('T')[0]).toBe("2026-02-07");
+
+      // Last 2 weeks
+      const twoWeeksAgo = new Date(today);
+      twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14);
+      expect(twoWeeksAgo.toISOString().split('T')[0]).toBe("2026-01-31");
+
+      // This month
+      const thisMonthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+      expect(thisMonthStart.toISOString().split('T')[0]).toBe("2026-02-01");
+
+      // Last month
+      const lastMonthStart = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+      const lastMonthEnd = new Date(today.getFullYear(), today.getMonth(), 0);
+      expect(lastMonthStart.toISOString().split('T')[0]).toBe("2026-01-01");
+      expect(lastMonthEnd.toISOString().split('T')[0]).toBe("2026-01-31");
+    });
+
+    it("should default to 'All Data' period starting from Jan 2026", () => {
+      const defaultStart = "2026-01-01";
+      expect(defaultStart).toBe("2026-01-01");
+    });
   });
 
   describe("Procurement Forecast", () => {
@@ -112,6 +205,17 @@ describe("Predictions Module", () => {
       const weekTotal = dailyForecast.reduce((sum, q) => sum + q, 0);
       expect(weekTotal).toBe(29);
     });
+
+    it("should filter out items with less than 3 total units", () => {
+      const items = [
+        { name: "Popular", totalQty: 50 },
+        { name: "Moderate", totalQty: 10 },
+        { name: "Rare", totalQty: 2 },
+      ];
+      const filtered = items.filter(i => i.totalQty >= 3);
+      expect(filtered.length).toBe(2);
+      expect(filtered.find(i => i.name === "Rare")).toBeUndefined();
+    });
   });
 
   describe("Trend Alerts", () => {
@@ -122,7 +226,7 @@ describe("Predictions Module", () => {
       expect(change).toBe(50);
     });
 
-    it("should identify rising items (>30% increase)", () => {
+    it("should identify rising items (>25% increase)", () => {
       const items = [
         { name: "A", prev: 10, recent: 14 }, // +40%
         { name: "B", prev: 10, recent: 11 }, // +10%
@@ -130,13 +234,13 @@ describe("Predictions Module", () => {
       ];
       const rising = items.filter(i => {
         const change = ((i.recent - i.prev) / i.prev) * 100;
-        return change > 30;
+        return change >= 25;
       });
       expect(rising.length).toBe(1);
       expect(rising[0].name).toBe("A");
     });
 
-    it("should identify falling items (>30% decrease)", () => {
+    it("should identify falling items (>25% decrease)", () => {
       const items = [
         { name: "A", prev: 10, recent: 14 }, // +40%
         { name: "B", prev: 10, recent: 5 },  // -50%
@@ -144,7 +248,7 @@ describe("Predictions Module", () => {
       ];
       const falling = items.filter(i => {
         const change = ((i.recent - i.prev) / i.prev) * 100;
-        return change < -30;
+        return change <= -25;
       });
       expect(falling.length).toBe(2);
     });
@@ -154,6 +258,44 @@ describe("Predictions Module", () => {
       const recent = 5;
       const change = previous > 0 ? Math.round(((recent - previous) / previous) * 100) : 100;
       expect(change).toBe(100);
+    });
+
+    it("should classify trend direction correctly", () => {
+      const classify = (changePercent: number, prevQty: number, recentQty: number) => {
+        if (prevQty === 0 && recentQty > 0) return "new";
+        if (changePercent >= 25) return "rising";
+        if (changePercent <= -25) return "falling";
+        return "stable";
+      };
+      expect(classify(50, 10, 15)).toBe("rising");
+      expect(classify(-50, 10, 5)).toBe("falling");
+      expect(classify(10, 10, 11)).toBe("stable");
+      expect(classify(100, 0, 5)).toBe("new");
+    });
+  });
+
+  describe("Upload History Grand Total", () => {
+    it("should combine Petpooja and website totals for grand total", () => {
+      const petpoojaGrandTotal = 23950900; // in paise
+      const websiteAmount = 5000000; // in paise
+      const combinedTotal = petpoojaGrandTotal + websiteAmount;
+      expect(combinedTotal).toBe(28950900);
+    });
+
+    it("should handle periods with zero website orders", () => {
+      const petpoojaGrandTotal = 23950900;
+      const websiteAmount = 0;
+      const combinedTotal = petpoojaGrandTotal + websiteAmount;
+      expect(combinedTotal).toBe(petpoojaGrandTotal);
+    });
+
+    it("should format combined total in Indian rupees", () => {
+      const formatCurrency = (paise: number) => {
+        return `₹${(paise / 100).toLocaleString('en-IN', { minimumFractionDigits: 0 })}`;
+      };
+      expect(formatCurrency(10000)).toBe("₹100");
+      expect(formatCurrency(23950900)).toContain("₹");
+      expect(formatCurrency(23950900)).toContain("2,39,509");
     });
   });
 

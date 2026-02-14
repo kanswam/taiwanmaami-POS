@@ -2089,3 +2089,12 @@ Orders fixed:
 - [x] Frontend: Accuracy Report with actual revenue/orders and top items
 - [x] Frontend: Methodology explainer card
 - [x] Write vitest tests for prediction logic (15 tests passing)
+
+## BUG FIX: Analytics Dashboard Issues (Feb 14)
+
+- [x] Fix Grand Total in Upload History to include website sales (currently only shows Petpooja delivery data)
+- [x] Add period selector to Predictions tab (1 week, 2 weeks, this month, past month, etc.)
+- [ ] Fix tab layout — GST Report pushed to second row and barely visible, clean up tab presentation
+- [x] Fix daily average calculation for food items — Biang Biang shows 2/day avg but sells 4.7 on Sundays, likely dividing by all calendar days instead of operating days
+- [x] Include delivery channel data (Petpooja) in prediction calculations for complete demand forecasting
+- [x] Pass period selector dates to procurement forecast and trend alerts

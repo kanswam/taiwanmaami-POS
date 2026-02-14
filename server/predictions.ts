@@ -6,8 +6,14 @@ import { eq, and, gte, lte, sql, ne } from "drizzle-orm";
 const DOW_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 const DOW_SHORT = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
-// Food category ID
+// Food category ID (website)
 const FOOD_CATEGORY_ID = 4;
+
+// Delivery categories that map to food items
+const DELIVERY_FOOD_CATEGORIES = [
+  'Noodles', 'Rice', 'Omelete', 'Savoury Pillow Brioche',
+  'Cong You Bing', 'ChickGozilla'
+];
 
 /**
  * Monthly Revenue Projection
@@ -52,7 +58,7 @@ export async function getMonthlyProjection(year: number, month: number) {
   }
   const actualDays = dailyRevenue.length;
 
-  // Day-of-week averages
+  // Day-of-week averages — use actual days with orders, not calendar days
   const dowRevenue: Record<number, { total: number; count: number }> = {};
   const dowOrders: Record<number, { total: number; count: number }> = {};
   for (let i = 1; i <= 7; i++) {
@@ -162,6 +168,8 @@ export async function getMonthlyProjection(year: number, month: number) {
 
 /**
  * Item-Level Day-of-Week Demand Forecast (Food items only)
+ * Combines website orders + delivery channel data (Petpooja)
+ * Uses actual days with sales for DOW averages (not calendar days)
  */
 export async function getItemDemandForecast(startDate?: Date, endDate?: Date) {
   const db = await getDb();
@@ -170,12 +178,13 @@ export async function getItemDemandForecast(startDate?: Date, endDate?: Date) {
   const start = startDate || new Date(2026, 0, 1);
   const end = endDate || new Date();
 
-  // Get food item sales by day of week
+  // ========== 1. Website food item sales by day of week ==========
   const websiteFoodSales = await db.select({
     productName: orderItems.productName,
     dayOfWeek: sql<number>`DAYOFWEEK(${orders.createdAt})`,
     totalQty: sql<number>`COALESCE(SUM(${orderItems.quantity}), 0)`,
     totalRevenue: sql<number>`COALESCE(SUM(${orderItems.lineTotal}), 0)`,
+    daysWithSales: sql<number>`COUNT(DISTINCT DATE(${orders.createdAt}))`,
   })
   .from(orderItems)
   .innerJoin(orders, eq(orderItems.orderId, orders.id))
@@ -191,50 +200,139 @@ export async function getItemDemandForecast(startDate?: Date, endDate?: Date) {
   ))
   .groupBy(orderItems.productName, sql`DAYOFWEEK(${orders.createdAt})`);
 
-  // Count how many of each day-of-week exist in the date range
-  const dowCounts: Record<number, number> = {};
+  // ========== 2. Delivery channel food item sales (aggregated by period) ==========
+  // Delivery data doesn't have daily granularity, so we distribute evenly across
+  // the period's days for each item, but we know the total per period
+  const deliveryFoodSales = await db.select({
+    itemName: deliveryItemSales.itemName,
+    totalQty: sql<number>`COALESCE(SUM(${deliveryItemSales.quantity}), 0)`,
+    totalAmount: sql<number>`COALESCE(SUM(${deliveryItemSales.amount}), 0)`,
+    periodStart: deliveryItemSales.periodStart,
+    periodEnd: deliveryItemSales.periodEnd,
+  })
+  .from(deliveryItemSales)
+  .innerJoin(deliverySalesUploads, eq(deliveryItemSales.uploadId, deliverySalesUploads.id))
+  .where(and(
+    sql`${deliveryItemSales.category} IN ('Noodles', 'Rice', 'Omelete', 'Savoury Pillow Brioche', 'Cong You Bing', 'ChickGozilla')`,
+    gte(deliveryItemSales.periodStart, start),
+    lte(deliveryItemSales.periodEnd, end),
+  ))
+  .groupBy(deliveryItemSales.itemName, deliveryItemSales.periodStart, deliveryItemSales.periodEnd);
+
+  // ========== 3. Count actual operating days per DOW from website orders ==========
+  // Use raw SQL to avoid only_full_group_by incompatibility with Drizzle's column quoting
+  const operatingDaysResult = await db.execute(
+    sql`SELECT DAYOFWEEK(${orders.createdAt}) as dayOfWeek, COUNT(DISTINCT DATE(${orders.createdAt})) as dayCount FROM ${orders} WHERE ${orders.createdAt} >= ${start} AND ${orders.createdAt} <= ${end} AND ${orders.orderStatus} <> 'cancelled' AND ${orders.isTestData} = false GROUP BY 1`
+  );
+  // db.execute returns [rows, fields] tuple
+  const operatingDaysByDow = (Array.isArray(operatingDaysResult[0]) ? operatingDaysResult[0] : operatingDaysResult) as { dayOfWeek: number; dayCount: number }[];
+
+  const operatingDowCounts: Record<number, number> = {};
+  let totalOperatingDays = 0;
+  for (const row of operatingDaysByDow) {
+    const dow = Number(row.dayOfWeek);
+    const count = Number(row.dayCount) || 0;
+    operatingDowCounts[dow] = count;
+    totalOperatingDays += count;
+  }
+
+  // Also count calendar days for reference
+  const calendarDowCounts: Record<number, number> = {};
   const current = new Date(start);
   while (current <= end) {
     const dow = current.getDay() + 1;
-    dowCounts[dow] = (dowCounts[dow] || 0) + 1;
+    calendarDowCounts[dow] = (calendarDowCounts[dow] || 0) + 1;
     current.setDate(current.getDate() + 1);
   }
 
-  // Build item × day-of-week matrix
+  // ========== 4. Build item × day-of-week matrix ==========
   const itemMap: Record<string, {
     totalQty: number;
     totalRevenue: number;
-    dow: Record<number, { qty: number; revenue: number }>;
+    websiteQty: number;
+    deliveryQty: number;
+    dow: Record<number, { qty: number; revenue: number; daysWithSales: number }>;
   }> = {};
 
+  // Add website sales (has DOW granularity)
   for (const row of websiteFoodSales) {
     const name = row.productName;
     if (!itemMap[name]) {
-      itemMap[name] = { totalQty: 0, totalRevenue: 0, dow: {} };
+      itemMap[name] = { totalQty: 0, totalRevenue: 0, websiteQty: 0, deliveryQty: 0, dow: {} };
     }
     const qty = Number(row.totalQty) || 0;
     const rev = Number(row.totalRevenue) || 0;
+    const daysWithSales = Number(row.daysWithSales) || 0;
     itemMap[name].totalQty += qty;
     itemMap[name].totalRevenue += rev;
-    itemMap[name].dow[Number(row.dayOfWeek)] = { qty, revenue: rev };
+    itemMap[name].websiteQty += qty;
+    itemMap[name].dow[Number(row.dayOfWeek)] = { qty, revenue: rev, daysWithSales };
   }
 
-  // Convert to array with daily averages
+  // Add delivery sales (distributed proportionally across DOWs based on calendar days)
+  for (const row of deliveryFoodSales) {
+    const name = row.itemName;
+    if (!itemMap[name]) {
+      itemMap[name] = { totalQty: 0, totalRevenue: 0, websiteQty: 0, deliveryQty: 0, dow: {} };
+    }
+    const qty = Number(row.totalQty) || 0;
+    const amt = Number(row.totalAmount) || 0;
+    itemMap[name].totalQty += qty;
+    itemMap[name].totalRevenue += amt;
+    itemMap[name].deliveryQty += qty;
+
+    // Distribute delivery qty proportionally across DOWs in the period
+    const pStart = new Date(row.periodStart);
+    const pEnd = new Date(row.periodEnd);
+    const periodDowCounts: Record<number, number> = {};
+    let periodTotalDays = 0;
+    const d = new Date(pStart);
+    while (d <= pEnd) {
+      const dow = d.getDay() + 1;
+      periodDowCounts[dow] = (periodDowCounts[dow] || 0) + 1;
+      periodTotalDays++;
+      d.setDate(d.getDate() + 1);
+    }
+
+    // Distribute qty evenly across days in the period
+    if (periodTotalDays > 0) {
+      for (const [dowStr, dayCount] of Object.entries(periodDowCounts)) {
+        const dow = Number(dowStr);
+        const proportionalQty = (qty * dayCount) / periodTotalDays;
+        const proportionalAmt = (amt * dayCount) / periodTotalDays;
+        if (!itemMap[name].dow[dow]) {
+          itemMap[name].dow[dow] = { qty: 0, revenue: 0, daysWithSales: 0 };
+        }
+        itemMap[name].dow[dow].qty += proportionalQty;
+        itemMap[name].dow[dow].revenue += proportionalAmt;
+        // For delivery, assume all days in period had sales
+        itemMap[name].dow[dow].daysWithSales = Math.max(
+          itemMap[name].dow[dow].daysWithSales,
+          dayCount
+        );
+      }
+    }
+  }
+
+  // ========== 5. Convert to array with daily averages ==========
   const items = Object.entries(itemMap)
     .map(([name, data]) => {
       const dowAvg = DOW_NAMES.map((_: string, i: number) => {
         const dow = i + 1;
         const rawQty = data.dow[dow]?.qty || 0;
-        const daysCount = dowCounts[dow] || 1;
+        // Use actual days with sales for the average, not calendar days
+        const daysWithSales = data.dow[dow]?.daysWithSales || 0;
+        // Fall back to operating days if we have them, then calendar days
+        const divisor = daysWithSales > 0 ? daysWithSales : (operatingDowCounts[dow] || calendarDowCounts[dow] || 1);
         return {
           day: DOW_SHORT[i],
-          avgQty: Math.round((rawQty / daysCount) * 10) / 10,
-          totalQty: rawQty,
+          avgQty: Math.round((rawQty / divisor) * 10) / 10,
+          totalQty: Math.round(rawQty * 10) / 10,
         };
       });
 
-      const totalDays = Object.values(dowCounts).reduce((a: number, b: number) => a + b, 0);
-      const dailyAvg = totalDays > 0 ? data.totalQty / totalDays : 0;
+      // Daily avg uses total operating days, not calendar days
+      const dailyAvg = totalOperatingDays > 0 ? data.totalQty / totalOperatingDays : 0;
       const peakDay = dowAvg.reduce((max, d) => d.avgQty > max.avgQty ? d : max, dowAvg[0]);
 
       // Calculate variance for reliability indicator
@@ -246,8 +344,10 @@ export async function getItemDemandForecast(startDate?: Date, endDate?: Date) {
 
       return {
         productName: name,
-        totalQty: data.totalQty,
+        totalQty: Math.round(data.totalQty * 10) / 10,
         totalRevenue: data.totalRevenue,
+        websiteQty: data.websiteQty,
+        deliveryQty: Math.round(data.deliveryQty * 10) / 10,
         dailyAvg: Math.round(dailyAvg * 10) / 10,
         peakDay: peakDay.day,
         peakDayAvg: peakDay.avgQty,
@@ -259,7 +359,9 @@ export async function getItemDemandForecast(startDate?: Date, endDate?: Date) {
 
   return {
     dateRange: { start: start.toISOString().split('T')[0], end: end.toISOString().split('T')[0] },
-    dowCounts,
+    operatingDowCounts,
+    calendarDowCounts: calendarDowCounts,
+    totalOperatingDays,
     items,
     totalFoodItems: items.length,
   };
@@ -267,9 +369,10 @@ export async function getItemDemandForecast(startDate?: Date, endDate?: Date) {
 
 /**
  * Procurement Planner - Next 7 days expected demand per food item
+ * Now accepts optional date range for training data
  */
-export async function getProcurementForecast() {
-  const forecast = await getItemDemandForecast();
+export async function getProcurementForecast(startDate?: Date, endDate?: Date) {
+  const forecast = await getItemDemandForecast(startDate, endDate);
   if (!forecast) return null;
 
   const today = new Date();
@@ -311,6 +414,7 @@ export async function getProcurementForecast() {
 
   return {
     generatedAt: new Date().toISOString(),
+    dateRange: forecast.dateRange,
     nextDays,
     items: procurement,
   };
@@ -318,12 +422,13 @@ export async function getProcurementForecast() {
 
 /**
  * Trend Detection - Compare recent 2 weeks vs previous 2 weeks
+ * Now accepts optional date range for the "recent" period
  */
-export async function getTrendAlerts() {
+export async function getTrendAlerts(recentEnd?: Date) {
   const db = await getDb();
   if (!db) return null;
 
-  const today = new Date();
+  const today = recentEnd || new Date();
   const twoWeeksAgo = new Date(today);
   twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14);
   const fourWeeksAgo = new Date(today);

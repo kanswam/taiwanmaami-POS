@@ -3,16 +3,15 @@ import { trpc } from "@/lib/trpc";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   TrendingUp,
   TrendingDown,
   Target,
-  ShoppingCart,
   Calendar,
   AlertTriangle,
   ArrowUpRight,
   ArrowDownRight,
-  Minus,
   Sparkles,
   BarChart3,
   Package,
@@ -25,28 +24,97 @@ const formatCurrency = (paise: number) => {
 
 const DOW_SHORT = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
+type PeriodOption = {
+  label: string;
+  value: string;
+  getRange: () => { start: string; end: string };
+};
+
+function getPeriodOptions(): PeriodOption[] {
+  const today = new Date();
+  const todayStr = today.toISOString().split('T')[0];
+
+  const daysAgo = (n: number) => {
+    const d = new Date(today);
+    d.setDate(d.getDate() - n);
+    return d.toISOString().split('T')[0];
+  };
+
+  const monthStart = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split('T')[0];
+  const lastMonthStart = new Date(today.getFullYear(), today.getMonth() - 1, 1).toISOString().split('T')[0];
+  const lastMonthEnd = new Date(today.getFullYear(), today.getMonth(), 0).toISOString().split('T')[0];
+
+  return [
+    {
+      label: "All Data (Jan 2026+)",
+      value: "all",
+      getRange: () => ({ start: "2026-01-01", end: todayStr }),
+    },
+    {
+      label: "Last 1 Week",
+      value: "1w",
+      getRange: () => ({ start: daysAgo(7), end: todayStr }),
+    },
+    {
+      label: "Last 2 Weeks",
+      value: "2w",
+      getRange: () => ({ start: daysAgo(14), end: todayStr }),
+    },
+    {
+      label: "This Month",
+      value: "this_month",
+      getRange: () => ({ start: monthStart, end: todayStr }),
+    },
+    {
+      label: "Last Month",
+      value: "last_month",
+      getRange: () => ({ start: lastMonthStart, end: lastMonthEnd }),
+    },
+  ];
+}
+
 export default function PredictionsTab() {
   const today = new Date();
   const [projYear] = useState(today.getFullYear());
   const [projMonth] = useState(today.getMonth() + 1);
+  const [selectedPeriod, setSelectedPeriod] = useState("all");
 
-  // Queries
+  const periodOptions = useMemo(() => getPeriodOptions(), []);
+  const currentPeriod = useMemo(
+    () => periodOptions.find((p) => p.value === selectedPeriod) || periodOptions[0],
+    [selectedPeriod, periodOptions]
+  );
+  const dateRange = useMemo(() => currentPeriod.getRange(), [currentPeriod]);
+
+  // Queries — item forecast and procurement use period selector
   const { data: projection, isLoading: loadingProj, refetch: refetchProj } =
     trpc.analytics.getMonthlyProjection.useQuery({ year: projYear, month: projMonth });
 
-  const { data: itemForecast, isLoading: loadingItems } =
-    trpc.analytics.getItemDemandForecast.useQuery(undefined);
+  const { data: itemForecast, isLoading: loadingItems, refetch: refetchItems } =
+    trpc.analytics.getItemDemandForecast.useQuery({
+      startDate: dateRange.start,
+      endDate: dateRange.end,
+    });
 
-  const { data: procurement, isLoading: loadingProc } =
-    trpc.analytics.getProcurementForecast.useQuery();
+  const { data: procurement, isLoading: loadingProc, refetch: refetchProc } =
+    trpc.analytics.getProcurementForecast.useQuery({
+      startDate: dateRange.start,
+      endDate: dateRange.end,
+    });
 
   const { data: trends, isLoading: loadingTrends } =
-    trpc.analytics.getTrendAlerts.useQuery();
+    trpc.analytics.getTrendAlerts.useQuery(undefined);
 
   const { data: accuracy } =
     trpc.analytics.getForecastAccuracy.useQuery({ year: projYear, month: projMonth });
 
   const isLoading = loadingProj || loadingItems || loadingProc || loadingTrends;
+
+  const handleRefresh = () => {
+    refetchProj();
+    refetchItems();
+    refetchProc();
+  };
 
   // Heatmap color for item demand
   const getHeatColor = (qty: number, maxQty: number) => {
@@ -60,21 +128,38 @@ export default function PredictionsTab() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
+      {/* Header with Period Selector */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-2xl font-bold flex items-center gap-2">
             <Sparkles className="h-6 w-6 text-amber-500" />
             Predictive Analytics
           </h2>
           <p className="text-muted-foreground mt-1">
-            Forecasts based on historical data from January 2026 onwards. Food items only.
+            Food item forecasts combining website + delivery channel data
           </p>
         </div>
-        <Button variant="outline" size="sm" onClick={() => refetchProj()}>
-          <RefreshCw className="h-4 w-4 mr-2" />
-          Refresh
-        </Button>
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            <Calendar className="h-4 w-4 text-muted-foreground" />
+            <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
+              <SelectTrigger className="w-[200px] h-9">
+                <SelectValue placeholder="Training period" />
+              </SelectTrigger>
+              <SelectContent>
+                {periodOptions.map((opt) => (
+                  <SelectItem key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <Button variant="outline" size="sm" onClick={handleRefresh}>
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Refresh
+          </Button>
+        </div>
       </div>
 
       {isLoading ? (
@@ -95,6 +180,7 @@ export default function PredictionsTab() {
                 <CardDescription>
                   {projection.daysElapsed} of {projection.daysInMonth} days elapsed
                   {projection.daysRemaining > 0 && ` · ${projection.daysRemaining} days remaining`}
+                  {" · "}Website orders only (revenue projection)
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
@@ -203,8 +289,10 @@ export default function PredictionsTab() {
                   Food Item Demand by Day of Week
                 </CardTitle>
                 <CardDescription>
-                  Average daily quantity based on data from {itemForecast.dateRange.start} to {itemForecast.dateRange.end}
-                  {" · "}{itemForecast.totalFoodItems} food items tracked
+                  Average daily quantity from {itemForecast.dateRange.start} to {itemForecast.dateRange.end}
+                  {" · "}{itemForecast.totalFoodItems} food items
+                  {" · "}{itemForecast.totalOperatingDays} operating days
+                  {" · "}Website + Delivery channels combined
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -217,12 +305,13 @@ export default function PredictionsTab() {
                           <th key={d} className="text-center p-2 min-w-[50px]">{d}</th>
                         ))}
                         <th className="text-center p-2 min-w-[60px]">Daily Avg</th>
+                        <th className="text-center p-2 min-w-[50px]">Total</th>
                         <th className="text-center p-2 min-w-[60px]">Peak</th>
-                        <th className="text-center p-2 min-w-[70px]">Reliability</th>
+                        <th className="text-center p-2 min-w-[70px]">Source</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {itemForecast.items.slice(0, 20).map((item) => {
+                      {itemForecast.items.slice(0, 25).map((item) => {
                         const maxQty = Math.max(...item.dowBreakdown.map((d) => d.avgQty));
                         return (
                           <tr key={item.productName} className="border-b hover:bg-muted/50">
@@ -233,17 +322,24 @@ export default function PredictionsTab() {
                               </td>
                             ))}
                             <td className="text-center p-2 font-semibold">{item.dailyAvg}</td>
+                            <td className="text-center p-2 text-muted-foreground">{item.totalQty}</td>
                             <td className="text-center p-2">
                               <Badge variant="outline" className="text-xs">{item.peakDay}</Badge>
                             </td>
                             <td className="text-center p-2">
-                              <Badge className={
-                                item.reliability === "high" ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200" :
-                                item.reliability === "medium" ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200" :
-                                "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
-                              }>
-                                {item.reliability}
-                              </Badge>
+                              {item.websiteQty > 0 && item.deliveryQty > 0 ? (
+                                <Badge className="bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200 text-[10px]">
+                                  Both
+                                </Badge>
+                              ) : item.deliveryQty > 0 ? (
+                                <Badge className="bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200 text-[10px]">
+                                  Delivery
+                                </Badge>
+                              ) : (
+                                <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 text-[10px]">
+                                  Website
+                                </Badge>
+                              )}
                             </td>
                           </tr>
                         );
@@ -251,11 +347,15 @@ export default function PredictionsTab() {
                     </tbody>
                   </table>
                 </div>
-                <div className="mt-3 flex gap-4 text-xs text-muted-foreground">
+                <div className="mt-3 flex flex-wrap gap-4 text-xs text-muted-foreground">
                   <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-red-200 dark:bg-red-900 inline-block" /> High demand</span>
                   <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-orange-200 dark:bg-orange-800 inline-block" /> Medium-high</span>
                   <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-yellow-100 dark:bg-yellow-900 inline-block" /> Moderate</span>
                   <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-green-50 dark:bg-green-900 inline-block" /> Low</span>
+                  <span className="ml-2">|</span>
+                  <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-purple-100 dark:bg-purple-900 inline-block" /> Both channels</span>
+                  <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-blue-100 dark:bg-blue-900 inline-block" /> Website only</span>
+                  <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-orange-100 dark:bg-orange-900 inline-block" /> Delivery only</span>
                 </div>
               </CardContent>
             </Card>
@@ -271,6 +371,7 @@ export default function PredictionsTab() {
                 </CardTitle>
                 <CardDescription>
                   Expected food item demand for the next 7 days based on day-of-week patterns
+                  {procurement.dateRange && ` · Training data: ${procurement.dateRange.start} to ${procurement.dateRange.end}`}
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -453,22 +554,26 @@ export default function PredictionsTab() {
               </h4>
               <div className="text-sm text-muted-foreground space-y-2">
                 <p>
-                  <strong>Monthly projection</strong> uses day-of-week weighted averages from your actual sales data.
-                  Remaining days are projected based on which days of the week they fall on (weekends vs weekdays).
+                  <strong>Data sources:</strong> Predictions combine website order data with delivery channel data
+                  (Zomato/Swiggy/Dine-in from Petpooja uploads) for complete demand forecasting across all channels.
                 </p>
                 <p>
-                  <strong>Item demand</strong> calculates average daily quantity sold per food item per day of week.
-                  The heatmap shows where demand concentrates to help plan procurement.
+                  <strong>Daily averages</strong> are calculated using actual operating days (days with sales), not calendar days.
+                  This prevents closed days from deflating the averages.
+                </p>
+                <p>
+                  <strong>Period selector</strong> controls which historical data the item demand heatmap and procurement forecast
+                  are based on. Use shorter periods (1-2 weeks) for recent trends, or "All Data" for stable long-term patterns.
+                </p>
+                <p>
+                  <strong>Monthly projection</strong> uses day-of-week weighted averages from the current month's website orders.
+                  Remaining days are projected based on which days of the week they fall on.
                 </p>
                 <p>
                   <strong>Trend alerts</strong> compare the last 2 weeks against the previous 2 weeks to spot rising or declining items.
                 </p>
-                <p>
-                  <strong>Reliability</strong> indicates how consistent the pattern is — "high" means the item sells consistently,
-                  "low" means sales are sporadic and predictions are less certain.
-                </p>
                 <p className="italic">
-                  As more data accumulates, predictions will become more accurate. Compare projections against actuals each month to calibrate.
+                  As more data accumulates, predictions will become more accurate. Upload Petpooja data regularly for best results.
                 </p>
               </div>
             </CardContent>

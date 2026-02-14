@@ -554,15 +554,15 @@ export default function Analytics() {
 
         {/* Tabs for different reports */}
         <Tabs defaultValue="sales" className="space-y-4">
-          <TabsList className="grid w-full grid-cols-7">
-            <TabsTrigger value="sales">Sales</TabsTrigger>
-            <TabsTrigger value="products">Products</TabsTrigger>
-            <TabsTrigger value="customers">Customers</TabsTrigger>
-            <TabsTrigger value="trends">Trends</TabsTrigger>
-            <TabsTrigger value="insights">Insights</TabsTrigger>
-            <TabsTrigger value="channels">Channels</TabsTrigger>
-            <TabsTrigger value="predictions">Predictions</TabsTrigger>
-            <TabsTrigger value="gst">GST Report</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-8">
+            <TabsTrigger value="sales" className="text-xs sm:text-sm">Sales</TabsTrigger>
+            <TabsTrigger value="products" className="text-xs sm:text-sm">Products</TabsTrigger>
+            <TabsTrigger value="customers" className="text-xs sm:text-sm">Customers</TabsTrigger>
+            <TabsTrigger value="trends" className="text-xs sm:text-sm">Trends</TabsTrigger>
+            <TabsTrigger value="insights" className="text-xs sm:text-sm">Insights</TabsTrigger>
+            <TabsTrigger value="channels" className="text-xs sm:text-sm">Channels</TabsTrigger>
+            <TabsTrigger value="predictions" className="text-xs sm:text-sm">Predictions</TabsTrigger>
+            <TabsTrigger value="gst" className="text-xs sm:text-sm">GST</TabsTrigger>
           </TabsList>
 
           {/* Sales Tab */}
@@ -1495,11 +1495,13 @@ export default function Analytics() {
                       <thead>
                         <tr className="border-b">
                           <th className="text-left py-2 font-medium">Period</th>
-                          <th className="text-right py-2 font-medium">Total Orders</th>
+                          <th className="text-right py-2 font-medium">Delivery Orders</th>
                           <th className="text-right py-2 font-medium">Zomato</th>
                           <th className="text-right py-2 font-medium">Swiggy</th>
                           <th className="text-right py-2 font-medium">Dine-in</th>
-                          <th className="text-right py-2 font-medium">Grand Total</th>
+                          <th className="text-right py-2 font-medium">Petpooja Total</th>
+                          <th className="text-right py-2 font-medium">Website</th>
+                          <th className="text-right py-2 font-medium font-bold">Grand Total</th>
                           <th className="text-right py-2 font-medium">Uploaded</th>
                           <th className="text-center py-2 font-medium">Action</th>
                         </tr>
@@ -1525,8 +1527,14 @@ export default function Analytics() {
                             <td className="text-right py-2 text-red-600">{p.zomatoOrders || 0}</td>
                             <td className="text-right py-2 text-orange-600">{p.swiggyOrders || 0}</td>
                             <td className="text-right py-2 text-gray-600">{p.dineInOrders || 0}</td>
-                            <td className="text-right py-2 font-medium">
+                            <td className="text-right py-2">
                               ₹{((p.grandTotal || 0) / 100).toLocaleString('en-IN', { minimumFractionDigits: 0 })}
+                            </td>
+                            <td className="text-right py-2 text-blue-600">
+                              {p.websiteOrders ? `${p.websiteOrders} ord · ` : ''}₹{((p.websiteAmount || 0) / 100).toLocaleString('en-IN', { minimumFractionDigits: 0 })}
+                            </td>
+                            <td className="text-right py-2 font-bold">
+                              ₹{((p.combinedTotal || 0) / 100).toLocaleString('en-IN', { minimumFractionDigits: 0 })}
                             </td>
                             <td className="text-right py-2 text-muted-foreground text-xs">
                               {p.createdAt ? new Date(p.createdAt).toLocaleDateString() : '-'}

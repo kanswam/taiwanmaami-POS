@@ -1,0 +1,269 @@
+{
+  "query": "\nSELECT \n  oi.productName,\n  DATE(o.createdAt) as orderDate,\n  DAYOFWEEK(o.createdAt) as dow,\n  DAYNAME(o.createdAt) as dayName,\n  SUM(oi.quantity) as totalQty\nFROM order_items oi\nJOIN orders o ON oi.orderId = o.id\nJOIN products p ON oi.productId = p.id\nJOIN subcategories sc ON p.subcategoryId = sc.id\nWHERE sc.categoryId = 4\n  AND o.orderStatus != 'cancelled'\n  AND oi.status = 'active'\n  AND o.isTestData = 0\n  AND oi.productName LIKE '%Biang%'\n  AND o.createdAt >= '2026-01-01'\nGROUP BY oi.productName, DATE(o.createdAt), DAYOFWEEK(o.createdAt), DAYNAME(o.createdAt)\nORDER BY DATE(o.createdAt);\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute \nSELECT \n  oi.productName,\n  DATE(o.createdAt) as orderDate,\n  DAYOFWEEK(o.createdAt) as dow,\n  DAYNAME(o.createdAt) as dayName,\n  SUM(oi.quantity) as totalQty\nFROM order_items oi\nJOIN orders o ON oi.orderId = o.id\nJOIN products p ON oi.productId = p.id\nJOIN subcategories sc ON p.subcategoryId = sc.id\nWHERE sc.categoryId = 4\n  AND o.orderStatus != 'cancelled'\n  AND oi.status = 'active'\n  AND o.isTestData = 0\n  AND oi.productName LIKE '%Biang%'\n  AND o.createdAt >= '2026-01-01'\nGROUP BY oi.productName, DATE(o.createdAt), DAYOFWEEK(o.createdAt), DAYNAME(o.createdAt)\nORDER BY DATE(o.createdAt);\n",
+  "rows": [
+    {
+      "productName": "Biang Biang Noodles",
+      "orderDate": "2026-01-04",
+      "dow": "1",
+      "dayName": "Sunday",
+      "totalQty": "2"
+    },
+    {
+      "productName": "Biang Biang Noodles",
+      "orderDate": "2026-01-06",
+      "dow": "3",
+      "dayName": "Tuesday",
+      "totalQty": "2"
+    },
+    {
+      "productName": "Biang Biang Noodles",
+      "orderDate": "2026-01-07",
+      "dow": "4",
+      "dayName": "Wednesday",
+      "totalQty": "1"
+    },
+    {
+      "productName": "Biang Biang Noodles",
+      "orderDate": "2026-01-08",
+      "dow": "5",
+      "dayName": "Thursday",
+      "totalQty": "3"
+    },
+    {
+      "productName": "Biang Biang Noodles",
+      "orderDate": "2026-01-09",
+      "dow": "6",
+      "dayName": "Friday",
+      "totalQty": "1"
+    },
+    {
+      "productName": "Biang Biang Noodles",
+      "orderDate": "2026-01-10",
+      "dow": "7",
+      "dayName": "Saturday",
+      "totalQty": "3"
+    },
+    {
+      "productName": "Biang Biang Noodles",
+      "orderDate": "2026-01-11",
+      "dow": "1",
+      "dayName": "Sunday",
+      "totalQty": "7"
+    },
+    {
+      "productName": "Biang Biang Noodles",
+      "orderDate": "2026-01-13",
+      "dow": "3",
+      "dayName": "Tuesday",
+      "totalQty": "1"
+    },
+    {
+      "productName": "Biang Biang Noodles",
+      "orderDate": "2026-01-14",
+      "dow": "4",
+      "dayName": "Wednesday",
+      "totalQty": "5"
+    },
+    {
+      "productName": "Biang Biang Noodles",
+      "orderDate": "2026-01-15",
+      "dow": "5",
+      "dayName": "Thursday",
+      "totalQty": "1"
+    },
+    {
+      "productName": "Biang Biang Noodles",
+      "orderDate": "2026-01-16",
+      "dow": "6",
+      "dayName": "Friday",
+      "totalQty": "2"
+    },
+    {
+      "productName": "Biang Biang Noodles",
+      "orderDate": "2026-01-17",
+      "dow": "7",
+      "dayName": "Saturday",
+      "totalQty": "4"
+    },
+    {
+      "productName": "Biang Biang Noodles",
+      "orderDate": "2026-01-18",
+      "dow": "1",
+      "dayName": "Sunday",
+      "totalQty": "8"
+    },
+    {
+      "productName": "Biang Biang Noodles",
+      "orderDate": "2026-01-19",
+      "dow": "2",
+      "dayName": "Monday",
+      "totalQty": "1"
+    },
+    {
+      "productName": "Biang Biang Noodles",
+      "orderDate": "2026-01-20",
+      "dow": "3",
+      "dayName": "Tuesday",
+      "totalQty": "2"
+    },
+    {
+      "productName": "Biang Biang Noodles",
+      "orderDate": "2026-01-21",
+      "dow": "4",
+      "dayName": "Wednesday",
+      "totalQty": "1"
+    },
+    {
+      "productName": "Biang Biang Noodles",
+      "orderDate": "2026-01-22",
+      "dow": "5",
+      "dayName": "Thursday",
+      "totalQty": "1"
+    },
+    {
+      "productName": "Biang Biang Noodles",
+      "orderDate": "2026-01-23",
+      "dow": "6",
+      "dayName": "Friday",
+      "totalQty": "1"
+    },
+    {
+      "productName": "Biang Biang Noodles",
+      "orderDate": "2026-01-24",
+      "dow": "7",
+      "dayName": "Saturday",
+      "totalQty": "5"
+    },
+    {
+      "productName": "Biang Biang Noodles",
+      "orderDate": "2026-01-25",
+      "dow": "1",
+      "dayName": "Sunday",
+      "totalQty": "2"
+    },
+    {
+      "productName": "Biang Biang Noodles",
+      "orderDate": "2026-01-27",
+      "dow": "3",
+      "dayName": "Tuesday",
+      "totalQty": "1"
+    },
+    {
+      "productName": "Biang Biang Noodles",
+      "orderDate": "2026-01-28",
+      "dow": "4",
+      "dayName": "Wednesday",
+      "totalQty": "1"
+    },
+    {
+      "productName": "Biang Biang Noodles",
+      "orderDate": "2026-01-29",
+      "dow": "5",
+      "dayName": "Thursday",
+      "totalQty": "1"
+    },
+    {
+      "productName": "Biang Biang Noodles",
+      "orderDate": "2026-01-30",
+      "dow": "6",
+      "dayName": "Friday",
+      "totalQty": "2"
+    },
+    {
+      "productName": "Biang Biang Noodles",
+      "orderDate": "2026-01-31",
+      "dow": "7",
+      "dayName": "Saturday",
+      "totalQty": "1"
+    },
+    {
+      "productName": "Biang Biang Noodles",
+      "orderDate": "2026-02-01",
+      "dow": "1",
+      "dayName": "Sunday",
+      "totalQty": "5"
+    },
+    {
+      "productName": "Biang Biang Noodles",
+      "orderDate": "2026-02-02",
+      "dow": "2",
+      "dayName": "Monday",
+      "totalQty": "2"
+    },
+    {
+      "productName": "Biang Biang Noodles",
+      "orderDate": "2026-02-03",
+      "dow": "3",
+      "dayName": "Tuesday",
+      "totalQty": "2"
+    },
+    {
+      "productName": "Biang Biang Noodles",
+      "orderDate": "2026-02-04",
+      "dow": "4",
+      "dayName": "Wednesday",
+      "totalQty": "2"
+    },
+    {
+      "productName": "Biang Biang Noodles",
+      "orderDate": "2026-02-05",
+      "dow": "5",
+      "dayName": "Thursday",
+      "totalQty": "1"
+    },
+    {
+      "productName": "Biang Biang Noodles",
+      "orderDate": "2026-02-06",
+      "dow": "6",
+      "dayName": "Friday",
+      "totalQty": "2"
+    },
+    {
+      "productName": "Biang Biang Noodles",
+      "orderDate": "2026-02-08",
+      "dow": "1",
+      "dayName": "Sunday",
+      "totalQty": "4"
+    },
+    {
+      "productName": "Biang Biang Noodles",
+      "orderDate": "2026-02-10",
+      "dow": "3",
+      "dayName": "Tuesday",
+      "totalQty": "1"
+    },
+    {
+      "productName": "Biang Biang Noodles",
+      "orderDate": "2026-02-11",
+      "dow": "4",
+      "dayName": "Wednesday",
+      "totalQty": "3"
+    },
+    {
+      "productName": "Biang Biang Noodles",
+      "orderDate": "2026-02-12",
+      "dow": "5",
+      "dayName": "Thursday",
+      "totalQty": "2"
+    },
+    {
+      "productName": "Biang Biang Noodles",
+      "orderDate": "2026-02-13",
+      "dow": "6",
+      "dayName": "Friday",
+      "totalQty": "3"
+    },
+    {
+      "productName": "Biang Biang Noodles",
+      "orderDate": "2026-02-14",
+      "dow": "7",
+      "dayName": "Saturday",
+      "totalQty": "6"
+    }
+  ],
+  "messages": [],
+  "stdout": "productName\torderDate\tdow\tdayName\ttotalQty\nBiang Biang Noodles\t2026-01-04\t1\tSunday\t2\nBiang Biang Noodles\t2026-01-06\t3\tTuesday\t2\nBiang Biang Noodles\t2026-01-07\t4\tWednesday\t1\nBiang Biang Noodles\t2026-01-08\t5\tThursday\t3\nBiang Biang Noodles\t2026-01-09\t6\tFriday\t1\nBiang Biang Noodles\t2026-01-10\t7\tSaturday\t3\nBiang Biang Noodles\t2026-01-11\t1\tSunday\t7\nBiang Biang Noodles\t2026-01-13\t3\tTuesday\t1\nBiang Biang Noodles\t2026-01-14\t4\tWednesday\t5\nBiang Biang Noodles\t2026-01-15\t5\tThursday\t1\nBiang Biang Noodles\t2026-01-16\t6\tFriday\t2\nBiang Biang Noodles\t2026-01-17\t7\tSaturday\t4\nBiang Biang Noodles\t2026-01-18\t1\tSunday\t8\nBiang Biang Noodles\t2026-01-19\t2\tMonday\t1\nBiang Biang Noodles\t2026-01-20\t3\tTuesday\t2\nBiang Biang Noodles\t2026-01-21\t4\tWednesday\t1\nBiang Biang Noodles\t2026-01-22\t5\tThursday\t1\nBiang Biang Noodles\t2026-01-23\t6\tFriday\t1\nBiang Biang Noodles\t2026-01-24\t7\tSaturday\t5\nBiang Biang Noodles\t2026-01-25\t1\tSunday\t2\nBiang Biang Noodles\t2026-01-27\t3\tTuesday\t1\nBiang Biang Noodles\t2026-01-28\t4\tWednesday\t1\nBiang Biang Noodles\t2026-01-29\t5\tThursday\t1\nBiang Biang Noodles\t2026-01-30\t6\tFriday\t2\nBiang Biang Noodles\t2026-01-31\t7\tSaturday\t1\nBiang Biang Noodles\t2026-02-01\t1\tSunday\t5\nBiang Biang Noodles\t2026-02-02\t2\tMonday\t2\nBiang Biang Noodles\t2026-02-03\t3\tTuesday\t2\nBiang Biang Noodles\t2026-02-04\t4\tWednesday\t2\nBiang Biang Noodles\t2026-02-05\t5\tThursday\t1\nBiang Biang Noodles\t2026-02-06\t6\tFriday\t2\nBiang Biang Noodles\t2026-02-08\t1\tSunday\t4\nBiang Biang Noodles\t2026-02-10\t3\tTuesday\t1\nBiang Biang Noodles\t2026-02-11\t4\tWednesday\t3\nBiang Biang Noodles\t2026-02-12\t5\tThursday\t2\nBiang Biang Noodles\t2026-02-13\t6\tFriday\t3\nBiang Biang Noodles\t2026-02-14\t7\tSaturday\t6\n",
+  "stderr": "",
+  "execution_time_ms": 146
+}
