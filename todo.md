@@ -2098,3 +2098,9 @@ Orders fixed:
 - [x] Fix daily average calculation for food items — Biang Biang shows 2/day avg but sells 4.7 on Sundays, likely dividing by all calendar days instead of operating days
 - [x] Include delivery channel data (Petpooja) in prediction calculations for complete demand forecasting
 - [x] Pass period selector dates to procurement forecast and trend alerts
+
+## Predictions Improvements (Feb 14 - Part 2)
+
+- [x] Fix ChickGozilla zero-day predictions — use minimum baseline instead of dashes for items with sparse data
+- [x] Add total sales/revenue prediction (all categories including drinks, sweet bites) based on selected period
+- [x] Add overall daily revenue/order projection section to PredictionsTab

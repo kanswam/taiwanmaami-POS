@@ -6052,6 +6052,18 @@ export const appRouter = router({
         return getTrendAlerts(end);
       }),
 
+    getTotalSalesForecast: adminProcedure
+      .input(z.object({
+        startDate: z.string().optional(),
+        endDate: z.string().optional(),
+      }).optional())
+      .query(async ({ input }) => {
+        const { getTotalSalesForecast } = await import('./predictions');
+        const start = input?.startDate ? new Date(input.startDate) : undefined;
+        const end = input?.endDate ? new Date(input.endDate) : undefined;
+        return getTotalSalesForecast(start, end);
+      }),
+
     getForecastAccuracy: adminProcedure
       .input(z.object({ year: z.number(), month: z.number().min(1).max(12) }))
       .query(async ({ input }) => {

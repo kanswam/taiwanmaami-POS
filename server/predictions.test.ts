@@ -299,6 +299,90 @@ describe("Predictions Module", () => {
     });
   });
 
+  describe("Estimated Baseline for Sparse Items", () => {
+    it("should calculate minimum baseline as 30% of overall daily average", () => {
+      const totalQty = 21; // e.g., ChickGozilla
+      const operatingDays = 45;
+      const overallDailyAvg = totalQty / operatingDays;
+      const minBaseline = Math.round(overallDailyAvg * 0.3 * 10) / 10;
+      expect(minBaseline).toBe(0.1);
+    });
+
+    it("should apply estimated baseline when item has >=5 total sales but zero on a DOW", () => {
+      const totalQty = 21;
+      const computedAvg = 0; // zero on Monday
+      const minBaseline = 0.1;
+      const isEstimated = computedAvg === 0 && totalQty >= 5 && minBaseline > 0;
+      const avgQty = isEstimated ? minBaseline : computedAvg;
+      expect(isEstimated).toBe(true);
+      expect(avgQty).toBe(0.1);
+    });
+
+    it("should NOT apply estimated baseline for items with <5 total sales", () => {
+      const totalQty = 3;
+      const computedAvg = 0;
+      const minBaseline = 0.1;
+      const isEstimated = computedAvg === 0 && totalQty >= 5 && minBaseline > 0;
+      expect(isEstimated).toBe(false);
+    });
+
+    it("should NOT apply estimated baseline when actual avg is non-zero", () => {
+      const totalQty = 50;
+      const computedAvg = 2.5;
+      const minBaseline = 0.3;
+      const isEstimated = computedAvg === 0 && totalQty >= 5 && minBaseline > 0;
+      expect(isEstimated).toBe(false);
+    });
+  });
+
+  describe("Total Sales Forecast Logic", () => {
+    it("should calculate daily average revenue from combined channels", () => {
+      const websiteRevenue = 354081;
+      const deliveryRevenue = 335120;
+      const operatingDays = 41;
+      const dailyAvg = (websiteRevenue + deliveryRevenue) / operatingDays;
+      expect(dailyAvg).toBeCloseTo(16809.8, 0);
+    });
+
+    it("should calculate website share percentage", () => {
+      const websiteRevenue = 354081;
+      const deliveryRevenue = 335120;
+      const combined = websiteRevenue + deliveryRevenue;
+      const share = Math.round((websiteRevenue / combined) * 100);
+      expect(share).toBe(51);
+    });
+
+    it("should project next 7 days revenue using DOW averages", () => {
+      const dowAvgs = [30000, 10000, 15000, 18000, 16000, 17000, 40000]; // Sun-Sat
+      // If next 7 days are Sun-Sat
+      const weekTotal = dowAvgs.reduce((s, v) => s + v, 0);
+      expect(weekTotal).toBe(146000);
+    });
+
+    it("should calculate month remaining projection", () => {
+      const dailyAvg = 16810;
+      const daysRemaining = 14;
+      const monthRemaining = dailyAvg * daysRemaining;
+      expect(monthRemaining).toBe(235340);
+    });
+
+    it("should calculate category breakdown percentages", () => {
+      const categories = [
+        { name: "Food", revenue: 100000 },
+        { name: "Drinks", revenue: 80000 },
+        { name: "Delivery", revenue: 120000 },
+      ];
+      const total = categories.reduce((s, c) => s + c.revenue, 0);
+      const breakdown = categories.map(c => ({
+        ...c,
+        percentage: Math.round((c.revenue / total) * 100),
+      }));
+      expect(breakdown[0].percentage).toBe(33);
+      expect(breakdown[1].percentage).toBe(27);
+      expect(breakdown[2].percentage).toBe(40);
+    });
+  });
+
   describe("Currency Formatting", () => {
     it("should format paise to rupees with Indian locale", () => {
       const formatCurrency = (paise: number) => {

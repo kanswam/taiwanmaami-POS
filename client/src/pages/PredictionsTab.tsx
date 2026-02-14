@@ -16,6 +16,7 @@ import {
   BarChart3,
   Package,
   RefreshCw,
+  DollarSign,
 } from "lucide-react";
 
 const formatCurrency = (paise: number) => {
@@ -86,9 +87,15 @@ export default function PredictionsTab() {
   );
   const dateRange = useMemo(() => currentPeriod.getRange(), [currentPeriod]);
 
-  // Queries — item forecast and procurement use period selector
+  // Queries — all use period selector except monthly projection
   const { data: projection, isLoading: loadingProj, refetch: refetchProj } =
     trpc.analytics.getMonthlyProjection.useQuery({ year: projYear, month: projMonth });
+
+  const { data: totalForecast, isLoading: loadingTotal, refetch: refetchTotal } =
+    trpc.analytics.getTotalSalesForecast.useQuery({
+      startDate: dateRange.start,
+      endDate: dateRange.end,
+    });
 
   const { data: itemForecast, isLoading: loadingItems, refetch: refetchItems } =
     trpc.analytics.getItemDemandForecast.useQuery({
@@ -108,10 +115,11 @@ export default function PredictionsTab() {
   const { data: accuracy } =
     trpc.analytics.getForecastAccuracy.useQuery({ year: projYear, month: projMonth });
 
-  const isLoading = loadingProj || loadingItems || loadingProc || loadingTrends;
+  const isLoading = loadingProj || loadingItems || loadingProc || loadingTrends || loadingTotal;
 
   const handleRefresh = () => {
     refetchProj();
+    refetchTotal();
     refetchItems();
     refetchProc();
   };
@@ -136,7 +144,7 @@ export default function PredictionsTab() {
             Predictive Analytics
           </h2>
           <p className="text-muted-foreground mt-1">
-            Food item forecasts combining website + delivery channel data
+            Revenue, order & food item forecasts combining website + delivery channel data
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -169,111 +177,170 @@ export default function PredictionsTab() {
         </div>
       ) : (
         <>
-          {/* ========== SECTION 1: Monthly Revenue Projection ========== */}
-          {projection && (
+          {/* ========== SECTION 0: Total Sales Forecast ========== */}
+          {totalForecast && (
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Target className="h-5 w-5 text-blue-500" />
-                  Monthly Revenue Projection — {projection.month}
+                  <DollarSign className="h-5 w-5 text-emerald-500" />
+                  Total Sales Forecast — All Categories
                 </CardTitle>
                 <CardDescription>
-                  {projection.daysElapsed} of {projection.daysInMonth} days elapsed
-                  {projection.daysRemaining > 0 && ` · ${projection.daysRemaining} days remaining`}
-                  {" · "}Website orders only (revenue projection)
+                  Revenue & order predictions across all products (drinks, food, desserts, delivery)
+                  {" · "}Based on {totalForecast.dateRange.start} to {totalForecast.dateRange.end}
+                  {" · "}{totalForecast.totalOperatingDays} operating days
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
-                {/* Key metrics row */}
+                {/* Key metrics */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="bg-emerald-50 dark:bg-emerald-950 rounded-lg p-4">
+                    <div className="text-sm text-emerald-600 dark:text-emerald-400">Daily Avg Revenue</div>
+                    <div className="text-xl font-bold mt-1">{formatCurrency(totalForecast.dailyAvgRevenue)}</div>
+                    <div className="text-xs text-muted-foreground">All channels combined</div>
+                  </div>
                   <div className="bg-blue-50 dark:bg-blue-950 rounded-lg p-4">
-                    <div className="text-sm text-blue-600 dark:text-blue-400">Actual So Far</div>
-                    <div className="text-xl font-bold mt-1">{formatCurrency(projection.actualRevenue)}</div>
-                    <div className="text-xs text-muted-foreground">{projection.actualOrders} orders</div>
+                    <div className="text-sm text-blue-600 dark:text-blue-400">Daily Avg Orders</div>
+                    <div className="text-xl font-bold mt-1">{totalForecast.dailyAvgOrders}</div>
+                    <div className="text-xs text-muted-foreground">Website + Delivery</div>
                   </div>
                   <div className="bg-amber-50 dark:bg-amber-950 rounded-lg p-4">
-                    <div className="text-sm text-amber-600 dark:text-amber-400">Projected Total</div>
-                    <div className="text-xl font-bold mt-1">{formatCurrency(projection.projectedTotal)}</div>
-                    <div className="text-xs text-muted-foreground">~{projection.projectedOrders} orders</div>
-                  </div>
-                  <div className="bg-green-50 dark:bg-green-950 rounded-lg p-4">
-                    <div className="text-sm text-green-600 dark:text-green-400">Daily Average</div>
-                    <div className="text-xl font-bold mt-1">{formatCurrency(projection.actualDailyAvg)}</div>
-                    <div className="text-xs text-muted-foreground">AOV: {formatCurrency(projection.projectedAOV)}</div>
+                    <div className="text-sm text-amber-600 dark:text-amber-400">Next 7 Days</div>
+                    <div className="text-xl font-bold mt-1">{formatCurrency(totalForecast.next7Revenue)}</div>
+                    <div className="text-xs text-muted-foreground">~{totalForecast.next7Orders} orders</div>
                   </div>
                   <div className="bg-purple-50 dark:bg-purple-950 rounded-lg p-4">
-                    <div className="text-sm text-purple-600 dark:text-purple-400">Confidence Range</div>
-                    <div className="text-lg font-bold mt-1">
-                      {formatCurrency(projection.pessimistic)} — {formatCurrency(projection.optimistic)}
-                    </div>
-                    <div className="text-xs text-muted-foreground">±{formatCurrency(projection.confidenceMargin)}</div>
+                    <div className="text-sm text-purple-600 dark:text-purple-400">Month Remaining</div>
+                    <div className="text-xl font-bold mt-1">{formatCurrency(totalForecast.monthRemainingRevenue)}</div>
+                    <div className="text-xs text-muted-foreground">{totalForecast.daysRemaining} days left</div>
                   </div>
                 </div>
 
-                {/* Progress bar */}
+                {/* Period totals by channel */}
                 <div>
-                  <div className="flex justify-between text-sm mb-2">
-                    <span className="text-muted-foreground">Progress to projected total</span>
-                    <span className="font-medium">
-                      {projection.projectedTotal > 0 ? Math.round((projection.actualRevenue / projection.projectedTotal) * 100) : 0}%
-                    </span>
-                  </div>
-                  <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3">
-                    <div
-                      className="bg-gradient-to-r from-blue-500 to-amber-500 h-3 rounded-full transition-all"
-                      style={{ width: `${Math.min(100, projection.projectedTotal > 0 ? (projection.actualRevenue / projection.projectedTotal) * 100 : 0)}%` }}
-                    />
+                  <h4 className="font-semibold mb-3">Period Totals by Channel</h4>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <div className="bg-muted/50 rounded-lg p-3">
+                      <div className="text-xs text-muted-foreground">Website Revenue</div>
+                      <div className="text-lg font-bold">{formatCurrency(totalForecast.websiteRevenue)}</div>
+                      <div className="text-xs text-muted-foreground">{totalForecast.websiteOrders} orders · {totalForecast.websiteItems} items</div>
+                    </div>
+                    <div className="bg-muted/50 rounded-lg p-3">
+                      <div className="text-xs text-muted-foreground">Delivery Revenue</div>
+                      <div className="text-lg font-bold">{formatCurrency(totalForecast.deliveryRevenue)}</div>
+                      <div className="text-xs text-muted-foreground">{totalForecast.deliveryOrders} orders</div>
+                    </div>
+                    <div className="bg-muted/50 rounded-lg p-3">
+                      <div className="text-xs text-muted-foreground">Combined Total</div>
+                      <div className="text-lg font-bold">{formatCurrency(totalForecast.combinedRevenue)}</div>
+                      <div className="text-xs text-muted-foreground">{totalForecast.combinedOrders} total orders</div>
+                    </div>
+                    <div className="bg-muted/50 rounded-lg p-3">
+                      <div className="text-xs text-muted-foreground">Website Share</div>
+                      <div className="text-lg font-bold">{totalForecast.websiteShare}%</div>
+                      <div className="text-xs text-muted-foreground">of total revenue</div>
+                    </div>
                   </div>
                 </div>
 
-                {/* vs Previous Month */}
-                {projection.prevMonthRevenue > 0 && (
-                  <div className="bg-muted/50 rounded-lg p-4">
-                    <div className="text-sm font-medium mb-2">vs Previous Month</div>
-                    <div className="flex items-center gap-4">
-                      <div>
-                        <span className="text-muted-foreground text-sm">Last month actual: </span>
-                        <span className="font-semibold">{formatCurrency(projection.prevMonthRevenue)}</span>
-                      </div>
-                      <div>
-                        {projection.projectedTotal > projection.prevMonthRevenue ? (
-                          <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
-                            <ArrowUpRight className="h-3 w-3 mr-1" />
-                            +{Math.round(((projection.projectedTotal - projection.prevMonthRevenue) / projection.prevMonthRevenue) * 100)}% projected
-                          </Badge>
-                        ) : (
-                          <Badge className="bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">
-                            <ArrowDownRight className="h-3 w-3 mr-1" />
-                            {Math.round(((projection.projectedTotal - projection.prevMonthRevenue) / projection.prevMonthRevenue) * 100)}% projected
-                          </Badge>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Day-of-week revenue pattern */}
+                {/* Next 7 days daily breakdown */}
                 <div>
-                  <h4 className="font-semibold mb-3">Revenue by Day of Week</h4>
+                  <h4 className="font-semibold mb-3">Next 7 Days — Daily Breakdown</h4>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b">
+                          <th className="text-left p-2">Day</th>
+                          <th className="text-right p-2">Website Rev</th>
+                          <th className="text-right p-2">Delivery Rev</th>
+                          <th className="text-right p-2 font-bold">Total Rev</th>
+                          <th className="text-center p-2">Est. Orders</th>
+                          <th className="text-center p-2">Est. Items</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {totalForecast.next7Days.map((day) => (
+                          <tr key={day.date} className="border-b hover:bg-muted/50">
+                            <td className="p-2">
+                              <div className="font-medium">{day.dayShort}</div>
+                              <div className="text-xs text-muted-foreground">{day.date.slice(5)}</div>
+                            </td>
+                            <td className="text-right p-2">{formatCurrency(day.websiteRevenue)}</td>
+                            <td className="text-right p-2 text-muted-foreground">{formatCurrency(day.deliveryRevenue)}</td>
+                            <td className="text-right p-2 font-semibold">{formatCurrency(day.totalRevenue)}</td>
+                            <td className="text-center p-2">{day.estOrders}</td>
+                            <td className="text-center p-2">{day.estItems}</td>
+                          </tr>
+                        ))}
+                        <tr className="bg-muted/50 font-bold">
+                          <td className="p-2">Week Total</td>
+                          <td className="text-right p-2">{formatCurrency(totalForecast.next7Days.reduce((s, d) => s + d.websiteRevenue, 0))}</td>
+                          <td className="text-right p-2">{formatCurrency(totalForecast.next7Days.reduce((s, d) => s + d.deliveryRevenue, 0))}</td>
+                          <td className="text-right p-2">{formatCurrency(totalForecast.next7Revenue)}</td>
+                          <td className="text-center p-2">{totalForecast.next7Orders}</td>
+                          <td className="text-center p-2">{Math.round(totalForecast.next7Days.reduce((s, d) => s + d.estItems, 0) * 10) / 10}</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                {/* Revenue by DOW chart */}
+                <div>
+                  <h4 className="font-semibold mb-3">Revenue by Day of Week (All Channels)</h4>
                   <div className="grid grid-cols-7 gap-2">
-                    {projection.dowBreakdown.map((dow) => {
-                      const maxRev = Math.max(...projection.dowBreakdown.map((d) => d.avgRevenue));
-                      const height = maxRev > 0 ? Math.max(20, (dow.avgRevenue / maxRev) * 100) : 20;
+                    {totalForecast.dowAverages.map((dow) => {
+                      const maxRev = Math.max(...totalForecast.dowAverages.map((d) => d.totalRevenue));
+                      const websiteHeight = maxRev > 0 ? Math.max(5, (dow.websiteRevenue / maxRev) * 100) : 5;
+                      const deliveryHeight = maxRev > 0 ? Math.max(3, (dow.deliveryRevenue / maxRev) * 100) : 3;
                       return (
                         <div key={dow.day} className="text-center">
                           <div className="h-24 flex items-end justify-center mb-1">
-                            <div
-                              className="w-full max-w-[40px] bg-gradient-to-t from-blue-500 to-blue-300 dark:from-blue-600 dark:to-blue-400 rounded-t-md transition-all"
-                              style={{ height: `${height}%` }}
-                              title={`${dow.dayFull}: ${formatCurrency(dow.avgRevenue)} avg`}
-                            />
+                            <div className="w-full max-w-[40px] flex flex-col items-stretch">
+                              <div
+                                className="bg-gradient-to-t from-blue-500 to-blue-300 dark:from-blue-600 dark:to-blue-400 rounded-t-md"
+                                style={{ height: `${websiteHeight}%` }}
+                                title={`Website: ${formatCurrency(dow.websiteRevenue)}`}
+                              />
+                              <div
+                                className="bg-gradient-to-t from-orange-400 to-orange-300 dark:from-orange-600 dark:to-orange-500"
+                                style={{ height: `${deliveryHeight}%` }}
+                                title={`Delivery: ${formatCurrency(dow.deliveryRevenue)}`}
+                              />
+                            </div>
                           </div>
                           <div className="text-xs font-medium">{dow.day}</div>
-                          <div className="text-xs text-muted-foreground">{formatCurrency(dow.avgRevenue)}</div>
-                          <div className="text-[10px] text-muted-foreground">{dow.avgOrders} ord</div>
+                          <div className="text-[10px] text-muted-foreground">{formatCurrency(dow.totalRevenue)}</div>
+                          <div className="text-[10px] text-muted-foreground">{Math.round(dow.totalOrders * 10) / 10} ord</div>
                         </div>
                       );
                     })}
+                  </div>
+                  <div className="flex gap-4 mt-2 text-xs text-muted-foreground justify-center">
+                    <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-blue-400 inline-block" /> Website</span>
+                    <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-orange-400 inline-block" /> Delivery</span>
+                  </div>
+                </div>
+
+                {/* Category breakdown */}
+                <div>
+                  <h4 className="font-semibold mb-3">Revenue by Category</h4>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                    {totalForecast.categoryBreakdown.map((cat) => (
+                      <div key={cat.name} className="bg-muted/30 rounded-lg p-3">
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-sm font-medium">{cat.name}</span>
+                          <span className="text-xs text-muted-foreground">{cat.percentage}%</span>
+                        </div>
+                        <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5 mb-1">
+                          <div
+                            className={`h-1.5 rounded-full ${cat.name === "Delivery Channels" ? "bg-orange-400" : "bg-blue-400"}`}
+                            style={{ width: `${Math.min(100, cat.percentage)}%` }}
+                          />
+                        </div>
+                        <div className="text-xs text-muted-foreground">{formatCurrency(cat.revenue)} · {cat.items} items</div>
+                      </div>
+                    ))}
                   </div>
                 </div>
               </CardContent>
@@ -317,8 +384,17 @@ export default function PredictionsTab() {
                           <tr key={item.productName} className="border-b hover:bg-muted/50">
                             <td className="p-2 font-medium">{item.productName}</td>
                             {item.dowBreakdown.map((dow) => (
-                              <td key={dow.day} className={`text-center p-2 ${getHeatColor(dow.avgQty, maxQty)}`}>
-                                {dow.avgQty > 0 ? dow.avgQty : "—"}
+                              <td
+                                key={dow.day}
+                                className={`text-center p-2 ${dow.isEstimated ? "bg-blue-50 dark:bg-blue-950" : getHeatColor(dow.avgQty, maxQty)}`}
+                              >
+                                {dow.avgQty > 0 ? (
+                                  dow.isEstimated ? (
+                                    <span className="italic text-blue-500 dark:text-blue-400 text-xs">~{dow.avgQty}</span>
+                                  ) : (
+                                    dow.avgQty
+                                  )
+                                ) : "—"}
                               </td>
                             ))}
                             <td className="text-center p-2 font-semibold">{item.dailyAvg}</td>
@@ -352,6 +428,7 @@ export default function PredictionsTab() {
                   <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-orange-200 dark:bg-orange-800 inline-block" /> Medium-high</span>
                   <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-yellow-100 dark:bg-yellow-900 inline-block" /> Moderate</span>
                   <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-green-50 dark:bg-green-900 inline-block" /> Low</span>
+                  <span className="italic text-blue-500">~Estimated</span>
                   <span className="ml-2">|</span>
                   <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-purple-100 dark:bg-purple-900 inline-block" /> Both channels</span>
                   <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-blue-100 dark:bg-blue-900 inline-block" /> Website only</span>
@@ -558,19 +635,20 @@ export default function PredictionsTab() {
                   (Zomato/Swiggy/Dine-in from Petpooja uploads) for complete demand forecasting across all channels.
                 </p>
                 <p>
+                  <strong>Total Sales Forecast</strong> covers ALL categories (drinks, food, desserts) and combines
+                  website + delivery revenue for daily, weekly, and monthly projections.
+                </p>
+                <p>
                   <strong>Daily averages</strong> are calculated using actual operating days (days with sales), not calendar days.
                   This prevents closed days from deflating the averages.
                 </p>
                 <p>
-                  <strong>Period selector</strong> controls which historical data the item demand heatmap and procurement forecast
-                  are based on. Use shorter periods (1-2 weeks) for recent trends, or "All Data" for stable long-term patterns.
+                  <strong>Estimated values</strong> (shown as <span className="italic text-blue-500">~value</span>) appear for items
+                  with sparse data on specific days. These use 30% of the item's overall daily average as a minimum baseline.
                 </p>
                 <p>
-                  <strong>Monthly projection</strong> uses day-of-week weighted averages from the current month's website orders.
-                  Remaining days are projected based on which days of the week they fall on.
-                </p>
-                <p>
-                  <strong>Trend alerts</strong> compare the last 2 weeks against the previous 2 weeks to spot rising or declining items.
+                  <strong>Period selector</strong> controls which historical data the forecasts are based on.
+                  Use shorter periods (1-2 weeks) for recent trends, or "All Data" for stable long-term patterns.
                 </p>
                 <p className="italic">
                   As more data accumulates, predictions will become more accurate. Upload Petpooja data regularly for best results.
