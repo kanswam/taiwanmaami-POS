@@ -6007,6 +6007,48 @@ export const appRouter = router({
         return { recommendations };
       }),
 
+    // ============================================
+    // Predictive Analytics
+    // ============================================
+
+    getMonthlyProjection: adminProcedure
+      .input(z.object({ year: z.number(), month: z.number().min(1).max(12) }))
+      .query(async ({ input }) => {
+        const { getMonthlyProjection } = await import('./predictions');
+        return getMonthlyProjection(input.year, input.month);
+      }),
+
+    getItemDemandForecast: adminProcedure
+      .input(z.object({
+        startDate: z.string().optional(),
+        endDate: z.string().optional(),
+      }).optional())
+      .query(async ({ input }) => {
+        const { getItemDemandForecast } = await import('./predictions');
+        const start = input?.startDate ? new Date(input.startDate) : undefined;
+        const end = input?.endDate ? new Date(input.endDate) : undefined;
+        return getItemDemandForecast(start, end);
+      }),
+
+    getProcurementForecast: adminProcedure
+      .query(async () => {
+        const { getProcurementForecast } = await import('./predictions');
+        return getProcurementForecast();
+      }),
+
+    getTrendAlerts: adminProcedure
+      .query(async () => {
+        const { getTrendAlerts } = await import('./predictions');
+        return getTrendAlerts();
+      }),
+
+    getForecastAccuracy: adminProcedure
+      .input(z.object({ year: z.number(), month: z.number().min(1).max(12) }))
+      .query(async ({ input }) => {
+        const { getForecastAccuracy } = await import('./predictions');
+        return getForecastAccuracy(input.year, input.month);
+      }),
+
     // List all delivery data upload periods for the period selector
     getDeliveryPeriods: adminProcedure
       .query(async () => {

@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
+import PredictionsTab from "./PredictionsTab";
 import { trpc } from "@/lib/trpc";
 import { Link } from "wouter";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -560,6 +561,7 @@ export default function Analytics() {
             <TabsTrigger value="trends">Trends</TabsTrigger>
             <TabsTrigger value="insights">Insights</TabsTrigger>
             <TabsTrigger value="channels">Channels</TabsTrigger>
+            <TabsTrigger value="predictions">Predictions</TabsTrigger>
             <TabsTrigger value="gst">GST Report</TabsTrigger>
           </TabsList>
 
@@ -1706,6 +1708,11 @@ export default function Analytics() {
                 )}
               </>
             ) : null}
+          </TabsContent>
+
+          {/* Predictions Tab */}
+          <TabsContent value="predictions" className="space-y-4">
+            <PredictionsTab />
           </TabsContent>
 
           {/* GST Report Tab */}

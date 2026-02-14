@@ -2071,3 +2071,21 @@ Orders fixed:
 ## BUG: Grand Total in Upload History shows Unicode escape (Feb 14)
 
 - [x] Fix Grand Total column showing \u20B9 instead of ₹ symbol in Upload History table — was escaped Unicode, replaced with actual ₹ character
+
+## Predictive Analytics - Predictions Tab (Feb 14)
+
+- [x] Investigate order items schema and historical data availability (Jan 2026+) — 42 days of data, 416 food items sold
+- [x] Investigate food item categorization to filter out drinks — Food category ID identified, excludes Iced/Hot Beverages and Sweet Bites
+- [x] Build backend: Monthly revenue projection with day-of-week weighting
+- [x] Build backend: Item-level day-of-week demand forecast (food items only)
+- [x] Build backend: Trend detection (items trending up/down, 2-week comparison)
+- [x] Build backend: Procurement planner (next 7 days expected demand per item per day)
+- [x] Build backend: Accuracy tracking (predicted vs actual comparison)
+- [x] Add "Predictions" tab to Analytics dashboard (separate PredictionsTab.tsx component)
+- [x] Frontend: Monthly Projection section with confidence range, progress bar, vs previous month
+- [x] Frontend: Item Demand Heatmap (Item × Day of Week with color-coded cells)
+- [x] Frontend: 7-Day Procurement Forecast table
+- [x] Frontend: Rising/Declining Items trend alerts (side by side cards)
+- [x] Frontend: Accuracy Report with actual revenue/orders and top items
+- [x] Frontend: Methodology explainer card
+- [x] Write vitest tests for prediction logic (15 tests passing)
