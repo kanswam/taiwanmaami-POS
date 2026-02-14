@@ -40,6 +40,7 @@ import {
 import { SortableCategory, SortableSubcategory } from '@/components/SortableCategory';
 import { RichTextEditor } from '@/components/RichTextEditor';
 import { generateEventDocument } from '@/lib/eventDocument';
+import { useOrderNotification, playOrderNotification } from '@/hooks/useOrderNotification';
 
 export default function Admin() {
   const [, navigate] = useLocation();
@@ -2005,6 +2006,9 @@ function OrdersTab() {
     { enabled: !!selectedOrderId }
   );
   
+  // Order notification sound & auto-poll (every 20s)
+  const { soundEnabled, toggleSound, newOrderIds } = useOrderNotification(orders, refetch, 20000);
+  
   // Order type filter
   const [orderTypeFilter, setOrderTypeFilter] = useState<'all' | 'instore' | 'delivery' | 'pickup'>('all');
   
@@ -2179,11 +2183,45 @@ function OrdersTab() {
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <h2 className="text-lg font-semibold">Recent Orders</h2>
-        <Button variant="outline" size="sm" onClick={() => refetch()}>
-          <RefreshCw className="w-4 h-4 mr-2" />
-          Refresh
-        </Button>
+        <div className="flex items-center gap-3">
+          <h2 className="text-lg font-semibold">Recent Orders</h2>
+          <span className="text-xs text-muted-foreground bg-secondary px-2 py-1 rounded-full flex items-center gap-1">
+            <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+            Auto-refresh 20s
+          </span>
+        </div>
+        <div className="flex items-center gap-2">
+          {/* Sound Toggle */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={toggleSound}
+            className={soundEnabled ? 'border-green-500 text-green-700 hover:bg-green-50' : 'border-gray-300 text-gray-400'}
+            title={soundEnabled ? 'Sound alerts ON — click to mute' : 'Sound alerts OFF — click to enable'}
+          >
+            {soundEnabled ? (
+              <><span className="text-base mr-1">\uD83D\uDD0A</span> Sound ON</>
+            ) : (
+              <><span className="text-base mr-1">\uD83D\uDD07</span> Sound OFF</>
+            )}
+          </Button>
+          {/* Test Sound */}
+          {soundEnabled && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => playOrderNotification('delivery')}
+              title="Test delivery alert sound"
+              className="text-xs text-muted-foreground"
+            >
+              Test \uD83D\uDD14
+            </Button>
+          )}
+          <Button variant="outline" size="sm" onClick={() => refetch()}>
+            <RefreshCw className="w-4 h-4 mr-2" />
+            Refresh
+          </Button>
+        </div>
       </div>
 
       {/* Order Type Filter Tabs */}
@@ -2246,13 +2284,24 @@ function OrdersTab() {
               )}
               {filteredOrders.map((order: any) => {
                 const typeConf = orderTypeConfig[order.orderType] || orderTypeConfig.instore;
+                const isNew = newOrderIds.has(order.id);
                 return (
                 <tr 
                   key={order.id} 
-                  className={`border-b hover:bg-secondary/50 cursor-pointer ${typeConf.border}`}
+                  className={`border-b hover:bg-secondary/50 cursor-pointer ${typeConf.border} ${
+                    isNew ? 'animate-pulse bg-amber-50 ring-2 ring-amber-400 ring-inset' : ''
+                  }`}
                   onClick={() => setSelectedOrderId(order.id)}
                 >
-                  <td className="p-3 font-medium text-primary underline">{order.orderNumber}</td>
+
+                  <td className="p-3 font-medium text-primary underline">
+                    {order.orderNumber}
+                    {isNew && (
+                      <span className="ml-2 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-red-500 text-white animate-bounce">
+                        NEW!
+                      </span>
+                    )}
+                  </td>
                   <td className="p-3">
                     <p>{order.customerName || 'Guest'}</p>
                     {order.customerPhone && (

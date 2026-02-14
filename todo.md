@@ -2027,3 +2027,17 @@ Orders fixed:
 - [x] Active order count badges (pulsing red) on each tab
 - [x] Table number shown for in-store orders
 - [x] Write vitest tests for the new filtering logic (11 tests passing)
+
+## New Delivery Order Notification Sound (Feb 14)
+
+- [x] Add auto-refresh to orders list (polls every 20 seconds with green pulse indicator)
+- [x] Detect new delivery orders arriving between refreshes (compares order IDs)
+- [x] Generate unique, attention-grabbing notification sounds (Web Audio API synthesized)
+  - Delivery: urgent triple-ascending chime with vibrato + staccato burst
+  - Pickup: pleasant double-ding bell tones
+  - In-store: warm single chime
+- [x] Play sound + visual flash alert (amber pulse + ring + bouncing NEW! badge)
+- [x] Also alert for new pickup and instore orders (delivery prioritized)
+- [x] Add mute/unmute toggle with Sound ON/OFF button + Test button
+- [x] Sound preference persisted in localStorage
+- [x] 12 vitest tests passing for detection logic and preference persistence
