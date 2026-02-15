@@ -873,12 +873,15 @@ export const appRouter = router({
           throw new TRPCError({ code: 'BAD_REQUEST', message: 'Payment already confirmed' });
         }
         
-        // Update payment status to completed
+        // Update payment status to completed with accountability tracking
         await dbInstance
           .update(orders)
           .set({
             paymentStatus: 'completed',
             paymentMethod: input.paymentMethod,
+            paymentCollectedBy: ctx.user.id,
+            paymentCollectedAt: new Date(),
+            paymentNote: input.notes || `Manual payment confirmed by ${ctx.user.name || 'Staff'}`,
             staffNotes: input.notes ? `[Manual Payment] ${input.notes}` : `[Manual Payment Confirmed by ${ctx.user.name || 'Staff'}]`,
           })
           .where(eq(orders.id, input.orderId));
@@ -974,6 +977,90 @@ export const appRouter = router({
           .where(eq(orders.id, input.orderId));
         
         return { success: true };
+      }),
+
+    // Verify payment with Razorpay API - for recovering missed callbacks
+    verifyRazorpayPayment: staffProcedure
+      .input(z.object({ orderId: z.number() }))
+      .mutation(async ({ input, ctx }) => {
+        const dbInstance = await getDb();
+        if (!dbInstance) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
+        
+        const [order] = await dbInstance.select().from(orders).where(eq(orders.id, input.orderId));
+        if (!order) throw new TRPCError({ code: 'NOT_FOUND', message: 'Order not found' });
+        
+        if (!order.razorpayOrderId) {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: 'No Razorpay order ID found for this order' });
+        }
+        
+        if (order.paymentStatus === 'completed') {
+          return { success: true, alreadyPaid: true, message: 'Payment already marked as completed' };
+        }
+        
+        const { fetchOrderPayments } = await import('./razorpay');
+        const payments = await fetchOrderPayments(order.razorpayOrderId);
+        
+        // Find a captured payment
+        const capturedPayment = payments.find((p: any) => p.status === 'captured');
+        
+        if (!capturedPayment) {
+          return { success: false, alreadyPaid: false, message: `No captured payment found in Razorpay for order ${order.razorpayOrderId}. ${payments.length} payment(s) found with statuses: ${payments.map((p: any) => p.status).join(', ') || 'none'}` };
+        }
+        
+        // Determine payment method from Razorpay
+        let paymentMethod: 'upi' | 'card' | 'razorpay' = 'razorpay';
+        if (capturedPayment.method === 'upi') paymentMethod = 'upi';
+        else if (capturedPayment.method === 'card') paymentMethod = 'card';
+        
+        // Update the order with the recovered payment info
+        await dbInstance
+          .update(orders)
+          .set({
+            paymentStatus: 'completed',
+            razorpayPaymentId: capturedPayment.id,
+            paymentMethod: paymentMethod,
+            paymentCollectedBy: ctx.user.id,
+            paymentCollectedAt: new Date(),
+            paymentNote: `Recovered via Razorpay API verification by ${ctx.user.name || 'Staff'}. Payment ID: ${capturedPayment.id}, Amount: ₹${(capturedPayment.amount / 100).toFixed(2)}, Method: ${capturedPayment.method}`,
+          })
+          .where(eq(orders.id, input.orderId));
+        
+        return {
+          success: true,
+          alreadyPaid: false,
+          message: `Payment verified! ₹${(capturedPayment.amount / 100).toFixed(2)} via ${capturedPayment.method}. Payment ID: ${capturedPayment.id}`,
+          paymentId: capturedPayment.id,
+          amount: capturedPayment.amount,
+          method: capturedPayment.method,
+        };
+      }),
+
+    // Mark order as walkout/unpaid with accountability
+    markWalkout: staffProcedure
+      .input(z.object({
+        orderId: z.number(),
+        note: z.string().optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const dbInstance = await getDb();
+        if (!dbInstance) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
+        
+        const [order] = await dbInstance.select().from(orders).where(eq(orders.id, input.orderId));
+        if (!order) throw new TRPCError({ code: 'NOT_FOUND', message: 'Order not found' });
+        
+        if (order.paymentStatus === 'completed') {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: 'Cannot mark a paid order as walkout' });
+        }
+        
+        await dbInstance
+          .update(orders)
+          .set({
+            paymentNote: `⚠️ WALKOUT - Reported by ${ctx.user.name || 'Staff'} at ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}${input.note ? '. Note: ' + input.note : ''}`,
+            staffNotes: `[WALKOUT] ${input.note || 'Customer left without paying'} - Reported by ${ctx.user.name || 'Staff'}`,
+          })
+          .where(eq(orders.id, input.orderId));
+        
+        return { success: true, message: 'Order marked as walkout' };
       }),
 
     // Staff can update notes on orders

@@ -2111,3 +2111,17 @@ Orders fixed:
 - [x] Add delivery item name mapping for consolidated predictions (case-insensitive matching)
 - [x] Add Excel export for Predictions tab data (Total Sales Forecast, Item Demand Heatmap)
 - [x] Fix getTotalSalesForecast SQL bug — websiteDowData query joins orders+order_items inflating SUM(totalAmount) by ~3.7x
+
+## Delivery Area Update (Feb 15)
+
+- [x] Add Thiruverkadu to delivery areas dropdown list (pincode 600077, ₹50 delivery charge)
+
+## Payment Tracking Improvements (Feb 15)
+
+- [x] Fix order #432 — added Verify Razorpay button to recover missed webhook payments
+- [x] Identify and fix all 3 missing Razorpay payments — added Verify Razorpay button for all pending orders with razorpayOrderId
+- [x] Add Razorpay payment verification endpoint (verifyRazorpayPayment procedure)
+- [x] Add staff payment status controls — Collect Payment records who/when, Verify Razorpay checks API
+- [x] Track who collected payment and when (paymentCollectedBy, paymentCollectedAt columns added)
+- [x] Add walkout/unpaid flag for accountability tracking (markWalkout procedure with WALKOUT badge)
+- [x] Show payment status prominently in Admin Orders (dialog + list view buttons)

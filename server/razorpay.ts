@@ -85,6 +85,26 @@ export function verifyWebhookSignature(
   return expectedSignature === signature;
 }
 
+// Fetch payments for a Razorpay order (to find captured payments when callback was missed)
+export async function fetchOrderPayments(razorpayOrderId: string): Promise<any[]> {
+  const auth = Buffer.from(`${RAZORPAY_KEY_ID}:${RAZORPAY_KEY_SECRET}`).toString('base64');
+  
+  const response = await fetch(`https://api.razorpay.com/v1/orders/${razorpayOrderId}/payments`, {
+    method: 'GET',
+    headers: {
+      'Authorization': `Basic ${auth}`,
+    },
+  });
+  
+  if (!response.ok) {
+    const error = await response.text();
+    throw new Error(`Failed to fetch order payments: ${error}`);
+  }
+  
+  const data = await response.json();
+  return data.items || [];
+}
+
 // Fetch payment details
 export async function fetchPaymentDetails(paymentId: string): Promise<any> {
   const auth = Buffer.from(`${RAZORPAY_KEY_ID}:${RAZORPAY_KEY_SECRET}`).toString('base64');

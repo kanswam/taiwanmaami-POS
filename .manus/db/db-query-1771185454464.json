@@ -1,0 +1,9 @@
+{
+  "query": "ALTER TABLE orders ADD COLUMN payment_collected_by varchar(255) DEFAULT NULL;\nALTER TABLE orders ADD COLUMN payment_collected_at bigint DEFAULT NULL;\nALTER TABLE orders ADD COLUMN payment_note text DEFAULT NULL;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute ALTER TABLE orders ADD COLUMN payment_collected_by varchar(255) DEFAULT NULL;\nALTER TABLE orders ADD COLUMN payment_collected_at bigint DEFAULT NULL;\nALTER TABLE orders ADD COLUMN payment_note text DEFAULT NULL;",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 1237
+}

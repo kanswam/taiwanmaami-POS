@@ -238,6 +238,10 @@ export const orders = mysqlTable("orders", {
   idempotencyKey: varchar("idempotencyKey", { length: 100 }).unique(),
   // Test data flag - NEVER delete orders where isTestData = false
   isTestData: boolean("isTestData").default(false).notNull(),
+  // Payment collection tracking
+  paymentCollectedBy: int("paymentCollectedBy"), // Staff/admin user ID who collected/confirmed payment
+  paymentCollectedAt: timestamp("paymentCollectedAt"), // When payment was collected
+  paymentNote: text("paymentNote"), // Note about payment (e.g., "walkout", "verified via Razorpay API")
   // Reconciliation fields for payment discrepancy tracking
   reconciliationNote: text("reconciliationNote"), // Note explaining how discrepancy was resolved
   reconciledAt: timestamp("reconciledAt"), // When the order was marked as reconciled
