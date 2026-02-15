@@ -554,15 +554,15 @@ export default function Analytics() {
 
         {/* Tabs for different reports */}
         <Tabs defaultValue="sales" className="space-y-4">
-          <TabsList className="grid w-full grid-cols-8">
-            <TabsTrigger value="sales" className="text-xs sm:text-sm">Sales</TabsTrigger>
-            <TabsTrigger value="products" className="text-xs sm:text-sm">Products</TabsTrigger>
-            <TabsTrigger value="customers" className="text-xs sm:text-sm">Customers</TabsTrigger>
-            <TabsTrigger value="trends" className="text-xs sm:text-sm">Trends</TabsTrigger>
-            <TabsTrigger value="insights" className="text-xs sm:text-sm">Insights</TabsTrigger>
-            <TabsTrigger value="channels" className="text-xs sm:text-sm">Channels</TabsTrigger>
-            <TabsTrigger value="predictions" className="text-xs sm:text-sm">Predictions</TabsTrigger>
-            <TabsTrigger value="gst" className="text-xs sm:text-sm">GST</TabsTrigger>
+          <TabsList className="flex w-full overflow-x-auto overflow-y-hidden h-auto flex-nowrap justify-start gap-1 p-1">
+            <TabsTrigger value="sales" className="text-xs sm:text-sm shrink-0">Sales</TabsTrigger>
+            <TabsTrigger value="products" className="text-xs sm:text-sm shrink-0">Products</TabsTrigger>
+            <TabsTrigger value="customers" className="text-xs sm:text-sm shrink-0">Customers</TabsTrigger>
+            <TabsTrigger value="trends" className="text-xs sm:text-sm shrink-0">Trends</TabsTrigger>
+            <TabsTrigger value="insights" className="text-xs sm:text-sm shrink-0">Insights</TabsTrigger>
+            <TabsTrigger value="channels" className="text-xs sm:text-sm shrink-0">Channels</TabsTrigger>
+            <TabsTrigger value="predictions" className="text-xs sm:text-sm shrink-0">Predictions</TabsTrigger>
+            <TabsTrigger value="gst" className="text-xs sm:text-sm shrink-0">GST</TabsTrigger>
           </TabsList>
 
           {/* Sales Tab */}

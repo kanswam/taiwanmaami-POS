@@ -17,10 +17,12 @@ import {
   Package,
   RefreshCw,
   DollarSign,
+  Download,
+  FileSpreadsheet,
 } from "lucide-react";
 
 const formatCurrency = (paise: number) => {
-  return `₹${(paise / 100).toLocaleString('en-IN', { minimumFractionDigits: 0 })}`;
+  return `₹${(paise / 100).toLocaleString('en-IN', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
 };
 
 const DOW_SHORT = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -124,6 +126,97 @@ export default function PredictionsTab() {
     refetchProc();
   };
 
+  // ========== Excel Export Functions ==========
+  const exportToCSV = (filename: string, headers: string[], rows: string[][]) => {
+    const csvContent = [headers.join(','), ...rows.map(r => r.map(cell => {
+      // Escape cells containing commas or quotes
+      if (cell.includes(',') || cell.includes('"') || cell.includes('\n')) {
+        return `"${cell.replace(/"/g, '""')}"`;
+      }
+      return cell;
+    }).join(','))].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${filename}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const exportTotalSalesForecast = () => {
+    if (!totalForecast) return;
+    const headers = ['Metric', 'Value'];
+    const rows: string[][] = [
+      ['Period', `${totalForecast.dateRange.start} to ${totalForecast.dateRange.end}`],
+      ['Operating Days', String(totalForecast.totalOperatingDays)],
+      ['Daily Avg Revenue (paise)', String(totalForecast.dailyAvgRevenue)],
+      ['Daily Avg Orders', String(totalForecast.dailyAvgOrders)],
+      ['Website Revenue (paise)', String(totalForecast.websiteRevenue)],
+      ['Delivery Revenue (paise)', String(totalForecast.deliveryRevenue)],
+      ['Combined Revenue (paise)', String(totalForecast.combinedRevenue)],
+      ['Website Share %', `${totalForecast.websiteShare}%`],
+      ['Next 7 Days Projected Revenue (paise)', String(totalForecast.next7Revenue)],
+      ['Next 7 Days Projected Orders', String(totalForecast.next7Orders)],
+      ['Month Remaining Revenue (paise)', String(totalForecast.monthRemainingRevenue)],
+      ['Days Remaining in Month', String(totalForecast.daysRemaining)],
+      ['', ''],
+      ['--- Next 7 Days Breakdown ---', ''],
+      ['Date', 'Day', 'Website Revenue', 'Delivery Revenue', 'Total Revenue', 'Est. Orders'],
+    ];
+    for (const day of totalForecast.next7Days) {
+      rows.push([day.date, day.dayName, String(day.websiteRevenue), String(day.deliveryRevenue), String(day.totalRevenue), String(day.estOrders)]);
+    }
+    rows.push(['', ''], ['--- Category Breakdown ---', '']);
+    rows.push(['Category', 'Revenue (paise)', 'Items', 'Percentage']);
+    for (const cat of totalForecast.categoryBreakdown) {
+      rows.push([cat.name, String(cat.revenue), String(cat.items), `${cat.percentage}%`]);
+    }
+    rows.push(['', ''], ['--- DOW Revenue Averages ---', '']);
+    rows.push(['Day', 'Website Revenue', 'Delivery Revenue', 'Total Revenue', 'Total Orders']);
+    for (const dow of totalForecast.dowAverages) {
+      rows.push([dow.dayFull, String(Math.round(dow.websiteRevenue)), String(Math.round(dow.deliveryRevenue)), String(Math.round(dow.totalRevenue)), String(Math.round(dow.totalOrders * 10) / 10)]);
+    }
+    exportToCSV(`total-sales-forecast-${dateRange.start}-${dateRange.end}`, headers, rows);
+  };
+
+  const exportItemDemandHeatmap = () => {
+    if (!itemForecast) return;
+    const headers = ['Product', 'Total Qty', 'Website Qty', 'Delivery Qty', 'Daily Avg', 'Peak Day', 'Reliability', ...DOW_SHORT.map(d => `${d} Avg`), ...DOW_SHORT.map(d => `${d} Estimated?`)];
+    const rows: string[][] = itemForecast.items.map((item: any) => [
+      item.productName,
+      String(item.totalQty),
+      String(item.websiteQty),
+      String(item.deliveryQty),
+      String(item.dailyAvg),
+      item.peakDay,
+      item.reliability,
+      ...item.dowBreakdown.map((d: any) => String(d.avgQty)),
+      ...item.dowBreakdown.map((d: any) => d.isEstimated ? 'Yes' : 'No'),
+    ]);
+    exportToCSV(`item-demand-heatmap-${dateRange.start}-${dateRange.end}`, headers, rows);
+  };
+
+  const exportProcurementForecast = () => {
+    if (!procurement) return;
+    const dayHeaders = procurement.nextDays.map((d: any) => `${d.dayName} (${d.date})`);
+    const headers = ['Product', 'Week Total', 'Peak Day', 'Reliability', ...dayHeaders];
+    const rows: string[][] = procurement.items.map((item: any) => [
+      item.productName,
+      String(item.weekTotal),
+      item.peakDay,
+      item.reliability,
+      ...item.dailyForecast.map((d: any) => String(d.expectedQty)),
+    ]);
+    exportToCSV(`procurement-forecast-${dateRange.start}-${dateRange.end}`, headers, rows);
+  };
+
+  const exportAllPredictions = () => {
+    exportTotalSalesForecast();
+    setTimeout(() => exportItemDemandHeatmap(), 200);
+    setTimeout(() => exportProcurementForecast(), 400);
+  };
+
   // Heatmap color for item demand
   const getHeatColor = (qty: number, maxQty: number) => {
     if (qty === 0) return "bg-gray-100 text-gray-400 dark:bg-gray-800 dark:text-gray-600";
@@ -167,6 +260,10 @@ export default function PredictionsTab() {
             <RefreshCw className="h-4 w-4 mr-2" />
             Refresh
           </Button>
+          <Button variant="outline" size="sm" onClick={exportAllPredictions} disabled={isLoading || (!totalForecast && !itemForecast && !procurement)}>
+            <Download className="h-4 w-4 mr-2" />
+            Export All
+          </Button>
         </div>
       </div>
 
@@ -181,10 +278,16 @@ export default function PredictionsTab() {
           {totalForecast && (
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <DollarSign className="h-5 w-5 text-emerald-500" />
-                  Total Sales Forecast — All Categories
-                </CardTitle>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="flex items-center gap-2">
+                    <DollarSign className="h-5 w-5 text-emerald-500" />
+                    Total Sales Forecast — All Categories
+                  </CardTitle>
+                  <Button variant="ghost" size="sm" onClick={exportTotalSalesForecast} title="Export to CSV">
+                    <FileSpreadsheet className="h-4 w-4 mr-1" />
+                    <span className="hidden sm:inline">CSV</span>
+                  </Button>
+                </div>
                 <CardDescription>
                   Revenue & order predictions across all products (drinks, food, desserts, delivery)
                   {" · "}Based on {totalForecast.dateRange.start} to {totalForecast.dateRange.end}

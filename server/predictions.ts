@@ -16,6 +16,79 @@ const DELIVERY_FOOD_CATEGORIES = [
 ];
 
 /**
+ * Delivery → Website item name mapping
+ * Maps delivery platform names (Petpooja/Zomato/Swiggy) to canonical website product names.
+ * Handles: case differences, special characters (ç, ǐ, etc.), size/boba suffixes, naming variations.
+ */
+const DELIVERY_NAME_MAP: Record<string, string> = {
+  // Cong You Bing variants
+  'Original Cong You Bing': 'Original Çong Yoú Bǐng',
+  'Egg Cong You Bing': 'Egg Çong Yoú Bǐng',
+  'Egg Cheesy Corn Cong You Bing': 'Egg Cheesy Corn Çong Yoú Bǐng',
+  'Cheesy Corn Cong You Bing': 'Cheesy Corn Çong Yoú Bǐng',
+  'Stir-fried Veg Cong You Bing': 'Stir-fried Veg Çong Yoú Bǐng',
+  // ChickGozilla variants
+  'Original Japanese Chickgozilla Curry Rice': 'Original Japanese ChickGozilla Curry Rice',
+  'Spicy Japanese Chickgozilla Curry Rice': 'Spicy Japanese ChickGozilla Curry Rice',
+  'Coconut Japanese Chickgozilla Curry Rice': 'Coconut Japanese ChickGozilla Curry Rice',
+  'Chickgozilla With Molten Cheesy Corn': 'ChickGozilla with Molten Cheesy Corn',
+  'Chickgozilla Power Salad': 'ChickGozilla Power Salad',
+  // Noodle variants (case differences)
+  'Vinegar-spiced Noodle Soup': 'Vinegar-Spiced Noodle Soup',
+  'Velvety Aubergine Stew Noodles': 'Velvety Aubergine Stew Noodle',
+  '8-Tomato Noodle Soup': '8-Tomato Noodle Soup',
+  // Rice variants
+  'Omurice': 'Omurice',
+  'Omunoodles': 'Omunoodles',
+  // Curry variants
+  'Original Japanese Imo Katsu Curry': 'Original Japanese Imo Katsu Curry Rice',
+  'Spicy Japanese Imo Katsu Curry': 'Spicy Japanese Imo Katsu Curry Rice',
+  'Coconut Japanese Imo Katsu Curry': 'Coconut Japanese Imo Katsu Curry Rice',
+  // Brioche variants
+  'Spicy Margherita With Basil': 'Spicy Margherita with Basil Pillow Brioche',
+  'Strawberry Conserve & Condensed Milk': 'Strawberry Conserve & Condensed Milk Brioche',
+  // Croissant
+  'Zilla Croissant': 'Taiwan Maami Zilla Croissant',
+  // Yaki
+  'Yaki Onigiri': 'Yaki Onigiri',
+};
+
+/**
+ * Normalize a delivery item name to its canonical website product name.
+ * First checks the explicit mapping, then tries case-insensitive matching.
+ */
+function normalizeDeliveryName(deliveryName: string, websiteNames: Set<string>): string {
+  // 1. Check explicit mapping
+  if (DELIVERY_NAME_MAP[deliveryName]) {
+    return DELIVERY_NAME_MAP[deliveryName];
+  }
+
+  // 2. Try exact match (already same name)
+  if (websiteNames.has(deliveryName)) {
+    return deliveryName;
+  }
+
+  // 3. Try case-insensitive match
+  const lowerDelivery = deliveryName.toLowerCase();
+  const namesArray = Array.from(websiteNames);
+  for (const wName of namesArray) {
+    if (wName.toLowerCase() === lowerDelivery) {
+      return wName;
+    }
+  }
+
+  // 4. Try partial match (delivery name might be a substring)
+  for (const wName of namesArray) {
+    if (wName.toLowerCase().includes(lowerDelivery) || lowerDelivery.includes(wName.toLowerCase())) {
+      return wName;
+    }
+  }
+
+  // 5. No match found — return original (will appear as separate row)
+  return deliveryName;
+}
+
+/**
  * Monthly Revenue Projection
  * Uses weighted daily averages with day-of-week patterns to project full month revenue
  */
@@ -269,9 +342,13 @@ export async function getItemDemandForecast(startDate?: Date, endDate?: Date) {
     itemMap[name].dow[Number(row.dayOfWeek)] = { qty, revenue: rev, daysWithSales };
   }
 
+  // Build a set of website product names for normalization
+  const websiteProductNames = new Set(websiteFoodSales.map(r => r.productName));
+
   // Add delivery sales (distributed proportionally across DOWs based on calendar days)
+  // Normalize delivery names to match website canonical names
   for (const row of deliveryFoodSales) {
-    const name = row.itemName;
+    const name = normalizeDeliveryName(row.itemName, websiteProductNames);
     if (!itemMap[name]) {
       itemMap[name] = { totalQty: 0, totalRevenue: 0, websiteQty: 0, deliveryQty: 0, dow: {} };
     }
@@ -611,43 +688,37 @@ export async function getTotalSalesForecast(startDate?: Date, endDate?: Date) {
   const end = endDate || new Date();
 
   // ========== 1. Website sales by DOW (all categories) ==========
-  const websiteDowData = await db.select({
-    dayOfWeek: sql<number>`DAYOFWEEK(${orders.createdAt})`,
-    revenue: sql<number>`COALESCE(SUM(${orders.totalAmount}), 0)`,
-    orderCount: sql<number>`COUNT(DISTINCT ${orders.id})`,
-    itemCount: sql<number>`COALESCE(SUM(${orderItems.quantity}), 0)`,
-    daysWithOrders: sql<number>`COUNT(DISTINCT DATE(${orders.createdAt}))`,
-  })
-  .from(orders)
-  .innerJoin(orderItems, eq(orderItems.orderId, orders.id))
-  .where(and(
-    gte(orders.createdAt, start),
-    lte(orders.createdAt, end),
-    ne(orders.orderStatus, "cancelled"),
-    eq(orders.isTestData, false),
-    eq(orderItems.status, "active"),
-  ))
-  .groupBy(sql`DAYOFWEEK(${orders.createdAt})`);
+  // Revenue & orders from orders table ONLY (no join) to avoid inflating SUM(totalAmount)
+  // Using raw SQL to avoid only_full_group_by issues with Drizzle
+  const websiteDowRevenueResult = await db.execute(
+    sql`SELECT DAYOFWEEK(${orders.createdAt}) as dayOfWeek, COALESCE(SUM(${orders.totalAmount}), 0) as revenue, COUNT(DISTINCT ${orders.id}) as orderCount, COUNT(DISTINCT DATE(${orders.createdAt})) as daysWithOrders FROM ${orders} WHERE ${orders.createdAt} >= ${start} AND ${orders.createdAt} <= ${end} AND ${orders.orderStatus} <> 'cancelled' AND ${orders.isTestData} = false GROUP BY DAYOFWEEK(${orders.createdAt})`
+  );
+  const websiteDowRevenue = (Array.isArray(websiteDowRevenueResult[0]) ? websiteDowRevenueResult[0] : websiteDowRevenueResult) as { dayOfWeek: number; revenue: number; orderCount: number; daysWithOrders: number }[];
+
+  // Item counts need the join (separate query to avoid inflating revenue)
+  const websiteDowItemsResult = await db.execute(
+    sql`SELECT DAYOFWEEK(${orders.createdAt}) as dayOfWeek, COALESCE(SUM(${orderItems.quantity}), 0) as itemCount FROM ${orderItems} INNER JOIN ${orders} ON ${orderItems.orderId} = ${orders.id} WHERE ${orders.createdAt} >= ${start} AND ${orders.createdAt} <= ${end} AND ${orders.orderStatus} <> 'cancelled' AND ${orders.isTestData} = false AND ${orderItems.status} = 'active' GROUP BY DAYOFWEEK(${orders.createdAt})`
+  );
+  const websiteDowItems = (Array.isArray(websiteDowItemsResult[0]) ? websiteDowItemsResult[0] : websiteDowItemsResult) as { dayOfWeek: number; itemCount: number }[];
+
+  // Merge the two results
+  const itemCountByDow: Record<number, number> = {};
+  for (const row of websiteDowItems) {
+    itemCountByDow[Number(row.dayOfWeek)] = Number(row.itemCount) || 0;
+  }
+  const websiteDowData = websiteDowRevenue.map(r => ({
+    dayOfWeek: Number(r.dayOfWeek),
+    revenue: Number(r.revenue),
+    orderCount: Number(r.orderCount),
+    itemCount: itemCountByDow[Number(r.dayOfWeek)] || 0,
+    daysWithOrders: Number(r.daysWithOrders),
+  }));
 
   // ========== 2. Website category breakdown ==========
-  const websiteCategoryData = await db.select({
-    categoryName: sql<string>`COALESCE(cat.name, 'Unknown')`,
-    revenue: sql<number>`COALESCE(SUM(${orderItems.lineTotal}), 0)`,
-    itemCount: sql<number>`COALESCE(SUM(${orderItems.quantity}), 0)`,
-  })
-  .from(orderItems)
-  .innerJoin(orders, eq(orderItems.orderId, orders.id))
-  .leftJoin(products, eq(orderItems.productId, products.id))
-  .leftJoin(subcategories, eq(products.subcategoryId, subcategories.id))
-  .leftJoin(sql`categories as cat`, sql`${subcategories.categoryId} = cat.id`)
-  .where(and(
-    gte(orders.createdAt, start),
-    lte(orders.createdAt, end),
-    ne(orders.orderStatus, "cancelled"),
-    eq(orders.isTestData, false),
-    eq(orderItems.status, "active"),
-  ))
-  .groupBy(sql`cat.name`);
+  const websiteCategoryResult = await db.execute(
+    sql`SELECT COALESCE(cat.name, 'Unknown') as categoryName, COALESCE(SUM(${orderItems.lineTotal}), 0) as revenue, COALESCE(SUM(${orderItems.quantity}), 0) as itemCount FROM ${orderItems} INNER JOIN ${orders} ON ${orderItems.orderId} = ${orders.id} LEFT JOIN ${products} ON ${orderItems.productId} = ${products.id} LEFT JOIN ${subcategories} ON ${products.subcategoryId} = ${subcategories.id} LEFT JOIN categories as cat ON ${subcategories.categoryId} = cat.id WHERE ${orders.createdAt} >= ${start} AND ${orders.createdAt} <= ${end} AND ${orders.orderStatus} <> 'cancelled' AND ${orders.isTestData} = false AND ${orderItems.status} = 'active' GROUP BY cat.name`
+  );
+  const websiteCategoryData = (Array.isArray(websiteCategoryResult[0]) ? websiteCategoryResult[0] : websiteCategoryResult) as { categoryName: string; revenue: number; itemCount: number }[];
 
   // ========== 3. Website totals ==========
   const [websiteTotals] = await db.select({
@@ -747,9 +818,9 @@ export async function getTotalSalesForecast(startDate?: Date, endDate?: Date) {
       date: d.toISOString().split('T')[0],
       dayName: DOW_NAMES[dowIdx],
       dayShort: DOW_SHORT[dowIdx],
-      websiteRevenue: Math.round(dowAvg.websiteRevenue * 100) / 100,
-      deliveryRevenue: Math.round(dowAvg.deliveryRevenue * 100) / 100,
-      totalRevenue: Math.round(dowAvg.totalRevenue * 100) / 100,
+      websiteRevenue: Math.round(dowAvg.websiteRevenue),
+      deliveryRevenue: Math.round(dowAvg.deliveryRevenue),
+      totalRevenue: Math.round(dowAvg.totalRevenue),
       estOrders: Math.round(dowAvg.totalOrders * 10) / 10,
       estItems: Math.round(dowAvg.websiteItems * 10) / 10,
     });
@@ -783,12 +854,12 @@ export async function getTotalSalesForecast(startDate?: Date, endDate?: Date) {
   return {
     dateRange: { start: start.toISOString().split('T')[0], end: end.toISOString().split('T')[0] },
     totalOperatingDays,
-    dailyAvgRevenue: Math.round(dailyAvgRevenue * 1000) / 1000,
+    dailyAvgRevenue: Math.round(dailyAvgRevenue),
     dailyAvgOrders: Math.round(dailyAvgOrders * 10) / 10,
     next7Days,
-    next7Revenue: Math.round(next7Revenue * 1000) / 1000,
+    next7Revenue: Math.round(next7Revenue),
     next7Orders: Math.round(next7Orders * 10) / 10,
-    monthRemainingRevenue: Math.round(monthRemainingRevenue * 1000) / 1000,
+    monthRemainingRevenue: Math.round(monthRemainingRevenue),
     daysRemaining,
     websiteRevenue,
     websiteOrders,

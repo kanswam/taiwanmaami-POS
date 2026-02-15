@@ -2094,7 +2094,7 @@ Orders fixed:
 
 - [x] Fix Grand Total in Upload History to include website sales (currently only shows Petpooja delivery data)
 - [x] Add period selector to Predictions tab (1 week, 2 weeks, this month, past month, etc.)
-- [ ] Fix tab layout — GST Report pushed to second row and barely visible, clean up tab presentation
+- [x] Fix tab layout — GST Report pushed to second row and barely visible, clean up tab presentation
 - [x] Fix daily average calculation for food items — Biang Biang shows 2/day avg but sells 4.7 on Sundays, likely dividing by all calendar days instead of operating days
 - [x] Include delivery channel data (Petpooja) in prediction calculations for complete demand forecasting
 - [x] Pass period selector dates to procurement forecast and trend alerts
@@ -2104,3 +2104,10 @@ Orders fixed:
 - [x] Fix ChickGozilla zero-day predictions — use minimum baseline instead of dashes for items with sparse data
 - [x] Add total sales/revenue prediction (all categories including drinks, sweet bites) based on selected period
 - [x] Add overall daily revenue/order projection section to PredictionsTab
+
+## Analytics Improvements (Feb 15)
+
+- [x] Fix GST tab layout — tabs overflow to second row on smaller screens, add horizontal scrolling
+- [x] Add delivery item name mapping for consolidated predictions (case-insensitive matching)
+- [x] Add Excel export for Predictions tab data (Total Sales Forecast, Item Demand Heatmap)
+- [x] Fix getTotalSalesForecast SQL bug — websiteDowData query joins orders+order_items inflating SUM(totalAmount) by ~3.7x
