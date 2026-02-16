@@ -2109,6 +2109,16 @@ function OrdersTab() {
     onError: (err: any) => toast.error(err.message || 'Failed to verify with Razorpay'),
   });
 
+  // Mark order as walkout/unpaid
+  // @ts-ignore
+  const markWalkout = trpc.orders.markWalkout?.useMutation({
+    onSuccess: () => {
+      toast.success('Order marked as walkout');
+      refetch();
+    },
+    onError: (err: any) => toast.error(err.message || 'Failed to mark walkout'),
+  });
+
   const handleApplyDiscount = () => {
     if (!discountOrderId || !discountValue) return;
     
@@ -2390,22 +2400,32 @@ function OrdersTab() {
                           ➕ Add Items
                         </Button>
                       )}
-                      {/* Collect Payment button - for ANY order type with pending payment */}
-                      {confirmPaymentManually && order.paymentStatus === 'pending' && order.orderStatus !== 'cancelled' && (
+                      {/* Collect Payment button - only for pending payment AND not completed/cancelled */}
+                      {order.orderType === 'instore' && order.paymentStatus === 'pending' && order.orderStatus !== 'completed' && order.orderStatus !== 'cancelled' && (
                         <Button
                           size="sm"
                           className="bg-green-600 hover:bg-green-700 text-white"
                           onClick={() => {
-                            if (confirm(`Mark payment as collected for order #${order.orderNumber}?`)) {
-                              confirmPaymentManually.mutate({ 
-                                orderId: order.id, 
-                                paymentMethod: order.orderType === 'instore' ? 'cash' : 'upi' 
-                              });
+                            updatePaymentStatus.mutate({ orderId: order.id, paymentStatus: 'completed' });
+                          }}
+                          disabled={updatePaymentStatus.isPending}
+                        >
+                          💰 Collect Payment
+                        </Button>
+                      )}
+                      {/* Confirm Payment button - for delivery/pickup orders with pending payment (QR code payment) */}
+                      {confirmPaymentManually && (order.orderType === 'delivery' || order.orderType === 'pickup') && order.paymentStatus === 'pending' && order.orderStatus !== 'completed' && order.orderStatus !== 'cancelled' && (
+                        <Button
+                          size="sm"
+                          className="bg-emerald-600 hover:bg-emerald-700 text-white"
+                          onClick={() => {
+                            if (confirm('Confirm that payment has been received via QR code/UPI?')) {
+                              confirmPaymentManually.mutate({ orderId: order.id, paymentMethod: 'upi' });
                             }
                           }}
                           disabled={confirmPaymentManually.isPending}
                         >
-                          {confirmPaymentManually.isPending ? '...' : '💰 Collect Payment'}
+                          ✅ Confirm Payment
                         </Button>
                       )}
                       {/* Verify with Razorpay - for orders with razorpayOrderId but pending payment */}
@@ -2424,14 +2444,32 @@ function OrdersTab() {
                           {verifyRazorpayPayment.isPending ? '⏳ Checking...' : '🔍 Verify Razorpay'}
                         </Button>
                       )}
-                      {/* Show payment collected info */}
-                      {order.paymentStatus === 'completed' && order.paymentCollectedBy && (
-                        <span className="text-green-600 text-xs bg-green-50 px-2 py-1 rounded">
-                          ✓ Paid {order.paymentCollectedBy}{order.paymentCollectedAt ? ` at ${new Date(order.paymentCollectedAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}` : ''}
-                        </span>
+                      {/* Mark Walkout - for unpaid in-store orders */}
+                      {markWalkout && order.orderType === 'instore' && order.paymentStatus === 'pending' && order.orderStatus !== 'cancelled' && !order.paymentNote?.includes('WALKOUT') && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="border-red-500 text-red-600 hover:bg-red-50"
+                          onClick={() => {
+                            const note = prompt('Add a note about the walkout (optional):');
+                            if (note !== null) {
+                              markWalkout.mutate({ orderId: order.id, note: note || undefined });
+                            }
+                          }}
+                          disabled={markWalkout.isPending}
+                        >
+                          🚶 Walkout
+                        </Button>
                       )}
-                      {order.paymentStatus === 'completed' && !order.paymentCollectedBy && (
-                        <span className="text-green-600 text-xs bg-green-50 px-2 py-1 rounded">✓ Paid</span>
+                      {/* Show walkout badge */}
+                      {order.paymentNote?.includes('WALKOUT') && (
+                        <span className="text-red-600 text-xs font-bold bg-red-100 px-2 py-1 rounded">⚠️ WALKOUT</span>
+                      )}
+                      {/* Show payment collected info */}
+                      {order.paymentCollectedBy && order.paymentCollectedAt && (
+                        <span className="text-green-600 text-xs bg-green-50 px-2 py-1 rounded">
+                          ✓ Collected {new Date(order.paymentCollectedAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
+                        </span>
                       )}
                       {/* Reprint KOT button */}
                       <Button
@@ -2572,33 +2610,19 @@ function OrdersTab() {
                       <>{(orderDetails as any).paymentMethod || 'N/A'} - {orderDetails.paymentStatus}</>
                     )}
                   </p>
-                  {(orderDetails as any).paymentCollectedBy && (
+                  {(orderDetails as any).paymentNote?.includes('WALKOUT') && (
+                    <p className="text-xs text-red-600 font-bold mt-1">⚠️ WALKOUT</p>
+                  )}
+                  {(orderDetails as any).paymentCollectedAt && (
                     <p className="text-xs text-green-600 mt-1">
-                      ✓ Collected by {(orderDetails as any).paymentCollectedBy}{(orderDetails as any).paymentCollectedAt ? ` at ${new Date((orderDetails as any).paymentCollectedAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}` : ''}
+                      ✓ Collected {new Date((orderDetails as any).paymentCollectedAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
                     </p>
                   )}
-                  {(orderDetails as any).paymentNote && (
+                  {(orderDetails as any).paymentNote && !(orderDetails as any).paymentNote.includes('WALKOUT') && (
                     <p className="text-xs text-muted-foreground mt-1">{(orderDetails as any).paymentNote}</p>
                   )}
                   {/* Action buttons in the dialog */}
                   <div className="flex gap-1 mt-2 flex-wrap">
-                    {confirmPaymentManually && orderDetails.paymentStatus === 'pending' && orderDetails.orderStatus !== 'cancelled' && (
-                      <Button
-                        size="sm"
-                        className="h-7 text-xs bg-green-600 hover:bg-green-700 text-white"
-                        onClick={() => {
-                          if (confirm(`Mark payment as collected for order #${orderDetails.orderNumber}?`)) {
-                            confirmPaymentManually.mutate({ 
-                              orderId: orderDetails.id, 
-                              paymentMethod: orderDetails.orderType === 'instore' ? 'cash' : 'upi' 
-                            });
-                          }
-                        }}
-                        disabled={confirmPaymentManually.isPending}
-                      >
-                        {confirmPaymentManually.isPending ? '...' : '💰 Collect Payment'}
-                      </Button>
-                    )}
                     {verifyRazorpayPayment && (orderDetails as any).razorpayOrderId && orderDetails.paymentStatus === 'pending' && (
                       <Button
                         size="sm"
@@ -2612,6 +2636,22 @@ function OrdersTab() {
                         disabled={verifyRazorpayPayment.isPending}
                       >
                         {verifyRazorpayPayment.isPending ? '⏳ Checking...' : '🔍 Verify Razorpay'}
+                      </Button>
+                    )}
+                    {markWalkout && orderDetails.orderType === 'instore' && orderDetails.paymentStatus === 'pending' && !(orderDetails as any).paymentNote?.includes('WALKOUT') && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-7 text-xs border-red-500 text-red-600 hover:bg-red-50"
+                        onClick={() => {
+                          const note = prompt('Add a note about the walkout (optional):');
+                          if (note !== null) {
+                            markWalkout.mutate({ orderId: orderDetails.id, note: note || undefined });
+                          }
+                        }}
+                        disabled={markWalkout.isPending}
+                      >
+                        🚶 Walkout
                       </Button>
                     )}
                   </div>
@@ -3087,13 +3127,12 @@ function AddItemsToOrderForm({ orderId, orderNumber, onSuccess, onCancel }: {
 // Tables Tab - Table Status Dashboard for In-store Orders
 function TablesTab() {
   const { data: activeOrders, refetch } = trpc.orders.getActiveInstoreOrders.useQuery();
-  // @ts-ignore
-  const confirmPaymentManually = trpc.orders.confirmPaymentManually?.useMutation({
+  const updatePaymentStatus = trpc.orders.updatePaymentStatus.useMutation({
     onSuccess: () => {
-      toast.success('Payment collected!');
+      toast.success('Payment status updated');
       refetch();
     },
-    onError: (err: any) => toast.error(err.message),
+    onError: (err) => toast.error(err.message),
   });
 
   // Group orders by table number
@@ -3199,34 +3238,31 @@ function TablesTab() {
                       {order.paymentStatus}
                     </span>
                   </div>
-                  {confirmPaymentManually && order.paymentStatus === 'pending' && (
+                  {order.paymentStatus === 'pending' && (
                     <Button 
                       size="sm" 
-                      className="w-full mt-2 h-7 text-xs bg-green-600 hover:bg-green-700 text-white"
-                      onClick={() => confirmPaymentManually.mutate({ orderId: order.id, paymentMethod: 'cash' })}
+                      className="w-full mt-2 h-7 text-xs"
+                      onClick={() => updatePaymentStatus.mutate({ orderId: order.id, paymentStatus: 'completed' })}
                     >
-                      💰 Collect Payment
+                      Mark as Paid
                     </Button>
-                  )}
-                  {order.paymentStatus === 'completed' && (order as any).paymentCollectedBy && (
-                    <span className="text-green-600 text-xs mt-1 block">✓ {(order as any).paymentCollectedBy}</span>
                   )}
                 </div>
               ))}
             </div>
 
-            {confirmPaymentManually && isTableReady(orders) && needsPayment(orders) && (
+            {isTableReady(orders) && needsPayment(orders) && (
               <Button 
-                className="w-full mt-3 bg-green-600 hover:bg-green-700 text-white"
+                className="w-full mt-3"
                 onClick={() => {
                   orders?.forEach((order: any) => {
                     if (order.paymentStatus === 'pending') {
-                      confirmPaymentManually.mutate({ orderId: order.id, paymentMethod: 'cash' });
+                      updatePaymentStatus.mutate({ orderId: order.id, paymentStatus: 'completed' });
                     }
                   });
                 }}
               >
-                💰 Collect Payment ({formatPrice(getTableTotal(orders))})
+                Collect Payment ({formatPrice(getTableTotal(orders))})
               </Button>
             )}
           </Card>
