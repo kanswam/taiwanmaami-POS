@@ -239,7 +239,7 @@ export const orders = mysqlTable("orders", {
   // Test data flag - NEVER delete orders where isTestData = false
   isTestData: boolean("isTestData").default(false).notNull(),
   // Payment collection tracking
-  paymentCollectedBy: int("paymentCollectedBy"), // Staff/admin user ID who collected/confirmed payment
+  paymentCollectedBy: varchar("paymentCollectedBy", { length: 255 }), // Staff name who collected/confirmed payment
   paymentCollectedAt: timestamp("paymentCollectedAt"), // When payment was collected
   paymentNote: text("paymentNote"), // Note about payment (e.g., "walkout", "verified via Razorpay API")
   // Reconciliation fields for payment discrepancy tracking

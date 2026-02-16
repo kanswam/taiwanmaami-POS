@@ -851,7 +851,7 @@ export const appRouter = router({
     confirmPaymentManually: staffProcedure
       .input(z.object({
         orderId: z.number(),
-        paymentMethod: z.enum(['upi', 'cash', 'card', 'other']).default('upi'),
+        paymentMethod: z.enum(['upi', 'cash', 'card', 'swiggy_dineout', 'zomato_dineout', 'eazydiner', 'other']).default('cash'),
         notes: z.string().optional(),
       }))
       .mutation(async ({ input, ctx }) => {
@@ -879,10 +879,10 @@ export const appRouter = router({
           .set({
             paymentStatus: 'completed',
             paymentMethod: input.paymentMethod,
-            paymentCollectedBy: ctx.user.id,
+            paymentCollectedBy: ctx.user.name || 'Staff',
             paymentCollectedAt: new Date(),
-            paymentNote: input.notes || `Manual payment confirmed by ${ctx.user.name || 'Staff'}`,
-            staffNotes: input.notes ? `[Manual Payment] ${input.notes}` : `[Manual Payment Confirmed by ${ctx.user.name || 'Staff'}]`,
+            paymentNote: input.notes || `Payment collected: ${input.paymentMethod} (by ${ctx.user.name || 'Staff'})`,
+            staffNotes: input.notes ? `[Payment: ${input.paymentMethod}] ${input.notes}` : `[Payment: ${input.paymentMethod} collected by ${ctx.user.name || 'Staff'}]`,
           })
           .where(eq(orders.id, input.orderId));
         
@@ -1019,7 +1019,7 @@ export const appRouter = router({
             paymentStatus: 'completed',
             razorpayPaymentId: capturedPayment.id,
             paymentMethod: paymentMethod,
-            paymentCollectedBy: ctx.user.id,
+            paymentCollectedBy: ctx.user.name || 'Staff',
             paymentCollectedAt: new Date(),
             paymentNote: `Recovered via Razorpay API verification by ${ctx.user.name || 'Staff'}. Payment ID: ${capturedPayment.id}, Amount: ₹${(capturedPayment.amount / 100).toFixed(2)}, Method: ${capturedPayment.method}`,
           })

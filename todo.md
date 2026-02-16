@@ -2125,3 +2125,13 @@ Orders fixed:
 - [x] Track who collected payment and when (paymentCollectedBy, paymentCollectedAt columns added)
 - [x] Add walkout/unpaid flag for accountability tracking (markWalkout procedure with WALKOUT badge)
 - [x] Show payment status prominently in Admin Orders (dialog + list view buttons)
+
+## Staff Orders - Collect Payment Fix (Feb 16)
+
+- [x] Add Collect Payment button to Staff Orders completed tab for orders with pending payment
+- [x] Show payment method selector (cash/UPI/card/Swiggy Dineout/Zomato Dineout/EazyDiner/Other) when collecting payment
+- [x] Update payment badge from "Pay at Counter" to "Paid (Cash)" / "Paid (UPI)" etc. after collection
+- [x] Ensure payment status reflects consistently between Staff Orders and Admin pages
+- [x] Fix backend confirmPaymentManually to store staff name (not user ID) in paymentCollectedBy
+- [x] Fix verifyRazorpayPayment to store staff name (not user ID)
+- [x] Fix Drizzle schema paymentCollectedBy from int to varchar(255)

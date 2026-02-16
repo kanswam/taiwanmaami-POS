@@ -495,6 +495,31 @@ export default function StaffOrders() {
     onError: (err) => toast.error(err.message),
   });
 
+  // Collect payment mutation - uses confirmPaymentManually which tracks who collected
+  const collectPayment = trpc.orders.confirmPaymentManually.useMutation({
+    onSuccess: async (_, variables) => {
+      toast.success('Payment collected successfully!');
+      
+      // Queue receipt for printing
+      try {
+        await fetch('/api/receipt/queue', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            secret: import.meta.env.VITE_KOT_PRINT_SECRET || 'tmm-kot-print-2024-secure',
+            orderId: variables.orderId,
+          }),
+        });
+        toast.success('Receipt queued for printing');
+      } catch (error) {
+        console.error('Failed to queue receipt:', error);
+      }
+      
+      utils.orders.getRecent.invalidate();
+    },
+    onError: (err) => toast.error(err.message),
+  });
+
   // Order notification sounds & auto-poll (synced with admin page chimes)
   const { soundEnabled, toggleSound, newOrderIds } = useOrderNotification(ordersData, refetch, 20000);
 
@@ -591,12 +616,23 @@ export default function StaffOrders() {
       }
     }
 
-    updateStatus.mutate({ 
-      orderId: paymentDialog.order.id, 
-      status: paymentDialog.nextStatus as any,
-      paymentMethod: selectedPaymentMethod as any,
-      paymentProofUrl,
-    });
+    // If nextStatus is empty, this is collecting payment on an already-completed order
+    // Use confirmPaymentManually which tracks who collected the payment
+    if (!paymentDialog.nextStatus) {
+      collectPayment.mutate({
+        orderId: paymentDialog.order.id,
+        paymentMethod: selectedPaymentMethod as any,
+        notes: paymentProofUrl ? `Payment proof: ${paymentProofUrl}` : undefined,
+      });
+    } else {
+      // Order is being marked completed + payment collected at the same time
+      updateStatus.mutate({ 
+        orderId: paymentDialog.order.id, 
+        status: paymentDialog.nextStatus as any,
+        paymentMethod: selectedPaymentMethod as any,
+        paymentProofUrl,
+      });
+    }
     setPaymentDialog({ open: false, order: null, nextStatus: '' });
     setSelectedPaymentMethod('');
     setPaymentProofFile(null);
@@ -706,11 +742,11 @@ export default function StaffOrders() {
               {/* Payment Status Indicator */}
               {order.paymentMethod === 'razorpay' || order.paymentStatus === 'completed' ? (
                 <Badge className="bg-green-600 text-white">
-                  ✅ Paid{order.paymentMethod === 'razorpay' ? ' (Razorpay)' : ''}
+                  ✅ Paid{order.paymentMethod === 'razorpay' ? ' (Razorpay)' : order.paymentMethod === 'upi' ? ' (UPI)' : order.paymentMethod === 'card' ? ' (Card)' : order.paymentMethod === 'swiggy_dineout' ? ' (Swiggy)' : order.paymentMethod === 'zomato_dineout' ? ' (Zomato)' : order.paymentMethod === 'eazydiner' ? ' (EazyDiner)' : order.paymentMethod === 'cash' ? ' (Cash)' : ''}
                 </Badge>
-              ) : order.orderType === 'instore' && order.paymentStatus === 'pending' ? (
+              ) : order.paymentStatus === 'pending' ? (
                 <Badge variant="outline" className="bg-amber-100 text-amber-800 border-amber-300">
-                  💰 Pay at Counter
+                  💰 Payment Pending
                 </Badge>
               ) : null}
             </div>
@@ -872,18 +908,35 @@ export default function StaffOrders() {
               </>
             )}
             {/* Collect Payment button - only for pending payment AND not completed/cancelled */}
-            {order.orderType === 'instore' && order.paymentStatus === 'pending' && order.orderStatus !== 'completed' && order.orderStatus !== 'cancelled' && (
+            {order.paymentStatus === 'pending' && order.orderStatus !== 'completed' && order.orderStatus !== 'cancelled' && (
               <Button
                 size="sm"
                 className="bg-green-600 hover:bg-green-700 text-white"
                 onClick={() => {
-                  updatePaymentStatus.mutate({ orderId: order.id, paymentStatus: 'completed' });
+                  setPaymentDialog({ open: true, order, nextStatus: '' });
+                  setSelectedPaymentMethod('');
                 }}
-                disabled={updatePaymentStatus.isPending}
+                disabled={collectPayment.isPending}
               >
                 💰 Collect Payment
               </Button>
             )}
+          </div>
+        )}
+
+        {/* Collect Payment button for COMPLETED orders with pending payment */}
+        {order.paymentStatus === 'pending' && (order.orderStatus === 'completed') && (
+          <div className="mt-3 pt-3 border-t">
+            <Button
+              className="w-full bg-green-600 hover:bg-green-700 text-white"
+              onClick={() => {
+                setPaymentDialog({ open: true, order, nextStatus: '' });
+                setSelectedPaymentMethod('');
+              }}
+              disabled={collectPayment.isPending}
+            >
+              💰 Collect Payment - {formatPrice(order.totalAmount)}
+            </Button>
           </div>
         )}
       </Card>
@@ -1271,9 +1324,9 @@ export default function StaffOrders() {
             </Button>
             <Button 
               onClick={handlePaymentComplete}
-              disabled={!selectedPaymentMethod || updateStatus.isPending || isUploadingProof}
+              disabled={!selectedPaymentMethod || updateStatus.isPending || collectPayment.isPending || isUploadingProof}
             >
-              {isUploadingProof ? 'Uploading...' : updateStatus.isPending ? 'Processing...' : 'Complete Order'}
+              {isUploadingProof ? 'Uploading...' : (updateStatus.isPending || collectPayment.isPending) ? 'Processing...' : paymentDialog.nextStatus ? 'Complete Order' : 'Confirm Payment'}
             </Button>
           </DialogFooter>
         </DialogContent>
