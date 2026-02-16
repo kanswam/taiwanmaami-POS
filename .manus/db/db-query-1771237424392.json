@@ -1,0 +1,37 @@
+{
+  "query": "SELECT COUNT(*) as total_orders FROM orders; SELECT COUNT(*) as today_orders FROM orders WHERE DATE(createdAt) = CURDATE(); SELECT id, orderNumber, customerName, createdAt FROM orders ORDER BY id DESC LIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT COUNT(*) as total_orders FROM orders; SELECT COUNT(*) as today_orders FROM orders WHERE DATE(createdAt) = CURDATE(); SELECT id, orderNumber, customerName, createdAt FROM orders ORDER BY id DESC LIMIT 5;",
+  "rows": [
+    {
+      "total_orders": "435"
+    },
+    {
+      "total_orders": "today_orders"
+    },
+    {
+      "total_orders": "2"
+    },
+    {
+      "total_orders": "id\torderNumber\tcustomerName\tcreatedAt"
+    },
+    {
+      "total_orders": "2160002\t00438\tNULL\t2026-02-16 09:08:40"
+    },
+    {
+      "total_orders": "2160001\t00437\tShih Chieh Wang\t2026-02-16 08:33:30"
+    },
+    {
+      "total_orders": "2130019\t00436\tAryan Lakshmanan\t2026-02-15 15:58:35"
+    },
+    {
+      "total_orders": "2130018\t00435\t[MERGED → #22052198] Muskaan Bhandari\t2026-02-15 15:49:12"
+    },
+    {
+      "total_orders": "2130017\t00434\tKaushik Roy\t2026-02-15 15:13:58"
+    }
+  ],
+  "messages": [],
+  "stdout": "total_orders\n435\ntoday_orders\n2\nid\torderNumber\tcustomerName\tcreatedAt\n2160002\t00438\tNULL\t2026-02-16 09:08:40\n2160001\t00437\tShih Chieh Wang\t2026-02-16 08:33:30\n2130019\t00436\tAryan Lakshmanan\t2026-02-15 15:58:35\n2130018\t00435\t[MERGED → #22052198] Muskaan Bhandari\t2026-02-15 15:49:12\n2130017\t00434\tKaushik Roy\t2026-02-15 15:13:58\n",
+  "stderr": "",
+  "execution_time_ms": 109
+}

@@ -471,8 +471,9 @@ export default function StaffOrders() {
     },
   });
 
-  const updatePaymentStatus = trpc.orders.updatePaymentStatus.useMutation({
-    onSuccess: async (_, variables) => {
+  // @ts-ignore
+  const confirmPaymentManually = trpc.orders.confirmPaymentManually?.useMutation({
+    onSuccess: async (_: any, variables: any) => {
       toast.success('Payment collected successfully!');
       
       // Queue receipt for printing
@@ -492,7 +493,22 @@ export default function StaffOrders() {
       
       utils.orders.getRecent.invalidate();
     },
-    onError: (err) => toast.error(err.message),
+    onError: (err: any) => toast.error(err.message),
+  });
+
+  // @ts-ignore
+  const verifyRazorpayPayment = trpc.orders.verifyRazorpayPayment?.useMutation({
+    onSuccess: (data: any) => {
+      if (data.success && !data.alreadyPaid) {
+        toast.success(data.message);
+      } else if (data.alreadyPaid) {
+        toast.info('Payment was already marked as completed');
+      } else {
+        toast.error(data.message);
+      }
+      utils.orders.getRecent.invalidate();
+    },
+    onError: (err: any) => toast.error(err.message || 'Failed to verify with Razorpay'),
   });
 
   // Order notification sounds & auto-poll (synced with admin page chimes)
@@ -871,18 +887,45 @@ export default function StaffOrders() {
                 )}
               </>
             )}
-            {/* Collect Payment button - only for pending payment AND not completed/cancelled */}
-            {order.orderType === 'instore' && order.paymentStatus === 'pending' && order.orderStatus !== 'completed' && order.orderStatus !== 'cancelled' && (
+            {/* Collect Payment button - for ANY order type with pending payment */}
+            {confirmPaymentManually && order.paymentStatus === 'pending' && order.orderStatus !== 'cancelled' && (
               <Button
                 size="sm"
                 className="bg-green-600 hover:bg-green-700 text-white"
                 onClick={() => {
-                  updatePaymentStatus.mutate({ orderId: order.id, paymentStatus: 'completed' });
+                  if (confirm(`Mark payment as collected for order #${order.orderNumber}?`)) {
+                    confirmPaymentManually.mutate({ 
+                      orderId: order.id, 
+                      paymentMethod: order.orderType === 'instore' ? 'cash' : 'upi' 
+                    });
+                  }
                 }}
-                disabled={updatePaymentStatus.isPending}
+                disabled={confirmPaymentManually.isPending}
               >
-                💰 Collect Payment
+                {confirmPaymentManually.isPending ? '...' : '💰 Collect Payment'}
               </Button>
+            )}
+            {/* Verify with Razorpay - for orders with razorpayOrderId but pending payment */}
+            {verifyRazorpayPayment && (order as any).razorpayOrderId && order.paymentStatus === 'pending' && (
+              <Button
+                size="sm"
+                variant="outline"
+                className="border-blue-500 text-blue-600 hover:bg-blue-50"
+                onClick={() => {
+                  if (confirm('Check Razorpay for a captured payment on this order?')) {
+                    verifyRazorpayPayment.mutate({ orderId: order.id });
+                  }
+                }}
+                disabled={verifyRazorpayPayment.isPending}
+              >
+                {verifyRazorpayPayment.isPending ? '⏳ Checking...' : '🔍 Verify Razorpay'}
+              </Button>
+            )}
+            {/* Show payment collected info */}
+            {order.paymentStatus === 'completed' && (order as any).paymentCollectedBy && (
+              <span className="text-green-600 text-xs bg-green-50 px-2 py-1 rounded">
+                ✓ Paid {(order as any).paymentCollectedBy}
+              </span>
             )}
           </div>
         )}

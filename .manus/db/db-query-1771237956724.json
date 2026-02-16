@@ -1,0 +1,34 @@
+{
+  "query": "SHOW COLUMNS FROM orders WHERE Field IN ('paymentCollectedBy', 'paymentCollectedAt', 'paymentNote');",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SHOW COLUMNS FROM orders WHERE Field IN ('paymentCollectedBy', 'paymentCollectedAt', 'paymentNote');",
+  "rows": [
+    {
+      "Field": "paymentCollectedBy",
+      "Type": "varchar(255)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "paymentCollectedAt",
+      "Type": "bigint(20)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "paymentNote",
+      "Type": "text",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    }
+  ],
+  "messages": [],
+  "stdout": "Field\tType\tNull\tKey\tDefault\tExtra\npaymentCollectedBy\tvarchar(255)\tYES\t\tNULL\t\npaymentCollectedAt\tbigint(20)\tYES\t\tNULL\t\npaymentNote\ttext\tYES\t\tNULL\t\n",
+  "stderr": "",
+  "execution_time_ms": 57
+}

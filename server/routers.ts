@@ -868,10 +868,11 @@ export const appRouter = router({
           throw new TRPCError({ code: 'NOT_FOUND', message: 'Order not found' });
         }
         
-        // Only allow manual confirmation for pending delivery/pickup orders
         if (order.paymentStatus === 'completed') {
           throw new TRPCError({ code: 'BAD_REQUEST', message: 'Payment already confirmed' });
         }
+        
+        const staffName = ctx.user.name || 'Staff';
         
         // Update payment status to completed with accountability tracking
         await dbInstance
@@ -879,14 +880,13 @@ export const appRouter = router({
           .set({
             paymentStatus: 'completed',
             paymentMethod: input.paymentMethod,
-            paymentCollectedBy: ctx.user.id,
+            paymentCollectedBy: staffName,
             paymentCollectedAt: new Date(),
-            paymentNote: input.notes || `Manual payment confirmed by ${ctx.user.name || 'Staff'}`,
-            staffNotes: input.notes ? `[Manual Payment] ${input.notes}` : `[Manual Payment Confirmed by ${ctx.user.name || 'Staff'}]`,
+            paymentNote: input.notes || `Payment collected by ${staffName}`,
           })
           .where(eq(orders.id, input.orderId));
         
-        return { success: true, message: 'Payment confirmed manually' };
+        return { success: true, message: 'Payment confirmed' };
       }),
 
     // Staff can view recent orders
@@ -1019,7 +1019,7 @@ export const appRouter = router({
             paymentStatus: 'completed',
             razorpayPaymentId: capturedPayment.id,
             paymentMethod: paymentMethod,
-            paymentCollectedBy: ctx.user.id,
+            paymentCollectedBy: ctx.user.name || 'Staff',
             paymentCollectedAt: new Date(),
             paymentNote: `Recovered via Razorpay API verification by ${ctx.user.name || 'Staff'}. Payment ID: ${capturedPayment.id}, Amount: ₹${(capturedPayment.amount / 100).toFixed(2)}, Method: ${capturedPayment.method}`,
           })
