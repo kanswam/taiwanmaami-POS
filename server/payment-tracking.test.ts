@@ -60,49 +60,6 @@ describe('Payment Tracking', () => {
     });
   });
 
-  describe('markWalkout', () => {
-    it('should create a walkout note with timestamp', () => {
-      const staffName = 'admin';
-      const userNote = 'Customer left without paying after food was served';
-      const now = new Date();
-
-      const paymentNote = `WALKOUT: ${userNote} (by ${staffName} at ${now.toLocaleString()})`;
-
-      expect(paymentNote).toContain('WALKOUT');
-      expect(paymentNote).toContain(staffName);
-      expect(paymentNote).toContain(userNote);
-    });
-
-    it('should handle walkout without a note', () => {
-      const staffName = 'admin';
-      const now = new Date();
-
-      const paymentNote = `WALKOUT: Marked as walkout (by ${staffName} at ${now.toLocaleString()})`;
-
-      expect(paymentNote).toContain('WALKOUT');
-      expect(paymentNote).toContain('Marked as walkout');
-    });
-
-    it('should only allow walkout for pending payment orders', () => {
-      const pendingOrder = { paymentStatus: 'pending', orderType: 'instore' };
-      const completedOrder = { paymentStatus: 'completed', orderType: 'instore' };
-
-      const canMarkWalkout = (order: any) =>
-        order.paymentStatus === 'pending' && order.orderType === 'instore';
-
-      expect(canMarkWalkout(pendingOrder)).toBe(true);
-      expect(canMarkWalkout(completedOrder)).toBe(false);
-    });
-
-    it('should not allow walkout for delivery orders', () => {
-      const deliveryOrder = { paymentStatus: 'pending', orderType: 'delivery' };
-
-      const canMarkWalkout = (order: any) =>
-        order.paymentStatus === 'pending' && order.orderType === 'instore';
-
-      expect(canMarkWalkout(deliveryOrder)).toBe(false);
-    });
-  });
 
   describe('confirmPaymentManually with accountability', () => {
     it('should record who collected the payment', () => {
@@ -137,18 +94,6 @@ describe('Payment Tracking', () => {
   });
 
   describe('Payment status visibility', () => {
-    it('should detect walkout from payment note', () => {
-      const walkoutOrder = {
-        paymentNote: 'WALKOUT: Customer left (by admin at 2/15/2026, 3:00 PM)',
-      };
-      const normalOrder = {
-        paymentNote: 'Manually confirmed: cash payment',
-      };
-
-      expect(walkoutOrder.paymentNote.includes('WALKOUT')).toBe(true);
-      expect(normalOrder.paymentNote.includes('WALKOUT')).toBe(false);
-    });
-
     it('should show collected time when payment is collected', () => {
       const order = {
         paymentCollectedBy: 'Karthik',

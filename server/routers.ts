@@ -1035,33 +1035,6 @@ export const appRouter = router({
         };
       }),
 
-    // Mark order as walkout/unpaid with accountability
-    markWalkout: staffProcedure
-      .input(z.object({
-        orderId: z.number(),
-        note: z.string().optional(),
-      }))
-      .mutation(async ({ input, ctx }) => {
-        const dbInstance = await getDb();
-        if (!dbInstance) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
-        
-        const [order] = await dbInstance.select().from(orders).where(eq(orders.id, input.orderId));
-        if (!order) throw new TRPCError({ code: 'NOT_FOUND', message: 'Order not found' });
-        
-        if (order.paymentStatus === 'completed') {
-          throw new TRPCError({ code: 'BAD_REQUEST', message: 'Cannot mark a paid order as walkout' });
-        }
-        
-        await dbInstance
-          .update(orders)
-          .set({
-            paymentNote: `⚠️ WALKOUT - Reported by ${ctx.user.name || 'Staff'} at ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}${input.note ? '. Note: ' + input.note : ''}`,
-            staffNotes: `[WALKOUT] ${input.note || 'Customer left without paying'} - Reported by ${ctx.user.name || 'Staff'}`,
-          })
-          .where(eq(orders.id, input.orderId));
-        
-        return { success: true, message: 'Order marked as walkout' };
-      }),
 
     // Staff can update notes on orders
     updateStaffNotes: staffProcedure

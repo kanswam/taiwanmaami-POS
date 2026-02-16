@@ -241,7 +241,7 @@ export const orders = mysqlTable("orders", {
   // Payment collection tracking
   paymentCollectedBy: varchar("paymentCollectedBy", { length: 255 }), // Staff name who collected/confirmed payment
   paymentCollectedAt: timestamp("paymentCollectedAt"), // When payment was collected
-  paymentNote: text("paymentNote"), // Note about payment (e.g., "walkout", "verified via Razorpay API")
+  paymentNote: text("paymentNote"), // Note about payment (e.g., "verified via Razorpay API")
   // Reconciliation fields for payment discrepancy tracking
   reconciliationNote: text("reconciliationNote"), // Note explaining how discrepancy was resolved
   reconciledAt: timestamp("reconciledAt"), // When the order was marked as reconciled

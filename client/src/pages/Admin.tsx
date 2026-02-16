@@ -2109,15 +2109,6 @@ function OrdersTab() {
     onError: (err: any) => toast.error(err.message || 'Failed to verify with Razorpay'),
   });
 
-  // Mark order as walkout/unpaid
-  // @ts-ignore
-  const markWalkout = trpc.orders.markWalkout?.useMutation({
-    onSuccess: () => {
-      toast.success('Order marked as walkout');
-      refetch();
-    },
-    onError: (err: any) => toast.error(err.message || 'Failed to mark walkout'),
-  });
 
   const handleApplyDiscount = () => {
     if (!discountOrderId || !discountValue) return;
@@ -2444,27 +2435,7 @@ function OrdersTab() {
                           {verifyRazorpayPayment.isPending ? '⏳ Checking...' : '🔍 Verify Razorpay'}
                         </Button>
                       )}
-                      {/* Mark Walkout - for unpaid in-store orders */}
-                      {markWalkout && order.orderType === 'instore' && order.paymentStatus === 'pending' && order.orderStatus !== 'cancelled' && !order.paymentNote?.includes('WALKOUT') && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="border-red-500 text-red-600 hover:bg-red-50"
-                          onClick={() => {
-                            const note = prompt('Add a note about the walkout (optional):');
-                            if (note !== null) {
-                              markWalkout.mutate({ orderId: order.id, note: note || undefined });
-                            }
-                          }}
-                          disabled={markWalkout.isPending}
-                        >
-                          🚶 Walkout
-                        </Button>
-                      )}
-                      {/* Show walkout badge */}
-                      {order.paymentNote?.includes('WALKOUT') && (
-                        <span className="text-red-600 text-xs font-bold bg-red-100 px-2 py-1 rounded">⚠️ WALKOUT</span>
-                      )}
+
                       {/* Show payment collected info */}
                       {order.paymentCollectedBy && order.paymentCollectedAt && (
                         <span className="text-green-600 text-xs bg-green-50 px-2 py-1 rounded">
@@ -2610,15 +2581,13 @@ function OrdersTab() {
                       <>{(orderDetails as any).paymentMethod || 'N/A'} - {orderDetails.paymentStatus}</>
                     )}
                   </p>
-                  {(orderDetails as any).paymentNote?.includes('WALKOUT') && (
-                    <p className="text-xs text-red-600 font-bold mt-1">⚠️ WALKOUT</p>
-                  )}
+
                   {(orderDetails as any).paymentCollectedAt && (
                     <p className="text-xs text-green-600 mt-1">
                       ✓ Collected {new Date((orderDetails as any).paymentCollectedAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
                     </p>
                   )}
-                  {(orderDetails as any).paymentNote && !(orderDetails as any).paymentNote.includes('WALKOUT') && (
+                  {(orderDetails as any).paymentNote && (
                     <p className="text-xs text-muted-foreground mt-1">{(orderDetails as any).paymentNote}</p>
                   )}
                   {/* Action buttons in the dialog */}
@@ -2638,22 +2607,7 @@ function OrdersTab() {
                         {verifyRazorpayPayment.isPending ? '⏳ Checking...' : '🔍 Verify Razorpay'}
                       </Button>
                     )}
-                    {markWalkout && orderDetails.orderType === 'instore' && orderDetails.paymentStatus === 'pending' && !(orderDetails as any).paymentNote?.includes('WALKOUT') && (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="h-7 text-xs border-red-500 text-red-600 hover:bg-red-50"
-                        onClick={() => {
-                          const note = prompt('Add a note about the walkout (optional):');
-                          if (note !== null) {
-                            markWalkout.mutate({ orderId: orderDetails.id, note: note || undefined });
-                          }
-                        }}
-                        disabled={markWalkout.isPending}
-                      >
-                        🚶 Walkout
-                      </Button>
-                    )}
+
                   </div>
                 </div>
                 <div className="col-span-2">
