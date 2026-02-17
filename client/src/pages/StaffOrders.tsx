@@ -94,6 +94,7 @@ function AvailabilityPanel() {
   const toggleProductAvailability = trpc.admin.toggleProductAvailability.useMutation({
     onSuccess: () => {
       toast.success('Product availability updated');
+      utils.admin.getAllProducts.invalidate();
       utils.menu.getProducts.invalidate();
     },
     onError: (err) => {
@@ -261,7 +262,7 @@ function AvailabilityPanel() {
               {isExpanded && (
                 <div className="divide-y">
                   {categoryProducts.map((product: any) => {
-                    const isProductAvailable = product.isAvailable === true || product.isAvailable === 1;
+                    const isProductAvailable = (product.isAvailable === true || product.isAvailable === 1) && (product.isInStock === true || product.isInStock === 1);
                     return (
                       <div key={product.id} className="p-4 flex items-center gap-3">
                         <div className="flex-1 min-w-0 overflow-hidden">

@@ -2135,3 +2135,14 @@ Orders fixed:
 - [x] Fix backend confirmPaymentManually to store staff name (not user ID) in paymentCollectedBy
 - [x] Fix verifyRazorpayPayment to store staff name (not user ID)
 - [x] Fix Drizzle schema paymentCollectedBy from int to varchar(255)
+
+## Fix Item Availability Toggle (Feb 17)
+
+- [x] Investigate why "Out" items can't be toggled back to "Available" on Staff Orders page
+  - Root cause: toggle updated `isAvailable` but menu page checks `isInStock` — two separate fields were out of sync
+- [x] Fix the toggle mutation to reliably switch items between available and out-of-stock
+  - Server now updates BOTH `isAvailable` AND `isInStock` simultaneously
+- [x] Fix invalidation: was calling `utils.menu.getProducts.invalidate()` but data fetched via `admin.getAllProducts` — now invalidates both
+- [x] Synced existing DB data where isAvailable and isInStock were out of sync (Strawberry Mochi had isAvailable=1 but isInStock=0)
+- [x] Ensure toggle state persists and reflects correctly across pages (Staff Orders, Menu, Admin)
+- [x] Test the toggle thoroughly before delivering

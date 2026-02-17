@@ -2345,7 +2345,8 @@ export const appRouter = router({
         if (!dbInstance) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
         const { id, isAvailable } = input;
         
-        await dbInstance!.update(products).set({ isAvailable }).where(eq(products.id, id));
+        // Update BOTH isAvailable AND isInStock — the menu page checks isInStock
+        await dbInstance!.update(products).set({ isAvailable, isInStock: isAvailable }).where(eq(products.id, id));
         
         // Log the change
         console.log(`[Staff] ${ctx.user.name} (${ctx.user.id}) toggled product ${id} availability to ${isAvailable}`);
