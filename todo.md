@@ -2146,3 +2146,14 @@ Orders fixed:
 - [x] Synced existing DB data where isAvailable and isInStock were out of sync (Strawberry Mochi had isAvailable=1 but isInStock=0)
 - [x] Ensure toggle state persists and reflects correctly across pages (Staff Orders, Menu, Admin)
 - [x] Test the toggle thoroughly before delivering
+
+## BOBALOVE10 Discount Bug - Order #445 (Feb 17)
+
+- [x] Investigate order #445: BOBALOVE10 discount shows ₹123 instead of expected ₹305 (10% of ₹3,050)
+  - Root cause: Discount was calculated at checkout on original 3 items (₹1,225 → 10% = ₹122.50)
+  - 5 custom items added later by staff (₹1,825) brought subtotal to ₹3,050 but discount was NOT recalculated
+- [x] Fix addItemsToOrder: now looks up discount code, recalculates if percentage-based
+- [x] Fix addCustomItemToOrder: same recalculation logic added
+- [x] Respects maxDiscountAmount cap for percentage discounts
+- [x] Fixed order #445 in database: discount ₹305, total ₹2,882.26 (was ₹3,073.88)
+- [x] 6 vitest tests passing for discount recalculation logic

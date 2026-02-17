@@ -1188,7 +1188,20 @@ export const appRouter = router({
         
         // Recalculate order totals
         const newSubtotal = order.subtotal + newItemsSubtotal;
-        const discountedSubtotal = newSubtotal - (order.discountAmount || 0);
+        
+        // Recalculate discount if a percentage-based discount code is applied
+        let newDiscountAmount = order.discountAmount || 0;
+        if (order.discountCode) {
+          const [discount] = await dbInstance.select().from(discounts).where(eq(discounts.code, order.discountCode));
+          if (discount && discount.type === 'percentage') {
+            newDiscountAmount = Math.round(newSubtotal * discount.value / 100);
+            if (discount.maxDiscountAmount && newDiscountAmount > discount.maxDiscountAmount) {
+              newDiscountAmount = discount.maxDiscountAmount;
+            }
+          }
+        }
+        
+        const discountedSubtotal = newSubtotal - newDiscountAmount;
         const newStateGst = Math.round(discountedSubtotal * 0.025);
         const newCentralGst = Math.round(discountedSubtotal * 0.025);
         const newTotalAmount = discountedSubtotal + newStateGst + newCentralGst + order.deliveryCharge;
@@ -1198,6 +1211,7 @@ export const appRouter = router({
           .update(orders)
           .set({
             subtotal: newSubtotal,
+            discountAmount: newDiscountAmount,
             stateGst: newStateGst,
             centralGst: newCentralGst,
             totalAmount: newTotalAmount,
@@ -1290,7 +1304,20 @@ export const appRouter = router({
         
         // Recalculate order totals
         const newSubtotal = order.subtotal + lineTotal;
-        const discountedSubtotal = newSubtotal - (order.discountAmount || 0);
+        
+        // Recalculate discount if a percentage-based discount code is applied
+        let newDiscountAmount = order.discountAmount || 0;
+        if (order.discountCode) {
+          const [discount] = await dbInstance.select().from(discounts).where(eq(discounts.code, order.discountCode));
+          if (discount && discount.type === 'percentage') {
+            newDiscountAmount = Math.round(newSubtotal * discount.value / 100);
+            if (discount.maxDiscountAmount && newDiscountAmount > discount.maxDiscountAmount) {
+              newDiscountAmount = discount.maxDiscountAmount;
+            }
+          }
+        }
+        
+        const discountedSubtotal = newSubtotal - newDiscountAmount;
         const newStateGst = Math.round(discountedSubtotal * 0.025);
         const newCentralGst = Math.round(discountedSubtotal * 0.025);
         const newTotalAmount = discountedSubtotal + newStateGst + newCentralGst + order.deliveryCharge;
@@ -1300,6 +1327,7 @@ export const appRouter = router({
           .update(orders)
           .set({
             subtotal: newSubtotal,
+            discountAmount: newDiscountAmount,
             stateGst: newStateGst,
             centralGst: newCentralGst,
             totalAmount: newTotalAmount,
