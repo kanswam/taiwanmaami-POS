@@ -308,7 +308,51 @@ export const appRouter = router({
           }
         }
 
-        const totalAmount = subtotal + gst.total + deliveryCharge - discountAmount - input.loyaltyPointsUsed;
+        // Birthday free drink detection
+        let birthdayFreeApplied = false;
+        if (ctx.user?.id && discountAmount === 0) {
+          // Only apply birthday free drink if no other discount is already applied
+          try {
+            const [birthdayUser] = await dbInstance!.select({
+              birthMonth: users.birthMonth,
+              birthDay: users.birthDay,
+              birthdayCodeUsedYear: users.birthdayCodeUsedYear,
+            }).from(users).where(eq(users.id, ctx.user.id));
+
+            if (birthdayUser?.birthMonth && birthdayUser?.birthDay) {
+              const now = new Date();
+              const currentYear = now.getFullYear();
+              
+              // Check if birthday free drink already used this year
+              if (birthdayUser.birthdayCodeUsedYear !== currentYear) {
+                // Check if today is within the birthday week (3 days before to 3 days after)
+                const birthdayThisYear = new Date(currentYear, birthdayUser.birthMonth - 1, birthdayUser.birthDay);
+                const diffMs = now.getTime() - birthdayThisYear.getTime();
+                const diffDays = diffMs / (1000 * 60 * 60 * 24);
+                
+                if (diffDays >= -3 && diffDays <= 3) {
+                  // Birthday week! Find the most expensive item to make free
+                  const mostExpensiveItem = input.items.reduce((max, item) => 
+                    item.lineTotal > max.lineTotal ? item : max, input.items[0]);
+                  
+                  if (mostExpensiveItem) {
+                    discountAmount = mostExpensiveItem.lineTotal;
+                    birthdayFreeApplied = true;
+                    console.log(`[Order] Birthday free drink applied for user ${ctx.user.id}: ${mostExpensiveItem.productName} (₹${mostExpensiveItem.lineTotal / 100})`);
+                  }
+                }
+              }
+            }
+          } catch (bdErr) {
+            console.error('Birthday check failed:', bdErr);
+            // Don't fail the order - birthday check is non-critical
+          }
+        }
+
+        // Recalculate GST on net amount after discount
+        const netAfterDiscount = subtotal - discountAmount;
+        const finalGst = birthdayFreeApplied ? calculateGst(netAfterDiscount) : gst;
+        const totalAmount = subtotal + finalGst.total + deliveryCharge - discountAmount - input.loyaltyPointsUsed;
         
         // Generate sequential 5-digit order number
         const [maxOrderResult] = await dbInstance!.execute(sql`SELECT MAX(CAST(orderNumber AS UNSIGNED)) as maxNum FROM orders WHERE orderNumber REGEXP '^[0-9]+$'`);
@@ -329,8 +373,8 @@ export const appRouter = router({
           tableNumber: input.orderType === 'instore' ? input.tableNumber : null,
           outletId,
           subtotal,
-          stateGst: gst.stateGst,
-          centralGst: gst.centralGst,
+          stateGst: finalGst.stateGst,
+          centralGst: finalGst.centralGst,
           deliveryCharge,
           discountAmount,
           loyaltyPointsUsed: input.loyaltyPointsUsed,
@@ -338,7 +382,7 @@ export const appRouter = router({
           deliveryAddressId: input.deliveryAddressId,
           deliveryAddress: input.deliveryAddress,
           scheduledTime: input.scheduledTime ? new Date(input.scheduledTime) : null,
-          discountCode: input.discountCode,
+          discountCode: birthdayFreeApplied ? 'BIRTHDAY_FREE_DRINK' : input.discountCode,
           specialInstructions: input.specialInstructions,
         });
 
@@ -478,6 +522,18 @@ export const appRouter = router({
           await db.recordDiscountUsage(appliedDiscount.id, ctx.user.id, orderId);
         }
         
+        // Mark birthday free drink as used for this year
+        if (birthdayFreeApplied && ctx.user?.id) {
+          try {
+            await dbInstance!.update(users).set({
+              birthdayCodeUsedYear: new Date().getFullYear(),
+            }).where(eq(users.id, ctx.user.id));
+            console.log(`[Order] Birthday free drink marked as used for user ${ctx.user.id} in ${new Date().getFullYear()}`);
+          } catch (bdUpdateErr) {
+            console.error('Failed to update birthdayCodeUsedYear:', bdUpdateErr);
+          }
+        }
+
         // Redeem loyalty reward voucher if used
         if (loyaltyVoucherCode && ctx.user?.id && discountAmount > 0) {
           try {

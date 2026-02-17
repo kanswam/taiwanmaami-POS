@@ -2157,3 +2157,20 @@ Orders fixed:
 - [x] Respects maxDiscountAmount cap for percentage discounts
 - [x] Fixed order #445 in database: discount ₹305, total ₹2,882.26 (was ₹3,073.88)
 - [x] 6 vitest tests passing for discount recalculation logic
+
+## Birthday Free Drink Bug - Order #447 (Feb 17)
+
+- [x] Fix order #447 in database: Tiramisu Oolong Latte (₹465) free, GST on net ₹245 only
+  - Subtotal ₹710, Discount ₹465, Net ₹245, GST ₹6.13+₹6.13, Total ₹257.26
+  - Set birthdayCodeUsedYear=2026 for customer
+- [x] Root cause: NO birthday detection logic exists in order creation flow
+- [x] Add birthday detection to orders.create procedure — auto-apply free drink for birthday week
+  - Checks birthMonth/birthDay within 3-day window (birthday week)
+  - Picks the most expensive item in the order to make free
+  - Recalculates GST on net amount after discount
+  - Stores 'BIRTHDAY_FREE_DRINK' as discountCode on the order
+- [x] Track birthdayCodeUsedYear so each customer gets only one free drink per year
+- [x] Birthday discount badge visible in Admin order detail dialog (shows BIRTHDAY_FREE_DRINK code)
+- [x] 15 vitest tests passing for birthday detection logic
+- [ ] (Future) Add birthday banner on Checkout page for customer visibility
+- [ ] (Future) Add birthday indicator badge on Staff Orders for walk-in customers
