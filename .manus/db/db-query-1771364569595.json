@@ -1,0 +1,25 @@
+{
+  "query": "SELECT id, title, slug FROM blog_articles WHERE id >= 30001;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT id, title, slug FROM blog_articles WHERE id >= 30001;",
+  "rows": [
+    {
+      "id": "30001",
+      "title": "Biang Biang Noodles: The Sound of Handmade Art at Taiwan Maami",
+      "slug": "biang-biang-noodles-handmade-art-taiwan-maami"
+    },
+    {
+      "id": "30002",
+      "title": "Discover Authentic Taiwanese Food: From Night Markets to Your Table",
+      "slug": "discover-authentic-taiwanese-food-night-markets-to-table"
+    },
+    {
+      "id": "30003",
+      "title": "Meet ChickGozilla: The XXL Fried Chicken Steak You Cannot Ignore",
+      "slug": "chickgozilla-xxl-fried-chicken-steak-taiwan-maami"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\ttitle\tslug\n30001\tBiang Biang Noodles: The Sound of Handmade Art at Taiwan Maami\tbiang-biang-noodles-handmade-art-taiwan-maami\n30002\tDiscover Authentic Taiwanese Food: From Night Markets to Your Table\tdiscover-authentic-taiwanese-food-night-markets-to-table\n30003\tMeet ChickGozilla: The XXL Fried Chicken Steak You Cannot Ignore\tchickgozilla-xxl-fried-chicken-steak-taiwan-maami\n",
+  "stderr": "",
+  "execution_time_ms": 88
+}

@@ -2174,3 +2174,12 @@ Orders fixed:
 - [x] 15 vitest tests passing for birthday detection logic
 - [ ] (Future) Add birthday banner on Checkout page for customer visibility
 - [ ] (Future) Add birthday indicator badge on Staff Orders for walk-in customers
+
+## Blog Content Upload (Feb 17)
+
+- [x] Review and upgrade Blog 1: Biang Biang Noodles
+- [x] Review and upgrade Blog 2: Discover Authentic Taiwanese Food
+- [x] Review and upgrade Blog 3: Meet ChickGozilla
+- [x] Upload all three blogs to the website (SEO-optimized HTML content)
+- [x] Verify blogs display correctly on the Blog page (HTML rendering confirmed)
+- [x] Convert blog content from Markdown to HTML (BlogArticle.tsx uses dangerouslySetInnerHTML)

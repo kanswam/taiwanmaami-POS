@@ -1,0 +1,45 @@
+{
+  "query": "SELECT id, title, slug, status, publishedAt FROM blog_articles ORDER BY id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT id, title, slug, status, publishedAt FROM blog_articles ORDER BY id;",
+  "rows": [
+    {
+      "id": "1",
+      "title": "The Story Behind Authentic Taiwanese Bubble Tea",
+      "slug": "the-story-behind-authentic-taiwanese-bubble-tea",
+      "status": "published",
+      "publishedAt": "2026-02-10 14:15:30"
+    },
+    {
+      "id": "2",
+      "title": "Taiwan Maami's Tea Journey — From Leaf to Cup",
+      "slug": "taiwan-maami-s-tea-journey-from-leaf-to-cup",
+      "status": "published",
+      "publishedAt": "2026-02-10 14:15:30"
+    },
+    {
+      "id": "5",
+      "title": "How to Order Bubble Tea Like a Pro",
+      "slug": "how-to-order-bubble-tea-like-a-pro",
+      "status": "published",
+      "publishedAt": "2026-02-10 14:15:30"
+    },
+    {
+      "id": "6",
+      "title": "Behind the Menu: How We Created Our Signature Mochis",
+      "slug": "behind-the-menu-how-we-created-our-signature-mochis",
+      "status": "published",
+      "publishedAt": "2026-02-10 14:15:30"
+    },
+    {
+      "id": "7",
+      "title": "Taiwanese Street Food and Asian Flavours — Beyond Bubble Tea",
+      "slug": "taiwanese-street-food-and-asian-flavours-beyond-bubble-tea",
+      "status": "published",
+      "publishedAt": "2026-02-10 14:15:30"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\ttitle\tslug\tstatus\tpublishedAt\n1\tThe Story Behind Authentic Taiwanese Bubble Tea\tthe-story-behind-authentic-taiwanese-bubble-tea\tpublished\t2026-02-10 14:15:30\n2\tTaiwan Maami's Tea Journey — From Leaf to Cup\ttaiwan-maami-s-tea-journey-from-leaf-to-cup\tpublished\t2026-02-10 14:15:30\n5\tHow to Order Bubble Tea Like a Pro\thow-to-order-bubble-tea-like-a-pro\tpublished\t2026-02-10 14:15:30\n6\tBehind the Menu: How We Created Our Signature Mochis\tbehind-the-menu-how-we-created-our-signature-mochis\tpublished\t2026-02-10 14:15:30\n7\tTaiwanese Street Food and Asian Flavours — Beyond Bubble Tea\ttaiwanese-street-food-and-asian-flavours-beyond-bubble-tea\tpublished\t2026-02-10 14:15:30\n",
+  "stderr": "",
+  "execution_time_ms": 112
+}
