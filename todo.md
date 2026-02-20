@@ -2198,3 +2198,5 @@ Orders fixed:
 - [x] Add route in App.tsx for /leela-hyderabad
 - [x] Write vitest tests for registration procedures (9/9 passed)
 - [x] Verify complete flow works end-to-end
+
+- [x] Published: The Leela Hyderabad event page live
