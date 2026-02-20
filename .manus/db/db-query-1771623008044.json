@@ -1,0 +1,9 @@
+{
+  "query": "CREATE TABLE IF NOT EXISTS `popup_registrations` (\n  `id` int AUTO_INCREMENT NOT NULL,\n  `eventSlug` varchar(100) NOT NULL,\n  `customerName` varchar(200) NOT NULL,\n  `customerEmail` varchar(320) NOT NULL,\n  `customerPhone` varchar(20) NOT NULL,\n  `eventType` enum('dinner','masterclass') NOT NULL,\n  `selectedDate` varchar(20) NOT NULL,\n  `numberOfGuests` int NOT NULL DEFAULT 1,\n  `specialRequirements` text,\n  `status` enum('registered','confirmed','cancelled') NOT NULL DEFAULT 'registered',\n  `createdAt` timestamp NOT NULL DEFAULT (now()),\n  `updatedAt` timestamp NOT NULL DEFAULT (now()) ON UPDATE CURRENT_TIMESTAMP,\n  CONSTRAINT `popup_registrations_id` PRIMARY KEY(`id`)\n);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute CREATE TABLE IF NOT EXISTS `popup_registrations` (\n  `id` int AUTO_INCREMENT NOT NULL,\n  `eventSlug` varchar(100) NOT NULL,\n  `customerName` varchar(200) NOT NULL,\n  `customerEmail` varchar(320) NOT NULL,\n  `customerPhone` varchar(20) NOT NULL,\n  `eventType` enum('dinner','masterclass') NOT NULL,\n  `selectedDate` varchar(20) NOT NULL,\n  `numberOfGuests` int NOT NULL DEFAULT 1,\n  `specialRequirements` text,\n  `status` enum('registered','confirmed','cancelled') NOT NULL DEFAULT 'registered',\n  `createdAt` timestamp NOT NULL DEFAULT (now()),\n  `updatedAt` timestamp NOT NULL DEFAULT (now()) ON UPDATE CURRENT_TIMESTAMP,\n  CONSTRAINT `popup_registrations_id` PRIMARY KEY(`id`)\n);",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 226
+}

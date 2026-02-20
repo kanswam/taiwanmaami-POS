@@ -2183,3 +2183,18 @@ Orders fixed:
 - [x] Upload all three blogs to the website (SEO-optimized HTML content)
 - [x] Verify blogs display correctly on the Blog page (HTML rendering confirmed)
 - [x] Convert blog content from Markdown to HTML (BlogArticle.tsx uses dangerouslySetInnerHTML)
+
+## The Leela Hyderabad Popup Event (Feb 20)
+
+- [x] Create popup_registrations database table for interest registration
+- [x] Create backend procedures: registerInterest, getRegistrations (admin)
+- [x] Build dedicated event page (/leela-hyderabad) with poster, Theresa's story narrative, and registration form
+- [x] Include Theresa Hu's personal story/vision narrative on the event page (editorial style)
+- [x] Event dates: 5-8 March (dinner), 6-8 March (masterclass) per poster
+- [x] Registration form: name, phone, email, event type (dinner/masterclass), date selection
+- [x] Dinner dates: 5-8 March 2026 (7PM-12AM)
+- [x] Masterclass dates: 6-8 March 2026 (1PM-3PM)
+- [x] Add landing page announcement banner linking to event page
+- [x] Add route in App.tsx for /leela-hyderabad
+- [x] Write vitest tests for registration procedures (9/9 passed)
+- [x] Verify complete flow works end-to-end

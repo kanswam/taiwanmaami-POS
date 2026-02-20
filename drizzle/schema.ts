@@ -1191,3 +1191,27 @@ export const dailyTrafficStats = mysqlTable("daily_traffic_stats", {
 
 export type DailyTrafficStat = typeof dailyTrafficStats.$inferSelect;
 export type InsertDailyTrafficStat = typeof dailyTrafficStats.$inferInsert;
+
+
+// =============================================
+// POPUP EVENT REGISTRATIONS
+// =============================================
+
+// Popup Event Registrations - Interest registrations for popup events (e.g., The Leela Hyderabad)
+export const popupRegistrations = mysqlTable("popup_registrations", {
+  id: int("id").autoincrement().primaryKey(),
+  eventSlug: varchar("eventSlug", { length: 100 }).notNull(), // e.g., "leela-hyderabad-march-2026"
+  customerName: varchar("customerName", { length: 200 }).notNull(),
+  customerEmail: varchar("customerEmail", { length: 320 }).notNull(),
+  customerPhone: varchar("customerPhone", { length: 20 }).notNull(),
+  eventType: mysqlEnum("eventType", ["dinner", "masterclass"]).notNull(),
+  selectedDate: varchar("selectedDate", { length: 20 }).notNull(), // e.g., "2026-03-05"
+  numberOfGuests: int("numberOfGuests").default(1).notNull(),
+  specialRequirements: text("specialRequirements"),
+  status: mysqlEnum("status", ["registered", "confirmed", "cancelled"]).default("registered").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type PopupRegistration = typeof popupRegistrations.$inferSelect;
+export type InsertPopupRegistration = typeof popupRegistrations.$inferInsert;

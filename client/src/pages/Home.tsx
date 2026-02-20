@@ -164,48 +164,45 @@ export default function Home() {
       />
       <Header />
 
-      {/* Workshop Announcement Banner - Above Hero for Maximum Visibility */}
-      {upcomingWorkshops && upcomingWorkshops.length > 0 && (
-        <section className="bg-gradient-to-r from-amber-500 via-orange-500 to-red-500 -mt-16 pt-20 pb-4">
-          <div className="container">
-            <Link href="/events#workshops">
-              <div className="flex flex-col md:flex-row items-center justify-between gap-4 text-white cursor-pointer hover:opacity-90 transition-opacity">
-                <div className="flex items-center gap-4">
-                  <div className="w-14 h-14 rounded-full bg-white/20 flex items-center justify-center animate-pulse">
-                    <Calendar className="w-7 h-7" />
-                  </div>
-                  <div>
-                    <div className="text-xs uppercase tracking-wider font-medium opacity-90">🎉 Upcoming Workshop - Book Now!</div>
-                    <h3 className="text-xl md:text-2xl font-bold">{upcomingWorkshops[0].title}</h3>
-                    <div className="flex flex-wrap items-center gap-3 text-sm opacity-90 mt-1">
-                      <span className="flex items-center gap-1">
-                        <Calendar className="w-4 h-4" />
-                        Saturday, 14th February
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <Clock className="w-4 h-4" />
-                        {upcomingWorkshops[0].startTime} - {upcomingWorkshops[0].endTime}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <Users className="w-4 h-4" />
-                        Limited spots per session
-                      </span>
-                    </div>
+      {/* The Leela Hyderabad Popup Event Announcement Banner */}
+      <section className="bg-gradient-to-r from-stone-900 via-stone-800 to-amber-900 -mt-16 pt-20 pb-4">
+        <div className="container">
+          <Link href="/leela-hyderabad">
+            <div className="flex flex-col md:flex-row items-center justify-between gap-4 text-white cursor-pointer hover:opacity-90 transition-opacity">
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 rounded-full bg-amber-500/20 flex items-center justify-center">
+                  <Star className="w-7 h-7 text-amber-400" />
+                </div>
+                <div>
+                  <div className="text-xs uppercase tracking-wider font-medium text-amber-300">Exclusive Culinary Residency</div>
+                  <h3 className="text-xl md:text-2xl font-bold">Taiwan Maami's Edible Journey at The Leela Hyderabad</h3>
+                  <div className="flex flex-wrap items-center gap-3 text-sm opacity-90 mt-1">
+                    <span className="flex items-center gap-1">
+                      <Calendar className="w-4 h-4 text-amber-400" />
+                      5 — 8 March 2026
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Clock className="w-4 h-4 text-amber-400" />
+                      Dinner & Master Class
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <MapPin className="w-4 h-4 text-amber-400" />
+                      RAEN — The Chef's Studio, Banjara Hills
+                    </span>
                   </div>
                 </div>
-                <Button className="bg-white text-orange-600 hover:bg-white/90 font-semibold shadow-lg">
-                  <Ticket className="w-4 h-4 mr-2" />
-                  Book Your Spot
-                  <ArrowRight className="w-4 h-4 ml-2" />
-                </Button>
               </div>
-            </Link>
-          </div>
-        </section>
-      )}
+              <Button className="bg-amber-600 hover:bg-amber-700 text-white font-semibold shadow-lg">
+                Register Interest
+                <ArrowRight className="w-4 h-4 ml-2" />
+              </Button>
+            </div>
+          </Link>
+        </div>
+      </section>
 
       {/* Hero Section with Video Background */}
-      <section className={`relative overflow-hidden ${upcomingWorkshops && upcomingWorkshops.length > 0 ? '' : '-mt-16 pt-16'}`}>
+      <section className="relative overflow-hidden">
         <div className="absolute inset-0">
           <video
             autoPlay

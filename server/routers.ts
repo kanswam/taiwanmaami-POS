@@ -11,7 +11,7 @@ import { categories, subcategories, products, addons, orders, orderItems as orde
 import { eq, and, desc, asc, sql, or, gte, lte, isNull } from "drizzle-orm";
 import { generateOrderNumber, calculateGst } from "@shared/types";
 // POS functionality removed - Employee Master import removed
-import { outletProducts, loyaltyRewards, stampTransactions, guestOrders, reviews, kotQueue, receiptQueue, productAuditLog, categoryAuditLog, complaints, eventInquiries, eventOrders, eventOrderItems, workshops, workshopBookings, workshopDates, workshopWaitlist, backupLogs, blogArticles, deliverySalesUploads, deliveryItemSales, pageviews as pageviewsTable } from "../drizzle/schema";
+import { outletProducts, loyaltyRewards, stampTransactions, guestOrders, reviews, kotQueue, receiptQueue, productAuditLog, categoryAuditLog, complaints, eventInquiries, eventOrders, eventOrderItems, workshops, workshopBookings, workshopDates, workshopWaitlist, backupLogs, blogArticles, deliverySalesUploads, deliveryItemSales, pageviews as pageviewsTable, popupRegistrations } from "../drizzle/schema";
 import { ENV } from './_core/env';
 import { wholesaleRouter } from './wholesaleRouter';
 import { chatWithBot } from './chatbot';
@@ -8037,6 +8037,80 @@ export const appRouter = router({
         
         // Delete the order
         await database.delete(eventOrders).where(eq(eventOrders.id, input.id));
+        return { success: true };
+      }),
+  }),
+
+  // Popup Event Registrations (e.g., The Leela Hyderabad)
+  popup: router({
+    // Register interest for a popup event (public - no auth required)
+    registerInterest: publicProcedure
+      .input(z.object({
+        eventSlug: z.string().min(1),
+        customerName: z.string().min(1, "Name is required"),
+        customerEmail: z.string().email("Valid email is required"),
+        customerPhone: z.string().min(10, "Valid phone number is required"),
+        eventType: z.enum(["dinner", "masterclass"]),
+        selectedDate: z.string().min(1, "Please select a date"),
+        numberOfGuests: z.number().min(1).max(20).default(1),
+        specialRequirements: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const database = await getDb();
+        if (!database) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Database not available' });
+        
+        const result = await database.insert(popupRegistrations).values({
+          eventSlug: input.eventSlug,
+          customerName: input.customerName,
+          customerEmail: input.customerEmail,
+          customerPhone: input.customerPhone,
+          eventType: input.eventType,
+          selectedDate: input.selectedDate,
+          numberOfGuests: input.numberOfGuests,
+          specialRequirements: input.specialRequirements || null,
+        });
+        
+        // Notify owner about new registration
+        await notifyOwner({
+          title: `New Popup Registration: ${input.eventType === 'dinner' ? 'Dinner' : 'Master Class'}`,
+          content: `New registration for The Leela Hyderabad popup:\n\nName: ${input.customerName}\nEmail: ${input.customerEmail}\nPhone: ${input.customerPhone}\nEvent: ${input.eventType === 'dinner' ? 'Dinner (7PM-12AM)' : 'Master Class (1PM-3PM)'}\nDate: ${input.selectedDate}\nGuests: ${input.numberOfGuests}${input.specialRequirements ? `\nNotes: ${input.specialRequirements}` : ''}`,
+        });
+        
+        return { success: true, id: result[0].insertId };
+      }),
+
+    // Get all registrations for a popup event (admin)
+    getRegistrations: adminProcedure
+      .input(z.object({
+        eventSlug: z.string(),
+        eventType: z.enum(["dinner", "masterclass", "all"]).optional(),
+      }))
+      .query(async ({ input }) => {
+        const database = await getDb();
+        if (!database) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Database not available' });
+        
+        const conditions = [eq(popupRegistrations.eventSlug, input.eventSlug)];
+        if (input.eventType && input.eventType !== "all") {
+          conditions.push(eq(popupRegistrations.eventType, input.eventType));
+        }
+        
+        return database.select().from(popupRegistrations)
+          .where(and(...conditions))
+          .orderBy(desc(popupRegistrations.createdAt));
+      }),
+
+    // Update registration status (admin)
+    updateRegistrationStatus: adminProcedure
+      .input(z.object({
+        id: z.number(),
+        status: z.enum(["registered", "confirmed", "cancelled"]),
+      }))
+      .mutation(async ({ input }) => {
+        const database = await getDb();
+        if (!database) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Database not available' });
+        await database.update(popupRegistrations)
+          .set({ status: input.status })
+          .where(eq(popupRegistrations.id, input.id));
         return { success: true };
       }),
   }),
