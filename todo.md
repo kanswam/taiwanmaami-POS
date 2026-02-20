@@ -2200,3 +2200,13 @@ Orders fixed:
 - [x] Verify complete flow works end-to-end
 
 - [x] Published: The Leela Hyderabad event page live
+
+## Admin Panel: Leela Registrations & Cleanup (Feb 20)
+- [x] Add Leela Registrations tab to Admin panel (Events dropdown)
+- [x] Show registration list with name, email, phone, event type, dates, guests, status
+- [x] Add filtering by event type (dinner/masterclass) and search
+- [x] Add ability to update registration status (registered/confirmed/cancelled)
+- [x] Add CSV export for registrations
+- [x] Add summary cards (total, dinner count, masterclass count, total guests)
+- [x] Delete all test workshops from database
+- [x] Delete all test Leela event registrations from database

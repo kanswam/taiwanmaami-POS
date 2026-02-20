@@ -167,9 +167,9 @@ export default function Admin() {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button 
-                  variant={['event-inquiries', 'event-orders', 'workshops', 'workshop-bookings'].includes(activeTab) ? 'default' : 'outline'} 
+                  variant={['event-inquiries', 'event-orders', 'workshops', 'workshop-bookings', 'leela-registrations'].includes(activeTab) ? 'default' : 'outline'} 
                   size="sm" 
-                  className={`gap-2 ${!['event-inquiries', 'event-orders', 'workshops', 'workshop-bookings'].includes(activeTab) ? 'border-transparent hover:bg-accent' : ''}`}
+                  className={`gap-2 ${!['event-inquiries', 'event-orders', 'workshops', 'workshop-bookings', 'leela-registrations'].includes(activeTab) ? 'border-transparent hover:bg-accent' : ''}`}
                 >
                   <Calendar className="w-4 h-4" />
                   Events
@@ -189,6 +189,10 @@ export default function Admin() {
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setActiveTab('workshop-bookings')} className={activeTab === 'workshop-bookings' ? 'bg-accent' : ''}>
                   <Ticket className="w-4 h-4 mr-2" /> Workshop Bookings
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => setActiveTab('leela-registrations')} className={activeTab === 'leela-registrations' ? 'bg-accent' : ''}>
+                  <Star className="w-4 h-4 mr-2" /> Leela Registrations
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -385,6 +389,10 @@ export default function Admin() {
 
           <TabsContent value="workshop-bookings">
             <WorkshopBookingsTab />
+          </TabsContent>
+
+          <TabsContent value="leela-registrations">
+            <LeelaRegistrationsTab />
           </TabsContent>
 
           <TabsContent value="backup">
@@ -10195,6 +10203,230 @@ function ReconciliationTab() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+    </div>
+  );
+}
+
+
+// Leela Hyderabad Registrations Tab
+function LeelaRegistrationsTab() {
+  const [filterType, setFilterType] = useState<string>('all');
+  const [searchQuery, setSearchQuery] = useState('');
+  
+  const { data: registrations, isLoading, refetch } = trpc.popup.getRegistrations.useQuery({
+    eventSlug: 'leela-hyderabad',
+    eventType: filterType === 'all' ? undefined : filterType as 'dinner' | 'masterclass',
+  });
+
+  const updateStatus = trpc.popup.updateRegistrationStatus.useMutation({
+    onSuccess: () => {
+      toast.success('Registration status updated');
+      refetch();
+    },
+    onError: (err: any) => toast.error(err.message),
+  });
+
+  const filteredRegistrations = (registrations || []).filter((r: any) => {
+    if (!searchQuery) return true;
+    const q = searchQuery.toLowerCase();
+    return (
+      r.customerName?.toLowerCase().includes(q) ||
+      r.customerEmail?.toLowerCase().includes(q) ||
+      r.customerPhone?.toLowerCase().includes(q)
+    );
+  });
+
+  const dinnerCount = (registrations || []).filter((r: any) => r.eventType === 'dinner').length;
+  const masterclassCount = (registrations || []).filter((r: any) => r.eventType === 'masterclass').length;
+  const totalGuests = (registrations || []).reduce((sum: number, r: any) => sum + (r.numberOfGuests || 1), 0);
+  const confirmedCount = (registrations || []).filter((r: any) => r.status === 'confirmed').length;
+
+  const exportCSV = () => {
+    if (!filteredRegistrations.length) return;
+    const headers = ['Name', 'Email', 'Phone', 'Event Type', 'Selected Date', 'Guests', 'Status', 'Special Requirements', 'Registered At'];
+    const rows = filteredRegistrations.map((r: any) => [
+      r.customerName,
+      r.customerEmail,
+      r.customerPhone,
+      r.eventType === 'dinner' ? 'Dinner' : 'Master Class',
+      r.selectedDate,
+      r.numberOfGuests,
+      r.status,
+      r.specialRequirements || '',
+      new Date(r.createdAt).toLocaleString(),
+    ]);
+    const csv = [headers.join(','), ...rows.map((row: any[]) => row.map((cell: any) => `"${String(cell).replace(/"/g, '""')}"`).join(','))].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `leela-registrations-${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success('CSV exported successfully');
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h2 className="text-2xl font-bold flex items-center gap-2">
+            <Star className="w-6 h-6 text-amber-500" />
+            The Leela Hyderabad — Registrations
+          </h2>
+          <p className="text-muted-foreground mt-1">
+            Taiwan Maami's Edible Journey · 5–8 March 2026
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={() => refetch()}>
+            <RefreshCw className="w-4 h-4 mr-2" /> Refresh
+          </Button>
+          <Button variant="outline" size="sm" onClick={exportCSV} disabled={!filteredRegistrations.length}>
+            <FileText className="w-4 h-4 mr-2" /> Export CSV
+          </Button>
+        </div>
+      </div>
+
+      {/* Summary Cards */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <Card className="p-4">
+          <div className="text-sm text-muted-foreground">Total Registrations</div>
+          <div className="text-3xl font-bold mt-1">{(registrations || []).length}</div>
+        </Card>
+        <Card className="p-4">
+          <div className="text-sm text-muted-foreground">Dinner</div>
+          <div className="text-3xl font-bold mt-1 text-amber-600">{dinnerCount}</div>
+          <div className="text-xs text-muted-foreground">5–8 March · 7PM–12AM</div>
+        </Card>
+        <Card className="p-4">
+          <div className="text-sm text-muted-foreground">Master Class</div>
+          <div className="text-3xl font-bold mt-1 text-emerald-600">{masterclassCount}</div>
+          <div className="text-xs text-muted-foreground">6–8 March · 1PM–3PM</div>
+        </Card>
+        <Card className="p-4">
+          <div className="text-sm text-muted-foreground">Total Guests</div>
+          <div className="text-3xl font-bold mt-1">{totalGuests}</div>
+          <div className="text-xs text-muted-foreground">{confirmedCount} confirmed</div>
+        </Card>
+      </div>
+
+      {/* Filters */}
+      <div className="flex flex-col sm:flex-row gap-3">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input
+            placeholder="Search by name, email, or phone..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10"
+          />
+        </div>
+        <Select value={filterType} onValueChange={setFilterType}>
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Filter by type" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Events</SelectItem>
+            <SelectItem value="dinner">Dinner Only</SelectItem>
+            <SelectItem value="masterclass">Master Class Only</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Registrations Table */}
+      {isLoading ? (
+        <div className="text-center py-12 text-muted-foreground">Loading registrations...</div>
+      ) : filteredRegistrations.length === 0 ? (
+        <Card className="p-12 text-center">
+          <Calendar className="w-12 h-12 mx-auto text-muted-foreground/40 mb-4" />
+          <h3 className="text-lg font-medium mb-2">No registrations yet</h3>
+          <p className="text-muted-foreground">
+            Registrations will appear here as customers sign up for the event.
+          </p>
+        </Card>
+      ) : (
+        <Card>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b bg-muted/50">
+                  <th className="text-left p-3 font-medium">Name</th>
+                  <th className="text-left p-3 font-medium">Contact</th>
+                  <th className="text-left p-3 font-medium">Event</th>
+                  <th className="text-left p-3 font-medium">Date</th>
+                  <th className="text-center p-3 font-medium">Guests</th>
+                  <th className="text-left p-3 font-medium">Notes</th>
+                  <th className="text-center p-3 font-medium">Status</th>
+                  <th className="text-left p-3 font-medium">Registered</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredRegistrations.map((reg: any) => (
+                  <tr key={reg.id} className="border-b hover:bg-muted/30 transition-colors">
+                    <td className="p-3 font-medium">{reg.customerName}</td>
+                    <td className="p-3">
+                      <div className="flex flex-col gap-0.5">
+                        <a href={`mailto:${reg.customerEmail}`} className="text-blue-600 hover:underline text-xs">
+                          {reg.customerEmail}
+                        </a>
+                        <a href={`tel:${reg.customerPhone}`} className="text-muted-foreground hover:text-foreground text-xs">
+                          {reg.customerPhone}
+                        </a>
+                      </div>
+                    </td>
+                    <td className="p-3">
+                      <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${
+                        reg.eventType === 'dinner' 
+                          ? 'bg-amber-100 text-amber-800' 
+                          : 'bg-emerald-100 text-emerald-800'
+                      }`}>
+                        {reg.eventType === 'dinner' ? 'Dinner' : 'Master Class'}
+                      </span>
+                    </td>
+                    <td className="p-3 text-xs">{reg.selectedDate}</td>
+                    <td className="p-3 text-center font-medium">{reg.numberOfGuests}</td>
+                    <td className="p-3 text-xs text-muted-foreground max-w-[200px] truncate" title={reg.specialRequirements || ''}>
+                      {reg.specialRequirements || '—'}
+                    </td>
+                    <td className="p-3 text-center">
+                      <Select 
+                        value={reg.status} 
+                        onValueChange={(val) => updateStatus.mutate({ id: reg.id, status: val as any })}
+                      >
+                        <SelectTrigger className="h-7 text-xs w-[110px] mx-auto">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="registered">
+                            <span className="flex items-center gap-1">
+                              <span className="w-2 h-2 rounded-full bg-blue-500" /> Registered
+                            </span>
+                          </SelectItem>
+                          <SelectItem value="confirmed">
+                            <span className="flex items-center gap-1">
+                              <span className="w-2 h-2 rounded-full bg-green-500" /> Confirmed
+                            </span>
+                          </SelectItem>
+                          <SelectItem value="cancelled">
+                            <span className="flex items-center gap-1">
+                              <span className="w-2 h-2 rounded-full bg-red-500" /> Cancelled
+                            </span>
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </td>
+                    <td className="p-3 text-xs text-muted-foreground">
+                      {new Date(reg.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </Card>
+      )}
     </div>
   );
 }
