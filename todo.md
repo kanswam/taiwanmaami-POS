@@ -2235,3 +2235,8 @@ Orders fixed:
 - [x] Changed from GROUP BY DATE(createdAt) to GROUP BY 1 pattern (compatible with only_full_group_by mode)
 - [x] Write vitest tests for all export data queries (7/7 passed)
 - [x] Verify all 3 exports download correctly: Sales Report (29KB), Itemwise (17KB), Channels (10KB)
+
+## Leela Registrations Cleanup (Feb 21)
+- [x] Inspect popup_registrations table for test/fake entries
+- [x] Delete test registrations (IDs 30007-30010: Test User, Test User 2 and duplicates)
+- [x] Verify only 3 real bookings remain (Raqeb, Ashreta, Kiran)
