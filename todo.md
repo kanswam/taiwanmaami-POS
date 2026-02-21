@@ -2220,3 +2220,18 @@ Orders fixed:
 - [x] Build itemwise sales report UI in Admin (Itemwise tab with category grouping, search, sort, CSV export)
 - [x] Add Export Channels Report button on Channels tab (CSV export with channel breakdown)
 - [x] Test both features (7/7 vitest tests passed, UI verified in browser)
+
+## Export to Excel Formatting Fix (Feb 21)
+- [x] Review all export functions across Analytics tabs
+- [x] Ensure header row Export Excel button works (Sales Report export)
+- [x] Ensure Itemwise tab export is neatly formatted Excel (.xlsx)
+- [x] Ensure Channels tab export is neatly formatted Excel (.xlsx)
+- [x] Upgrade ALL exports from CSV to proper Excel (.xlsx) with exceljs formatting
+- [x] Add formatted headers, column widths, ₹ currency formatting, alternating rows, branded dark red headers
+- [x] Test all exports in browser — all 3 exports download correctly (Itemwise 17KB, Channels 10KB, Sales 29KB)
+
+## Channels Export SQL Fix (Feb 21)
+- [x] Fix SQL GROUP BY error in Channels export (daily website orders query)
+- [x] Changed from GROUP BY DATE(createdAt) to GROUP BY 1 pattern (compatible with only_full_group_by mode)
+- [x] Write vitest tests for all export data queries (7/7 passed)
+- [x] Verify all 3 exports download correctly: Sales Report (29KB), Itemwise (17KB), Channels (10KB)

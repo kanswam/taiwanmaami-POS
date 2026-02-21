@@ -6,6 +6,7 @@ import { createExpressMiddleware } from "@trpc/server/adapters/express";
 import { registerOAuthRoutes } from "./oauth";
 import { appRouter } from "../routers";
 import { handleSalesReportExport } from "../excelExport";
+import { handleItemwiseExport, handleChannelsExport } from "../excelExportExtra";
 import { handleDeliveryUpload, handleGetDeliveryUploads, handleDeleteDeliveryUpload, deliveryUploadMiddleware } from "../deliveryUpload";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
@@ -499,6 +500,8 @@ async function startServer() {
 
   // Excel Sales Report Export
   app.get('/api/export/sales-report', handleSalesReportExport as any);
+  app.get('/api/export/itemwise-report', handleItemwiseExport as any);
+  app.get('/api/export/channels-report', handleChannelsExport as any);
 
   // Delivery data upload/management
   app.post('/api/delivery/upload', deliveryUploadMiddleware as any, handleDeliveryUpload as any);

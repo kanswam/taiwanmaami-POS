@@ -1570,51 +1570,27 @@ export default function Analytics() {
                 <Button 
                   variant="outline" 
                   size="sm"
-                  onClick={() => {
-                    if (!channelData) return;
-                    const rows = channelData.channels.map(ch => ({
-                      Channel: ch.name,
-                      Orders: ch.orders,
-                      'Revenue (₹)': (ch.revenue / 100).toFixed(2),
-                      'Avg Order Value (₹)': (ch.avgOrderValue / 100).toFixed(2),
-                      '% of Revenue': channelData.totalRevenue > 0 ? (ch.revenue / channelData.totalRevenue * 100).toFixed(1) + '%' : '0%',
-                    }));
-                    // Add totals row
-                    rows.push({
-                      Channel: 'TOTAL',
-                      Orders: channelData.totalOrders,
-                      'Revenue (₹)': (channelData.totalRevenue / 100).toFixed(2),
-                      'Avg Order Value (₹)': channelData.totalOrders > 0 ? (channelData.totalRevenue / channelData.totalOrders / 100).toFixed(2) : '0.00',
-                      '% of Revenue': '100%',
-                    });
-                    // Add product comparison
-                    let csvContent = 'CHANNEL SUMMARY\n';
-                    const headers = Object.keys(rows[0]);
-                    csvContent += headers.join(',') + '\n';
-                    rows.forEach(row => {
-                      csvContent += headers.map(h => {
-                        const val = (row as any)[h];
-                        return typeof val === 'string' && val.includes(',') ? `"${val}"` : String(val ?? '');
-                      }).join(',') + '\n';
-                    });
-                    if (channelData.productComparison && channelData.productComparison.length > 0) {
-                      csvContent += '\nPRODUCT COMPARISON ACROSS CHANNELS\n';
-                      csvContent += 'Product,Category,Website Qty,Website Revenue (₹),Delivery Qty,Delivery Revenue (₹),Total Qty,Total Revenue (₹)\n';
-                      channelData.productComparison.forEach((p: any) => {
-                        csvContent += `"${p.name}","${p.category}",${p.websiteQty},${(p.websiteRevenue / 100).toFixed(2)},${p.deliveryQty},${(p.deliveryRevenue / 100).toFixed(2)},${p.totalQty},${(p.totalRevenue / 100).toFixed(2)}\n`;
-                      });
+                  onClick={async () => {
+                    try {
+                      const url = `/api/export/channels-report?startDate=${channelStartDate}&endDate=${channelEndDate}`;
+                      const response = await fetch(url, { credentials: 'include' });
+                      if (!response.ok) throw new Error('Export failed');
+                      const blob = await response.blob();
+                      const downloadUrl = URL.createObjectURL(blob);
+                      const a = document.createElement('a');
+                      a.href = downloadUrl;
+                      a.download = `Taiwan_Maami_Channel_Report_${channelStartDate}_to_${channelEndDate}.xlsx`;
+                      document.body.appendChild(a);
+                      a.click();
+                      document.body.removeChild(a);
+                      URL.revokeObjectURL(downloadUrl);
+                    } catch (err) {
+                      alert('Failed to export report. Please try again.');
                     }
-                    const blob = new Blob([csvContent], { type: 'text/csv' });
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = `Taiwan_Maami_Channel_Report_${channelStartDate}_to_${channelEndDate}.csv`;
-                    a.click();
-                    URL.revokeObjectURL(url);
                   }}
                 >
                   <Download className="h-4 w-4 mr-2" />
-                  Export Channels Report
+                  Export Excel
                 </Button>
               </div>
             )}
@@ -1971,27 +1947,23 @@ function ItemwiseSalesReport({ startDate, endDate, orderType, categories, format
   }, [filteredItems, groupBy]);
 
   // Export to CSV
-  const exportItemwiseCSV = () => {
-    if (!filteredItems.length) return;
-    let csv = 'Item Name,Size,Category,Subcategory,Qty Sold,Revenue (₹),Avg Price (₹),Orders,% of Revenue,% of Qty\n';
-    filteredItems.forEach(item => {
-      csv += `"${item.productName}","${item.size}","${item.categoryName}","${item.subcategoryName}",${item.quantity},${(item.revenue / 100).toFixed(2)},${(item.avgPrice / 100).toFixed(2)},${item.orderCount},${item.revenueShare}%,${item.quantityShare}%\n`;
-    });
-    // Add summary
-    if (data?.summary) {
-      csv += `\nSUMMARY\n`;
-      csv += `Total Items,${data.summary.totalItems}\n`;
-      csv += `Total Quantity,${data.summary.totalQuantity}\n`;
-      csv += `Total Revenue (₹),${(data.summary.totalRevenue / 100).toFixed(2)}\n`;
-      csv += `Total Orders,${data.summary.totalOrders}\n`;
+  const exportItemwiseExcel = async () => {
+    try {
+      const url = `/api/export/itemwise-report?startDate=${startDate}&endDate=${endDate}`;
+      const response = await fetch(url, { credentials: 'include' });
+      if (!response.ok) throw new Error('Export failed');
+      const blob = await response.blob();
+      const downloadUrl = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = downloadUrl;
+      a.download = `Taiwan_Maami_Itemwise_Sales_${startDate}_to_${endDate}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(downloadUrl);
+    } catch (err) {
+      alert('Failed to export report. Please try again.');
     }
-    const blob = new Blob([csv], { type: 'text/csv' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `Taiwan_Maami_Itemwise_Sales_${startDate}_to_${endDate}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
   };
 
   return (
@@ -2036,9 +2008,9 @@ function ItemwiseSalesReport({ startDate, endDate, orderType, categories, format
               <CardDescription>{startDate} to {endDate} | {filteredItems.length} items</CardDescription>
             </div>
             <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" onClick={exportItemwiseCSV}>
+              <Button variant="outline" size="sm" onClick={exportItemwiseExcel}>
                 <Download className="h-4 w-4 mr-2" />
-                Export CSV
+                Export Excel
               </Button>
             </div>
           </div>

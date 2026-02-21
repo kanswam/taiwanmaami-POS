@@ -223,7 +223,7 @@ export async function handleSalesReportExport(req: Request, res: Response) {
           right: { style: 'thin', color: { argb: 'FFD0D0D0' } },
         };
         if (col >= 6 && col <= 10) {
-          cell.numFmt = '#,##0.00';
+          cell.numFmt = '"₹"#,##0.00';
           cell.alignment = { horizontal: 'right' };
         }
         if (col === 1) cell.alignment = { horizontal: 'center' };
@@ -280,7 +280,7 @@ export async function handleSalesReportExport(req: Request, res: Response) {
           right: { style: 'thin', color: { argb: 'FFD0D0D0' } },
         };
         if (col >= 6 && col <= 10) {
-          cell.numFmt = '#,##0.00';
+          cell.numFmt = '"₹"#,##0.00';
           cell.alignment = { horizontal: 'right' };
         }
         if (col === 1) cell.alignment = { horizontal: 'center' };
@@ -332,7 +332,7 @@ export async function handleSalesReportExport(req: Request, res: Response) {
           right: { style: 'thin', color: { argb: 'FFD0D0D0' } },
         };
         if (col >= 6 && col <= 10) {
-          cell.numFmt = '#,##0.00';
+          cell.numFmt = '"₹"#,##0.00';
           cell.alignment = { horizontal: 'right' };
         }
         if (col === 1) cell.alignment = { horizontal: 'center' };
@@ -370,7 +370,7 @@ export async function handleSalesReportExport(req: Request, res: Response) {
         right: { style: 'thin' },
       };
       if (col >= 6 && col <= 10) {
-        cell.numFmt = '#,##0.00';
+        cell.numFmt = '"₹"#,##0.00';
         cell.alignment = { horizontal: 'right', vertical: 'middle' };
       }
       if (col === 5) cell.alignment = { horizontal: 'right', vertical: 'middle' };
@@ -399,7 +399,7 @@ export async function handleSalesReportExport(req: Request, res: Response) {
       row.getCell(5).value = count as number;
       row.getCell(5).alignment = { horizontal: 'center' };
       row.getCell(6).value = amount as number;
-      row.getCell(6).numFmt = '#,##0.00';
+      row.getCell(6).numFmt = '"₹"#,##0.00';
       row.getCell(6).alignment = { horizontal: 'right' };
 
       if (label === 'Grand Total') {
@@ -556,7 +556,7 @@ export async function handleSalesReportExport(req: Request, res: Response) {
         const cell = row.getCell(col);
         cell.border = { top: { style: 'thin', color: { argb: 'FFD0D0D0' } }, bottom: { style: 'thin', color: { argb: 'FFD0D0D0' } }, left: { style: 'thin', color: { argb: 'FFD0D0D0' } }, right: { style: 'thin', color: { argb: 'FFD0D0D0' } } };
         if (col >= 3) {
-          cell.numFmt = '#,##0.00';
+          cell.numFmt = '"₹"#,##0.00';
           cell.alignment = { horizontal: 'right' };
         }
         if (col === 2) cell.alignment = { horizontal: 'center' };
@@ -589,7 +589,7 @@ export async function handleSalesReportExport(req: Request, res: Response) {
       cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF8B0000' } };
       cell.border = { top: { style: 'medium' }, bottom: { style: 'medium' }, left: { style: 'thin' }, right: { style: 'thin' } };
       if (col >= 3) {
-        cell.numFmt = '#,##0.00';
+        cell.numFmt = '"₹"#,##0.00';
         cell.alignment = { horizontal: 'right', vertical: 'middle' };
       }
       if (col === 1) cell.alignment = { horizontal: 'right', vertical: 'middle' };
@@ -657,7 +657,7 @@ export async function handleSalesReportExport(req: Request, res: Response) {
       for (let col = 1; col <= 4; col++) {
         const cell = row.getCell(col);
         cell.border = { top: { style: 'thin', color: { argb: 'FFD0D0D0' } }, bottom: { style: 'thin', color: { argb: 'FFD0D0D0' } }, left: { style: 'thin', color: { argb: 'FFD0D0D0' } }, right: { style: 'thin', color: { argb: 'FFD0D0D0' } } };
-        if (col === 3) { cell.numFmt = '#,##0.00'; cell.alignment = { horizontal: 'right' }; }
+        if (col === 3) { cell.numFmt = '"₹"#,##0.00'; cell.alignment = { horizontal: 'right' }; }
         if (col === 4) { cell.numFmt = '0.0"%"'; cell.alignment = { horizontal: 'center' }; }
         if (col === 2) cell.alignment = { horizontal: 'center' };
       }
@@ -680,7 +680,7 @@ export async function handleSalesReportExport(req: Request, res: Response) {
       cell.font = { bold: true, size: 12, color: { argb: 'FFFFFFFF' } };
       cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF8B0000' } };
       cell.border = { top: { style: 'medium' }, bottom: { style: 'medium' }, left: { style: 'thin' }, right: { style: 'thin' } };
-      if (col === 3) { cell.numFmt = '#,##0.00'; cell.alignment = { horizontal: 'right', vertical: 'middle' }; }
+      if (col === 3) { cell.numFmt = '"₹"#,##0.00'; cell.alignment = { horizontal: 'right', vertical: 'middle' }; }
       if (col === 4) { cell.numFmt = '0.0"%"'; cell.alignment = { horizontal: 'center', vertical: 'middle' }; }
       if (col === 1) cell.alignment = { horizontal: 'right', vertical: 'middle' };
       if (col === 2) cell.alignment = { horizontal: 'center', vertical: 'middle' };

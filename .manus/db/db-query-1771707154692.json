@@ -1,0 +1,40 @@
+{
+  "query": "SELECT productName, quantity, unitPrice, lineTotal FROM order_items LIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT productName, quantity, unitPrice, lineTotal FROM order_items LIMIT 5;",
+  "rows": [
+    {
+      "productName": "Rose Slush ",
+      "quantity": "3",
+      "unitPrice": "40500",
+      "lineTotal": "121500"
+    },
+    {
+      "productName": "Blueberry Mochi",
+      "quantity": "1",
+      "unitPrice": "18500",
+      "lineTotal": "18500"
+    },
+    {
+      "productName": "Cheesy Corn Çong Yoú Bǐng",
+      "quantity": "1",
+      "unitPrice": "34000",
+      "lineTotal": "34000"
+    },
+    {
+      "productName": "Spicy Margherita with Basil Pillow Brioche",
+      "quantity": "1",
+      "unitPrice": "43500",
+      "lineTotal": "43500"
+    },
+    {
+      "productName": "Iced Hong Kong Style Yuen-Yeung",
+      "quantity": "1",
+      "unitPrice": "40500",
+      "lineTotal": "40500"
+    }
+  ],
+  "messages": [],
+  "stdout": "productName\tquantity\tunitPrice\tlineTotal\nRose Slush \t3\t40500\t121500\nBlueberry Mochi\t1\t18500\t18500\nCheesy Corn Çong Yoú Bǐng\t1\t34000\t34000\nSpicy Margherita with Basil Pillow Brioche\t1\t43500\t43500\nIced Hong Kong Style Yuen-Yeung\t1\t40500\t40500\n",
+  "stderr": "",
+  "execution_time_ms": 105
+}
