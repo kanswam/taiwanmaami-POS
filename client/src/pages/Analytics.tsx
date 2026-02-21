@@ -560,6 +560,7 @@ export default function Analytics() {
             <TabsTrigger value="customers" className="text-xs sm:text-sm shrink-0">Customers</TabsTrigger>
             <TabsTrigger value="trends" className="text-xs sm:text-sm shrink-0">Trends</TabsTrigger>
             <TabsTrigger value="insights" className="text-xs sm:text-sm shrink-0">Insights</TabsTrigger>
+            <TabsTrigger value="itemwise" className="text-xs sm:text-sm shrink-0">Itemwise</TabsTrigger>
             <TabsTrigger value="channels" className="text-xs sm:text-sm shrink-0">Channels</TabsTrigger>
             <TabsTrigger value="predictions" className="text-xs sm:text-sm shrink-0">Predictions</TabsTrigger>
             <TabsTrigger value="gst" className="text-xs sm:text-sm shrink-0">GST</TabsTrigger>
@@ -1335,6 +1336,11 @@ export default function Analytics() {
             </Card>
           </TabsContent>
 
+          {/* Itemwise Sales Report Tab */}
+          <TabsContent value="itemwise" className="space-y-4">
+            <ItemwiseSalesReport startDate={startDate} endDate={endDate} orderType={orderType} categories={categories} formatCurrency={formatCurrency} />
+          </TabsContent>
+
           {/* Channels Tab - Combined Analytics */}
           <TabsContent value="channels" className="space-y-4">
             {/* Upload Section */}
@@ -1556,6 +1562,61 @@ export default function Analytics() {
                   </div>
                 </CardContent>
               </Card>
+            )}
+
+            {/* Channel Export Button */}
+            {channelData && (
+              <div className="flex justify-end">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => {
+                    if (!channelData) return;
+                    const rows = channelData.channels.map(ch => ({
+                      Channel: ch.name,
+                      Orders: ch.orders,
+                      'Revenue (₹)': (ch.revenue / 100).toFixed(2),
+                      'Avg Order Value (₹)': (ch.avgOrderValue / 100).toFixed(2),
+                      '% of Revenue': channelData.totalRevenue > 0 ? (ch.revenue / channelData.totalRevenue * 100).toFixed(1) + '%' : '0%',
+                    }));
+                    // Add totals row
+                    rows.push({
+                      Channel: 'TOTAL',
+                      Orders: channelData.totalOrders,
+                      'Revenue (₹)': (channelData.totalRevenue / 100).toFixed(2),
+                      'Avg Order Value (₹)': channelData.totalOrders > 0 ? (channelData.totalRevenue / channelData.totalOrders / 100).toFixed(2) : '0.00',
+                      '% of Revenue': '100%',
+                    });
+                    // Add product comparison
+                    let csvContent = 'CHANNEL SUMMARY\n';
+                    const headers = Object.keys(rows[0]);
+                    csvContent += headers.join(',') + '\n';
+                    rows.forEach(row => {
+                      csvContent += headers.map(h => {
+                        const val = (row as any)[h];
+                        return typeof val === 'string' && val.includes(',') ? `"${val}"` : String(val ?? '');
+                      }).join(',') + '\n';
+                    });
+                    if (channelData.productComparison && channelData.productComparison.length > 0) {
+                      csvContent += '\nPRODUCT COMPARISON ACROSS CHANNELS\n';
+                      csvContent += 'Product,Category,Website Qty,Website Revenue (₹),Delivery Qty,Delivery Revenue (₹),Total Qty,Total Revenue (₹)\n';
+                      channelData.productComparison.forEach((p: any) => {
+                        csvContent += `"${p.name}","${p.category}",${p.websiteQty},${(p.websiteRevenue / 100).toFixed(2)},${p.deliveryQty},${(p.deliveryRevenue / 100).toFixed(2)},${p.totalQty},${(p.totalRevenue / 100).toFixed(2)}\n`;
+                      });
+                    }
+                    const blob = new Blob([csvContent], { type: 'text/csv' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `Taiwan_Maami_Channel_Report_${channelStartDate}_to_${channelEndDate}.csv`;
+                    a.click();
+                    URL.revokeObjectURL(url);
+                  }}
+                >
+                  <Download className="h-4 w-4 mr-2" />
+                  Export Channels Report
+                </Button>
+              </div>
             )}
 
             {/* Channel Overview */}
@@ -1853,6 +1914,241 @@ export default function Analytics() {
           </TabsContent>
         </Tabs>
       </div>
+    </div>
+  );
+}
+
+// Itemwise Sales Report Component
+function ItemwiseSalesReport({ startDate, endDate, orderType, categories, formatCurrency }: {
+  startDate: string;
+  endDate: string;
+  orderType: 'all' | 'instore' | 'delivery' | 'pickup';
+  categories: { id: number; name: string }[] | undefined;
+  formatCurrency: (paise: number) => string;
+}) {
+  const [sortBy, setSortBy] = useState<'quantity' | 'revenue'>('quantity');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [categoryFilter, setCategoryFilter] = useState<number | undefined>(undefined);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [groupBy, setGroupBy] = useState<'none' | 'category' | 'subcategory'>('category');
+
+  const { data, isLoading } = trpc.analytics.getItemwiseSalesReport.useQuery({
+    startDate,
+    endDate,
+    orderType,
+    categoryId: categoryFilter,
+  });
+
+  // Filter and sort items
+  const filteredItems = useMemo(() => {
+    if (!data?.items) return [];
+    let items = [...data.items];
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      items = items.filter(i => i.productName.toLowerCase().includes(q) || i.categoryName.toLowerCase().includes(q) || i.subcategoryName.toLowerCase().includes(q));
+    }
+    items.sort((a, b) => sortOrder === 'desc' ? b[sortBy] - a[sortBy] : a[sortBy] - b[sortBy]);
+    return items;
+  }, [data?.items, searchQuery, sortBy, sortOrder]);
+
+  // Group items
+  const groupedItems = useMemo(() => {
+    if (groupBy === 'none') return { 'All Items': filteredItems };
+    const groups: Record<string, typeof filteredItems> = {};
+    for (const item of filteredItems) {
+      const key = groupBy === 'category' ? item.categoryName : item.subcategoryName;
+      if (!groups[key]) groups[key] = [];
+      groups[key].push(item);
+    }
+    // Sort groups by total quantity
+    return Object.fromEntries(
+      Object.entries(groups).sort((a, b) => {
+        const aTotal = a[1].reduce((s, i) => s + i.quantity, 0);
+        const bTotal = b[1].reduce((s, i) => s + i.quantity, 0);
+        return bTotal - aTotal;
+      })
+    );
+  }, [filteredItems, groupBy]);
+
+  // Export to CSV
+  const exportItemwiseCSV = () => {
+    if (!filteredItems.length) return;
+    let csv = 'Item Name,Size,Category,Subcategory,Qty Sold,Revenue (₹),Avg Price (₹),Orders,% of Revenue,% of Qty\n';
+    filteredItems.forEach(item => {
+      csv += `"${item.productName}","${item.size}","${item.categoryName}","${item.subcategoryName}",${item.quantity},${(item.revenue / 100).toFixed(2)},${(item.avgPrice / 100).toFixed(2)},${item.orderCount},${item.revenueShare}%,${item.quantityShare}%\n`;
+    });
+    // Add summary
+    if (data?.summary) {
+      csv += `\nSUMMARY\n`;
+      csv += `Total Items,${data.summary.totalItems}\n`;
+      csv += `Total Quantity,${data.summary.totalQuantity}\n`;
+      csv += `Total Revenue (₹),${(data.summary.totalRevenue / 100).toFixed(2)}\n`;
+      csv += `Total Orders,${data.summary.totalOrders}\n`;
+    }
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Taiwan_Maami_Itemwise_Sales_${startDate}_to_${endDate}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  return (
+    <div className="space-y-4">
+      {/* Summary Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <Card>
+          <CardContent className="pt-4">
+            <p className="text-sm text-muted-foreground">Unique Items</p>
+            <p className="text-2xl font-bold">{data?.summary.totalItems ?? 0}</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-4">
+            <p className="text-sm text-muted-foreground">Total Qty Sold</p>
+            <p className="text-2xl font-bold">{data?.summary.totalQuantity?.toLocaleString('en-IN') ?? 0}</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-4">
+            <p className="text-sm text-muted-foreground">Total Revenue</p>
+            <p className="text-2xl font-bold">{data?.summary.totalRevenue ? formatCurrency(data.summary.totalRevenue) : '₹0'}</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-4">
+            <p className="text-sm text-muted-foreground">Total Orders</p>
+            <p className="text-2xl font-bold">{data?.summary.totalOrders?.toLocaleString('en-IN') ?? 0}</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Controls */}
+      <Card>
+        <CardHeader>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <BarChart3 className="h-5 w-5" />
+                Itemwise Sales Report
+              </CardTitle>
+              <CardDescription>{startDate} to {endDate} | {filteredItems.length} items</CardDescription>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="sm" onClick={exportItemwiseCSV}>
+                <Download className="h-4 w-4 mr-2" />
+                Export CSV
+              </Button>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-wrap gap-3 mb-4">
+            <Input
+              placeholder="Search items..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-48"
+            />
+            <Select value={categoryFilter ? String(categoryFilter) : 'all'} onValueChange={(v) => setCategoryFilter(v === 'all' ? undefined : Number(v))}>
+              <SelectTrigger className="w-40">
+                <SelectValue placeholder="All Categories" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Categories</SelectItem>
+                {categories?.map(c => (
+                  <SelectItem key={c.id} value={String(c.id)}>{c.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={groupBy} onValueChange={(v: any) => setGroupBy(v)}>
+              <SelectTrigger className="w-40">
+                <SelectValue placeholder="Group by" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">No Grouping</SelectItem>
+                <SelectItem value="category">By Category</SelectItem>
+                <SelectItem value="subcategory">By Subcategory</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={sortBy} onValueChange={(v: any) => setSortBy(v)}>
+              <SelectTrigger className="w-36">
+                <SelectValue placeholder="Sort by" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="quantity">By Quantity</SelectItem>
+                <SelectItem value="revenue">By Revenue</SelectItem>
+              </SelectContent>
+            </Select>
+            <Button variant="ghost" size="sm" onClick={() => setSortOrder(o => o === 'desc' ? 'asc' : 'desc')}>
+              {sortOrder === 'desc' ? <TrendingDown className="h-4 w-4" /> : <TrendingUp className="h-4 w-4" />}
+            </Button>
+          </div>
+
+          {isLoading ? (
+            <div className="text-center py-8 text-muted-foreground">Loading itemwise report...</div>
+          ) : filteredItems.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">No items found for this period</div>
+          ) : (
+            <div className="space-y-6">
+              {Object.entries(groupedItems).map(([group, items]) => {
+                const groupQty = items.reduce((s, i) => s + i.quantity, 0);
+                const groupRev = items.reduce((s, i) => s + i.revenue, 0);
+                return (
+                  <div key={group}>
+                    {groupBy !== 'none' && (
+                      <div className="flex items-center justify-between bg-muted/50 rounded-lg px-4 py-2 mb-2">
+                        <span className="font-semibold text-sm">{group}</span>
+                        <div className="flex gap-4 text-sm text-muted-foreground">
+                          <span>{groupQty} qty</span>
+                          <span>{formatCurrency(groupRev)}</span>
+                        </div>
+                      </div>
+                    )}
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="border-b text-left">
+                            <th className="py-2 px-2 font-medium">#</th>
+                            <th className="py-2 px-2 font-medium">Item Name</th>
+                            <th className="py-2 px-2 font-medium">Size</th>
+                            {groupBy === 'none' && <th className="py-2 px-2 font-medium">Category</th>}
+                            <th className="py-2 px-2 font-medium text-right">Qty Sold</th>
+                            <th className="py-2 px-2 font-medium text-right">Revenue</th>
+                            <th className="py-2 px-2 font-medium text-right">Avg Price</th>
+                            <th className="py-2 px-2 font-medium text-right">Orders</th>
+                            <th className="py-2 px-2 font-medium text-right">% Rev</th>
+                            <th className="py-2 px-2 font-medium text-right">% Qty</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {items.map((item, idx) => (
+                            <tr key={`${item.productId}-${item.size}`} className="border-b border-border/50 hover:bg-muted/30">
+                              <td className="py-2 px-2 text-muted-foreground">{idx + 1}</td>
+                              <td className="py-2 px-2 font-medium">{item.productName}</td>
+                              <td className="py-2 px-2">
+                                <Badge variant="outline" className="text-xs capitalize">{item.size}</Badge>
+                              </td>
+                              {groupBy === 'none' && <td className="py-2 px-2 text-muted-foreground">{item.categoryName}</td>}
+                              <td className="py-2 px-2 text-right font-semibold">{item.quantity}</td>
+                              <td className="py-2 px-2 text-right text-green-600 font-semibold">{formatCurrency(item.revenue)}</td>
+                              <td className="py-2 px-2 text-right">{formatCurrency(item.avgPrice)}</td>
+                              <td className="py-2 px-2 text-right">{item.orderCount}</td>
+                              <td className="py-2 px-2 text-right">{item.revenueShare}%</td>
+                              <td className="py-2 px-2 text-right">{item.quantityShare}%</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }

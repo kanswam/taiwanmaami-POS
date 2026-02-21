@@ -2214,3 +2214,9 @@ Orders fixed:
 ## Bug Fix: Leela Registrations not showing in Admin (Feb 21)
 - [x] Investigate why registrations not appearing in Admin Leela Registrations tab (slug mismatch: form uses 'leela-hyderabad-march-2026', admin queried 'leela-hyderabad')
 - [x] Fix the query/display issue (aligned Admin query slug + updated Raqeb's record slug)
+
+## Itemwise Sales Report & Export Excel Fix (Feb 21)
+- [x] Build itemwise sales report backend procedure (aggregate order_items by product for date range)
+- [x] Build itemwise sales report UI in Admin (Itemwise tab with category grouping, search, sort, CSV export)
+- [x] Add Export Channels Report button on Channels tab (CSV export with channel breakdown)
+- [x] Test both features (7/7 vitest tests passed, UI verified in browser)

@@ -6512,6 +6512,131 @@ export const appRouter = router({
         };
       }),
 
+    getItemwiseSalesReport: adminProcedure
+      .input(z.object({
+        startDate: z.string(),
+        endDate: z.string(),
+        orderType: z.enum(['all', 'instore', 'delivery', 'pickup']).default('all'),
+        categoryId: z.number().optional(),
+      }))
+      .query(async ({ input }) => {
+        const dbInstance = await getDb();
+        if (!dbInstance) return { items: [], summary: { totalItems: 0, totalQuantity: 0, totalRevenue: 0, totalOrders: 0 } };
+
+        let conditions: any[] = [sql`${orders.orderStatus} != 'cancelled'`];
+        if (input.startDate) conditions.push(sql`${orders.createdAt} >= ${input.startDate}`);
+        if (input.endDate) conditions.push(sql`${orders.createdAt} <= ${input.endDate + ' 23:59:59'}`);
+        if (input.orderType && input.orderType !== 'all') conditions.push(eq(orders.orderType, input.orderType));
+
+        const whereClause = and(...conditions);
+        const matchingOrders = await dbInstance.select().from(orders).where(whereClause);
+        const orderIds = matchingOrders.map(o => o.id);
+
+        if (orderIds.length === 0) return { items: [], summary: { totalItems: 0, totalQuantity: 0, totalRevenue: 0, totalOrders: matchingOrders.length } };
+
+        // Get all order items with product details
+        const items = await dbInstance
+          .select({
+            productId: orderItemsTable.productId,
+            productName: orderItemsTable.productName,
+            quantity: orderItemsTable.quantity,
+            unitPrice: orderItemsTable.unitPrice,
+            lineTotal: orderItemsTable.lineTotal,
+            size: orderItemsTable.size,
+            orderId: orderItemsTable.orderId,
+            subcategoryId: products.subcategoryId,
+          })
+          .from(orderItemsTable)
+          .innerJoin(products, eq(orderItemsTable.productId, products.id))
+          .where(sql`${orderItemsTable.orderId} IN (${sql.join(orderIds, sql`, `)})`);
+
+        // Get all subcategories and categories for grouping
+        const allSubcategories = await dbInstance.select().from(subcategories);
+        const allCategories = await dbInstance.select().from(categories);
+
+        // Build subcategory -> category map
+        const subcatToCat: Record<number, { catId: number; catName: string; subcatName: string }> = {};
+        for (const sc of allSubcategories) {
+          const cat = allCategories.find(c => c.id === sc.categoryId);
+          subcatToCat[sc.id] = { catId: sc.categoryId, catName: cat?.name || 'Unknown', subcatName: sc.name };
+        }
+
+        // Filter by category if specified
+        let filteredItems = items;
+        if (input.categoryId) {
+          const subcatIds = allSubcategories.filter(s => s.categoryId === input.categoryId).map(s => s.id);
+          filteredItems = items.filter(i => subcatIds.includes(i.subcategoryId));
+        }
+
+        // Aggregate by product + size
+        const productSizeStats: Record<string, {
+          productId: number;
+          productName: string;
+          size: string;
+          categoryName: string;
+          subcategoryName: string;
+          quantity: number;
+          revenue: number;
+          orderCount: number;
+          avgPrice: number;
+          orderIds: Set<number>;
+        }> = {};
+
+        for (const item of filteredItems) {
+          const size = item.size || 'standard';
+          const key = `${item.productId}-${size}`;
+          const catInfo = subcatToCat[item.subcategoryId] || { catId: 0, catName: 'Unknown', subcatName: 'Unknown' };
+
+          if (!productSizeStats[key]) {
+            productSizeStats[key] = {
+              productId: item.productId,
+              productName: item.productName,
+              size,
+              categoryName: catInfo.catName,
+              subcategoryName: catInfo.subcatName,
+              quantity: 0,
+              revenue: 0,
+              orderCount: 0,
+              avgPrice: 0,
+              orderIds: new Set(),
+            };
+          }
+          productSizeStats[key].quantity += item.quantity;
+          productSizeStats[key].revenue += item.lineTotal;
+          productSizeStats[key].orderIds.add(item.orderId);
+        }
+
+        // Convert to array and calculate derived fields
+        const totalRevenue = Object.values(productSizeStats).reduce((sum, s) => sum + s.revenue, 0);
+        const totalQuantity = Object.values(productSizeStats).reduce((sum, s) => sum + s.quantity, 0);
+
+        const result = Object.values(productSizeStats)
+          .map(s => ({
+            productId: s.productId,
+            productName: s.productName,
+            size: s.size,
+            categoryName: s.categoryName,
+            subcategoryName: s.subcategoryName,
+            quantity: s.quantity,
+            revenue: s.revenue,
+            orderCount: s.orderIds.size,
+            avgPrice: s.quantity > 0 ? Math.round(s.revenue / s.quantity) : 0,
+            revenueShare: totalRevenue > 0 ? Math.round((s.revenue / totalRevenue) * 10000) / 100 : 0,
+            quantityShare: totalQuantity > 0 ? Math.round((s.quantity / totalQuantity) * 10000) / 100 : 0,
+          }))
+          .sort((a, b) => b.quantity - a.quantity);
+
+        return {
+          items: result,
+          summary: {
+            totalItems: result.length,
+            totalQuantity,
+            totalRevenue,
+            totalOrders: matchingOrders.length,
+          },
+        };
+      }),
+
     getWebsiteTraffic: adminProcedure
       .input(z.object({
         startDate: z.string(),
