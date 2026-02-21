@@ -1,0 +1,9 @@
+{
+  "query": "INSERT INTO popup_registrations (eventSlug, customerName, customerEmail, customerPhone, eventType, selectedDate, numberOfGuests, status, specialRequirements) VALUES ('leela-hyderabad', 'Raqeb Rahman', 'raquibrahman445@gmail.com', '+917013857351', 'dinner', '2026-03-08', 2, 'registered', NULL); DELETE FROM popup_registrations WHERE customerEmail IN ('test@example.com', 'test2@example.com');",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute INSERT INTO popup_registrations (eventSlug, customerName, customerEmail, customerPhone, eventType, selectedDate, numberOfGuests, status, specialRequirements) VALUES ('leela-hyderabad', 'Raqeb Rahman', 'raquibrahman445@gmail.com', '+917013857351', 'dinner', '2026-03-08', 2, 'registered', NULL); DELETE FROM popup_registrations WHERE customerEmail IN ('test@example.com', 'test2@example.com');",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 72
+}

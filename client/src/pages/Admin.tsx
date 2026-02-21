@@ -10214,7 +10214,7 @@ function LeelaRegistrationsTab() {
   const [searchQuery, setSearchQuery] = useState('');
   
   const { data: registrations, isLoading, refetch } = trpc.popup.getRegistrations.useQuery({
-    eventSlug: 'leela-hyderabad',
+    eventSlug: 'leela-hyderabad-march-2026',
     eventType: filterType === 'all' ? undefined : filterType as 'dinner' | 'masterclass',
   });
 

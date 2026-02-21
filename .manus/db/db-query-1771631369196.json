@@ -1,0 +1,32 @@
+{
+  "query": "SELECT id, customerName, customerEmail, customerPhone, eventType, selectedDate, numberOfGuests, status, createdAt FROM popup_registrations ORDER BY id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT id, customerName, customerEmail, customerPhone, eventType, selectedDate, numberOfGuests, status, createdAt FROM popup_registrations ORDER BY id;",
+  "rows": [
+    {
+      "id": "30002",
+      "customerName": "Test User",
+      "customerEmail": "test@example.com",
+      "customerPhone": "+919876543210",
+      "eventType": "dinner",
+      "selectedDate": "2026-03-05",
+      "numberOfGuests": "2",
+      "status": "registered",
+      "createdAt": "2026-02-20 23:31:36"
+    },
+    {
+      "id": "30003",
+      "customerName": "Test User 2",
+      "customerEmail": "test2@example.com",
+      "customerPhone": "+919876543211",
+      "eventType": "masterclass",
+      "selectedDate": "2026-03-07",
+      "numberOfGuests": "1",
+      "status": "registered",
+      "createdAt": "2026-02-20 23:31:36"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tcustomerName\tcustomerEmail\tcustomerPhone\teventType\tselectedDate\tnumberOfGuests\tstatus\tcreatedAt\n30002\tTest User\ttest@example.com\t+919876543210\tdinner\t2026-03-05\t2\tregistered\t2026-02-20 23:31:36\n30003\tTest User 2\ttest2@example.com\t+919876543211\tmasterclass\t2026-03-07\t1\tregistered\t2026-02-20 23:31:36\n",
+  "stderr": "",
+  "execution_time_ms": 92
+}

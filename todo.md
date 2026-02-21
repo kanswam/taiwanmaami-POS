@@ -2210,3 +2210,7 @@ Orders fixed:
 - [x] Add summary cards (total, dinner count, masterclass count, total guests)
 - [x] Delete all test workshops from database
 - [x] Delete all test Leela event registrations from database
+
+## Bug Fix: Leela Registrations not showing in Admin (Feb 21)
+- [x] Investigate why registrations not appearing in Admin Leela Registrations tab (slug mismatch: form uses 'leela-hyderabad-march-2026', admin queried 'leela-hyderabad')
+- [x] Fix the query/display issue (aligned Admin query slug + updated Raqeb's record slug)
