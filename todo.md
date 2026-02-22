@@ -2240,3 +2240,11 @@ Orders fixed:
 - [x] Inspect popup_registrations table for test/fake entries
 - [x] Delete test registrations (IDs 30007-30010: Test User, Test User 2 and duplicates)
 - [x] Verify only 3 real bookings remain (Raqeb, Ashreta, Kiran)
+
+## Leela Registrations Export Excel (Feb 22)
+- [x] Create backend endpoint /api/export/leela-registrations as formatted .xlsx
+- [x] Include: Customer Name, Email, Phone, Event Type, Date, Number of Guests, Status
+- [x] Add branded formatting (dark red headers, column widths, borders)
+- [x] Add Summary by Date sheet (registrations, guests, confirmed per date/event type)
+- [x] Add Export Excel button to Leela Registrations admin tab
+- [x] Test export in browser — 8.2KB, 2 sheets, all 3 real registrations present

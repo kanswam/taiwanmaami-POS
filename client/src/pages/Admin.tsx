@@ -19,7 +19,7 @@ import {
   Plus, Edit, Trash2, ImageIcon, RefreshCw, Check, X, Search,
   ChevronDown, ChevronUp, Eye, EyeOff, Star, MessageSquare, Reply, Printer,
   ClipboardList, RotateCcw, History, Filter, BarChart3, UtensilsCrossed, AlertCircle, DollarSign, CreditCard, Users,
-  Settings, Layers, FileText, TrendingUp, Calendar, Ticket, Mail, Phone, MapPin, Clock, UserCheck, BookOpen, GitMerge, ArrowRight, AlertTriangle
+  Settings, Layers, FileText, TrendingUp, Calendar, Ticket, Mail, Phone, MapPin, Clock, UserCheck, BookOpen, GitMerge, ArrowRight, AlertTriangle, Download
 } from 'lucide-react';
 import { toast } from 'sonner';
 import {
@@ -10241,29 +10241,29 @@ function LeelaRegistrationsTab() {
   const totalGuests = (registrations || []).reduce((sum: number, r: any) => sum + (r.numberOfGuests || 1), 0);
   const confirmedCount = (registrations || []).filter((r: any) => r.status === 'confirmed').length;
 
-  const exportCSV = () => {
+  const [exporting, setExporting] = useState(false);
+
+  const exportExcel = async () => {
     if (!filteredRegistrations.length) return;
-    const headers = ['Name', 'Email', 'Phone', 'Event Type', 'Selected Date', 'Guests', 'Status', 'Special Requirements', 'Registered At'];
-    const rows = filteredRegistrations.map((r: any) => [
-      r.customerName,
-      r.customerEmail,
-      r.customerPhone,
-      r.eventType === 'dinner' ? 'Dinner' : 'Master Class',
-      r.selectedDate,
-      r.numberOfGuests,
-      r.status,
-      r.specialRequirements || '',
-      new Date(r.createdAt).toLocaleString(),
-    ]);
-    const csv = [headers.join(','), ...rows.map((row: any[]) => row.map((cell: any) => `"${String(cell).replace(/"/g, '""')}"`).join(','))].join('\n');
-    const blob = new Blob([csv], { type: 'text/csv' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `leela-registrations-${new Date().toISOString().split('T')[0]}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
-    toast.success('CSV exported successfully');
+    setExporting(true);
+    try {
+      const response = await fetch('/api/export/leela-registrations', { credentials: 'include' });
+      if (!response.ok) throw new Error('Export failed');
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Leela_Hyderabad_Registrations_${new Date().toISOString().split('T')[0]}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      toast.success('Excel exported successfully');
+    } catch (err) {
+      toast.error('Failed to export Excel');
+    } finally {
+      setExporting(false);
+    }
   };
 
   return (
@@ -10283,8 +10283,8 @@ function LeelaRegistrationsTab() {
           <Button variant="outline" size="sm" onClick={() => refetch()}>
             <RefreshCw className="w-4 h-4 mr-2" /> Refresh
           </Button>
-          <Button variant="outline" size="sm" onClick={exportCSV} disabled={!filteredRegistrations.length}>
-            <FileText className="w-4 h-4 mr-2" /> Export CSV
+          <Button variant="outline" size="sm" onClick={exportExcel} disabled={!filteredRegistrations.length || exporting}>
+            <Download className="w-4 h-4 mr-2" /> {exporting ? 'Exporting...' : 'Export Excel'}
           </Button>
         </div>
       </div>

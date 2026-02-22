@@ -577,3 +577,172 @@ export async function handleChannelsExport(req: Request, res: Response) {
     res.status(500).json({ error: 'Failed to generate channels report', details: String(error) });
   }
 }
+
+// ============================================================
+// LEELA REGISTRATIONS EXPORT
+// ============================================================
+export async function handleLeelaRegistrationsExport(req: Request, res: Response) {
+  const isAdmin = await requireAdmin(req, res);
+  if (!isAdmin) return;
+
+  try {
+    const dbInstance = await getDb();
+    if (!dbInstance) { res.status(500).json({ error: 'Database not available' }); return; }
+    const { popupRegistrations } = await import('../drizzle/schema');
+
+    const registrations = await dbInstance
+      .select()
+      .from(popupRegistrations)
+      .where(eq(popupRegistrations.eventSlug, 'leela-hyderabad-march-2026'))
+      .orderBy(popupRegistrations.selectedDate, popupRegistrations.customerName);
+
+    const workbook = new ExcelJS.Workbook();
+    workbook.creator = 'Taiwan Maami';
+    workbook.created = new Date();
+
+    // ---- Sheet 1: All Registrations ----
+    const sheet = workbook.addWorksheet('Registrations');
+
+    const COL_COUNT = 8;
+    addTitle(sheet, 'Taiwan Maami — The Leela Hyderabad', 'Edible Journey · 5–8 March 2026 · Guest Registrations', COL_COUNT);
+
+    // Headers
+    const headerRow = sheet.getRow(4);
+    headerRow.values = ['#', 'Customer Name', 'Email', 'Phone', 'Event Type', 'Date', 'No. of Guests', 'Status'];
+    applyHeaderStyle(headerRow, COL_COUNT);
+
+    // Column widths
+    sheet.getColumn(1).width = 5;
+    sheet.getColumn(2).width = 25;
+    sheet.getColumn(3).width = 32;
+    sheet.getColumn(4).width = 18;
+    sheet.getColumn(5).width = 16;
+    sheet.getColumn(6).width = 14;
+    sheet.getColumn(7).width = 14;
+    sheet.getColumn(8).width = 14;
+
+    // Data rows
+    let rowNum = 5;
+    let totalGuests = 0;
+    registrations.forEach((reg, idx) => {
+      const row = sheet.getRow(rowNum);
+      row.values = [
+        idx + 1,
+        reg.customerName,
+        reg.customerEmail,
+        reg.customerPhone,
+        reg.eventType === 'dinner' ? 'Dinner' : 'Master Class',
+        reg.selectedDate,
+        reg.numberOfGuests,
+        reg.status.charAt(0).toUpperCase() + reg.status.slice(1),
+      ];
+      applyDataRowStyle(row, COL_COUNT, idx % 2 === 1);
+      row.getCell(1).alignment = { horizontal: 'center' };
+      row.getCell(5).alignment = { horizontal: 'center' };
+      row.getCell(6).alignment = { horizontal: 'center' };
+      row.getCell(7).alignment = { horizontal: 'center' };
+      row.getCell(8).alignment = { horizontal: 'center' };
+      totalGuests += reg.numberOfGuests;
+      rowNum++;
+    });
+
+    // Totals row
+    const totalsRow = sheet.getRow(rowNum);
+    totalsRow.values = ['', 'TOTAL', '', '', '', '', totalGuests, `${registrations.length} registrations`];
+    applyTotalsRowStyle(totalsRow, COL_COUNT);
+    totalsRow.getCell(2).alignment = { horizontal: 'left', vertical: 'middle' };
+    totalsRow.getCell(7).alignment = { horizontal: 'center', vertical: 'middle' };
+    totalsRow.getCell(8).alignment = { horizontal: 'center', vertical: 'middle' };
+
+    // ---- Sheet 2: Summary by Date ----
+    const summarySheet = workbook.addWorksheet('Summary by Date');
+
+    const SUMMARY_COLS = 5;
+    addTitle(summarySheet, 'Taiwan Maami — The Leela Hyderabad', 'Registration Summary by Date', SUMMARY_COLS);
+
+    const summaryHeaderRow = summarySheet.getRow(4);
+    summaryHeaderRow.values = ['Date', 'Event Type', 'Registrations', 'Total Guests', 'Confirmed'];
+    applyHeaderStyle(summaryHeaderRow, SUMMARY_COLS);
+
+    summarySheet.getColumn(1).width = 16;
+    summarySheet.getColumn(2).width = 16;
+    summarySheet.getColumn(3).width = 16;
+    summarySheet.getColumn(4).width = 16;
+    summarySheet.getColumn(5).width = 16;
+
+    // Group by date + event type
+    const dateMap: Record<string, { dinner: { count: number; guests: number; confirmed: number }; masterclass: { count: number; guests: number; confirmed: number } }> = {};
+    registrations.forEach(reg => {
+      if (!dateMap[reg.selectedDate]) {
+        dateMap[reg.selectedDate] = {
+          dinner: { count: 0, guests: 0, confirmed: 0 },
+          masterclass: { count: 0, guests: 0, confirmed: 0 },
+        };
+      }
+      const bucket = dateMap[reg.selectedDate][reg.eventType as 'dinner' | 'masterclass'];
+      bucket.count++;
+      bucket.guests += reg.numberOfGuests;
+      if (reg.status === 'confirmed') bucket.confirmed++;
+    });
+
+    let summaryRowNum = 5;
+    const sortedDates = Object.keys(dateMap).sort();
+    let grandTotalRegs = 0;
+    let grandTotalGuests = 0;
+    let grandTotalConfirmed = 0;
+
+    sortedDates.forEach((date, dateIdx) => {
+      const d = dateMap[date];
+      const types: Array<{ label: string; data: { count: number; guests: number; confirmed: number } }> = [];
+      if (d.dinner.count > 0) types.push({ label: 'Dinner', data: d.dinner });
+      if (d.masterclass.count > 0) types.push({ label: 'Master Class', data: d.masterclass });
+
+      types.forEach((t, tIdx) => {
+        const row = summarySheet.getRow(summaryRowNum);
+        row.values = [date, t.label, t.data.count, t.data.guests, t.data.confirmed];
+        applyDataRowStyle(row, SUMMARY_COLS, (dateIdx + tIdx) % 2 === 1);
+        row.getCell(1).alignment = { horizontal: 'center' };
+        row.getCell(2).alignment = { horizontal: 'center' };
+        row.getCell(3).alignment = { horizontal: 'center' };
+        row.getCell(4).alignment = { horizontal: 'center' };
+        row.getCell(5).alignment = { horizontal: 'center' };
+        grandTotalRegs += t.data.count;
+        grandTotalGuests += t.data.guests;
+        grandTotalConfirmed += t.data.confirmed;
+        summaryRowNum++;
+      });
+    });
+
+    // Summary totals
+    const summaryTotalsRow = summarySheet.getRow(summaryRowNum);
+    summaryTotalsRow.values = ['TOTAL', '', grandTotalRegs, grandTotalGuests, grandTotalConfirmed];
+    applyTotalsRowStyle(summaryTotalsRow, SUMMARY_COLS);
+    summaryTotalsRow.getCell(1).alignment = { horizontal: 'left', vertical: 'middle' };
+    for (let c = 3; c <= 5; c++) {
+      summaryTotalsRow.getCell(c).alignment = { horizontal: 'center', vertical: 'middle' };
+    }
+
+    // Freeze panes
+    sheet.views = [{ state: 'frozen', ySplit: 4 }];
+    summarySheet.views = [{ state: 'frozen', ySplit: 4 }];
+
+    // Print setup
+    [sheet, summarySheet].forEach(s => {
+      s.pageSetup = { orientation: 'landscape', fitToPage: true, fitToWidth: 1, fitToHeight: 0 };
+    });
+
+    // Generate and send
+    const buffer = await workbook.xlsx.writeBuffer();
+    const today = new Date().toISOString().split('T')[0];
+    const filename = `Leela_Hyderabad_Registrations_${today}.xlsx`;
+
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.setHeader('Content-Length', (buffer as any).length);
+    res.send(Buffer.from(buffer as ArrayBuffer));
+
+  } catch (error) {
+    console.error('Leela registrations export error:', error);
+    res.status(500).json({ error: 'Failed to generate registrations report', details: String(error) });
+  }
+}
