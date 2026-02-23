@@ -38,6 +38,7 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { SortableCategory, SortableSubcategory } from '@/components/SortableCategory';
+import OutletAvailabilityTab from '@/components/OutletAvailabilityTab';
 import { RichTextEditor } from '@/components/RichTextEditor';
 import { generateEventDocument } from '@/lib/eventDocument';
 import { useOrderNotification, playOrderNotification } from '@/hooks/useOrderNotification';
@@ -110,6 +111,10 @@ export default function Admin() {
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setActiveTab('addons')} className={activeTab === 'addons' ? 'bg-accent' : ''}>
                   <Plus className="w-4 h-4 mr-2" /> Add-ons
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => setActiveTab('outlet-availability')} className={activeTab === 'outlet-availability' ? 'bg-accent' : ''}>
+                  <MapPin className="w-4 h-4 mr-2" /> Outlet Availability
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -397,6 +402,10 @@ export default function Admin() {
 
           <TabsContent value="backup">
             <BackupTab />
+          </TabsContent>
+
+          <TabsContent value="outlet-availability">
+            <OutletAvailabilityTab />
           </TabsContent>
         </Tabs>
       </div>

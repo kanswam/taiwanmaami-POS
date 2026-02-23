@@ -2281,3 +2281,12 @@ Orders fixed:
 - [x] No database fixes needed — stamps are correct (physical card transfers are intentional)
 - [x] Enable sorting on the Rewards column in admin customer list
 - [x] Test and verify — Rewards column sorts correctly (desc/asc), groups reward holders at top
+
+## Per-Outlet Product Availability (Feb 23)
+- [x] Schema already has availableAtPalladium/availableAtTnagar on products & subcategories
+- [x] Backend procedures already exist (toggleProductOutlet, toggleSubcategoryOutlet)
+- [x] Added bulk toggle procedure for subcategory-level outlet control
+- [x] Built dedicated Outlet Availability admin page with toggle grid (Menu > Outlet Availability)
+- [x] Subcategory-level bulk toggles (e.g., all ChickGozilla items at Palladium)
+- [x] Customer-facing menu already filters by outlet — verified working
+- [x] Stats: 124 products, 84/124 at Palladium, 124/124 at T.Nagar, all toggles functional

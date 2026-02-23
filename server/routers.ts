@@ -3353,7 +3353,62 @@ export const appRouter = router({
         }
         return { success: true };
       }),
-    // POS Audit logs removed - POS functionality removed
+    // Bulk toggle outlet availability for products
+    bulkToggleOutletAvailability: adminProcedure
+      .input(z.object({
+        productIds: z.array(z.number()),
+        outlet: z.enum(['palladium', 'tnagar']),
+        isAvailable: z.boolean(),
+      }))
+      .mutation(async ({ input }) => {
+        const dbInstance = await getDb();
+        if (!dbInstance) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
+        const field = input.outlet === 'palladium' ? products.availableAtPalladium : products.availableAtTnagar;
+        for (const productId of input.productIds) {
+          await dbInstance.update(products)
+            .set({ [input.outlet === 'palladium' ? 'availableAtPalladium' : 'availableAtTnagar']: input.isAvailable })
+            .where(eq(products.id, productId));
+        }
+        return { success: true, updated: input.productIds.length };
+      }),
+
+    // Toggle single product outlet availability (quick toggle)
+    toggleProductOutlet: adminProcedure
+      .input(z.object({
+        productId: z.number(),
+        outlet: z.enum(['palladium', 'tnagar']),
+        isAvailable: z.boolean(),
+      }))
+      .mutation(async ({ input }) => {
+        const dbInstance = await getDb();
+        if (!dbInstance) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
+        await dbInstance.update(products)
+          .set({ [input.outlet === 'palladium' ? 'availableAtPalladium' : 'availableAtTnagar']: input.isAvailable })
+          .where(eq(products.id, input.productId));
+        return { success: true };
+      }),
+
+    // Bulk toggle entire subcategory for an outlet
+    toggleSubcategoryOutlet: adminProcedure
+      .input(z.object({
+        subcategoryId: z.number(),
+        outlet: z.enum(['palladium', 'tnagar']),
+        isAvailable: z.boolean(),
+      }))
+      .mutation(async ({ input }) => {
+        const dbInstance = await getDb();
+        if (!dbInstance) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
+        // Update all products in this subcategory
+        const subProducts = await dbInstance.select({ id: products.id }).from(products).where(eq(products.subcategoryId, input.subcategoryId));
+        const col = input.outlet === 'palladium' ? 'availableAtPalladium' : 'availableAtTnagar';
+        for (const p of subProducts) {
+          await dbInstance.update(products).set({ [col]: input.isAvailable }).where(eq(products.id, p.id));
+        }
+        // Also update the subcategory itself
+        const { subcategories } = await import('../drizzle/schema.js');
+        await dbInstance.update(subcategories).set({ [col]: input.isAvailable }).where(eq(subcategories.id, input.subcategoryId));
+        return { success: true, updated: subProducts.length };
+      }),
 
     // Site settings management
     getSiteSettings: adminProcedure.query(async () => {
