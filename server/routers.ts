@@ -985,11 +985,28 @@ export const appRouter = router({
           .orderBy(sql`CAST(${orders.orderNumber} AS UNSIGNED) DESC`)
           .limit(input?.limit || 50);
         
+        // Get unredeemed rewards for registered users in these orders
+        const userIds = Array.from(new Set(recentOrders.filter(o => o.userId && o.userId > 0).map(o => o.userId!)));
+        const userRewardsMap: Record<number, { count: number; rewards: { voucherCode: string; rewardType: string; expiresAt: Date }[] }> = {};
+        if (userIds.length > 0) {
+          const activeRewards = await dbInstance.select().from(loyaltyRewards)
+            .where(eq(loyaltyRewards.isRedeemed, false));
+          const now = new Date();
+          activeRewards.forEach(r => {
+            if (new Date(r.expiresAt) > now && userIds.includes(r.userId)) {
+              if (!userRewardsMap[r.userId]) userRewardsMap[r.userId] = { count: 0, rewards: [] };
+              userRewardsMap[r.userId].count += 1;
+              userRewardsMap[r.userId].rewards.push({ voucherCode: r.voucherCode, rewardType: r.rewardType, expiresAt: r.expiresAt });
+            }
+          });
+        }
+
         // Get order items for each order
         const ordersWithItems = await Promise.all(
           recentOrders.map(async (order) => {
             const items = await dbInstance.select().from(orderItemsTable).where(eq(orderItemsTable.orderId, order.id));
-            return { ...order, items };
+            const customerRewards = order.userId ? userRewardsMap[order.userId] : undefined;
+            return { ...order, items, customerRewards: customerRewards || null };
           })
         );
         
@@ -6846,6 +6863,19 @@ export const appRouter = router({
           }
         }
 
+        // Get unredeemed rewards per user
+        const allRewards = await dbInstance.select().from(loyaltyRewards)
+          .where(eq(loyaltyRewards.isRedeemed, false));
+        const now = new Date();
+        const userRewards: Record<number, { count: number; rewards: { voucherCode: string; rewardType: string; expiresAt: Date }[] }> = {};
+        allRewards.forEach(r => {
+          if (new Date(r.expiresAt) > now) {
+            if (!userRewards[r.userId]) userRewards[r.userId] = { count: 0, rewards: [] };
+            userRewards[r.userId].count += 1;
+            userRewards[r.userId].rewards.push({ voucherCode: r.voucherCode, rewardType: r.rewardType, expiresAt: r.expiresAt });
+          }
+        });
+
         // Get order stats for registered users
         const userOrderStats: Record<number, { orders: number; totalSpent: number; lastOrder: Date | null }> = {};
         const allOrders = await dbInstance.select().from(orders).where(sql`${orders.orderStatus} != 'cancelled'`);
@@ -6874,6 +6904,8 @@ export const appRouter = router({
           storeCredit: user.storeCredit || 0,
           loyaltyPoints: user.loyaltyPoints || 0,
           stampCount: user.stampCount || 0,
+          unredeemedRewards: userRewards[user.id]?.count || 0,
+          rewardDetails: userRewards[user.id]?.rewards || [],
           totalOrders: userOrderStats[user.id]?.orders || 0,
           totalSpent: userOrderStats[user.id]?.totalSpent || 0,
           lastOrderDate: userOrderStats[user.id]?.lastOrder?.toISOString() || null,
@@ -6920,6 +6952,8 @@ export const appRouter = router({
               storeCredit: 0,
               loyaltyPoints: 0,
               stampCount: 0,
+              unredeemedRewards: 0,
+              rewardDetails: [],
               totalOrders: stats.orders,
               totalSpent: stats.totalSpent,
               lastOrderDate: stats.lastOrder?.toISOString() || null,

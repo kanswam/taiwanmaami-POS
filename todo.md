@@ -2250,12 +2250,11 @@ Orders fixed:
 - [x] Test export in browser — 8.2KB, 2 sheets, all 3 real registrations present
 
 ## Stamp Bug Investigation - Pramoth (Feb 23)
-- [ ] Investigate why Pramoth Selvanathan (pramoth.dsg@gmail.com) has 0 stamps with ₹4,284 spent
-- [ ] Check loyalty_stamps table for Pramoth's records
-- [ ] Check orders table for Pramoth's completed orders
-- [ ] Identify root cause in stamp awarding logic
-- [ ] Fix the bug and correct Pramoth's stamps
-- [ ] Test and verify the fix
+- [x] Investigate why Pramoth Selvanathan (pramoth.dsg@gmail.com) has 0 stamps with ₹4,284 spent
+- [x] Check loyalty_stamps table for Pramoth's records
+- [x] Check orders table for Pramoth's completed orders
+- [x] Root cause: Stamps working correctly — earned 10 stamps, auto-redeemed for free drink voucher (REWARDMLWNHUC7XJGE), stampCount reset to 0
+- [x] No bug — 0/10 is correct (new cycle after redemption)
 
 ## Database Backup Download Fix (Feb 23)
 - [x] Investigate current backup/download implementation
@@ -2267,3 +2266,10 @@ Orders fixed:
 - [x] Add Download as Excel button (green) to backup admin UI header
 - [x] Fix JSON download to trigger file save instead of opening in browser tab
 - [x] Test Excel download — 185KB, 13 sheets, all data readable and verified
+
+## Rewards Column & Staff Reminder (Feb 23)
+- [x] Add backend query to fetch unredeemed rewards count per customer (getAllCustomers + getRecent)
+- [x] Add Rewards column to admin customer list showing unredeemed reward count with green pulsing 🎁 badge
+- [x] Show reward details (voucher code, type, expiry) on hover tooltip
+- [x] Add reward reminder banner on Staff Orders page — green banner with Gift icon, voucher code, expiry
+- [x] Test both features in browser — verified on admin (3 customers with rewards) and staff (2 orders with banners)

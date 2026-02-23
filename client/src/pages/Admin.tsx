@@ -4808,6 +4808,7 @@ const [mergeSource, setMergeSource] = useState<{ id: number | string; name: stri
                 <SortableHeader column="totalSpent" align="right">Total Spent</SortableHeader>
                 <th className="text-right p-3 text-sm font-medium">Store Credit</th>
                 <SortableHeader column="stampCount" align="center">Stamps</SortableHeader>
+                <th className="text-center p-3 text-sm font-medium">Rewards</th>
                 <SortableHeader column="lastOrderDate" align="left">Last Order</SortableHeader>
                 <th className="text-center p-3 text-sm font-medium">Actions</th>
               </tr>
@@ -4831,6 +4832,31 @@ const [mergeSource, setMergeSource] = useState<{ id: number | string; name: stri
                       <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-amber-100 text-amber-700 text-xs font-medium">
                         ⭐ {customer.stampCount || 0}/10
                       </span>
+                    ) : (
+                      <span className="text-muted-foreground">-</span>
+                    )}
+                  </td>
+                  <td className="p-3 text-center">
+                    {customer.unredeemedRewards > 0 ? (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-green-100 text-green-700 text-xs font-bold cursor-help animate-pulse">
+                            🎁 {customer.unredeemedRewards}
+                          </span>
+                        </TooltipTrigger>
+                        <TooltipContent className="max-w-xs">
+                          <div className="space-y-1">
+                            <p className="font-semibold">Unredeemed Rewards:</p>
+                            {customer.rewardDetails?.map((r: any, i: number) => (
+                              <div key={i} className="text-xs">
+                                <p>🧋 Free Large Bubble Tea</p>
+                                <p className="text-muted-foreground">Code: {r.voucherCode}</p>
+                                <p className="text-muted-foreground">Expires: {new Date(r.expiresAt).toLocaleDateString()}</p>
+                              </div>
+                            ))}
+                          </div>
+                        </TooltipContent>
+                      </Tooltip>
                     ) : (
                       <span className="text-muted-foreground">-</span>
                     )}

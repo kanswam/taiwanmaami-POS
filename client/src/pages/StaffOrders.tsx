@@ -17,7 +17,7 @@ import {
   Printer, RefreshCw, MapPin, Phone, User, Bell,
   Filter, Store, UtensilsCrossed, ShoppingBag,
   MessageSquare, AlertTriangle, BarChart3, Volume2, VolumeX,
-  X, Calendar, Hash, Camera, Upload, Image, ToggleLeft, Trash2, ChevronDown
+  X, Calendar, Hash, Camera, Upload, Image, ToggleLeft, Trash2, ChevronDown, Gift
 } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogAction, AlertDialogCancel } from '@/components/ui/alert-dialog';
@@ -781,6 +781,29 @@ export default function StaffOrders() {
             </div>
           )}
         </div>
+
+        {/* Reward Reminder Banner */}
+        {order.customerRewards && order.customerRewards.count > 0 && (
+          <div className="bg-green-50 border border-green-300 rounded-lg p-3 mb-3 animate-pulse">
+            <div className="flex items-center gap-2">
+              <Gift className="w-5 h-5 text-green-600" />
+              <div className="flex-1">
+                <p className="text-sm font-bold text-green-800">
+                  🎉 This customer has {order.customerRewards.count} FREE drink{order.customerRewards.count > 1 ? 's' : ''} available!
+                </p>
+                <p className="text-xs text-green-700 mt-0.5">
+                  Remind them to use their reward — Free Large Bubble Tea
+                </p>
+                {order.customerRewards.rewards.map((r: any, i: number) => (
+                  <p key={i} className="text-xs text-green-600 mt-0.5">
+                    Code: <span className="font-mono font-bold">{r.voucherCode}</span>
+                    {' · '}Expires: {new Date(r.expiresAt).toLocaleDateString()}
+                  </p>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Order Items */}
         <div className="space-y-2 mb-4">
