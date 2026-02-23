@@ -2290,3 +2290,10 @@ Orders fixed:
 - [x] Subcategory-level bulk toggles (e.g., all ChickGozilla items at Palladium)
 - [x] Customer-facing menu already filters by outlet — verified working
 - [x] Stats: 124 products, 84/124 at Palladium, 124/124 at T.Nagar, all toggles functional
+
+## Outlet Availability Toggle Fix (Feb 23)
+- [x] Show ALL products on customer menu regardless of outlet availability (don't hide them)
+- [x] Mark unavailable-at-outlet products with orange 'Not at This Outlet' overlay instead of hiding
+- [x] Fix T.Nagar/Palladium missing items (Blueberry, Mango hidden due to isAvailable:0 filter)
+- [x] Root cause: frontend filtered by isAvailable instead of isActive — fixed
+- [x] Test both outlets: Palladium shows 5 mochis (1 available, 4 not-at-outlet), T.Nagar shows 5 (2 available, 3 out-of-stock)

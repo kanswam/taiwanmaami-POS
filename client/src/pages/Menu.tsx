@@ -127,30 +127,16 @@ export default function Menu() {
     if (!menuData || selectedCategory === 'all') return [];
     const category = menuData.categories.find(c => c.slug === selectedCategory);
     if (!category) return [];
-    return menuData.subcategories.filter(s => {
-      if (s.categoryId !== category.id) return false;
-      // Filter by outlet availability
-      const sub = s as any;
-      if (currentOutlet === 'palladium' && sub.availableAtPalladium === false) return false;
-      if (currentOutlet === 'tnagar' && sub.availableAtTnagar === false) return false;
-      return true;
-    });
-  }, [menuData, selectedCategory, currentOutlet]);
+    return menuData.subcategories.filter(s => s.categoryId === category.id);
+  }, [menuData, selectedCategory]);
 
   // Get products for selected subcategory (filtered by outlet availability)
   const subcategoryProducts = useMemo(() => {
     if (!menuData || !selectedSubcategory) return [];
     const subcategory = menuData.subcategories.find(s => s.slug === selectedSubcategory);
     if (!subcategory) return [];
-    return menuData.products.filter(p => {
-      if (p.subcategoryId !== subcategory.id) return false;
-      // Filter by outlet availability
-      const prod = p as any;
-      if (currentOutlet === 'palladium' && prod.availableAtPalladium === false) return false;
-      if (currentOutlet === 'tnagar' && prod.availableAtTnagar === false) return false;
-      return true;
-    });
-  }, [menuData, selectedSubcategory, currentOutlet]);
+    return menuData.products.filter(p => p.subcategoryId === subcategory.id);
+  }, [menuData, selectedSubcategory]);
 
   // Search results across all products (filtered by outlet availability)
   const searchResults = useMemo(() => {
@@ -159,14 +145,9 @@ export default function Menu() {
     return menuData.products.filter(p => {
       const matchesSearch = p.name.toLowerCase().includes(query) ||
         p.chineseName?.toLowerCase().includes(query);
-      if (!matchesSearch) return false;
-      // Filter by outlet availability
-      const prod = p as any;
-      if (currentOutlet === 'palladium' && prod.availableAtPalladium === false) return false;
-      if (currentOutlet === 'tnagar' && prod.availableAtTnagar === false) return false;
-      return true;
+      return matchesSearch;
     });
-  }, [menuData, searchQuery, currentOutlet]);
+  }, [menuData, searchQuery]);
 
   // Get subcategory info
   const getSubcategory = (slug: string) => menuData?.subcategories.find(s => s.slug === slug);
@@ -241,14 +222,8 @@ export default function Menu() {
             (state.orderType === 'pickup' && cat.availablePickup === false)
           );
           
-          // Filter subcategories by outlet availability
-          const subcategories = menuData.subcategories.filter(s => {
-            if (s.categoryId !== category.id) return false;
-            const sub = s as any;
-            if (currentOutlet === 'palladium' && sub.availableAtPalladium === false) return false;
-            if (currentOutlet === 'tnagar' && sub.availableAtTnagar === false) return false;
-            return true;
-          });
+          // Show all subcategories for this category (no outlet filtering)
+          const subcategories = menuData.subcategories.filter(s => s.categoryId === category.id);
           const productCount = menuData.products.filter(p => 
             subcategories.some(s => s.id === p.subcategoryId)
           ).length;
@@ -374,9 +349,12 @@ export default function Menu() {
   const renderProductGrid = (products: typeof subcategoryProducts) => {
     const subcategory = selectedSubcategory ? getSubcategory(selectedSubcategory) : null;
     
-    // Check if product is available at selected pickup outlet
+    // Check if product is available at selected outlet
     const isProductAvailableAtOutlet = (product: typeof products[0]) => {
-      return true; // All products available at T Nagar
+      const prod = product as any;
+      if (currentOutlet === 'palladium' && prod.availableAtPalladium === false) return false;
+      if (currentOutlet === 'tnagar' && prod.availableAtTnagar === false) return false;
+      return true;
     };
     
     return (
@@ -393,26 +371,28 @@ export default function Menu() {
         
         
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-          {products.filter((product) => product.isAvailable !== false).map((product) => {
+          {products.filter((product) => product.isActive !== false).map((product) => {
             const sub = getSubcategoryById(product.subcategoryId);
             if (!sub) return null;
             // Find the category for this product's subcategory
             const cat = menuData?.categories.find(c => c.id === sub.categoryId);
-            const isAvailable = isProductAvailableAtOutlet(product);
+            const isAvailableAtOutlet = isProductAvailableAtOutlet(product);
             
             return (
-              <div key={product.id} className={`relative ${!isAvailable ? 'opacity-50 pointer-events-none' : ''}`}>
+              <div key={product.id}>
                 <ProductCard
                   product={{
                     ...product,
                     imageUrl: product.imageUrl || PRODUCT_IMAGES[product.slug] || null,
                     imageUrl2: (product as any).imageUrl2 || null,
                     imageUrl3: (product as any).imageUrl3 || null,
+                    isInStock: isAvailableAtOutlet ? product.isInStock : false,
                   }}
                   subcategory={sub}
                   category={cat}
                   isDelivery={state.orderType !== 'instore'}
                   orderType={state.orderType}
+                  notAvailableAtOutlet={!isAvailableAtOutlet}
                 />
 
               </div>
@@ -725,21 +705,27 @@ export default function Menu() {
                   const sub = getSubcategoryById(product.subcategoryId);
                   if (!sub) return null;
                   const cat = getCategoryById(sub.categoryId);
-                  // Check Palladium availability for search results too
-                  const isAvailable = state.orderType !== 'pickup' || !pickupOutlet || pickupOutlet === 'tnagar' || (product as any).availableAtPalladium !== false;
+                  const prod = product as any;
+                  const isAvailableAtOutlet = (() => {
+                    if (currentOutlet === 'palladium' && prod.availableAtPalladium === false) return false;
+                    if (currentOutlet === 'tnagar' && prod.availableAtTnagar === false) return false;
+                    return true;
+                  })();
                   return (
-                    <div key={product.id} className={`relative ${!isAvailable ? 'opacity-50 pointer-events-none' : ''}`}>
+                    <div key={product.id}>
                       <ProductCard
                         product={{
                           ...product,
                           imageUrl: product.imageUrl || PRODUCT_IMAGES[product.slug] || null,
                           imageUrl2: (product as any).imageUrl2 || null,
                           imageUrl3: (product as any).imageUrl3 || null,
+                          isInStock: isAvailableAtOutlet ? product.isInStock : false,
                         }}
                         subcategory={sub}
                         category={cat}
                         isDelivery={state.orderType !== 'instore'}
                         orderType={state.orderType}
+                        notAvailableAtOutlet={!isAvailableAtOutlet}
                       />
 
                     </div>

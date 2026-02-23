@@ -50,9 +50,10 @@ interface ProductCardProps {
   };
   isDelivery?: boolean;
   orderType?: 'instore' | 'delivery' | 'pickup';
+  notAvailableAtOutlet?: boolean;
 }
 
-export function ProductCard({ product, subcategory, category, isDelivery = false, orderType = 'instore' }: ProductCardProps) {
+export function ProductCard({ product, subcategory, category, isDelivery = false, orderType = 'instore', notAvailableAtOutlet = false }: ProductCardProps) {
   const [showModal, setShowModal] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
@@ -84,7 +85,7 @@ export function ProductCard({ product, subcategory, category, isDelivery = false
     return false;
   })();
   
-  const isUnavailable = isOutOfStock || isInactive || isNotAvailableForOrderType;
+  const isUnavailable = isOutOfStock || isInactive || isNotAvailableForOrderType || notAvailableAtOutlet;
 
   // Check if this is a mochi product (for delivery/pickup, mochis are sold as set of 2)
   const isMochiProduct = subcategory.name.toLowerCase().includes('mochi');
@@ -200,17 +201,21 @@ export function ProductCard({ product, subcategory, category, isDelivery = false
           {isUnavailable && (
             <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
               <span className={`px-3 py-1.5 rounded-full text-sm font-bold shadow-lg ${
-                isNotAvailableForOrderType
-                  ? 'bg-amber-600 text-white'
-                  : isInactive 
-                    ? 'bg-gray-600 text-white' 
-                    : 'bg-red-600 text-white'
+                notAvailableAtOutlet
+                  ? 'bg-orange-600 text-white'
+                  : isNotAvailableForOrderType
+                    ? 'bg-amber-600 text-white'
+                    : isInactive 
+                      ? 'bg-gray-600 text-white' 
+                      : 'bg-red-600 text-white'
               }`}>
-                {isNotAvailableForOrderType 
-                  ? 'In-store Only' 
-                  : isInactive 
-                    ? 'Unavailable' 
-                    : 'Out of Stock'}
+                {notAvailableAtOutlet
+                  ? 'Not at This Outlet'
+                  : isNotAvailableForOrderType 
+                    ? 'In-store Only' 
+                    : isInactive 
+                      ? 'Unavailable' 
+                      : 'Out of Stock'}
               </span>
             </div>
           )}
