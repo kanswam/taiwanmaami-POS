@@ -4587,7 +4587,7 @@ function CustomersTab() {
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [newCustomer, setNewCustomer] = useState({ name: '', phone: '', email: '' });
   const [editingCustomer, setEditingCustomer] = useState<{ id: number; name: string; phone: string; email: string; storeCredit: number; notes: string } | null>(null);
-  const [sortColumn, setSortColumn] = useState<'name' | 'totalOrders' | 'totalSpent' | 'stampCount' | 'lastOrderDate'>('totalSpent');
+  const [sortColumn, setSortColumn] = useState<'name' | 'totalOrders' | 'totalSpent' | 'stampCount' | 'rewards' | 'lastOrderDate'>('totalSpent');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const [showAddStampsDialog, setShowAddStampsDialog] = useState(false);
   const [stampCustomer, setStampCustomer] = useState<{ id: number; name: string; currentStamps: number } | null>(null);
@@ -4745,6 +4745,10 @@ const [mergeSource, setMergeSource] = useState<{ id: number | string; name: stri
         aVal = a.stampCount || 0;
         bVal = b.stampCount || 0;
         break;
+      case 'rewards':
+        aVal = a.unredeemedRewards || 0;
+        bVal = b.unredeemedRewards || 0;
+        break;
       case 'lastOrderDate':
         aVal = a.lastOrderDate ? new Date(a.lastOrderDate).getTime() : 0;
         bVal = b.lastOrderDate ? new Date(b.lastOrderDate).getTime() : 0;
@@ -4808,7 +4812,7 @@ const [mergeSource, setMergeSource] = useState<{ id: number | string; name: stri
                 <SortableHeader column="totalSpent" align="right">Total Spent</SortableHeader>
                 <th className="text-right p-3 text-sm font-medium">Store Credit</th>
                 <SortableHeader column="stampCount" align="center">Stamps</SortableHeader>
-                <th className="text-center p-3 text-sm font-medium">Rewards</th>
+                <SortableHeader column="rewards" align="center">Rewards</SortableHeader>
                 <SortableHeader column="lastOrderDate" align="left">Last Order</SortableHeader>
                 <th className="text-center p-3 text-sm font-medium">Actions</th>
               </tr>

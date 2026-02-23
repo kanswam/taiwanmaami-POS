@@ -2273,3 +2273,11 @@ Orders fixed:
 - [x] Show reward details (voucher code, type, expiry) on hover tooltip
 - [x] Add reward reminder banner on Staff Orders page — green banner with Gift icon, voucher code, expiry
 - [x] Test both features in browser — verified on admin (3 customers with rewards) and staff (2 orders with banners)
+
+## Customer Stamp Audit (Feb 23)
+- [x] Query all customers with stamps > 0 and their order history
+- [x] Calculate expected stamps based on actual spending (1 per ₹450 + 1 welcome bonus per first order)
+- [x] Identify 26 customers with discrepancies — ALL are from legitimate physical card transfers by staff
+- [x] No database fixes needed — stamps are correct (physical card transfers are intentional)
+- [x] Enable sorting on the Rewards column in admin customer list
+- [x] Test and verify — Rewards column sorts correctly (desc/asc), groups reward holders at top
