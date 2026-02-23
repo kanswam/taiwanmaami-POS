@@ -7,6 +7,7 @@ import { registerOAuthRoutes } from "./oauth";
 import { appRouter } from "../routers";
 import { handleSalesReportExport } from "../excelExport";
 import { handleItemwiseExport, handleChannelsExport, handleLeelaRegistrationsExport } from "../excelExportExtra";
+import { handleBackupExcelExport } from "../excelBackupExport";
 import { handleDeliveryUpload, handleGetDeliveryUploads, handleDeleteDeliveryUpload, deliveryUploadMiddleware } from "../deliveryUpload";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
@@ -503,6 +504,7 @@ async function startServer() {
   app.get('/api/export/itemwise-report', handleItemwiseExport as any);
   app.get('/api/export/channels-report', handleChannelsExport as any);
   app.get('/api/export/leela-registrations', handleLeelaRegistrationsExport as any);
+  app.get('/api/export/database-excel', handleBackupExcelExport as any);
 
   // Delivery data upload/management
   app.post('/api/delivery/upload', deliveryUploadMiddleware as any, handleDeliveryUpload as any);

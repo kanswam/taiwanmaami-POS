@@ -9345,9 +9345,44 @@ function BackupTab() {
     });
   };
 
+  const [isExporting, setIsExporting] = useState(false);
+
   const handleBackupNow = () => {
     setIsBackingUp(true);
     createBackupMutation.mutate();
+  };
+
+  const handleDownloadExcel = async () => {
+    setIsExporting(true);
+    try {
+      const response = await fetch('/api/export/database-excel', { credentials: 'include' });
+      if (!response.ok) throw new Error('Export failed');
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      const today = new Date().toISOString().split('T')[0];
+      a.download = `Taiwan_Maami_Database_Export_${today}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      toast.success('Database exported as Excel successfully!');
+    } catch (error) {
+      toast.error('Failed to export database as Excel');
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  const handleDownloadJson = (backupUrl: string) => {
+    const a = document.createElement('a');
+    a.href = backupUrl;
+    const today = new Date().toISOString().split('T')[0];
+    a.download = `Taiwan_Maami_Backup_${today}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
   };
 
   const formatBytes = (bytes: number) => {
@@ -9378,23 +9413,43 @@ function BackupTab() {
             Automated daily backups at 4:00 AM IST. Backups are retained for 90 days.
           </p>
         </div>
-        <Button 
-          onClick={handleBackupNow} 
-          disabled={isBackingUp}
-          className="gap-2"
-        >
-          {isBackingUp ? (
-            <>
-              <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
-              Backing up...
-            </>
-          ) : (
-            <>
-              <History className="h-4 w-4" />
-              Backup Now
-            </>
-          )}
-        </Button>
+        <div className="flex items-center gap-3">
+          <Button 
+            onClick={handleDownloadExcel} 
+            disabled={isExporting}
+            variant="outline"
+            className="gap-2 border-green-600 text-green-700 hover:bg-green-50"
+          >
+            {isExporting ? (
+              <>
+                <div className="animate-spin h-4 w-4 border-2 border-green-600 border-t-transparent rounded-full" />
+                Exporting...
+              </>
+            ) : (
+              <>
+                <Download className="h-4 w-4" />
+                Download as Excel
+              </>
+            )}
+          </Button>
+          <Button 
+            onClick={handleBackupNow} 
+            disabled={isBackingUp}
+            className="gap-2"
+          >
+            {isBackingUp ? (
+              <>
+                <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
+                Backing up...
+              </>
+            ) : (
+              <>
+                <History className="h-4 w-4" />
+                Backup Now
+              </>
+            )}
+          </Button>
+        </div>
       </div>
 
       <Card className="p-6">
@@ -9489,14 +9544,12 @@ function BackupTab() {
                       <div className="flex items-center gap-2">
                         {backup.status === 'success' && backup.backupUrl && (
                           <>
-                            <a 
-                              href={backup.backupUrl} 
-                              target="_blank" 
-                              rel="noopener noreferrer"
-                              className="text-primary hover:underline text-sm"
+                            <button 
+                              onClick={() => handleDownloadJson(backup.backupUrl!)}
+                              className="text-primary hover:underline text-sm cursor-pointer"
                             >
-                              Download
-                            </a>
+                              JSON
+                            </button>
                             <Button
                               variant="outline"
                               size="sm"

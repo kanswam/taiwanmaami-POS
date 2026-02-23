@@ -2248,3 +2248,22 @@ Orders fixed:
 - [x] Add Summary by Date sheet (registrations, guests, confirmed per date/event type)
 - [x] Add Export Excel button to Leela Registrations admin tab
 - [x] Test export in browser — 8.2KB, 2 sheets, all 3 real registrations present
+
+## Stamp Bug Investigation - Pramoth (Feb 23)
+- [ ] Investigate why Pramoth Selvanathan (pramoth.dsg@gmail.com) has 0 stamps with ₹4,284 spent
+- [ ] Check loyalty_stamps table for Pramoth's records
+- [ ] Check orders table for Pramoth's completed orders
+- [ ] Identify root cause in stamp awarding logic
+- [ ] Fix the bug and correct Pramoth's stamps
+- [ ] Test and verify the fix
+
+## Database Backup Download Fix (Feb 23)
+- [x] Investigate current backup/download implementation
+- [x] Identify why downloaded backup produces gibberish (raw JSON opens in browser tab)
+- [x] Backup JSON is valid and data is retrievable
+- [x] Build backend endpoint /api/export/database-excel as multi-sheet Excel (.xlsx)
+- [x] 13 sheets: Summary, Sales Orders, Order Items, Customers, Guest Orders, Payments, Loyalty & Stamps, Rewards, Products & Menu, Event Orders, Discounts, Store Locations, Leela Registrations
+- [x] Add formatted headers, column widths, ₹ currency formatting, date formatting
+- [x] Add Download as Excel button (green) to backup admin UI header
+- [x] Fix JSON download to trigger file save instead of opening in browser tab
+- [x] Test Excel download — 185KB, 13 sheets, all data readable and verified
