@@ -2297,3 +2297,14 @@ Orders fixed:
 - [x] Fix T.Nagar/Palladium missing items (Blueberry, Mango hidden due to isAvailable:0 filter)
 - [x] Root cause: frontend filtered by isAvailable instead of isActive — fixed
 - [x] Test both outlets: Palladium shows 5 mochis (1 available, 4 not-at-outlet), T.Nagar shows 5 (2 available, 3 out-of-stock)
+
+## Staff Rewards Bug Investigation (Feb 24)
+- [x] Investigate why free drink rewards appear under staff names (e.g., Rinold Thousen)
+  - Root cause: Rinold (staff role) placed in-store orders under his own account, earning 26 stamps and 2 free drink rewards before the staff exclusion was added
+- [x] Determine if staff should be excluded from loyalty stamp accumulation
+  - Yes: awardStamps procedure already had staff check (added earlier), but getRecent rewards lookup did not
+- [x] Fix reward banner on Staff Orders page to not show for staff accounts
+  - Added staff/admin user filtering in getRecent procedure's rewards lookup
+  - Cleaned up Rinold's 2 unredeemed rewards and reset stamps for all 10 staff/admin users
+- [x] Verify fix works correctly
+  - 5 new vitest tests passing, browser verification confirmed banner removed

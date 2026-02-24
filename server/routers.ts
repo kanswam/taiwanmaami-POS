@@ -8,7 +8,7 @@ import * as db from "./db";
 import { getDb, serializeDates, serializeDateArray } from "./db";
 import { seedDatabase } from "./seed";
 import { categories, subcategories, products, addons, orders, orderItems as orderItemsTable, orderItemAddons, payments, discounts, discountUsage, addresses, storeLocations, deliveryAreas, users, productAddons, loyaltyTransactions } from "../drizzle/schema";
-import { eq, and, desc, asc, sql, or, gte, lte, isNull } from "drizzle-orm";
+import { eq, and, desc, asc, sql, or, gte, lte, isNull, inArray } from "drizzle-orm";
 import { generateOrderNumber, calculateGst } from "@shared/types";
 // POS functionality removed - Employee Master import removed
 import { outletProducts, loyaltyRewards, stampTransactions, guestOrders, reviews, kotQueue, receiptQueue, productAuditLog, categoryAuditLog, complaints, eventInquiries, eventOrders, eventOrderItems, workshops, workshopBookings, workshopDates, workshopWaitlist, backupLogs, blogArticles, deliverySalesUploads, deliveryItemSales, pageviews as pageviewsTable, popupRegistrations } from "../drizzle/schema";
@@ -985,20 +985,31 @@ export const appRouter = router({
           .orderBy(sql`CAST(${orders.orderNumber} AS UNSIGNED) DESC`)
           .limit(input?.limit || 50);
         
-        // Get unredeemed rewards for registered users in these orders
+        // Get unredeemed rewards for registered CUSTOMER users in these orders (exclude staff/admin)
         const userIds = Array.from(new Set(recentOrders.filter(o => o.userId && o.userId > 0).map(o => o.userId!)));
         const userRewardsMap: Record<number, { count: number; rewards: { voucherCode: string; rewardType: string; expiresAt: Date }[] }> = {};
         if (userIds.length > 0) {
-          const activeRewards = await dbInstance.select().from(loyaltyRewards)
-            .where(eq(loyaltyRewards.isRedeemed, false));
-          const now = new Date();
-          activeRewards.forEach(r => {
-            if (new Date(r.expiresAt) > now && userIds.includes(r.userId)) {
-              if (!userRewardsMap[r.userId]) userRewardsMap[r.userId] = { count: 0, rewards: [] };
-              userRewardsMap[r.userId].count += 1;
-              userRewardsMap[r.userId].rewards.push({ voucherCode: r.voucherCode, rewardType: r.rewardType, expiresAt: r.expiresAt });
-            }
-          });
+          // First, identify which userIds belong to staff/admin so we can exclude them
+          const staffAdminUsers = await dbInstance.select({ id: users.id }).from(users)
+            .where(and(
+              inArray(users.id, userIds),
+              inArray(users.role, ['staff', 'admin'])
+            ));
+          const staffAdminIds = new Set(staffAdminUsers.map(u => u.id));
+          const customerUserIds = userIds.filter(id => !staffAdminIds.has(id));
+          
+          if (customerUserIds.length > 0) {
+            const activeRewards = await dbInstance.select().from(loyaltyRewards)
+              .where(eq(loyaltyRewards.isRedeemed, false));
+            const now = new Date();
+            activeRewards.forEach(r => {
+              if (new Date(r.expiresAt) > now && customerUserIds.includes(r.userId)) {
+                if (!userRewardsMap[r.userId]) userRewardsMap[r.userId] = { count: 0, rewards: [] };
+                userRewardsMap[r.userId].count += 1;
+                userRewardsMap[r.userId].rewards.push({ voucherCode: r.voucherCode, rewardType: r.rewardType, expiresAt: r.expiresAt });
+              }
+            });
+          }
         }
 
         // Get order items for each order
