@@ -603,12 +603,12 @@ export async function handleLeelaRegistrationsExport(req: Request, res: Response
     // ---- Sheet 1: All Registrations ----
     const sheet = workbook.addWorksheet('Registrations');
 
-    const COL_COUNT = 8;
+    const COL_COUNT = 9;
     addTitle(sheet, 'Taiwan Maami — The Leela Hyderabad', 'Edible Journey · 5–8 March 2026 · Guest Registrations', COL_COUNT);
 
     // Headers
     const headerRow = sheet.getRow(4);
-    headerRow.values = ['#', 'Customer Name', 'Email', 'Phone', 'Event Type', 'Date', 'No. of Guests', 'Status'];
+    headerRow.values = ['#', 'Customer Name', 'Email', 'Phone', 'Event Type', 'Date', 'No. of Guests', 'Status', 'Notes'];
     applyHeaderStyle(headerRow, COL_COUNT);
 
     // Column widths
@@ -620,6 +620,7 @@ export async function handleLeelaRegistrationsExport(req: Request, res: Response
     sheet.getColumn(6).width = 14;
     sheet.getColumn(7).width = 14;
     sheet.getColumn(8).width = 14;
+    sheet.getColumn(9).width = 30;
 
     // Data rows
     let rowNum = 5;
@@ -635,6 +636,7 @@ export async function handleLeelaRegistrationsExport(req: Request, res: Response
         reg.selectedDate,
         reg.numberOfGuests,
         reg.status.charAt(0).toUpperCase() + reg.status.slice(1),
+        reg.specialRequirements || '',
       ];
       applyDataRowStyle(row, COL_COUNT, idx % 2 === 1);
       row.getCell(1).alignment = { horizontal: 'center' };
@@ -642,13 +644,14 @@ export async function handleLeelaRegistrationsExport(req: Request, res: Response
       row.getCell(6).alignment = { horizontal: 'center' };
       row.getCell(7).alignment = { horizontal: 'center' };
       row.getCell(8).alignment = { horizontal: 'center' };
+      row.getCell(9).alignment = { horizontal: 'left', wrapText: true };
       totalGuests += reg.numberOfGuests;
       rowNum++;
     });
 
     // Totals row
     const totalsRow = sheet.getRow(rowNum);
-    totalsRow.values = ['', 'TOTAL', '', '', '', '', totalGuests, `${registrations.length} registrations`];
+    totalsRow.values = ['', 'TOTAL', '', '', '', '', totalGuests, `${registrations.length} registrations`, ''];
     applyTotalsRowStyle(totalsRow, COL_COUNT);
     totalsRow.getCell(2).alignment = { horizontal: 'left', vertical: 'middle' };
     totalsRow.getCell(7).alignment = { horizontal: 'center', vertical: 'middle' };

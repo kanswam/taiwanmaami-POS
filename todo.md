@@ -2308,3 +2308,9 @@ Orders fixed:
   - Cleaned up Rinold's 2 unredeemed rewards and reset stamps for all 10 staff/admin users
 - [x] Verify fix works correctly
   - 5 new vitest tests passing, browser verification confirmed banner removed
+
+## Leela Registrations Excel Export - Add Notes Column (Feb 25)
+- [x] Add Special Requirements/Notes column to Leela Registrations Excel export (both main export and backup export)
+
+## Leela Registrations Excel Export - Add Notes Column (Feb 25)
+- [x] Add Special Requirements/Notes column to Leela Registrations Excel export (both main export and backup export)

@@ -661,13 +661,13 @@ export async function handleBackupExcelExport(req: Request, res: Response) {
     // SHEET 12: LEELA REGISTRATIONS
     // ============================================================
     const leelaSheet = workbook.addWorksheet('Leela Registrations');
-    const LEELA_COLS = 8;
+    const LEELA_COLS = 9;
     addTitle(leelaSheet, 'Taiwan Maami — Leela Hyderabad Registrations', `Database Export · ${today}`, LEELA_COLS);
 
     const allRegs = await dbInstance.select().from(popupRegistrations).orderBy(desc(popupRegistrations.createdAt));
 
     const leelaHeaderRow = leelaSheet.getRow(4);
-    leelaHeaderRow.values = ['Name', 'Email', 'Phone', 'Event Type', 'Date', 'Guests', 'Status', 'Registered'];
+    leelaHeaderRow.values = ['Name', 'Email', 'Phone', 'Event Type', 'Date', 'Guests', 'Status', 'Registered', 'Notes'];
     applyHeaderStyle(leelaHeaderRow, LEELA_COLS);
 
     leelaSheet.getColumn(1).width = 22;
@@ -678,6 +678,7 @@ export async function handleBackupExcelExport(req: Request, res: Response) {
     leelaSheet.getColumn(6).width = 10;
     leelaSheet.getColumn(7).width = 14;
     leelaSheet.getColumn(8).width = 18;
+    leelaSheet.getColumn(9).width = 30;
 
     let leelaRowNum = 5;
     allRegs.forEach((r, idx) => {
@@ -691,6 +692,7 @@ export async function handleBackupExcelExport(req: Request, res: Response) {
         r.numberOfGuests || 0,
         r.status || '',
         formatDateTime(r.createdAt),
+        r.specialRequirements || '',
       ];
       applyDataRowStyle(row, LEELA_COLS, idx % 2 === 1);
       leelaRowNum++;
