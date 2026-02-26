@@ -2314,3 +2314,18 @@ Orders fixed:
 
 ## Leela Registrations Excel Export - Add Notes Column (Feb 25)
 - [x] Add Special Requirements/Notes column to Leela Registrations Excel export (both main export and backup export)
+
+## Channels Analytics Dashboard Bugs (Feb 26)
+- [x] Fix revenue mismatch: Feb 2026 row shows ₹5,07,319 but dashboard cards show ₹6,06,412
+  - Root cause: getCombinedChannelAnalytics was summing both overlapping uploads (mid Feb + full Feb)
+  - Fix: Added deduplication logic - newer uploads that fully cover older ones take priority
+- [x] Fix Website/Direct revenue: shows ₹3,34,207 but actual is ₹2,98,052
+  - Root cause: Website query used Petpooja period dates (Jan 27-Feb 26) instead of calendar month (Feb 1-28)
+  - Fix: Parse periodLabel to extract calendar month dates for website order enrichment
+- [x] Fix date range: Current Range shows Jan 27 - Feb 26 instead of Feb 1 - Feb 26
+  - Root cause: Frontend used raw periodStart/periodEnd from Petpooja upload
+  - Fix: Frontend now derives calendar month dates from periodLabel for full-month periods
+- [x] Investigate double-counting from two Feb delivery uploads (mid Feb 2026 + February 2026)
+  - Confirmed: mid Feb (Feb 1-14, 114 orders) fully contained within Feb 2026 (Jan 27-Feb 26, 222 orders)
+  - Both Insights and Channel Analytics procedures now deduplicate overlapping uploads
+- [x] Date range selector already exists (Current Range / All Time / YTD / uploaded period dropdown)

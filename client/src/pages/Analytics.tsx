@@ -238,8 +238,27 @@ export default function Analytics() {
       // Specific period - find it in deliveryPeriods
       const period = deliveryPeriods?.find(p => String(p.id) === channelPeriod);
       if (period) {
-        setChannelStartDate(new Date(period.periodStart).toISOString().split('T')[0]);
-        setChannelEndDate(new Date(period.periodEnd).toISOString().split('T')[0]);
+        // Use calendar month dates for full-month periods (e.g. "February 2026")
+        // instead of Petpooja period dates which may span across months (e.g. Jan 27 - Feb 26)
+        const monthNames = ['january','february','march','april','may','june','july','august','september','october','november','december'];
+        const monthMatch = period.periodLabel.match(/^(January|February|March|April|May|June|July|August|September|October|November|December)\s+(\d{4})$/i);
+        if (monthMatch) {
+          const monthIdx = monthNames.indexOf(monthMatch[1].toLowerCase());
+          const year = parseInt(monthMatch[2]);
+          if (monthIdx >= 0) {
+            const calStart = new Date(year, monthIdx, 1);
+            const calEnd = new Date(year, monthIdx + 1, 0); // last day of month
+            setChannelStartDate(calStart.toISOString().split('T')[0]);
+            setChannelEndDate(calEnd.toISOString().split('T')[0]);
+          } else {
+            setChannelStartDate(new Date(period.periodStart).toISOString().split('T')[0]);
+            setChannelEndDate(new Date(period.periodEnd).toISOString().split('T')[0]);
+          }
+        } else {
+          // Partial periods (e.g. "mid Feb 2026") - use the upload's actual dates
+          setChannelStartDate(new Date(period.periodStart).toISOString().split('T')[0]);
+          setChannelEndDate(new Date(period.periodEnd).toISOString().split('T')[0]);
+        }
       }
     }
   }, [channelPeriod, startDate, endDate, deliveryPeriods]);

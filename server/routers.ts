@@ -6104,12 +6104,26 @@ export const appRouter = router({
         const startDateStr = input.startDate;
         const endDateStr = input.endDate;
         const deliveryEnd = new Date(end.getTime() + 24 * 60 * 60 * 1000);
-        const deliveryUploads = await dbInstance.select()
+        const allInsightDeliveryUploads = await dbInstance.select()
           .from(deliverySalesUploads)
           .where(and(
             sql`DATE(${deliverySalesUploads.periodStart}) >= ${startDateStr}`,
             sql`DATE(${deliverySalesUploads.periodEnd}) <= DATE_ADD(${endDateStr}, INTERVAL 1 DAY)`
           ));
+        // Deduplicate overlapping uploads (same logic as getCombinedChannelAnalytics)
+        const sortedInsightUploads = [...allInsightDeliveryUploads].sort((a, b) => 
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
+        const deliveryUploads = sortedInsightUploads.filter((upload, idx) => {
+          const uploadStart = new Date(upload.periodStart).getTime();
+          const uploadEnd = new Date(upload.periodEnd).getTime();
+          for (let i = 0; i < idx; i++) {
+            const newerStart = new Date(sortedInsightUploads[i].periodStart).getTime();
+            const newerEnd = new Date(sortedInsightUploads[i].periodEnd).getTime();
+            if (newerStart <= uploadStart && newerEnd >= uploadEnd) return false;
+          }
+          return true;
+        });
 
         if (deliveryUploads.length > 0) {
           let zomatoOrders = 0, zomatoAmount = 0, swiggyOrders = 0, swiggyAmount = 0;
@@ -6318,17 +6332,32 @@ export const appRouter = router({
         }).from(deliverySalesUploads)
           .orderBy(sql`${deliverySalesUploads.periodStart} DESC`);
         
-        // For each period, also get website order totals
+        // For each period, get website order totals using CALENDAR MONTH dates
+        // (not Petpooja period dates which may span across months, e.g. Jan 27 - Feb 26)
         const enriched = await Promise.all(uploads.map(async (u) => {
-          const start = u.periodStart;
-          const end = u.periodEnd;
+          // Parse the periodLabel to extract calendar month dates
+          // e.g. "February 2026" -> Feb 1 - Feb 28, "January 2026" -> Jan 1 - Jan 31
+          // For partial periods like "mid Feb 2026", fall back to upload dates
+          let websiteStart = u.periodStart;
+          let websiteEnd = u.periodEnd;
+          const monthMatch = u.periodLabel.match(/^(January|February|March|April|May|June|July|August|September|October|November|December)\s+(\d{4})$/i);
+          if (monthMatch) {
+            const monthNames = ['january','february','march','april','may','june','july','august','september','october','november','december'];
+            const monthIdx = monthNames.indexOf(monthMatch[1].toLowerCase());
+            const year = parseInt(monthMatch[2]);
+            if (monthIdx >= 0) {
+              websiteStart = new Date(year, monthIdx, 1);
+              // Last day of month
+              websiteEnd = new Date(year, monthIdx + 1, 0, 23, 59, 59, 999);
+            }
+          }
           const websiteResult = await dbInstance.select({
             orderCount: sql<number>`COUNT(*)`,
             totalAmount: sql<number>`COALESCE(SUM(${orders.totalAmount}), 0)`,
           }).from(orders)
             .where(and(
-              gte(orders.createdAt, start),
-              lte(orders.createdAt, end),
+              gte(orders.createdAt, websiteStart),
+              lte(orders.createdAt, websiteEnd),
               sql`${orders.orderStatus} != 'cancelled'`
             ));
           const websiteOrders = Number(websiteResult[0]?.orderCount) || 0;
@@ -6373,12 +6402,32 @@ export const appRouter = router({
         // 2. Delivery data from uploads (use date-only comparison to avoid timezone issues)
         const startDateStr = input.startDate; // YYYY-MM-DD
         const endDateStr = input.endDate; // YYYY-MM-DD
-        const deliveryUploads = await dbInstance.select()
+        const allDeliveryUploads = await dbInstance.select()
           .from(deliverySalesUploads)
           .where(and(
             sql`DATE(${deliverySalesUploads.periodStart}) >= ${startDateStr}`,
             sql`DATE(${deliverySalesUploads.periodEnd}) <= DATE_ADD(${endDateStr}, INTERVAL 1 DAY)`
           ));
+
+        // Deduplicate overlapping uploads: if a newer upload's period fully contains
+        // an older upload's period, skip the older one to avoid double-counting.
+        // Sort by createdAt DESC so newer uploads take priority.
+        const sortedUploads = [...allDeliveryUploads].sort((a, b) => 
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
+        const deliveryUploads = sortedUploads.filter((upload, idx) => {
+          const uploadStart = new Date(upload.periodStart).getTime();
+          const uploadEnd = new Date(upload.periodEnd).getTime();
+          // Check if any newer upload (earlier in the sorted array) fully contains this one
+          for (let i = 0; i < idx; i++) {
+            const newerStart = new Date(sortedUploads[i].periodStart).getTime();
+            const newerEnd = new Date(sortedUploads[i].periodEnd).getTime();
+            if (newerStart <= uploadStart && newerEnd >= uploadEnd) {
+              return false; // Skip: newer upload fully covers this period
+            }
+          }
+          return true;
+        });
 
         // Aggregate delivery data
         let deliveryTotals = {
