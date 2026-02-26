@@ -2346,3 +2346,13 @@ Orders fixed:
   - Fixed: Now sets paymentStatus='completed' and paymentCollectedAt when paymentMethod is provided
 - [x] Ensure Collect Payment flow marks paymentStatus as 'completed' for all payment methods
 - [x] Fix existing orders — 317 completed orders with pending payment status all corrected in database
+
+## Palladium Location in Monthly Report Bug (Feb 26)
+- [x] Investigate why 'Palladium' appears in the monthly order report when all sales were at TNagar
+  - Root cause: 36 orders had outletId=1 (Palladium) instead of outletId=2 (T Nagar)
+  - Excel export had hardcoded outlet name mapping
+  - 10 fallbacks across routers.ts and _core/index.ts defaulted to outletId 1 (Palladium)
+- [x] Fix outlet mapping in Excel export to read from database instead of hardcoding
+- [x] Fix all 36 orders reassigned to T Nagar (outletId=2), plus 18 with null outletId
+- [x] Fix all 10 outletId || 1 fallbacks to outletId || 2 (T Nagar) across routers.ts and _core/index.ts
+- [x] Fix backup export outlet mapping to also read from database

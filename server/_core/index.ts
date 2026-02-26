@@ -158,7 +158,7 @@ async function startServer() {
           
           await dbInstance.insert(kotQueue).values({
             orderId: order.id.toString(),
-            outletId: order.outletId || 1,
+            outletId: order.outletId || 2, // Default to T Nagar
             orderNumber: order.orderNumber,
             kotData: kotData,
             isPrinted: false,
@@ -331,7 +331,7 @@ async function startServer() {
       // Insert new KOT for reprinting
       await dbInstance.insert(kotQueue).values({
         orderId: order.id.toString(),
-        outletId: order.outletId || 1,
+        outletId: order.outletId || 2, // Default to T Nagar
         orderNumber: order.orderNumber,
         kotData: kotData,
         isPrinted: false,
@@ -486,7 +486,7 @@ async function startServer() {
       // Insert receipt into queue
       await dbInstance.insert(receiptQueue).values({
         orderId: order.id,
-        outletId: order.outletId || 1,
+        outletId: order.outletId || 2, // Default to T Nagar
         orderNumber: order.orderNumber,
         receiptData: receiptData,
         isPrinted: false,

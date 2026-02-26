@@ -161,7 +161,15 @@ export async function handleBackupExcelExport(req: Request, res: Response) {
     salesSheet.getColumn(16).width = 10;
 
     let salesRowNum = 5;
-    const outletMap: Record<number, string> = { 1: 'Palladium', 2: 'T Nagar' };
+    // Read outlet names from store_locations table, with fallback
+    let outletMap: Record<number, string> = { 1: 'T Nagar', 2: 'T Nagar' };
+    try {
+      const locRows = await dbInstance.execute(sql`SELECT id, name FROM store_locations`);
+      for (const loc of locRows as any[]) {
+        const shortName = (loc.name as string).replace('Taiwan Maami - ', '').replace('T Nagar', 'T Nagar');
+        outletMap[loc.id as number] = shortName;
+      }
+    } catch (e) { /* use fallback */ }
 
     allOrders.forEach((o, idx) => {
       const row = salesSheet.getRow(salesRowNum);

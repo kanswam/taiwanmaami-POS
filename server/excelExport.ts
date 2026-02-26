@@ -14,11 +14,32 @@ const formatDate = (date: Date) => {
   return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
 };
 
-// Outlet name mapping
+// Outlet name mapping - reads from store_locations table, with fallback
+let outletNameCache: Record<number, string> = {};
+let outletCacheLoaded = false;
+
+async function loadOutletNames() {
+  if (outletCacheLoaded) return;
+  try {
+    const dbInstance = await getDb();
+    if (dbInstance) {
+      const rows = await dbInstance.execute(sql`SELECT id, name FROM store_locations`);
+      for (const row of rows as any[]) {
+        // Extract short name: "Taiwan Maami - T Nagar" -> "T. Nagar"
+        const fullName = row.name as string;
+        const shortName = fullName.replace('Taiwan Maami - ', '').replace('T Nagar', 'T. Nagar');
+        outletNameCache[row.id as number] = shortName;
+      }
+      outletCacheLoaded = true;
+    }
+  } catch (e) {
+    // Fallback to T. Nagar if DB fails
+  }
+}
+
 const outletName = (outletId: number | null) => {
-  if (outletId === 1) return 'Palladium Mall';
-  if (outletId === 2) return 'T. Nagar';
-  return 'N/A';
+  if (!outletId) return 'T. Nagar';
+  return outletNameCache[outletId] || 'T. Nagar';
 };
 
 // Admin auth middleware for express routes
@@ -39,6 +60,9 @@ async function requireAdmin(req: Request, res: Response): Promise<boolean> {
 export async function handleSalesReportExport(req: Request, res: Response) {
   const isAdmin = await requireAdmin(req, res);
   if (!isAdmin) return;
+
+  // Load outlet names from database
+  await loadOutletNames();
 
   const startDate = req.query.startDate as string;
   const endDate = req.query.endDate as string;

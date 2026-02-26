@@ -637,7 +637,7 @@ export const appRouter = router({
         
         await dbInstance.insert(kotQueue).values({
           orderId: order.id.toString(),
-          outletId: order.outletId || 1,
+          outletId: order.outletId || 2,
           orderNumber: order.orderNumber,
           kotData: kotData,
           isPrinted: false,
@@ -762,7 +762,7 @@ export const appRouter = router({
           
           await dbInstance!.insert(receiptQueue).values({
             orderId: order.id,
-            outletId: order.outletId || 1,
+            outletId: order.outletId || 2,
             orderNumber: order.orderNumber,
             receiptData: receiptData,
             isPrinted: false,
@@ -1332,7 +1332,7 @@ export const appRouter = router({
         
         await dbInstance.insert(kotQueue).values({
           orderId: order.id.toString(),
-          outletId: order.outletId || 1,
+          outletId: order.outletId || 2,
           orderNumber: order.orderNumber,
           kotData: kotData,
           isPrinted: false,
@@ -1449,7 +1449,7 @@ export const appRouter = router({
         
         await dbInstance.insert(kotQueue).values({
           orderId: order.id.toString(),
-          outletId: order.outletId || 1,
+          outletId: order.outletId || 2,
           orderNumber: order.orderNumber,
           kotData: kotData,
           isPrinted: false,
@@ -1549,7 +1549,7 @@ export const appRouter = router({
         
         await dbInstance.insert(kotQueue).values({
           orderId: order.id.toString(),
-          outletId: order.outletId || 1,
+          outletId: order.outletId || 2,
           orderNumber: order.orderNumber,
           kotData: cancellationKotData,
           isPrinted: false,
@@ -1774,7 +1774,7 @@ export const appRouter = router({
           
           await dbInstance!.insert(kotQueue).values({
             orderId: order.id.toString(),
-            outletId: order.outletId || 1, // Default to outlet 1 if not specified
+            outletId: order.outletId || 2, // Default to T Nagar if not specified
             orderNumber: order.orderNumber,
             kotData: kotData, // JSON type, no need to stringify
             isPrinted: false,
@@ -1805,7 +1805,7 @@ export const appRouter = router({
           
           await dbInstance!.insert(receiptQueue).values({
             orderId: order.id,
-            outletId: order.outletId || 1,
+            outletId: order.outletId || 2,
             orderNumber: order.orderNumber,
             receiptData: receiptData,
             isPrinted: false,
