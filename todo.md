@@ -2329,3 +2329,6 @@ Orders fixed:
   - Confirmed: mid Feb (Feb 1-14, 114 orders) fully contained within Feb 2026 (Jan 27-Feb 26, 222 orders)
   - Both Insights and Channel Analytics procedures now deduplicate overlapping uploads
 - [x] Date range selector already exists (Current Range / All Time / YTD / uploaded period dropdown)
+
+## Remove Predictions Tab (Feb 26)
+- [x] Remove Predictions tab from Analytics dashboard - inaccurate extrapolation-based predictions
