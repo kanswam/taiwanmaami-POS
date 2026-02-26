@@ -1,0 +1,24 @@
+{
+  "query": "SELECT id, orderNumber, orderStatus, paymentStatus, paymentMethod FROM orders WHERE orderNumber IN ('00546', '00544', '546', '544') OR id IN (546, 544);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT id, orderNumber, orderStatus, paymentStatus, paymentMethod FROM orders WHERE orderNumber IN ('00546', '00544', '546', '544') OR id IN (546, 544);",
+  "rows": [
+    {
+      "id": "2400012",
+      "orderNumber": "00544",
+      "orderStatus": "completed",
+      "paymentStatus": "completed",
+      "paymentMethod": "card"
+    },
+    {
+      "id": "2400014",
+      "orderNumber": "00546",
+      "orderStatus": "completed",
+      "paymentStatus": "completed",
+      "paymentMethod": "zomato_dineout"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\torderNumber\torderStatus\tpaymentStatus\tpaymentMethod\n2400012\t00544\tcompleted\tcompleted\tcard\n2400014\t00546\tcompleted\tcompleted\tzomato_dineout\n",
+  "stderr": "",
+  "execution_time_ms": 61
+}

@@ -707,10 +707,14 @@ export const appRouter = router({
         
         await db.updateOrderStatus(input.orderId, input.status);
         
-        // Update payment method and proof if provided (for completed in-store orders)
+        // Update payment method, status, and proof if provided (for completed in-store orders)
         if (input.status === 'completed' && (input.paymentMethod || input.paymentProofUrl)) {
           const updateData: any = {};
-          if (input.paymentMethod) updateData.paymentMethod = input.paymentMethod;
+          if (input.paymentMethod) {
+            updateData.paymentMethod = input.paymentMethod;
+            updateData.paymentStatus = 'completed';
+            updateData.paymentCollectedAt = new Date();
+          }
           if (input.paymentProofUrl) updateData.paymentProofUrl = input.paymentProofUrl;
           
           await dbInstance!

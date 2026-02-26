@@ -2339,3 +2339,10 @@ Orders fixed:
 - [x] Add redeem button on Staff Orders page so staff can mark rewards as used
 - [x] Improve admin visibility of reward redemption status (redeemed vs unredeemed vs expired)
 - [x] Add customer-facing redemption history/proof on Profile page loyalty section
+
+## Payment Status Bug Fix (Feb 26)
+- [x] Fix payment status not updating to 'completed' when staff collects payment via Zomato Dineout, UPI, etc.
+  - Root cause: updateStatus procedure recorded paymentMethod but never set paymentStatus to 'completed'
+  - Fixed: Now sets paymentStatus='completed' and paymentCollectedAt when paymentMethod is provided
+- [x] Ensure Collect Payment flow marks paymentStatus as 'completed' for all payment methods
+- [x] Fix existing orders — 317 completed orders with pending payment status all corrected in database
