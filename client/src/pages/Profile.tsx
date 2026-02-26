@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { trpc } from '@/lib/trpc';
 import { useAuth } from '@/_core/hooks/useAuth';
 import { Link } from 'wouter';
-import { User, Phone, Mail, Cake, MapPin, Gift, Star, Edit2, Plus, Trash2, Check, ArrowLeft } from 'lucide-react';
+import { User, Phone, Mail, Cake, MapPin, Gift, Star, Edit2, Plus, Trash2, Check, ArrowLeft, Award, CheckCircle, XCircle, Clock } from 'lucide-react';
 import { toast } from 'sonner';
 
 const MONTHS = [
@@ -43,6 +43,7 @@ export default function Profile() {
   
   // Delivery areas for address form
   const { data: deliveryAreas } = trpc.addresses.getDeliveryAreas.useQuery();
+  const { data: rewardHistory } = trpc.loyalty.getMyRewardHistory.useQuery(undefined, { enabled: !!user });
   
   // Edit states
   const [isEditingProfile, setIsEditingProfile] = useState(false);
@@ -450,6 +451,83 @@ export default function Profile() {
             </p>
           </div>
         </Card>
+
+        {/* Reward History */}
+        {rewardHistory && rewardHistory.length > 0 && (
+          <Card className="p-6 mb-6 bg-white shadow-sm">
+            <h2 className="text-xl font-semibold flex items-center gap-2 mb-4">
+              <Award className="w-5 h-5 text-amber-500" />
+              Reward History
+            </h2>
+            <div className="space-y-3">
+              {rewardHistory.map((reward: any) => (
+                <div
+                  key={reward.id}
+                  className={`p-4 rounded-lg border ${
+                    reward.status === 'available'
+                      ? 'bg-green-50 border-green-200'
+                      : reward.status === 'redeemed'
+                      ? 'bg-gray-50 border-gray-200'
+                      : 'bg-red-50 border-red-200'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      {reward.status === 'available' && <CheckCircle className="w-5 h-5 text-green-600" />}
+                      {reward.status === 'redeemed' && <Gift className="w-5 h-5 text-gray-500" />}
+                      {reward.status === 'expired' && <XCircle className="w-5 h-5 text-red-500" />}
+                      <div>
+                        <p className={`font-medium ${
+                          reward.status === 'available' ? 'text-green-800' :
+                          reward.status === 'redeemed' ? 'text-gray-600 line-through' :
+                          'text-red-600 line-through'
+                        }`}>
+                          🧂 Free Large Bubble Tea
+                        </p>
+                        <p className="text-xs text-muted-foreground font-mono">
+                          Code: {reward.voucherCode}
+                        </p>
+                      </div>
+                    </div>
+                    <span className={`text-xs font-bold px-2 py-1 rounded-full ${
+                      reward.status === 'available' ? 'bg-green-100 text-green-700' :
+                      reward.status === 'redeemed' ? 'bg-gray-100 text-gray-600' :
+                      'bg-red-100 text-red-600'
+                    }`}>
+                      {reward.status === 'available' ? '✅ Available' :
+                       reward.status === 'redeemed' ? '🌟 Redeemed' :
+                       '❌ Expired'}
+                    </span>
+                  </div>
+                  <div className="mt-2 flex items-center gap-4 text-xs text-muted-foreground">
+                    <span className="flex items-center gap-1">
+                      <Clock className="w-3 h-3" />
+                      Earned: {new Date(reward.createdAt).toLocaleDateString()}
+                    </span>
+                    {reward.status === 'redeemed' && reward.redeemedAt && (
+                      <span className="flex items-center gap-1">
+                        <CheckCircle className="w-3 h-3" />
+                        Redeemed: {new Date(reward.redeemedAt).toLocaleDateString()}
+                      </span>
+                    )}
+                    {reward.status === 'available' && (
+                      <span className="flex items-center gap-1">
+                        <Clock className="w-3 h-3" />
+                        Expires: {new Date(reward.expiresAt).toLocaleDateString()}
+                      </span>
+                    )}
+                    {reward.status === 'expired' && (
+                      <span className="flex items-center gap-1 text-red-500">
+                        <XCircle className="w-3 h-3" />
+                        Expired: {new Date(reward.expiresAt).toLocaleDateString()}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </Card>
+        )}
         
         {/* Addresses Card */}
         <Card className="p-6 bg-white shadow-sm">

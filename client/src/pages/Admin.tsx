@@ -4850,23 +4850,51 @@ const [mergeSource, setMergeSource] = useState<{ id: number | string; name: stri
                     )}
                   </td>
                   <td className="p-3 text-center">
-                    {customer.unredeemedRewards > 0 ? (
+                    {(customer.rewardDetails?.length || 0) > 0 ? (
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-green-100 text-green-700 text-xs font-bold cursor-help animate-pulse">
-                            🎁 {customer.unredeemedRewards}
+                          <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-bold cursor-help ${customer.unredeemedRewards > 0 ? 'bg-green-100 text-green-700 animate-pulse' : 'bg-gray-100 text-gray-600'}`}>
+                            🎁 {customer.unredeemedRewards > 0 ? customer.unredeemedRewards : '0'}
                           </span>
                         </TooltipTrigger>
-                        <TooltipContent className="max-w-xs">
-                          <div className="space-y-1">
-                            <p className="font-semibold">Unredeemed Rewards:</p>
-                            {customer.rewardDetails?.map((r: any, i: number) => (
-                              <div key={i} className="text-xs">
-                                <p>🧋 Free Large Bubble Tea</p>
-                                <p className="text-muted-foreground">Code: {r.voucherCode}</p>
-                                <p className="text-muted-foreground">Expires: {new Date(r.expiresAt).toLocaleDateString()}</p>
+                        <TooltipContent className="max-w-sm">
+                          <div className="space-y-2">
+                            {customer.unredeemedRewards > 0 && (
+                              <div>
+                                <p className="font-semibold text-green-700 mb-1">✅ Available ({customer.unredeemedRewards}):</p>
+                                {customer.rewardDetails?.filter((r: any) => !r.isRedeemed && new Date(r.expiresAt) > new Date()).map((r: any, i: number) => (
+                                  <div key={i} className="text-xs mb-1 pl-2 border-l-2 border-green-400">
+                                    <p>🧂 Free Large Bubble Tea</p>
+                                    <p className="text-muted-foreground">Code: {r.voucherCode}</p>
+                                    <p className="text-muted-foreground">Expires: {new Date(r.expiresAt).toLocaleDateString()}</p>
+                                  </div>
+                                ))}
                               </div>
-                            ))}
+                            )}
+                            {customer.rewardDetails?.some((r: any) => r.isRedeemed) && (
+                              <div>
+                                <p className="font-semibold text-gray-500 mb-1">🌟 Redeemed:</p>
+                                {customer.rewardDetails?.filter((r: any) => r.isRedeemed).map((r: any, i: number) => (
+                                  <div key={i} className="text-xs mb-1 pl-2 border-l-2 border-gray-300">
+                                    <p className="line-through opacity-70">🧂 Free Large Bubble Tea</p>
+                                    <p className="text-muted-foreground">Code: {r.voucherCode}</p>
+                                    <p className="text-muted-foreground">Redeemed: {r.redeemedAt ? new Date(r.redeemedAt).toLocaleDateString() : 'N/A'}</p>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                            {customer.rewardDetails?.some((r: any) => !r.isRedeemed && new Date(r.expiresAt) <= new Date()) && (
+                              <div>
+                                <p className="font-semibold text-red-500 mb-1">❌ Expired:</p>
+                                {customer.rewardDetails?.filter((r: any) => !r.isRedeemed && new Date(r.expiresAt) <= new Date()).map((r: any, i: number) => (
+                                  <div key={i} className="text-xs mb-1 pl-2 border-l-2 border-red-300">
+                                    <p className="line-through opacity-70">🧂 Free Large Bubble Tea</p>
+                                    <p className="text-muted-foreground">Code: {r.voucherCode}</p>
+                                    <p className="text-muted-foreground">Expired: {new Date(r.expiresAt).toLocaleDateString()}</p>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
                           </div>
                         </TooltipContent>
                       </Tooltip>

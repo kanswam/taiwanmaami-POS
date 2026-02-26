@@ -521,6 +521,15 @@ export default function StaffOrders() {
     onError: (err) => toast.error(err.message),
   });
 
+  // Staff redeem customer reward at counter
+  const redeemRewardMutation = trpc.loyalty.staffRedeemReward.useMutation({
+    onSuccess: (data) => {
+      toast.success(`Reward redeemed for ${data.customerName}! Free Large Bubble Tea applied.`);
+      utils.orders.getRecent.invalidate();
+    },
+    onError: (err) => toast.error(err.message || 'Failed to redeem reward'),
+  });
+
   // Order notification sounds & auto-poll (synced with admin page chimes)
   const { soundEnabled, toggleSound, newOrderIds } = useOrderNotification(ordersData, refetch, 20000);
 
@@ -782,26 +791,38 @@ export default function StaffOrders() {
           )}
         </div>
 
-        {/* Reward Reminder Banner */}
+        {/* Reward Reminder Banner with Redeem Button */}
         {order.customerRewards && order.customerRewards.count > 0 && (
-          <div className="bg-green-50 border border-green-300 rounded-lg p-3 mb-3 animate-pulse">
-            <div className="flex items-center gap-2">
+          <div className="bg-green-50 border border-green-300 rounded-lg p-3 mb-3">
+            <div className="flex items-center gap-2 mb-2">
               <Gift className="w-5 h-5 text-green-600" />
-              <div className="flex-1">
-                <p className="text-sm font-bold text-green-800">
-                  🎉 This customer has {order.customerRewards.count} FREE drink{order.customerRewards.count > 1 ? 's' : ''} available!
-                </p>
-                <p className="text-xs text-green-700 mt-0.5">
-                  Remind them to use their reward — Free Large Bubble Tea
-                </p>
-                {order.customerRewards.rewards.map((r: any, i: number) => (
-                  <p key={i} className="text-xs text-green-600 mt-0.5">
-                    Code: <span className="font-mono font-bold">{r.voucherCode}</span>
-                    {' · '}Expires: {new Date(r.expiresAt).toLocaleDateString()}
-                  </p>
-                ))}
-              </div>
+              <p className="text-sm font-bold text-green-800 flex-1">
+                🎉 {order.customerRewards.count} FREE drink{order.customerRewards.count > 1 ? 's' : ''} available!
+              </p>
             </div>
+            {order.customerRewards.rewards.map((r: any, i: number) => (
+              <div key={i} className="flex items-center justify-between bg-white rounded-md p-2 mb-1 border border-green-200">
+                <div className="flex-1">
+                  <p className="text-xs font-medium text-green-800">🧂 Free Large Bubble Tea</p>
+                  <p className="text-xs text-green-600">
+                    Code: <span className="font-mono font-bold">{r.voucherCode}</span>
+                    {' · '}Exp: {new Date(r.expiresAt).toLocaleDateString()}
+                  </p>
+                </div>
+                <Button
+                  size="sm"
+                  className="bg-green-600 hover:bg-green-700 text-white text-xs h-7 px-3"
+                  onClick={() => {
+                    if (window.confirm(`Mark this reward as REDEEMED for ${order.customerName || 'this customer'}?\n\nReward: Free Large Bubble Tea\nCode: ${r.voucherCode}`)) {
+                      redeemRewardMutation.mutate({ rewardId: r.id });
+                    }
+                  }}
+                  disabled={redeemRewardMutation.isPending}
+                >
+                  {redeemRewardMutation.isPending ? 'Redeeming...' : '✅ Redeem'}
+                </Button>
+              </div>
+            ))}
           </div>
         )}
 

@@ -987,7 +987,7 @@ export const appRouter = router({
         
         // Get unredeemed rewards for registered CUSTOMER users in these orders (exclude staff/admin)
         const userIds = Array.from(new Set(recentOrders.filter(o => o.userId && o.userId > 0).map(o => o.userId!)));
-        const userRewardsMap: Record<number, { count: number; rewards: { voucherCode: string; rewardType: string; expiresAt: Date }[] }> = {};
+        const userRewardsMap: Record<number, { count: number; rewards: { id: number; voucherCode: string; rewardType: string; expiresAt: Date }[] }> = {};
         if (userIds.length > 0) {
           // First, identify which userIds belong to staff/admin so we can exclude them
           const staffAdminUsers = await dbInstance.select({ id: users.id }).from(users)
@@ -1006,7 +1006,7 @@ export const appRouter = router({
               if (new Date(r.expiresAt) > now && customerUserIds.includes(r.userId)) {
                 if (!userRewardsMap[r.userId]) userRewardsMap[r.userId] = { count: 0, rewards: [] };
                 userRewardsMap[r.userId].count += 1;
-                userRewardsMap[r.userId].rewards.push({ voucherCode: r.voucherCode, rewardType: r.rewardType, expiresAt: r.expiresAt });
+                userRewardsMap[r.userId].rewards.push({ id: r.id, voucherCode: r.voucherCode, rewardType: r.rewardType, expiresAt: r.expiresAt });
               }
             });
           }
@@ -3756,6 +3756,114 @@ export const appRouter = router({
           expiresAt: reward.expiresAt,
         };
       }),
+
+    // Staff: Redeem a customer's reward at the counter
+    staffRedeemReward: staffProcedure
+      .input(z.object({
+        rewardId: z.number(),
+        notes: z.string().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const dbInstance = await getDb();
+        
+        // Find the reward
+        const [reward] = await dbInstance!
+          .select()
+          .from(loyaltyRewards)
+          .where(eq(loyaltyRewards.id, input.rewardId));
+        
+        if (!reward) {
+          throw new TRPCError({ code: 'NOT_FOUND', message: 'Reward not found' });
+        }
+        
+        if (reward.isRedeemed) {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: 'This reward has already been redeemed' });
+        }
+        
+        if (new Date(reward.expiresAt) < new Date()) {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: 'This reward has expired' });
+        }
+        
+        // Mark as redeemed by staff
+        await dbInstance!
+          .update(loyaltyRewards)
+          .set({
+            isRedeemed: true,
+            redeemedAt: new Date(),
+            redeemedOrderId: null, // Staff counter redemption, no specific order
+          })
+          .where(eq(loyaltyRewards.id, reward.id));
+        
+        // Log the redemption in stamp transactions
+        await dbInstance!.insert(stampTransactions).values({
+          userId: reward.userId,
+          orderId: null,
+          action: 'redeem',
+          stamps: 0,
+          description: `Reward redeemed at counter by ${ctx.user.name || 'Staff'}${input.notes ? ` — ${input.notes}` : ''}`,
+        });
+        
+        // Get customer name for confirmation
+        const [customer] = await dbInstance!
+          .select({ name: users.name })
+          .from(users)
+          .where(eq(users.id, reward.userId));
+        
+        return {
+          success: true,
+          customerName: customer?.name || 'Customer',
+          rewardType: reward.rewardType,
+          voucherCode: reward.voucherCode,
+          redeemedAt: new Date(),
+          redeemedBy: ctx.user.name || 'Staff',
+        };
+      }),
+
+    // Staff/Admin: Get all rewards for a specific customer (for admin customer view)
+    getCustomerRewards: staffProcedure
+      .input(z.object({ customerId: z.number() }))
+      .query(async ({ input }) => {
+        const dbInstance = await getDb();
+        const rewards = await dbInstance!
+          .select()
+          .from(loyaltyRewards)
+          .where(eq(loyaltyRewards.userId, input.customerId))
+          .orderBy(desc(loyaltyRewards.createdAt));
+        
+        return rewards.map(r => ({
+          id: r.id,
+          rewardType: r.rewardType,
+          voucherCode: r.voucherCode,
+          isRedeemed: r.isRedeemed,
+          redeemedAt: r.redeemedAt,
+          redeemedOrderId: r.redeemedOrderId,
+          expiresAt: r.expiresAt,
+          createdAt: r.createdAt,
+          isExpired: new Date(r.expiresAt) < new Date(),
+        }));
+      }),
+
+    // Customer: Get own reward history (for profile page proof)
+    getMyRewardHistory: protectedProcedure.query(async ({ ctx }) => {
+      const dbInstance = await getDb();
+      const rewards = await dbInstance!
+        .select()
+        .from(loyaltyRewards)
+        .where(eq(loyaltyRewards.userId, ctx.user.id))
+        .orderBy(desc(loyaltyRewards.createdAt));
+      
+      return rewards.map(r => ({
+        id: r.id,
+        rewardType: r.rewardType,
+        voucherCode: r.voucherCode,
+        isRedeemed: r.isRedeemed,
+        redeemedAt: r.redeemedAt,
+        expiresAt: r.expiresAt,
+        createdAt: r.createdAt,
+        isExpired: !r.isRedeemed && new Date(r.expiresAt) < new Date(),
+        status: r.isRedeemed ? 'redeemed' as const : (new Date(r.expiresAt) < new Date() ? 'expired' as const : 'available' as const),
+      }));
+    }),
   }),
 
   // Guest checkout routes
@@ -6978,17 +7086,17 @@ export const appRouter = router({
           }
         }
 
-        // Get unredeemed rewards per user
-        const allRewards = await dbInstance.select().from(loyaltyRewards)
-          .where(eq(loyaltyRewards.isRedeemed, false));
+        // Get all rewards per user (both redeemed and unredeemed)
+        const allRewards = await dbInstance.select().from(loyaltyRewards);
         const now = new Date();
-        const userRewards: Record<number, { count: number; rewards: { voucherCode: string; rewardType: string; expiresAt: Date }[] }> = {};
+        const userRewards: Record<number, { count: number; rewards: { id: number; voucherCode: string; rewardType: string; expiresAt: Date; isRedeemed: boolean; redeemedAt: Date | null }[] }> = {};
         allRewards.forEach(r => {
-          if (new Date(r.expiresAt) > now) {
-            if (!userRewards[r.userId]) userRewards[r.userId] = { count: 0, rewards: [] };
-            userRewards[r.userId].count += 1;
-            userRewards[r.userId].rewards.push({ voucherCode: r.voucherCode, rewardType: r.rewardType, expiresAt: r.expiresAt });
-          }
+          // Only count unredeemed, non-expired as active
+          const isExpired = new Date(r.expiresAt) < now;
+          const isActive = !r.isRedeemed && !isExpired;
+          if (!userRewards[r.userId]) userRewards[r.userId] = { count: 0, rewards: [] };
+          if (isActive) userRewards[r.userId].count += 1;
+          userRewards[r.userId].rewards.push({ id: r.id, voucherCode: r.voucherCode, rewardType: r.rewardType, expiresAt: r.expiresAt, isRedeemed: r.isRedeemed, redeemedAt: r.redeemedAt });
         });
 
         // Get order stats for registered users

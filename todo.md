@@ -2332,3 +2332,10 @@ Orders fixed:
 
 ## Remove Predictions Tab (Feb 26)
 - [x] Remove Predictions tab from Analytics dashboard - inaccurate extrapolation-based predictions
+
+## Reward Redemption Tracking & Proof (Feb 26)
+- [x] Investigate Gurushi Jain's reward status — NOT redeemed (voucher REWARDMLMHNGMRIMN4, expires May 15)
+- [x] Add backend procedure for staff/admin to redeem rewards (staffRedeemReward)
+- [x] Add redeem button on Staff Orders page so staff can mark rewards as used
+- [x] Improve admin visibility of reward redemption status (redeemed vs unredeemed vs expired)
+- [x] Add customer-facing redemption history/proof on Profile page loyalty section
