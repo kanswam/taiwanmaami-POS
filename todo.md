@@ -2356,3 +2356,11 @@ Orders fixed:
 - [x] Fix all 36 orders reassigned to T Nagar (outletId=2), plus 18 with null outletId
 - [x] Fix all 10 outletId || 1 fallbacks to outletId || 2 (T Nagar) across routers.ts and _core/index.ts
 - [x] Fix backup export outlet mapping to also read from database
+
+## Customer Database Excel Export (Feb 26)
+- [x] Add backend endpoint /api/export/customer-database as formatted Excel (.xlsx)
+- [x] Include: Name, Phone, Email, Type, Orders, Total Spent, Avg Order Value, Store Credit, Stamps, Lifetime Stamps, Active Rewards, Redeemed Rewards, Last Order
+- [x] Add branded formatting (dark red headers, column widths, ₹ currency formatting, alternating rows, borders)
+- [x] Add 3 sheets: Customer Database (all customers), Top Customers (top 30 by spending), Birthday Calendar
+- [x] Add Export Excel button to Admin Customer Database page
+- [x] 5 vitest tests passing

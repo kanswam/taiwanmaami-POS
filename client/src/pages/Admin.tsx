@@ -4775,6 +4775,17 @@ const [mergeSource, setMergeSource] = useState<{ id: number | string; name: stri
       <div className="flex justify-between items-center">
         <h2 className="text-lg font-semibold">Customer Database</h2>
         <div className="flex gap-2">
+          <Button variant="outline" onClick={() => {
+            const link = document.createElement('a');
+            link.href = '/api/export/customer-database';
+            link.download = 'customer-database.xlsx';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+          }}>
+            <Download className="w-4 h-4 mr-2" />
+            Export Excel
+          </Button>
           <Button variant="outline" onClick={() => { resetMergeState(); setShowMergeDialog(true); }}>
             <GitMerge className="w-4 h-4 mr-2" />
             Merge Accounts

@@ -749,3 +749,269 @@ export async function handleLeelaRegistrationsExport(req: Request, res: Response
     res.status(500).json({ error: 'Failed to generate registrations report', details: String(error) });
   }
 }
+
+
+// ============================================================
+// CUSTOMER DATABASE EXPORT
+// ============================================================
+export async function handleCustomerDatabaseExport(req: Request, res: Response) {
+  const isAdmin = await requireAdmin(req, res);
+  if (!isAdmin) return;
+
+  const dbInstance = await getDb();
+  if (!dbInstance) {
+    return res.status(500).json({ error: 'Database not available' });
+  }
+
+  try {
+    const { users, orders, loyaltyRewards } = await import('../drizzle/schema');
+
+    // Get all customers (exclude staff/admin)
+    const allCustomers = await dbInstance
+      .select()
+      .from(users)
+      .where(eq(users.role, 'customer'))
+      .orderBy(desc(users.createdAt));
+
+    // Get order stats per customer
+    const orderStats = await dbInstance
+      .select({
+        userId: orders.userId,
+        orderCount: sql<number>`COUNT(*)`.as('order_count'),
+        totalSpent: sql<number>`SUM(${orders.totalAmount})`.as('total_spent'),
+        lastOrderDate: sql<string>`MAX(${orders.createdAt})`.as('last_order_date'),
+      })
+      .from(orders)
+      .where(sql`${orders.orderStatus} != 'cancelled'`)
+      .groupBy(orders.userId);
+
+    const orderMap = new Map(orderStats.map(o => [o.userId, o]));
+
+    // Get reward counts per customer (unredeemed)
+    const rewardCounts = await dbInstance
+      .select({
+        userId: loyaltyRewards.userId,
+        unredeemedCount: sql<number>`SUM(CASE WHEN ${loyaltyRewards.isRedeemed} = 0 AND ${loyaltyRewards.expiresAt} > NOW() THEN 1 ELSE 0 END)`.as('unredeemed'),
+        redeemedCount: sql<number>`SUM(CASE WHEN ${loyaltyRewards.isRedeemed} = 1 THEN 1 ELSE 0 END)`.as('redeemed'),
+        totalRewards: sql<number>`COUNT(*)`.as('total_rewards'),
+      })
+      .from(loyaltyRewards)
+      .groupBy(loyaltyRewards.userId);
+
+    const rewardMap = new Map(rewardCounts.map(r => [r.userId, r]));
+
+    // Build workbook
+    const workbook = new ExcelJS.Workbook();
+    workbook.creator = 'Taiwan Maami';
+    workbook.created = new Date();
+
+    // ===== Sheet 1: Customer Database =====
+    const sheet = workbook.addWorksheet('Customer Database');
+    const colCount = 14;
+    const exportDate = new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+    addTitle(sheet, 'Taiwan Maami - Customer Database', `Exported on ${exportDate} · ${allCustomers.length} customers`, colCount);
+
+    // Headers
+    const headers = [
+      'S.No', 'Customer Name', 'Phone', 'Email', 'Type',
+      'Orders', 'Total Spent (₹)', 'Avg Order Value (₹)', 'Store Credit (₹)',
+      'Stamps', 'Lifetime Stamps', 'Active Rewards', 'Redeemed Rewards',
+      'Last Order'
+    ];
+    const headerRow = sheet.getRow(4);
+    headers.forEach((h, i) => { headerRow.getCell(i + 1).value = h; });
+    applyHeaderStyle(headerRow, colCount);
+
+    // Column widths
+    sheet.getColumn(1).width = 6;     // S.No
+    sheet.getColumn(2).width = 25;    // Name
+    sheet.getColumn(3).width = 16;    // Phone
+    sheet.getColumn(4).width = 30;    // Email
+    sheet.getColumn(5).width = 12;    // Type
+    sheet.getColumn(6).width = 10;    // Orders
+    sheet.getColumn(7).width = 18;    // Total Spent
+    sheet.getColumn(8).width = 18;    // Avg Order Value
+    sheet.getColumn(9).width = 16;    // Store Credit
+    sheet.getColumn(10).width = 10;   // Stamps
+    sheet.getColumn(11).width = 16;   // Lifetime Stamps
+    sheet.getColumn(12).width = 16;   // Active Rewards
+    sheet.getColumn(13).width = 18;   // Redeemed Rewards
+    sheet.getColumn(14).width = 16;   // Last Order
+
+    let rowNum = 5;
+    let totalOrders = 0;
+    let totalRevenue = 0;
+    let totalStoreCredit = 0;
+
+    allCustomers.forEach((customer, idx) => {
+      const stats = orderMap.get(customer.id);
+      const rewards = rewardMap.get(customer.id);
+      const orderCount = stats ? Number(stats.orderCount) : 0;
+      const totalSpent = stats ? Number(stats.totalSpent) : 0;
+      const avgOrderValue = orderCount > 0 ? totalSpent / orderCount : 0;
+      const lastOrder = stats?.lastOrderDate
+        ? new Date(stats.lastOrderDate).toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' })
+        : '-';
+
+      const customerType = customer.phone ? 'Registered' : (customer.email ? 'Email Only' : 'Guest');
+
+      totalOrders += orderCount;
+      totalRevenue += totalSpent;
+      totalStoreCredit += customer.storeCredit;
+
+      const row = sheet.getRow(rowNum);
+      row.values = [
+        idx + 1,
+        customer.name || 'Unknown',
+        customer.phone || '-',
+        customer.email || '-',
+        customerType,
+        orderCount,
+        Math.round(toRupees(totalSpent) * 100) / 100,
+        Math.round(toRupees(avgOrderValue) * 100) / 100,
+        Math.round(toRupees(customer.storeCredit) * 100) / 100,
+        `${customer.stampCount}/10`,
+        customer.lifetimeStamps,
+        rewards ? Number(rewards.unredeemedCount) : 0,
+        rewards ? Number(rewards.redeemedCount) : 0,
+        lastOrder,
+      ];
+
+      applyDataRowStyle(row, colCount, idx % 2 === 1, [7, 8, 9]);
+      row.getCell(1).alignment = { horizontal: 'center' };
+      row.getCell(5).alignment = { horizontal: 'center' };
+      row.getCell(6).alignment = { horizontal: 'center' };
+      row.getCell(10).alignment = { horizontal: 'center' };
+      row.getCell(11).alignment = { horizontal: 'center' };
+      row.getCell(12).alignment = { horizontal: 'center' };
+      row.getCell(13).alignment = { horizontal: 'center' };
+      row.getCell(14).alignment = { horizontal: 'center' };
+
+      rowNum++;
+    });
+
+    // Totals row
+    const totalsRow = sheet.getRow(rowNum);
+    totalsRow.values = [
+      '', `TOTAL (${allCustomers.length} customers)`, '', '', '',
+      totalOrders,
+      Math.round(toRupees(totalRevenue) * 100) / 100,
+      totalOrders > 0 ? Math.round(toRupees(totalRevenue / totalOrders) * 100) / 100 : 0,
+      Math.round(toRupees(totalStoreCredit) * 100) / 100,
+      '', '', '', '', '',
+    ];
+    applyTotalsRowStyle(totalsRow, colCount, [7, 8, 9]);
+    totalsRow.getCell(2).alignment = { horizontal: 'left', vertical: 'middle' };
+    totalsRow.getCell(6).alignment = { horizontal: 'center', vertical: 'middle' };
+
+    // ===== Sheet 2: Top Customers =====
+    const topSheet = workbook.addWorksheet('Top Customers');
+    const topColCount = 8;
+    addTitle(topSheet, 'Taiwan Maami - Top Customers by Spending', `Top 30 customers · ${exportDate}`, topColCount);
+
+    const topHeaders = ['Rank', 'Customer Name', 'Phone', 'Email', 'Orders', 'Total Spent (₹)', 'Avg Order (₹)', 'Stamps'];
+    const topHeaderRow = topSheet.getRow(4);
+    topHeaders.forEach((h, i) => { topHeaderRow.getCell(i + 1).value = h; });
+    applyHeaderStyle(topHeaderRow, topColCount);
+
+    topSheet.getColumn(1).width = 8;
+    topSheet.getColumn(2).width = 25;
+    topSheet.getColumn(3).width = 16;
+    topSheet.getColumn(4).width = 30;
+    topSheet.getColumn(5).width = 10;
+    topSheet.getColumn(6).width = 18;
+    topSheet.getColumn(7).width = 16;
+    topSheet.getColumn(8).width = 10;
+
+    // Sort customers by total spent
+    const sortedCustomers = allCustomers
+      .map(c => {
+        const stats = orderMap.get(c.id);
+        return {
+          ...c,
+          orderCount: stats ? Number(stats.orderCount) : 0,
+          totalSpent: stats ? Number(stats.totalSpent) : 0,
+        };
+      })
+      .filter(c => c.totalSpent > 0)
+      .sort((a, b) => b.totalSpent - a.totalSpent)
+      .slice(0, 30);
+
+    let topRowNum = 5;
+    sortedCustomers.forEach((customer, idx) => {
+      const avgOrder = customer.orderCount > 0 ? customer.totalSpent / customer.orderCount : 0;
+      const row = topSheet.getRow(topRowNum);
+      row.values = [
+        idx + 1,
+        customer.name || 'Unknown',
+        customer.phone || '-',
+        customer.email || '-',
+        customer.orderCount,
+        Math.round(toRupees(customer.totalSpent) * 100) / 100,
+        Math.round(toRupees(avgOrder) * 100) / 100,
+        `${customer.stampCount}/10`,
+      ];
+      applyDataRowStyle(row, topColCount, idx % 2 === 1, [6, 7]);
+      row.getCell(1).alignment = { horizontal: 'center' };
+      row.getCell(5).alignment = { horizontal: 'center' };
+      row.getCell(8).alignment = { horizontal: 'center' };
+      topRowNum++;
+    });
+
+    // ===== Sheet 3: Birthday Calendar =====
+    const bdaySheet = workbook.addWorksheet('Birthday Calendar');
+    const bdayColCount = 6;
+    addTitle(bdaySheet, 'Taiwan Maami - Customer Birthday Calendar', `Customers with birthdays on file · ${exportDate}`, bdayColCount);
+
+    const bdayHeaders = ['Month', 'Day', 'Customer Name', 'Phone', 'Email', 'Birthday Gift Used'];
+    const bdayHeaderRow = bdaySheet.getRow(4);
+    bdayHeaders.forEach((h, i) => { bdayHeaderRow.getCell(i + 1).value = h; });
+    applyHeaderStyle(bdayHeaderRow, bdayColCount);
+
+    bdaySheet.getColumn(1).width = 14;
+    bdaySheet.getColumn(2).width = 8;
+    bdaySheet.getColumn(3).width = 25;
+    bdaySheet.getColumn(4).width = 16;
+    bdaySheet.getColumn(5).width = 30;
+    bdaySheet.getColumn(6).width = 20;
+
+    const monthNames = ['', 'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+
+    const birthdayCustomers = allCustomers
+      .filter(c => c.birthMonth && c.birthDay)
+      .sort((a, b) => (a.birthMonth! - b.birthMonth!) || (a.birthDay! - b.birthDay!));
+
+    let bdayRowNum = 5;
+    birthdayCustomers.forEach((customer, idx) => {
+      const row = bdaySheet.getRow(bdayRowNum);
+      const currentYear = new Date().getFullYear();
+      const giftUsed = customer.birthdayCodeUsedYear === currentYear ? `Yes (${currentYear})` : 'No';
+      row.values = [
+        monthNames[customer.birthMonth!],
+        customer.birthDay,
+        customer.name || 'Unknown',
+        customer.phone || '-',
+        customer.email || '-',
+        giftUsed,
+      ];
+      applyDataRowStyle(row, bdayColCount, idx % 2 === 1);
+      row.getCell(1).alignment = { horizontal: 'center' };
+      row.getCell(2).alignment = { horizontal: 'center' };
+      row.getCell(6).alignment = { horizontal: 'center' };
+      bdayRowNum++;
+    });
+
+    // Generate buffer and send
+    const buffer = await workbook.xlsx.writeBuffer();
+    const filename = `Taiwan_Maami_Customer_Database_${exportDate.replace(/ /g, '_')}.xlsx`;
+
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.setHeader('Content-Length', (buffer as any).length);
+    res.send(Buffer.from(buffer as ArrayBuffer));
+
+  } catch (error) {
+    console.error('Customer database export error:', error);
+    res.status(500).json({ error: 'Failed to generate customer database report', details: String(error) });
+  }
+}

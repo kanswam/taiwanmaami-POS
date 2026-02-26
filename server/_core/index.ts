@@ -6,7 +6,7 @@ import { createExpressMiddleware } from "@trpc/server/adapters/express";
 import { registerOAuthRoutes } from "./oauth";
 import { appRouter } from "../routers";
 import { handleSalesReportExport } from "../excelExport";
-import { handleItemwiseExport, handleChannelsExport, handleLeelaRegistrationsExport } from "../excelExportExtra";
+import { handleItemwiseExport, handleChannelsExport, handleLeelaRegistrationsExport, handleCustomerDatabaseExport } from "../excelExportExtra";
 import { handleBackupExcelExport } from "../excelBackupExport";
 import { handleDeliveryUpload, handleGetDeliveryUploads, handleDeleteDeliveryUpload, deliveryUploadMiddleware } from "../deliveryUpload";
 import { createContext } from "./context";
@@ -505,6 +505,7 @@ async function startServer() {
   app.get('/api/export/channels-report', handleChannelsExport as any);
   app.get('/api/export/leela-registrations', handleLeelaRegistrationsExport as any);
   app.get('/api/export/database-excel', handleBackupExcelExport as any);
+  app.get('/api/export/customer-database', handleCustomerDatabaseExport as any);
 
   // Delivery data upload/management
   app.post('/api/delivery/upload', deliveryUploadMiddleware as any, handleDeliveryUpload as any);
