@@ -2364,3 +2364,14 @@ Orders fixed:
 - [x] Add 3 sheets: Customer Database (all customers), Top Customers (top 30 by spending), Birthday Calendar
 - [x] Add Export Excel button to Admin Customer Database page
 - [x] 5 vitest tests passing
+
+## Monthly Sales Excel Export Fix (Feb 28)
+- [x] Investigate why Excel export shows confusing totals compared to dashboard for Feb 2026
+  - Root cause: TOTAL summary row was in the same columns (F-J) as data rows, causing double-counting when users select a column to sum
+  - Grand Total row was in column F (Taxable Amount) instead of column J (Total Amount)
+  - The actual data (308 orders, ₹3,28,027.76) was correct - it was a formatting/layout issue
+- [x] Fix: Moved summary to a separate 'Summary' sheet to prevent any column overlap
+  - Summary sheet has: Category breakdown (F&B Orders, Workshops, Events), Grand Total, GST Breakdown, Payment Method Breakdown
+  - Sales Report sheet now has only raw data rows with no totals that could be double-counted
+  - Added note on Sales Report sheet pointing users to Summary sheet
+  - Added legend for row color coding (Regular Order, Workshop, Event)
