@@ -2375,3 +2375,11 @@ Orders fixed:
   - Sales Report sheet now has only raw data rows with no totals that could be double-counted
   - Added note on Sales Report sheet pointing users to Summary sheet
   - Added legend for row color coding (Regular Order, Workshop, Event)
+
+## Leela Event Test Bookings Cleanup (Feb 28)
+- [x] Investigate unexpected test bookings on Leela Event
+  - Root cause: popup.test.ts inserted real records into live popup_registrations table every time pnpm test ran
+  - 14 test entries created (7 runs x 2 inserts each) with test@example.com and test2@example.com
+- [x] Identify test vs real bookings (14 test, 15 real)
+- [x] Delete only test bookings, preserve real ones (15 real registrations intact)
+- [x] Fix popup.test.ts to clean up after itself (immediate DELETE after each insert, plus afterAll cleanup)

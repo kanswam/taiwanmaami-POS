@@ -1,0 +1,19 @@
+{
+  "query": "SELECT COUNT(*) as total FROM popup_registrations; SELECT COUNT(*) as test_remaining FROM popup_registrations WHERE customerEmail IN ('test@example.com', 'test2@example.com');",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT COUNT(*) as total FROM popup_registrations; SELECT COUNT(*) as test_remaining FROM popup_registrations WHERE customerEmail IN ('test@example.com', 'test2@example.com');",
+  "rows": [
+    {
+      "total": "15"
+    },
+    {
+      "total": "test_remaining"
+    },
+    {
+      "total": "0"
+    }
+  ],
+  "messages": [],
+  "stdout": "total\n15\ntest_remaining\n0\n",
+  "stderr": "",
+  "execution_time_ms": 69
+}

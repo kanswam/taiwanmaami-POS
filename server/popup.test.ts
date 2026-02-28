@@ -1,8 +1,15 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, afterAll } from "vitest";
 import { appRouter } from "./routers";
 import type { TrpcContext } from "./_core/context";
+import { getDb } from "./db";
+import { sql } from "drizzle-orm";
 
 type AuthenticatedUser = NonNullable<TrpcContext["user"]>;
+
+// Use a unique prefix so we can safely clean up after tests
+const TEST_EMAIL_PREFIX = "vitest-popup-";
+const TEST_EMAIL_1 = `${TEST_EMAIL_PREFIX}dinner@test-cleanup.local`;
+const TEST_EMAIL_2 = `${TEST_EMAIL_PREFIX}masterclass@test-cleanup.local`;
 
 function createPublicContext(): { ctx: TrpcContext } {
   const ctx: TrpcContext = {
@@ -70,15 +77,29 @@ function createCustomerContext(): { ctx: TrpcContext } {
   return { ctx };
 }
 
+// Clean up any test entries after all tests complete
+afterAll(async () => {
+  try {
+    const db = await getDb();
+    if (db) {
+      await db.execute(
+        sql`DELETE FROM popup_registrations WHERE customerEmail LIKE ${TEST_EMAIL_PREFIX + '%'}`
+      );
+    }
+  } catch (e) {
+    // Cleanup is best-effort
+  }
+});
+
 describe("popup.registerInterest", () => {
-  it("successfully registers interest for dinner", async () => {
+  it("successfully registers interest for dinner and cleans up", async () => {
     const { ctx } = createPublicContext();
     const caller = appRouter.createCaller(ctx);
 
     const result = await caller.popup.registerInterest({
       eventSlug: "leela-hyderabad-march-2026",
-      customerName: "Test User",
-      customerEmail: "test@example.com",
+      customerName: "Vitest Dinner User",
+      customerEmail: TEST_EMAIL_1,
       customerPhone: "+919876543210",
       eventType: "dinner",
       selectedDate: "2026-03-05",
@@ -88,16 +109,22 @@ describe("popup.registerInterest", () => {
     expect(result).toHaveProperty("success", true);
     expect(result).toHaveProperty("id");
     expect(result.id).toBeGreaterThan(0);
+
+    // Immediately clean up the inserted row
+    const db = await getDb();
+    if (db) {
+      await db.execute(sql`DELETE FROM popup_registrations WHERE id = ${result.id}`);
+    }
   });
 
-  it("successfully registers interest for masterclass", async () => {
+  it("successfully registers interest for masterclass and cleans up", async () => {
     const { ctx } = createPublicContext();
     const caller = appRouter.createCaller(ctx);
 
     const result = await caller.popup.registerInterest({
       eventSlug: "leela-hyderabad-march-2026",
-      customerName: "Test User 2",
-      customerEmail: "test2@example.com",
+      customerName: "Vitest Masterclass User",
+      customerEmail: TEST_EMAIL_2,
       customerPhone: "+919876543211",
       eventType: "masterclass",
       selectedDate: "2026-03-07",
@@ -107,6 +134,12 @@ describe("popup.registerInterest", () => {
 
     expect(result).toHaveProperty("success", true);
     expect(result).toHaveProperty("id");
+
+    // Immediately clean up the inserted row
+    const db = await getDb();
+    if (db) {
+      await db.execute(sql`DELETE FROM popup_registrations WHERE id = ${result.id}`);
+    }
   });
 
   it("rejects registration with invalid email", async () => {
@@ -134,7 +167,7 @@ describe("popup.registerInterest", () => {
       caller.popup.registerInterest({
         eventSlug: "leela-hyderabad-march-2026",
         customerName: "",
-        customerEmail: "test@example.com",
+        customerEmail: TEST_EMAIL_1,
         customerPhone: "+919876543210",
         eventType: "dinner",
         selectedDate: "2026-03-05",
@@ -151,7 +184,7 @@ describe("popup.registerInterest", () => {
       caller.popup.registerInterest({
         eventSlug: "leela-hyderabad-march-2026",
         customerName: "Test User",
-        customerEmail: "test@example.com",
+        customerEmail: TEST_EMAIL_1,
         customerPhone: "+919876543210",
         eventType: "brunch" as any,
         selectedDate: "2026-03-05",
@@ -182,7 +215,6 @@ describe("popup.getRegistrations", () => {
     });
 
     expect(Array.isArray(result)).toBe(true);
-    // Should have at least the 2 registrations from the registerInterest tests
     expect(result.length).toBeGreaterThanOrEqual(0);
   });
 
