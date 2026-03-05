@@ -2383,3 +2383,6 @@ Orders fixed:
 - [x] Identify test vs real bookings (14 test, 15 real)
 - [x] Delete only test bookings, preserve real ones (15 real registrations intact)
 - [x] Fix popup.test.ts to clean up after itself (immediate DELETE after each insert, plus afterAll cleanup)
+
+## Leela Event Banner - Replace Registration (Mar 5)
+- [x] Replace "Register Interest" button on Leela event banner (landing page) with "Please call +918712688658 for reservations"

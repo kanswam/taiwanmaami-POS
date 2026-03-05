@@ -192,10 +192,10 @@ export default function Home() {
                   </div>
                 </div>
               </div>
-              <Button className="bg-amber-600 hover:bg-amber-700 text-white font-semibold shadow-lg">
-                Register Interest
-                <ArrowRight className="w-4 h-4 ml-2" />
-              </Button>
+              <a href="tel:+918712688658" onClick={(e) => e.stopPropagation()} className="flex items-center gap-2 bg-amber-600 hover:bg-amber-700 text-white font-semibold shadow-lg px-5 py-2.5 rounded-md transition-colors whitespace-nowrap">
+                <Phone className="w-4 h-4" />
+                Call +91 87126 88658 for Reservations
+              </a>
             </div>
           </Link>
         </div>
