@@ -33,7 +33,6 @@ import FAQ from "./pages/FAQ";
 import Blog from "./pages/Blog";
 import BlogArticle from "./pages/BlogArticle";
 import Events from "./pages/Events";
-import LeelaHyderabad from "./pages/LeelaHyderabad";
 import Profile from "./pages/Profile";
 import AdminEvents from "./pages/AdminEvents";
 import AdminBlog from "./pages/AdminBlog";
@@ -87,7 +86,6 @@ function Router() {
       <Route path="/orders" component={Orders} />
       <Route path="/profile" component={Profile} />
       <Route path="/events" component={Events} />
-      <Route path="/leela-hyderabad" component={LeelaHyderabad} />
       
       {/* Content Pages */}
       <Route path="/about" component={About} />

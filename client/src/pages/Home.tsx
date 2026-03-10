@@ -164,42 +164,7 @@ export default function Home() {
       />
       <Header />
 
-      {/* The Leela Hyderabad Popup Event Announcement Banner */}
-      <section className="bg-gradient-to-r from-stone-900 via-stone-800 to-amber-900 -mt-16 pt-20 pb-4">
-        <div className="container">
-          <Link href="/leela-hyderabad">
-            <div className="flex flex-col md:flex-row items-center justify-between gap-4 text-white cursor-pointer hover:opacity-90 transition-opacity">
-              <div className="flex items-center gap-4">
-                <div className="w-14 h-14 rounded-full bg-amber-500/20 flex items-center justify-center">
-                  <Star className="w-7 h-7 text-amber-400" />
-                </div>
-                <div>
-                  <div className="text-xs uppercase tracking-wider font-medium text-amber-300">Exclusive Culinary Residency</div>
-                  <h3 className="text-xl md:text-2xl font-bold">Taiwan Maami's Edible Journey at The Leela Hyderabad</h3>
-                  <div className="flex flex-wrap items-center gap-3 text-sm opacity-90 mt-1">
-                    <span className="flex items-center gap-1">
-                      <Calendar className="w-4 h-4 text-amber-400" />
-                      5 — 8 March 2026
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Clock className="w-4 h-4 text-amber-400" />
-                      Dinner & Master Class
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <MapPin className="w-4 h-4 text-amber-400" />
-                      RAEN — The Chef's Studio, Banjara Hills
-                    </span>
-                  </div>
-                </div>
-              </div>
-              <a href="tel:+918712688658" onClick={(e) => e.stopPropagation()} className="flex items-center gap-2 bg-amber-600 hover:bg-amber-700 text-white font-semibold shadow-lg px-5 py-2.5 rounded-md transition-colors whitespace-nowrap">
-                <Phone className="w-4 h-4" />
-                Call +91 87126 88658 for Reservations
-              </a>
-            </div>
-          </Link>
-        </div>
-      </section>
+
 
       {/* Hero Section with Video Background */}
       <section className="relative overflow-hidden">

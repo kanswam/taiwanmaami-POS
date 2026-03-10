@@ -2386,3 +2386,10 @@ Orders fixed:
 
 ## Leela Event Banner - Replace Registration (Mar 5)
 - [x] Replace "Register Interest" button on Leela event banner (landing page) with "Please call +918712688658 for reservations"
+
+## Remove Leela Event Banner & Archive (Mar 10)
+- [x] Remove the Leela event banner from the landing page (Home.tsx)
+- [x] Archive the Leela event page (/leela-hyderabad route removed from App.tsx)
+- [x] Remove Leela-related nav links if any (none found in Header/nav)
+- [x] Keep admin Leela registrations tab for historical data access (DO NOT delete registration data from DB)
+- [x] Keep popup_registrations table data intact — only remove public-facing UI (15 real registrations preserved)
