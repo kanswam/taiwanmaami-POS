@@ -11,7 +11,7 @@ import { categories, subcategories, products, addons, orders, orderItems as orde
 import { eq, and, desc, asc, sql, or, gte, lte, isNull, inArray } from "drizzle-orm";
 import { generateOrderNumber, calculateGst } from "@shared/types";
 // POS functionality removed - Employee Master import removed
-import { outletProducts, loyaltyRewards, stampTransactions, guestOrders, reviews, kotQueue, receiptQueue, productAuditLog, categoryAuditLog, complaints, eventInquiries, eventOrders, eventOrderItems, workshops, workshopBookings, workshopDates, workshopWaitlist, backupLogs, blogArticles, deliverySalesUploads, deliveryItemSales, pageviews as pageviewsTable, popupRegistrations } from "../drizzle/schema";
+import { outletProducts, loyaltyRewards, stampTransactions, guestOrders, reviews, kotQueue, receiptQueue, productAuditLog, categoryAuditLog, complaints, eventInquiries, eventOrders, eventOrderItems, workshops, workshopBookings, workshopDates, workshopWaitlist, backupLogs, blogArticles, deliverySalesUploads, deliveryItemSales, pageviews as pageviewsTable, popupRegistrations, homepageSections } from "../drizzle/schema";
 import { ENV } from './_core/env';
 import { wholesaleRouter } from './wholesaleRouter';
 import { chatWithBot } from './chatbot';
@@ -9528,6 +9528,155 @@ export const appRouter = router({
         const { url } = await storagePut(fileKey, buffer, input.mimeType);
         return { audioUrl: url };
       }),
+  }),
+
+  // =============================================
+  // HOMEPAGE CMS
+  // =============================================
+  homepage: router({
+    // Public: Get all homepage sections for rendering
+    getSections: publicProcedure.query(async () => {
+      const dbInstance = await getDb();
+      if (!dbInstance) return [];
+      return dbInstance.select().from(homepageSections).orderBy(asc(homepageSections.displayOrder));
+    }),
+
+    // Public: Get featured products for carousel
+    getFeaturedProducts: publicProcedure.query(async () => {
+      const dbInstance = await getDb();
+      if (!dbInstance) return [];
+      const featured = await dbInstance.select({
+        id: products.id,
+        name: products.name,
+        slug: products.slug,
+        imageUrl: products.imageUrl,
+        instorePrice: products.instorePrice,
+        deliveryPrice: products.deliveryPrice,
+        useBasePrice: products.useBasePrice,
+        isVegetarian: products.isVegetarian,
+        isNonVeg: products.isNonVeg,
+        containsEgg: products.containsEgg,
+        featuredOrder: products.featuredOrder,
+        subcategoryId: products.subcategoryId,
+        subcategoryName: subcategories.name,
+        categoryName: categories.name,
+        categoryId: categories.id,
+        // Base prices from subcategory for drinks
+        basePriceRegularWithBoba: subcategories.basePriceRegularWithBoba,
+        basePriceRegularNoBoba: subcategories.basePriceRegularNoBoba,
+        basePricePetiteWithBoba: subcategories.basePricePetiteWithBoba,
+        basePricePetiteNoBoba: subcategories.basePricePetiteNoBoba,
+      })
+        .from(products)
+        .innerJoin(subcategories, eq(products.subcategoryId, subcategories.id))
+        .innerJoin(categories, eq(subcategories.categoryId, categories.id))
+        .where(and(
+          eq(products.isFeatured, true),
+          eq(products.isActive, true)
+        ))
+        .orderBy(asc(products.featuredOrder));
+      return featured;
+    }),
+
+    // Admin: Update a homepage section
+    updateSection: adminProcedure
+      .input(z.object({
+        sectionKey: z.string(),
+        title: z.string().optional(),
+        subtitle: z.string().optional(),
+        content: z.any().optional(),
+        isActive: z.boolean().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const dbInstance = await getDb();
+        if (!dbInstance) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
+        
+        const existing = await dbInstance.select().from(homepageSections)
+          .where(eq(homepageSections.sectionKey, input.sectionKey));
+        
+        const updateData: any = {};
+        if (input.title !== undefined) updateData.title = input.title;
+        if (input.subtitle !== undefined) updateData.subtitle = input.subtitle;
+        if (input.content !== undefined) updateData.content = input.content;
+        if (input.isActive !== undefined) updateData.isActive = input.isActive;
+        
+        if (existing.length > 0) {
+          await dbInstance.update(homepageSections)
+            .set(updateData)
+            .where(eq(homepageSections.sectionKey, input.sectionKey));
+        } else {
+          await dbInstance.insert(homepageSections).values({
+            sectionKey: input.sectionKey,
+            ...updateData,
+          });
+        }
+        return { success: true };
+      }),
+
+    // Admin: Toggle featured status on a product
+    toggleFeatured: adminProcedure
+      .input(z.object({
+        productId: z.number(),
+        isFeatured: z.boolean(),
+      }))
+      .mutation(async ({ input }) => {
+        const dbInstance = await getDb();
+        if (!dbInstance) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
+        
+        if (input.isFeatured) {
+          // Get max featured order
+          const maxOrder = await dbInstance.select({ max: sql<number>`MAX(featuredOrder)` })
+            .from(products)
+            .where(eq(products.isFeatured, true));
+          const nextOrder = (maxOrder[0]?.max || 0) + 1;
+          await dbInstance.update(products)
+            .set({ isFeatured: true, featuredOrder: nextOrder })
+            .where(eq(products.id, input.productId));
+        } else {
+          await dbInstance.update(products)
+            .set({ isFeatured: false, featuredOrder: 0 })
+            .where(eq(products.id, input.productId));
+        }
+        return { success: true };
+      }),
+
+    // Admin: Reorder featured products
+    reorderFeatured: adminProcedure
+      .input(z.object({
+        productIds: z.array(z.number()),
+      }))
+      .mutation(async ({ input }) => {
+        const dbInstance = await getDb();
+        if (!dbInstance) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
+        
+        for (let i = 0; i < input.productIds.length; i++) {
+          await dbInstance.update(products)
+            .set({ featuredOrder: i + 1 })
+            .where(eq(products.id, input.productIds[i]));
+        }
+        return { success: true };
+      }),
+
+    // Admin: Get all products with featured status for the selector
+    getAllProductsForFeatured: adminProcedure.query(async () => {
+      const dbInstance = await getDb();
+      if (!dbInstance) return [];
+      return dbInstance.select({
+        id: products.id,
+        name: products.name,
+        imageUrl: products.imageUrl,
+        isFeatured: products.isFeatured,
+        featuredOrder: products.featuredOrder,
+        subcategoryName: subcategories.name,
+        categoryName: categories.name,
+        isActive: products.isActive,
+      })
+        .from(products)
+        .innerJoin(subcategories, eq(products.subcategoryId, subcategories.id))
+        .innerJoin(categories, eq(subcategories.categoryId, categories.id))
+        .where(eq(products.isActive, true))
+        .orderBy(asc(categories.displayOrder), asc(subcategories.displayOrder), asc(products.displayOrder));
+    }),
   }),
 });
 

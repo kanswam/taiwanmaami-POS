@@ -1,5 +1,5 @@
 import { Link } from 'wouter';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 // Taiwan Maami Web Platform - Customer Ordering Website
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -7,15 +7,35 @@ import { Header } from '@/components/Header';
 import { SEO } from '@/components/SEO';
 import { LazyVideo } from '@/components/LazyVideo';
 import { trpc } from '@/lib/trpc';
-import { ArrowRight, MapPin, Clock, Star, Sparkles, Instagram, Phone, Navigation, Store, Truck, ShoppingBag, Facebook, Twitter, Youtube, Calendar, Users, Ticket } from 'lucide-react';
+import { ArrowRight, MapPin, Clock, Star, Sparkles, Instagram, Phone, Navigation, Store, Truck, ShoppingBag, Facebook, Twitter, Youtube, ChevronLeft, ChevronRight, Leaf, Globe } from 'lucide-react';
+import { formatPrice } from '@shared/types';
+
+// Chinese painting jade green for CTAs
+const JADE_GREEN = '#5e6c48';
+const JADE_GREEN_HOVER = '#4d5a3b';
 
 export default function Home() {
   // Fetch site settings from database (public endpoint - no auth required)
   const { data: siteSettings } = trpc.menu.getPublicSiteSettings.useQuery();
   
+  // Fetch homepage CMS sections
+  const { data: homepageSections } = trpc.homepage.getSections.useQuery();
+  
+  // Fetch featured products for carousel
+  const { data: featuredProducts } = trpc.homepage.getFeaturedProducts.useQuery();
+  
   // Fetch upcoming workshops for announcement banner
   const { data: upcomingWorkshops } = trpc.workshops.getPublished.useQuery();
   
+  // Parse CMS sections into a map
+  const sectionsMap = useMemo(() => {
+    if (!homepageSections) return {};
+    return homepageSections.reduce((acc: any, s: any) => {
+      acc[s.sectionKey] = s;
+      return acc;
+    }, {});
+  }, [homepageSections]);
+
   // Default values
   const [heroTitle, setHeroTitle] = useState('Authentic Taiwanese\nBubble Tea');
   const [heroDescription, setHeroDescription] = useState('Crafted with imported tapioca pearls from Taiwan. Experience the true taste of premium bubble tea at Taiwan Maami.');
@@ -90,7 +110,6 @@ export default function Home() {
     const scrollToSection = sessionStorage.getItem('scrollToSection');
     if (scrollToSection) {
       sessionStorage.removeItem('scrollToSection');
-      // Wait for page to fully render
       setTimeout(() => {
         const element = document.getElementById(scrollToSection);
         if (element) {
@@ -100,8 +119,43 @@ export default function Home() {
     }
   }, []);
 
-  // Category cards with video backgrounds - links to /menu with category filter
-  // Order: Food (top-left), Iced Beverages (top-right), Hot Beverages (bottom-left), Asian Sweet Bites (bottom-right)
+  // Carousel scroll ref
+  const carouselRef = useRef<HTMLDivElement>(null);
+  const scrollCarousel = (direction: 'left' | 'right') => {
+    if (carouselRef.current) {
+      const scrollAmount = 300;
+      carouselRef.current.scrollBy({
+        left: direction === 'left' ? -scrollAmount : scrollAmount,
+        behavior: 'smooth',
+      });
+    }
+  };
+
+  // CMS-driven announcement bar items
+  const announcementSection = sectionsMap['announcement_bar'];
+  const announcementItems = announcementSection?.content?.items || [
+    { icon: '🚚', text: 'Free Delivery Above ₹2500' },
+    { icon: '⭐', text: '10 Stamps = 1 Free Drink' },
+    { icon: '🎉', text: 'BOBALOVE10 — 10% Off First Order' },
+  ];
+
+  // CMS-driven hero content
+  const heroSection = sectionsMap['hero'];
+  const heroCta = heroSection?.content?.ctaText || 'Order Online & Save!';
+  const heroCtaSub = heroSection?.content?.ctaSubtext || 'Skip the queue • Earn loyalty stamps • Get exclusive offers';
+
+  // CMS-driven freshness story
+  const freshnessSection = sectionsMap['freshness_story'];
+  const freshnessStoryTitle = freshnessSection?.title || 'Freshly Crafted. Authentically Taiwanese.';
+  const freshnessStorySubtitle = freshnessSection?.subtitle || 'Every drink and food item is prepared fresh in-store using ingredients imported directly from Taiwan. No shortcuts, no compromises — just genuine Taiwanese flavours crafted with care.';
+  const freshnessPillars = freshnessSection?.content?.pillars || [
+    { icon: '🍵', title: 'Organic Whole-Leaf Tea', description: 'Sourced from certified organic farms in Nantou, Taiwan' },
+    { icon: '🍞', title: 'Handmade Mochi', description: 'Prepared fresh daily using premium Japanese rice flour' },
+    { icon: '🥧', title: 'Real Tapioca Pearls', description: 'Cooked in small batches every 4 hours for perfect texture' },
+    { icon: '🌎', title: 'Imported Ingredients', description: 'Key ingredients flown in directly from Taiwan & Japan' },
+  ];
+
+  // Category cards with video backgrounds
   const menuCategories = [
     {
       name: cat3Name,
@@ -140,7 +194,6 @@ export default function Home() {
       mapUrl: 'https://maps.google.com/?q=Palladium+Mall+Velachery+Chennai',
       phone: '+91 89259 14303',
       hours: '10:00 AM - 10:00 PM',
-      
     },
     {
       name: loc2Name,
@@ -155,6 +208,14 @@ export default function Home() {
     },
   ];
 
+  // Helper: get display price for a featured product
+  const getDisplayPrice = (product: any) => {
+    if (product.useBasePrice && product.basePriceRegularNoBoba) {
+      return product.basePriceRegularNoBoba;
+    }
+    return product.instorePrice || product.deliveryPrice || 0;
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <SEO
@@ -164,9 +225,23 @@ export default function Home() {
       />
       <Header />
 
+      {/* ===== 1. STATIC ANNOUNCEMENT BAR (replaces marquee) ===== */}
+      {announcementSection?.isActive !== false && (
+        <div className="bg-foreground text-background py-2.5">
+          <div className="container">
+            <div className="flex items-center justify-center gap-6 sm:gap-10 flex-wrap text-sm">
+              {announcementItems.map((item: any, i: number) => (
+                <span key={i} className="flex items-center gap-2 whitespace-nowrap">
+                  <span>{item.icon}</span>
+                  <span className="font-medium">{item.text}</span>
+                </span>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
-
-      {/* Hero Section with Video Background */}
+      {/* ===== 2. HERO SECTION with Warm Amber Overlay ===== */}
       <section className="relative overflow-hidden">
         <div className="absolute inset-0">
           <video
@@ -185,28 +260,31 @@ export default function Home() {
               className="w-full h-full object-cover"
             />
           </video>
-          <div className="absolute inset-0 bg-gradient-to-r from-primary/95 via-primary/80 to-primary/60" />
+          {/* Warm amber overlay - lets the video show through clearly */}
+          <div className="absolute inset-0" style={{
+            background: 'linear-gradient(to right, rgba(120, 60, 20, 0.70), rgba(120, 60, 20, 0.45), rgba(120, 60, 20, 0.20))'
+          }} />
         </div>
         <div className="relative py-20 sm:py-32">
           <div className="container">
             <div className="max-w-2xl">
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-6">
-                {heroTitle.split('\n').map((line, i) => (
+              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-6" style={{ textShadow: '0 2px 8px rgba(0,0,0,0.4)' }}>
+                {(heroSection?.title || heroTitle).split('\n').map((line: string, i: number) => (
                   <span key={i} className={i > 0 ? 'block' : ''}>{line}</span>
                 ))}
               </h1>
-              <p className="text-lg sm:text-xl text-white/90 mb-8">
-                {heroDescription}
+              <p className="text-lg sm:text-xl text-white/90 mb-8" style={{ textShadow: '0 1px 4px rgba(0,0,0,0.3)' }}>
+                {heroSection?.subtitle || heroDescription}
               </p>
               <Link href="/menu" className="inline-block">
-                <div className="bg-gradient-to-r from-green-600 to-emerald-500 rounded-xl p-4 sm:p-5 shadow-lg hover:shadow-xl transition-all hover:scale-[1.02] cursor-pointer">
+                <div className="rounded-xl p-4 sm:p-5 shadow-lg hover:shadow-xl transition-all hover:scale-[1.02] cursor-pointer" style={{ background: `linear-gradient(135deg, ${JADE_GREEN}, ${JADE_GREEN_HOVER})` }}>
                   <div className="flex items-center gap-4">
                     <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center">
                       <ShoppingBag className="w-6 h-6 text-white" />
                     </div>
                     <div className="text-white">
-                      <h3 className="text-lg sm:text-xl font-bold">Order Online & Save!</h3>
-                      <p className="text-sm opacity-90">Skip the queue • Earn loyalty stamps • Get exclusive offers</p>
+                      <h3 className="text-lg sm:text-xl font-bold">{heroCta}</h3>
+                      <p className="text-sm opacity-90">{heroCtaSub}</p>
                     </div>
                     <ArrowRight className="w-6 h-6 text-white ml-2 hidden sm:block" />
                   </div>
@@ -217,43 +295,111 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Features */}
-      <section className="py-12 bg-secondary/50">
-        <div className="container">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="flex items-center gap-4 p-4">
-              <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                <Star className="w-6 h-6 text-primary" />
-              </div>
-              <div>
-                <h3 className="font-semibold">{qualityTitle}</h3>
-                <p className="text-sm text-muted-foreground">{qualityDescription}</p>
-              </div>
+      {/* ===== 3. FRESHNESS STORY (CMS-driven, right after hero) ===== */}
+      {freshnessSection?.isActive !== false && (
+        <section className="py-16 bg-secondary/50">
+          <div className="container">
+            <div className="text-center mb-10">
+              <h2 className="text-3xl sm:text-4xl font-bold mb-4">{freshnessStoryTitle}</h2>
+              <p className="text-muted-foreground max-w-3xl mx-auto text-lg leading-relaxed">
+                {freshnessStorySubtitle}
+              </p>
             </div>
-            <div className="flex items-center gap-4 p-4">
-              <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                <Sparkles className="w-6 h-6 text-primary" />
-              </div>
-              <div>
-                <h3 className="font-semibold">{freshnessTitle}</h3>
-                <p className="text-sm text-muted-foreground">{freshnessDescription}</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-4 p-4">
-              <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                <Clock className="w-6 h-6 text-primary" />
-              </div>
-              <div>
-                <h3 className="font-semibold">{deliveryTitle}</h3>
-                <p className="text-sm text-muted-foreground">{deliveryDescription}</p>
-              </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-5xl mx-auto">
+              {freshnessPillars.map((pillar: any, i: number) => (
+                <div key={i} className="text-center p-6 rounded-xl bg-card/80 border border-border/50">
+                  <div className="text-4xl mb-3">{pillar.icon}</div>
+                  <h3 className="font-bold text-lg mb-2">{pillar.title}</h3>
+                  <p className="text-sm text-muted-foreground">{pillar.description}</p>
+                </div>
+              ))}
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
-      {/* How to Order Section */}
-      <section id="order-options" className="py-16 bg-background">
+      {/* ===== 4. CUSTOMER FAVOURITES CAROUSEL ===== */}
+      {featuredProducts && featuredProducts.length > 0 && (
+        <section className="py-16">
+          <div className="container">
+            <div className="flex items-center justify-between mb-8">
+              <div>
+                <h2 className="text-3xl font-bold mb-2">Customer Favourites</h2>
+                <p className="text-muted-foreground">Our most loved items, handpicked for you</p>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => scrollCarousel('left')}
+                  className="w-10 h-10 rounded-full border border-border flex items-center justify-center hover:bg-secondary transition-colors"
+                  aria-label="Scroll left"
+                >
+                  <ChevronLeft className="w-5 h-5" />
+                </button>
+                <button
+                  onClick={() => scrollCarousel('right')}
+                  className="w-10 h-10 rounded-full border border-border flex items-center justify-center hover:bg-secondary transition-colors"
+                  aria-label="Scroll right"
+                >
+                  <ChevronRight className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+            <div
+              ref={carouselRef}
+              className="flex gap-5 overflow-x-auto pb-4 scrollbar-hide snap-x snap-mandatory"
+              style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+            >
+              {featuredProducts.map((product: any) => (
+                <Link key={product.id} href={`/menu?highlight=${product.id}`}>
+                  <div className="flex-shrink-0 w-[220px] sm:w-[250px] snap-start group cursor-pointer">
+                    <div className="relative aspect-square rounded-xl overflow-hidden mb-3 bg-secondary">
+                      {product.imageUrl ? (
+                        <img
+                          src={product.imageUrl}
+                          alt={product.name}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          loading="lazy"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                          <ShoppingBag className="w-12 h-12 opacity-30" />
+                        </div>
+                      )}
+                      {/* Category badge */}
+                      <span className="absolute top-2 left-2 text-xs font-medium px-2 py-1 rounded-full bg-foreground/80 text-background">
+                        {product.categoryName}
+                      </span>
+                      {/* Diet indicator */}
+                      {product.isVegetarian && (
+                        <span className="absolute top-2 right-2 w-5 h-5 rounded-sm border-2 border-green-600 bg-white flex items-center justify-center">
+                          <span className="w-2 h-2 rounded-full bg-green-600" />
+                        </span>
+                      )}
+                      {product.isNonVeg && (
+                        <span className="absolute top-2 right-2 w-5 h-5 rounded-sm border-2 border-red-600 bg-white flex items-center justify-center">
+                          <span className="w-2 h-2 rounded-full bg-red-600" />
+                        </span>
+                      )}
+                    </div>
+                    <h3 className="font-semibold text-sm line-clamp-2 group-hover:text-primary transition-colors">
+                      {product.name}
+                    </h3>
+                    <div className="flex items-center justify-between mt-1">
+                      <span className="text-sm text-muted-foreground">{product.subcategoryName}</span>
+                      {getDisplayPrice(product) > 0 && (
+                        <span className="font-bold text-sm">{formatPrice(getDisplayPrice(product))}</span>
+                      )}
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* ===== HOW TO ORDER SECTION ===== */}
+      <section id="order-options" className="py-16 bg-secondary/30">
         <div className="container">
           <div className="text-center mb-10">
             <h2 className="text-3xl font-bold mb-4">How Would You Like to Order?</h2>
@@ -326,7 +472,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Explore Our Menu - Video Category Cards */}
+      {/* ===== EXPLORE OUR MENU - Video Category Cards ===== */}
       <section className="py-16">
         <div className="container">
           <div className="text-center mb-12">
@@ -341,7 +487,6 @@ export default function Home() {
             {menuCategories.map((category, index) => (
               <Link key={index} href={category.href}>
                 <Card className="group cursor-pointer overflow-hidden hover:shadow-2xl transition-all duration-300 relative aspect-[16/9]">
-                  {/* Lazy Loaded Video Background */}
                   <LazyVideo
                     src={category.video}
                     className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
@@ -350,11 +495,7 @@ export default function Home() {
                     muted
                     playsInline
                   />
-                  
-                  {/* Overlay */}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
-                  
-                  {/* Content */}
                   <div className="absolute bottom-0 left-0 right-0 p-6">
                     <h3 className="font-bold text-white text-2xl mb-2 group-hover:text-primary-foreground transition-colors">
                       {category.name}
@@ -383,7 +524,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Visit Our Outlets - Location Video Cards */}
+      {/* ===== VISIT OUR OUTLETS ===== */}
       <section id="outlets" className="py-16 bg-secondary/30 scroll-mt-20">
         <div className="container">
           <div className="text-center mb-12">
@@ -396,7 +537,6 @@ export default function Home() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {locations.map((location, index) => (
               <Card key={index} className="group overflow-hidden hover:shadow-2xl transition-all duration-300 relative aspect-[4/3]">
-                {/* Lazy Loaded Video Background */}
                 <LazyVideo
                   src={location.video}
                   poster="https://files.manuscdn.com/user_upload_by_module/session_file/114675165/fYHiyJVvyVYquZaW.jpg"
@@ -406,11 +546,7 @@ export default function Home() {
                   muted
                   playsInline
                 />
-                
-                {/* Overlay */}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-black/20" />
-                
-                {/* Content */}
                 <div className="absolute bottom-0 left-0 right-0 p-6">
                   <div className="mb-4">
                     <h3 className="font-bold text-white text-2xl mb-1">
@@ -420,7 +556,6 @@ export default function Home() {
                       {location.subtitle}
                     </p>
                   </div>
-                  
                   <div className="space-y-2 mb-4">
                     <p className="text-white/90 text-sm flex items-start gap-2">
                       <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0" />
@@ -440,7 +575,6 @@ export default function Home() {
                       </p>
                     )}
                   </div>
-                  
                   <a 
                     href={location.mapUrl} 
                     target="_blank" 
@@ -457,7 +591,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Loyalty Programme Section */}
+      {/* ===== LOYALTY PROGRAMME ===== */}
       <section className="py-16 bg-primary">
         <div className="container">
           <div className="text-center mb-10">
@@ -514,7 +648,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Footer */}
+      {/* ===== FOOTER ===== */}
       <footer className="bg-foreground text-background py-12">
         <div className="container">
           <div className="grid md:grid-cols-3 gap-8">
@@ -586,7 +720,7 @@ export default function Home() {
               </div>
             </div>
             
-            {/* Quick Links (consolidated) */}
+            {/* Quick Links */}
             <div>
               <h4 className="font-semibold mb-4">Quick Links</h4>
               <ul className="space-y-2 text-sm text-background/70">
@@ -612,7 +746,7 @@ export default function Home() {
             </div>
           </div>
           <div className="border-t border-background/20 mt-8 pt-8 text-center text-sm text-background/50">
-            <p>© {new Date().getFullYear()} Taiwan Maami. All rights reserved.</p>
+            <p>&copy; {new Date().getFullYear()} Taiwan Maami. All rights reserved.</p>
             <p className="mt-1">A unit of Thamarai Foods and Trading Private Limited</p>
           </div>
         </div>

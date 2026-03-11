@@ -2393,3 +2393,20 @@ Orders fixed:
 - [x] Remove Leela-related nav links if any (none found in Header/nav)
 - [x] Keep admin Leela registrations tab for historical data access (DO NOT delete registration data from DB)
 - [x] Keep popup_registrations table data intact — only remove public-facing UI (15 real registrations preserved)
+
+## Homepage Redesign + CMS (Mar 11)
+- [x] DB: Add homepage_sections table for CMS content (announcement bar, hero, freshness story)
+- [x] DB: Add featured + featuredOrder columns to products table
+- [x] Backend: tRPC procedures for homepage sections CRUD (admin)
+- [x] Backend: tRPC procedure to get/set featured products
+- [x] Backend: Public procedure to fetch homepage data for rendering
+- [x] Frontend: Replace marquee with static announcement bar (CMS-driven)
+- [x] Frontend: Change hero video overlay to warm amber
+- [x] Frontend: Add Freshness Story section after hero (CMS-driven)
+- [x] Frontend: Add Customer Favourites carousel (from featured products)
+- [ ] Frontend: Implement 2-level tabbed menu on homepage (deferred - needs more design work)
+- [x] Frontend: Use painting green (#5e6c48) for CTA buttons
+- [x] Frontend: Consistent warm tan background across all sections
+- [x] Admin: Homepage Settings page with section editors (Announcement, Hero, Freshness Story, Featured Items)
+- [x] Admin: Featured product selector with toggle and reorder
+- [x] Tests: Vitest for homepage CMS procedures (11 tests passing)

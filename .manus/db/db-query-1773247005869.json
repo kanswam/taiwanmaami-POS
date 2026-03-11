@@ -1,0 +1,42 @@
+{
+  "query": "SELECT `name`, `imageUrl` FROM `products` WHERE `isActive` = 1 AND `imageUrl` IS NOT NULL ORDER BY `displayOrder` ASC LIMIT 8",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT `name`, `imageUrl` FROM `products` WHERE `isActive` = 1 AND `imageUrl` IS NOT NULL ORDER BY `displayOrder` ASC LIMIT 8",
+  "rows": [
+    {
+      "name": "Yaki Onigiri",
+      "imageUrl": "https://res.cloudinary.com/drpu1dbqk/image/upload/v1767674846/taiwan-maami/products/products-76-img-1767674845804.jpg"
+    },
+    {
+      "name": "Original Japanese Imo Katsu Curry Rice ",
+      "imageUrl": "https://res.cloudinary.com/drpu1dbqk/image/upload/v1767674785/taiwan-maami/products/products-61-img-1767674784254.jpg"
+    },
+    {
+      "name": "Coconut Japanese Imo Katsu Curry Rice",
+      "imageUrl": "https://res.cloudinary.com/drpu1dbqk/image/upload/v1767675018/taiwan-maami/products/products-240001-img-1767675017211.jpg"
+    },
+    {
+      "name": "Spicy Japanese Imo Katsu Curry Rice",
+      "imageUrl": "https://res.cloudinary.com/drpu1dbqk/image/upload/v1767675023/taiwan-maami/products/products-270001-img-1767675022081.jpg"
+    },
+    {
+      "name": "Original Japanese ChickGozilla Curry Rice",
+      "imageUrl": "https://d2xsxph8kpxj0f.cloudfront.net/114675165/7xKVuVPoe4TavcqcxPZkpC/products/810003-img1-1770667637699.jpeg"
+    },
+    {
+      "name": "Coconut Japanese ChickGozilla Curry Rice ",
+      "imageUrl": "https://d2xsxph8kpxj0f.cloudfront.net/114675165/7xKVuVPoe4TavcqcxPZkpC/products/810004-img1-1770667759894.jpeg"
+    },
+    {
+      "name": "Spicy Japanese ChickGozilla Curry Rice",
+      "imageUrl": "https://res.cloudinary.com/drpu1dbqk/image/upload/v1770667731/taiwan-maami/products/810005-img1-1770667728140.jpg"
+    },
+    {
+      "name": "Vinegar-Spiced Noodle Soup",
+      "imageUrl": "https://res.cloudinary.com/drpu1dbqk/image/upload/v1767674812/taiwan-maami/products/products-68-img-1767674811964.jpg"
+    }
+  ],
+  "messages": [],
+  "stdout": "name\timageUrl\nYaki Onigiri\thttps://res.cloudinary.com/drpu1dbqk/image/upload/v1767674846/taiwan-maami/products/products-76-img-1767674845804.jpg\nOriginal Japanese Imo Katsu Curry Rice \thttps://res.cloudinary.com/drpu1dbqk/image/upload/v1767674785/taiwan-maami/products/products-61-img-1767674784254.jpg\nCoconut Japanese Imo Katsu Curry Rice\thttps://res.cloudinary.com/drpu1dbqk/image/upload/v1767675018/taiwan-maami/products/products-240001-img-1767675017211.jpg\nSpicy Japanese Imo Katsu Curry Rice\thttps://res.cloudinary.com/drpu1dbqk/image/upload/v1767675023/taiwan-maami/products/products-270001-img-1767675022081.jpg\nOriginal Japanese ChickGozilla Curry Rice\thttps://d2xsxph8kpxj0f.cloudfront.net/114675165/7xKVuVPoe4TavcqcxPZkpC/products/810003-img1-1770667637699.jpeg\nCoconut Japanese ChickGozilla Curry Rice \thttps://d2xsxph8kpxj0f.cloudfront.net/114675165/7xKVuVPoe4TavcqcxPZkpC/products/810004-img1-1770667759894.jpeg\nSpicy Japanese ChickGozilla Curry Rice\thttps://res.cloudinary.com/drpu1dbqk/image/upload/v1770667731/taiwan-maami/products/810005-img1-1770667728140.jpg\nVinegar-Spiced Noodle Soup\thttps://res.cloudinary.com/drpu1dbqk/image/upload/v1767674812/taiwan-maami/products/products-68-img-1767674811964.jpg\n",
+  "stderr": "",
+  "execution_time_ms": 63
+}

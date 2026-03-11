@@ -129,6 +129,9 @@ export const products = mysqlTable("products", {
   availableSizes: json("availableSizes").$type<string[] | null>(),
   displayOrder: int("displayOrder").default(0).notNull(),
   isActive: boolean("isActive").default(true).notNull(),
+  // Featured product for homepage carousel
+  isFeatured: boolean("isFeatured").default(false).notNull(),
+  featuredOrder: int("featuredOrder").default(0).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
@@ -1215,3 +1218,22 @@ export const popupRegistrations = mysqlTable("popup_registrations", {
 
 export type PopupRegistration = typeof popupRegistrations.$inferSelect;
 export type InsertPopupRegistration = typeof popupRegistrations.$inferInsert;
+
+// =============================================
+// HOMEPAGE CMS SECTIONS
+// =============================================
+
+// Homepage sections for CMS-driven content
+export const homepageSections = mysqlTable("homepage_sections", {
+  id: int("id").autoincrement().primaryKey(),
+  sectionKey: varchar("sectionKey", { length: 100 }).notNull().unique(), // e.g., "announcement_bar", "hero", "freshness_story"
+  title: text("title"),
+  subtitle: text("subtitle"),
+  content: json("content"), // Flexible JSON for section-specific data
+  isActive: boolean("isActive").default(true).notNull(),
+  displayOrder: int("displayOrder").default(0).notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type HomepageSection = typeof homepageSections.$inferSelect;
+export type InsertHomepageSection = typeof homepageSections.$inferInsert;

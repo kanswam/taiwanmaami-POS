@@ -41,6 +41,7 @@ import { SortableCategory, SortableSubcategory } from '@/components/SortableCate
 import OutletAvailabilityTab from '@/components/OutletAvailabilityTab';
 import { RichTextEditor } from '@/components/RichTextEditor';
 import { generateEventDocument } from '@/lib/eventDocument';
+import HomepageSettingsTab from '@/components/HomepageSettingsTab';
 import { useOrderNotification, playOrderNotification } from '@/hooks/useOrderNotification';
 
 export default function Admin() {
@@ -262,9 +263,9 @@ export default function Admin() {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button 
-                  variant={['settings', 'bulk-upload', 'cms', 'admin-pin', 'refunds'].includes(activeTab) ? 'default' : 'outline'} 
+                  variant={['settings', 'bulk-upload', 'cms', 'admin-pin', 'refunds', 'homepage-settings'].includes(activeTab) ? 'default' : 'outline'} 
                   size="sm" 
-                  className={`gap-2 ${!['settings', 'bulk-upload', 'cms', 'admin-pin', 'refunds', 'backup'].includes(activeTab) ? 'border-transparent hover:bg-accent' : ''}`}
+                  className={`gap-2 ${!['settings', 'bulk-upload', 'cms', 'admin-pin', 'refunds', 'backup', 'homepage-settings'].includes(activeTab) ? 'border-transparent hover:bg-accent' : ''}`}
                 >
                   <Settings className="w-4 h-4" />
                   Settings
@@ -274,6 +275,9 @@ export default function Admin() {
               <DropdownMenuContent align="start">
                 <DropdownMenuItem onClick={() => setActiveTab('settings')} className={activeTab === 'settings' ? 'bg-accent' : ''}>
                   <Settings className="w-4 h-4 mr-2" /> Site Settings
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setActiveTab('homepage-settings')} className={activeTab === 'homepage-settings' ? 'bg-accent' : ''}>
+                  <Home className="w-4 h-4 mr-2" /> Homepage Settings
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setActiveTab('cms')} className={activeTab === 'cms' ? 'bg-accent' : ''}>
                   <FileText className="w-4 h-4 mr-2" /> Content Pages
@@ -398,6 +402,10 @@ export default function Admin() {
 
           <TabsContent value="leela-registrations">
             <LeelaRegistrationsTab />
+          </TabsContent>
+
+          <TabsContent value="homepage-settings">
+            <HomepageSettingsTab />
           </TabsContent>
 
           <TabsContent value="backup">

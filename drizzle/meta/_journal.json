@@ -265,7 +265,14 @@
       "idx": 37,
       "version": "5",
       "when": 1771622986991,
-      "tag": "0037_slimy_shinobi_shaw",
+      "tag": "0037_ambitious_secret_warriors",
+      "breakpoints": true
+    },
+    {
+      "idx": 38,
+      "version": "5",
+      "when": 1773253264560,
+      "tag": "0038_nifty_sandman",
       "breakpoints": true
     }
   ]
