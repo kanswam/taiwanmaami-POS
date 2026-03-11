@@ -2427,3 +2427,12 @@ Orders fixed:
 - [x] Add Quick Add (+) buttons to Customer Favourites carousel cards
 - [x] Replace 4 video category tiles with 2-level tabbed menu (Category tabs → subcategory chips → item cards)
 - [x] Ensure tabbed menu links to actual product pages for variant/size selection
+
+## Quick Add Modal Fix (Mar 11)
+- [x] Fix Quick Add buttons on homepage to open ProductCustomizationModal inline instead of navigating to /menu page
+  - Customer Favourites carousel: Quick Add (+) button opens modal with full variant selection
+  - Explore Our Menu grid: Clicking product card opens modal with full variant selection
+  - Food items show: image, description, special instructions, quantity, Add to Cart
+  - Bubble tea items show: size, boba type, sugar level, ice level, add-ons, Add to Cart
+  - No navigation away from homepage — modal opens as overlay
+- [x] Tests: Vitest for Quick Add data requirements (8 tests passing)

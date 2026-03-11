@@ -9,6 +9,7 @@ import { LazyVideo } from '@/components/LazyVideo';
 import { trpc } from '@/lib/trpc';
 import { ArrowRight, MapPin, Clock, Star, Sparkles, Instagram, Phone, Navigation, Store, Truck, ShoppingBag, Facebook, Twitter, Youtube, ChevronLeft, ChevronRight, Leaf, Globe, Plus } from 'lucide-react';
 import { formatPrice } from '@shared/types';
+import { ProductCustomizationModal } from '@/components/ProductCustomizationModal';
 
 // Chinese painting jade green for CTAs
 const JADE_GREEN = '#5e6c48';
@@ -33,6 +34,29 @@ export default function Home() {
   // Active category tab for the explore menu section
   const [activeMenuTab, setActiveMenuTab] = useState<number | null>(null);
   const [activeSubFilter, setActiveSubFilter] = useState<string>('all');
+
+  // Quick Add modal state
+  const [quickAddProductId, setQuickAddProductId] = useState<number | null>(null);
+
+  // Helper: open Quick Add modal for a product
+  const openQuickAdd = (productId: number, e?: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    setQuickAddProductId(productId);
+  };
+
+  // Resolve the Quick Add modal data from fullMenu
+  const quickAddProduct = useMemo(() => {
+    if (!quickAddProductId || !fullMenu) return null;
+    const product = fullMenu.products.find((p: any) => p.id === quickAddProductId);
+    if (!product) return null;
+    const subcategory = fullMenu.subcategories.find((s: any) => s.id === product.subcategoryId);
+    if (!subcategory) return null;
+    const category = fullMenu.categories.find((c: any) => c.id === subcategory.categoryId);
+    return { product, subcategory, category };
+  }, [quickAddProductId, fullMenu]);
   
   // Parse CMS sections into a map
   const sectionsMap = useMemo(() => {
@@ -379,8 +403,8 @@ export default function Home() {
             >
               {featuredProducts.map((product: any) => (
                 <div key={product.id} className="flex-shrink-0 w-[220px] sm:w-[250px] snap-start group">
-                  <Link href={`/menu?highlight=${product.id}`}>
-                    <div className="relative aspect-square rounded-xl overflow-hidden mb-3 bg-secondary cursor-pointer">
+                  <div onClick={() => openQuickAdd(product.id)} className="cursor-pointer">
+                    <div className="relative aspect-square rounded-xl overflow-hidden mb-3 bg-secondary">
                       {product.imageUrl ? (
                         <img
                           src={product.imageUrl}
@@ -409,23 +433,22 @@ export default function Home() {
                         </span>
                       )}
                     </div>
-                  </Link>
+                  </div>
                   <div className="flex items-start justify-between gap-2">
-                    <Link href={`/menu?highlight=${product.id}`}>
-                      <h3 className="font-semibold text-sm line-clamp-2 group-hover:text-primary transition-colors cursor-pointer">
+                    <div onClick={() => openQuickAdd(product.id)} className="cursor-pointer">
+                      <h3 className="font-semibold text-sm line-clamp-2 group-hover:text-primary transition-colors">
                         {product.name}
                       </h3>
                       <span className="text-xs text-muted-foreground">{product.subcategoryName}</span>
-                    </Link>
-                    <Link href={`/menu?highlight=${product.id}`}>
-                      <button
-                        className="flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center text-white shadow-md hover:scale-110 transition-transform"
-                        style={{ background: JADE_GREEN }}
-                        title="Quick Add"
-                      >
-                        <Plus className="w-5 h-5" />
-                      </button>
-                    </Link>
+                    </div>
+                    <button
+                      onClick={(e) => openQuickAdd(product.id, e)}
+                      className="flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center text-white shadow-md hover:scale-110 transition-transform"
+                      style={{ background: JADE_GREEN }}
+                      title="Quick Add"
+                    >
+                      <Plus className="w-5 h-5" />
+                    </button>
                   </div>
                   {getDisplayPrice(product) > 0 && (
                     <span className="font-bold text-sm mt-1 block">{formatPrice(getDisplayPrice(product))}</span>
@@ -574,59 +597,58 @@ export default function Home() {
               {/* Product Grid */}
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
                 {menuProducts.slice(0, 20).map((product: any) => (
-                  <Link key={product.id} href={`/menu?highlight=${product.id}`}>
-                    <div className="group cursor-pointer">
-                      <div className="relative aspect-square rounded-xl overflow-hidden mb-2 bg-secondary">
-                        {product.imageUrl ? (
-                          <img
-                            src={product.imageUrl}
-                            alt={product.name}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                            loading="lazy"
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-                            <ShoppingBag className="w-8 h-8 opacity-30" />
-                          </div>
-                        )}
-                        {/* Diet indicator */}
-                        {product.isVegetarian && (
-                          <span className="absolute top-2 left-2 w-5 h-5 rounded-sm border-2 border-green-600 bg-white flex items-center justify-center">
-                            <span className="w-2 h-2 rounded-full bg-green-600" />
-                          </span>
-                        )}
-                        {product.isNonVeg && (
-                          <span className="absolute top-2 left-2 w-5 h-5 rounded-sm border-2 border-red-600 bg-white flex items-center justify-center">
-                            <span className="w-2 h-2 rounded-full bg-red-600" />
-                          </span>
-                        )}
-                        {/* Quick Add button overlay */}
-                        <button
-                          className="absolute bottom-2 right-2 w-8 h-8 rounded-full flex items-center justify-center text-white shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
-                          style={{ background: JADE_GREEN }}
-                          title="View & Add"
-                        >
-                          <Plus className="w-4 h-4" />
-                        </button>
-                      </div>
-                      <h3 className="font-semibold text-sm line-clamp-2 group-hover:text-primary transition-colors">
-                        {product.name}
-                      </h3>
-                      <div className="flex items-center justify-between mt-0.5">
-                        <span className="text-xs text-muted-foreground line-clamp-1">
-                          {fullMenu.subcategories.find((s: any) => s.id === product.subcategoryId)?.name}
+                  <div key={product.id} onClick={() => openQuickAdd(product.id)} className="group cursor-pointer">
+                    <div className="relative aspect-square rounded-xl overflow-hidden mb-2 bg-secondary">
+                      {product.imageUrl ? (
+                        <img
+                          src={product.imageUrl}
+                          alt={product.name}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          loading="lazy"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                          <ShoppingBag className="w-8 h-8 opacity-30" />
+                        </div>
+                      )}
+                      {/* Diet indicator */}
+                      {product.isVegetarian && (
+                        <span className="absolute top-2 left-2 w-5 h-5 rounded-sm border-2 border-green-600 bg-white flex items-center justify-center">
+                          <span className="w-2 h-2 rounded-full bg-green-600" />
                         </span>
-                        {(product.instorePrice || product.deliveryPrice) > 0 && (
-                          <span className="font-bold text-xs">
-                            {formatPrice(product.useBasePrice
-                              ? (fullMenu.subcategories.find((s: any) => s.id === product.subcategoryId)?.basePriceRegularNoBoba || product.instorePrice)
-                              : (product.instorePrice || product.deliveryPrice)
-                            )}
-                          </span>
-                        )}
-                      </div>
+                      )}
+                      {product.isNonVeg && (
+                        <span className="absolute top-2 left-2 w-5 h-5 rounded-sm border-2 border-red-600 bg-white flex items-center justify-center">
+                          <span className="w-2 h-2 rounded-full bg-red-600" />
+                        </span>
+                      )}
+                      {/* Quick Add button overlay */}
+                      <button
+                        onClick={(e) => openQuickAdd(product.id, e)}
+                        className="absolute bottom-2 right-2 w-8 h-8 rounded-full flex items-center justify-center text-white shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                        style={{ background: JADE_GREEN }}
+                        title="Quick Add"
+                      >
+                        <Plus className="w-4 h-4" />
+                      </button>
                     </div>
-                  </Link>
+                    <h3 className="font-semibold text-sm line-clamp-2 group-hover:text-primary transition-colors">
+                      {product.name}
+                    </h3>
+                    <div className="flex items-center justify-between mt-0.5">
+                      <span className="text-xs text-muted-foreground line-clamp-1">
+                        {fullMenu.subcategories.find((s: any) => s.id === product.subcategoryId)?.name}
+                      </span>
+                      {(product.instorePrice || product.deliveryPrice) > 0 && (
+                        <span className="font-bold text-xs">
+                          {formatPrice(product.useBasePrice
+                            ? (fullMenu.subcategories.find((s: any) => s.id === product.subcategoryId)?.basePriceRegularNoBoba || product.instorePrice)
+                            : (product.instorePrice || product.deliveryPrice)
+                          )}
+                        </span>
+                      )}
+                    </div>
+                  </div>
                 ))}
               </div>
 
@@ -875,6 +897,18 @@ export default function Home() {
           </div>
         </div>
       </footer>
+
+      {/* Quick Add Modal */}
+      {quickAddProduct && (
+        <ProductCustomizationModal
+          product={quickAddProduct.product}
+          subcategory={quickAddProduct.subcategory}
+          category={quickAddProduct.category}
+          isDelivery={false}
+          open={!!quickAddProductId}
+          onClose={() => setQuickAddProductId(null)}
+        />
+      )}
     </div>
   );
 }
