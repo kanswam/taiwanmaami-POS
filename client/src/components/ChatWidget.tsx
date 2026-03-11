@@ -20,6 +20,17 @@ const DEFAULT_QUICK_REPLIES = [
   "📍 Store Info",
 ];
 
+// Generate a stable session ID per browser session
+function getChatSessionId(): string {
+  const key = 'maami_chat_session';
+  let id = sessionStorage.getItem(key);
+  if (!id) {
+    id = `chat_${Date.now()}_${Math.random().toString(36).substring(2, 10)}`;
+    sessionStorage.setItem(key, id);
+  }
+  return id;
+}
+
 export function ChatWidget() {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -29,6 +40,7 @@ export function ChatWidget() {
   const [showGreeting, setShowGreeting] = useState(false);
   const pulseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const greetingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const sessionIdRef = useRef(getChatSessionId());
 
   const chatMutation = trpc.chatbot.chat.useMutation({
     onSuccess: (data) => {
@@ -64,7 +76,7 @@ export function ChatWidget() {
       .filter(m => m.role !== 'system')
       .map(m => ({ role: m.role, content: m.content }));
 
-    chatMutation.mutate({ messages: conversationHistory });
+    chatMutation.mutate({ messages: conversationHistory, sessionId: sessionIdRef.current });
   }, [messages, chatMutation, hasInteracted]);
 
   const toggleChat = useCallback(() => {

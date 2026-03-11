@@ -7,7 +7,7 @@ import { Header } from '@/components/Header';
 import { SEO } from '@/components/SEO';
 import { LazyVideo } from '@/components/LazyVideo';
 import { trpc } from '@/lib/trpc';
-import { ArrowRight, MapPin, Clock, Star, Sparkles, Instagram, Phone, Navigation, Store, Truck, ShoppingBag, Facebook, Twitter, Youtube, ChevronLeft, ChevronRight, Leaf, Globe } from 'lucide-react';
+import { ArrowRight, MapPin, Clock, Star, Sparkles, Instagram, Phone, Navigation, Store, Truck, ShoppingBag, Facebook, Twitter, Youtube, ChevronLeft, ChevronRight, Leaf, Globe, Plus } from 'lucide-react';
 import { formatPrice } from '@shared/types';
 
 // Chinese painting jade green for CTAs
@@ -26,6 +26,13 @@ export default function Home() {
   
   // Fetch upcoming workshops for announcement banner
   const { data: upcomingWorkshops } = trpc.workshops.getPublished.useQuery();
+  
+  // Fetch full menu for 2-level tabbed menu section
+  const { data: fullMenu } = trpc.menu.getFullMenu.useQuery({ isDelivery: false, isPickup: false, includeUnavailable: false });
+  
+  // Active category tab for the explore menu section
+  const [activeMenuTab, setActiveMenuTab] = useState<number | null>(null);
+  const [activeSubFilter, setActiveSubFilter] = useState<string>('all');
   
   // Parse CMS sections into a map
   const sectionsMap = useMemo(() => {
@@ -130,6 +137,27 @@ export default function Home() {
       });
     }
   };
+
+  // Set default active menu tab when data loads
+  useEffect(() => {
+    if (fullMenu?.categories && fullMenu.categories.length > 0 && activeMenuTab === null) {
+      setActiveMenuTab(fullMenu.categories[0].id);
+    }
+  }, [fullMenu, activeMenuTab]);
+
+  // Compute filtered products for the tabbed menu
+  const menuSubcategories = useMemo(() => {
+    if (!fullMenu || !activeMenuTab) return [];
+    return fullMenu.subcategories.filter((s: any) => s.categoryId === activeMenuTab);
+  }, [fullMenu, activeMenuTab]);
+
+  const menuProducts = useMemo(() => {
+    if (!fullMenu || !activeMenuTab) return [];
+    const subIds = activeSubFilter === 'all'
+      ? menuSubcategories.map((s: any) => s.id)
+      : [Number(activeSubFilter)];
+    return fullMenu.products.filter((p: any) => subIds.includes(p.subcategoryId) && p.isActive);
+  }, [fullMenu, activeMenuTab, activeSubFilter, menuSubcategories]);
 
   // CMS-driven announcement bar items
   const announcementSection = sectionsMap['announcement_bar'];
@@ -350,9 +378,9 @@ export default function Home() {
               style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
             >
               {featuredProducts.map((product: any) => (
-                <Link key={product.id} href={`/menu?highlight=${product.id}`}>
-                  <div className="flex-shrink-0 w-[220px] sm:w-[250px] snap-start group cursor-pointer">
-                    <div className="relative aspect-square rounded-xl overflow-hidden mb-3 bg-secondary">
+                <div key={product.id} className="flex-shrink-0 w-[220px] sm:w-[250px] snap-start group">
+                  <Link href={`/menu?highlight=${product.id}`}>
+                    <div className="relative aspect-square rounded-xl overflow-hidden mb-3 bg-secondary cursor-pointer">
                       {product.imageUrl ? (
                         <img
                           src={product.imageUrl}
@@ -381,17 +409,28 @@ export default function Home() {
                         </span>
                       )}
                     </div>
-                    <h3 className="font-semibold text-sm line-clamp-2 group-hover:text-primary transition-colors">
-                      {product.name}
-                    </h3>
-                    <div className="flex items-center justify-between mt-1">
-                      <span className="text-sm text-muted-foreground">{product.subcategoryName}</span>
-                      {getDisplayPrice(product) > 0 && (
-                        <span className="font-bold text-sm">{formatPrice(getDisplayPrice(product))}</span>
-                      )}
-                    </div>
+                  </Link>
+                  <div className="flex items-start justify-between gap-2">
+                    <Link href={`/menu?highlight=${product.id}`}>
+                      <h3 className="font-semibold text-sm line-clamp-2 group-hover:text-primary transition-colors cursor-pointer">
+                        {product.name}
+                      </h3>
+                      <span className="text-xs text-muted-foreground">{product.subcategoryName}</span>
+                    </Link>
+                    <Link href={`/menu?highlight=${product.id}`}>
+                      <button
+                        className="flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center text-white shadow-md hover:scale-110 transition-transform"
+                        style={{ background: JADE_GREEN }}
+                        title="Quick Add"
+                      >
+                        <Plus className="w-5 h-5" />
+                      </button>
+                    </Link>
                   </div>
-                </Link>
+                  {getDisplayPrice(product) > 0 && (
+                    <span className="font-bold text-sm mt-1 block">{formatPrice(getDisplayPrice(product))}</span>
+                  )}
+                </div>
               ))}
             </div>
           </div>
@@ -472,10 +511,10 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ===== EXPLORE OUR MENU - Video Category Cards ===== */}
+      {/* ===== EXPLORE OUR MENU - 2-Level Tabbed Menu ===== */}
       <section className="py-16">
         <div className="container">
-          <div className="text-center mb-12">
+          <div className="text-center mb-10">
             <h2 className="text-3xl font-bold mb-4">Explore Our Menu</h2>
             <p className="text-muted-foreground max-w-2xl mx-auto">
               From authentic bubble tea to delicious mochis and Asian street food, 
@@ -483,44 +522,129 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {menuCategories.map((category, index) => (
-              <Link key={index} href={category.href}>
-                <Card className="group cursor-pointer overflow-hidden hover:shadow-2xl transition-all duration-300 relative aspect-[16/9]">
-                  <LazyVideo
-                    src={category.video}
-                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                    autoPlay
-                    loop
-                    muted
-                    playsInline
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
-                  <div className="absolute bottom-0 left-0 right-0 p-6">
-                    <h3 className="font-bold text-white text-2xl mb-2 group-hover:text-primary-foreground transition-colors">
-                      {category.name}
-                    </h3>
-                    <p className="text-white/80 text-sm mb-4">
-                      {category.description}
-                    </p>
-                    <div className="flex items-center text-white/90 text-sm font-medium group-hover:text-white transition-colors">
-                      <span>Explore</span>
-                      <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                    </div>
-                  </div>
-                </Card>
-              </Link>
-            ))}
-          </div>
+          {fullMenu && fullMenu.categories.length > 0 ? (
+            <div>
+              {/* Category Tabs */}
+              <div className="flex gap-2 overflow-x-auto pb-3 mb-4 scrollbar-hide" style={{ scrollbarWidth: 'none' }}>
+                {fullMenu.categories.map((cat: any) => (
+                  <button
+                    key={cat.id}
+                    onClick={() => { setActiveMenuTab(cat.id); setActiveSubFilter('all'); }}
+                    className={`flex-shrink-0 px-5 py-2.5 rounded-full text-sm font-semibold transition-all ${
+                      activeMenuTab === cat.id
+                        ? 'text-white shadow-md'
+                        : 'bg-card border border-border text-foreground hover:bg-secondary'
+                    }`}
+                    style={activeMenuTab === cat.id ? { background: JADE_GREEN } : {}}
+                  >
+                    {cat.name}
+                  </button>
+                ))}
+              </div>
 
-          <div className="text-center mt-10">
-            <Link href="/menu">
-              <Button size="lg">
-                View Full Menu
-                <ArrowRight className="ml-2 w-5 h-5" />
-              </Button>
-            </Link>
-          </div>
+              {/* Subcategory Filter Chips */}
+              {menuSubcategories.length > 1 && (
+                <div className="flex gap-2 overflow-x-auto pb-3 mb-6 scrollbar-hide" style={{ scrollbarWidth: 'none' }}>
+                  <button
+                    onClick={() => setActiveSubFilter('all')}
+                    className={`flex-shrink-0 px-4 py-1.5 rounded-full text-xs font-medium transition-all ${
+                      activeSubFilter === 'all'
+                        ? 'bg-foreground text-background'
+                        : 'bg-secondary text-foreground hover:bg-secondary/80'
+                    }`}
+                  >
+                    All
+                  </button>
+                  {menuSubcategories.map((sub: any) => (
+                    <button
+                      key={sub.id}
+                      onClick={() => setActiveSubFilter(String(sub.id))}
+                      className={`flex-shrink-0 px-4 py-1.5 rounded-full text-xs font-medium transition-all ${
+                        activeSubFilter === String(sub.id)
+                          ? 'bg-foreground text-background'
+                          : 'bg-secondary text-foreground hover:bg-secondary/80'
+                      }`}
+                    >
+                      {sub.name}
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {/* Product Grid */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                {menuProducts.slice(0, 20).map((product: any) => (
+                  <Link key={product.id} href={`/menu?highlight=${product.id}`}>
+                    <div className="group cursor-pointer">
+                      <div className="relative aspect-square rounded-xl overflow-hidden mb-2 bg-secondary">
+                        {product.imageUrl ? (
+                          <img
+                            src={product.imageUrl}
+                            alt={product.name}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                            loading="lazy"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                            <ShoppingBag className="w-8 h-8 opacity-30" />
+                          </div>
+                        )}
+                        {/* Diet indicator */}
+                        {product.isVegetarian && (
+                          <span className="absolute top-2 left-2 w-5 h-5 rounded-sm border-2 border-green-600 bg-white flex items-center justify-center">
+                            <span className="w-2 h-2 rounded-full bg-green-600" />
+                          </span>
+                        )}
+                        {product.isNonVeg && (
+                          <span className="absolute top-2 left-2 w-5 h-5 rounded-sm border-2 border-red-600 bg-white flex items-center justify-center">
+                            <span className="w-2 h-2 rounded-full bg-red-600" />
+                          </span>
+                        )}
+                        {/* Quick Add button overlay */}
+                        <button
+                          className="absolute bottom-2 right-2 w-8 h-8 rounded-full flex items-center justify-center text-white shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                          style={{ background: JADE_GREEN }}
+                          title="View & Add"
+                        >
+                          <Plus className="w-4 h-4" />
+                        </button>
+                      </div>
+                      <h3 className="font-semibold text-sm line-clamp-2 group-hover:text-primary transition-colors">
+                        {product.name}
+                      </h3>
+                      <div className="flex items-center justify-between mt-0.5">
+                        <span className="text-xs text-muted-foreground line-clamp-1">
+                          {fullMenu.subcategories.find((s: any) => s.id === product.subcategoryId)?.name}
+                        </span>
+                        {(product.instorePrice || product.deliveryPrice) > 0 && (
+                          <span className="font-bold text-xs">
+                            {formatPrice(product.useBasePrice
+                              ? (fullMenu.subcategories.find((s: any) => s.id === product.subcategoryId)?.basePriceRegularNoBoba || product.instorePrice)
+                              : (product.instorePrice || product.deliveryPrice)
+                            )}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+
+              {/* Show more / View Full Menu */}
+              <div className="text-center mt-8">
+                <Link href="/menu">
+                  <Button size="lg" style={{ background: JADE_GREEN, borderColor: JADE_GREEN }} className="text-white hover:opacity-90">
+                    View Full Menu
+                    <ArrowRight className="ml-2 w-5 h-5" />
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          ) : (
+            <div className="text-center py-12 text-muted-foreground">
+              Loading menu...
+            </div>
+          )}
         </div>
       </section>
 

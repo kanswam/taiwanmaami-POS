@@ -11,7 +11,7 @@ import { categories, subcategories, products, addons, orders, orderItems as orde
 import { eq, and, desc, asc, sql, or, gte, lte, isNull, inArray } from "drizzle-orm";
 import { generateOrderNumber, calculateGst } from "@shared/types";
 // POS functionality removed - Employee Master import removed
-import { outletProducts, loyaltyRewards, stampTransactions, guestOrders, reviews, kotQueue, receiptQueue, productAuditLog, categoryAuditLog, complaints, eventInquiries, eventOrders, eventOrderItems, workshops, workshopBookings, workshopDates, workshopWaitlist, backupLogs, blogArticles, deliverySalesUploads, deliveryItemSales, pageviews as pageviewsTable, popupRegistrations, homepageSections } from "../drizzle/schema";
+import { outletProducts, loyaltyRewards, stampTransactions, guestOrders, reviews, kotQueue, receiptQueue, productAuditLog, categoryAuditLog, complaints, eventInquiries, eventOrders, eventOrderItems, workshops, workshopBookings, workshopDates, workshopWaitlist, backupLogs, blogArticles, deliverySalesUploads, deliveryItemSales, pageviews as pageviewsTable, popupRegistrations, homepageSections, chatConversations, chatMessages } from "../drizzle/schema";
 import { ENV } from './_core/env';
 import { wholesaleRouter } from './wholesaleRouter';
 import { chatWithBot } from './chatbot';
@@ -9415,9 +9415,70 @@ export const appRouter = router({
           role: z.string(),
           content: z.string(),
         })),
+        sessionId: z.string().optional(),
       }))
-      .mutation(async ({ input }) => {
+      .mutation(async ({ input, ctx }) => {
         const response = await chatWithBot(input.messages);
+        
+        // Log conversation asynchronously (don't block the response)
+        try {
+          const dbInstance = await getDb();
+          if (dbInstance && input.sessionId) {
+            const lastUserMsg = [...input.messages].reverse().find(m => m.role === 'user');
+            
+            // Find or create conversation
+            let convId: number;
+            const existing = await dbInstance.select().from(chatConversations)
+              .where(eq(chatConversations.sessionId, input.sessionId))
+              .limit(1);
+            
+            if (existing.length > 0) {
+              convId = existing[0].id;
+              await dbInstance.update(chatConversations)
+                .set({ messageCount: sql`messageCount + 2` })
+                .where(eq(chatConversations.id, convId));
+            } else {
+              const userName = (ctx as any)?.user?.name || null;
+              const userId = (ctx as any)?.user?.id || null;
+              const [result] = await dbInstance.insert(chatConversations).values({
+                sessionId: input.sessionId,
+                userId,
+                userName,
+                messageCount: 2,
+                channel: 'text',
+              });
+              convId = result.insertId;
+            }
+            
+            // Detect intents for logging
+            const { detectIntents, extractSearchQuery } = await import('./chatbot');
+            const userContent = lastUserMsg?.content || '';
+            const intents = detectIntents(userContent);
+            const searchQuery = intents.includes('search_menu') ? extractSearchQuery(userContent) : null;
+            
+            // Log user message
+            if (lastUserMsg) {
+              await dbInstance.insert(chatMessages).values({
+                conversationId: convId,
+                role: 'user',
+                content: lastUserMsg.content,
+                intents: intents,
+                searchQuery,
+              });
+            }
+            
+            // Log bot response
+            await dbInstance.insert(chatMessages).values({
+              conversationId: convId,
+              role: 'assistant',
+              content: response.reply,
+              productsShown: response.cards?.length || 0,
+            });
+          }
+        } catch (logErr) {
+          console.error('[ChatLog] Failed to log conversation:', logErr);
+        }
+        
         return response;
       }),
 
@@ -9527,6 +9588,141 @@ export const appRouter = router({
 
         const { url } = await storagePut(fileKey, buffer, input.mimeType);
         return { audioUrl: url };
+      }),
+  }),
+
+  // =============================================
+  // CHATBOT ANALYTICS
+  // =============================================
+  chatAnalytics: router({
+    // Admin: Get conversation stats overview
+    getStats: adminProcedure
+      .input(z.object({
+        days: z.number().default(30),
+      }).optional())
+      .query(async ({ input }) => {
+        const dbInstance = await getDb();
+        if (!dbInstance) return { totalConversations: 0, totalMessages: 0, avgMessagesPerConv: 0, topIntents: [], recentConversations: [], dailyUsage: [] };
+        
+        const days = input?.days || 30;
+        const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+        
+        // Total conversations
+        const [convCount] = await dbInstance.select({ count: sql<number>`COUNT(*)` })
+          .from(chatConversations)
+          .where(gte(chatConversations.startedAt, since));
+        
+        // Total messages
+        const [msgCount] = await dbInstance.select({ count: sql<number>`COUNT(*)` })
+          .from(chatMessages)
+          .where(gte(chatMessages.createdAt, since));
+        
+        // Top intents (from user messages)
+        const intentRows = await dbInstance.select({
+          intents: chatMessages.intents,
+        })
+          .from(chatMessages)
+          .where(and(
+            eq(chatMessages.role, 'user'),
+            gte(chatMessages.createdAt, since)
+          ));
+        
+        // Count intents
+        const intentCounts: Record<string, number> = {};
+        for (const row of intentRows) {
+          const intents = (row.intents as string[] | null) || [];
+          for (const intent of intents) {
+            intentCounts[intent] = (intentCounts[intent] || 0) + 1;
+          }
+        }
+        const topIntents = Object.entries(intentCounts)
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, 10)
+          .map(([intent, count]) => ({ intent, count }));
+        
+        // Top search queries
+        const searchRows = await dbInstance.select({
+          searchQuery: chatMessages.searchQuery,
+        })
+          .from(chatMessages)
+          .where(and(
+            eq(chatMessages.role, 'user'),
+            gte(chatMessages.createdAt, since),
+            sql`${chatMessages.searchQuery} IS NOT NULL AND ${chatMessages.searchQuery} != ''`
+          ));
+        
+        const queryCounts: Record<string, number> = {};
+        for (const row of searchRows) {
+          const q = (row.searchQuery || '').toLowerCase().trim();
+          if (q) queryCounts[q] = (queryCounts[q] || 0) + 1;
+        }
+        const topSearches = Object.entries(queryCounts)
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, 15)
+          .map(([query, count]) => ({ query, count }));
+        
+        // Daily usage for chart
+        const dailyRows = await dbInstance.select({
+          date: sql<string>`DATE(${chatMessages.createdAt})`,
+          count: sql<number>`COUNT(*)`,
+        })
+          .from(chatMessages)
+          .where(and(
+            eq(chatMessages.role, 'user'),
+            gte(chatMessages.createdAt, since)
+          ))
+          .groupBy(sql`DATE(${chatMessages.createdAt})`)
+          .orderBy(sql`DATE(${chatMessages.createdAt})`);
+        
+        // Recent conversations with preview
+        const recentConvs = await dbInstance.select()
+          .from(chatConversations)
+          .where(gte(chatConversations.startedAt, since))
+          .orderBy(desc(chatConversations.lastMessageAt))
+          .limit(20);
+        
+        // Get first user message for each conversation as preview
+        const recentWithPreview = await Promise.all(recentConvs.map(async (conv) => {
+          const firstMsg = await dbInstance.select()
+            .from(chatMessages)
+            .where(and(
+              eq(chatMessages.conversationId, conv.id),
+              eq(chatMessages.role, 'user')
+            ))
+            .orderBy(asc(chatMessages.createdAt))
+            .limit(1);
+          return {
+            ...conv,
+            preview: firstMsg[0]?.content || '(no message)',
+          };
+        }));
+        
+        return {
+          totalConversations: Number(convCount?.count || 0),
+          totalMessages: Number(msgCount?.count || 0),
+          avgMessagesPerConv: convCount?.count ? Math.round(Number(msgCount?.count || 0) / Number(convCount.count)) : 0,
+          topIntents,
+          topSearches,
+          dailyUsage: dailyRows.map(r => ({ date: r.date, count: Number(r.count) })),
+          recentConversations: recentWithPreview,
+        };
+      }),
+    
+    // Admin: Get full conversation messages
+    getConversation: adminProcedure
+      .input(z.object({ conversationId: z.number() }))
+      .query(async ({ input }) => {
+        const dbInstance = await getDb();
+        if (!dbInstance) return { conversation: null, messages: [] };
+        
+        const [conv] = await dbInstance.select().from(chatConversations)
+          .where(eq(chatConversations.id, input.conversationId));
+        
+        const msgs = await dbInstance.select().from(chatMessages)
+          .where(eq(chatMessages.conversationId, input.conversationId))
+          .orderBy(asc(chatMessages.createdAt));
+        
+        return { conversation: conv || null, messages: msgs };
       }),
   }),
 

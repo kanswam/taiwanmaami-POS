@@ -1237,3 +1237,38 @@ export const homepageSections = mysqlTable("homepage_sections", {
 
 export type HomepageSection = typeof homepageSections.$inferSelect;
 export type InsertHomepageSection = typeof homepageSections.$inferInsert;
+
+
+// =============================================
+// CHATBOT ANALYTICS
+// =============================================
+
+// Chat conversations - one per session
+export const chatConversations = mysqlTable("chat_conversations", {
+  id: int("id").autoincrement().primaryKey(),
+  sessionId: varchar("sessionId", { length: 100 }).notNull(), // unique per browser session
+  userId: int("userId"), // null for anonymous users
+  userName: varchar("userName", { length: 200 }),
+  messageCount: int("messageCount").default(0).notNull(),
+  channel: mysqlEnum("channel", ["text", "voice"]).default("text").notNull(),
+  startedAt: timestamp("startedAt").defaultNow().notNull(),
+  lastMessageAt: timestamp("lastMessageAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type ChatConversation = typeof chatConversations.$inferSelect;
+export type InsertChatConversation = typeof chatConversations.$inferInsert;
+
+// Chat messages - individual messages within a conversation
+export const chatMessages = mysqlTable("chat_messages", {
+  id: int("id").autoincrement().primaryKey(),
+  conversationId: int("conversationId").notNull(),
+  role: mysqlEnum("role", ["user", "assistant"]).notNull(),
+  content: text("content").notNull(),
+  intents: json("intents"), // array of detected intents for user messages
+  searchQuery: varchar("searchQuery", { length: 500 }), // what the user searched for
+  productsShown: int("productsShown").default(0), // number of product cards shown
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type ChatMessage = typeof chatMessages.$inferSelect;
+export type InsertChatMessage = typeof chatMessages.$inferInsert;

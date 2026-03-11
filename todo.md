@@ -2405,9 +2405,25 @@ Orders fixed:
 - [x] Frontend: Change hero video overlay to warm amber
 - [x] Frontend: Add Freshness Story section after hero (CMS-driven)
 - [x] Frontend: Add Customer Favourites carousel (from featured products)
-- [ ] Frontend: Implement 2-level tabbed menu on homepage (deferred - needs more design work)
+- [x] Frontend: Implement 2-level tabbed menu on homepage (category tabs + subcategory chips + product grid)
 - [x] Frontend: Use painting green (#5e6c48) for CTA buttons
 - [x] Frontend: Consistent warm tan background across all sections
 - [x] Admin: Homepage Settings page with section editors (Announcement, Hero, Freshness Story, Featured Items)
 - [x] Admin: Featured product selector with toggle and reorder
 - [x] Tests: Vitest for homepage CMS procedures (11 tests passing)
+
+## Maami Bot - Prominence + Analytics (Mar 11)
+- [x] Investigate current bot implementation and placement
+  - ChatWidget.tsx: floating button bottom-right with greeting lady image, bounce animation, speech bubble
+  - chatbot.ts: full LLM-powered bot with intent detection, menu search, store info, workshops, blog
+  - No conversation logging or analytics currently exists
+- [ ] Add conversation logging to database (store questions, responses, timestamps, user info)
+- [ ] Add topic/intent categorization for bot queries
+- [ ] Build admin dashboard tab showing bot analytics (popular questions, usage trends, topics)
+- [ ] Make bot more prominent on the website (bigger trigger, welcome message, pulse animation)
+- [ ] Tests for bot analytics procedures
+
+## Homepage Redesign - Incomplete Items (Mar 11)
+- [x] Add Quick Add (+) buttons to Customer Favourites carousel cards
+- [x] Replace 4 video category tiles with 2-level tabbed menu (Category tabs → subcategory chips → item cards)
+- [x] Ensure tabbed menu links to actual product pages for variant/size selection

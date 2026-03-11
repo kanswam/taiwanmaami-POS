@@ -477,7 +477,7 @@ function getStoreInfo(): Record<string, any> {
 
 type Intent = 'search_menu' | 'get_categories' | 'get_popular_items' | 'get_store_info' | 'get_workshops' | 'get_blog' | 'general_chat';
 
-function detectIntents(userMessage: string): Intent[] {
+export function detectIntents(userMessage: string): Intent[] {
   const msg = userMessage.toLowerCase();
   const intents: Intent[] = [];
 
@@ -544,7 +544,7 @@ function detectIntents(userMessage: string): Intent[] {
   return intents;
 }
 
-function extractSearchQuery(userMessage: string): string {
+export function extractSearchQuery(userMessage: string): string {
   const msg = userMessage.toLowerCase();
 
   // First, check for known multi-word food terms and preserve them
