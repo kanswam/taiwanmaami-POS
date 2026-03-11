@@ -2459,3 +2459,6 @@ Orders fixed:
   - Products shown with grayscale/opacity treatment and dark rotated badge
   - Product name and price shown in muted text
 - [x] Disable Quick Add for unavailable items (no Quick Add button, toast on click)
+
+## Bug Fix - Logo Navigation (Mar 11)
+- [x] Fix Taiwan Maami logo in navbar: scrolls to top when on homepage, navigates to / from other pages

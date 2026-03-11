@@ -34,7 +34,18 @@ export function Header() {
       <div className="container">
         <div className="flex items-center justify-between h-20 md:h-24">
           {/* Logo */}
-          <Link href="/" className="flex items-center">
+          <a
+            href="/"
+            className="flex items-center"
+            onClick={(e) => {
+              e.preventDefault();
+              if (location === '/') {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              } else {
+                window.location.href = '/';
+              }
+            }}
+          >
             <img 
               src="https://files.manuscdn.com/user_upload_by_module/session_file/114675165/PNSTmVAGBQQgOlVy.png" 
               alt="Taiwan Maami" 
@@ -44,7 +55,7 @@ export function Header() {
                 (e.target as HTMLImageElement).style.display = 'none';
               }}
             />
-          </Link>
+          </a>
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-6">
