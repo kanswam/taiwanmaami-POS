@@ -2436,3 +2436,19 @@ Orders fixed:
   - Bubble tea items show: size, boba type, sugar level, ice level, add-ons, Add to Cart
   - No navigation away from homepage — modal opens as overlay
 - [x] Tests: Vitest for Quick Add data requirements (8 tests passing)
+
+## Outlet-First Ordering Flow (Mar 11)
+- [x] Outlet/order-type selection gateway in "How Would You Like to Order?" section
+  - Clicking Dine-In/Delivery/Pickup shows outlet selector (T Nagar / Palladium)
+  - Delivery auto-selects T. Nagar (no outlet choice needed)
+  - Saves order type + outlet to cart context
+  - Section updates to show confirmation after selection with Change button
+- [x] Sticky selection pill showing current outlet + order type with "Change" option
+- [x] Filter Explore Our Menu section by outlet availability
+  - Auto-switches to first category with available products when outlet changes
+  - Shows "No items available" message when a category has 0 products at selected outlet
+  - Food tab stays selected when clicked (no auto-switch loop)
+- [x] Redirect "Order Online & Save" CTA to scroll to "How Would You Like to Order?" section
+- [x] Quick Add pre-check: if no outlet selected, show brief order-type + outlet selector first
+  - Pending Quick Add opens automatically after outlet selection
+- [x] Tests for outlet-first ordering flow (8 vitest tests passing)

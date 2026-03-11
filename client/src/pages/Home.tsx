@@ -1,5 +1,5 @@
 import { Link } from 'wouter';
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 // Taiwan Maami Web Platform - Customer Ordering Website
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -7,7 +7,9 @@ import { Header } from '@/components/Header';
 import { SEO } from '@/components/SEO';
 import { LazyVideo } from '@/components/LazyVideo';
 import { trpc } from '@/lib/trpc';
-import { ArrowRight, MapPin, Clock, Star, Sparkles, Instagram, Phone, Navigation, Store, Truck, ShoppingBag, Facebook, Twitter, Youtube, ChevronLeft, ChevronRight, Leaf, Globe, Plus } from 'lucide-react';
+import { ArrowRight, MapPin, Clock, Star, Sparkles, Instagram, Phone, Navigation, Store, Truck, ShoppingBag, Facebook, Twitter, Youtube, ChevronLeft, ChevronRight, Leaf, Globe, Plus, X, Check } from 'lucide-react';
+import { useCart } from '@/contexts/CartContext';
+import { toast } from 'sonner';
 import { formatPrice } from '@shared/types';
 import { ProductCustomizationModal } from '@/components/ProductCustomizationModal';
 
@@ -28,21 +30,95 @@ export default function Home() {
   // Fetch upcoming workshops for announcement banner
   const { data: upcomingWorkshops } = trpc.workshops.getPublished.useQuery();
   
-  // Fetch full menu for 2-level tabbed menu section
-  const { data: fullMenu } = trpc.menu.getFullMenu.useQuery({ isDelivery: false, isPickup: false, includeUnavailable: false });
+  // Cart context for outlet/order type
+  const { state: cartState, setOrderType, setInstoreOutlet, setPickupOutlet } = useCart();
+  const { instoreOutlet, pickupOutlet } = cartState;
+
+  // Fetch full menu for 2-level tabbed menu section (dynamic based on order type)
+  const { data: fullMenu } = trpc.menu.getFullMenu.useQuery({
+    isDelivery: cartState.orderType === 'delivery',
+    isPickup: cartState.orderType === 'pickup',
+    includeUnavailable: false,
+  });
   
   // Active category tab for the explore menu section
   const [activeMenuTab, setActiveMenuTab] = useState<number | null>(null);
   const [activeSubFilter, setActiveSubFilter] = useState<string>('all');
 
+  // Outlet selection UI state
+  const [showOutletSelector, setShowOutletSelector] = useState(false);
+  const [pendingOrderType, setPendingOrderType] = useState<'instore' | 'pickup' | null>(null);
+  const [pendingQuickAddProductId, setPendingQuickAddProductId] = useState<number | null>(null);
+
+  // Determine if outlet has been selected
+  const hasOutletSelected = useMemo(() => {
+    if (cartState.orderType === 'delivery') return true;
+    if (cartState.orderType === 'instore') return !!instoreOutlet;
+    if (cartState.orderType === 'pickup') return !!pickupOutlet;
+    return false;
+  }, [cartState.orderType, instoreOutlet, pickupOutlet]);
+
+  // Get the current selected outlet
+  const currentOutlet = useMemo(() => {
+    if (cartState.orderType === 'instore') return instoreOutlet;
+    if (cartState.orderType === 'pickup') return pickupOutlet;
+    if (cartState.orderType === 'delivery') return 'tnagar';
+    return null;
+  }, [cartState.orderType, instoreOutlet, pickupOutlet]);
+
+  // Handle order type selection
+  const handleOrderTypeClick = (type: 'instore' | 'delivery' | 'pickup') => {
+    if (type === 'delivery') {
+      setOrderType('delivery');
+      setShowOutletSelector(false);
+      setPendingOrderType(null);
+      toast.success('Ordering for Delivery from T. Nagar', { duration: 2000 });
+      setTimeout(() => {
+        document.getElementById('explore-menu')?.scrollIntoView({ behavior: 'smooth' });
+      }, 300);
+    } else {
+      setPendingOrderType(type);
+      setShowOutletSelector(true);
+    }
+  };
+
+  // Handle outlet selection
+  const handleOutletSelect = (outlet: 'palladium' | 'tnagar') => {
+    const type = pendingOrderType || cartState.orderType;
+    setOrderType(type);
+    if (type === 'instore') {
+      setInstoreOutlet(outlet);
+    } else if (type === 'pickup') {
+      setPickupOutlet(outlet);
+    }
+    setShowOutletSelector(false);
+    setPendingOrderType(null);
+    const outletName = outlet === 'palladium' ? 'Palladium Mall' : 'T. Nagar';
+    const typeLabel = type === 'instore' ? 'Dine-In' : 'Pickup';
+    toast.success(`${typeLabel} at ${outletName}`, { duration: 2000 });
+    if (pendingQuickAddProductId) {
+      setQuickAddProductId(pendingQuickAddProductId);
+      setPendingQuickAddProductId(null);
+    } else {
+      setTimeout(() => {
+        document.getElementById('explore-menu')?.scrollIntoView({ behavior: 'smooth' });
+      }, 300);
+    }
+  };
+
   // Quick Add modal state
   const [quickAddProductId, setQuickAddProductId] = useState<number | null>(null);
 
-  // Helper: open Quick Add modal for a product
+  // Helper: open Quick Add modal for a product (with outlet pre-check)
   const openQuickAdd = (productId: number, e?: React.MouseEvent) => {
     if (e) {
       e.preventDefault();
       e.stopPropagation();
+    }
+    if (!hasOutletSelected) {
+      setPendingQuickAddProductId(productId);
+      setShowOutletSelector(true);
+      return;
     }
     setQuickAddProductId(productId);
   };
@@ -162,12 +238,43 @@ export default function Home() {
     }
   };
 
+  // Helper: find first category with products available at the current outlet
+  const findFirstAvailableCategory = useCallback(() => {
+    if (!fullMenu?.categories || !fullMenu?.subcategories || !fullMenu?.products) return null;
+    for (const cat of fullMenu.categories) {
+      const catSubIds = fullMenu.subcategories.filter((s: any) => s.categoryId === cat.id).map((s: any) => s.id);
+      const hasProducts = fullMenu.products.some((p: any) => {
+        if (!catSubIds.includes(p.subcategoryId) || !p.isActive) return false;
+        if (currentOutlet === 'palladium' && p.availableAtPalladium === false) return false;
+        if (currentOutlet === 'tnagar' && p.availableAtTnagar === false) return false;
+        return true;
+      });
+      if (hasProducts) return cat.id;
+    }
+    return fullMenu.categories[0]?.id ?? null;
+  }, [fullMenu, currentOutlet]);
+
   // Set default active menu tab when data loads
   useEffect(() => {
     if (fullMenu?.categories && fullMenu.categories.length > 0 && activeMenuTab === null) {
-      setActiveMenuTab(fullMenu.categories[0].id);
+      setActiveMenuTab(findFirstAvailableCategory() ?? fullMenu.categories[0].id);
     }
-  }, [fullMenu, activeMenuTab]);
+  }, [fullMenu, activeMenuTab, findFirstAvailableCategory]);
+
+  // Auto-switch to first category with available products when outlet changes
+  const prevOutletRef = useRef(currentOutlet);
+  useEffect(() => {
+    if (!fullMenu?.categories || !currentOutlet) return;
+    // Only auto-switch when the outlet actually changes, not on every tab click
+    if (prevOutletRef.current !== currentOutlet) {
+      prevOutletRef.current = currentOutlet;
+      const firstAvailable = findFirstAvailableCategory();
+      if (firstAvailable !== null) {
+        setActiveMenuTab(firstAvailable);
+        setActiveSubFilter('all');
+      }
+    }
+  }, [currentOutlet, fullMenu, findFirstAvailableCategory]);
 
   // Compute filtered products for the tabbed menu
   const menuSubcategories = useMemo(() => {
@@ -180,8 +287,13 @@ export default function Home() {
     const subIds = activeSubFilter === 'all'
       ? menuSubcategories.map((s: any) => s.id)
       : [Number(activeSubFilter)];
-    return fullMenu.products.filter((p: any) => subIds.includes(p.subcategoryId) && p.isActive);
-  }, [fullMenu, activeMenuTab, activeSubFilter, menuSubcategories]);
+    return fullMenu.products.filter((p: any) => {
+      if (!subIds.includes(p.subcategoryId) || !p.isActive) return false;
+      if (currentOutlet === 'palladium' && p.availableAtPalladium === false) return false;
+      if (currentOutlet === 'tnagar' && p.availableAtTnagar === false) return false;
+      return true;
+    });
+  }, [fullMenu, activeMenuTab, activeSubFilter, menuSubcategories, currentOutlet]);
 
   // CMS-driven announcement bar items
   const announcementSection = sectionsMap['announcement_bar'];
@@ -328,20 +440,22 @@ export default function Home() {
               <p className="text-lg sm:text-xl text-white/90 mb-8" style={{ textShadow: '0 1px 4px rgba(0,0,0,0.3)' }}>
                 {heroSection?.subtitle || heroDescription}
               </p>
-              <Link href="/menu" className="inline-block">
-                <div className="rounded-xl p-4 sm:p-5 shadow-lg hover:shadow-xl transition-all hover:scale-[1.02] cursor-pointer" style={{ background: `linear-gradient(135deg, ${JADE_GREEN}, ${JADE_GREEN_HOVER})` }}>
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center">
-                      <ShoppingBag className="w-6 h-6 text-white" />
-                    </div>
-                    <div className="text-white">
-                      <h3 className="text-lg sm:text-xl font-bold">{heroCta}</h3>
-                      <p className="text-sm opacity-90">{heroCtaSub}</p>
-                    </div>
-                    <ArrowRight className="w-6 h-6 text-white ml-2 hidden sm:block" />
+              <div
+                onClick={() => document.getElementById('order-options')?.scrollIntoView({ behavior: 'smooth' })}
+                className="rounded-xl p-4 sm:p-5 shadow-lg hover:shadow-xl transition-all hover:scale-[1.02] cursor-pointer inline-block"
+                style={{ background: `linear-gradient(135deg, ${JADE_GREEN}, ${JADE_GREEN_HOVER})` }}
+              >
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center">
+                    <ShoppingBag className="w-6 h-6 text-white" />
                   </div>
+                  <div className="text-white">
+                    <h3 className="text-lg sm:text-xl font-bold">{heroCta}</h3>
+                    <p className="text-sm opacity-90">{heroCtaSub}</p>
+                  </div>
+                  <ArrowRight className="w-6 h-6 text-white ml-2 hidden sm:block" />
                 </div>
-              </Link>
+              </div>
             </div>
           </div>
         </div>
@@ -461,87 +575,168 @@ export default function Home() {
       )}
 
       {/* ===== HOW TO ORDER SECTION ===== */}
-      <section id="order-options" className="py-16 bg-secondary/30">
+      <section id="order-options" className="py-16 bg-secondary/30 scroll-mt-20">
         <div className="container">
           <div className="text-center mb-10">
             <h2 className="text-3xl font-bold mb-4">How Would You Like to Order?</h2>
-            <p className="text-muted-foreground max-w-2xl mx-auto">
-              Choose the option that works best for you
-            </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
-            {/* In-Store */}
-            <Link href="/menu?type=instore" className="h-full">
-              <Card className="p-6 text-center hover:shadow-lg transition-all duration-300 cursor-pointer group border-2 hover:border-primary h-full flex flex-col">
+          {/* Show confirmation pill if outlet is already selected */}
+          {hasOutletSelected ? (
+            <div className="max-w-lg mx-auto">
+              <div className="flex items-center justify-between p-4 rounded-xl bg-card border border-border shadow-sm">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: JADE_GREEN }}>
+                    {cartState.orderType === 'instore' ? <Store className="w-5 h-5 text-white" /> :
+                     cartState.orderType === 'delivery' ? <Truck className="w-5 h-5 text-white" /> :
+                     <ShoppingBag className="w-5 h-5 text-white" />}
+                  </div>
+                  <div>
+                    <p className="font-semibold">
+                      {cartState.orderType === 'instore' ? 'Dine In-Store' :
+                       cartState.orderType === 'delivery' ? 'Home Delivery' : 'Quick Pickup'}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      {cartState.orderType === 'delivery' ? 'From T. Nagar outlet' :
+                       `At ${currentOutlet === 'palladium' ? 'Palladium Mall' : 'T. Nagar'}`}
+                    </p>
+                  </div>
+                </div>
+                <Button variant="outline" size="sm" onClick={() => { setPendingOrderType(null); setShowOutletSelector(true); }}>
+                  Change
+                </Button>
+              </div>
+              <p className="text-center text-sm text-muted-foreground mt-3">Browse the menu below and add items to your cart</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+              <Card onClick={() => handleOrderTypeClick('instore')} className="p-6 text-center hover:shadow-lg transition-all duration-300 cursor-pointer group border-2 hover:border-primary h-full flex flex-col">
                 <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-colors flex-shrink-0">
                   <Store className="w-8 h-8 text-primary group-hover:text-white" />
                 </div>
-                <h3 className="font-bold text-xl mb-2">Dine In-Store</h3>
-                <p className="text-sm text-muted-foreground mb-2 flex-grow">
-                  Visit our outlets and enjoy freshly made bubble tea
-                </p>
-                <div className="flex items-center justify-center gap-1 text-xs text-muted-foreground mb-3">
-                  <Clock className="w-3 h-3" />
-                  <span>Ready in 10-30 mins</span>
-                </div>
+                <h3 className="font-bold text-xl mb-2">Dine In</h3>
+                <p className="text-sm text-muted-foreground mb-2 flex-grow">Visit our outlets and enjoy freshly made bubble tea</p>
                 <div className="text-primary font-medium flex items-center justify-center gap-2 mt-auto">
-                  Order In-Store <ArrowRight className="w-4 h-4" />
+                  Select <ArrowRight className="w-4 h-4" />
                 </div>
               </Card>
-            </Link>
-
-            {/* Delivery */}
-            <Link href="/menu?type=delivery" className="h-full">
-              <Card className="p-6 text-center hover:shadow-lg transition-all duration-300 cursor-pointer group border-2 hover:border-primary h-full flex flex-col">
+              <Card onClick={() => handleOrderTypeClick('delivery')} className="p-6 text-center hover:shadow-lg transition-all duration-300 cursor-pointer group border-2 hover:border-primary h-full flex flex-col">
                 <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-colors flex-shrink-0">
                   <Truck className="w-8 h-8 text-primary group-hover:text-white" />
                 </div>
-                <h3 className="font-bold text-xl mb-2">Home Delivery</h3>
-                <p className="text-sm text-muted-foreground mb-2 flex-grow">
-                  Get your favorites delivered to your doorstep
-                </p>
-                <div className="flex items-center justify-center gap-1 text-xs text-muted-foreground mb-3">
-                  <Clock className="w-3 h-3" />
-                  <span>30-60 mins (varies by distance)</span>
-                </div>
+                <h3 className="font-bold text-xl mb-2">Delivery</h3>
+                <p className="text-sm text-muted-foreground mb-2 flex-grow">Get your favorites delivered to your doorstep</p>
                 <div className="text-primary font-medium flex items-center justify-center gap-2 mt-auto">
-                  Order Delivery <ArrowRight className="w-4 h-4" />
+                  Select <ArrowRight className="w-4 h-4" />
                 </div>
               </Card>
-            </Link>
-
-            {/* Pickup */}
-            <Link href="/menu?type=pickup" className="h-full">
-              <Card className="p-6 text-center hover:shadow-lg transition-all duration-300 cursor-pointer group border-2 hover:border-primary h-full flex flex-col">
+              <Card onClick={() => handleOrderTypeClick('pickup')} className="p-6 text-center hover:shadow-lg transition-all duration-300 cursor-pointer group border-2 hover:border-primary h-full flex flex-col">
                 <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-colors flex-shrink-0">
                   <ShoppingBag className="w-8 h-8 text-primary group-hover:text-white" />
                 </div>
-                <h3 className="font-bold text-xl mb-2">Quick Pickup</h3>
-                <p className="text-sm text-muted-foreground mb-2 flex-grow">
-                  Order ahead and pick up at your convenience
-                </p>
-                <div className="flex items-center justify-center gap-1 text-xs text-muted-foreground mb-3">
-                  <Clock className="w-3 h-3" />
-                  <span>Ready in 10-30 mins</span>
-                </div>
+                <h3 className="font-bold text-xl mb-2">Pickup</h3>
+                <p className="text-sm text-muted-foreground mb-2 flex-grow">Order ahead and pick up at your convenience</p>
                 <div className="text-primary font-medium flex items-center justify-center gap-2 mt-auto">
-                  Order Pickup <ArrowRight className="w-4 h-4" />
+                  Select <ArrowRight className="w-4 h-4" />
                 </div>
               </Card>
-            </Link>
-          </div>
+            </div>
+          )}
+
+          {/* Outlet Selector Modal */}
+          {showOutletSelector && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => { setShowOutletSelector(false); setPendingOrderType(null); setPendingQuickAddProductId(null); }}>
+              <div className="bg-card rounded-2xl shadow-2xl p-6 max-w-sm w-full mx-4" onClick={(e) => e.stopPropagation()}>
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="font-bold text-lg">Select Order Type & Outlet</h3>
+                  <button onClick={() => { setShowOutletSelector(false); setPendingOrderType(null); setPendingQuickAddProductId(null); }} className="p-1 rounded-full hover:bg-secondary">
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+                {!pendingOrderType ? (
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-4">How would you like to order?</p>
+                    <div className="grid grid-cols-3 gap-3">
+                      <button onClick={() => handleOrderTypeClick('instore')} className="flex flex-col items-center gap-2 p-4 rounded-xl border-2 border-border hover:border-primary transition-colors">
+                        <Store className="w-6 h-6" />
+                        <span className="text-sm font-medium">Dine In</span>
+                      </button>
+                      <button onClick={() => handleOrderTypeClick('delivery')} className="flex flex-col items-center gap-2 p-4 rounded-xl border-2 border-border hover:border-primary transition-colors">
+                        <Truck className="w-6 h-6" />
+                        <span className="text-sm font-medium">Delivery</span>
+                      </button>
+                      <button onClick={() => handleOrderTypeClick('pickup')} className="flex flex-col items-center gap-2 p-4 rounded-xl border-2 border-border hover:border-primary transition-colors">
+                        <ShoppingBag className="w-6 h-6" />
+                        <span className="text-sm font-medium">Pickup</span>
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-4">Select your outlet</p>
+                    <div className="space-y-3">
+                      <button onClick={() => handleOutletSelect('palladium')} className="w-full flex items-center gap-3 p-4 rounded-xl border-2 border-border hover:border-primary transition-colors text-left">
+                        <MapPin className="w-5 h-5 flex-shrink-0" />
+                        <div>
+                          <p className="font-semibold">Palladium Mall</p>
+                          <p className="text-xs text-muted-foreground">Velachery • 10am-10pm</p>
+                        </div>
+                      </button>
+                      <button onClick={() => handleOutletSelect('tnagar')} className="w-full flex items-center gap-3 p-4 rounded-xl border-2 border-border hover:border-primary transition-colors text-left">
+                        <MapPin className="w-5 h-5 flex-shrink-0" />
+                        <div>
+                          <p className="font-semibold">T. Nagar (Moutan)</p>
+                          <p className="text-xs text-muted-foreground">Burkit Road • 12pm-12am</p>
+                        </div>
+                      </button>
+                    </div>
+                    <button onClick={() => setPendingOrderType(null)} className="mt-3 text-sm text-muted-foreground hover:text-foreground">
+                      &larr; Back to order types
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       </section>
 
+      {/* Sticky selection pill */}
+      {hasOutletSelected && (
+        <div className="sticky top-16 z-30 bg-background/95 backdrop-blur-sm border-b border-border py-2">
+          <div className="container flex items-center justify-center gap-2 text-sm">
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-secondary">
+              {cartState.orderType === 'instore' ? <Store className="w-4 h-4" /> :
+               cartState.orderType === 'delivery' ? <Truck className="w-4 h-4" /> :
+               <ShoppingBag className="w-4 h-4" />}
+              <span className="font-medium">
+                {cartState.orderType === 'instore' ? 'Dine In' :
+                 cartState.orderType === 'delivery' ? 'Delivery' : 'Pickup'}
+              </span>
+              <span className="text-muted-foreground">·</span>
+              <span>{currentOutlet === 'palladium' ? 'Palladium Mall' : 'T. Nagar'}</span>
+            </div>
+            <button
+              onClick={() => { setPendingOrderType(null); setShowOutletSelector(true); }}
+              className="text-primary font-medium hover:underline"
+            >
+              Change
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* ===== EXPLORE OUR MENU - 2-Level Tabbed Menu ===== */}
-      <section className="py-16">
+      <section id="explore-menu" className="py-16 scroll-mt-32">
         <div className="container">
           <div className="text-center mb-10">
             <h2 className="text-3xl font-bold mb-4">Explore Our Menu</h2>
             <p className="text-muted-foreground max-w-2xl mx-auto">
-              From authentic bubble tea to delicious mochis and Asian street food, 
-              discover our carefully curated selection.
+              {!hasOutletSelected
+                ? 'From authentic bubble tea to delicious mochis and Asian street food, discover our carefully curated selection.'
+                : cartState.orderType === 'delivery'
+                  ? 'Showing items available for delivery from T. Nagar'
+                  : `Showing items available at ${currentOutlet === 'palladium' ? 'Palladium Mall' : 'T. Nagar'}`}
             </p>
           </div>
 
@@ -595,6 +790,13 @@ export default function Home() {
               )}
 
               {/* Product Grid */}
+              {menuProducts.length === 0 ? (
+                <div className="text-center py-12 text-muted-foreground">
+                  <ShoppingBag className="w-10 h-10 mx-auto mb-3 opacity-30" />
+                  <p className="text-sm">No items available in this category{currentOutlet ? ` at ${currentOutlet === 'palladium' ? 'Palladium Mall' : 'T. Nagar'}` : ''}.</p>
+                  <p className="text-xs mt-1">Try another category above.</p>
+                </div>
+              ) : (
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
                 {menuProducts.slice(0, 20).map((product: any) => (
                   <div key={product.id} onClick={() => openQuickAdd(product.id)} className="group cursor-pointer">
@@ -651,10 +853,11 @@ export default function Home() {
                   </div>
                 ))}
               </div>
+              )}
 
               {/* Show more / View Full Menu */}
               <div className="text-center mt-8">
-                <Link href="/menu">
+                <Link href={`/menu?type=${cartState.orderType}`}>
                   <Button size="lg" style={{ background: JADE_GREEN, borderColor: JADE_GREEN }} className="text-white hover:opacity-90">
                     View Full Menu
                     <ArrowRight className="ml-2 w-5 h-5" />
@@ -784,12 +987,14 @@ export default function Home() {
           </div>
           
           <div className="text-center">
-            <Link href="/menu">
-              <Button size="lg" className="bg-white text-primary hover:bg-white/90">
-                Start Your Order
-                <ArrowRight className="ml-2 w-5 h-5" />
-              </Button>
-            </Link>
+            <Button
+              size="lg"
+              className="bg-white text-primary hover:bg-white/90"
+              onClick={() => document.getElementById('order-options')?.scrollIntoView({ behavior: 'smooth' })}
+            >
+              Start Your Order
+              <ArrowRight className="ml-2 w-5 h-5" />
+            </Button>
           </div>
         </div>
       </section>
@@ -904,7 +1109,7 @@ export default function Home() {
           product={quickAddProduct.product}
           subcategory={quickAddProduct.subcategory}
           category={quickAddProduct.category}
-          isDelivery={false}
+          isDelivery={cartState.orderType === 'delivery'}
           open={!!quickAddProductId}
           onClose={() => setQuickAddProductId(null)}
         />
