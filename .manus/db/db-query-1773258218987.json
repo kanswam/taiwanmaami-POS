@@ -1,0 +1,27 @@
+{
+  "query": "SHOW CREATE TABLE chat_messages;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SHOW CREATE TABLE chat_messages;",
+  "rows": [
+    {
+      "Table": "chat_messages",
+      "Create Table": "CREATE TABLE `chat_messages` ("
+    }
+  ],
+  "messages": [
+    "  `id` int NOT NULL AUTO_INCREMENT,",
+    "  `conversationId` int NOT NULL,",
+    "  `role` enum('user','assistant') COLLATE utf8mb4_unicode_ci NOT NULL,",
+    "  `content` text COLLATE utf8mb4_unicode_ci NOT NULL,",
+    "  `intents` json DEFAULT NULL,",
+    "  `searchQuery` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,",
+    "  `productsShown` int DEFAULT '0',",
+    "  `createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,",
+    "  PRIMARY KEY (`id`) /*T![clustered_index] CLUSTERED */,",
+    "  KEY `idx_conversation` (`conversationId`),",
+    "  KEY `idx_created` (`createdAt`)",
+    ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci"
+  ],
+  "stdout": "Table\tCreate Table\nchat_messages\tCREATE TABLE `chat_messages` (\n  `id` int NOT NULL AUTO_INCREMENT,\n  `conversationId` int NOT NULL,\n  `role` enum('user','assistant') COLLATE utf8mb4_unicode_ci NOT NULL,\n  `content` text COLLATE utf8mb4_unicode_ci NOT NULL,\n  `intents` json DEFAULT NULL,\n  `searchQuery` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `productsShown` int DEFAULT '0',\n  `createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  PRIMARY KEY (`id`) /*T![clustered_index] CLUSTERED */,\n  KEY `idx_conversation` (`conversationId`),\n  KEY `idx_created` (`createdAt`)\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci\n",
+  "stderr": "",
+  "execution_time_ms": 54
+}

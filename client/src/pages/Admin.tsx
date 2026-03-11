@@ -19,7 +19,7 @@ import {
   Plus, Edit, Trash2, ImageIcon, RefreshCw, Check, X, Search,
   ChevronDown, ChevronUp, Eye, EyeOff, Star, MessageSquare, Reply, Printer,
   ClipboardList, RotateCcw, History, Filter, BarChart3, UtensilsCrossed, AlertCircle, DollarSign, CreditCard, Users,
-  Settings, Layers, FileText, TrendingUp, Calendar, Ticket, Mail, Phone, MapPin, Clock, UserCheck, BookOpen, GitMerge, ArrowRight, AlertTriangle, Download
+  Settings, Layers, FileText, TrendingUp, Calendar, Ticket, Mail, Phone, MapPin, Clock, UserCheck, BookOpen, GitMerge, ArrowRight, AlertTriangle, Download, Bot
 } from 'lucide-react';
 import { toast } from 'sonner';
 import {
@@ -42,6 +42,7 @@ import OutletAvailabilityTab from '@/components/OutletAvailabilityTab';
 import { RichTextEditor } from '@/components/RichTextEditor';
 import { generateEventDocument } from '@/lib/eventDocument';
 import HomepageSettingsTab from '@/components/HomepageSettingsTab';
+import { BotAnalyticsTab } from '@/components/BotAnalyticsTab';
 import { useOrderNotification, playOrderNotification } from '@/hooks/useOrderNotification';
 
 export default function Admin() {
@@ -233,9 +234,9 @@ export default function Admin() {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button 
-                  variant={['analytics', 'audit', 'payment-report', 'reconciliation'].includes(activeTab) ? 'default' : 'outline'} 
+                  variant={['analytics', 'audit', 'payment-report', 'reconciliation', 'bot-analytics'].includes(activeTab) ? 'default' : 'outline'} 
                   size="sm" 
-                  className={`gap-2 ${!['analytics', 'audit', 'payment-report', 'reconciliation'].includes(activeTab) ? 'border-transparent hover:bg-accent' : ''}`}
+                  className={`gap-2 ${!['analytics', 'audit', 'payment-report', 'reconciliation', 'bot-analytics'].includes(activeTab) ? 'border-transparent hover:bg-accent' : ''}`}
                 >
                   <TrendingUp className="w-4 h-4" />
                   Reports
@@ -251,6 +252,9 @@ export default function Admin() {
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setActiveTab('audit')} className={activeTab === 'audit' ? 'bg-accent' : ''}>
                   <ClipboardList className="w-4 h-4 mr-2" /> Audit Log
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setActiveTab('bot-analytics')} className={activeTab === 'bot-analytics' ? 'bg-accent' : ''}>
+                  <Bot className="w-4 h-4 mr-2" /> Bot Analytics
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => setActiveTab('reconciliation')} className={activeTab === 'reconciliation' ? 'bg-accent' : ''}>
@@ -382,6 +386,10 @@ export default function Admin() {
 
           <TabsContent value="reconciliation">
             <ReconciliationTab />
+          </TabsContent>
+
+          <TabsContent value="bot-analytics">
+            <BotAnalyticsTab />
           </TabsContent>
 
           <TabsContent value="event-inquiries">

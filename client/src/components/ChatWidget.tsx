@@ -38,6 +38,7 @@ export function ChatWidget() {
   const [quickReplies, setQuickReplies] = useState<string[]>(DEFAULT_QUICK_REPLIES);
   const [hasInteracted, setHasInteracted] = useState(false);
   const [showGreeting, setShowGreeting] = useState(false);
+  const [greetingDismissed, setGreetingDismissed] = useState(false);
   const pulseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const greetingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const sessionIdRef = useRef(getChatSessionId());
@@ -84,26 +85,27 @@ export function ChatWidget() {
     setHasNewMessage(false);
     if (!isOpen) {
       setShowGreeting(false);
+      setGreetingDismissed(true);
     }
   }, [isOpen]);
 
-  // Show greeting tooltip after 5 seconds, pulse after 10
+  // Show greeting tooltip after 3 seconds (faster), pulse after 8
   useEffect(() => {
-    if (!hasInteracted && !isOpen) {
+    if (!hasInteracted && !isOpen && !greetingDismissed) {
       greetingTimerRef.current = setTimeout(() => {
         setShowGreeting(true);
-      }, 5000);
+      }, 3000);
       pulseTimerRef.current = setTimeout(() => {
         setHasNewMessage(true);
-      }, 10000);
+      }, 8000);
     }
     return () => {
       if (pulseTimerRef.current) clearTimeout(pulseTimerRef.current);
       if (greetingTimerRef.current) clearTimeout(greetingTimerRef.current);
     };
-  }, [hasInteracted, isOpen]);
+  }, [hasInteracted, isOpen, greetingDismissed]);
 
-  // Dismiss greeting tooltip on scroll
+  // Dismiss greeting tooltip on scroll (but don't prevent it from showing again)
   useEffect(() => {
     const handleScroll = () => {
       if (showGreeting) setShowGreeting(false);
@@ -160,17 +162,22 @@ export function ChatWidget() {
         </div>
       </div>
 
-      {/* Greeting Speech Bubble */}
+      {/* Greeting Speech Bubble - More prominent with CTA */}
       {showGreeting && !isOpen && (
         <div
           className={cn(
-            'fixed bottom-[120px] right-4 sm:bottom-[140px] sm:right-6 z-50',
-            'animate-in fade-in slide-in-from-bottom-2 duration-500'
+            'fixed bottom-[130px] right-4 sm:bottom-[150px] sm:right-6 z-50',
+            'animate-in fade-in slide-in-from-bottom-2 duration-500',
+            'cursor-pointer'
           )}
+          onClick={toggleChat}
         >
-          <div className="bg-white rounded-2xl shadow-xl px-4 py-3 max-w-[200px] relative border border-gray-100">
+          <div className="bg-white rounded-2xl shadow-xl px-4 py-3 max-w-[240px] relative border border-gray-100">
             <p className="text-sm text-gray-800 font-medium leading-snug">
-              Nǐ hǎo! வணக்கம்! 👋 Need help with our menu?
+              Hi there! 👋 Need help with our menu or ordering?
+            </p>
+            <p className="text-xs text-[#c0392b] font-semibold mt-1.5">
+              Tap to chat with Maami Bot →
             </p>
             {/* Speech bubble tail */}
             <div className="absolute -bottom-2 right-8 w-4 h-4 bg-white border-r border-b border-gray-100 transform rotate-45" />
@@ -178,7 +185,7 @@ export function ChatWidget() {
         </div>
       )}
 
-      {/* Floating Chat Button with Greeting Lady */}
+      {/* Floating Chat Button - Larger with label */}
       <button
         onClick={toggleChat}
         className={cn(
@@ -186,7 +193,6 @@ export function ChatWidget() {
           'transition-all duration-300 ease-in-out',
           'hover:scale-105 active:scale-95',
           'focus:outline-none focus-visible:ring-2 focus-visible:ring-[#c0392b] focus-visible:ring-offset-2',
-          isOpen ? 'w-14 h-14' : 'w-[56px] h-[70px] sm:w-[64px] sm:h-[80px]'
         )}
         aria-label={isOpen ? 'Close chat' : 'Open chat assistant'}
       >
@@ -195,38 +201,61 @@ export function ChatWidget() {
             <X className="w-6 h-6 text-white" />
           </div>
         ) : (
-          <div className="relative group">
-            {/* Animated greeting lady image */}
-            <div className="chat-lady-bounce">
-              <img
-                src={GREETING_LADY_URL}
-                alt="Chat with us"
-                className="w-[56px] h-[70px] sm:w-[64px] sm:h-[80px] object-contain drop-shadow-lg transition-transform duration-300 group-hover:scale-110"
-                loading="eager"
-              />
+          <div className="relative group flex items-end gap-2">
+            {/* "Ask Maami" label pill - visible on larger screens */}
+            <div className="hidden sm:flex items-center gap-1.5 bg-white/95 backdrop-blur-sm rounded-full px-3 py-1.5 shadow-lg border border-gray-200 mb-2 chat-label-pulse">
+              <Sparkles className="w-3.5 h-3.5 text-[#c0392b]" />
+              <span className="text-xs font-semibold text-gray-800 whitespace-nowrap">Ask Maami</span>
             </div>
 
-            {/* Notification dot */}
+            {/* Animated greeting lady image - slightly larger */}
+            <div className="chat-lady-bounce relative">
+              <img
+                src={GREETING_LADY_URL}
+                alt="Chat with Maami Bot"
+                className="w-[64px] h-[80px] sm:w-[72px] sm:h-[90px] object-contain drop-shadow-lg transition-transform duration-300 group-hover:scale-110"
+                loading="eager"
+              />
+              
+              {/* Glowing ring behind the image */}
+              <div className="absolute inset-0 -z-10 rounded-full bg-[#c0392b]/10 blur-xl scale-150 chat-glow" />
+            </div>
+
+            {/* Notification dot - larger and more visible */}
             {hasNewMessage && (
-              <span className="absolute -top-1 -right-1 w-5 h-5 bg-green-500 rounded-full border-2 border-white animate-pulse flex items-center justify-center">
-                <span className="text-white text-[10px] font-bold">1</span>
+              <span className="absolute -top-1 right-0 w-6 h-6 bg-green-500 rounded-full border-2 border-white animate-pulse flex items-center justify-center shadow-md">
+                <span className="text-white text-[11px] font-bold">1</span>
               </span>
             )}
           </div>
         )}
       </button>
 
-      {/* Inline styles for the gentle bounce animation */}
+      {/* Inline styles for animations */}
       <style>{`
         @keyframes chatLadyBounce {
           0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-6px); }
+          50% { transform: translateY(-8px); }
         }
         .chat-lady-bounce {
-          animation: chatLadyBounce 3s ease-in-out infinite;
+          animation: chatLadyBounce 2.5s ease-in-out infinite;
         }
         .chat-lady-bounce:hover {
           animation-play-state: paused;
+        }
+        @keyframes chatGlow {
+          0%, 100% { opacity: 0.3; transform: scale(1.5); }
+          50% { opacity: 0.6; transform: scale(1.8); }
+        }
+        .chat-glow {
+          animation: chatGlow 3s ease-in-out infinite;
+        }
+        @keyframes labelPulse {
+          0%, 100% { box-shadow: 0 0 0 0 rgba(192, 57, 43, 0.3); }
+          50% { box-shadow: 0 0 0 6px rgba(192, 57, 43, 0); }
+        }
+        .chat-label-pulse {
+          animation: labelPulse 2s ease-in-out infinite;
         }
       `}</style>
     </>

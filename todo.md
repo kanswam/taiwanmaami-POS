@@ -2417,11 +2417,11 @@ Orders fixed:
   - ChatWidget.tsx: floating button bottom-right with greeting lady image, bounce animation, speech bubble
   - chatbot.ts: full LLM-powered bot with intent detection, menu search, store info, workshops, blog
   - No conversation logging or analytics currently exists
-- [ ] Add conversation logging to database (store questions, responses, timestamps, user info)
-- [ ] Add topic/intent categorization for bot queries
-- [ ] Build admin dashboard tab showing bot analytics (popular questions, usage trends, topics)
-- [ ] Make bot more prominent on the website (bigger trigger, welcome message, pulse animation)
-- [ ] Tests for bot analytics procedures
+- [x] Add conversation logging to database (store questions, responses, timestamps, user info)
+- [x] Add topic/intent categorization for bot queries (intents detected per message)
+- [x] Build admin dashboard tab showing bot analytics (popular questions, usage trends, topics)
+- [x] Make bot more prominent on the website (bigger trigger, "Ask Maami" label, stronger glow/pulse, earlier greeting)
+- [x] Tests for bot analytics procedures (5 tests passing)
 
 ## Homepage Redesign - Incomplete Items (Mar 11)
 - [x] Add Quick Add (+) buttons to Customer Favourites carousel cards

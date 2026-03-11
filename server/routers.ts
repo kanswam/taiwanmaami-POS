@@ -9663,16 +9663,16 @@ export const appRouter = router({
         
         // Daily usage for chart
         const dailyRows = await dbInstance.select({
-          date: sql<string>`DATE(${chatMessages.createdAt})`,
-          count: sql<number>`COUNT(*)`,
+          date: sql<string>`DATE(\`createdAt\`)`.as('date'),
+          count: sql<number>`COUNT(*)`.as('count'),
         })
           .from(chatMessages)
           .where(and(
             eq(chatMessages.role, 'user'),
             gte(chatMessages.createdAt, since)
           ))
-          .groupBy(sql`DATE(${chatMessages.createdAt})`)
-          .orderBy(sql`DATE(${chatMessages.createdAt})`);
+          .groupBy(sql`DATE(\`createdAt\`)`)
+          .orderBy(sql`DATE(\`createdAt\`)`);
         
         // Recent conversations with preview
         const recentConvs = await dbInstance.select()
