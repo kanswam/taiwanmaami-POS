@@ -226,6 +226,20 @@ export default function Home() {
     }
   }, []);
 
+  // Track if the How To Order section is visible (to hide/show sticky pill)
+  const orderSectionRef = useRef<HTMLDivElement>(null);
+  const [orderSectionVisible, setOrderSectionVisible] = useState(true);
+  useEffect(() => {
+    const el = orderSectionRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => setOrderSectionVisible(entry.isIntersecting),
+      { threshold: 0 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
   // Carousel scroll ref
   const carouselRef = useRef<HTMLDivElement>(null);
   const scrollCarousel = (direction: 'left' | 'right') => {
@@ -287,13 +301,20 @@ export default function Home() {
     const subIds = activeSubFilter === 'all'
       ? menuSubcategories.map((s: any) => s.id)
       : [Number(activeSubFilter)];
+    // Show ALL active products (don't filter by outlet), but mark availability
     return fullMenu.products.filter((p: any) => {
       if (!subIds.includes(p.subcategoryId) || !p.isActive) return false;
-      if (currentOutlet === 'palladium' && p.availableAtPalladium === false) return false;
-      if (currentOutlet === 'tnagar' && p.availableAtTnagar === false) return false;
       return true;
     });
-  }, [fullMenu, activeMenuTab, activeSubFilter, menuSubcategories, currentOutlet]);
+  }, [fullMenu, activeMenuTab, activeSubFilter, menuSubcategories]);
+
+  // Helper: check if a product is available at the current outlet
+  const isProductAvailableAtOutlet = useCallback((product: any) => {
+    if (!currentOutlet) return true; // no outlet selected = show all as available
+    if (currentOutlet === 'palladium' && product.availableAtPalladium === false) return false;
+    if (currentOutlet === 'tnagar' && product.availableAtTnagar === false) return false;
+    return true;
+  }, [currentOutlet]);
 
   // CMS-driven announcement bar items
   const announcementSection = sectionsMap['announcement_bar'];
@@ -575,7 +596,7 @@ export default function Home() {
       )}
 
       {/* ===== HOW TO ORDER SECTION ===== */}
-      <section id="order-options" className="py-16 bg-secondary/30 scroll-mt-20">
+      <section id="order-options" ref={orderSectionRef} className="py-16 bg-secondary/30 scroll-mt-20">
         <div className="container">
           <div className="text-center mb-10">
             <h2 className="text-3xl font-bold mb-4">How Would You Like to Order?</h2>
@@ -701,8 +722,8 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Sticky selection pill */}
-      {hasOutletSelected && (
+      {/* Sticky selection pill - only show when How To Order section is scrolled out of view */}
+      {hasOutletSelected && !orderSectionVisible && (
         <div className="sticky top-16 z-30 bg-background/95 backdrop-blur-sm border-b border-border py-2">
           <div className="container flex items-center justify-center gap-2 text-sm">
             <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-secondary">
@@ -793,24 +814,37 @@ export default function Home() {
               {menuProducts.length === 0 ? (
                 <div className="text-center py-12 text-muted-foreground">
                   <ShoppingBag className="w-10 h-10 mx-auto mb-3 opacity-30" />
-                  <p className="text-sm">No items available in this category{currentOutlet ? ` at ${currentOutlet === 'palladium' ? 'Palladium Mall' : 'T. Nagar'}` : ''}.</p>
-                  <p className="text-xs mt-1">Try another category above.</p>
+                  <p className="text-sm">No items in this category.</p>
                 </div>
               ) : (
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-                {menuProducts.slice(0, 20).map((product: any) => (
-                  <div key={product.id} onClick={() => openQuickAdd(product.id)} className="group cursor-pointer">
+                {menuProducts.slice(0, 20).map((product: any) => {
+                  const available = isProductAvailableAtOutlet(product);
+                  return (
+                  <div
+                    key={product.id}
+                    onClick={() => available ? openQuickAdd(product.id) : toast.info(`This item is not available at ${currentOutlet === 'palladium' ? 'Palladium Mall' : 'T. Nagar'}. Try our other outlet!`, { duration: 3000 })}
+                    className={`group ${available ? 'cursor-pointer' : 'cursor-default'}`}
+                  >
                     <div className="relative aspect-square rounded-xl overflow-hidden mb-2 bg-secondary">
                       {product.imageUrl ? (
                         <img
                           src={product.imageUrl}
                           alt={product.name}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          className={`w-full h-full object-cover transition-transform duration-300 ${available ? 'group-hover:scale-105' : 'grayscale-[40%] opacity-70'}`}
                           loading="lazy"
                         />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-muted-foreground">
                           <ShoppingBag className="w-8 h-8 opacity-30" />
+                        </div>
+                      )}
+                      {/* "Not available" stamp overlay */}
+                      {!available && currentOutlet && (
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <div className="bg-black/60 text-white text-[10px] sm:text-xs font-bold px-2 py-1 sm:px-3 sm:py-1.5 rounded-lg text-center leading-tight rotate-[-12deg] shadow-lg border border-white/20">
+                            Not available at<br />{currentOutlet === 'palladium' ? 'Palladium' : 'T. Nagar'}
+                          </div>
                         </div>
                       )}
                       {/* Diet indicator */}
@@ -824,17 +858,19 @@ export default function Home() {
                           <span className="w-2 h-2 rounded-full bg-red-600" />
                         </span>
                       )}
-                      {/* Quick Add button overlay */}
-                      <button
-                        onClick={(e) => openQuickAdd(product.id, e)}
-                        className="absolute bottom-2 right-2 w-8 h-8 rounded-full flex items-center justify-center text-white shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
-                        style={{ background: JADE_GREEN }}
-                        title="Quick Add"
-                      >
-                        <Plus className="w-4 h-4" />
-                      </button>
+                      {/* Quick Add button overlay - only for available items */}
+                      {available && (
+                        <button
+                          onClick={(e) => openQuickAdd(product.id, e)}
+                          className="absolute bottom-2 right-2 w-8 h-8 rounded-full flex items-center justify-center text-white shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                          style={{ background: JADE_GREEN }}
+                          title="Quick Add"
+                        >
+                          <Plus className="w-4 h-4" />
+                        </button>
+                      )}
                     </div>
-                    <h3 className="font-semibold text-sm line-clamp-2 group-hover:text-primary transition-colors">
+                    <h3 className={`font-semibold text-sm line-clamp-2 transition-colors ${available ? 'group-hover:text-primary' : 'text-muted-foreground'}`}>
                       {product.name}
                     </h3>
                     <div className="flex items-center justify-between mt-0.5">
@@ -842,7 +878,7 @@ export default function Home() {
                         {fullMenu.subcategories.find((s: any) => s.id === product.subcategoryId)?.name}
                       </span>
                       {(product.instorePrice || product.deliveryPrice) > 0 && (
-                        <span className="font-bold text-xs">
+                        <span className={`font-bold text-xs ${!available ? 'text-muted-foreground' : ''}`}>
                           {formatPrice(product.useBasePrice
                             ? (fullMenu.subcategories.find((s: any) => s.id === product.subcategoryId)?.basePriceRegularNoBoba || product.instorePrice)
                             : (product.instorePrice || product.deliveryPrice)
@@ -851,7 +887,8 @@ export default function Home() {
                       )}
                     </div>
                   </div>
-                ))}
+                  );
+                })}
               </div>
               )}
 

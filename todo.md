@@ -2452,3 +2452,10 @@ Orders fixed:
 - [x] Quick Add pre-check: if no outlet selected, show brief order-type + outlet selector first
   - Pending Quick Add opens automatically after outlet selection
 - [x] Tests for outlet-first ordering flow (8 vitest tests passing)
+
+## UI Fixes - Outlet Display & Product Availability (Mar 11)
+- [x] Fix duplicate order-type display: sticky pill only shows when scrolled past the How To Order section (IntersectionObserver)
+- [x] Show all products in Explore Menu regardless of outlet, with "Not available at [outlet]" stamp overlay on unavailable items
+  - Products shown with grayscale/opacity treatment and dark rotated badge
+  - Product name and price shown in muted text
+- [x] Disable Quick Add for unavailable items (no Quick Add button, toast on click)
