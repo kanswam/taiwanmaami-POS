@@ -174,6 +174,21 @@ export default function Home() {
   const [loc2City, setLoc2City] = useState('Chennai - 600017');
 
   // Load settings from database when available
+  // Handle hash-based scrolling when navigating from other pages (e.g., /#explore-menu)
+  useEffect(() => {
+    const hash = window.location.hash;
+    if (hash) {
+      // Retry scroll multiple times as dynamic content shifts layout
+      const timers = [500, 1200, 2500].map(delay =>
+        setTimeout(() => {
+          const el = document.getElementById(hash.slice(1));
+          if (el) el.scrollIntoView({ behavior: 'smooth' });
+        }, delay)
+      );
+      return () => timers.forEach(clearTimeout);
+    }
+  }, []);
+
   useEffect(() => {
     if (siteSettings) {
       const settingsMap = siteSettings.reduce((acc: any, s: any) => {

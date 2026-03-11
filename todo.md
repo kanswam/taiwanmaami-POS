@@ -2462,3 +2462,7 @@ Orders fixed:
 
 ## Bug Fix - Logo Navigation (Mar 11)
 - [x] Fix Taiwan Maami logo in navbar: scrolls to top when on homepage, navigates to / from other pages
+
+## Bug Fix - Cart Back to Menu (Mar 11)
+- [x] Fix "Back to Menu" / "Browse Menu" buttons in Cart, CategorySubcategories, OrderConfirmation, and Profile to navigate to homepage /#explore-menu
+- [x] Add hash-based scroll handler in Home.tsx with retry mechanism for dynamic content loading

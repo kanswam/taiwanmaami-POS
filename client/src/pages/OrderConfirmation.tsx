@@ -56,7 +56,7 @@ export default function OrderConfirmation() {
             <p className="text-muted-foreground mb-6">
               We couldn't find the order you're looking for.
             </p>
-            <Link href="/menu">
+            <Link href="/#explore-menu">
               <Button>Back to Menu</Button>
             </Link>
           </div>

@@ -111,7 +111,7 @@ export default function Cart() {
             <p className="text-muted-foreground mb-6">
               Add some delicious bubble tea to get started!
             </p>
-            <Link href="/menu">
+            <Link href="/#explore-menu">
               <Button>
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Browse Menu
@@ -129,7 +129,7 @@ export default function Cart() {
 
       <div className="container py-6">
         <div className="flex items-center gap-4 mb-6">
-          <Link href="/menu">
+          <Link href="/#explore-menu">
             <Button variant="ghost" size="sm">
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back to Menu

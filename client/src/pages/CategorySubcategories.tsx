@@ -183,7 +183,7 @@ export default function CategorySubcategories() {
         <div className="container py-12 text-center">
           <h1 className="text-2xl font-bold mb-4">Category Not Found</h1>
           <p className="text-muted-foreground mb-6">The category you're looking for doesn't exist.</p>
-          <Link href="/menu">
+          <Link href="/#explore-menu">
             <Button>Back to Menu</Button>
           </Link>
         </div>

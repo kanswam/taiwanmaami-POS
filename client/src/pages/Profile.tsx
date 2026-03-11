@@ -210,7 +210,7 @@ export default function Profile() {
       
       <div className="container py-8 max-w-4xl">
         {/* Back button */}
-        <Link href="/menu">
+        <Link href="/#explore-menu">
           <Button variant="ghost" className="mb-4 -ml-2">
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back to Menu
