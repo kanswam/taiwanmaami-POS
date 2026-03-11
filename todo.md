@@ -1,4 +1,5 @@
 # Taiwan Maami - Project TODO
+<!-- Last updated: 2026-03-11 Homepage Redesign + CMS -->
 
 ## Active Tasks
 
