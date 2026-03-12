@@ -1,8 +1,8 @@
 /**
  * Client-side Image Optimizer for Taiwan Maami
  * 
- * Automatically optimizes Cloudinary images for different devices and contexts.
- * Falls back gracefully for non-Cloudinary images.
+ * Automatically optimizes Cloudinary images using URL-based transforms.
+ * CloudFront/S3 images are served directly from CDN (no server proxy).
  */
 
 // Get Cloudinary cloud name from environment (set during build)
@@ -16,25 +16,15 @@ export function isCloudinaryUrl(url: string): boolean {
 }
 
 /**
- * Check if a URL is from CloudFront/S3 (needs proxy optimization)
+ * Check if a URL is from CloudFront/S3
  */
 export function isCloudFrontUrl(url: string): boolean {
   return url?.includes('cloudfront.net') || url?.includes('amazonaws.com');
 }
 
 /**
- * Get optimized URL for CloudFront/S3 images via server proxy
- */
-export function getProxiedImageUrl(
-  imageUrl: string,
-  width: number = 400,
-  quality: number = 80
-): string {
-  return `/api/img?url=${encodeURIComponent(imageUrl)}&w=${width}&q=${quality}`;
-}
-
-/**
- * Get optimized Cloudinary image URL with transformations
+ * Get optimized Cloudinary image URL with transformations.
+ * CloudFront/S3 images are returned directly (served from CDN, no proxy).
  * 
  * @param imageUrl - Original image URL
  * @param options - Transformation options
@@ -53,11 +43,9 @@ export function getOptimizedImageUrl(
 ): string {
   if (!imageUrl) return '/placeholder-drink.jpg';
   
-  // Route CloudFront/S3 images through server proxy
+  // CloudFront/S3 images: serve directly from CDN (fast, no server round-trip)
   if (isCloudFrontUrl(imageUrl)) {
-    const width = options.width || 400;
-    const quality = typeof options.quality === 'number' ? options.quality : 80;
-    return getProxiedImageUrl(imageUrl, width, quality);
+    return imageUrl;
   }
   
   // Only transform Cloudinary URLs
@@ -109,7 +97,8 @@ export function getOptimizedImageUrl(
 }
 
 /**
- * Get responsive srcset for an image
+ * Get responsive srcset for an image (Cloudinary only)
+ * CloudFront images don't support URL-based resizing so no srcset is generated.
  * 
  * @param imageUrl - Original image URL
  * @returns srcset string for responsive images
@@ -117,17 +106,15 @@ export function getOptimizedImageUrl(
 export function getResponsiveSrcSet(imageUrl: string | null | undefined): string {
   if (!imageUrl) return '';
   
-  // Support both Cloudinary and CloudFront URLs
-  if (!isCloudinaryUrl(imageUrl) && !isCloudFrontUrl(imageUrl)) {
+  // Only generate srcset for Cloudinary URLs (they support URL-based transforms)
+  if (!isCloudinaryUrl(imageUrl)) {
     return '';
   }
   
   const sizes = [300, 400, 600, 800, 1200];
   const srcset = sizes
     .map(width => {
-      const url = isCloudFrontUrl(imageUrl)
-        ? getProxiedImageUrl(imageUrl, width)
-        : getOptimizedImageUrl(imageUrl, { width, crop: 'limit' });
+      const url = getOptimizedImageUrl(imageUrl, { width, crop: 'limit' });
       return `${url} ${width}w`;
     })
     .join(', ');

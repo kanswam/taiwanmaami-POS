@@ -1,15 +1,8 @@
-import { describe, expect, it, afterAll } from "vitest";
+import { describe, expect, it } from "vitest";
 import { appRouter } from "./routers";
 import type { TrpcContext } from "./_core/context";
-import { getDb } from "./db";
-import { sql } from "drizzle-orm";
 
 type AuthenticatedUser = NonNullable<TrpcContext["user"]>;
-
-// Use a unique prefix so we can safely clean up after tests
-const TEST_EMAIL_PREFIX = "vitest-popup-";
-const TEST_EMAIL_1 = `${TEST_EMAIL_PREFIX}dinner@test-cleanup.local`;
-const TEST_EMAIL_2 = `${TEST_EMAIL_PREFIX}masterclass@test-cleanup.local`;
 
 function createPublicContext(): { ctx: TrpcContext } {
   const ctx: TrpcContext = {
@@ -77,72 +70,42 @@ function createCustomerContext(): { ctx: TrpcContext } {
   return { ctx };
 }
 
-// Clean up any test entries after all tests complete
-afterAll(async () => {
-  try {
-    const db = await getDb();
-    if (db) {
-      await db.execute(
-        sql`DELETE FROM popup_registrations WHERE customerEmail LIKE ${TEST_EMAIL_PREFIX + '%'}`
-      );
-    }
-  } catch (e) {
-    // Cleanup is best-effort
-  }
-});
-
-describe("popup.registerInterest", () => {
-  it("successfully registers interest for dinner and cleans up", async () => {
+describe("popup.registerInterest (DISABLED - event ended)", () => {
+  it("rejects all new registrations since the event has ended", async () => {
     const { ctx } = createPublicContext();
     const caller = appRouter.createCaller(ctx);
 
-    const result = await caller.popup.registerInterest({
-      eventSlug: "leela-hyderabad-march-2026",
-      customerName: "Vitest Dinner User",
-      customerEmail: TEST_EMAIL_1,
-      customerPhone: "+919876543210",
-      eventType: "dinner",
-      selectedDate: "2026-03-05",
-      numberOfGuests: 2,
-    });
-
-    expect(result).toHaveProperty("success", true);
-    expect(result).toHaveProperty("id");
-    expect(result.id).toBeGreaterThan(0);
-
-    // Immediately clean up the inserted row
-    const db = await getDb();
-    if (db) {
-      await db.execute(sql`DELETE FROM popup_registrations WHERE id = ${result.id}`);
-    }
+    await expect(
+      caller.popup.registerInterest({
+        eventSlug: "leela-hyderabad-march-2026",
+        customerName: "Test User",
+        customerEmail: "test@example.com",
+        customerPhone: "+919876543210",
+        eventType: "dinner",
+        selectedDate: "2026-03-05",
+        numberOfGuests: 2,
+      })
+    ).rejects.toThrow("This event has ended");
   });
 
-  it("successfully registers interest for masterclass and cleans up", async () => {
+  it("rejects masterclass registrations too", async () => {
     const { ctx } = createPublicContext();
     const caller = appRouter.createCaller(ctx);
 
-    const result = await caller.popup.registerInterest({
-      eventSlug: "leela-hyderabad-march-2026",
-      customerName: "Vitest Masterclass User",
-      customerEmail: TEST_EMAIL_2,
-      customerPhone: "+919876543211",
-      eventType: "masterclass",
-      selectedDate: "2026-03-07",
-      numberOfGuests: 1,
-      specialRequirements: "Vegetarian only",
-    });
-
-    expect(result).toHaveProperty("success", true);
-    expect(result).toHaveProperty("id");
-
-    // Immediately clean up the inserted row
-    const db = await getDb();
-    if (db) {
-      await db.execute(sql`DELETE FROM popup_registrations WHERE id = ${result.id}`);
-    }
+    await expect(
+      caller.popup.registerInterest({
+        eventSlug: "leela-hyderabad-march-2026",
+        customerName: "Test User",
+        customerEmail: "test@example.com",
+        customerPhone: "+919876543211",
+        eventType: "masterclass",
+        selectedDate: "2026-03-07",
+        numberOfGuests: 1,
+      })
+    ).rejects.toThrow("This event has ended");
   });
 
-  it("rejects registration with invalid email", async () => {
+  it("still rejects registration with invalid email (input validation)", async () => {
     const { ctx } = createPublicContext();
     const caller = appRouter.createCaller(ctx);
 
@@ -159,7 +122,7 @@ describe("popup.registerInterest", () => {
     ).rejects.toThrow();
   });
 
-  it("rejects registration with empty name", async () => {
+  it("still rejects registration with empty name (input validation)", async () => {
     const { ctx } = createPublicContext();
     const caller = appRouter.createCaller(ctx);
 
@@ -167,7 +130,7 @@ describe("popup.registerInterest", () => {
       caller.popup.registerInterest({
         eventSlug: "leela-hyderabad-march-2026",
         customerName: "",
-        customerEmail: TEST_EMAIL_1,
+        customerEmail: "test@example.com",
         customerPhone: "+919876543210",
         eventType: "dinner",
         selectedDate: "2026-03-05",
@@ -176,7 +139,7 @@ describe("popup.registerInterest", () => {
     ).rejects.toThrow();
   });
 
-  it("rejects registration with invalid event type", async () => {
+  it("still rejects registration with invalid event type (input validation)", async () => {
     const { ctx } = createPublicContext();
     const caller = appRouter.createCaller(ctx);
 
@@ -184,7 +147,7 @@ describe("popup.registerInterest", () => {
       caller.popup.registerInterest({
         eventSlug: "leela-hyderabad-march-2026",
         customerName: "Test User",
-        customerEmail: TEST_EMAIL_1,
+        customerEmail: "test@example.com",
         customerPhone: "+919876543210",
         eventType: "brunch" as any,
         selectedDate: "2026-03-05",
@@ -206,7 +169,7 @@ describe("popup.getRegistrations", () => {
     ).rejects.toThrow();
   });
 
-  it("returns registrations for admin", async () => {
+  it("returns registrations for admin (existing data still accessible)", async () => {
     const { ctx } = createAdminContext();
     const caller = appRouter.createCaller(ctx);
 

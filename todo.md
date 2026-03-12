@@ -2490,3 +2490,13 @@ Orders fixed:
 - [x] Updated How Would You Like to Order section to show cards until explicit choice is made
 - [x] Updated sticky selection pill to only show after explicit choice
 - [x] Updated Explore Menu subtitle to reflect explicit choice state
+
+## Bug Fixes (Mar 12 - Popup Event Notifications)
+- [ ] Investigate and stop popup event registration emails still firing after event removed
+- [ ] Identify source of "New Popup Registration: Master Class" and "Dinner" notifications
+- [ ] Disable or remove the popup event notification trigger
+
+## Bug Fixes (Mar 12 - Image Loading & Popup)
+- [x] Fix image loading delays/blank images on homepage and menu page
+- [x] Investigate /api/img proxy bottleneck causing slow image loads (removed server proxy, serve CloudFront images directly from CDN)
+- [x] Disable popup event registration endpoint (Leela Hyderabad event is over)

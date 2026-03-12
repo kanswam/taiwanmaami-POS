@@ -8429,7 +8429,7 @@ export const appRouter = router({
 
   // Popup Event Registrations (e.g., The Leela Hyderabad)
   popup: router({
-    // Register interest for a popup event (public - no auth required)
+    // Register interest for a popup event — DISABLED (event ended March 8, 2026)
     registerInterest: publicProcedure
       .input(z.object({
         eventSlug: z.string().min(1),
@@ -8441,28 +8441,9 @@ export const appRouter = router({
         numberOfGuests: z.number().min(1).max(20).default(1),
         specialRequirements: z.string().optional(),
       }))
-      .mutation(async ({ input }) => {
-        const database = await getDb();
-        if (!database) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Database not available' });
-        
-        const result = await database.insert(popupRegistrations).values({
-          eventSlug: input.eventSlug,
-          customerName: input.customerName,
-          customerEmail: input.customerEmail,
-          customerPhone: input.customerPhone,
-          eventType: input.eventType,
-          selectedDate: input.selectedDate,
-          numberOfGuests: input.numberOfGuests,
-          specialRequirements: input.specialRequirements || null,
-        });
-        
-        // Notify owner about new registration
-        await notifyOwner({
-          title: `New Popup Registration: ${input.eventType === 'dinner' ? 'Dinner' : 'Master Class'}`,
-          content: `New registration for The Leela Hyderabad popup:\n\nName: ${input.customerName}\nEmail: ${input.customerEmail}\nPhone: ${input.customerPhone}\nEvent: ${input.eventType === 'dinner' ? 'Dinner (7PM-12AM)' : 'Master Class (1PM-3PM)'}\nDate: ${input.selectedDate}\nGuests: ${input.numberOfGuests}${input.specialRequirements ? `\nNotes: ${input.specialRequirements}` : ''}`,
-        });
-        
-        return { success: true, id: result[0].insertId };
+      .mutation(async () => {
+        // Event has ended — reject all new registrations
+        throw new TRPCError({ code: 'BAD_REQUEST', message: 'This event has ended. Registrations are no longer accepted.' });
       }),
 
     // Get all registrations for a popup event (admin)
