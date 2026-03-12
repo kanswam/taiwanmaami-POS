@@ -535,25 +535,9 @@ export default function Home() {
                   <span key={i} className={i > 0 ? 'block' : ''}>{line}</span>
                 ))}
               </h1>
-              <p className="text-lg sm:text-xl text-white/90 mb-8" style={{ textShadow: '0 1px 4px rgba(0,0,0,0.3)' }}>
+              <p className="text-lg sm:text-xl text-white/90" style={{ textShadow: '0 1px 4px rgba(0,0,0,0.3)' }}>
                 {heroSection?.subtitle || heroDescription}
               </p>
-              <div
-                onClick={() => document.getElementById('order-options')?.scrollIntoView({ behavior: 'smooth' })}
-                className="rounded-xl p-4 sm:p-5 shadow-lg hover:shadow-xl transition-all hover:scale-[1.02] cursor-pointer inline-block"
-                style={{ background: `linear-gradient(135deg, ${JADE_GREEN}, ${JADE_GREEN_HOVER})` }}
-              >
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center">
-                    <ShoppingBag className="w-6 h-6 text-white" />
-                  </div>
-                  <div className="text-white">
-                    <h3 className="text-lg sm:text-xl font-bold">{heroCta}</h3>
-                    <p className="text-sm opacity-90">{heroCtaSub}</p>
-                  </div>
-                  <ArrowRight className="w-6 h-6 text-white ml-2 hidden sm:block" />
-                </div>
-              </div>
             </div>
           </div>
         </div>
@@ -1091,47 +1075,47 @@ export default function Home() {
       </section>
 
       {/* ===== LOYALTY PROGRAMME ===== */}
-      <section className="py-16 bg-primary">
+      <section className="py-10 sm:py-16 bg-primary">
         <div className="container">
-          <div className="text-center mb-10">
-            <h2 className="text-3xl sm:text-4xl font-bold text-white mb-3">
+          <div className="text-center mb-6 sm:mb-10">
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-2">
               Login to our Loyalty Programme
             </h2>
-            <p className="text-white/90 text-lg">
+            <p className="text-white/90 text-base sm:text-lg">
               Simple. Seamless. Rewarding.
             </p>
           </div>
           
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-5xl mx-auto mb-10">
-            <Card className="p-6 bg-white/10 border-white/20 text-center">
-              <div className="text-4xl mb-3">🏆</div>
-              <h3 className="font-bold text-white text-lg mb-2">₹450 = 1 stamp</h3>
-              <p className="text-white/80 text-sm">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 max-w-5xl mx-auto mb-6 sm:mb-10">
+            <Card className="p-4 sm:p-6 bg-white/10 border-white/20 text-center">
+              <div className="text-2xl sm:text-4xl mb-2 sm:mb-3">🏆</div>
+              <h3 className="font-bold text-white text-sm sm:text-lg mb-1 sm:mb-2">₹450 = 1 stamp</h3>
+              <p className="text-white/80 text-xs sm:text-sm">
                 Collect 10 stamps and receive a free drink.
               </p>
             </Card>
             
-            <Card className="p-6 bg-white/10 border-white/20 text-center">
-              <div className="text-4xl mb-3">⚙️</div>
-              <h3 className="font-bold text-white text-lg mb-2">Fully automated</h3>
-              <p className="text-white/80 text-sm">
-                Just log in — stamps and rewards are tracked automatically.
+            <Card className="p-4 sm:p-6 bg-white/10 border-white/20 text-center">
+              <div className="text-2xl sm:text-4xl mb-2 sm:mb-3">⚙️</div>
+              <h3 className="font-bold text-white text-sm sm:text-lg mb-1 sm:mb-2">Fully automated</h3>
+              <p className="text-white/80 text-xs sm:text-sm">
+                Stamps and rewards tracked automatically.
               </p>
             </Card>
             
-            <Card className="p-6 bg-white/10 border-white/20 text-center">
-              <div className="text-4xl mb-3">🌍</div>
-              <h3 className="font-bold text-white text-lg mb-2">Use it anywhere</h3>
-              <p className="text-white/80 text-sm">
-                Valid for in-store, pickup, and delivery when you pay on our website.
+            <Card className="p-4 sm:p-6 bg-white/10 border-white/20 text-center">
+              <div className="text-2xl sm:text-4xl mb-2 sm:mb-3">🌍</div>
+              <h3 className="font-bold text-white text-sm sm:text-lg mb-1 sm:mb-2">Use it anywhere</h3>
+              <p className="text-white/80 text-xs sm:text-sm">
+                Valid for in-store, pickup, and delivery.
               </p>
             </Card>
             
-            <Card className="p-6 bg-white/10 border-white/20 text-center">
-              <div className="text-4xl mb-3">⭐</div>
-              <h3 className="font-bold text-white text-lg mb-2">Member exclusives</h3>
-              <p className="text-white/80 text-sm">
-                Enjoy special gifts, early access, and invite-only events.
+            <Card className="p-4 sm:p-6 bg-white/10 border-white/20 text-center">
+              <div className="text-2xl sm:text-4xl mb-2 sm:mb-3">⭐</div>
+              <h3 className="font-bold text-white text-sm sm:text-lg mb-1 sm:mb-2">Member exclusives</h3>
+              <p className="text-white/80 text-xs sm:text-sm">
+                Special gifts, early access, and invite-only events.
               </p>
             </Card>
           </div>
@@ -1150,13 +1134,13 @@ export default function Home() {
       </section>
 
       {/* ===== FOOTER ===== */}
-      <footer className="bg-foreground text-background py-12">
+      <footer className="bg-foreground text-background py-8 sm:py-12">
         <div className="container">
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 sm:gap-8">
             {/* Social Media Links */}
             <div>
-              <h4 className="font-semibold mb-4">Follow Us</h4>
-              <div className="flex gap-4">
+              <h4 className="font-semibold mb-3 sm:mb-4">Follow Us</h4>
+              <div className="flex gap-3 sm:gap-4">
                 <a 
                   href="https://www.instagram.com/taiwan_maami/" 
                   target="_blank" 
@@ -1205,9 +1189,9 @@ export default function Home() {
                   <Youtube className="w-5 h-5" />
                 </a>
               </div>
-              <div className="mt-6">
+              <div className="mt-4 sm:mt-6">
                 <h4 className="font-semibold mb-2">Contact</h4>
-                <div className="space-y-1 text-sm text-background/70">
+                <div className="space-y-1 text-xs sm:text-sm text-background/70">
                   <a href="mailto:hello@taiwanmaami.com" className="block hover:text-background">
                     hello@taiwanmaami.com
                   </a>
@@ -1223,8 +1207,8 @@ export default function Home() {
             
             {/* Quick Links */}
             <div>
-              <h4 className="font-semibold mb-4">Quick Links</h4>
-              <ul className="space-y-2 text-sm text-background/70">
+              <h4 className="font-semibold mb-3 sm:mb-4">Quick Links</h4>
+              <ul className="space-y-1.5 sm:space-y-2 text-xs sm:text-sm text-background/70">
                 <li><Link href="/menu" className="hover:text-background">Menu</Link></li>
                 <li><Link href="/about" className="hover:text-background">About Us</Link></li>
                 <li><Link href="/terms" className="hover:text-background">Terms & Conditions</Link></li>
@@ -1239,14 +1223,14 @@ export default function Home() {
             
             {/* Hours */}
             <div>
-              <h4 className="font-semibold mb-4">Hours</h4>
-              <ul className="space-y-2 text-sm text-background/70">
+              <h4 className="font-semibold mb-3 sm:mb-4">Hours</h4>
+              <ul className="space-y-1.5 sm:space-y-2 text-xs sm:text-sm text-background/70">
                 <li><strong>Palladium:</strong> 10am - 10pm</li>
                 <li><strong>T Nagar:</strong> 12pm - 12am</li>
               </ul>
             </div>
           </div>
-          <div className="border-t border-background/20 mt-8 pt-8 text-center text-sm text-background/50">
+          <div className="border-t border-background/20 mt-6 pt-6 sm:mt-8 sm:pt-8 text-center text-xs sm:text-sm text-background/50">
             <p>&copy; {new Date().getFullYear()} Taiwan Maami. All rights reserved.</p>
             <p className="mt-1">A unit of Thamarai Foods and Trading Private Limited</p>
           </div>

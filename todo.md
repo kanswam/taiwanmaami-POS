@@ -2505,3 +2505,9 @@ Orders fixed:
 - [x] Fix: Product customization modal opens for unavailable items and allows adding to cart
 - [x] After outlet selection in Quick Add flow, check availability before opening modal
 - [x] If item not available at selected outlet, show toast and don't open modal
+
+## UI Fixes (Mar 12 - Hero CTA & Mobile Layout)
+- [x] Remove CTA overlay from hero video section (doesn't flow with the rest)
+- [x] Reduce height of Loyalty Programme section on mobile
+- [x] Reduce height of Terms & Conditions / footer section on mobile
+- [x] Ensure both sections display properly on mobile viewports
