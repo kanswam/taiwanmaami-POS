@@ -2511,3 +2511,4 @@ Orders fixed:
 - [x] Reduce height of Loyalty Programme section on mobile
 - [x] Reduce height of Terms & Conditions / footer section on mobile
 - [x] Ensure both sections display properly on mobile viewports
+
