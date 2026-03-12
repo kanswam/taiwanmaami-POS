@@ -2500,3 +2500,8 @@ Orders fixed:
 - [x] Fix image loading delays/blank images on homepage and menu page
 - [x] Investigate /api/img proxy bottleneck causing slow image loads (removed server proxy, serve CloudFront images directly from CDN)
 - [x] Disable popup event registration endpoint (Leela Hyderabad event is over)
+
+## Bug Fixes (Mar 12 - Modal Availability)
+- [x] Fix: Product customization modal opens for unavailable items and allows adding to cart
+- [x] After outlet selection in Quick Add flow, check availability before opening modal
+- [x] If item not available at selected outlet, show toast and don't open modal

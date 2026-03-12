@@ -91,9 +91,21 @@ export default function Home() {
       setPendingOrderType(null);
       markModeChosen();
       toast.success('Ordering for Delivery from T. Nagar', { duration: 2000 });
-      setTimeout(() => {
-        document.getElementById('explore-menu')?.scrollIntoView({ behavior: 'smooth' });
-      }, 300);
+      // If there's a pending quick add from carousel, check availability at T. Nagar (delivery outlet)
+      if (pendingQuickAddProductId) {
+        const pendingProduct = featuredProducts?.find((p: any) => p.id === pendingQuickAddProductId)
+          || fullMenu?.products.find((p: any) => p.id === pendingQuickAddProductId);
+        if (pendingProduct && pendingProduct.availableAtTnagar === false) {
+          toast.info('This item is not available for delivery from T. Nagar. Try dine-in or pickup at Palladium!', { duration: 3000 });
+        } else {
+          setQuickAddProductId(pendingQuickAddProductId);
+        }
+        setPendingQuickAddProductId(null);
+      } else {
+        setTimeout(() => {
+          document.getElementById('explore-menu')?.scrollIntoView({ behavior: 'smooth' });
+        }, 300);
+      }
     } else {
       setPendingOrderType(type);
       setShowOutletSelector(true);
@@ -116,7 +128,22 @@ export default function Home() {
     const typeLabel = type === 'instore' ? 'Dine-In' : 'Pickup';
     toast.success(`${typeLabel} at ${outletName}`, { duration: 2000 });
     if (pendingQuickAddProductId) {
-      setQuickAddProductId(pendingQuickAddProductId);
+      // Check if the pending product is available at the newly selected outlet
+      const pendingProduct = featuredProducts?.find((p: any) => p.id === pendingQuickAddProductId)
+        || fullMenu?.products.find((p: any) => p.id === pendingQuickAddProductId);
+      const isAvailableAtNewOutlet = (() => {
+        if (!pendingProduct) return true; // If we can't find the product data, allow it
+        if (outlet === 'palladium' && pendingProduct.availableAtPalladium === false) return false;
+        if (outlet === 'tnagar' && pendingProduct.availableAtTnagar === false) return false;
+        return true;
+      })();
+      
+      if (!isAvailableAtNewOutlet) {
+        const outletLabel = outlet === 'palladium' ? 'Palladium Mall' : 'T. Nagar';
+        toast.info(`This item is not available at ${outletLabel}. Try our other outlet!`, { duration: 3000 });
+      } else {
+        setQuickAddProductId(pendingQuickAddProductId);
+      }
       setPendingQuickAddProductId(null);
     } else {
       setTimeout(() => {
