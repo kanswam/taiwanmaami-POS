@@ -2512,3 +2512,7 @@ Orders fixed:
 - [x] Reduce height of Terms & Conditions / footer section on mobile
 - [x] Ensure both sections display properly on mobile viewports
 
+
+## Bug Fixes (Mar 12 - Text Readability)
+- [x] Fix About Us page body text too light / low contrast against beige background
+- [x] Ensure text is dark enough to be easily readable across all pages (changed --muted-foreground from #7a6a5f to #4a3a30)
