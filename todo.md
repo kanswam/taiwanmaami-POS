@@ -2466,3 +2466,13 @@ Orders fixed:
 ## Bug Fix - Cart Back to Menu (Mar 11)
 - [x] Fix "Back to Menu" / "Browse Menu" buttons in Cart, CategorySubcategories, OrderConfirmation, and Profile to navigate to homepage /#explore-menu
 - [x] Add hash-based scroll handler in Home.tsx with retry mechanism for dynamic content loading
+
+## Performance Fix - Image Loading (Mar 11)
+- [x] Fix slow image rendering in Explore Our Menu section on homepage
+  - Added server-side image proxy (/api/img) using Sharp for CloudFront/S3 images
+  - CloudFront images reduced from 10.6 MB to ~11 KB each (99.9% reduction)
+  - Serves WebP/AVIF based on Accept header with 1-year cache
+- [x] Add lazy loading for off-screen product images (loading="lazy" on all grid images)
+- [x] Use Cloudinary transforms for proper image sizing (q_auto,f_auto,w_300 for Cloudinary URLs)
+- [x] Optimize Customer Favourites carousel images with responsive srcset
+- [x] Updated imageOptimizer.ts to route CloudFront URLs through server proxy

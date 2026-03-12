@@ -16,6 +16,24 @@ export function isCloudinaryUrl(url: string): boolean {
 }
 
 /**
+ * Check if a URL is from CloudFront/S3 (needs proxy optimization)
+ */
+export function isCloudFrontUrl(url: string): boolean {
+  return url?.includes('cloudfront.net') || url?.includes('amazonaws.com');
+}
+
+/**
+ * Get optimized URL for CloudFront/S3 images via server proxy
+ */
+export function getProxiedImageUrl(
+  imageUrl: string,
+  width: number = 400,
+  quality: number = 80
+): string {
+  return `/api/img?url=${encodeURIComponent(imageUrl)}&w=${width}&q=${quality}`;
+}
+
+/**
  * Get optimized Cloudinary image URL with transformations
  * 
  * @param imageUrl - Original image URL
@@ -34,6 +52,13 @@ export function getOptimizedImageUrl(
   } = {}
 ): string {
   if (!imageUrl) return '/placeholder-drink.jpg';
+  
+  // Route CloudFront/S3 images through server proxy
+  if (isCloudFrontUrl(imageUrl)) {
+    const width = options.width || 400;
+    const quality = typeof options.quality === 'number' ? options.quality : 80;
+    return getProxiedImageUrl(imageUrl, width, quality);
+  }
   
   // Only transform Cloudinary URLs
   if (!isCloudinaryUrl(imageUrl)) {
@@ -90,14 +115,19 @@ export function getOptimizedImageUrl(
  * @returns srcset string for responsive images
  */
 export function getResponsiveSrcSet(imageUrl: string | null | undefined): string {
-  if (!imageUrl || !isCloudinaryUrl(imageUrl)) {
+  if (!imageUrl) return '';
+  
+  // Support both Cloudinary and CloudFront URLs
+  if (!isCloudinaryUrl(imageUrl) && !isCloudFrontUrl(imageUrl)) {
     return '';
   }
   
   const sizes = [300, 400, 600, 800, 1200];
   const srcset = sizes
     .map(width => {
-      const url = getOptimizedImageUrl(imageUrl, { width, crop: 'limit' });
+      const url = isCloudFrontUrl(imageUrl)
+        ? getProxiedImageUrl(imageUrl, width)
+        : getOptimizedImageUrl(imageUrl, { width, crop: 'limit' });
       return `${url} ${width}w`;
     })
     .join(', ');

@@ -574,6 +574,62 @@ async function startServer() {
     }
   });
 
+  // ============ IMAGE PROXY / OPTIMIZER ============
+  // Resizes large S3/CloudFront images on the fly using Sharp
+  app.get('/api/img', async (req, res) => {
+    try {
+      const url = req.query.url as string;
+      const w = parseInt(req.query.w as string) || 400;
+      const q = parseInt(req.query.q as string) || 80;
+      
+      if (!url || (!url.includes('cloudfront.net') && !url.includes('amazonaws.com'))) {
+        return res.status(400).json({ error: 'Invalid URL' });
+      }
+      
+      // Clamp dimensions
+      const width = Math.min(Math.max(w, 50), 1200);
+      const quality = Math.min(Math.max(q, 10), 100);
+      
+      // Set aggressive cache headers (1 year)
+      res.set('Cache-Control', 'public, max-age=31536000, immutable');
+      res.set('Vary', 'Accept');
+      
+      const response = await fetch(url);
+      if (!response.ok) {
+        return res.status(502).json({ error: 'Failed to fetch image' });
+      }
+      
+      const buffer = Buffer.from(await response.arrayBuffer());
+      const sharp = (await import('sharp')).default;
+      
+      // Determine output format based on Accept header
+      const acceptsWebp = req.headers.accept?.includes('image/webp');
+      const acceptsAvif = req.headers.accept?.includes('image/avif');
+      
+      let pipeline = sharp(buffer).resize(width, undefined, { fit: 'inside', withoutEnlargement: true });
+      
+      if (acceptsAvif) {
+        pipeline = pipeline.avif({ quality });
+        res.set('Content-Type', 'image/avif');
+      } else if (acceptsWebp) {
+        pipeline = pipeline.webp({ quality });
+        res.set('Content-Type', 'image/webp');
+      } else {
+        pipeline = pipeline.jpeg({ quality, mozjpeg: true });
+        res.set('Content-Type', 'image/jpeg');
+      }
+      
+      const optimized = await pipeline.toBuffer();
+      res.send(optimized);
+    } catch (error) {
+      console.error('[ImageProxy] Error:', error);
+      // Fallback: redirect to original
+      const url = req.query.url as string;
+      if (url) return res.redirect(url);
+      res.status(500).json({ error: 'Image processing failed' });
+    }
+  });
+
   // tRPC API
   app.use(
     "/api/trpc",
