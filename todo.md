@@ -2482,3 +2482,11 @@ Orders fixed:
 - [x] Fix Customer Favourites carousel: enforce outlet/order-type selection before Quick Add
 - [x] Fix Customer Favourites carousel: show "Not available at [outlet]" stamp on unavailable items
 - [x] Fix Customer Favourites carousel: disable Quick Add for items not available at selected outlet
+
+## Bug Fixes (Mar 12 - Favourites Flow)
+- [x] Force outlet+mode selection before Customer Favourites Quick Add can add items to cart
+- [x] Prevent silent defaulting to previously stored outlet/mode when using carousel Quick Add
+- [x] Track explicit mode choice via sessionStorage (resets each browser session)
+- [x] Updated How Would You Like to Order section to show cards until explicit choice is made
+- [x] Updated sticky selection pill to only show after explicit choice
+- [x] Updated Explore Menu subtitle to reflect explicit choice state

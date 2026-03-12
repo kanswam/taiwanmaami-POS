@@ -51,6 +51,13 @@ export default function Home() {
   const [pendingOrderType, setPendingOrderType] = useState<'instore' | 'pickup' | null>(null);
   const [pendingQuickAddProductId, setPendingQuickAddProductId] = useState<number | null>(null);
 
+  // Track whether user has EXPLICITLY chosen their ordering mode in this session
+  // This prevents silent defaults from localStorage allowing items into cart without choosing
+  const [hasExplicitlyChosenMode, setHasExplicitlyChosenMode] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return sessionStorage.getItem('tw_orderModeChosen') === 'true';
+  });
+
   // Determine if outlet has been selected
   const hasOutletSelected = useMemo(() => {
     if (cartState.orderType === 'delivery') return true;
@@ -58,6 +65,9 @@ export default function Home() {
     if (cartState.orderType === 'pickup') return !!pickupOutlet;
     return false;
   }, [cartState.orderType, instoreOutlet, pickupOutlet]);
+
+  // Combined check: outlet selected AND user explicitly chose this session
+  const canAddToCart = hasOutletSelected && hasExplicitlyChosenMode;
 
   // Get the current selected outlet
   const currentOutlet = useMemo(() => {
@@ -67,12 +77,19 @@ export default function Home() {
     return null;
   }, [cartState.orderType, instoreOutlet, pickupOutlet]);
 
+  // Mark order mode as explicitly chosen (persists for this browser session)
+  const markModeChosen = useCallback(() => {
+    setHasExplicitlyChosenMode(true);
+    sessionStorage.setItem('tw_orderModeChosen', 'true');
+  }, []);
+
   // Handle order type selection
   const handleOrderTypeClick = (type: 'instore' | 'delivery' | 'pickup') => {
     if (type === 'delivery') {
       setOrderType('delivery');
       setShowOutletSelector(false);
       setPendingOrderType(null);
+      markModeChosen();
       toast.success('Ordering for Delivery from T. Nagar', { duration: 2000 });
       setTimeout(() => {
         document.getElementById('explore-menu')?.scrollIntoView({ behavior: 'smooth' });
@@ -94,6 +111,7 @@ export default function Home() {
     }
     setShowOutletSelector(false);
     setPendingOrderType(null);
+    markModeChosen();
     const outletName = outlet === 'palladium' ? 'Palladium Mall' : 'T. Nagar';
     const typeLabel = type === 'instore' ? 'Dine-In' : 'Pickup';
     toast.success(`${typeLabel} at ${outletName}`, { duration: 2000 });
@@ -124,8 +142,10 @@ export default function Home() {
       e.preventDefault();
       e.stopPropagation();
     }
-    if (!hasOutletSelected) {
+    // Force outlet+mode selection if user hasn't explicitly chosen this session
+    if (!canAddToCart) {
       setPendingQuickAddProductId(productId);
+      setPendingOrderType(null); // Reset so they see order type selection first
       setShowOutletSelector(true);
       return;
     }
@@ -665,8 +685,8 @@ export default function Home() {
             <h2 className="text-3xl font-bold mb-4">How Would You Like to Order?</h2>
           </div>
 
-          {/* Show confirmation pill if outlet is already selected */}
-          {hasOutletSelected ? (
+          {/* Show confirmation pill if outlet is already selected AND user explicitly chose */}
+          {canAddToCart ? (
             <div className="max-w-lg mx-auto">
               <div className="flex items-center justify-between p-4 rounded-xl bg-card border border-border shadow-sm">
                 <div className="flex items-center gap-3">
@@ -786,7 +806,7 @@ export default function Home() {
       </section>
 
       {/* Sticky selection pill - only show when How To Order section is scrolled out of view */}
-      {hasOutletSelected && !orderSectionVisible && (
+      {canAddToCart && !orderSectionVisible && (
         <div className="sticky top-16 z-30 bg-background/95 backdrop-blur-sm border-b border-border py-2">
           <div className="container flex items-center justify-center gap-2 text-sm">
             <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-secondary">
@@ -816,7 +836,7 @@ export default function Home() {
           <div className="text-center mb-10">
             <h2 className="text-3xl font-bold mb-4">Explore Our Menu</h2>
             <p className="text-muted-foreground max-w-2xl mx-auto">
-              {!hasOutletSelected
+              {!canAddToCart
                 ? 'From authentic bubble tea to delicious mochis and Asian street food, discover our carefully curated selection.'
                 : cartState.orderType === 'delivery'
                   ? 'Showing items available for delivery from T. Nagar'
