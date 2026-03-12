@@ -2476,3 +2476,9 @@ Orders fixed:
 - [x] Use Cloudinary transforms for proper image sizing (q_auto,f_auto,w_300 for Cloudinary URLs)
 - [x] Optimize Customer Favourites carousel images with responsive srcset
 - [x] Updated imageOptimizer.ts to route CloudFront URLs through server proxy
+
+## Bug Fixes (Mar 12)
+- [x] Remove "Made with Manus" branding from the website
+- [x] Fix Customer Favourites carousel: enforce outlet/order-type selection before Quick Add
+- [x] Fix Customer Favourites carousel: show "Not available at [outlet]" stamp on unavailable items
+- [x] Fix Customer Favourites carousel: disable Quick Add for items not available at selected outlet

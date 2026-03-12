@@ -84,6 +84,20 @@ const trpcClient = trpc.createClient({
   ],
 });
 
+// Hide platform watermark badge
+(function hidePlatformBadge() {
+  const hide = () => {
+    const root = document.querySelector('manus-content-root');
+    if (root?.shadowRoot) {
+      const fw = root.shadowRoot.querySelector('footer-watermark');
+      if (fw) { (fw as HTMLElement).style.display = 'none'; return; }
+    }
+    // Retry until element appears (injected after page load)
+    setTimeout(hide, 500);
+  };
+  hide();
+})();
+
 createRoot(document.getElementById("root")!).render(
   <trpc.Provider client={trpcClient} queryClient={queryClient}>
     <QueryClientProvider client={queryClient}>

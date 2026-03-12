@@ -60,6 +60,19 @@ describe('Homepage CMS Procedures', () => {
       }
     });
 
+    it('should return products with outlet availability fields', async () => {
+      const caller = appRouter.createCaller({ user: null } as any);
+      const products = await caller.homepage.getFeaturedProducts();
+      if (products.length > 0) {
+        const product = products[0] as any;
+        // Must include availability fields for outlet-based filtering
+        expect(product).toHaveProperty('availableAtPalladium');
+        expect(product).toHaveProperty('availableAtTnagar');
+        expect(typeof product.availableAtPalladium).toBe('boolean');
+        expect(typeof product.availableAtTnagar).toBe('boolean');
+      }
+    });
+
     it('should return products ordered by featuredOrder', async () => {
       const caller = appRouter.createCaller({ user: null } as any);
       const products = await caller.homepage.getFeaturedProducts();

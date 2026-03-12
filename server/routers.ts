@@ -9762,6 +9762,8 @@ export const appRouter = router({
         basePriceRegularNoBoba: subcategories.basePriceRegularNoBoba,
         basePricePetiteWithBoba: subcategories.basePricePetiteWithBoba,
         basePricePetiteNoBoba: subcategories.basePricePetiteNoBoba,
+        availableAtPalladium: products.availableAtPalladium,
+        availableAtTnagar: products.availableAtTnagar,
       })
         .from(products)
         .innerJoin(subcategories, eq(products.subcategoryId, subcategories.id))

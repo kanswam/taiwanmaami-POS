@@ -110,8 +110,16 @@ export default function Home() {
   // Quick Add modal state
   const [quickAddProductId, setQuickAddProductId] = useState<number | null>(null);
 
-  // Helper: open Quick Add modal for a product (with outlet pre-check)
-  const openQuickAdd = (productId: number, e?: React.MouseEvent) => {
+  // Helper: check if a featured product (from carousel) is available at the current outlet
+  const isFeaturedProductAvailable = useCallback((product: any) => {
+    if (!currentOutlet) return true; // no outlet selected = show all as available
+    if (currentOutlet === 'palladium' && product.availableAtPalladium === false) return false;
+    if (currentOutlet === 'tnagar' && product.availableAtTnagar === false) return false;
+    return true;
+  }, [currentOutlet]);
+
+  // Helper: open Quick Add modal for a product (with outlet pre-check + availability check)
+  const openQuickAdd = (productId: number, e?: React.MouseEvent, productData?: any) => {
     if (e) {
       e.preventDefault();
       e.stopPropagation();
@@ -119,6 +127,12 @@ export default function Home() {
     if (!hasOutletSelected) {
       setPendingQuickAddProductId(productId);
       setShowOutletSelector(true);
+      return;
+    }
+    // Check availability at the selected outlet
+    if (productData && !isFeaturedProductAvailable(productData)) {
+      const outletName = currentOutlet === 'palladium' ? 'Palladium Mall' : 'T. Nagar';
+      toast.info(`This item is not available at ${outletName}. Try our other outlet!`, { duration: 3000 });
       return;
     }
     setQuickAddProductId(productId);
@@ -552,9 +566,17 @@ export default function Home() {
               className="flex gap-5 overflow-x-auto pb-4 scrollbar-hide snap-x snap-mandatory"
               style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
             >
-              {featuredProducts.map((product: any) => (
+              {featuredProducts.map((product: any) => {
+                const carouselAvailable = isFeaturedProductAvailable(product);
+                return (
                 <div key={product.id} className="flex-shrink-0 w-[220px] sm:w-[250px] snap-start group">
-                  <div onClick={() => openQuickAdd(product.id)} className="cursor-pointer">
+                  <div
+                    onClick={() => carouselAvailable
+                      ? openQuickAdd(product.id, undefined, product)
+                      : toast.info(`This item is not available at ${currentOutlet === 'palladium' ? 'Palladium Mall' : 'T. Nagar'}. Try our other outlet!`, { duration: 3000 })
+                    }
+                    className={carouselAvailable ? 'cursor-pointer' : 'cursor-default'}
+                  >
                     <div className="relative aspect-square rounded-xl overflow-hidden mb-3 bg-secondary">
                       {product.imageUrl ? (
                         <img
@@ -562,7 +584,7 @@ export default function Home() {
                           srcSet={getResponsiveSrcSet(product.imageUrl)}
                           sizes="(max-width: 640px) 160px, (max-width: 1024px) 200px, 220px"
                           alt={product.name}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          className={`w-full h-full object-cover transition-transform duration-300 ${carouselAvailable ? 'group-hover:scale-105' : 'grayscale-[40%] opacity-70'}`}
                           loading="lazy"
                           decoding="async"
                         />
@@ -575,6 +597,14 @@ export default function Home() {
                       <span className="absolute top-2 left-2 text-xs font-medium px-2 py-1 rounded-full bg-foreground/80 text-background">
                         {product.categoryName}
                       </span>
+                      {/* "Not available" stamp overlay */}
+                      {!carouselAvailable && currentOutlet && (
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <div className="bg-black/60 text-white text-[10px] sm:text-xs font-bold px-2 py-1 sm:px-3 sm:py-1.5 rounded-lg text-center leading-tight rotate-[-12deg] shadow-lg border border-white/20">
+                            Not available at<br />{currentOutlet === 'palladium' ? 'Palladium' : 'T. Nagar'}
+                          </div>
+                        </div>
+                      )}
                       {/* Diet indicator */}
                       {product.isVegetarian && (
                         <span className="absolute top-2 right-2 w-5 h-5 rounded-sm border-2 border-green-600 bg-white flex items-center justify-center">
@@ -589,26 +619,40 @@ export default function Home() {
                     </div>
                   </div>
                   <div className="flex items-start justify-between gap-2">
-                    <div onClick={() => openQuickAdd(product.id)} className="cursor-pointer">
-                      <h3 className="font-semibold text-sm line-clamp-2 group-hover:text-primary transition-colors">
+                    <div
+                      onClick={() => carouselAvailable
+                        ? openQuickAdd(product.id, undefined, product)
+                        : toast.info(`This item is not available at ${currentOutlet === 'palladium' ? 'Palladium Mall' : 'T. Nagar'}. Try our other outlet!`, { duration: 3000 })
+                      }
+                      className={carouselAvailable ? 'cursor-pointer' : 'cursor-default'}
+                    >
+                      <h3 className={`font-semibold text-sm line-clamp-2 transition-colors ${carouselAvailable ? 'group-hover:text-primary' : 'text-muted-foreground'}`}>
                         {product.name}
                       </h3>
                       <span className="text-xs text-muted-foreground">{product.subcategoryName}</span>
                     </div>
-                    <button
-                      onClick={(e) => openQuickAdd(product.id, e)}
-                      className="flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center text-white shadow-md hover:scale-110 transition-transform"
-                      style={{ background: JADE_GREEN }}
-                      title="Quick Add"
-                    >
-                      <Plus className="w-5 h-5" />
-                    </button>
+                    {/* Quick Add button - only for available items */}
+                    {carouselAvailable ? (
+                      <button
+                        onClick={(e) => openQuickAdd(product.id, e, product)}
+                        className="flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center text-white shadow-md hover:scale-110 transition-transform"
+                        style={{ background: JADE_GREEN }}
+                        title="Quick Add"
+                      >
+                        <Plus className="w-5 h-5" />
+                      </button>
+                    ) : (
+                      <div className="flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center bg-muted text-muted-foreground">
+                        <Plus className="w-5 h-5" />
+                      </div>
+                    )}
                   </div>
                   {getDisplayPrice(product) > 0 && (
-                    <span className="font-bold text-sm mt-1 block">{formatPrice(getDisplayPrice(product))}</span>
+                    <span className={`font-bold text-sm mt-1 block ${!carouselAvailable ? 'text-muted-foreground' : ''}`}>{formatPrice(getDisplayPrice(product))}</span>
                   )}
                 </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         </section>

@@ -621,6 +621,22 @@
   color: var(--foreground);
 }
 
+/* Hide platform branding badge */
+#manus-watermark,
+[data-manus-watermark],
+a[href*="manus.im"][target="_blank"],
+div:has(> a[href*="manus.im"]) {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  overflow: hidden !important;
+  position: absolute !important;
+  z-index: -9999 !important;
+}
+
 /* Responsive adjustments */
 @media (max-width: 640px) {
   .blog-content {
