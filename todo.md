@@ -2516,3 +2516,10 @@ Orders fixed:
 ## Bug Fixes (Mar 12 - Text Readability)
 - [x] Fix About Us page body text too light / low contrast against beige background
 - [x] Ensure text is dark enough to be easily readable across all pages (changed --muted-foreground from #7a6a5f to #4a3a30)
+
+## Feature: External Invoice Entry (Mar 12)
+- [x] Enter The Leela Hyderabad popup invoice (Rs. 193,726.50) as event order EVT-LEELA-HYD-001 in Event Orders system (completed, fully paid)
+
+## Bug Fixes (Mar 13)
+- [x] Delete all test event orders (Test Customer, Draft, Rs.0) from database — 72 deleted, only EVT-LEELA-HYD-001 remains
+- [x] Fix analytics dashboard monthly summary to include event order revenue in totals (Events column added to table, event revenue included in Grand Total per period)

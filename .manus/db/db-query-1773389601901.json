@@ -1,0 +1,17 @@
+{
+  "query": "SELECT id, orderNumber, customerName, status, totalAmount FROM event_orders ORDER BY id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT id, orderNumber, customerName, status, totalAmount FROM event_orders ORDER BY id;",
+  "rows": [
+    {
+      "id": "510001",
+      "orderNumber": "EVT-LEELA-HYD-001",
+      "customerName": "The Leela Palace Hyderabad",
+      "status": "completed",
+      "totalAmount": "19372650"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\torderNumber\tcustomerName\tstatus\ttotalAmount\n510001\tEVT-LEELA-HYD-001\tThe Leela Palace Hyderabad\tcompleted\t19372650\n",
+  "stderr": "",
+  "execution_time_ms": 359
+}

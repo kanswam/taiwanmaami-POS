@@ -1,0 +1,521 @@
+{
+  "query": "SELECT id, orderNumber, customerName, status, totalAmount FROM event_orders ORDER BY id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT id, orderNumber, customerName, status, totalAmount FROM event_orders ORDER BY id;",
+  "rows": [
+    {
+      "id": "30001",
+      "orderNumber": "EVTMKKN9W4L",
+      "customerName": "Test Customer",
+      "status": "draft",
+      "totalAmount": "0"
+    },
+    {
+      "id": "60001",
+      "orderNumber": "EVTMKR971FX",
+      "customerName": "Test Customer",
+      "status": "draft",
+      "totalAmount": "0"
+    },
+    {
+      "id": "90001",
+      "orderNumber": "EVTMLB83N2Z",
+      "customerName": "Test Customer",
+      "status": "draft",
+      "totalAmount": "0"
+    },
+    {
+      "id": "90002",
+      "orderNumber": "EVTMLB841CH",
+      "customerName": "Test Customer",
+      "status": "draft",
+      "totalAmount": "0"
+    },
+    {
+      "id": "90003",
+      "orderNumber": "EVTMLB84MS6",
+      "customerName": "Test Customer",
+      "status": "draft",
+      "totalAmount": "0"
+    },
+    {
+      "id": "90004",
+      "orderNumber": "EVTMLB85EPX",
+      "customerName": "Test Customer",
+      "status": "draft",
+      "totalAmount": "0"
+    },
+    {
+      "id": "90005",
+      "orderNumber": "EVTMLBB1BLN",
+      "customerName": "Test Customer",
+      "status": "draft",
+      "totalAmount": "0"
+    },
+    {
+      "id": "90006",
+      "orderNumber": "EVTMLBB1RN4",
+      "customerName": "Test Customer",
+      "status": "draft",
+      "totalAmount": "0"
+    },
+    {
+      "id": "120001",
+      "orderNumber": "EVTMLCV5YMF",
+      "customerName": "Test Customer",
+      "status": "draft",
+      "totalAmount": "0"
+    },
+    {
+      "id": "120002",
+      "orderNumber": "EVTMLCV6C5P",
+      "customerName": "Test Customer",
+      "status": "draft",
+      "totalAmount": "0"
+    },
+    {
+      "id": "120003",
+      "orderNumber": "EVTMLCV6PVZ",
+      "customerName": "Test Customer",
+      "status": "draft",
+      "totalAmount": "0"
+    },
+    {
+      "id": "150001",
+      "orderNumber": "EVTMLDH5Y1F",
+      "customerName": "Test Customer",
+      "status": "draft",
+      "totalAmount": "0"
+    },
+    {
+      "id": "150002",
+      "orderNumber": "EVTMLDH6C5Y",
+      "customerName": "Test Customer",
+      "status": "draft",
+      "totalAmount": "0"
+    },
+    {
+      "id": "150003",
+      "orderNumber": "EVTMLDH6NBV",
+      "customerName": "Test Customer",
+      "status": "draft",
+      "totalAmount": "0"
+    },
+    {
+      "id": "180001",
+      "orderNumber": "EVTMLFIQS6J",
+      "customerName": "Test Customer",
+      "status": "draft",
+      "totalAmount": "0"
+    },
+    {
+      "id": "210001",
+      "orderNumber": "EVTMLIK3Z62",
+      "customerName": "Test Customer",
+      "status": "draft",
+      "totalAmount": "0"
+    },
+    {
+      "id": "210002",
+      "orderNumber": "EVTMLIK4D9Q",
+      "customerName": "Test Customer",
+      "status": "draft",
+      "totalAmount": "0"
+    },
+    {
+      "id": "210003",
+      "orderNumber": "EVTMLIK56OE",
+      "customerName": "Test Customer",
+      "status": "draft",
+      "totalAmount": "0"
+    },
+    {
+      "id": "240001",
+      "orderNumber": "EVTMLJJH0TU",
+      "customerName": "Test Customer",
+      "status": "draft",
+      "totalAmount": "0"
+    },
+    {
+      "id": "240002",
+      "orderNumber": "EVTMLJK0K87",
+      "customerName": "Test Customer",
+      "status": "draft",
+      "totalAmount": "0"
+    },
+    {
+      "id": "240003",
+      "orderNumber": "EVTMLJK7K3F",
+      "customerName": "Test Customer",
+      "status": "draft",
+      "totalAmount": "0"
+    },
+    {
+      "id": "240004",
+      "orderNumber": "EVTMLJQOH4T",
+      "customerName": "Test Customer",
+      "status": "draft",
+      "totalAmount": "0"
+    },
+    {
+      "id": "240005",
+      "orderNumber": "EVTMLJQPV9N",
+      "customerName": "Test Customer",
+      "status": "draft",
+      "totalAmount": "0"
+    },
+    {
+      "id": "270001",
+      "orderNumber": "EVTMLMNF2EY",
+      "customerName": "Test Customer",
+      "status": "draft",
+      "totalAmount": "0"
+    },
+    {
+      "id": "270002",
+      "orderNumber": "EVTMLMPKRER",
+      "customerName": "Test Customer",
+      "status": "draft",
+      "totalAmount": "0"
+    },
+    {
+      "id": "270003",
+      "orderNumber": "EVTMLMPL6EY",
+      "customerName": "Test Customer",
+      "status": "draft",
+      "totalAmount": "0"
+    },
+    {
+      "id": "270004",
+      "orderNumber": "EVTMLMQIKJU",
+      "customerName": "Test Customer",
+      "status": "draft",
+      "totalAmount": "0"
+    },
+    {
+      "id": "270005",
+      "orderNumber": "EVTMLMQYS0M",
+      "customerName": "Test Customer",
+      "status": "draft",
+      "totalAmount": "0"
+    },
+    {
+      "id": "270006",
+      "orderNumber": "EVTMLMQZ4JJ",
+      "customerName": "Test Customer",
+      "status": "draft",
+      "totalAmount": "0"
+    },
+    {
+      "id": "270007",
+      "orderNumber": "EVTMLMSF7BB",
+      "customerName": "Test Customer",
+      "status": "draft",
+      "totalAmount": "0"
+    },
+    {
+      "id": "270008",
+      "orderNumber": "EVTMLMSFU3K",
+      "customerName": "Test Customer",
+      "status": "draft",
+      "totalAmount": "0"
+    },
+    {
+      "id": "270009",
+      "orderNumber": "EVTMLMSG6X1",
+      "customerName": "Test Customer",
+      "status": "draft",
+      "totalAmount": "0"
+    },
+    {
+      "id": "270010",
+      "orderNumber": "EVTMLMSGRIX",
+      "customerName": "Test Customer",
+      "status": "draft",
+      "totalAmount": "0"
+    },
+    {
+      "id": "270011",
+      "orderNumber": "EVTMLMTE3GC",
+      "customerName": "Test Customer",
+      "status": "draft",
+      "totalAmount": "0"
+    },
+    {
+      "id": "300001",
+      "orderNumber": "EVTMLNGW6LH",
+      "customerName": "Test Customer",
+      "status": "draft",
+      "totalAmount": "0"
+    },
+    {
+      "id": "330001",
+      "orderNumber": "EVTMLVETATC",
+      "customerName": "Test Customer",
+      "status": "draft",
+      "totalAmount": "0"
+    },
+    {
+      "id": "330002",
+      "orderNumber": "EVTMLVEU4XW",
+      "customerName": "Test Customer",
+      "status": "draft",
+      "totalAmount": "0"
+    },
+    {
+      "id": "330003",
+      "orderNumber": "EVTMLVEUHPX",
+      "customerName": "Test Customer",
+      "status": "draft",
+      "totalAmount": "0"
+    },
+    {
+      "id": "330004",
+      "orderNumber": "EVTMLVEUU6H",
+      "customerName": "Test Customer",
+      "status": "draft",
+      "totalAmount": "0"
+    },
+    {
+      "id": "360001",
+      "orderNumber": "EVTMLWTDT2W",
+      "customerName": "Test Customer",
+      "status": "draft",
+      "totalAmount": "0"
+    },
+    {
+      "id": "360002",
+      "orderNumber": "EVTMLWTE8BM",
+      "customerName": "Test Customer",
+      "status": "draft",
+      "totalAmount": "0"
+    },
+    {
+      "id": "390001",
+      "orderNumber": "EVTMM0UO3WV",
+      "customerName": "Test Customer",
+      "status": "draft",
+      "totalAmount": "0"
+    },
+    {
+      "id": "420001",
+      "orderNumber": "EVTMM6NJENT",
+      "customerName": "Test Customer",
+      "status": "draft",
+      "totalAmount": "0"
+    },
+    {
+      "id": "420002",
+      "orderNumber": "EVTMM6NJXPL",
+      "customerName": "Test Customer",
+      "status": "draft",
+      "totalAmount": "0"
+    },
+    {
+      "id": "420003",
+      "orderNumber": "EVTMM6NM6LH",
+      "customerName": "Test Customer",
+      "status": "draft",
+      "totalAmount": "0"
+    },
+    {
+      "id": "420004",
+      "orderNumber": "EVTMM6NMMGR",
+      "customerName": "Test Customer",
+      "status": "draft",
+      "totalAmount": "0"
+    },
+    {
+      "id": "420005",
+      "orderNumber": "EVTMM6NNSLD",
+      "customerName": "Test Customer",
+      "status": "draft",
+      "totalAmount": "0"
+    },
+    {
+      "id": "420006",
+      "orderNumber": "EVTMM6NOIHU",
+      "customerName": "Test Customer",
+      "status": "draft",
+      "totalAmount": "0"
+    },
+    {
+      "id": "420007",
+      "orderNumber": "EVTMM6NOXQE",
+      "customerName": "Test Customer",
+      "status": "draft",
+      "totalAmount": "0"
+    },
+    {
+      "id": "420008",
+      "orderNumber": "EVTMM6QCG9M",
+      "customerName": "Test Customer",
+      "status": "draft",
+      "totalAmount": "0"
+    },
+    {
+      "id": "420009",
+      "orderNumber": "EVTMM6QCXSO",
+      "customerName": "Test Customer",
+      "status": "draft",
+      "totalAmount": "0"
+    },
+    {
+      "id": "420010",
+      "orderNumber": "EVTMM6QDDAJ",
+      "customerName": "Test Customer",
+      "status": "draft",
+      "totalAmount": "0"
+    },
+    {
+      "id": "450001",
+      "orderNumber": "EVTMMMDWMNY",
+      "customerName": "Test Customer",
+      "status": "draft",
+      "totalAmount": "0"
+    },
+    {
+      "id": "450002",
+      "orderNumber": "EVTMMMDXXP8",
+      "customerName": "Test Customer",
+      "status": "draft",
+      "totalAmount": "0"
+    },
+    {
+      "id": "450003",
+      "orderNumber": "EVTMMMDYJZY",
+      "customerName": "Test Customer",
+      "status": "draft",
+      "totalAmount": "0"
+    },
+    {
+      "id": "450004",
+      "orderNumber": "EVTMMMG41OY",
+      "customerName": "Test Customer",
+      "status": "draft",
+      "totalAmount": "0"
+    },
+    {
+      "id": "450005",
+      "orderNumber": "EVTMMMG4IY2",
+      "customerName": "Test Customer",
+      "status": "draft",
+      "totalAmount": "0"
+    },
+    {
+      "id": "450006",
+      "orderNumber": "EVTMMMG4ZU0",
+      "customerName": "Test Customer",
+      "status": "draft",
+      "totalAmount": "0"
+    },
+    {
+      "id": "450007",
+      "orderNumber": "EVTMMMG72BS",
+      "customerName": "Test Customer",
+      "status": "draft",
+      "totalAmount": "0"
+    },
+    {
+      "id": "480001",
+      "orderNumber": "EVTMMN3XE6G",
+      "customerName": "Test Customer",
+      "status": "draft",
+      "totalAmount": "0"
+    },
+    {
+      "id": "480002",
+      "orderNumber": "EVTMMN3XTT8",
+      "customerName": "Test Customer",
+      "status": "draft",
+      "totalAmount": "0"
+    },
+    {
+      "id": "480003",
+      "orderNumber": "EVTMMN3Y9K8",
+      "customerName": "Test Customer",
+      "status": "draft",
+      "totalAmount": "0"
+    },
+    {
+      "id": "480004",
+      "orderNumber": "EVTMMN3YOVO",
+      "customerName": "Test Customer",
+      "status": "draft",
+      "totalAmount": "0"
+    },
+    {
+      "id": "480005",
+      "orderNumber": "EVTMMN570SR",
+      "customerName": "Test Customer",
+      "status": "draft",
+      "totalAmount": "0"
+    },
+    {
+      "id": "480006",
+      "orderNumber": "EVTMMN57I3E",
+      "customerName": "Test Customer",
+      "status": "draft",
+      "totalAmount": "0"
+    },
+    {
+      "id": "480007",
+      "orderNumber": "EVTMMN5UOBW",
+      "customerName": "Test Customer",
+      "status": "draft",
+      "totalAmount": "0"
+    },
+    {
+      "id": "480008",
+      "orderNumber": "EVTMMN5VZ2I",
+      "customerName": "Test Customer",
+      "status": "draft",
+      "totalAmount": "0"
+    },
+    {
+      "id": "480009",
+      "orderNumber": "EVTMMN60GA9",
+      "customerName": "Test Customer",
+      "status": "draft",
+      "totalAmount": "0"
+    },
+    {
+      "id": "480010",
+      "orderNumber": "EVTMMN62EIA",
+      "customerName": "Test Customer",
+      "status": "draft",
+      "totalAmount": "0"
+    },
+    {
+      "id": "480011",
+      "orderNumber": "EVTMMN63OKC",
+      "customerName": "Test Customer",
+      "status": "draft",
+      "totalAmount": "0"
+    },
+    {
+      "id": "480012",
+      "orderNumber": "EVTMMN6WRLN",
+      "customerName": "Test Customer",
+      "status": "draft",
+      "totalAmount": "0"
+    },
+    {
+      "id": "480013",
+      "orderNumber": "EVTMMN8X7VY",
+      "customerName": "Test Customer",
+      "status": "draft",
+      "totalAmount": "0"
+    },
+    {
+      "id": "510001",
+      "orderNumber": "EVT-LEELA-HYD-001",
+      "customerName": "The Leela Palace Hyderabad",
+      "status": "completed",
+      "totalAmount": "19372650"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\torderNumber\tcustomerName\tstatus\ttotalAmount\n30001\tEVTMKKN9W4L\tTest Customer\tdraft\t0\n60001\tEVTMKR971FX\tTest Customer\tdraft\t0\n90001\tEVTMLB83N2Z\tTest Customer\tdraft\t0\n90002\tEVTMLB841CH\tTest Customer\tdraft\t0\n90003\tEVTMLB84MS6\tTest Customer\tdraft\t0\n90004\tEVTMLB85EPX\tTest Customer\tdraft\t0\n90005\tEVTMLBB1BLN\tTest Customer\tdraft\t0\n90006\tEVTMLBB1RN4\tTest Customer\tdraft\t0\n120001\tEVTMLCV5YMF\tTest Customer\tdraft\t0\n120002\tEVTMLCV6C5P\tTest Customer\tdraft\t0\n120003\tEVTMLCV6PVZ\tTest Customer\tdraft\t0\n150001\tEVTMLDH5Y1F\tTest Customer\tdraft\t0\n150002\tEVTMLDH6C5Y\tTest Customer\tdraft\t0\n150003\tEVTMLDH6NBV\tTest Customer\tdraft\t0\n180001\tEVTMLFIQS6J\tTest Customer\tdraft\t0\n210001\tEVTMLIK3Z62\tTest Customer\tdraft\t0\n210002\tEVTMLIK4D9Q\tTest Customer\tdraft\t0\n210003\tEVTMLIK56OE\tTest Customer\tdraft\t0\n240001\tEVTMLJJH0TU\tTest Customer\tdraft\t0\n240002\tEVTMLJK0K87\tTest Customer\tdraft\t0\n240003\tEVTMLJK7K3F\tTest Customer\tdraft\t0\n240004\tEVTMLJQOH4T\tTest Customer\tdraft\t0\n240005\tEVTMLJQPV9N\tTest Customer\tdraft\t0\n270001\tEVTMLMNF2EY\tTest Customer\tdraft\t0\n270002\tEVTMLMPKRER\tTest Customer\tdraft\t0\n270003\tEVTMLMPL6EY\tTest Customer\tdraft\t0\n270004\tEVTMLMQIKJU\tTest Customer\tdraft\t0\n270005\tEVTMLMQYS0M\tTest Customer\tdraft\t0\n270006\tEVTMLMQZ4JJ\tTest Customer\tdraft\t0\n270007\tEVTMLMSF7BB\tTest Customer\tdraft\t0\n270008\tEVTMLMSFU3K\tTest Customer\tdraft\t0\n270009\tEVTMLMSG6X1\tTest Customer\tdraft\t0\n270010\tEVTMLMSGRIX\tTest Customer\tdraft\t0\n270011\tEVTMLMTE3GC\tTest Customer\tdraft\t0\n300001\tEVTMLNGW6LH\tTest Customer\tdraft\t0\n330001\tEVTMLVETATC\tTest Customer\tdraft\t0\n330002\tEVTMLVEU4XW\tTest Customer\tdraft\t0\n330003\tEVTMLVEUHPX\tTest Customer\tdraft\t0\n330004\tEVTMLVEUU6H\tTest Customer\tdraft\t0\n360001\tEVTMLWTDT2W\tTest Customer\tdraft\t0\n360002\tEVTMLWTE8BM\tTest Customer\tdraft\t0\n390001\tEVTMM0UO3WV\tTest Customer\tdraft\t0\n420001\tEVTMM6NJENT\tTest Customer\tdraft\t0\n420002\tEVTMM6NJXPL\tTest Customer\tdraft\t0\n420003\tEVTMM6NM6LH\tTest Customer\tdraft\t0\n420004\tEVTMM6NMMGR\tTest Customer\tdraft\t0\n420005\tEVTMM6NNSLD\tTest Customer\tdraft\t0\n420006\tEVTMM6NOIHU\tTest Customer\tdraft\t0\n420007\tEVTMM6NOXQE\tTest Customer\tdraft\t0\n420008\tEVTMM6QCG9M\tTest Customer\tdraft\t0\n420009\tEVTMM6QCXSO\tTest Customer\tdraft\t0\n420010\tEVTMM6QDDAJ\tTest Customer\tdraft\t0\n450001\tEVTMMMDWMNY\tTest Customer\tdraft\t0\n450002\tEVTMMMDXXP8\tTest Customer\tdraft\t0\n450003\tEVTMMMDYJZY\tTest Customer\tdraft\t0\n450004\tEVTMMMG41OY\tTest Customer\tdraft\t0\n450005\tEVTMMMG4IY2\tTest Customer\tdraft\t0\n450006\tEVTMMMG4ZU0\tTest Customer\tdraft\t0\n450007\tEVTMMMG72BS\tTest Customer\tdraft\t0\n480001\tEVTMMN3XE6G\tTest Customer\tdraft\t0\n480002\tEVTMMN3XTT8\tTest Customer\tdraft\t0\n480003\tEVTMMN3Y9K8\tTest Customer\tdraft\t0\n480004\tEVTMMN3YOVO\tTest Customer\tdraft\t0\n480005\tEVTMMN570SR\tTest Customer\tdraft\t0\n480006\tEVTMMN57I3E\tTest Customer\tdraft\t0\n480007\tEVTMMN5UOBW\tTest Customer\tdraft\t0\n480008\tEVTMMN5VZ2I\tTest Customer\tdraft\t0\n480009\tEVTMMN60GA9\tTest Customer\tdraft\t0\n480010\tEVTMMN62EIA\tTest Customer\tdraft\t0\n480011\tEVTMMN63OKC\tTest Customer\tdraft\t0\n480012\tEVTMMN6WRLN\tTest Customer\tdraft\t0\n480013\tEVTMMN8X7VY\tTest Customer\tdraft\t0\n510001\tEVT-LEELA-HYD-001\tThe Leela Palace Hyderabad\tcompleted\t19372650\n",
+  "stderr": "",
+  "execution_time_ms": 351
+}

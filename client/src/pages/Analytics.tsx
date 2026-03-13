@@ -1524,6 +1524,7 @@ export default function Analytics() {
                           <th className="text-right py-2 font-medium">Dine-in</th>
                           <th className="text-right py-2 font-medium">Petpooja Total</th>
                           <th className="text-right py-2 font-medium">Website</th>
+                          <th className="text-right py-2 font-medium text-purple-600">Events</th>
                           <th className="text-right py-2 font-medium font-bold">Grand Total</th>
                           <th className="text-right py-2 font-medium">Uploaded</th>
                           <th className="text-center py-2 font-medium">Action</th>
@@ -1555,6 +1556,9 @@ export default function Analytics() {
                             </td>
                             <td className="text-right py-2 text-blue-600">
                               {p.websiteOrders ? `${p.websiteOrders} ord · ` : ''}₹{((p.websiteAmount || 0) / 100).toLocaleString('en-IN', { minimumFractionDigits: 0 })}
+                            </td>
+                            <td className="text-right py-2 text-purple-600">
+                              {(p as any).eventOrders ? `${(p as any).eventOrders} ord · ` : ''}₹{(((p as any).eventAmount || 0) / 100).toLocaleString('en-IN', { minimumFractionDigits: 0 })}
                             </td>
                             <td className="text-right py-2 font-bold">
                               ₹{((p.combinedTotal || 0) / 100).toLocaleString('en-IN', { minimumFractionDigits: 0 })}

@@ -1,0 +1,9 @@
+{
+  "query": "INSERT INTO event_order_items (eventOrderId, itemType, itemName, description, quantity, unitPrice, totalPrice) VALUES \n(510001, 'food', 'Taiwan Maami Popup and Master Class', 'Popup dinner service and Master Class at The Leela Palace Hyderabad (5-6 March 2026)', 1, 15000000, 15000000),\n(510001, 'delivery', 'Transport Charges for Ingredients', 'Transport of ingredients from Chennai to Hyderabad for the popup event', 1, 1417500, 1417500);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute INSERT INTO event_order_items (eventOrderId, itemType, itemName, description, quantity, unitPrice, totalPrice) VALUES \n(510001, 'food', 'Taiwan Maami Popup and Master Class', 'Popup dinner service and Master Class at The Leela Palace Hyderabad (5-6 March 2026)', 1, 15000000, 15000000),\n(510001, 'delivery', 'Transport Charges for Ingredients', 'Transport of ingredients from Chennai to Hyderabad for the popup event', 1, 1417500, 1417500);",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 380
+}

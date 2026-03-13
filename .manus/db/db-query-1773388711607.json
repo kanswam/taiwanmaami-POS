@@ -1,0 +1,13 @@
+{
+  "query": "SELECT id FROM event_orders WHERE orderNumber = 'EVT-LEELA-HYD-001';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT id FROM event_orders WHERE orderNumber = 'EVT-LEELA-HYD-001';",
+  "rows": [
+    {
+      "id": "510001"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\n510001\n",
+  "stderr": "",
+  "execution_time_ms": 349
+}

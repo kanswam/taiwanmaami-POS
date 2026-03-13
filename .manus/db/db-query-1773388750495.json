@@ -1,0 +1,25 @@
+{
+  "query": "SELECT eo.id, eo.orderNumber, eo.customerName, eo.status, eo.subtotal, eo.gstAmount, eo.totalAmount, eo.advancePaid, eo.balancePaid FROM event_orders eo WHERE eo.orderNumber = 'EVT-LEELA-HYD-001'; SELECT eoi.itemName, eoi.itemType, eoi.quantity, eoi.unitPrice, eoi.totalPrice FROM event_order_items eoi WHERE eoi.eventOrderId = 510001;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT eo.id, eo.orderNumber, eo.customerName, eo.status, eo.subtotal, eo.gstAmount, eo.totalAmount, eo.advancePaid, eo.balancePaid FROM event_orders eo WHERE eo.orderNumber = 'EVT-LEELA-HYD-001'; SELECT eoi.itemName, eoi.itemType, eoi.quantity, eoi.unitPrice, eoi.totalPrice FROM event_order_items eoi WHERE eoi.eventOrderId = 510001;",
+  "rows": [
+    {
+      "id": "510001",
+      "orderNumber": "EVT-LEELA-HYD-001",
+      "customerName": "The Leela Palace Hyderabad",
+      "status": "completed",
+      "subtotal": "16417500",
+      "gstAmount": "2955150",
+      "totalAmount": "19372650",
+      "advancePaid": "1",
+      "balancePaid": "1"
+    }
+  ],
+  "messages": [
+    "itemName\titemType\tquantity\tunitPrice\ttotalPrice",
+    "Taiwan Maami Popup and Master Class\tfood\t1\t15000000\t15000000",
+    "Transport Charges for Ingredients\tdelivery\t1\t1417500\t1417500"
+  ],
+  "stdout": "id\torderNumber\tcustomerName\tstatus\tsubtotal\tgstAmount\ttotalAmount\tadvancePaid\tbalancePaid\n510001\tEVT-LEELA-HYD-001\tThe Leela Palace Hyderabad\tcompleted\t16417500\t2955150\t19372650\t1\t1\nitemName\titemType\tquantity\tunitPrice\ttotalPrice\nTaiwan Maami Popup and Master Class\tfood\t1\t15000000\t15000000\nTransport Charges for Ingredients\tdelivery\t1\t1417500\t1417500\n",
+  "stderr": "",
+  "execution_time_ms": 414
+}

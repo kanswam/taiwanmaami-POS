@@ -6474,11 +6474,27 @@ export const appRouter = router({
             ));
           const websiteOrders = Number(websiteResult[0]?.orderCount) || 0;
           const websiteAmount = Number(websiteResult[0]?.totalAmount) || 0;
+
+          // Also fetch event order revenue for this period
+          const eventResult = await dbInstance.select({
+            orderCount: sql<number>`COUNT(*)`,
+            totalAmount: sql<number>`COALESCE(SUM(${eventOrders.totalAmount}), 0)`,
+          }).from(eventOrders)
+            .where(and(
+              gte(eventOrders.createdAt, websiteStart),
+              lte(eventOrders.createdAt, websiteEnd),
+              sql`${eventOrders.status} IN ('confirmed', 'in_progress', 'completed')`
+            ));
+          const eventOrderCount = Number(eventResult[0]?.orderCount) || 0;
+          const eventAmount = Number(eventResult[0]?.totalAmount) || 0;
+
           return {
             ...u,
             websiteOrders,
             websiteAmount,
-            combinedTotal: (Number(u.grandTotal) || 0) + websiteAmount,
+            eventOrders: eventOrderCount,
+            eventAmount,
+            combinedTotal: (Number(u.grandTotal) || 0) + websiteAmount + eventAmount,
           };
         }));
         return enriched;
