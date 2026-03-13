@@ -991,7 +991,7 @@ export default function Home() {
 
               {/* Show more / View Full Menu */}
               <div className="text-center mt-8">
-                <Link href={`/menu?type=${cartState.orderType}`}>
+                <Link href={`/menu?type=${cartState.orderType}${currentOutlet ? `&outlet=${currentOutlet}` : ''}`}>
                   <Button size="lg" style={{ background: JADE_GREEN, borderColor: JADE_GREEN }} className="text-white hover:opacity-90">
                     View Full Menu
                     <ArrowRight className="ml-2 w-5 h-5" />

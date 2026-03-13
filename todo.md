@@ -2523,3 +2523,4 @@ Orders fixed:
 ## Bug Fixes (Mar 13)
 - [x] Delete all test event orders (Test Customer, Draft, Rs.0) from database — 72 deleted, only EVT-LEELA-HYD-001 remains
 - [x] Fix analytics dashboard monthly summary to include event order revenue in totals (Events column added to table, event revenue included in Grand Total per period)
+- [x] Bug: Location selection lost when navigating from menu preview to full menu page via "View Full Menu" button

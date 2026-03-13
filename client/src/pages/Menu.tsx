@@ -77,15 +77,27 @@ export default function Menu() {
   );
   
   // Auto-set order type from URL params - only on initial mount
+  // IMPORTANT: Only call setOrderType if the type actually differs from current state,
+  // because setOrderType clears outlet selections (instoreOutlet/pickupOutlet)
   const initialOrderTypeSet = useRef(false);
   useEffect(() => {
     if (orderTypeFromUrl && !initialOrderTypeSet.current) {
       initialOrderTypeSet.current = true;
-      if (orderTypeFromUrl === 'instore') setOrderType('instore');
-      else if (orderTypeFromUrl === 'delivery') setOrderType('delivery');
-      else if (orderTypeFromUrl === 'pickup') setOrderType('pickup');
+      const validType = orderTypeFromUrl as 'instore' | 'delivery' | 'pickup';
+      // Only change order type if it's actually different to avoid clearing outlet
+      if (['instore', 'delivery', 'pickup'].includes(validType) && state.orderType !== validType) {
+        setOrderType(validType);
+      }
+      // Set outlet from URL params if provided (for instore/pickup)
+      if (outletFromUrl === 'palladium' || outletFromUrl === 'tnagar') {
+        if (validType === 'instore' || state.orderType === 'instore') {
+          setInstoreOutlet(outletFromUrl);
+        } else if (validType === 'pickup' || state.orderType === 'pickup') {
+          setPickupOutlet(outletFromUrl);
+        }
+      }
     }
-  }, [orderTypeFromUrl, setOrderType]);
+  }, [orderTypeFromUrl, outletFromUrl, state.orderType, setOrderType, setInstoreOutlet, setPickupOutlet]);
 
   // Auto-set order type and table number from URL params
   useEffect(() => {
