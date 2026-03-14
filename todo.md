@@ -2524,3 +2524,8 @@ Orders fixed:
 - [x] Delete all test event orders (Test Customer, Draft, Rs.0) from database — 72 deleted, only EVT-LEELA-HYD-001 remains
 - [x] Fix analytics dashboard monthly summary to include event order revenue in totals (Events column added to table, event revenue included in Grand Total per period)
 - [x] Bug: Location selection lost when navigating from menu preview to full menu page via "View Full Menu" button
+- [ ] Bug: Dine In location selection lost when navigating to full menu page via "View Full Menu" button (fix was incomplete - only covered delivery/pickup)
+
+## Cookie & Cart Expiry (Mar 14)
+- [x] Implement 4-hour cart expiry (clear cart after 4 hours of inactivity)
+- [x] Reduce session cookie expiry from 1 year to 30 days

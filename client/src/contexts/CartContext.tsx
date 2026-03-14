@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useReducer, useEffect, ReactNode, useState } from 'react';
 import { CartItem, calculateGst, GST_RATE } from '@shared/types';
+import { CART_EXPIRY_MS } from '@shared/const';
 import { trackAddToCart, trackRemoveFromCart, toGA4Item } from '@/lib/analytics';
 
 interface CartState {
@@ -13,6 +14,7 @@ interface CartState {
   loyaltyPointsUsed: number;
   lastAddedItem: { productId: number; subcategoryId: number } | null;
   activeOrderId: number | null; // For adding items to existing in-store orders
+  lastActivityAt: number; // Timestamp of last cart activity (add/remove/update)
 }
 
 type CartAction =
@@ -41,6 +43,7 @@ const initialState: CartState = {
   loyaltyPointsUsed: 0,
   lastAddedItem: null,
   activeOrderId: null,
+  lastActivityAt: Date.now(),
 };
 
 // Get initial state from localStorage synchronously to prevent flash
@@ -51,7 +54,27 @@ function getInitialState(): CartState {
     const savedCart = localStorage.getItem('taiwanMaamiCart');
     if (savedCart) {
       const parsed = JSON.parse(savedCart);
-      return { ...initialState, ...parsed };
+      const state = { ...initialState, ...parsed };
+      
+      // Check if cart items have expired (4 hours of inactivity)
+      const lastActivity = state.lastActivityAt || 0;
+      const now = Date.now();
+      if (state.items.length > 0 && (now - lastActivity) > CART_EXPIRY_MS) {
+        // Cart has expired — clear items but keep order type and outlet preferences
+        console.log('[Cart] Cart expired after 4 hours of inactivity, clearing items');
+        return {
+          ...state,
+          items: [],
+          discountCode: null,
+          discountAmount: 0,
+          loyaltyPointsUsed: 0,
+          lastAddedItem: null,
+          activeOrderId: null,
+          lastActivityAt: now,
+        };
+      }
+      
+      return state;
     }
   } catch (e) {
     console.error('Failed to load cart from localStorage');
@@ -85,19 +108,21 @@ function cartReducer(state: CartState, action: CartAction): CartState {
           ...state, 
           items: newItems,
           lastAddedItem: { productId: action.payload.productId, subcategoryId: action.payload.subcategoryId },
+          lastActivityAt: Date.now(),
         };
       }
       return { 
         ...state, 
         items: [...state.items, action.payload],
         lastAddedItem: { productId: action.payload.productId, subcategoryId: action.payload.subcategoryId },
+        lastActivityAt: Date.now(),
       };
     }
     case 'REMOVE_ITEM':
-      return { ...state, items: state.items.filter(item => item.id !== action.payload) };
+      return { ...state, items: state.items.filter(item => item.id !== action.payload), lastActivityAt: Date.now() };
     case 'UPDATE_QUANTITY': {
       if (action.payload.quantity <= 0) {
-        return { ...state, items: state.items.filter(item => item.id !== action.payload.id) };
+        return { ...state, items: state.items.filter(item => item.id !== action.payload.id), lastActivityAt: Date.now() };
       }
       return {
         ...state,
@@ -110,10 +135,11 @@ function cartReducer(state: CartState, action: CartAction): CartState {
               }
             : item
         ),
+        lastActivityAt: Date.now(),
       };
     }
     case 'CLEAR_CART':
-      return { ...initialState, orderType: state.orderType };
+      return { ...initialState, orderType: state.orderType, lastActivityAt: Date.now() };
     case 'SET_ORDER_TYPE': {
       // When switching to delivery/pickup, ensure mochi items have minimum quantity of 2
       const newOrderType = action.payload;
@@ -213,6 +239,28 @@ export function CartProvider({ children }: { children: ReactNode }) {
       localStorage.setItem('taiwanMaamiCart', JSON.stringify(state));
     }
   }, [state, isHydrated]);
+
+  // Periodic check: clear expired cart items while the tab is open
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const savedCart = localStorage.getItem('taiwanMaamiCart');
+      if (savedCart) {
+        try {
+          const parsed = JSON.parse(savedCart);
+          const lastActivity = parsed.lastActivityAt || 0;
+          const now = Date.now();
+          if (parsed.items && parsed.items.length > 0 && (now - lastActivity) > CART_EXPIRY_MS) {
+            console.log('[Cart] Cart expired during session, clearing items');
+            dispatch({ type: 'CLEAR_CART' });
+          }
+        } catch (e) {
+          // ignore parse errors
+        }
+      }
+    }, 60_000); // Check every minute
+
+    return () => clearInterval(interval);
+  }, []);
 
   const subtotal = state.items.reduce((sum, item) => sum + item.lineTotal, 0);
   const gst = calculateGst(subtotal);
