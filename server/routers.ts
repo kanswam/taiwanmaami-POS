@@ -6449,18 +6449,41 @@ export const appRouter = router({
         const enriched = await Promise.all(uploads.map(async (u) => {
           // Parse the periodLabel to extract calendar month dates
           // e.g. "February 2026" -> Feb 1 - Feb 28, "January 2026" -> Jan 1 - Jan 31
-          // For partial periods like "mid Feb 2026", fall back to upload dates
+          // For partial periods like "Mid March 2026" or "mid Feb 2026", use 1st to 15th of that month
           let websiteStart = u.periodStart;
           let websiteEnd = u.periodEnd;
-          const monthMatch = u.periodLabel.match(/^(January|February|March|April|May|June|July|August|September|October|November|December)\s+(\d{4})$/i);
-          if (monthMatch) {
-            const monthNames = ['january','february','march','april','may','june','july','august','september','october','november','december'];
-            const monthIdx = monthNames.indexOf(monthMatch[1].toLowerCase());
-            const year = parseInt(monthMatch[2]);
+          const monthNames = ['january','february','march','april','may','june','july','august','september','october','november','december'];
+          const monthAbbrevs: Record<string, string> = { jan: 'january', feb: 'february', mar: 'march', apr: 'april', may: 'may', jun: 'june', jul: 'july', aug: 'august', sep: 'september', oct: 'october', nov: 'november', dec: 'december' };
+          
+          // Match full month: "February 2026"
+          const fullMonthMatch = u.periodLabel.match(/^(January|February|March|April|May|June|July|August|September|October|November|December)\s+(\d{4})$/i);
+          // Match partial/mid month: "Mid March 2026", "mid Feb 2026", "Early Jan 2026"
+          const midMonthMatch = u.periodLabel.match(/^(?:mid|early|first half|1st half)\s+(January|February|March|April|May|June|July|August|September|October|November|December|Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+(\d{4})$/i);
+          
+          if (fullMonthMatch) {
+            const monthIdx = monthNames.indexOf(fullMonthMatch[1].toLowerCase());
+            const year = parseInt(fullMonthMatch[2]);
             if (monthIdx >= 0) {
               websiteStart = new Date(year, monthIdx, 1);
               // Last day of month
               websiteEnd = new Date(year, monthIdx + 1, 0, 23, 59, 59, 999);
+            }
+          } else if (midMonthMatch) {
+            // Resolve abbreviated or full month name
+            const rawMonth = midMonthMatch[1].toLowerCase();
+            const resolvedMonth = monthAbbrevs[rawMonth] || rawMonth;
+            const monthIdx = monthNames.indexOf(resolvedMonth);
+            const year = parseInt(midMonthMatch[2]);
+            if (monthIdx >= 0) {
+              websiteStart = new Date(year, monthIdx, 1);
+              // Mid-month: use the actual periodEnd date but cap to end of month
+              // Use the day from periodEnd if it's within the same month, otherwise use 15th
+              const periodEndDate = new Date(u.periodEnd);
+              if (periodEndDate.getMonth() === monthIdx && periodEndDate.getFullYear() === year) {
+                websiteEnd = new Date(year, monthIdx, periodEndDate.getDate(), 23, 59, 59, 999);
+              } else {
+                websiteEnd = new Date(year, monthIdx, 15, 23, 59, 59, 999);
+              }
             }
           }
           const websiteResult = await dbInstance.select({

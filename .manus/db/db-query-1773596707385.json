@@ -1,0 +1,38 @@
+{
+  "query": "SELECT * FROM delivery_sales_uploads ORDER BY id DESC LIMIT 1;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT * FROM delivery_sales_uploads ORDER BY id DESC LIMIT 1;",
+  "rows": [
+    {
+      "id": "90001",
+      "periodLabel": "Mid March 2026",
+      "periodStart": "2026-02-13 00:00:00",
+      "periodEnd": "2026-03-15 00:00:00",
+      "fileName": "Item_Wise_Sales_Report_2026_03_15_17_39_00.xlsx",
+      "totalOrders": "157",
+      "totalAmount": "12463500",
+      "totalDiscount": "435750",
+      "netSales": "12027750",
+      "totalTax": "611216",
+      "grandTotal": "12833800",
+      "zomatoOrders": "104",
+      "zomatoAmount": "8393900",
+      "swiggyOrders": "53",
+      "swiggyAmount": "4439900",
+      "dineInOrders": "0",
+      "dineInAmount": "0",
+      "cashAmount": "0",
+      "cardAmount": "0",
+      "upiAmount": "0",
+      "swiggyDineoutAmount": "0",
+      "zomatoDineoutAmount": "0",
+      "cgst": "305608",
+      "sgst": "305608",
+      "uploadedBy": "15510360",
+      "createdAt": "2026-03-15 17:40:02"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tperiodLabel\tperiodStart\tperiodEnd\tfileName\ttotalOrders\ttotalAmount\ttotalDiscount\tnetSales\ttotalTax\tgrandTotal\tzomatoOrders\tzomatoAmount\tswiggyOrders\tswiggyAmount\tdineInOrders\tdineInAmount\tcashAmount\tcardAmount\tupiAmount\tswiggyDineoutAmount\tzomatoDineoutAmount\tcgst\tsgst\tuploadedBy\tcreatedAt\n90001\tMid March 2026\t2026-02-13 00:00:00\t2026-03-15 00:00:00\tItem_Wise_Sales_Report_2026_03_15_17_39_00.xlsx\t157\t12463500\t435750\t12027750\t611216\t12833800\t104\t8393900\t53\t4439900\t0\t0\t0\t0\t0\t0\t0\t305608\t305608\t15510360\t2026-03-15 17:40:02\n",
+  "stderr": "",
+  "execution_time_ms": 346
+}

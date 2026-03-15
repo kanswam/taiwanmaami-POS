@@ -2529,3 +2529,6 @@ Orders fixed:
 ## Cookie & Cart Expiry (Mar 14)
 - [x] Implement 4-hour cart expiry (clear cart after 4 hours of inactivity)
 - [x] Reduce session cookie expiry from 1 year to 30 days
+
+## Bug Fixes (Mar 15)
+- [x] Fix analytics dashboard website sales total showing ₹3,13,213 instead of correct ₹1,32,126 for Mid March 2026
