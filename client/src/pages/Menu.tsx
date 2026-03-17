@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { trpc } from '@/lib/trpc';
 import { useCart } from '@/contexts/CartContext';
-import { Search, ShoppingCart, Truck, Store, ChevronRight, ArrowLeft, Home, AlertCircle, MapPin } from 'lucide-react';
+import { Search, ShoppingCart, Truck, Store, ChevronRight, ArrowLeft, Home, AlertCircle, MapPin, Sparkles } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Link } from 'wouter';
 import { formatPrice } from '@shared/types';
@@ -223,6 +223,24 @@ export default function Menu() {
   const renderCategoryCards = () => (
     <div className="space-y-6">
       <h2 className="text-2xl font-bold">Browse Categories</h2>
+      {/* Maami Bot CTA - encourage users to ask for recommendations */}
+      <button
+        onClick={() => {
+          // Find and click the chat widget button
+          const chatBtn = document.querySelector('[aria-label="Open chat assistant"]') as HTMLButtonElement;
+          if (chatBtn) chatBtn.click();
+        }}
+        className="w-full flex items-center gap-3 bg-gradient-to-r from-[#c0392b]/5 to-[#e74c3c]/10 border border-[#c0392b]/20 rounded-xl px-4 py-3 hover:from-[#c0392b]/10 hover:to-[#e74c3c]/15 transition-all group cursor-pointer"
+      >
+        <div className="w-10 h-10 rounded-full bg-[#c0392b]/10 flex items-center justify-center shrink-0 group-hover:bg-[#c0392b]/20 transition-colors">
+          <Sparkles className="w-5 h-5 text-[#c0392b]" />
+        </div>
+        <div className="text-left">
+          <p className="text-sm font-semibold text-foreground">Not sure what to order?</p>
+          <p className="text-xs text-muted-foreground">Ask Maami Bot for personalized recommendations!</p>
+        </div>
+        <ChevronRight className="w-4 h-4 text-[#c0392b] ml-auto shrink-0 group-hover:translate-x-0.5 transition-transform" />
+      </button>
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
         {menuData?.categories.map((category) => {
           // Check if category is available for current order type

@@ -6,6 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Streamdown } from 'streamdown';
+import { useLocation } from 'wouter';
 
 const GREETING_LADY_URL = 'https://files.manuscdn.com/user_upload_by_module/session_file/114675165/cCIiqSZESwdbtugN.png';
 
@@ -21,6 +22,42 @@ const SUGGESTED_PROMPTS = [
   "📍 Store info",
 ];
 
+// Page-specific greeting messages
+function getGreetingForPage(pathname: string): { bubble: string; cta: string } {
+  if (pathname.startsWith('/menu')) {
+    return {
+      bubble: "Not sure what to order? 🤔 I can help you pick the perfect drink!",
+      cta: "Help me choose →",
+    };
+  }
+  if (pathname.startsWith('/locations')) {
+    return {
+      bubble: "Want to know our hours or how to get here? Just ask! 📍",
+      cta: "Ask about locations →",
+    };
+  }
+  if (pathname.startsWith('/events') || pathname.startsWith('/workshops')) {
+    return {
+      bubble: "Curious about our events or workshops? I've got all the details! 🎉",
+      cta: "Tell me more →",
+    };
+  }
+  if (pathname.startsWith('/wholesale')) {
+    return {
+      bubble: "Interested in wholesale orders? I can help with pricing and bulk options! 📦",
+      cta: "Ask about wholesale →",
+    };
+  }
+  return {
+    bubble: "Hi there! 👋 Need help with our menu or ordering?",
+    cta: "Chat with Maami Bot →",
+  };
+}
+
+// Session storage keys
+const FIRST_VISIT_KEY = 'maami_bot_first_visit_done';
+const SESSION_GREETING_KEY = 'maami_bot_session_greeting_shown';
+
 export function VoiceChatWidget() {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -29,11 +66,18 @@ export function VoiceChatWidget() {
   const [hasNewMessage, setHasNewMessage] = useState(false);
   const [hasInteracted, setHasInteracted] = useState(false);
   const [showGreeting, setShowGreeting] = useState(false);
+  const [autoOpened, setAutoOpened] = useState(false);
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const pulseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const greetingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const autoOpenTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const greetingDismissTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const [location] = useLocation();
+
+  // Get page-specific greeting
+  const greeting = getGreetingForPage(location);
 
   // tRPC mutation
   const textChatMutation = trpc.chatbot.chat.useMutation();
@@ -55,23 +99,56 @@ export function VoiceChatWidget() {
     }
   }, [messages.length, scrollToBottom]);
 
-  // Show greeting tooltip after 5 seconds
+  // Auto-open chat for first-time visitors after 5 seconds
   useEffect(() => {
-    if (!hasInteracted && !isOpen) {
-      greetingTimerRef.current = setTimeout(() => setShowGreeting(true), 5000);
-      pulseTimerRef.current = setTimeout(() => setHasNewMessage(true), 10000);
+    const hasVisitedBefore = localStorage.getItem(FIRST_VISIT_KEY);
+    if (!hasVisitedBefore && !hasInteracted && !isOpen) {
+      autoOpenTimerRef.current = setTimeout(() => {
+        setIsOpen(true);
+        setAutoOpened(true);
+        setMessages([{
+          role: 'assistant',
+          content: "Welcome to Taiwan Maami! 🧋✨ I'm **Maami Bot**, your personal ordering assistant.\n\nI can help you with:\n- 🍵 **Menu recommendations** — tell me what you like!\n- 📍 **Store hours & locations**\n- 🎉 **Events & workshops**\n- 🛵 **Delivery & pickup info**\n\nWhat can I help you with today?",
+        }]);
+        localStorage.setItem(FIRST_VISIT_KEY, 'true');
+      }, 5000);
+    }
+    return () => {
+      if (autoOpenTimerRef.current) clearTimeout(autoOpenTimerRef.current);
+    };
+  }, [hasInteracted, isOpen]);
+
+  // Show greeting bubble for returning visitors (per session, per page change)
+  useEffect(() => {
+    const sessionGreetingShown = sessionStorage.getItem(SESSION_GREETING_KEY + location);
+    if (!hasInteracted && !isOpen && !autoOpened && !sessionGreetingShown) {
+      // Show greeting after 3 seconds
+      greetingTimerRef.current = setTimeout(() => {
+        setShowGreeting(true);
+        sessionStorage.setItem(SESSION_GREETING_KEY + location, 'true');
+      }, 3000);
+
+      // Show pulse notification after 8 seconds
+      pulseTimerRef.current = setTimeout(() => {
+        setHasNewMessage(true);
+      }, 8000);
     }
     return () => {
       if (pulseTimerRef.current) clearTimeout(pulseTimerRef.current);
       if (greetingTimerRef.current) clearTimeout(greetingTimerRef.current);
     };
-  }, [hasInteracted, isOpen]);
+  }, [hasInteracted, isOpen, autoOpened, location]);
 
-  // Dismiss greeting on scroll
+  // Auto-dismiss greeting after 10 seconds (but don't dismiss on scroll — keep it visible)
   useEffect(() => {
-    const handleScroll = () => { if (showGreeting) setShowGreeting(false); };
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
+    if (showGreeting) {
+      greetingDismissTimerRef.current = setTimeout(() => {
+        setShowGreeting(false);
+      }, 10000);
+    }
+    return () => {
+      if (greetingDismissTimerRef.current) clearTimeout(greetingDismissTimerRef.current);
+    };
   }, [showGreeting]);
 
   // Focus input when chat opens
@@ -139,7 +216,9 @@ export function VoiceChatWidget() {
   const toggleChat = useCallback(() => {
     setIsOpen(prev => !prev);
     setHasNewMessage(false);
-    if (!isOpen) setShowGreeting(false);
+    if (!isOpen) {
+      setShowGreeting(false);
+    }
   }, [isOpen]);
 
   return (
@@ -279,33 +358,39 @@ export function VoiceChatWidget() {
                 type="submit"
                 size="icon"
                 disabled={!textInput.trim() || isProcessing}
-                className="shrink-0 h-9 w-9 bg-[#c0392b] hover:bg-[#a93226]"
+                className="shrink-0 h-9 w-9 bg-[#c0392b] hover:bg-[#a93226] text-white rounded-xl"
               >
-                <Send className="w-4 h-4" />
+                {isProcessing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
               </Button>
             </form>
           </div>
         </div>
       </div>
 
-      {/* Greeting Speech Bubble */}
+      {/* Greeting Speech Bubble - Page-contextual, persistent for 10s */}
       {showGreeting && !isOpen && (
         <div
           className={cn(
-            'fixed bottom-[120px] right-4 sm:bottom-[140px] sm:right-6 z-50',
-            'animate-in fade-in slide-in-from-bottom-2 duration-500'
+            'fixed bottom-[130px] right-4 sm:bottom-[150px] sm:right-6 z-50',
+            'animate-in fade-in slide-in-from-bottom-2 duration-500',
+            'cursor-pointer'
           )}
+          onClick={toggleChat}
         >
-          <div className="bg-white rounded-2xl shadow-xl px-4 py-3 max-w-[220px] relative border border-gray-100">
+          <div className="bg-white rounded-2xl shadow-xl px-4 py-3 max-w-[260px] relative border border-gray-100">
             <p className="text-sm text-gray-800 font-medium leading-snug">
-              Hi there! 👋 Need help with our menu or ordering?
+              {greeting.bubble}
             </p>
+            <p className="text-xs text-[#c0392b] font-semibold mt-1.5">
+              {greeting.cta}
+            </p>
+            {/* Speech bubble tail */}
             <div className="absolute -bottom-2 right-8 w-4 h-4 bg-white border-r border-b border-gray-100 transform rotate-45" />
           </div>
         </div>
       )}
 
-      {/* Floating Chat Button */}
+      {/* Floating Chat Button - Larger with visible label on ALL screens */}
       <button
         onClick={toggleChat}
         className={cn(
@@ -313,7 +398,6 @@ export function VoiceChatWidget() {
           'transition-all duration-300 ease-in-out',
           'hover:scale-105 active:scale-95',
           'focus:outline-none focus-visible:ring-2 focus-visible:ring-[#c0392b] focus-visible:ring-offset-2',
-          isOpen ? 'w-14 h-14' : 'w-[56px] h-[70px] sm:w-[64px] sm:h-[80px]'
         )}
         aria-label={isOpen ? 'Close chat' : 'Open chat assistant'}
       >
@@ -322,35 +406,61 @@ export function VoiceChatWidget() {
             <X className="w-6 h-6 text-white" />
           </div>
         ) : (
-          <div className="relative group">
-            <div className="chat-lady-bounce">
+          <div className="relative group flex items-end gap-1.5">
+            {/* "Ask Maami" label pill - NOW visible on ALL screens including mobile */}
+            <div className="flex items-center gap-1.5 bg-white/95 backdrop-blur-sm rounded-full px-3 py-1.5 shadow-lg border border-gray-200 mb-3 chat-label-pulse">
+              <Sparkles className="w-3.5 h-3.5 text-[#c0392b]" />
+              <span className="text-xs font-semibold text-gray-800 whitespace-nowrap">Ask Maami</span>
+            </div>
+
+            {/* Animated greeting lady image - larger on both mobile and desktop */}
+            <div className="chat-lady-bounce relative">
               <img
                 src={GREETING_LADY_URL}
-                alt="Chat with Maami"
-                className="w-[56px] h-[70px] sm:w-[64px] sm:h-[80px] object-contain drop-shadow-lg transition-transform duration-300 group-hover:scale-110"
+                alt="Chat with Maami Bot"
+                className="w-[68px] h-[85px] sm:w-[76px] sm:h-[95px] object-contain drop-shadow-lg transition-transform duration-300 group-hover:scale-110"
                 loading="eager"
               />
+              
+              {/* Pulsing ring behind the image */}
+              <div className="absolute inset-0 -z-10 rounded-full bg-[#c0392b]/15 blur-xl scale-150 chat-glow" />
             </div>
+
+            {/* Notification dot - larger and more visible */}
             {hasNewMessage && (
-              <span className="absolute -top-1 -right-1 w-5 h-5 bg-green-500 rounded-full border-2 border-white animate-pulse flex items-center justify-center">
-                <span className="text-white text-[10px] font-bold">1</span>
+              <span className="absolute -top-1 right-0 w-6 h-6 bg-green-500 rounded-full border-2 border-white animate-pulse flex items-center justify-center shadow-md">
+                <span className="text-white text-[11px] font-bold">1</span>
               </span>
             )}
           </div>
         )}
       </button>
 
-      {/* Animations */}
+      {/* Inline styles for animations */}
       <style>{`
         @keyframes chatLadyBounce {
           0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-6px); }
+          50% { transform: translateY(-8px); }
         }
         .chat-lady-bounce {
-          animation: chatLadyBounce 3s ease-in-out infinite;
+          animation: chatLadyBounce 2.5s ease-in-out infinite;
         }
         .chat-lady-bounce:hover {
           animation-play-state: paused;
+        }
+        @keyframes chatGlow {
+          0%, 100% { opacity: 0.3; transform: scale(1.5); }
+          50% { opacity: 0.6; transform: scale(1.8); }
+        }
+        .chat-glow {
+          animation: chatGlow 3s ease-in-out infinite;
+        }
+        @keyframes labelPulse {
+          0%, 100% { box-shadow: 0 0 0 0 rgba(192, 57, 43, 0.3); }
+          50% { box-shadow: 0 0 0 6px rgba(192, 57, 43, 0); }
+        }
+        .chat-label-pulse {
+          animation: labelPulse 2s ease-in-out infinite;
         }
       `}</style>
     </>

@@ -2536,3 +2536,6 @@ Orders fixed:
 ## Google Customer Reviews Integration (Mar 17)
 - [x] Add Store Widget script to index.html head (all pages)
 - [x] Add Survey Opt-in useEffect to Order Confirmation component
+
+## Maami Bot Prominence (Mar 17)
+- [x] Make Maami Bot more prominent and encourage customer usage
