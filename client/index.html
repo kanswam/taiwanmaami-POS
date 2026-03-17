@@ -309,6 +309,24 @@
       }
     }
     </script>
+
+    <!-- BEGIN Google Customer Reviews Store Widget -->
+    <script id="merchantWidgetScript"
+            src="https://www.gstatic.com/shopping/merchant/merchantwidget.js"
+            defer>
+    </script>
+    <script type="text/javascript">
+      document.getElementById('merchantWidgetScript').addEventListener('load', function () {
+        merchantwidget.start({
+          position: 'RIGHT_BOTTOM',
+          sideMargin: 20,
+          bottomMargin: 20,
+          mobileSideMargin: 16,
+          mobileBottomMargin: 70
+        });
+      });
+    </script>
+    <!-- END Google Customer Reviews Store Widget -->
   </head>
 
   <body>

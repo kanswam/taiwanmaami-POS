@@ -653,7 +653,18 @@ export const appRouter = router({
         if (!order) throw new TRPCError({ code: 'NOT_FOUND' });
         
         const items = await db.getOrderItems(order.id);
-        return { order, items };
+        
+        // Look up customer email from users table for Google Customer Reviews
+        let customerEmail: string | null = null;
+        if (order.userId) {
+          const dbInstance = await db.getDb();
+          if (dbInstance) {
+            const [user] = await dbInstance.select({ email: users.email }).from(users).where(eq(users.id, order.userId));
+            customerEmail = user?.email || null;
+          }
+        }
+        
+        return { order: { ...order, customerEmail }, items };
       }),
 
     getUserOrders: protectedProcedure.query(async ({ ctx }) => {

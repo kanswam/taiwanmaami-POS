@@ -2532,3 +2532,7 @@ Orders fixed:
 
 ## Bug Fixes (Mar 15)
 - [x] Fix analytics dashboard website sales total showing ₹3,13,213 instead of correct ₹1,32,126 for Mid March 2026
+
+## Google Customer Reviews Integration (Mar 17)
+- [x] Add Store Widget script to index.html head (all pages)
+- [x] Add Survey Opt-in useEffect to Order Confirmation component

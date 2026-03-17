@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useParams, Link } from 'wouter';
 import { useState } from 'react';
 import { Header } from '@/components/Header';
@@ -21,9 +21,51 @@ export default function OrderConfirmation() {
   );
   const order = data?.order;
   const utils = trpc.useUtils();
-  
+  const googleReviewScriptLoaded = useRef(false);
 
-  
+  // Google Customer Reviews - Survey Opt-in
+  useEffect(() => {
+    if (!order || !order.customerEmail || googleReviewScriptLoaded.current) return;
+    googleReviewScriptLoaded.current = true;
+
+    // Calculate estimated delivery date
+    // Delivery orders: today + 1 day; Pickup/Dine-in: today (same day)
+    const today = new Date();
+    const deliveryDate = new Date(today);
+    if (order.orderType === 'delivery') {
+      deliveryDate.setDate(today.getDate() + 1);
+    }
+    const estimatedDeliveryDate = deliveryDate.toISOString().split('T')[0]; // YYYY-MM-DD
+
+    // Define the render callback before loading the script
+    (window as any).renderOptIn = function () {
+      (window as any).gapi.load('surveyoptin', function () {
+        (window as any).gapi.surveyoptin.render({
+          merchant_id: 5406585787,
+          order_id: order.orderNumber,
+          email: order.customerEmail,
+          delivery_country: 'IN',
+          estimated_delivery_date: estimatedDeliveryDate,
+          opt_in_style: 'BOTTOM_RIGHT_DIALOG',
+        });
+      });
+    };
+
+    // Dynamically load the Google platform script
+    const script = document.createElement('script');
+    script.src = 'https://apis.google.com/js/platform.js?onload=renderOptIn';
+    script.async = true;
+    script.defer = true;
+    document.body.appendChild(script);
+
+    return () => {
+      if (script.parentNode) {
+        script.parentNode.removeChild(script);
+      }
+      delete (window as any).renderOptIn;
+    };
+  }, [order]);
+
   // Fetch company details from site settings
   const { data: siteSettings } = trpc.admin.getSiteSettings.useQuery();
   const companyName = siteSettings?.find((s: any) => s.key === 'company_name')?.value || 'Thamarai Foods and Trading Private Limited';
