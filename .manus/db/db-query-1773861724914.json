@@ -1,0 +1,17 @@
+{
+  "query": "SELECT id, name, stampCount, lifetimeStamps, lastStampDate FROM users WHERE id = 25320649;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT id, name, stampCount, lifetimeStamps, lastStampDate FROM users WHERE id = 25320649;",
+  "rows": [
+    {
+      "id": "25320649",
+      "name": "Deepi selvan",
+      "stampCount": "0",
+      "lifetimeStamps": "0",
+      "lastStampDate": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\tstampCount\tlifetimeStamps\tlastStampDate\n25320649\tDeepi selvan\t0\t0\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 447
+}

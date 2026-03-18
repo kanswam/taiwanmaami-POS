@@ -318,7 +318,7 @@ export default function Profile() {
             <div className="space-y-4">
               <div className="p-4 bg-pink-50 rounded-lg border border-pink-100">
                 <p className="text-sm text-pink-700">
-                  🎂 Share your birthday and get a <strong>FREE large boba drink</strong> (worth over ₹450) with any food or drink purchase during your birthday week!
+                  🎂 Share your birthday and get a <strong>FREE large boba drink</strong> (worth over ₹450) when you order at least one other item during your birthday week!
                 </p>
               </div>
               <div className="grid grid-cols-2 gap-4">
@@ -395,7 +395,7 @@ export default function Profile() {
               ) : (
                 <div className="p-4 bg-muted/50 rounded-lg text-center">
                   <Cake className="w-8 h-8 mx-auto text-muted-foreground mb-2" />
-                  <p className="text-muted-foreground">Add your birthday to get a free boba treat!</p>
+                  <p className="text-muted-foreground">Add your birthday to get a free boba treat when you order!</p>
                 </div>
               )}
             </div>

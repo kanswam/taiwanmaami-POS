@@ -1,0 +1,20 @@
+{
+  "query": "SELECT id, name, phone, email, stampCount, lifetimeStamps, birthdayCodeUsedYear, role FROM users WHERE phone = '7358653329' OR name LIKE '%Deepi%';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT id, name, phone, email, stampCount, lifetimeStamps, birthdayCodeUsedYear, role FROM users WHERE phone = '7358653329' OR name LIKE '%Deepi%';",
+  "rows": [
+    {
+      "id": "25320649",
+      "name": "Deepi selvan",
+      "phone": "NULL",
+      "email": "deepiselvan1799@gmail.com",
+      "stampCount": "1",
+      "lifetimeStamps": "1",
+      "birthdayCodeUsedYear": "2026",
+      "role": "customer"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\tphone\temail\tstampCount\tlifetimeStamps\tbirthdayCodeUsedYear\trole\n25320649\tDeepi selvan\tNULL\tdeepiselvan1799@gmail.com\t1\t1\t2026\tcustomer\n",
+  "stderr": "",
+  "execution_time_ms": 4592
+}

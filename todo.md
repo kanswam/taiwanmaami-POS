@@ -2539,3 +2539,8 @@ Orders fixed:
 
 ## Maami Bot Prominence (Mar 17)
 - [x] Make Maami Bot more prominent and encourage customer usage
+
+## Birthday Free Drink Abuse Fix (Mar 18)
+- [x] Remove Deepi selvan's unearned stamp (1/10 stamps from ₹0 order)
+- [x] Fix birthday drink to require at least one paid food item to qualify
+- [x] Prevent loyalty stamps from being awarded on zero-value orders

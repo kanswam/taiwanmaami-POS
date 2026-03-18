@@ -313,35 +313,43 @@ export const appRouter = router({
         if (ctx.user?.id && discountAmount === 0) {
           // Only apply birthday free drink if no other discount is already applied
           try {
-            const [birthdayUser] = await dbInstance!.select({
-              birthMonth: users.birthMonth,
-              birthDay: users.birthDay,
-              birthdayCodeUsedYear: users.birthdayCodeUsedYear,
-            }).from(users).where(eq(users.id, ctx.user.id));
+            // POLICY: Customer must order at least 2 items to qualify for birthday free drink
+            // This prevents abuse where someone registers just to claim a free drink without buying anything
+            const totalItemQuantity = input.items.reduce((sum, item) => sum + (item.quantity || 1), 0);
+            
+            if (totalItemQuantity >= 2) {
+              const [birthdayUser] = await dbInstance!.select({
+                birthMonth: users.birthMonth,
+                birthDay: users.birthDay,
+                birthdayCodeUsedYear: users.birthdayCodeUsedYear,
+              }).from(users).where(eq(users.id, ctx.user.id));
 
-            if (birthdayUser?.birthMonth && birthdayUser?.birthDay) {
-              const now = new Date();
-              const currentYear = now.getFullYear();
-              
-              // Check if birthday free drink already used this year
-              if (birthdayUser.birthdayCodeUsedYear !== currentYear) {
-                // Check if today is within the birthday week (3 days before to 3 days after)
-                const birthdayThisYear = new Date(currentYear, birthdayUser.birthMonth - 1, birthdayUser.birthDay);
-                const diffMs = now.getTime() - birthdayThisYear.getTime();
-                const diffDays = diffMs / (1000 * 60 * 60 * 24);
+              if (birthdayUser?.birthMonth && birthdayUser?.birthDay) {
+                const now = new Date();
+                const currentYear = now.getFullYear();
                 
-                if (diffDays >= -3 && diffDays <= 3) {
-                  // Birthday week! Find the most expensive item to make free
-                  const mostExpensiveItem = input.items.reduce((max, item) => 
-                    item.lineTotal > max.lineTotal ? item : max, input.items[0]);
+                // Check if birthday free drink already used this year
+                if (birthdayUser.birthdayCodeUsedYear !== currentYear) {
+                  // Check if today is within the birthday week (3 days before to 3 days after)
+                  const birthdayThisYear = new Date(currentYear, birthdayUser.birthMonth - 1, birthdayUser.birthDay);
+                  const diffMs = now.getTime() - birthdayThisYear.getTime();
+                  const diffDays = diffMs / (1000 * 60 * 60 * 24);
                   
-                  if (mostExpensiveItem) {
-                    discountAmount = mostExpensiveItem.lineTotal;
-                    birthdayFreeApplied = true;
-                    console.log(`[Order] Birthday free drink applied for user ${ctx.user.id}: ${mostExpensiveItem.productName} (₹${mostExpensiveItem.lineTotal / 100})`);
+                  if (diffDays >= -3 && diffDays <= 3) {
+                    // Birthday week! Find the most expensive item to make free
+                    const mostExpensiveItem = input.items.reduce((max, item) => 
+                      item.lineTotal > max.lineTotal ? item : max, input.items[0]);
+                    
+                    if (mostExpensiveItem) {
+                      discountAmount = mostExpensiveItem.lineTotal;
+                      birthdayFreeApplied = true;
+                      console.log(`[Order] Birthday free drink applied for user ${ctx.user.id}: ${mostExpensiveItem.productName} (₹${mostExpensiveItem.lineTotal / 100})`);
+                    }
                   }
                 }
               }
+            } else {
+              console.log(`[Order] Birthday free drink skipped for user ${ctx.user?.id}: requires at least 2 items, got ${totalItemQuantity}`);
             }
           } catch (bdErr) {
             console.error('Birthday check failed:', bdErr);
@@ -797,6 +805,10 @@ export const appRouter = router({
           // Staff and admin accounts should not earn stamps
           if (user?.role === 'staff' || user?.role === 'admin') {
             // Skip stamp awarding for staff/admin
+          } else if (orderTotal <= 0) {
+            // POLICY: Do not award stamps (including welcome stamps) on zero-value orders
+            // This prevents gaming via birthday-only or fully-discounted orders
+            console.log(`[Order] Stamps skipped for order #${order.orderNumber}: zero-value order (₹${orderTotal / 100})`);
           } else {
           
           const isFirstOrder = (user?.lifetimeStamps || 0) === 0;
