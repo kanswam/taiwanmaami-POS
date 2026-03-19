@@ -1,0 +1,9 @@
+{
+  "query": "CREATE TABLE IF NOT EXISTS `partner_config` (\n\t`id` int AUTO_INCREMENT NOT NULL,\n\t`configKey` varchar(100) NOT NULL,\n\t`configValue` text NOT NULL,\n\t`description` text,\n\t`updatedAt` timestamp NOT NULL DEFAULT (now()) ON UPDATE CURRENT_TIMESTAMP,\n\t`updatedBy` int,\n\tCONSTRAINT `partner_config_id` PRIMARY KEY(`id`),\n\tCONSTRAINT `partner_config_configKey_unique` UNIQUE(`configKey`)\n);\nALTER TABLE `orders` ADD COLUMN IF NOT EXISTS `partnerBenefitAmount` int DEFAULT 0 NOT NULL;\nALTER TABLE `orders` ADD COLUMN IF NOT EXISTS `partnerSubscriptionId` int",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute CREATE TABLE IF NOT EXISTS `partner_config` (\n\t`id` int AUTO_INCREMENT NOT NULL,\n\t`configKey` varchar(100) NOT NULL,\n\t`configValue` text NOT NULL,\n\t`description` text,\n\t`updatedAt` timestamp NOT NULL DEFAULT (now()) ON UPDATE CURRENT_TIMESTAMP,\n\t`updatedBy` int,\n\tCONSTRAINT `partner_config_id` PRIMARY KEY(`id`),\n\tCONSTRAINT `partner_config_configKey_unique` UNIQUE(`configKey`)\n);\nALTER TABLE `orders` ADD COLUMN IF NOT EXISTS `partnerBenefitAmount` int DEFAULT 0 NOT NULL;\nALTER TABLE `orders` ADD COLUMN IF NOT EXISTS `partnerSubscriptionId` int",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 1192
+}

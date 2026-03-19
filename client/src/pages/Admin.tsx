@@ -19,7 +19,7 @@ import {
   Plus, Edit, Trash2, ImageIcon, RefreshCw, Check, X, Search,
   ChevronDown, ChevronUp, Eye, EyeOff, Star, MessageSquare, Reply, Printer,
   ClipboardList, RotateCcw, History, Filter, BarChart3, UtensilsCrossed, AlertCircle, DollarSign, CreditCard, Users,
-  Settings, Layers, FileText, TrendingUp, Calendar, Ticket, Mail, Phone, MapPin, Clock, UserCheck, BookOpen, GitMerge, ArrowRight, AlertTriangle, Download, Bot
+  Settings, Layers, FileText, TrendingUp, Calendar, Ticket, Mail, Phone, MapPin, Clock, UserCheck, BookOpen, GitMerge, ArrowRight, AlertTriangle, Download, Bot, Crown
 } from 'lucide-react';
 import { toast } from 'sonner';
 import {
@@ -305,6 +305,9 @@ export default function Admin() {
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => navigate('/admin/wholesale')}>
                   <Package className="w-4 h-4 mr-2" /> Wholesale Portal
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate('/admin/partners')}>
+                  <Crown className="w-4 h-4 mr-2" /> Partner Programme
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

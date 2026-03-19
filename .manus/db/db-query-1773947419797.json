@@ -1,0 +1,9 @@
+{
+  "query": "CREATE TABLE IF NOT EXISTS `partner_benefits_log` (\n\t`id` int AUTO_INCREMENT NOT NULL,\n\t`subscriptionId` int NOT NULL,\n\t`userId` int NOT NULL,\n\t`orderId` int NOT NULL,\n\t`orderNumber` varchar(20) NOT NULL,\n\t`outletId` int NOT NULL,\n\t`benefitType` enum('free_biang_biang','free_large_tea','tea_discount','maami_rupee_credit') NOT NULL,\n\t`benefitAmount` int NOT NULL,\n\t`itemName` varchar(200),\n\t`itemOriginalPrice` int,\n\t`discountPercent` int,\n\t`teaItemsCount` int,\n\t`createdAt` timestamp NOT NULL DEFAULT (now()),\n\tCONSTRAINT `partner_benefits_log_id` PRIMARY KEY(`id`)\n)",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute CREATE TABLE IF NOT EXISTS `partner_benefits_log` (\n\t`id` int AUTO_INCREMENT NOT NULL,\n\t`subscriptionId` int NOT NULL,\n\t`userId` int NOT NULL,\n\t`orderId` int NOT NULL,\n\t`orderNumber` varchar(20) NOT NULL,\n\t`outletId` int NOT NULL,\n\t`benefitType` enum('free_biang_biang','free_large_tea','tea_discount','maami_rupee_credit') NOT NULL,\n\t`benefitAmount` int NOT NULL,\n\t`itemName` varchar(200),\n\t`itemOriginalPrice` int,\n\t`discountPercent` int,\n\t`teaItemsCount` int,\n\t`createdAt` timestamp NOT NULL DEFAULT (now()),\n\tCONSTRAINT `partner_benefits_log_id` PRIMARY KEY(`id`)\n)",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 453
+}

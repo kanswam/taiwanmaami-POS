@@ -232,6 +232,9 @@ export const orders = mysqlTable("orders", {
   paymentMethod: mysqlEnum("paymentMethod", ["cash", "upi", "card", "razorpay", "swiggy_dineout", "zomato_dineout", "eazydiner", "birthday_gift", "complimentary", "other"]),
   // Payment proof screenshot URL (for non-cash payments)
   paymentProofUrl: text("paymentProofUrl"),
+  // Partner programme benefit tracking
+  partnerBenefitAmount: int("partnerBenefitAmount").default(0).notNull(), // Total Partner benefit discount (paise)
+  partnerSubscriptionId: int("partnerSubscriptionId"), // FK to partner_subscriptions if Partner benefits applied
   refundAmount: int("refundAmount").default(0).notNull(),
   refundMethod: mysqlEnum("refundMethod", ["store_credit", "original_payment", "none"]).default("none"),
   refundReason: text("refundReason"),
@@ -1272,3 +1275,104 @@ export const chatMessages = mysqlTable("chat_messages", {
 
 export type ChatMessage = typeof chatMessages.$inferSelect;
 export type InsertChatMessage = typeof chatMessages.$inferInsert;
+
+
+// =============================================
+// MAAMI PARTNER PROGRAMME
+// =============================================
+
+// Partner Subscriptions - tracks who is a Partner and their subscription status
+export const partnerSubscriptions = mysqlTable("partner_subscriptions", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(), // FK to users.id
+  // Subscription tier
+  tier: mysqlEnum("tier", ["founding", "regular"]).notNull(),
+  // Status
+  status: mysqlEnum("status", ["active", "expired", "cancelled", "paused"]).default("active").notNull(),
+  // Pricing (in paise) - snapshot at time of subscription
+  amountPaid: int("amountPaid").notNull(), // Amount paid for this subscription period
+  // Razorpay subscription tracking
+  razorpaySubscriptionId: varchar("razorpaySubscriptionId", { length: 100 }),
+  razorpayPaymentId: varchar("razorpayPaymentId", { length: 100 }), // Initial payment
+  // Referral
+  referralCode: varchar("referralCode", { length: 20 }).notNull().unique(), // Unique code for this partner to share
+  referredByCode: varchar("referredByCode", { length: 20 }), // Code of partner who referred this user
+  // Dates
+  startDate: timestamp("startDate").notNull(),
+  endDate: timestamp("endDate").notNull(), // 1 year from start
+  // Renewal tracking
+  isAutoRenew: boolean("isAutoRenew").default(true).notNull(),
+  renewalReminderSent: boolean("renewalReminderSent").default(false).notNull(),
+  // Metadata
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  cancelledAt: timestamp("cancelledAt"),
+  cancellationReason: text("cancellationReason"),
+});
+
+export type PartnerSubscription = typeof partnerSubscriptions.$inferSelect;
+export type InsertPartnerSubscription = typeof partnerSubscriptions.$inferInsert;
+
+// Partner Referrals - tracks referral conversions and rewards
+export const partnerReferrals = mysqlTable("partner_referrals", {
+  id: int("id").autoincrement().primaryKey(),
+  referrerUserId: int("referrerUserId").notNull(), // Partner who shared the code
+  referrerSubscriptionId: int("referrerSubscriptionId").notNull(), // FK to partner_subscriptions
+  referredUserId: int("referredUserId").notNull(), // New user who signed up
+  referredSubscriptionId: int("referredSubscriptionId"), // FK to their new subscription (null until they subscribe)
+  referralCode: varchar("referralCode", { length: 20 }).notNull(), // The code that was used
+  // Reward tracking
+  referrerRewardAmount: int("referrerRewardAmount").default(0).notNull(), // Maami Rupees (paise) awarded to referrer
+  referredRewardAmount: int("referredRewardAmount").default(0).notNull(), // Maami Rupees (paise) awarded to referred
+  referrerRewardCredited: boolean("referrerRewardCredited").default(false).notNull(),
+  referredRewardCredited: boolean("referredRewardCredited").default(false).notNull(),
+  // Status
+  status: mysqlEnum("status", ["clicked", "registered", "subscribed", "rewarded"]).default("clicked").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type PartnerReferral = typeof partnerReferrals.$inferSelect;
+export type InsertPartnerReferral = typeof partnerReferrals.$inferInsert;
+
+// Partner Benefits Log - audit trail of every benefit used per order
+export const partnerBenefitsLog = mysqlTable("partner_benefits_log", {
+  id: int("id").autoincrement().primaryKey(),
+  subscriptionId: int("subscriptionId").notNull(), // FK to partner_subscriptions
+  userId: int("userId").notNull(),
+  orderId: int("orderId").notNull(), // FK to orders
+  orderNumber: varchar("orderNumber", { length: 20 }).notNull(),
+  outletId: int("outletId").notNull(), // Which outlet
+  // Benefit details
+  benefitType: mysqlEnum("benefitType", [
+    "free_biang_biang",     // Free Biang Biang Noodles at T.Nagar
+    "free_large_tea",       // Free Large Bubble Tea at Palladium
+    "tea_discount",         // 10-15% off tea items
+    "maami_rupee_credit",   // Store credit from referral rewards
+  ]).notNull(),
+  // Amount saved (in paise)
+  benefitAmount: int("benefitAmount").notNull(), // How much the partner saved
+  // Item details (for free item benefits)
+  itemName: varchar("itemName", { length: 200 }), // e.g., "Biang Biang Noodles" or "Taro Milk Tea - Large"
+  itemOriginalPrice: int("itemOriginalPrice"), // Original price before discount (paise)
+  // Tea discount details
+  discountPercent: int("discountPercent"), // e.g., 15 for 15%
+  teaItemsCount: int("teaItemsCount"), // Number of tea items discounted
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type PartnerBenefitLog = typeof partnerBenefitsLog.$inferSelect;
+export type InsertPartnerBenefitLog = typeof partnerBenefitsLog.$inferInsert;
+
+// Partner Programme Config - admin-configurable settings
+export const partnerConfig = mysqlTable("partner_config", {
+  id: int("id").autoincrement().primaryKey(),
+  configKey: varchar("configKey", { length: 100 }).notNull().unique(),
+  configValue: text("configValue").notNull(),
+  description: text("description"),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  updatedBy: int("updatedBy"), // Admin user ID
+});
+
+export type PartnerConfig = typeof partnerConfig.$inferSelect;
+export type InsertPartnerConfig = typeof partnerConfig.$inferInsert;

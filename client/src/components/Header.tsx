@@ -22,6 +22,7 @@ export function Header() {
     { href: '/events', label: 'Events' },
     { href: '/wholesale', label: 'Wholesale' },
     { href: '/blog', label: 'Blog' },
+    { href: '/partner', label: 'Partner' },
   ];
 
   const isActive = (href: string) => location === href;

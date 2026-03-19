@@ -20,6 +20,8 @@ import { calculateDeliveryCharge } from './deliveryCharge';
 import { transcribeAudio } from './_core/voiceTranscription';
 import { textToSpeech, getVoiceForLanguage } from './tts';
 import { storagePut } from './storage';
+import { partnerRouter, calculatePartnerBenefits, getActivePartnerSubscription } from './partnerRouter';
+import { partnerBenefitsLog, partnerSubscriptions } from '../drizzle/schema';
 
 // Admin procedure - only allows admin role
 const adminProcedure = protectedProcedure.use(({ ctx, next }) => {
@@ -357,10 +359,51 @@ export const appRouter = router({
           }
         }
 
+        // =============================================
+        // PARTNER PROGRAMME BENEFITS
+        // =============================================
+        let partnerBenefitAmount = 0;
+        let partnerSubId: number | null = null;
+        let partnerBenefitsToLog: Array<{
+          type: 'free_biang_biang' | 'free_large_tea' | 'tea_discount';
+          amount: number;
+          itemName?: string;
+          itemOriginalPrice?: number;
+          discountPercent?: number;
+          teaItemsCount?: number;
+        }> = [];
+
+        if (ctx.user?.id) {
+          try {
+            const outletId = input.orderType === 'delivery' ? 2 : (input.outletId || 2);
+            const partnerResult = await calculatePartnerBenefits(
+              ctx.user.id,
+              outletId,
+              input.items.map(item => ({
+                productId: item.productId,
+                productName: item.productName,
+                lineTotal: item.lineTotal,
+                size: item.size || null,
+                quantity: item.quantity,
+              }))
+            );
+
+            if (partnerResult && partnerResult.totalBenefitAmount > 0) {
+              partnerBenefitAmount = partnerResult.totalBenefitAmount;
+              partnerSubId = partnerResult.subscription.id;
+              partnerBenefitsToLog = partnerResult.benefits;
+              console.log(`[Order] Partner benefits applied for user ${ctx.user.id}: ₹${partnerBenefitAmount / 100} (${partnerResult.benefits.map(b => b.type).join(', ')})`);
+            }
+          } catch (partnerErr) {
+            console.error('Partner benefit calculation failed:', partnerErr);
+            // Don't fail the order - partner benefits are non-critical
+          }
+        }
+
         // Recalculate GST on net amount after discount
-        const netAfterDiscount = subtotal - discountAmount;
-        const finalGst = birthdayFreeApplied ? calculateGst(netAfterDiscount) : gst;
-        const totalAmount = subtotal + finalGst.total + deliveryCharge - discountAmount - input.loyaltyPointsUsed;
+        const netAfterDiscount = subtotal - discountAmount - partnerBenefitAmount;
+        const finalGst = (birthdayFreeApplied || partnerBenefitAmount > 0) ? calculateGst(netAfterDiscount) : gst;
+        const totalAmount = subtotal + finalGst.total + deliveryCharge - discountAmount - partnerBenefitAmount - input.loyaltyPointsUsed;
         
         // Generate sequential 5-digit order number
         const [maxOrderResult] = await dbInstance!.execute(sql`SELECT MAX(CAST(orderNumber AS UNSIGNED)) as maxNum FROM orders WHERE orderNumber REGEXP '^[0-9]+$'`);
@@ -392,6 +435,8 @@ export const appRouter = router({
           scheduledTime: input.scheduledTime ? new Date(input.scheduledTime) : null,
           discountCode: birthdayFreeApplied ? 'BIRTHDAY_FREE_DRINK' : input.discountCode,
           specialInstructions: input.specialInstructions,
+          partnerBenefitAmount,
+          partnerSubscriptionId: partnerSubId,
         });
 
         const orderId = orderResult.insertId;
@@ -576,7 +621,32 @@ export const appRouter = router({
           }
         }
         
-        return { orderId, orderNumber, totalAmount };
+        // Log Partner benefits
+        if (partnerSubId && partnerBenefitsToLog.length > 0) {
+          try {
+            const outletId = input.orderType === 'delivery' ? 2 : (input.outletId || 2);
+            for (const benefit of partnerBenefitsToLog) {
+              await dbInstance!.insert(partnerBenefitsLog).values({
+                subscriptionId: partnerSubId,
+                userId: ctx.user!.id,
+                orderId,
+                orderNumber,
+                outletId,
+                benefitType: benefit.type,
+                benefitAmount: benefit.amount,
+                itemName: benefit.itemName || null,
+                itemOriginalPrice: benefit.itemOriginalPrice || null,
+                discountPercent: benefit.discountPercent || null,
+                teaItemsCount: benefit.teaItemsCount || null,
+              });
+            }
+          } catch (benefitLogErr) {
+            console.error('Failed to log partner benefits:', benefitLogErr);
+            // Don't fail the order
+          }
+        }
+
+        return { orderId, orderNumber, totalAmount, partnerBenefitAmount };
         } catch (err: any) {
           console.error('Order creation failed:', err);
           // Never expose raw SQL errors to customers
@@ -9813,6 +9883,7 @@ export const appRouter = router({
   // =============================================
   // HOMEPAGE CMS
   // =============================================
+  partner: partnerRouter,
   homepage: router({
     // Public: Get all homepage sections for rendering
     getSections: publicProcedure.query(async () => {

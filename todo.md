@@ -2564,3 +2564,22 @@ Orders fixed:
   - [x] Proper ₹ currency formatting, percentage formatting, DD/MM/YYYY dates
   - [x] Freeze panes, print setup (landscape A4), alternating row backgrounds
   - [x] 17 vitest tests for the formatting module
+
+## Maami Partner Programme (Mar 19)
+- [x] Database schema: partner_subscriptions, partner_referrals, partner_benefits_log, partner_config tables
+- [x] Partner tiers: Founding (₹2,500/yr) and Regular (₹5,000/yr) with 15% tea discount
+- [x] Free Biang Biang per visit at T. Nagar outlet (auto-applied in checkout)
+- [x] Free Large Bubble Tea per visit at Palladium outlet (auto-applied in checkout)
+- [x] Tea discount logic in checkout (15% off all teas, both outlets)
+- [x] Referral code generation (unique per partner, e.g. PRIYA26ABC)
+- [x] WhatsApp share integration (wa.me link with pre-written message)
+- [x] Referral tracking: link new sign-ups to referring partner, auto-credit Maami Rupees
+- [x] Maami Rupee (store credit) earned on referral (₹250 referrer, ₹100 referred)
+- [x] Partner subscription page (/partner) with Razorpay payment
+- [x] Partner badge (Founding = gold, Regular = standard) in dashboard
+- [x] Partner dashboard (/partner/dashboard): benefits, referral stats, savings, WhatsApp sharing
+- [x] Admin dashboard (/admin/partners): all partners, stats, config management, cancel subscriptions
+- [x] Outlet-specific benefit logic (T. Nagar = Biang Biang, Palladium = Large Tea)
+- [x] Checkout integration: Partner benefits preview in order summary
+- [x] Partner link in navigation header
+- [x] 17 vitest tests for Partner Programme backend logic (all passing)

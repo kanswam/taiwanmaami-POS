@@ -34,6 +34,8 @@ import Blog from "./pages/Blog";
 import BlogArticle from "./pages/BlogArticle";
 import Events from "./pages/Events";
 import Profile from "./pages/Profile";
+import Partner from "./pages/Partner";
+import PartnerDashboard from "./pages/PartnerDashboard";
 import AdminEvents from "./pages/AdminEvents";
 import AdminBlog from "./pages/AdminBlog";
 import { CookieConsent } from "./components/CookieConsent";
@@ -50,6 +52,7 @@ import WholesaleProducts from "./pages/wholesale/WholesaleProducts";
 import WholesaleCart from "./pages/wholesale/WholesaleCart";
 import WholesaleOrders from "./pages/wholesale/WholesaleOrders";
 import WholesaleAdmin from "./pages/admin/WholesaleAdmin";
+import AdminPartners from "./pages/admin/AdminPartners";
 
 // Scroll to top on route change
 function ScrollToTop() {
@@ -85,6 +88,8 @@ function Router() {
       <Route path="/track" component={OrderTracking} />
       <Route path="/orders" component={Orders} />
       <Route path="/profile" component={Profile} />
+      <Route path="/partner" component={Partner} />
+      <Route path="/partner/dashboard" component={PartnerDashboard} />
       <Route path="/events" component={Events} />
       
       {/* Content Pages */}
@@ -116,6 +121,7 @@ function Router() {
       <Route path="/admin/events" component={AdminEvents} />
       <Route path="/admin/blog" component={AdminBlog} />
       <Route path="/admin/wholesale" component={WholesaleAdmin} />
+      <Route path="/admin/partners" component={AdminPartners} />
       
       {/* Fallback */}
       <Route path="/404" component={NotFound} />

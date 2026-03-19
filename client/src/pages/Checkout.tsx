@@ -12,7 +12,7 @@ import { useCart } from '@/contexts/CartContext';
 import { useAuth } from '@/_core/hooks/useAuth';
 import { trpc } from '@/lib/trpc';
 import { formatPrice, CHENNAI_AREAS, isOrderingAvailable, isOutletOpen, OUTLET_HOURS, DELIVERY_CONFIG } from '@shared/types';
-import { ArrowLeft, MapPin, Clock, CreditCard, Banknote, Loader2, Gift, User, Stamp } from 'lucide-react';
+import { ArrowLeft, MapPin, Clock, CreditCard, Banknote, Loader2, Gift, User, Stamp, Crown } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { Link } from 'wouter';
@@ -352,6 +352,29 @@ export default function Checkout() {
 
   // Calculate display delivery charge
   const displayDeliveryCharge = isFreeDelivery ? 0 : (deliveryChargeData?.chargePaise || 0);
+
+  // Partner benefits preview
+  const checkoutOutletId = state.orderType === 'delivery' 
+    ? 2 
+    : selectedOutlet === 'palladium' ? 1 : 2;
+
+  const partnerBenefitsInput = useMemo(() => ({
+    outletId: checkoutOutletId,
+    items: state.items.map(item => ({
+      productId: item.productId,
+      productName: item.productName,
+      lineTotal: item.lineTotal,
+      size: item.size || null,
+      quantity: item.quantity,
+    })),
+  }), [checkoutOutletId, state.items]);
+
+  const { data: partnerBenefits } = trpc.partner.previewBenefits.useQuery(
+    partnerBenefitsInput,
+    { enabled: isAuthenticated && state.items.length > 0 }
+  );
+
+  const partnerSavings = partnerBenefits?.totalBenefitAmount || 0;
 
   // total from useCart already includes gst.total, so displayTotal should include delivery charge
   const displayTotal = total + displayDeliveryCharge;
@@ -1169,6 +1192,36 @@ export default function Checkout() {
                     <div className="flex justify-between text-green-600">
                       <span>Discount</span>
                       <span>-{formatPrice(state.discountAmount)}</span>
+                    </div>
+                  )}
+                  {partnerBenefits && partnerSavings > 0 && (
+                    <div className="bg-gradient-to-r from-[#fef3e8] to-[#fdf0e3] rounded-lg p-3 -mx-1 border border-[#d4a574]/30">
+                      <div className="flex items-center gap-1.5 mb-1.5">
+                        <Crown className="w-3.5 h-3.5 text-[#bd302c]" />
+                        <span className="text-xs font-semibold text-[#bd302c]">Partner Benefits</span>
+                      </div>
+                      {partnerBenefits.benefits.map((b, i) => (
+                        <div key={i} className="flex justify-between text-xs text-green-700 mb-0.5">
+                          <span>
+                            {b.type === 'free_biang_biang' ? `Free ${b.itemName}` :
+                             b.type === 'free_large_tea' ? `Free ${b.itemName}` :
+                             `${b.discountPercent}% tea discount (${b.teaItemsCount} items)`}
+                          </span>
+                          <span>-{formatPrice(b.amount)}</span>
+                        </div>
+                      ))}
+                      <div className="flex justify-between text-sm font-semibold text-green-700 mt-1 pt-1 border-t border-green-200">
+                        <span>Partner Savings</span>
+                        <span>-{formatPrice(partnerSavings)}</span>
+                      </div>
+                    </div>
+                  )}
+                  {!partnerBenefits && isAuthenticated && (
+                    <div className="text-center py-2">
+                      <Link href="/partner" className="text-xs text-[#bd302c] hover:underline flex items-center justify-center gap-1">
+                        <Crown className="w-3 h-3" />
+                        Join Maami Partner for free Biang Biang every visit
+                      </Link>
                     </div>
                   )}
                   {state.orderType === 'delivery' && (

@@ -1,0 +1,17 @@
+{
+  "query": "SELECT id, name, slug, instorePrice, deliveryPrice FROM products WHERE name LIKE '%Biang%' OR slug LIKE '%biang%'",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT id, name, slug, instorePrice, deliveryPrice FROM products WHERE name LIKE '%Biang%' OR slug LIKE '%biang%'",
+  "rows": [
+    {
+      "id": "69",
+      "name": "Biang Biang Noodles",
+      "slug": "biang-biang-noodles",
+      "instorePrice": "41500",
+      "deliveryPrice": "41500"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\tslug\tinstorePrice\tdeliveryPrice\n69\tBiang Biang Noodles\tbiang-biang-noodles\t41500\t41500\n",
+  "stderr": "",
+  "execution_time_ms": 410
+}
