@@ -2583,3 +2583,8 @@ Orders fixed:
 - [x] Checkout integration: Partner benefits preview in order summary
 - [x] Partner link in navigation header
 - [x] 17 vitest tests for Partner Programme backend logic (all passing)
+
+## Partner Programme Fixes (Mar 19)
+- [x] Fix Regular Partner price from ₹5,000 to ₹3,500/year (DB config + code fallback + frontend)
+- [x] Fix tea discount: limit to 1 tea per visit (Partner's own drink only), not all teas in the order
+- [x] Verified: referral credit already only triggers after referred person's Razorpay payment is confirmed (in verifyPayment, not subscribe)

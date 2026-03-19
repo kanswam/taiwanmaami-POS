@@ -108,7 +108,7 @@ export default function PartnerDashboard() {
     const text = encodeURIComponent(
       `Hey! I'm a Maami Partner at Taiwan Maami and I love it 🧋\n\n` +
       `Join using my link and we both earn Maami Rupees:\n${referralLink}\n\n` +
-      `You get free Biang Biang Noodles every visit + ${subscription.usageStats ? '' : '15'}% off all teas!`
+      `You get free Biang Biang Noodles every visit + 15% off your tea!`
     );
     window.open(`https://wa.me/?text=${text}`, '_blank');
   };

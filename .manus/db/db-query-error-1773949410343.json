@@ -1,0 +1,8 @@
+{
+  "query": "UPDATE partner_config SET config_value = '350000' WHERE config_key = 'regular_price_paise';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute UPDATE partner_config SET config_value = '350000' WHERE config_key = 'regular_price_paise';",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1054 (42S22) at line 1: Unknown column 'config_key' in 'where clause'"
+  ]
+}

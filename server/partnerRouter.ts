@@ -199,7 +199,7 @@ export async function calculatePartnerBenefits(
   }
 
   // 2. TEA DISCOUNT BENEFIT (applies at both outlets)
-  // Get all tea products in the order (excluding the one that's already free)
+  // Limited to 1 tea per visit — the Partner's own drink only
   const teaCategories2 = await dbInstance
     .select({ id: categories.id })
     .from(categories)
@@ -218,50 +218,53 @@ export async function calculatePartnerBenefits(
 
     const teaProductIds2 = new Set(teaProducts2.map((p) => p.productId));
 
-    // Find tea items, excluding the free one
-    const freeItemProductId = benefits.find(
-      (b) => b.type === "free_large_tea"
-    )
-      ? items.find(
-          (i) =>
-            teaProductIds2.has(i.productId) &&
-            i.size === "large"
-        )?.productId
-      : null;
+    // Find tea items in the order
+    const teaItemsInOrder = items.filter((item) => teaProductIds2.has(item.productId));
 
-    let teaDiscountTotal = 0;
-    let teaItemsCount = 0;
+    // Check if one tea is already free (Palladium free large tea)
+    const freeTeaBenefitExists = benefits.some((b) => b.type === "free_large_tea");
 
-    for (const item of items) {
-      if (!teaProductIds2.has(item.productId)) continue;
+    // Apply discount to only 1 tea (the Partner's own drink)
+    // If a free tea was already given at Palladium, pick the next cheapest tea for the discount
+    // If no free tea (T.Nagar), pick the cheapest tea for the discount
+    let eligibleTeaItems = teaItemsInOrder;
 
-      // For the free large tea at Palladium, skip discounting the first one (it's already free)
-      if (freeItemProductId && item.productId === freeItemProductId && item.quantity === 1) {
-        continue;
-      }
-
-      // Calculate discount on this tea item
-      let discountableAmount = item.lineTotal;
-
-      // If this is the same product as the free one but qty > 1, discount all but one
-      if (freeItemProductId && item.productId === freeItemProductId && item.quantity > 1) {
-        const unitPrice = Math.round(item.lineTotal / item.quantity);
-        discountableAmount = unitPrice * (item.quantity - 1);
-      }
-
-      const discount = Math.round((discountableAmount * teaDiscountPercent) / 100);
-      teaDiscountTotal += discount;
-      teaItemsCount += item.quantity;
+    if (freeTeaBenefitExists) {
+      // At Palladium: the free large tea is already accounted for.
+      // Find a different tea item for the discount, or if same product with qty > 1, discount one unit
+      const freeTeaItem = teaItemsInOrder.find((i) => i.size === "large");
+      eligibleTeaItems = teaItemsInOrder.filter((i) => {
+        if (!freeTeaItem) return true;
+        // If it's a different product, it's eligible
+        if (i.productId !== freeTeaItem.productId) return true;
+        // If same product but qty > 1, one unit is free, another can get discount
+        if (i.productId === freeTeaItem.productId && i.quantity > 1) return true;
+        // Same product, qty = 1 — this is the free one, skip
+        return false;
+      });
     }
 
-    if (teaDiscountTotal > 0) {
-      benefits.push({
-        type: "tea_discount",
-        amount: teaDiscountTotal,
-        discountPercent: teaDiscountPercent,
-        teaItemsCount,
-      });
-      totalBenefitAmount += teaDiscountTotal;
+    if (eligibleTeaItems.length > 0) {
+      // Pick the cheapest tea for the discount (1 unit only)
+      const cheapestTea = eligibleTeaItems.reduce((min, item) => {
+        const unitPrice = Math.round(item.lineTotal / item.quantity);
+        const minUnitPrice = Math.round(min.lineTotal / min.quantity);
+        return unitPrice < minUnitPrice ? item : min;
+      }, eligibleTeaItems[0]);
+
+      // Discount applies to 1 unit of this tea only
+      const unitPrice = Math.round(cheapestTea.lineTotal / cheapestTea.quantity);
+      const discount = Math.round((unitPrice * teaDiscountPercent) / 100);
+
+      if (discount > 0) {
+        benefits.push({
+          type: "tea_discount",
+          amount: discount,
+          discountPercent: teaDiscountPercent,
+          teaItemsCount: 1,
+        });
+        totalBenefitAmount += discount;
+      }
     }
   }
 
@@ -288,7 +291,7 @@ export const partnerRouter = router({
 
     return {
       foundingPrice: parseInt(config.founding_price_paise || "250000"),
-      regularPrice: parseInt(config.regular_price_paise || "500000"),
+      regularPrice: parseInt(config.regular_price_paise || "350000"),
       teaDiscountPercent: parseInt(config.tea_discount_percent || "15"),
       foundingSlotsRemaining: parseInt(config.founding_slots_remaining || "100"),
       foundingSlotsTotal: parseInt(config.founding_slots_total || "100"),

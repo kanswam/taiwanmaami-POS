@@ -70,6 +70,24 @@ describe("Partner Programme", () => {
       expect(info.foundingPrice).toBeLessThanOrEqual(info.regularPrice);
     });
 
+    it("returns regular price of ₹3,500 (350000 paise)", async () => {
+      const ctx = createPublicContext();
+      const caller = appRouter.createCaller(ctx);
+
+      const info = await caller.partner.getProgrammeInfo();
+
+      expect(info.regularPrice).toBe(350000);
+    });
+
+    it("returns founding price of ₹2,500 (250000 paise)", async () => {
+      const ctx = createPublicContext();
+      const caller = appRouter.createCaller(ctx);
+
+      const info = await caller.partner.getProgrammeInfo();
+
+      expect(info.foundingPrice).toBe(250000);
+    });
+
     it("returns positive founding slots total", async () => {
       const ctx = createPublicContext();
       const caller = appRouter.createCaller(ctx);

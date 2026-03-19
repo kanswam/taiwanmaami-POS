@@ -171,7 +171,7 @@ export default function Partner() {
 
   const info = programmeInfo!;
   const foundingPrice = info?.foundingPrice || 250000;
-  const regularPrice = info?.regularPrice || 500000;
+  const regularPrice = info?.regularPrice || 350000;
   const teaDiscount = info?.teaDiscountPercent || 15;
   const slotsRemaining = info?.foundingSlotsRemaining || 0;
   const slotsTotal = info?.foundingSlotsTotal || 100;
@@ -202,7 +202,7 @@ export default function Partner() {
               </span>
             </h1>
             <p className="text-lg md:text-xl text-gray-300 mb-8 max-w-2xl mx-auto leading-relaxed">
-              Free Biang Biang Noodles every visit. {teaDiscount}% off every tea.
+              Free Biang Biang Noodles every visit. {teaDiscount}% off your tea.
               Earn rewards when friends join. One annual fee, unlimited benefits.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -274,10 +274,10 @@ export default function Partner() {
               <div className="w-14 h-14 rounded-2xl bg-[#bd302c]/10 flex items-center justify-center mb-5">
                 <Percent className="w-7 h-7 text-[#bd302c]" />
               </div>
-              <h3 className="text-xl font-bold mb-3">{teaDiscount}% Off All Teas</h3>
+              <h3 className="text-xl font-bold mb-3">{teaDiscount}% Off Your Tea</h3>
               <p className="text-muted-foreground leading-relaxed">
-                Every bubble tea, matcha, taro, and coffee drink — {teaDiscount}% off, 
-                every time, at both outlets. Stacks with the free item.
+                {teaDiscount}% off one tea per visit — your own drink, at both outlets.
+                Stacks with the free Biang Biang or free Large Tea.
               </p>
               <p className="mt-3 text-sm font-medium text-[#bd302c]">
                 Both outlets
@@ -358,7 +358,7 @@ export default function Partner() {
                 </div>
               </div>
               <p className="text-center text-sm text-muted-foreground mt-8">
-                Based on 1 Biang Biang (₹415) + 1 Regular tea (~₹250 with {teaDiscount}% off = ~₹37 saved) per visit
+                Based on 1 free Biang Biang (₹415) + {teaDiscount}% off 1 tea (~₹250 × {teaDiscount}% = ~₹37 saved) per visit
               </p>
             </div>
           </div>
@@ -405,7 +405,7 @@ export default function Partner() {
                   {[
                     'Free Biang Biang every visit (T. Nagar)',
                     'Free Large Bubble Tea every visit (Palladium)',
-                    `${teaDiscount}% off all teas at both outlets`,
+                    `${teaDiscount}% off your tea (1 per visit)`,
                     'Refer & earn Maami Rupees',
                     'Gold Partner badge',
                     'Founding Partner recognition',
@@ -443,7 +443,7 @@ export default function Partner() {
                   {[
                     'Free Biang Biang every visit (T. Nagar)',
                     'Free Large Bubble Tea every visit (Palladium)',
-                    `${teaDiscount}% off all teas at both outlets`,
+                    `${teaDiscount}% off your tea (1 per visit)`,
                     'Refer & earn Maami Rupees',
                     'Partner badge',
                   ].map((item) => (
