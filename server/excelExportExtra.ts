@@ -4,9 +4,12 @@ import { orders, orderItems, products, categories, subcategories, deliverySalesU
 import { and, eq, sql, desc, sum, count } from 'drizzle-orm';
 import type { Request, Response } from 'express';
 import { sdk } from './_core/sdk';
-
-// Paise to Rupees conversion
-const toRupees = (paise: number) => paise / 100;
+import {
+  BRAND, FMT,
+  addTitleBlock, styleHeaderRow, styleDataRow, styleTotalsRow, styleSubtotalRow,
+  addSectionTitle, addFooterNote, applySheetSetup, createWorkbook,
+  setColumnWidths, formatDate, toRupees, round2, addLegend,
+} from './excelStyles';
 
 // Admin auth middleware
 async function requireAdmin(req: Request, res: Response): Promise<boolean> {
@@ -23,85 +26,6 @@ async function requireAdmin(req: Request, res: Response): Promise<boolean> {
   }
 }
 
-// Shared styling helpers
-const BRAND_COLOR = 'FF8B0000';
-const LIGHT_BG = 'FFFFF5F0';
-const WHITE = 'FFFFFFFF';
-
-function applyHeaderStyle(row: ExcelJS.Row, colCount: number, height: number = 28) {
-  row.height = height;
-  for (let col = 1; col <= colCount; col++) {
-    const cell = row.getCell(col);
-    cell.font = { bold: true, color: { argb: WHITE }, size: 11 };
-    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: BRAND_COLOR } };
-    cell.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
-    cell.border = {
-      top: { style: 'thin' },
-      bottom: { style: 'thin' },
-      left: { style: 'thin' },
-      right: { style: 'thin' },
-    };
-  }
-}
-
-function applyDataRowStyle(row: ExcelJS.Row, colCount: number, isAlternate: boolean, currencyCols: number[] = []) {
-  for (let col = 1; col <= colCount; col++) {
-    const cell = row.getCell(col);
-    cell.border = {
-      top: { style: 'thin', color: { argb: 'FFD0D0D0' } },
-      bottom: { style: 'thin', color: { argb: 'FFD0D0D0' } },
-      left: { style: 'thin', color: { argb: 'FFD0D0D0' } },
-      right: { style: 'thin', color: { argb: 'FFD0D0D0' } },
-    };
-    if (currencyCols.includes(col)) {
-      cell.numFmt = '"\u20b9"#,##0.00';
-      cell.alignment = { horizontal: 'right' };
-    }
-    if (isAlternate) {
-      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: LIGHT_BG } };
-    }
-  }
-}
-
-function applyTotalsRowStyle(row: ExcelJS.Row, colCount: number, currencyCols: number[] = []) {
-  row.height = 28;
-  for (let col = 1; col <= colCount; col++) {
-    const cell = row.getCell(col);
-    cell.font = { bold: true, size: 12, color: { argb: WHITE } };
-    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: BRAND_COLOR } };
-    cell.border = {
-      top: { style: 'medium' },
-      bottom: { style: 'medium' },
-      left: { style: 'thin' },
-      right: { style: 'thin' },
-    };
-    if (currencyCols.includes(col)) {
-      cell.numFmt = '"\u20b9"#,##0.00';
-      cell.alignment = { horizontal: 'right', vertical: 'middle' };
-    }
-  }
-}
-
-function addTitle(sheet: ExcelJS.Worksheet, title: string, subtitle: string, colCount: number) {
-  // Title row
-  sheet.mergeCells(1, 1, 1, colCount);
-  const titleCell = sheet.getCell('A1');
-  titleCell.value = title;
-  titleCell.font = { bold: true, size: 16, color: { argb: BRAND_COLOR } };
-  titleCell.alignment = { horizontal: 'center', vertical: 'middle' };
-  sheet.getRow(1).height = 30;
-
-  // Subtitle row
-  sheet.mergeCells(2, 1, 2, colCount);
-  const subtitleCell = sheet.getCell('A2');
-  subtitleCell.value = subtitle;
-  subtitleCell.font = { size: 11, italic: true };
-  subtitleCell.alignment = { horizontal: 'center' };
-  sheet.getRow(2).height = 20;
-
-  // Spacer
-  sheet.getRow(3).height = 10;
-}
 
 // ============================================================
 // ITEMWISE SALES REPORT EXPORT
@@ -123,8 +47,7 @@ export async function handleItemwiseExport(req: Request, res: Response) {
   }
 
   try {
-    // Query itemwise data - aggregate order_items for completed orders in date range
-    // products only has subcategoryId, need to join subcategories to get categoryId
+    // Query itemwise data
     const itemData = await dbInstance
       .select({
         productId: orderItems.productId,
@@ -159,32 +82,26 @@ export async function handleItemwiseExport(req: Request, res: Response) {
     const totalQuantity = itemData.reduce((s, i) => s + Number(i.quantity), 0);
 
     // Build workbook
-    const workbook = new ExcelJS.Workbook();
-    workbook.creator = 'Taiwan Maami';
-    workbook.created = new Date();
+    const workbook = createWorkbook();
 
-    // ===== Sheet 1: Itemwise Sales (All Items) =====
+    // ===== Sheet 1: Itemwise Sales =====
     const sheet = workbook.addWorksheet('Itemwise Sales');
-    addTitle(sheet, 'Taiwan Maami - Itemwise Sales Report', `Period: ${startDate} to ${endDate}`, 10);
+    const COL_COUNT = 10;
+    addTitleBlock(sheet, 'Taiwan Maami — Itemwise Sales Report', `Period: ${formatDate(startDate)} to ${formatDate(endDate)}  ·  ${itemData.length} items  ·  ${totalQuantity} units sold`, COL_COUNT);
 
     // Headers
-    const headers = ['S.No', 'Item Name', 'Size', 'Category', 'Subcategory', 'Qty Sold', 'Revenue (₹)', 'Avg Price (₹)', '% of Revenue', '% of Qty'];
+    const headers = ['S.No', 'Item Name', 'Size', 'Category', 'Subcategory', 'Qty Sold', 'Revenue', 'Avg Price', '% of Revenue', '% of Qty'];
     const headerRow = sheet.getRow(4);
     headers.forEach((h, i) => { headerRow.getCell(i + 1).value = h; });
-    applyHeaderStyle(headerRow, 10);
+    styleHeaderRow(headerRow, COL_COUNT);
 
     // Column widths
-    sheet.getColumn(1).width = 6;    // S.No
-    sheet.getColumn(2).width = 35;   // Item Name
-    sheet.getColumn(3).width = 12;   // Size
-    sheet.getColumn(4).width = 20;   // Category
-    sheet.getColumn(5).width = 20;   // Subcategory
-    sheet.getColumn(6).width = 10;   // Qty Sold
-    sheet.getColumn(7).width = 16;   // Revenue
-    sheet.getColumn(8).width = 14;   // Avg Price
-    sheet.getColumn(9).width = 12;   // % Revenue
-    sheet.getColumn(10).width = 10;  // % Qty
+    setColumnWidths(sheet, [
+      [1, 6], [2, 38], [3, 12], [4, 22], [5, 22],
+      [6, 11], [7, 16], [8, 14], [9, 13], [10, 11],
+    ]);
 
+    // Data rows
     let rowNum = 5;
     itemData.forEach((item, idx) => {
       const row = sheet.getRow(rowNum);
@@ -198,25 +115,20 @@ export async function handleItemwiseExport(req: Request, res: Response) {
         idx + 1,
         item.productName,
         item.size || 'Regular',
-        catMap.get(item.categoryId ?? 0) || 'Uncategorized',
-        subMap.get(item.subcategoryId ?? 0) || '-',
+        catMap.get(item.categoryId ?? 0) || 'Custom Items',
+        subMap.get(item.subcategoryId ?? 0) || '—',
         qty,
-        Math.round(toRupees(rev) * 100) / 100,
-        Math.round(toRupees(avgPrice) * 100) / 100,
-        Math.round(revShare * 10) / 10,
-        Math.round(qtyShare * 10) / 10,
+        round2(toRupees(rev)),
+        round2(toRupees(avgPrice)),
+        round2(revShare),
+        round2(qtyShare),
       ];
 
-      applyDataRowStyle(row, 10, idx % 2 === 1, [7, 8]);
-      row.getCell(7).numFmt = '"₹"#,##0.00';
-      row.getCell(8).numFmt = '"₹"#,##0.00';
-      row.getCell(1).alignment = { horizontal: 'center' };
-      row.getCell(6).alignment = { horizontal: 'center' };
-      row.getCell(9).numFmt = '0.0"%"';
-      row.getCell(9).alignment = { horizontal: 'center' };
-      row.getCell(10).numFmt = '0.0"%"';
-      row.getCell(10).alignment = { horizontal: 'center' };
-
+      styleDataRow(row, COL_COUNT, idx % 2 === 1, {
+        currencyCols: [7, 8],
+        percentCols: [9, 10],
+        centerCols: [1, 6],
+      });
       rowNum++;
     });
 
@@ -225,40 +137,36 @@ export async function handleItemwiseExport(req: Request, res: Response) {
     totalsRow.values = [
       '', 'TOTAL', '', '', '',
       totalQuantity,
-      Math.round(toRupees(totalRevenue) * 100) / 100,
-      totalQuantity > 0 ? Math.round(toRupees(totalRevenue / totalQuantity) * 100) / 100 : 0,
+      round2(toRupees(totalRevenue)),
+      totalQuantity > 0 ? round2(toRupees(totalRevenue / totalQuantity)) : 0,
       100,
       100,
     ];
-    applyTotalsRowStyle(totalsRow, 10, [7, 8]);
-    totalsRow.getCell(7).numFmt = '"₹"#,##0.00';
-    totalsRow.getCell(8).numFmt = '"₹"#,##0.00';
+    styleTotalsRow(totalsRow, COL_COUNT, {
+      currencyCols: [7, 8],
+      percentCols: [9, 10],
+      centerCols: [6],
+    });
     totalsRow.getCell(2).alignment = { horizontal: 'left', vertical: 'middle' };
-    totalsRow.getCell(6).alignment = { horizontal: 'center', vertical: 'middle' };
-    totalsRow.getCell(9).numFmt = '0.0"%"';
-    totalsRow.getCell(9).alignment = { horizontal: 'center', vertical: 'middle' };
-    totalsRow.getCell(10).numFmt = '0.0"%"';
-    totalsRow.getCell(10).alignment = { horizontal: 'center', vertical: 'middle' };
 
     // ===== Sheet 2: Category Summary =====
     const catSheet = workbook.addWorksheet('Category Summary');
-    addTitle(catSheet, 'Taiwan Maami - Category Sales Summary', `Period: ${startDate} to ${endDate}`, 5);
+    const CAT_COLS = 6;
+    addTitleBlock(catSheet, 'Taiwan Maami — Category Sales Summary', `Period: ${formatDate(startDate)} to ${formatDate(endDate)}`, CAT_COLS);
 
-    const catHeaders = ['S.No', 'Category', 'Qty Sold', 'Revenue (₹)', '% of Revenue'];
+    const catHeaders = ['S.No', 'Category', 'Qty Sold', 'Revenue', 'Avg Price', '% of Revenue'];
     const catHeaderRow = catSheet.getRow(4);
     catHeaders.forEach((h, i) => { catHeaderRow.getCell(i + 1).value = h; });
-    applyHeaderStyle(catHeaderRow, 5);
+    styleHeaderRow(catHeaderRow, CAT_COLS);
 
-    catSheet.getColumn(1).width = 6;
-    catSheet.getColumn(2).width = 30;
-    catSheet.getColumn(3).width = 12;
-    catSheet.getColumn(4).width = 18;
-    catSheet.getColumn(5).width = 14;
+    setColumnWidths(catSheet, [
+      [1, 6], [2, 30], [3, 12], [4, 18], [5, 16], [6, 14],
+    ]);
 
     // Aggregate by category
     const catStats: Record<string, { qty: number; revenue: number }> = {};
     itemData.forEach(item => {
-      const catName = catMap.get(item.categoryId ?? 0) || 'Uncategorized';
+      const catName = catMap.get(item.categoryId ?? 0) || 'Custom Items';
       if (!catStats[catName]) catStats[catName] = { qty: 0, revenue: 0 };
       catStats[catName].qty += Number(item.quantity);
       catStats[catName].revenue += Number(item.revenue);
@@ -269,33 +177,108 @@ export async function handleItemwiseExport(req: Request, res: Response) {
     sortedCats.forEach(([catName, stats], idx) => {
       const row = catSheet.getRow(catRowNum);
       const revShare = totalRevenue > 0 ? (stats.revenue / totalRevenue * 100) : 0;
-      row.values = [idx + 1, catName, stats.qty, Math.round(toRupees(stats.revenue) * 100) / 100, Math.round(revShare * 10) / 10];
-      applyDataRowStyle(row, 5, idx % 2 === 1, [4]);
-      row.getCell(4).numFmt = '"₹"#,##0.00';
-      row.getCell(1).alignment = { horizontal: 'center' };
-      row.getCell(3).alignment = { horizontal: 'center' };
-      row.getCell(5).numFmt = '0.0"%"';
-      row.getCell(5).alignment = { horizontal: 'center' };
+      const avgPrice = stats.qty > 0 ? stats.revenue / stats.qty : 0;
+      row.values = [
+        idx + 1,
+        catName,
+        stats.qty,
+        round2(toRupees(stats.revenue)),
+        round2(toRupees(avgPrice)),
+        round2(revShare),
+      ];
+      styleDataRow(row, CAT_COLS, idx % 2 === 1, {
+        currencyCols: [4, 5],
+        percentCols: [6],
+        centerCols: [1, 3],
+      });
       catRowNum++;
     });
 
+    // Category totals
     const catTotalsRow = catSheet.getRow(catRowNum);
-    catTotalsRow.values = ['', 'TOTAL', totalQuantity, Math.round(toRupees(totalRevenue) * 100) / 100, 100];
-    applyTotalsRowStyle(catTotalsRow, 5, [4]);
-    catTotalsRow.getCell(4).numFmt = '"₹"#,##0.00';
-    catTotalsRow.getCell(2).alignment = { horizontal: 'left', vertical: 'middle' };
-    catTotalsRow.getCell(3).alignment = { horizontal: 'center', vertical: 'middle' };
-    catTotalsRow.getCell(5).numFmt = '0.0"%"';
-    catTotalsRow.getCell(5).alignment = { horizontal: 'center', vertical: 'middle' };
-
-    // Freeze panes
-    sheet.views = [{ state: 'frozen', ySplit: 4 }];
-    catSheet.views = [{ state: 'frozen', ySplit: 4 }];
-
-    // Print setup
-    [sheet, catSheet].forEach(s => {
-      s.pageSetup = { orientation: 'landscape', fitToPage: true, fitToWidth: 1, fitToHeight: 0 };
+    catTotalsRow.values = [
+      '', 'TOTAL',
+      totalQuantity,
+      round2(toRupees(totalRevenue)),
+      totalQuantity > 0 ? round2(toRupees(totalRevenue / totalQuantity)) : 0,
+      100,
+    ];
+    styleTotalsRow(catTotalsRow, CAT_COLS, {
+      currencyCols: [4, 5],
+      percentCols: [6],
+      centerCols: [3],
     });
+    catTotalsRow.getCell(2).alignment = { horizontal: 'left', vertical: 'middle' };
+
+    // ===== Sheet 3: Subcategory Summary =====
+    const subSheet = workbook.addWorksheet('Subcategory Summary');
+    const SUB_COLS = 7;
+    addTitleBlock(subSheet, 'Taiwan Maami — Subcategory Sales Summary', `Period: ${formatDate(startDate)} to ${formatDate(endDate)}`, SUB_COLS);
+
+    const subHeaders = ['S.No', 'Category', 'Subcategory', 'Qty Sold', 'Revenue', 'Avg Price', '% of Revenue'];
+    const subHeaderRow = subSheet.getRow(4);
+    subHeaders.forEach((h, i) => { subHeaderRow.getCell(i + 1).value = h; });
+    styleHeaderRow(subHeaderRow, SUB_COLS);
+
+    setColumnWidths(subSheet, [
+      [1, 6], [2, 22], [3, 26], [4, 12], [5, 18], [6, 14], [7, 14],
+    ]);
+
+    // Aggregate by subcategory
+    const subStats: Record<string, { category: string; qty: number; revenue: number }> = {};
+    itemData.forEach(item => {
+      const catName = catMap.get(item.categoryId ?? 0) || 'Custom Items';
+      const subName = subMap.get(item.subcategoryId ?? 0) || '—';
+      const key = `${catName}|||${subName}`;
+      if (!subStats[key]) subStats[key] = { category: catName, qty: 0, revenue: 0 };
+      subStats[key].qty += Number(item.quantity);
+      subStats[key].revenue += Number(item.revenue);
+    });
+
+    const sortedSubs = Object.entries(subStats).sort((a, b) => b[1].revenue - a[1].revenue);
+    let subRowNum = 5;
+    sortedSubs.forEach(([key, stats], idx) => {
+      const [catName, subName] = key.split('|||');
+      const row = subSheet.getRow(subRowNum);
+      const revShare = totalRevenue > 0 ? (stats.revenue / totalRevenue * 100) : 0;
+      const avgPrice = stats.qty > 0 ? stats.revenue / stats.qty : 0;
+      row.values = [
+        idx + 1,
+        catName,
+        subName,
+        stats.qty,
+        round2(toRupees(stats.revenue)),
+        round2(toRupees(avgPrice)),
+        round2(revShare),
+      ];
+      styleDataRow(row, SUB_COLS, idx % 2 === 1, {
+        currencyCols: [5, 6],
+        percentCols: [7],
+        centerCols: [1, 4],
+      });
+      subRowNum++;
+    });
+
+    // Subcategory totals
+    const subTotalsRow = subSheet.getRow(subRowNum);
+    subTotalsRow.values = [
+      '', '', 'TOTAL',
+      totalQuantity,
+      round2(toRupees(totalRevenue)),
+      totalQuantity > 0 ? round2(toRupees(totalRevenue / totalQuantity)) : 0,
+      100,
+    ];
+    styleTotalsRow(subTotalsRow, SUB_COLS, {
+      currencyCols: [5, 6],
+      percentCols: [7],
+      centerCols: [4],
+    });
+    subTotalsRow.getCell(3).alignment = { horizontal: 'left', vertical: 'middle' };
+
+    // Apply sheet setup
+    applySheetSetup(sheet);
+    applySheetSetup(catSheet);
+    applySheetSetup(subSheet);
 
     // Generate and send
     const buffer = await workbook.xlsx.writeBuffer();
@@ -311,6 +294,7 @@ export async function handleItemwiseExport(req: Request, res: Response) {
     res.status(500).json({ error: 'Failed to generate itemwise report' });
   }
 }
+
 
 // ============================================================
 // CHANNELS REPORT EXPORT
@@ -333,6 +317,7 @@ export async function handleChannelsExport(req: Request, res: Response) {
 
   try {
     console.log('[Channels Export] Starting export for', startDate, 'to', endDate);
+
     // 1. Website orders
     const websiteOrders = await dbInstance
       .select({
@@ -347,7 +332,8 @@ export async function handleChannelsExport(req: Request, res: Response) {
       ));
 
     console.log('[Channels Export] Website orders:', JSON.stringify(websiteOrders));
-    // 2. Delivery data from Petpooja uploads (Zomato, Swiggy, Dine-in)
+
+    // 2. Delivery data from Petpooja uploads
     const deliveryUploads = await dbInstance.select()
       .from(deliverySalesUploads)
       .where(and(
@@ -355,7 +341,7 @@ export async function handleChannelsExport(req: Request, res: Response) {
         sql`DATE(${deliverySalesUploads.periodEnd}) <= DATE_ADD(${endDate}, INTERVAL 1 DAY)`
       ));
 
-    // Aggregate delivery channel data from uploads
+    // Aggregate delivery channel data
     let zomatoOrders = 0, zomatoAmount = 0, swiggyOrders = 0, swiggyAmount = 0;
     let dineInOrders = 0, dineInAmount = 0;
     for (const u of deliveryUploads) {
@@ -369,48 +355,33 @@ export async function handleChannelsExport(req: Request, res: Response) {
 
     // Build channel data
     const channels: { name: string; orders: number; revenue: number }[] = [];
-    
     const webOrders = Number(websiteOrders[0]?.orderCount || 0);
     const webRevenue = Number(websiteOrders[0]?.totalRevenue || 0);
-    if (webOrders > 0) {
-      channels.push({ name: 'Website / Direct', orders: webOrders, revenue: webRevenue });
-    }
-    if (zomatoOrders > 0) {
-      channels.push({ name: 'Zomato', orders: zomatoOrders, revenue: zomatoAmount });
-    }
-    if (swiggyOrders > 0) {
-      channels.push({ name: 'Swiggy', orders: swiggyOrders, revenue: swiggyAmount });
-    }
-    if (dineInOrders > 0) {
-      channels.push({ name: 'Dine-in', orders: dineInOrders, revenue: dineInAmount });
-    }
+    if (webOrders > 0) channels.push({ name: 'Website / Direct', orders: webOrders, revenue: webRevenue });
+    if (zomatoOrders > 0) channels.push({ name: 'Zomato', orders: zomatoOrders, revenue: zomatoAmount });
+    if (swiggyOrders > 0) channels.push({ name: 'Swiggy', orders: swiggyOrders, revenue: swiggyAmount });
+    if (dineInOrders > 0) channels.push({ name: 'Dine-in', orders: dineInOrders, revenue: dineInAmount });
 
-    // Sort by revenue descending
     channels.sort((a, b) => b.revenue - a.revenue);
-
     const totalOrders = channels.reduce((s, c) => s + c.orders, 0);
     const totalRevenue = channels.reduce((s, c) => s + c.revenue, 0);
 
     // Build workbook
-    const workbook = new ExcelJS.Workbook();
-    workbook.creator = 'Taiwan Maami';
-    workbook.created = new Date();
+    const workbook = createWorkbook();
 
     // ===== Sheet 1: Channel Summary =====
     const sheet = workbook.addWorksheet('Channel Summary');
-    addTitle(sheet, 'Taiwan Maami - Channel Sales Report', `Period: ${startDate} to ${endDate}`, 6);
+    const COL_COUNT = 6;
+    addTitleBlock(sheet, 'Taiwan Maami — Channel Sales Report', `Period: ${formatDate(startDate)} to ${formatDate(endDate)}  ·  ${channels.length} channels  ·  ${totalOrders} orders`, COL_COUNT);
 
-    const headers = ['S.No', 'Channel', 'Orders', 'Revenue (₹)', 'Avg Order Value (₹)', '% of Revenue'];
+    const headers = ['S.No', 'Channel', 'Orders', 'Revenue', 'Avg Order Value', '% of Revenue'];
     const headerRow = sheet.getRow(4);
     headers.forEach((h, i) => { headerRow.getCell(i + 1).value = h; });
-    applyHeaderStyle(headerRow, 6);
+    styleHeaderRow(headerRow, COL_COUNT);
 
-    sheet.getColumn(1).width = 6;
-    sheet.getColumn(2).width = 22;
-    sheet.getColumn(3).width = 12;
-    sheet.getColumn(4).width = 18;
-    sheet.getColumn(5).width = 20;
-    sheet.getColumn(6).width = 14;
+    setColumnWidths(sheet, [
+      [1, 6], [2, 24], [3, 12], [4, 18], [5, 18], [6, 14],
+    ]);
 
     let rowNum = 5;
     channels.forEach((ch, idx) => {
@@ -422,19 +393,16 @@ export async function handleChannelsExport(req: Request, res: Response) {
         idx + 1,
         ch.name,
         ch.orders,
-        Math.round(toRupees(ch.revenue) * 100) / 100,
-        Math.round(toRupees(aov) * 100) / 100,
-        Math.round(revShare * 10) / 10,
+        round2(toRupees(ch.revenue)),
+        round2(toRupees(aov)),
+        round2(revShare),
       ];
 
-      applyDataRowStyle(row, 6, idx % 2 === 1, [4, 5]);
-      row.getCell(4).numFmt = '"₹"#,##0.00';
-      row.getCell(5).numFmt = '"₹"#,##0.00';
-      row.getCell(1).alignment = { horizontal: 'center' };
-      row.getCell(3).alignment = { horizontal: 'center' };
-      row.getCell(6).numFmt = '0.0"%"';
-      row.getCell(6).alignment = { horizontal: 'center' };
-
+      styleDataRow(row, COL_COUNT, idx % 2 === 1, {
+        currencyCols: [4, 5],
+        percentCols: [6],
+        centerCols: [1, 3],
+      });
       rowNum++;
     });
 
@@ -443,31 +411,27 @@ export async function handleChannelsExport(req: Request, res: Response) {
     totalsRow.values = [
       '', 'TOTAL',
       totalOrders,
-      Math.round(toRupees(totalRevenue) * 100) / 100,
-      totalOrders > 0 ? Math.round(toRupees(totalRevenue / totalOrders) * 100) / 100 : 0,
+      round2(toRupees(totalRevenue)),
+      totalOrders > 0 ? round2(toRupees(totalRevenue / totalOrders)) : 0,
       100,
     ];
-    applyTotalsRowStyle(totalsRow, 6, [4, 5]);
-    totalsRow.getCell(4).numFmt = '"₹"#,##0.00';
-    totalsRow.getCell(5).numFmt = '"₹"#,##0.00';
+    styleTotalsRow(totalsRow, COL_COUNT, {
+      currencyCols: [4, 5],
+      percentCols: [6],
+      centerCols: [3],
+    });
     totalsRow.getCell(2).alignment = { horizontal: 'left', vertical: 'middle' };
-    totalsRow.getCell(3).alignment = { horizontal: 'center', vertical: 'middle' };
-    totalsRow.getCell(6).numFmt = '0.0"%"';
-    totalsRow.getCell(6).alignment = { horizontal: 'center', vertical: 'middle' };
 
     // ===== Sheet 2: Daily Channel Breakdown =====
     const dailySheet = workbook.addWorksheet('Daily Breakdown');
-    addTitle(dailySheet, 'Taiwan Maami - Daily Channel Breakdown', `Period: ${startDate} to ${endDate}`, 3 + channels.length * 2);
+    const channelNames = channels.map(c => c.name);
+    const dailyColCount = 3 + channelNames.length * 2;
+    addTitleBlock(dailySheet, 'Taiwan Maami — Daily Channel Breakdown', `Period: ${formatDate(startDate)} to ${formatDate(endDate)}`, dailyColCount);
 
-    // Build daily data - website orders by date
-    // Use GROUP BY 1 (positional) to satisfy only_full_group_by with DATE() expressions
+    // Build daily data
     const dailyWebsite = await dbInstance.execute(
       sql`SELECT DATE(${orders.createdAt}) as order_date, COUNT(*) as order_count, SUM(${orders.totalAmount}) as total_revenue FROM ${orders} WHERE ${orders.createdAt} >= ${startDate} AND ${orders.createdAt} <= ${endDate + ' 23:59:59'} AND ${orders.orderStatus} != 'cancelled' GROUP BY 1 ORDER BY 1`
     ) as any;
-
-    // Note: Delivery data from Petpooja uploads is aggregate per period, not daily
-    // So the daily breakdown only shows website orders with daily granularity
-    // Delivery totals are shown in the Channel Summary sheet
 
     const allDates = new Set<string>();
     const dailyRows = (Array.isArray(dailyWebsite) ? (dailyWebsite[0] || dailyWebsite) : dailyWebsite) as any[];
@@ -475,62 +439,54 @@ export async function handleChannelsExport(req: Request, res: Response) {
     const sortedDates = Array.from(allDates).sort();
 
     const dailyMap: Record<string, Record<string, { orders: number; revenue: number }>> = {};
-    for (const date of sortedDates) {
-      dailyMap[date] = {};
-    }
+    for (const date of sortedDates) dailyMap[date] = {};
     dailyRows.forEach((d: any) => {
       dailyMap[String(d.order_date)]['Website / Direct'] = { orders: Number(d.order_count), revenue: Number(d.total_revenue) };
     });
 
-    // Channel names for columns
-    const channelNames = channels.map(c => c.name);
-    const dailyHeaders = ['S.No', 'Date', ...channelNames.flatMap(n => [`${n} Orders`, `${n} Revenue (₹)`]), 'Total Orders', 'Total Revenue (₹)'];
+    const dailyHeaders = ['S.No', 'Date', ...channelNames.flatMap(n => [`${n} Orders`, `${n} Revenue`]), 'Total Orders', 'Total Revenue'];
     const dailyHeaderRow = dailySheet.getRow(4);
     dailyHeaders.forEach((h, i) => { dailyHeaderRow.getCell(i + 1).value = h; });
-    applyHeaderStyle(dailyHeaderRow, dailyHeaders.length);
+    styleHeaderRow(dailyHeaderRow, dailyColCount);
 
-    dailySheet.getColumn(1).width = 6;
-    dailySheet.getColumn(2).width = 14;
+    // Set column widths
+    const dailyWidths: [number, number][] = [[1, 6], [2, 14]];
     for (let i = 0; i < channelNames.length; i++) {
-      dailySheet.getColumn(3 + i * 2).width = 14;
-      dailySheet.getColumn(4 + i * 2).width = 16;
+      dailyWidths.push([3 + i * 2, 14]);
+      dailyWidths.push([4 + i * 2, 16]);
     }
-    dailySheet.getColumn(dailyHeaders.length - 1).width = 14;
-    dailySheet.getColumn(dailyHeaders.length).width = 18;
+    dailyWidths.push([dailyColCount - 1, 14]);
+    dailyWidths.push([dailyColCount, 18]);
+    setColumnWidths(dailySheet, dailyWidths);
+
+    // Revenue columns for formatting
+    const revCols: number[] = [];
+    for (let i = 0; i < channelNames.length; i++) revCols.push(4 + i * 2);
+    revCols.push(dailyColCount);
+    const orderCols: number[] = [1];
+    for (let i = 0; i < channelNames.length; i++) orderCols.push(3 + i * 2);
+    orderCols.push(dailyColCount - 1);
 
     let dailyRowNum = 5;
-    const currCols: number[] = [];
-    for (let i = 0; i < channelNames.length; i++) {
-      currCols.push(4 + i * 2); // revenue columns
-    }
-    currCols.push(dailyHeaders.length); // total revenue
-
     sortedDates.forEach((date, idx) => {
       const row = dailySheet.getRow(dailyRowNum);
       const vals: (string | number)[] = [idx + 1, date];
-      let dayOrders = 0;
-      let dayRevenue = 0;
+      let dayOrders = 0, dayRevenue = 0;
       for (const chName of channelNames) {
         const chData = dailyMap[date]?.[chName];
         vals.push(chData?.orders || 0);
-        vals.push(chData ? Math.round(toRupees(chData.revenue) * 100) / 100 : 0);
+        vals.push(chData ? round2(toRupees(chData.revenue)) : 0);
         dayOrders += chData?.orders || 0;
         dayRevenue += chData?.revenue || 0;
       }
       vals.push(dayOrders);
-      vals.push(Math.round(toRupees(dayRevenue) * 100) / 100);
+      vals.push(round2(toRupees(dayRevenue)));
       row.values = vals;
 
-      applyDataRowStyle(row, dailyHeaders.length, idx % 2 === 1, currCols);
-      row.getCell(1).alignment = { horizontal: 'center' };
-      // Center order count columns and format revenue columns
-      for (let i = 0; i < channelNames.length; i++) {
-        row.getCell(3 + i * 2).alignment = { horizontal: 'center' };
-        row.getCell(4 + i * 2).numFmt = '"₹"#,##0.00';
-      }
-      row.getCell(dailyHeaders.length - 1).alignment = { horizontal: 'center' };
-      row.getCell(dailyHeaders.length).numFmt = '"₹"#,##0.00';
-
+      styleDataRow(row, dailyColCount, idx % 2 === 1, {
+        currencyCols: revCols,
+        centerCols: orderCols,
+      });
       dailyRowNum++;
     });
 
@@ -540,27 +496,20 @@ export async function handleChannelsExport(req: Request, res: Response) {
     for (const chName of channelNames) {
       const ch = channels.find(c => c.name === chName);
       totalVals.push(ch?.orders || 0);
-      totalVals.push(Math.round(toRupees(ch?.revenue || 0) * 100) / 100);
+      totalVals.push(round2(toRupees(ch?.revenue || 0)));
     }
     totalVals.push(totalOrders);
-    totalVals.push(Math.round(toRupees(totalRevenue) * 100) / 100);
+    totalVals.push(round2(toRupees(totalRevenue)));
     dailyTotalsRow.values = totalVals;
-    applyTotalsRowStyle(dailyTotalsRow, dailyHeaders.length, currCols);
-    dailyTotalsRow.getCell(2).alignment = { horizontal: 'left', vertical: 'middle' };
-    // Format revenue columns in totals
-    for (let i = 0; i < channelNames.length; i++) {
-      dailyTotalsRow.getCell(4 + i * 2).numFmt = '"₹"#,##0.00';
-    }
-    dailyTotalsRow.getCell(dailyHeaders.length).numFmt = '"₹"#,##0.00';
-
-    // Freeze panes
-    sheet.views = [{ state: 'frozen', ySplit: 4 }];
-    dailySheet.views = [{ state: 'frozen', ySplit: 4 }];
-
-    // Print setup
-    [sheet, dailySheet].forEach(s => {
-      s.pageSetup = { orientation: 'landscape', fitToPage: true, fitToWidth: 1, fitToHeight: 0 };
+    styleTotalsRow(dailyTotalsRow, dailyColCount, {
+      currencyCols: revCols,
+      centerCols: orderCols,
     });
+    dailyTotalsRow.getCell(2).alignment = { horizontal: 'left', vertical: 'middle' };
+
+    // Apply sheet setup
+    applySheetSetup(sheet);
+    applySheetSetup(dailySheet);
 
     // Generate and send
     const buffer = await workbook.xlsx.writeBuffer();
@@ -577,6 +526,7 @@ export async function handleChannelsExport(req: Request, res: Response) {
     res.status(500).json({ error: 'Failed to generate channels report', details: String(error) });
   }
 }
+
 
 // ============================================================
 // LEELA REGISTRATIONS EXPORT
@@ -596,33 +546,22 @@ export async function handleLeelaRegistrationsExport(req: Request, res: Response
       .where(eq(popupRegistrations.eventSlug, 'leela-hyderabad-march-2026'))
       .orderBy(popupRegistrations.selectedDate, popupRegistrations.customerName);
 
-    const workbook = new ExcelJS.Workbook();
-    workbook.creator = 'Taiwan Maami';
-    workbook.created = new Date();
+    const workbook = createWorkbook();
 
     // ---- Sheet 1: All Registrations ----
     const sheet = workbook.addWorksheet('Registrations');
-
     const COL_COUNT = 9;
-    addTitle(sheet, 'Taiwan Maami — The Leela Hyderabad', 'Edible Journey · 5–8 March 2026 · Guest Registrations', COL_COUNT);
+    addTitleBlock(sheet, 'Taiwan Maami — The Leela Hyderabad', 'Edible Journey · 5–8 March 2026 · Guest Registrations', COL_COUNT);
 
-    // Headers
     const headerRow = sheet.getRow(4);
     headerRow.values = ['#', 'Customer Name', 'Email', 'Phone', 'Event Type', 'Date', 'No. of Guests', 'Status', 'Notes'];
-    applyHeaderStyle(headerRow, COL_COUNT);
+    styleHeaderRow(headerRow, COL_COUNT);
 
-    // Column widths
-    sheet.getColumn(1).width = 5;
-    sheet.getColumn(2).width = 25;
-    sheet.getColumn(3).width = 32;
-    sheet.getColumn(4).width = 18;
-    sheet.getColumn(5).width = 16;
-    sheet.getColumn(6).width = 14;
-    sheet.getColumn(7).width = 14;
-    sheet.getColumn(8).width = 14;
-    sheet.getColumn(9).width = 30;
+    setColumnWidths(sheet, [
+      [1, 5], [2, 25], [3, 32], [4, 18], [5, 16],
+      [6, 14], [7, 14], [8, 14], [9, 30],
+    ]);
 
-    // Data rows
     let rowNum = 5;
     let totalGuests = 0;
     registrations.forEach((reg, idx) => {
@@ -638,13 +577,11 @@ export async function handleLeelaRegistrationsExport(req: Request, res: Response
         reg.status.charAt(0).toUpperCase() + reg.status.slice(1),
         reg.specialRequirements || '',
       ];
-      applyDataRowStyle(row, COL_COUNT, idx % 2 === 1);
-      row.getCell(1).alignment = { horizontal: 'center' };
-      row.getCell(5).alignment = { horizontal: 'center' };
-      row.getCell(6).alignment = { horizontal: 'center' };
-      row.getCell(7).alignment = { horizontal: 'center' };
-      row.getCell(8).alignment = { horizontal: 'center' };
-      row.getCell(9).alignment = { horizontal: 'left', wrapText: true };
+      styleDataRow(row, COL_COUNT, idx % 2 === 1, {
+        centerCols: [1, 5, 6, 7, 8],
+      });
+      // Wrap notes column
+      row.getCell(9).alignment = { horizontal: 'left', vertical: 'middle', wrapText: true };
       totalGuests += reg.numberOfGuests;
       rowNum++;
     });
@@ -652,26 +589,21 @@ export async function handleLeelaRegistrationsExport(req: Request, res: Response
     // Totals row
     const totalsRow = sheet.getRow(rowNum);
     totalsRow.values = ['', 'TOTAL', '', '', '', '', totalGuests, `${registrations.length} registrations`, ''];
-    applyTotalsRowStyle(totalsRow, COL_COUNT);
+    styleTotalsRow(totalsRow, COL_COUNT, { centerCols: [7, 8] });
     totalsRow.getCell(2).alignment = { horizontal: 'left', vertical: 'middle' };
-    totalsRow.getCell(7).alignment = { horizontal: 'center', vertical: 'middle' };
-    totalsRow.getCell(8).alignment = { horizontal: 'center', vertical: 'middle' };
 
     // ---- Sheet 2: Summary by Date ----
     const summarySheet = workbook.addWorksheet('Summary by Date');
-
     const SUMMARY_COLS = 5;
-    addTitle(summarySheet, 'Taiwan Maami — The Leela Hyderabad', 'Registration Summary by Date', SUMMARY_COLS);
+    addTitleBlock(summarySheet, 'Taiwan Maami — The Leela Hyderabad', 'Registration Summary by Date', SUMMARY_COLS);
 
     const summaryHeaderRow = summarySheet.getRow(4);
     summaryHeaderRow.values = ['Date', 'Event Type', 'Registrations', 'Total Guests', 'Confirmed'];
-    applyHeaderStyle(summaryHeaderRow, SUMMARY_COLS);
+    styleHeaderRow(summaryHeaderRow, SUMMARY_COLS);
 
-    summarySheet.getColumn(1).width = 16;
-    summarySheet.getColumn(2).width = 16;
-    summarySheet.getColumn(3).width = 16;
-    summarySheet.getColumn(4).width = 16;
-    summarySheet.getColumn(5).width = 16;
+    setColumnWidths(summarySheet, [
+      [1, 16], [2, 16], [3, 16], [4, 16], [5, 16],
+    ]);
 
     // Group by date + event type
     const dateMap: Record<string, { dinner: { count: number; guests: number; confirmed: number }; masterclass: { count: number; guests: number; confirmed: number } }> = {};
@@ -689,12 +621,10 @@ export async function handleLeelaRegistrationsExport(req: Request, res: Response
     });
 
     let summaryRowNum = 5;
-    const sortedDates = Object.keys(dateMap).sort();
-    let grandTotalRegs = 0;
-    let grandTotalGuests = 0;
-    let grandTotalConfirmed = 0;
+    const sortedRegDates = Object.keys(dateMap).sort();
+    let grandTotalRegs = 0, grandTotalGuests = 0, grandTotalConfirmed = 0;
 
-    sortedDates.forEach((date, dateIdx) => {
+    sortedRegDates.forEach((date, dateIdx) => {
       const d = dateMap[date];
       const types: Array<{ label: string; data: { count: number; guests: number; confirmed: number } }> = [];
       if (d.dinner.count > 0) types.push({ label: 'Dinner', data: d.dinner });
@@ -703,12 +633,9 @@ export async function handleLeelaRegistrationsExport(req: Request, res: Response
       types.forEach((t, tIdx) => {
         const row = summarySheet.getRow(summaryRowNum);
         row.values = [date, t.label, t.data.count, t.data.guests, t.data.confirmed];
-        applyDataRowStyle(row, SUMMARY_COLS, (dateIdx + tIdx) % 2 === 1);
-        row.getCell(1).alignment = { horizontal: 'center' };
-        row.getCell(2).alignment = { horizontal: 'center' };
-        row.getCell(3).alignment = { horizontal: 'center' };
-        row.getCell(4).alignment = { horizontal: 'center' };
-        row.getCell(5).alignment = { horizontal: 'center' };
+        styleDataRow(row, SUMMARY_COLS, (dateIdx + tIdx) % 2 === 1, {
+          centerCols: [1, 2, 3, 4, 5],
+        });
         grandTotalRegs += t.data.count;
         grandTotalGuests += t.data.guests;
         grandTotalConfirmed += t.data.confirmed;
@@ -716,23 +643,14 @@ export async function handleLeelaRegistrationsExport(req: Request, res: Response
       });
     });
 
-    // Summary totals
     const summaryTotalsRow = summarySheet.getRow(summaryRowNum);
     summaryTotalsRow.values = ['TOTAL', '', grandTotalRegs, grandTotalGuests, grandTotalConfirmed];
-    applyTotalsRowStyle(summaryTotalsRow, SUMMARY_COLS);
+    styleTotalsRow(summaryTotalsRow, SUMMARY_COLS, { centerCols: [3, 4, 5] });
     summaryTotalsRow.getCell(1).alignment = { horizontal: 'left', vertical: 'middle' };
-    for (let c = 3; c <= 5; c++) {
-      summaryTotalsRow.getCell(c).alignment = { horizontal: 'center', vertical: 'middle' };
-    }
 
-    // Freeze panes
-    sheet.views = [{ state: 'frozen', ySplit: 4 }];
-    summarySheet.views = [{ state: 'frozen', ySplit: 4 }];
-
-    // Print setup
-    [sheet, summarySheet].forEach(s => {
-      s.pageSetup = { orientation: 'landscape', fitToPage: true, fitToWidth: 1, fitToHeight: 0 };
-    });
+    // Apply sheet setup
+    applySheetSetup(sheet);
+    applySheetSetup(summarySheet);
 
     // Generate and send
     const buffer = await workbook.xlsx.writeBuffer();
@@ -787,7 +705,7 @@ export async function handleCustomerDatabaseExport(req: Request, res: Response) 
 
     const orderMap = new Map(orderStats.map(o => [o.userId, o]));
 
-    // Get reward counts per customer (unredeemed)
+    // Get reward counts per customer
     const rewardCounts = await dbInstance
       .select({
         userId: loyaltyRewards.userId,
@@ -801,47 +719,32 @@ export async function handleCustomerDatabaseExport(req: Request, res: Response) 
     const rewardMap = new Map(rewardCounts.map(r => [r.userId, r]));
 
     // Build workbook
-    const workbook = new ExcelJS.Workbook();
-    workbook.creator = 'Taiwan Maami';
-    workbook.created = new Date();
+    const workbook = createWorkbook();
+    const exportDate = new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
 
     // ===== Sheet 1: Customer Database =====
     const sheet = workbook.addWorksheet('Customer Database');
-    const colCount = 14;
-    const exportDate = new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
-    addTitle(sheet, 'Taiwan Maami - Customer Database', `Exported on ${exportDate} · ${allCustomers.length} customers`, colCount);
+    const COL_COUNT = 14;
+    addTitleBlock(sheet, 'Taiwan Maami — Customer Database', `Exported on ${exportDate}  ·  ${allCustomers.length} customers`, COL_COUNT);
 
-    // Headers
     const headers = [
       'S.No', 'Customer Name', 'Phone', 'Email', 'Type',
-      'Orders', 'Total Spent (₹)', 'Avg Order Value (₹)', 'Store Credit (₹)',
+      'Orders', 'Total Spent', 'Avg Order Value', 'Store Credit',
       'Stamps', 'Lifetime Stamps', 'Active Rewards', 'Redeemed Rewards',
       'Last Order'
     ];
     const headerRow = sheet.getRow(4);
     headers.forEach((h, i) => { headerRow.getCell(i + 1).value = h; });
-    applyHeaderStyle(headerRow, colCount);
+    styleHeaderRow(headerRow, COL_COUNT);
 
-    // Column widths
-    sheet.getColumn(1).width = 6;     // S.No
-    sheet.getColumn(2).width = 25;    // Name
-    sheet.getColumn(3).width = 16;    // Phone
-    sheet.getColumn(4).width = 30;    // Email
-    sheet.getColumn(5).width = 12;    // Type
-    sheet.getColumn(6).width = 10;    // Orders
-    sheet.getColumn(7).width = 18;    // Total Spent
-    sheet.getColumn(8).width = 18;    // Avg Order Value
-    sheet.getColumn(9).width = 16;    // Store Credit
-    sheet.getColumn(10).width = 10;   // Stamps
-    sheet.getColumn(11).width = 16;   // Lifetime Stamps
-    sheet.getColumn(12).width = 16;   // Active Rewards
-    sheet.getColumn(13).width = 18;   // Redeemed Rewards
-    sheet.getColumn(14).width = 16;   // Last Order
+    setColumnWidths(sheet, [
+      [1, 6], [2, 25], [3, 16], [4, 30], [5, 12],
+      [6, 10], [7, 18], [8, 18], [9, 16],
+      [10, 10], [11, 16], [12, 16], [13, 18], [14, 16],
+    ]);
 
     let rowNum = 5;
-    let totalOrders = 0;
-    let totalRevenue = 0;
-    let totalStoreCredit = 0;
+    let totalOrderCount = 0, totalRevenueSum = 0, totalStoreCreditSum = 0;
 
     allCustomers.forEach((customer, idx) => {
       const stats = orderMap.get(customer.id);
@@ -851,25 +754,25 @@ export async function handleCustomerDatabaseExport(req: Request, res: Response) 
       const avgOrderValue = orderCount > 0 ? totalSpent / orderCount : 0;
       const lastOrder = stats?.lastOrderDate
         ? new Date(stats.lastOrderDate).toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' })
-        : '-';
+        : '—';
 
       const customerType = customer.phone ? 'Registered' : (customer.email ? 'Email Only' : 'Guest');
 
-      totalOrders += orderCount;
-      totalRevenue += totalSpent;
-      totalStoreCredit += customer.storeCredit;
+      totalOrderCount += orderCount;
+      totalRevenueSum += totalSpent;
+      totalStoreCreditSum += customer.storeCredit;
 
       const row = sheet.getRow(rowNum);
       row.values = [
         idx + 1,
         customer.name || 'Unknown',
-        customer.phone || '-',
-        customer.email || '-',
+        customer.phone || '—',
+        customer.email || '—',
         customerType,
         orderCount,
-        Math.round(toRupees(totalSpent) * 100) / 100,
-        Math.round(toRupees(avgOrderValue) * 100) / 100,
-        Math.round(toRupees(customer.storeCredit) * 100) / 100,
+        round2(toRupees(totalSpent)),
+        round2(toRupees(avgOrderValue)),
+        round2(toRupees(customer.storeCredit)),
         `${customer.stampCount}/10`,
         customer.lifetimeStamps,
         rewards ? Number(rewards.unredeemedCount) : 0,
@@ -877,16 +780,10 @@ export async function handleCustomerDatabaseExport(req: Request, res: Response) 
         lastOrder,
       ];
 
-      applyDataRowStyle(row, colCount, idx % 2 === 1, [7, 8, 9]);
-      row.getCell(1).alignment = { horizontal: 'center' };
-      row.getCell(5).alignment = { horizontal: 'center' };
-      row.getCell(6).alignment = { horizontal: 'center' };
-      row.getCell(10).alignment = { horizontal: 'center' };
-      row.getCell(11).alignment = { horizontal: 'center' };
-      row.getCell(12).alignment = { horizontal: 'center' };
-      row.getCell(13).alignment = { horizontal: 'center' };
-      row.getCell(14).alignment = { horizontal: 'center' };
-
+      styleDataRow(row, COL_COUNT, idx % 2 === 1, {
+        currencyCols: [7, 8, 9],
+        centerCols: [1, 5, 6, 10, 11, 12, 13, 14],
+      });
       rowNum++;
     });
 
@@ -894,36 +791,32 @@ export async function handleCustomerDatabaseExport(req: Request, res: Response) 
     const totalsRow = sheet.getRow(rowNum);
     totalsRow.values = [
       '', `TOTAL (${allCustomers.length} customers)`, '', '', '',
-      totalOrders,
-      Math.round(toRupees(totalRevenue) * 100) / 100,
-      totalOrders > 0 ? Math.round(toRupees(totalRevenue / totalOrders) * 100) / 100 : 0,
-      Math.round(toRupees(totalStoreCredit) * 100) / 100,
+      totalOrderCount,
+      round2(toRupees(totalRevenueSum)),
+      totalOrderCount > 0 ? round2(toRupees(totalRevenueSum / totalOrderCount)) : 0,
+      round2(toRupees(totalStoreCreditSum)),
       '', '', '', '', '',
     ];
-    applyTotalsRowStyle(totalsRow, colCount, [7, 8, 9]);
+    styleTotalsRow(totalsRow, COL_COUNT, {
+      currencyCols: [7, 8, 9],
+      centerCols: [6],
+    });
     totalsRow.getCell(2).alignment = { horizontal: 'left', vertical: 'middle' };
-    totalsRow.getCell(6).alignment = { horizontal: 'center', vertical: 'middle' };
 
     // ===== Sheet 2: Top Customers =====
     const topSheet = workbook.addWorksheet('Top Customers');
-    const topColCount = 8;
-    addTitle(topSheet, 'Taiwan Maami - Top Customers by Spending', `Top 30 customers · ${exportDate}`, topColCount);
+    const TOP_COLS = 8;
+    addTitleBlock(topSheet, 'Taiwan Maami — Top Customers by Spending', `Top 30 customers  ·  ${exportDate}`, TOP_COLS);
 
-    const topHeaders = ['Rank', 'Customer Name', 'Phone', 'Email', 'Orders', 'Total Spent (₹)', 'Avg Order (₹)', 'Stamps'];
+    const topHeaders = ['Rank', 'Customer Name', 'Phone', 'Email', 'Orders', 'Total Spent', 'Avg Order', 'Stamps'];
     const topHeaderRow = topSheet.getRow(4);
     topHeaders.forEach((h, i) => { topHeaderRow.getCell(i + 1).value = h; });
-    applyHeaderStyle(topHeaderRow, topColCount);
+    styleHeaderRow(topHeaderRow, TOP_COLS);
 
-    topSheet.getColumn(1).width = 8;
-    topSheet.getColumn(2).width = 25;
-    topSheet.getColumn(3).width = 16;
-    topSheet.getColumn(4).width = 30;
-    topSheet.getColumn(5).width = 10;
-    topSheet.getColumn(6).width = 18;
-    topSheet.getColumn(7).width = 16;
-    topSheet.getColumn(8).width = 10;
+    setColumnWidths(topSheet, [
+      [1, 8], [2, 25], [3, 16], [4, 30], [5, 10], [6, 18], [7, 16], [8, 10],
+    ]);
 
-    // Sort customers by total spent
     const sortedCustomers = allCustomers
       .map(c => {
         const stats = orderMap.get(c.id);
@@ -944,36 +837,33 @@ export async function handleCustomerDatabaseExport(req: Request, res: Response) 
       row.values = [
         idx + 1,
         customer.name || 'Unknown',
-        customer.phone || '-',
-        customer.email || '-',
+        customer.phone || '—',
+        customer.email || '—',
         customer.orderCount,
-        Math.round(toRupees(customer.totalSpent) * 100) / 100,
-        Math.round(toRupees(avgOrder) * 100) / 100,
+        round2(toRupees(customer.totalSpent)),
+        round2(toRupees(avgOrder)),
         `${customer.stampCount}/10`,
       ];
-      applyDataRowStyle(row, topColCount, idx % 2 === 1, [6, 7]);
-      row.getCell(1).alignment = { horizontal: 'center' };
-      row.getCell(5).alignment = { horizontal: 'center' };
-      row.getCell(8).alignment = { horizontal: 'center' };
+      styleDataRow(row, TOP_COLS, idx % 2 === 1, {
+        currencyCols: [6, 7],
+        centerCols: [1, 5, 8],
+      });
       topRowNum++;
     });
 
     // ===== Sheet 3: Birthday Calendar =====
     const bdaySheet = workbook.addWorksheet('Birthday Calendar');
-    const bdayColCount = 6;
-    addTitle(bdaySheet, 'Taiwan Maami - Customer Birthday Calendar', `Customers with birthdays on file · ${exportDate}`, bdayColCount);
+    const BDAY_COLS = 6;
+    addTitleBlock(bdaySheet, 'Taiwan Maami — Customer Birthday Calendar', `Customers with birthdays on file  ·  ${exportDate}`, BDAY_COLS);
 
     const bdayHeaders = ['Month', 'Day', 'Customer Name', 'Phone', 'Email', 'Birthday Gift Used'];
     const bdayHeaderRow = bdaySheet.getRow(4);
     bdayHeaders.forEach((h, i) => { bdayHeaderRow.getCell(i + 1).value = h; });
-    applyHeaderStyle(bdayHeaderRow, bdayColCount);
+    styleHeaderRow(bdayHeaderRow, BDAY_COLS);
 
-    bdaySheet.getColumn(1).width = 14;
-    bdaySheet.getColumn(2).width = 8;
-    bdaySheet.getColumn(3).width = 25;
-    bdaySheet.getColumn(4).width = 16;
-    bdaySheet.getColumn(5).width = 30;
-    bdaySheet.getColumn(6).width = 20;
+    setColumnWidths(bdaySheet, [
+      [1, 14], [2, 8], [3, 25], [4, 16], [5, 30], [6, 20],
+    ]);
 
     const monthNames = ['', 'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
@@ -990,18 +880,22 @@ export async function handleCustomerDatabaseExport(req: Request, res: Response) 
         monthNames[customer.birthMonth!],
         customer.birthDay,
         customer.name || 'Unknown',
-        customer.phone || '-',
-        customer.email || '-',
+        customer.phone || '—',
+        customer.email || '—',
         giftUsed,
       ];
-      applyDataRowStyle(row, bdayColCount, idx % 2 === 1);
-      row.getCell(1).alignment = { horizontal: 'center' };
-      row.getCell(2).alignment = { horizontal: 'center' };
-      row.getCell(6).alignment = { horizontal: 'center' };
+      styleDataRow(row, BDAY_COLS, idx % 2 === 1, {
+        centerCols: [1, 2, 6],
+      });
       bdayRowNum++;
     });
 
-    // Generate buffer and send
+    // Apply sheet setup
+    applySheetSetup(sheet);
+    applySheetSetup(topSheet);
+    applySheetSetup(bdaySheet);
+
+    // Generate and send
     const buffer = await workbook.xlsx.writeBuffer();
     const filename = `Taiwan_Maami_Customer_Database_${exportDate.replace(/ /g, '_')}.xlsx`;
 

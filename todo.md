@@ -2552,3 +2552,15 @@ Orders fixed:
   - Fix: Changed INNER JOIN to LEFT JOIN in 4 procedures (getItemwiseSalesReport, getSalesByCategory, getSalesBySubcategory, getProductPerformance)
   - Fix: Itemwise summary card now shows orderTotalRevenue (matching Sales tab)
   - Custom items now appear under "Custom Items" category in all reports
+
+## Excel Export Formatting Overhaul (Mar 19)
+- [x] Redesign all Excel exports with professional formatting
+  - [x] Itemwise Sales Report export (3 sheets: Itemwise Sales, Category Summary, Subcategory Summary)
+  - [x] Sales Report export (4 sheets: Sales Report, Summary, GST Summary, Payment Summary)
+  - [x] Channels Report export (2 sheets: Channel Summary, Daily Breakdown)
+  - [x] Leela Registrations export (2 sheets: Registrations, Summary by Date)
+  - [x] Customer Database export (3 sheets: Customer Database, Top Customers, Birthday Calendar)
+  - [x] Shared excelStyles.ts module with brand colors, fonts, borders, number formats
+  - [x] Proper ₹ currency formatting, percentage formatting, DD/MM/YYYY dates
+  - [x] Freeze panes, print setup (landscape A4), alternating row backgrounds
+  - [x] 17 vitest tests for the formatting module
