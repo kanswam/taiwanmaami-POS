@@ -7,6 +7,7 @@ import { useCart } from '@/contexts/CartContext';
 import { useLoginTransition } from '@/hooks/useLoginTransition';
 import { Menu, ShoppingCart, User, LogOut, MapPin, Info, FileText, X, ClipboardList, BookOpen } from 'lucide-react';
 import { formatPrice } from '@shared/types';
+import { isPartnerNavVisible } from '@/lib/partnerGate';
 
 export function Header() {
   const [location] = useLocation();
@@ -15,6 +16,7 @@ export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { triggerLogin, transitionPortal } = useLoginTransition();
 
+  const partnerVisible = isPartnerNavVisible();
   const navLinks = [
     { href: '/#order-options', label: 'Menu' },
     { href: '/about', label: 'About Us' },
@@ -22,7 +24,7 @@ export function Header() {
     { href: '/events', label: 'Events' },
     { href: '/wholesale', label: 'Wholesale' },
     { href: '/blog', label: 'Blog' },
-    { href: '/partner', label: 'Partner' },
+    ...(partnerVisible ? [{ href: '/partner', label: 'Partner' }] : []),
   ];
 
   const isActive = (href: string) => location === href;

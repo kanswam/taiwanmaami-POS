@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useLocation } from 'wouter';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
+import { checkPartnerAccess, isPartnerGateActive } from '@/lib/partnerGate';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -31,6 +32,27 @@ export default function PartnerDashboard() {
   const [, navigate] = useLocation();
   const { isAuthenticated, user } = useAuth();
   const [copied, setCopied] = useState(false);
+
+  // Secret gate check
+  const hasAccess = checkPartnerAccess();
+  if (isPartnerGateActive() && !hasAccess) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <div className="container py-32 text-center">
+          <Crown className="w-16 h-16 text-[#d4a574] mx-auto mb-6" />
+          <h1 className="text-4xl font-bold mb-4">Something Special is Coming</h1>
+          <p className="text-muted-foreground text-lg max-w-md mx-auto mb-8">
+            The Maami Partner Programme is being crafted with care. Stay tuned for an exclusive announcement.
+          </p>
+          <Button variant="outline" onClick={() => navigate('/')}>
+            Back to Home
+          </Button>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
 
   const { data: subscription, isLoading } = trpc.partner.getMySubscription.useQuery(undefined, {
     enabled: isAuthenticated,

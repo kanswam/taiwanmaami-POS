@@ -2588,3 +2588,9 @@ Orders fixed:
 - [x] Fix Regular Partner price from ₹5,000 to ₹3,500/year (DB config + code fallback + frontend)
 - [x] Fix tea discount: limit to 1 tea per visit (Partner's own drink only), not all teas in the order
 - [x] Verified: referral credit already only triggers after referred person's Razorpay payment is confirmed (in verifyPayment, not subscribe)
+
+## Partner Programme Secret Gate (Mar 19)
+- [x] Add secret key gate to /partner and /partner/dashboard pages (key: tmpartner2026)
+- [x] Hide "Partner" link from navigation header unless gate key is in session
+- [x] Show "Coming Soon" page for visitors without the key
+- [x] Verified: checkout integration is safe for non-partners (benefit check returns null and is skipped)

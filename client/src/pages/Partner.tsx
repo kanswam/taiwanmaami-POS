@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useLocation, useSearch } from 'wouter';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
+import { checkPartnerAccess, isPartnerGateActive } from '@/lib/partnerGate';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -58,6 +59,28 @@ export default function Partner() {
   const [selectedTier, setSelectedTier] = useState<'founding' | 'regular'>('founding');
   const [referralCode, setReferralCode] = useState('');
   const [isSubscribing, setIsSubscribing] = useState(false);
+
+  // Secret gate check — during testing phase, only accessible with ?key=tmpartner2026
+  const hasAccess = checkPartnerAccess();
+
+  if (isPartnerGateActive() && !hasAccess) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <div className="container py-32 text-center">
+          <Crown className="w-16 h-16 text-[#d4a574] mx-auto mb-6" />
+          <h1 className="text-4xl font-bold mb-4">Something Special is Coming</h1>
+          <p className="text-muted-foreground text-lg max-w-md mx-auto mb-8">
+            The Maami Partner Programme is being crafted with care. Stay tuned for an exclusive announcement.
+          </p>
+          <Button variant="outline" onClick={() => navigate('/')}>
+            Back to Home
+          </Button>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
 
   // Parse referral code from URL
   useEffect(() => {
