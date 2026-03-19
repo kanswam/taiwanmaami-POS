@@ -1,0 +1,9 @@
+{
+  "query": "\n-- Check the order items for order 00121\nSELECT oi.id, oi.orderId, oi.productId, oi.productName, oi.quantity, oi.unitPrice / 100.0 as unit_price_rupees, oi.lineTotal / 100.0 as line_total_rupees\nFROM order_items oi\nWHERE oi.orderId = 1230001;\n\n-- Check if those productIds exist in products table\nSELECT oi.productId, p.id as product_exists\nFROM order_items oi\nLEFT JOIN products p ON oi.productId = p.id\nWHERE oi.orderId = 1230001;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute \n-- Check the order items for order 00121\nSELECT oi.id, oi.orderId, oi.productId, oi.productName, oi.quantity, oi.unitPrice / 100.0 as unit_price_rupees, oi.lineTotal / 100.0 as line_total_rupees\nFROM order_items oi\nWHERE oi.orderId = 1230001;\n\n-- Check if those productIds exist in products table\nSELECT oi.productId, p.id as product_exists\nFROM order_items oi\nLEFT JOIN products p ON oi.productId = p.id\nWHERE oi.orderId = 1230001;\n",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 437
+}

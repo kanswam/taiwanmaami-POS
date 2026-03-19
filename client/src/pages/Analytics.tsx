@@ -2002,7 +2002,7 @@ function ItemwiseSalesReport({ startDate, endDate, orderType, categories, format
         <Card>
           <CardContent className="pt-4">
             <p className="text-sm text-muted-foreground">Total Revenue</p>
-            <p className="text-2xl font-bold">{data?.summary.totalRevenue ? formatCurrency(data.summary.totalRevenue) : '₹0'}</p>
+            <p className="text-2xl font-bold">{data?.summary.orderTotalRevenue ? formatCurrency(data.summary.orderTotalRevenue) : '₹0'}</p>
           </CardContent>
         </Card>
         <Card>

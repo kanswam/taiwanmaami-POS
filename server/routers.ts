@@ -5028,7 +5028,7 @@ export const appRouter = router({
             subcategoryId: products.subcategoryId,
           })
           .from(orderItemsTable)
-          .innerJoin(products, eq(orderItemsTable.productId, products.id))
+          .leftJoin(products, eq(orderItemsTable.productId, products.id))
           .where(sql`${orderItemsTable.orderId} IN (${sql.join(orderIds, sql`, `)})`);
 
         const allCategories = await dbInstance.select().from(categories);
@@ -5036,22 +5036,36 @@ export const appRouter = router({
         const subcatToCat: Record<number, number> = {};
         allSubcategories.forEach(s => { subcatToCat[s.id] = s.categoryId; });
 
+        // Use catId 0 for "Custom Items" category (items with no product match)
         const categoryStats: Record<number, { revenue: number; quantity: number; orders: Set<number> }> = {};
         items.forEach(item => {
-          const catId = subcatToCat[item.subcategoryId];
+          const catId = item.subcategoryId ? (subcatToCat[item.subcategoryId] ?? 0) : 0;
           if (!categoryStats[catId]) categoryStats[catId] = { revenue: 0, quantity: 0, orders: new Set() };
           categoryStats[catId].revenue += item.totalPrice;
           categoryStats[catId].quantity += item.quantity;
           categoryStats[catId].orders.add(item.orderId);
         });
 
-        return allCategories.map(cat => ({
+        const result = allCategories.map(cat => ({
           id: cat.id,
           name: cat.name,
           revenue: categoryStats[cat.id]?.revenue || 0,
           quantity: categoryStats[cat.id]?.quantity || 0,
           orderCount: categoryStats[cat.id]?.orders.size || 0,
-        })).sort((a, b) => b.revenue - a.revenue);
+        }));
+
+        // Add "Custom Items" row if there are any custom items
+        if (categoryStats[0]) {
+          result.push({
+            id: 0,
+            name: 'Custom Items',
+            revenue: categoryStats[0].revenue,
+            quantity: categoryStats[0].quantity,
+            orderCount: categoryStats[0].orders.size,
+          });
+        }
+
+        return result.sort((a, b) => b.revenue - a.revenue);
       }),
 
     // Sales by Subcategory
@@ -5085,7 +5099,7 @@ export const appRouter = router({
             subcategoryId: products.subcategoryId,
           })
           .from(orderItemsTable)
-          .innerJoin(products, eq(orderItemsTable.productId, products.id))
+          .leftJoin(products, eq(orderItemsTable.productId, products.id))
           .where(sql`${orderItemsTable.orderId} IN (${sql.join(orderIds, sql`, `)})`);
 
         const allSubcategories = await dbInstance.select().from(subcategories);
@@ -5096,20 +5110,35 @@ export const appRouter = router({
 
         const subcatStats: Record<number, { revenue: number; quantity: number; orders: Set<number> }> = {};
         items.forEach(item => {
-          if (!subcatStats[item.subcategoryId]) subcatStats[item.subcategoryId] = { revenue: 0, quantity: 0, orders: new Set() };
-          subcatStats[item.subcategoryId].revenue += item.totalPrice;
-          subcatStats[item.subcategoryId].quantity += item.quantity;
-          subcatStats[item.subcategoryId].orders.add(item.orderId);
+          const subcatId = item.subcategoryId ?? 0;
+          if (!subcatStats[subcatId]) subcatStats[subcatId] = { revenue: 0, quantity: 0, orders: new Set() };
+          subcatStats[subcatId].revenue += item.totalPrice;
+          subcatStats[subcatId].quantity += item.quantity;
+          subcatStats[subcatId].orders.add(item.orderId);
         });
 
-        return filteredSubcategories.map(sub => ({
+        const result = filteredSubcategories.map(sub => ({
           id: sub.id,
           name: sub.name,
           categoryId: sub.categoryId,
           revenue: subcatStats[sub.id]?.revenue || 0,
           quantity: subcatStats[sub.id]?.quantity || 0,
           orderCount: subcatStats[sub.id]?.orders.size || 0,
-        })).filter(s => s.revenue > 0).sort((a, b) => b.revenue - a.revenue);
+        })).filter(s => s.revenue > 0);
+
+        // Add "Custom Items" row if there are any custom items and no category filter
+        if (subcatStats[0] && !input?.categoryId) {
+          result.push({
+            id: 0,
+            name: 'Custom Items',
+            categoryId: 0,
+            revenue: subcatStats[0].revenue,
+            quantity: subcatStats[0].quantity,
+            orderCount: subcatStats[0].orders.size,
+          });
+        }
+
+        return result.sort((a, b) => b.revenue - a.revenue);
       }),
 
     // Product Performance (Top/Bottom)
@@ -5148,7 +5177,7 @@ export const appRouter = router({
             subcategoryId: products.subcategoryId,
           })
           .from(orderItemsTable)
-          .innerJoin(products, eq(orderItemsTable.productId, products.id))
+          .leftJoin(products, eq(orderItemsTable.productId, products.id))
           .where(sql`${orderItemsTable.orderId} IN (${sql.join(orderIds, sql`, `)})`);
 
         let filteredItems = items;
@@ -5157,7 +5186,7 @@ export const appRouter = router({
         } else if (input?.categoryId) {
           const allSubcategories = await dbInstance.select().from(subcategories);
           const subcatIds = allSubcategories.filter(s => s.categoryId === input.categoryId).map(s => s.id);
-          filteredItems = items.filter(i => subcatIds.includes(i.subcategoryId));
+          filteredItems = items.filter(i => subcatIds.includes(i.subcategoryId ?? 0));
         }
 
         const productStats: Record<number, { name: string; revenue: number; quantity: number }> = {};
@@ -6838,9 +6867,13 @@ export const appRouter = router({
         const matchingOrders = await dbInstance.select().from(orders).where(whereClause);
         const orderIds = matchingOrders.map(o => o.id);
 
-        if (orderIds.length === 0) return { items: [], summary: { totalItems: 0, totalQuantity: 0, totalRevenue: 0, totalOrders: matchingOrders.length } };
+        if (orderIds.length === 0) {
+          const orderTotalRevenue = matchingOrders.reduce((sum, o) => sum + o.totalAmount, 0);
+          const orderTotalGst = matchingOrders.reduce((sum, o) => sum + (o.stateGst + o.centralGst), 0);
+          return { items: [], summary: { totalItems: 0, totalQuantity: 0, totalRevenue: 0, totalOrders: matchingOrders.length, orderTotalRevenue, orderTotalGst } };
+        }
 
-        // Get all order items with product details
+        // Get all order items with product details — use LEFT JOIN so custom items (productId=0) are included
         const items = await dbInstance
           .select({
             productId: orderItemsTable.productId,
@@ -6853,7 +6886,7 @@ export const appRouter = router({
             subcategoryId: products.subcategoryId,
           })
           .from(orderItemsTable)
-          .innerJoin(products, eq(orderItemsTable.productId, products.id))
+          .leftJoin(products, eq(orderItemsTable.productId, products.id))
           .where(sql`${orderItemsTable.orderId} IN (${sql.join(orderIds, sql`, `)})`);
 
         // Get all subcategories and categories for grouping
@@ -6871,7 +6904,8 @@ export const appRouter = router({
         let filteredItems = items;
         if (input.categoryId) {
           const subcatIds = allSubcategories.filter(s => s.categoryId === input.categoryId).map(s => s.id);
-          filteredItems = items.filter(i => subcatIds.includes(i.subcategoryId));
+          // Include custom items (subcategoryId is null) only when no category filter is applied
+          filteredItems = items.filter(i => i.subcategoryId !== null && subcatIds.includes(i.subcategoryId));
         }
 
         // Aggregate by product + size
@@ -6890,8 +6924,9 @@ export const appRouter = router({
 
         for (const item of filteredItems) {
           const size = item.size || 'standard';
-          const key = `${item.productId}-${size}`;
-          const catInfo = subcatToCat[item.subcategoryId] || { catId: 0, catName: 'Unknown', subcatName: 'Unknown' };
+          // For custom items (productId=0), use the product name as part of the key to keep them separate
+          const key = item.productId === 0 ? `custom-${item.productName}-${size}` : `${item.productId}-${size}`;
+          const catInfo = item.subcategoryId ? (subcatToCat[item.subcategoryId] || { catId: 0, catName: 'Custom Items', subcatName: 'Custom Items' }) : { catId: 0, catName: 'Custom Items', subcatName: 'Custom Items' };
 
           if (!productSizeStats[key]) {
             productSizeStats[key] = {
@@ -6932,13 +6967,19 @@ export const appRouter = router({
           }))
           .sort((a, b) => b.quantity - a.quantity);
 
+        // Calculate order-level totals for the summary cards (consistent with Sales tab)
+        const orderTotalRevenue = matchingOrders.reduce((sum, o) => sum + o.totalAmount, 0);
+        const orderTotalGst = matchingOrders.reduce((sum, o) => sum + (o.stateGst + o.centralGst), 0);
+
         return {
           items: result,
           summary: {
             totalItems: result.length,
             totalQuantity,
-            totalRevenue,
+            totalRevenue: totalRevenue, // Sum of line items (pre-tax, pre-delivery, pre-discount)
             totalOrders: matchingOrders.length,
+            orderTotalRevenue, // Sum of order totalAmount (includes GST, delivery, minus discounts) — matches Sales tab
+            orderTotalGst, // GST total
           },
         };
       }),

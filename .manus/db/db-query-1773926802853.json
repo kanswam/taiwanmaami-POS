@@ -1,0 +1,16 @@
+{
+  "query": "\n-- Sum of custom items (productId = 0) that are excluded by INNER JOIN products\nSELECT \n  COUNT(*) as custom_item_count,\n  SUM(oi.quantity) as custom_qty,\n  SUM(oi.lineTotal) / 100.0 as custom_revenue_rupees,\n  COUNT(DISTINCT oi.orderId) as orders_with_custom_items\nFROM order_items oi\nINNER JOIN orders o ON oi.orderId = o.id\nWHERE o.orderStatus != 'cancelled' \n  AND o.createdAt >= '2026-01-01' \n  AND o.createdAt <= '2026-02-28 23:59:59'\n  AND oi.productId = 0;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute \n-- Sum of custom items (productId = 0) that are excluded by INNER JOIN products\nSELECT \n  COUNT(*) as custom_item_count,\n  SUM(oi.quantity) as custom_qty,\n  SUM(oi.lineTotal) / 100.0 as custom_revenue_rupees,\n  COUNT(DISTINCT oi.orderId) as orders_with_custom_items\nFROM order_items oi\nINNER JOIN orders o ON oi.orderId = o.id\nWHERE o.orderStatus != 'cancelled' \n  AND o.createdAt >= '2026-01-01' \n  AND o.createdAt <= '2026-02-28 23:59:59'\n  AND oi.productId = 0;\n",
+  "rows": [
+    {
+      "custom_item_count": "45",
+      "custom_qty": "48",
+      "custom_revenue_rupees": "16239.0000",
+      "orders_with_custom_items": "24"
+    }
+  ],
+  "messages": [],
+  "stdout": "custom_item_count\tcustom_qty\tcustom_revenue_rupees\torders_with_custom_items\n45\t48\t16239.0000\t24\n",
+  "stderr": "",
+  "execution_time_ms": 397
+}

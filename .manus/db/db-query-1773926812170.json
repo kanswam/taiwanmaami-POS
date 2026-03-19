@@ -1,0 +1,15 @@
+{
+  "query": "\n-- Full reconciliation\n-- Sales tab totalAmount = subtotal + GST + delivery - discounts\n-- subtotal = sum of all lineTotals (including custom items)\n-- Itemwise tab = sum of lineTotals for items that INNER JOIN to products (excludes custom items with productId=0)\n\n-- Let's verify: subtotal from orders should equal sum of all lineTotals from order_items\nSELECT \n  SUM(o.subtotal) / 100.0 as orders_subtotal_rupees,\n  (SELECT SUM(oi.lineTotal) / 100.0 FROM order_items oi INNER JOIN orders o2 ON oi.orderId = o2.id WHERE o2.orderStatus != 'cancelled' AND o2.createdAt >= '2026-01-01' AND o2.createdAt <= '2026-02-28 23:59:59') as all_items_lineTotal_rupees,\n  (SELECT SUM(oi.lineTotal) / 100.0 FROM order_items oi INNER JOIN orders o2 ON oi.orderId = o2.id INNER JOIN products p ON oi.productId = p.id WHERE o2.orderStatus != 'cancelled' AND o2.createdAt >= '2026-01-01' AND o2.createdAt <= '2026-02-28 23:59:59') as items_with_products_rupees\nFROM orders o\nWHERE o.orderStatus != 'cancelled' \n  AND o.createdAt >= '2026-01-01' \n  AND o.createdAt <= '2026-02-28 23:59:59';\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute \n-- Full reconciliation\n-- Sales tab totalAmount = subtotal + GST + delivery - discounts\n-- subtotal = sum of all lineTotals (including custom items)\n-- Itemwise tab = sum of lineTotals for items that INNER JOIN to products (excludes custom items with productId=0)\n\n-- Let's verify: subtotal from orders should equal sum of all lineTotals from order_items\nSELECT \n  SUM(o.subtotal) / 100.0 as orders_subtotal_rupees,\n  (SELECT SUM(oi.lineTotal) / 100.0 FROM order_items oi INNER JOIN orders o2 ON oi.orderId = o2.id WHERE o2.orderStatus != 'cancelled' AND o2.createdAt >= '2026-01-01' AND o2.createdAt <= '2026-02-28 23:59:59') as all_items_lineTotal_rupees,\n  (SELECT SUM(oi.lineTotal) / 100.0 FROM order_items oi INNER JOIN orders o2 ON oi.orderId = o2.id INNER JOIN products p ON oi.productId = p.id WHERE o2.orderStatus != 'cancelled' AND o2.createdAt >= '2026-01-01' AND o2.createdAt <= '2026-02-28 23:59:59') as items_with_products_rupees\nFROM orders o\nWHERE o.orderStatus != 'cancelled' \n  AND o.createdAt >= '2026-01-01' \n  AND o.createdAt <= '2026-02-28 23:59:59';\n",
+  "rows": [
+    {
+      "orders_subtotal_rupees": "518766.2600",
+      "all_items_lineTotal_rupees": "521204.0000",
+      "items_with_products_rupees": "504965.0000"
+    }
+  ],
+  "messages": [],
+  "stdout": "orders_subtotal_rupees\tall_items_lineTotal_rupees\titems_with_products_rupees\n518766.2600\t521204.0000\t504965.0000\n",
+  "stderr": "",
+  "execution_time_ms": 402
+}

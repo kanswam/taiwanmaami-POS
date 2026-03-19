@@ -1,0 +1,18 @@
+{
+  "query": "\n-- Itemwise tab: sum of order_items.lineTotal via INNER JOIN products\nSELECT \n  'Itemwise Tab' as source,\n  COUNT(DISTINCT oi.orderId) as order_count,\n  COUNT(*) as item_rows,\n  SUM(oi.quantity) as total_qty,\n  SUM(oi.lineTotal) as line_total_paise,\n  SUM(oi.lineTotal) / 100.0 as line_total_rupees\nFROM order_items oi\nINNER JOIN products p ON oi.productId = p.id\nINNER JOIN orders o ON oi.orderId = o.id\nWHERE o.orderStatus != 'cancelled' \n  AND o.createdAt >= '2026-01-01' \n  AND o.createdAt <= '2026-02-28 23:59:59';\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute \n-- Itemwise tab: sum of order_items.lineTotal via INNER JOIN products\nSELECT \n  'Itemwise Tab' as source,\n  COUNT(DISTINCT oi.orderId) as order_count,\n  COUNT(*) as item_rows,\n  SUM(oi.quantity) as total_qty,\n  SUM(oi.lineTotal) as line_total_paise,\n  SUM(oi.lineTotal) / 100.0 as line_total_rupees\nFROM order_items oi\nINNER JOIN products p ON oi.productId = p.id\nINNER JOIN orders o ON oi.orderId = o.id\nWHERE o.orderStatus != 'cancelled' \n  AND o.createdAt >= '2026-01-01' \n  AND o.createdAt <= '2026-02-28 23:59:59';\n",
+  "rows": [
+    {
+      "source": "Itemwise Tab",
+      "order_count": "513",
+      "item_rows": "1272",
+      "total_qty": "1351",
+      "line_total_paise": "50496500",
+      "line_total_rupees": "504965.0000"
+    }
+  ],
+  "messages": [],
+  "stdout": "source\torder_count\titem_rows\ttotal_qty\tline_total_paise\tline_total_rupees\nItemwise Tab\t513\t1272\t1351\t50496500\t504965.0000\n",
+  "stderr": "",
+  "execution_time_ms": 375
+}

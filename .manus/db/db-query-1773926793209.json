@@ -1,0 +1,76 @@
+{
+  "query": "\n-- Check if order 1230001 has any items at all\nSELECT COUNT(*) as item_count FROM order_items WHERE orderId = 1230001;\n\n-- Also check if there are items that DON'T join to products across ALL orders in Jan-Feb\nSELECT oi.orderId, oi.productId, oi.productName, oi.lineTotal / 100.0 as line_total_rupees\nFROM order_items oi\nLEFT JOIN products p ON oi.productId = p.id\nINNER JOIN orders o ON oi.orderId = o.id\nWHERE o.orderStatus != 'cancelled' \n  AND o.createdAt >= '2026-01-01' \n  AND o.createdAt <= '2026-02-28 23:59:59'\n  AND p.id IS NULL\nLIMIT 20;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute \n-- Check if order 1230001 has any items at all\nSELECT COUNT(*) as item_count FROM order_items WHERE orderId = 1230001;\n\n-- Also check if there are items that DON'T join to products across ALL orders in Jan-Feb\nSELECT oi.orderId, oi.productId, oi.productName, oi.lineTotal / 100.0 as line_total_rupees\nFROM order_items oi\nLEFT JOIN products p ON oi.productId = p.id\nINNER JOIN orders o ON oi.orderId = o.id\nWHERE o.orderStatus != 'cancelled' \n  AND o.createdAt >= '2026-01-01' \n  AND o.createdAt <= '2026-02-28 23:59:59'\n  AND p.id IS NULL\nLIMIT 20;\n",
+  "rows": [
+    {
+      "item_count": "0"
+    },
+    {
+      "item_count": "orderId\tproductId\tproductName\tline_total_rupees"
+    },
+    {
+      "item_count": "1920006\t0\t[Custom] slush\t405.0000"
+    },
+    {
+      "item_count": "2010013\t0\t[Custom] HAZELNIT MILK TEA\t345.0000"
+    },
+    {
+      "item_count": "2040004\t0\t[Custom] blueberry mochi\t185.0000"
+    },
+    {
+      "item_count": "2040004\t0\t[Custom] pineapple mochi\t185.0000"
+    },
+    {
+      "item_count": "2070008\t0\t[Custom] strawberry mochi\t185.0000"
+    },
+    {
+      "item_count": "2070008\t0\t[Custom] Blueberry mochi\t185.0000"
+    },
+    {
+      "item_count": "2070008\t0\t[Custom] Mango mochi\t185.0000"
+    },
+    {
+      "item_count": "2070014\t0\t[Custom] buleberry mochi\t185.0000"
+    },
+    {
+      "item_count": "2100006\t0\t[Custom] cafe latte with boba\t405.0000"
+    },
+    {
+      "item_count": "2100006\t0\t[Custom] blueberry mochi\t370.0000"
+    },
+    {
+      "item_count": "2100006\t0\t[Custom] chickgozilla power salad\t580.0000"
+    },
+    {
+      "item_count": "2100034\t0\t[Custom] mango mochi\t185.0000"
+    },
+    {
+      "item_count": "2100034\t0\t[Custom] original boba ceram caramel\t285.0000"
+    },
+    {
+      "item_count": "2130014\t0\t[Custom] the original chickgozilla\t485.0000"
+    },
+    {
+      "item_count": "2130014\t0\t[Custom] spicy margherita with bisal pillow brioche\t435.0000"
+    },
+    {
+      "item_count": "2190003\t0\t[Custom] original japanese Imo katsu curry\t480.0000"
+    },
+    {
+      "item_count": "2190003\t0\t[Custom] origional chickGozilla\t485.0000"
+    },
+    {
+      "item_count": "2190003\t0\t[Custom] rocher mochi\t270.0000"
+    },
+    {
+      "item_count": "2190003\t0\t[Custom] pineapple mochi\t185.0000"
+    },
+    {
+      "item_count": "2190003\t0\t[Custom] strawberry macha latte\t405.0000"
+    }
+  ],
+  "messages": [],
+  "stdout": "item_count\n0\norderId\tproductId\tproductName\tline_total_rupees\n1920006\t0\t[Custom] slush\t405.0000\n2010013\t0\t[Custom] HAZELNIT MILK TEA\t345.0000\n2040004\t0\t[Custom] blueberry mochi\t185.0000\n2040004\t0\t[Custom] pineapple mochi\t185.0000\n2070008\t0\t[Custom] strawberry mochi\t185.0000\n2070008\t0\t[Custom] Blueberry mochi\t185.0000\n2070008\t0\t[Custom] Mango mochi\t185.0000\n2070014\t0\t[Custom] buleberry mochi\t185.0000\n2100006\t0\t[Custom] cafe latte with boba\t405.0000\n2100006\t0\t[Custom] blueberry mochi\t370.0000\n2100006\t0\t[Custom] chickgozilla power salad\t580.0000\n2100034\t0\t[Custom] mango mochi\t185.0000\n2100034\t0\t[Custom] original boba ceram caramel\t285.0000\n2130014\t0\t[Custom] the original chickgozilla\t485.0000\n2130014\t0\t[Custom] spicy margherita with bisal pillow brioche\t435.0000\n2190003\t0\t[Custom] original japanese Imo katsu curry\t480.0000\n2190003\t0\t[Custom] origional chickGozilla\t485.0000\n2190003\t0\t[Custom] rocher mochi\t270.0000\n2190003\t0\t[Custom] pineapple mochi\t185.0000\n2190003\t0\t[Custom] strawberry macha latte\t405.0000\n",
+  "stderr": "",
+  "execution_time_ms": 425
+}

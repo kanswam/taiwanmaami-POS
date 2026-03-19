@@ -2544,3 +2544,11 @@ Orders fixed:
 - [x] Remove Deepi selvan's unearned stamp (1/10 stamps from ₹0 order)
 - [x] Fix birthday drink to require at least one paid food item to qualify
 - [x] Prevent loyalty stamps from being awarded on zero-value orders
+
+## Analytics Dashboard Bug (Mar 19)
+- [x] Fix discrepancy: Sales tab Total Revenue (₹5,43,594.48) vs Itemwise tab Total Revenue (₹5,04,965.00) for Jan-Feb 2026 — ₹38,629 difference
+  - Root cause 1: INNER JOIN to products table excluded 45 custom items (productId=0) worth ₹16,239
+  - Root cause 2: Sales tab showed totalAmount (incl. GST/delivery/discounts), Itemwise showed only lineTotal sum
+  - Fix: Changed INNER JOIN to LEFT JOIN in 4 procedures (getItemwiseSalesReport, getSalesByCategory, getSalesBySubcategory, getProductPerformance)
+  - Fix: Itemwise summary card now shows orderTotalRevenue (matching Sales tab)
+  - Custom items now appear under "Custom Items" category in all reports

@@ -1,0 +1,26 @@
+{
+  "query": "\n-- Sales tab: sum of order.totalAmount (includes GST, delivery, minus discounts)\nSELECT \n  'Sales Tab' as source,\n  COUNT(*) as order_count,\n  SUM(totalAmount) as total_amount_paise,\n  SUM(totalAmount) / 100.0 as total_amount_rupees,\n  SUM(subtotal) as subtotal_paise,\n  SUM(subtotal) / 100.0 as subtotal_rupees,\n  SUM(stateGst + centralGst) as total_gst_paise,\n  SUM(stateGst + centralGst) / 100.0 as total_gst_rupees,\n  SUM(deliveryCharge) as delivery_charge_paise,\n  SUM(deliveryCharge) / 100.0 as delivery_charge_rupees,\n  SUM(discountAmount) as discount_paise,\n  SUM(discountAmount) / 100.0 as discount_rupees,\n  SUM(loyaltyPointsUsed) as loyalty_paise,\n  SUM(loyaltyPointsUsed) / 100.0 as loyalty_rupees\nFROM orders \nWHERE orderStatus != 'cancelled' \n  AND createdAt >= '2026-01-01' \n  AND createdAt <= '2026-02-28 23:59:59';\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute \n-- Sales tab: sum of order.totalAmount (includes GST, delivery, minus discounts)\nSELECT \n  'Sales Tab' as source,\n  COUNT(*) as order_count,\n  SUM(totalAmount) as total_amount_paise,\n  SUM(totalAmount) / 100.0 as total_amount_rupees,\n  SUM(subtotal) as subtotal_paise,\n  SUM(subtotal) / 100.0 as subtotal_rupees,\n  SUM(stateGst + centralGst) as total_gst_paise,\n  SUM(stateGst + centralGst) / 100.0 as total_gst_rupees,\n  SUM(deliveryCharge) as delivery_charge_paise,\n  SUM(deliveryCharge) / 100.0 as delivery_charge_rupees,\n  SUM(discountAmount) as discount_paise,\n  SUM(discountAmount) / 100.0 as discount_rupees,\n  SUM(loyaltyPointsUsed) as loyalty_paise,\n  SUM(loyaltyPointsUsed) / 100.0 as loyalty_rupees\nFROM orders \nWHERE orderStatus != 'cancelled' \n  AND createdAt >= '2026-01-01' \n  AND createdAt <= '2026-02-28 23:59:59';\n",
+  "rows": [
+    {
+      "source": "Sales Tab",
+      "order_count": "514",
+      "total_amount_paise": "54359448",
+      "total_amount_rupees": "543594.4800",
+      "subtotal_paise": "51876626",
+      "subtotal_rupees": "518766.2600",
+      "total_gst_paise": "2548868",
+      "total_gst_rupees": "25488.6800",
+      "delivery_charge_paise": "315000",
+      "delivery_charge_rupees": "3150.0000",
+      "discount_paise": "419450",
+      "discount_rupees": "4194.5000",
+      "loyalty_paise": "0",
+      "loyalty_rupees": "0.0000"
+    }
+  ],
+  "messages": [],
+  "stdout": "source\torder_count\ttotal_amount_paise\ttotal_amount_rupees\tsubtotal_paise\tsubtotal_rupees\ttotal_gst_paise\ttotal_gst_rupees\tdelivery_charge_paise\tdelivery_charge_rupees\tdiscount_paise\tdiscount_rupees\tloyalty_paise\tloyalty_rupees\nSales Tab\t514\t54359448\t543594.4800\t51876626\t518766.2600\t2548868\t25488.6800\t315000\t3150.0000\t419450\t4194.5000\t0\t0.0000\n",
+  "stderr": "",
+  "execution_time_ms": 946
+}

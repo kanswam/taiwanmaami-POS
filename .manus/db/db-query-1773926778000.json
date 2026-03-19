@@ -1,0 +1,17 @@
+{
+  "query": "\n-- Find orders that have NO matching items when joined via INNER JOIN products\n-- (i.e., orders where product was deleted)\nSELECT o.id, o.orderNumber, o.totalAmount / 100.0 as total_rupees, o.subtotal / 100.0 as subtotal_rupees, o.createdAt\nFROM orders o\nWHERE o.orderStatus != 'cancelled' \n  AND o.createdAt >= '2026-01-01' \n  AND o.createdAt <= '2026-02-28 23:59:59'\n  AND o.id NOT IN (\n    SELECT DISTINCT oi.orderId \n    FROM order_items oi \n    INNER JOIN products p ON oi.productId = p.id\n    WHERE oi.orderId = o.id\n  );\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute \n-- Find orders that have NO matching items when joined via INNER JOIN products\n-- (i.e., orders where product was deleted)\nSELECT o.id, o.orderNumber, o.totalAmount / 100.0 as total_rupees, o.subtotal / 100.0 as subtotal_rupees, o.createdAt\nFROM orders o\nWHERE o.orderStatus != 'cancelled' \n  AND o.createdAt >= '2026-01-01' \n  AND o.createdAt <= '2026-02-28 23:59:59'\n  AND o.id NOT IN (\n    SELECT DISTINCT oi.orderId \n    FROM order_items oi \n    INNER JOIN products p ON oi.productId = p.id\n    WHERE oi.orderId = o.id\n  );\n",
+  "rows": [
+    {
+      "id": "1230001",
+      "orderNumber": "00121",
+      "total_rupees": "1292.2600",
+      "subtotal_rupees": "1292.2600",
+      "createdAt": "2026-01-19 12:34:00"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\torderNumber\ttotal_rupees\tsubtotal_rupees\tcreatedAt\n1230001\t00121\t1292.2600\t1292.2600\t2026-01-19 12:34:00\n",
+  "stderr": "",
+  "execution_time_ms": 1877
+}
