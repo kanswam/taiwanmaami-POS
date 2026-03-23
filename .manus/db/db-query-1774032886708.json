@@ -1,0 +1,13 @@
+{
+  "query": "SELECT GROUP_CONCAT(table_name ORDER BY table_name SEPARATOR ', ') as all_tables FROM information_schema.tables WHERE table_schema = DATABASE();",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT GROUP_CONCAT(table_name ORDER BY table_name SEPARATOR ', ') as all_tables FROM information_schema.tables WHERE table_schema = DATABASE();",
+  "rows": [
+    {
+      "all_tables": "__drizzle_migrations, addons, addresses, adminPins, admin_pins, backup_logs, blog_articles, categories, category_addons, category_audit_log, chat_conversations, chat_messages, complaints, content_pages, customization_options, daily_traffic_stats, delivery_areas, delivery_item_sales, delivery_sales_uploads, discountAuthorizations, discount_authorizations, discount_usage, discounts, event_inquiries, event_order_items, event_orders, guest_orders, homepage_sections, kot_queue, loyalty_rewards, loyalty_transactions, order_audit_log, order_item_addons, order_items, orders, outlet_products, pageviews, partner_benefits_log, partner_config, partner_referrals, partner_subscriptions, payments, popup_registrations, pos_audit_log, pos_sessions, product_addons, product_audit_log, products, receipt_queue, refundRequests, refund_requests, reviews, site_settings, stamp_transactions, store_locations, subcategories, subcategory_addons, users, wholesale_cart, wholesale_categories, wholesale_customers, wholesale_order_items, whol"
+    }
+  ],
+  "messages": [],
+  "stdout": "all_tables\n__drizzle_migrations, addons, addresses, adminPins, admin_pins, backup_logs, blog_articles, categories, category_addons, category_audit_log, chat_conversations, chat_messages, complaints, content_pages, customization_options, daily_traffic_stats, delivery_areas, delivery_item_sales, delivery_sales_uploads, discountAuthorizations, discount_authorizations, discount_usage, discounts, event_inquiries, event_order_items, event_orders, guest_orders, homepage_sections, kot_queue, loyalty_rewards, loyalty_transactions, order_audit_log, order_item_addons, order_items, orders, outlet_products, pageviews, partner_benefits_log, partner_config, partner_referrals, partner_subscriptions, payments, popup_registrations, pos_audit_log, pos_sessions, product_addons, product_audit_log, products, receipt_queue, refundRequests, refund_requests, reviews, site_settings, stamp_transactions, store_locations, subcategories, subcategory_addons, users, wholesale_cart, wholesale_categories, wholesale_customers, wholesale_order_items, whol\n",
+  "stderr": "",
+  "execution_time_ms": 397
+}

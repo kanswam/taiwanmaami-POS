@@ -2594,3 +2594,9 @@ Orders fixed:
 - [x] Hide "Partner" link from navigation header unless gate key is in session
 - [x] Show "Coming Soon" page for visitors without the key
 - [x] Verified: checkout integration is safe for non-partners (benefit check returns null and is skipped)
+
+## Invoice Numbering Reset for FY 2026-27 (Mar 23)
+- [x] Reset invoice number to 1 from April 1st 2026 (new financial year)
+- [x] Implement financial year-aware invoice numbering logic (shared orderNumberHelper.ts)
+- [x] Ensure previous FY invoices retain their numbers (query filters by FY start date)
+- [x] Write tests to verify the reset logic (12 tests passing)

@@ -1,0 +1,15 @@
+{
+  "query": "SELECT MAX(CAST(orderNumber AS UNSIGNED)) as maxNum, MIN(createdAt) as firstOrder, MAX(createdAt) as lastOrder FROM orders WHERE orderNumber REGEXP '^[0-9]+$'",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT MAX(CAST(orderNumber AS UNSIGNED)) as maxNum, MIN(createdAt) as firstOrder, MAX(createdAt) as lastOrder FROM orders WHERE orderNumber REGEXP '^[0-9]+$'",
+  "rows": [
+    {
+      "maxNum": "807",
+      "firstOrder": "2026-01-03 15:20:08",
+      "lastOrder": "2026-03-23 12:33:12"
+    }
+  ],
+  "messages": [],
+  "stdout": "maxNum\tfirstOrder\tlastOrder\n807\t2026-01-03 15:20:08\t2026-03-23 12:33:12\n",
+  "stderr": "",
+  "execution_time_ms": 829
+}

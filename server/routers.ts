@@ -405,11 +405,9 @@ export const appRouter = router({
         const finalGst = (birthdayFreeApplied || partnerBenefitAmount > 0) ? calculateGst(netAfterDiscount) : gst;
         const totalAmount = subtotal + finalGst.total + deliveryCharge - discountAmount - partnerBenefitAmount - input.loyaltyPointsUsed;
         
-        // Generate sequential 5-digit order number
-        const [maxOrderResult] = await dbInstance!.execute(sql`SELECT MAX(CAST(orderNumber AS UNSIGNED)) as maxNum FROM orders WHERE orderNumber REGEXP '^[0-9]+$'`);
-        const maxNum = (maxOrderResult as any)[0]?.maxNum || 0;
-        const nextNum = maxNum + 1;
-        const orderNumber = String(nextNum).padStart(5, '0');
+        // Generate sequential 5-digit order number (resets each financial year on April 1st)
+        const { generateNextOrderNumber } = await import('./orderNumberHelper');
+        const orderNumber = await generateNextOrderNumber(dbInstance!);
 
         // Determine outletId: Delivery always from T.Nagar (2), otherwise use provided outletId
         const outletId = input.orderType === 'delivery' ? 2 : (input.outletId || 2);
@@ -4052,11 +4050,9 @@ export const appRouter = router({
         }
         const totalAmount = subtotal + gstDetails.total + deliveryCharge;
         
-        // Generate sequential 5-digit order number
-        const [maxOrderResult] = await dbInstance!.execute(sql`SELECT MAX(CAST(orderNumber AS UNSIGNED)) as maxNum FROM orders WHERE orderNumber REGEXP '^[0-9]+$'`);
-        const maxNum = (maxOrderResult as any)[0]?.maxNum || 0;
-        const nextNum = maxNum + 1;
-        const orderNumber = String(nextNum).padStart(5, '0');
+        // Generate sequential 5-digit order number (resets each financial year on April 1st)
+        const { generateNextOrderNumber } = await import('./orderNumberHelper');
+        const orderNumber = await generateNextOrderNumber(dbInstance!);
         
         // Create order (userId = null for guest)
         const [orderResult] = await dbInstance!.insert(orders).values({
