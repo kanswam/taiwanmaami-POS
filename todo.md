@@ -2607,5 +2607,17 @@ Orders fixed:
 - [x] Keep it non-cluttering and dismissible (X button to close)
 
 ## Menu Toggle Bug - Onu Noodles (Mar 24)
-- [ ] Investigate why toggling different levels of food menu doesn't make Onu Noodles available
-- [ ] Fix the menu toggle logic
+- [x] Investigate why toggling different levels of food menu doesn't make Onu Noodles available
+- [x] Fix the menu toggle logic (root cause: Omelette subcategory id=14 had availableInstore=0, blocking product-level settings)
+- [x] Updated Omelette subcategory availableInstore/Delivery/Pickup to 1 — Omunoodles and Omurice now visible
+
+## Automated Food Availability Scheduler (Mar 24)
+- [x] Build time-based food availability logic (Mon-Fri 4PM-12AM, Sat-Sun 12-3PM & 6PM-12AM)
+- [x] Beverages and Mochis remain available all day (12 Noon - 12 Midnight)
+- [x] Filter food items from menu API response based on current time/day in IST
+- [x] Admin UI to manage food time windows without code changes (Food Schedule tab in Admin Settings)
+- [x] Write tests for the scheduler logic (51 tests passing)
+- [x] Customer-facing food unavailability banner on Menu page (amber notice with schedule times)
+- [x] Backend: foodSchedule.ts with IST time checking, DB persistence, 5-min caching
+- [x] API: getFoodStatus (public), getFoodSchedule (staff), updateFoodSchedule (admin) procedures
+- [x] Menu API filters out Food category (id=4) outside scheduled hours

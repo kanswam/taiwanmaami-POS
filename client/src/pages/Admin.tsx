@@ -267,9 +267,9 @@ export default function Admin() {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button 
-                  variant={['settings', 'bulk-upload', 'cms', 'admin-pin', 'refunds', 'homepage-settings'].includes(activeTab) ? 'default' : 'outline'} 
+                  variant={['settings', 'bulk-upload', 'cms', 'admin-pin', 'refunds', 'homepage-settings', 'food-schedule'].includes(activeTab) ? 'default' : 'outline'} 
                   size="sm" 
-                  className={`gap-2 ${!['settings', 'bulk-upload', 'cms', 'admin-pin', 'refunds', 'backup', 'homepage-settings'].includes(activeTab) ? 'border-transparent hover:bg-accent' : ''}`}
+                  className={`gap-2 ${!['settings', 'bulk-upload', 'cms', 'admin-pin', 'refunds', 'backup', 'homepage-settings', 'food-schedule'].includes(activeTab) ? 'border-transparent hover:bg-accent' : ''}`}
                 >
                   <Settings className="w-4 h-4" />
                   Settings
@@ -279,6 +279,9 @@ export default function Admin() {
               <DropdownMenuContent align="start">
                 <DropdownMenuItem onClick={() => setActiveTab('settings')} className={activeTab === 'settings' ? 'bg-accent' : ''}>
                   <Settings className="w-4 h-4 mr-2" /> Site Settings
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setActiveTab('food-schedule')} className={activeTab === 'food-schedule' ? 'bg-accent' : ''}>
+                  <Clock className="w-4 h-4 mr-2" /> Food Schedule
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setActiveTab('homepage-settings')} className={activeTab === 'homepage-settings' ? 'bg-accent' : ''}>
                   <Home className="w-4 h-4 mr-2" /> Homepage Settings
@@ -357,6 +360,9 @@ export default function Admin() {
 
           <TabsContent value="settings">
             <SiteSettingsTab />
+          </TabsContent>
+          <TabsContent value="food-schedule">
+            <FoodScheduleTab />
           </TabsContent>
 
           <TabsContent value="bulk-pricing">
@@ -5512,6 +5518,230 @@ const [mergeSource, setMergeSource] = useState<{ id: number | string; name: stri
           </DialogFooter>
         </DialogContent>
       </Dialog>
+    </div>
+  );
+}
+
+// Food Schedule Tab Component
+function FoodScheduleTab() {
+  const { data: scheduleData, refetch } = trpc.admin.getFoodSchedule.useQuery();
+  const updateSchedule = trpc.admin.updateFoodSchedule.useMutation({
+    onSuccess: () => {
+      refetch();
+      toast.success('Food schedule updated successfully');
+    },
+    onError: (err: any) => toast.error(err.message || 'Failed to update schedule'),
+  });
+
+  const [enabled, setEnabled] = useState(true);
+  const [weekdayStart, setWeekdayStart] = useState('16:00');
+  const [weekdayEnd, setWeekdayEnd] = useState('24:00');
+  const [weekendSlot1Start, setWeekendSlot1Start] = useState('12:00');
+  const [weekendSlot1End, setWeekendSlot1End] = useState('15:00');
+  const [weekendSlot2Start, setWeekendSlot2Start] = useState('18:00');
+  const [weekendSlot2End, setWeekendSlot2End] = useState('24:00');
+
+  useEffect(() => {
+    if (scheduleData?.config) {
+      const c = scheduleData.config;
+      setEnabled(c.enabled);
+      if (c.weekday.length > 0) {
+        setWeekdayStart(`${String(c.weekday[0].startHour).padStart(2, '0')}:${String(c.weekday[0].startMinute).padStart(2, '0')}`);
+        setWeekdayEnd(`${String(c.weekday[0].endHour).padStart(2, '0')}:${String(c.weekday[0].endMinute).padStart(2, '0')}`);
+      }
+      if (c.weekend.length > 0) {
+        setWeekendSlot1Start(`${String(c.weekend[0].startHour).padStart(2, '0')}:${String(c.weekend[0].startMinute).padStart(2, '0')}`);
+        setWeekendSlot1End(`${String(c.weekend[0].endHour).padStart(2, '0')}:${String(c.weekend[0].endMinute).padStart(2, '0')}`);
+      }
+      if (c.weekend.length > 1) {
+        setWeekendSlot2Start(`${String(c.weekend[1].startHour).padStart(2, '0')}:${String(c.weekend[1].startMinute).padStart(2, '0')}`);
+        setWeekendSlot2End(`${String(c.weekend[1].endHour).padStart(2, '0')}:${String(c.weekend[1].endMinute).padStart(2, '0')}`);
+      }
+    }
+  }, [scheduleData]);
+
+  const parseTime = (t: string) => {
+    const [h, m] = t.split(':').map(Number);
+    return { startHour: h, startMinute: m };
+  };
+
+  const handleSave = () => {
+    const wdStart = parseTime(weekdayStart);
+    const wdEnd = parseTime(weekdayEnd);
+    const we1Start = parseTime(weekendSlot1Start);
+    const we1End = parseTime(weekendSlot1End);
+    const we2Start = parseTime(weekendSlot2Start);
+    const we2End = parseTime(weekendSlot2End);
+
+    updateSchedule.mutate({
+      enabled,
+      weekday: [{
+        startHour: wdStart.startHour, startMinute: wdStart.startMinute,
+        endHour: wdEnd.startHour, endMinute: wdEnd.startMinute,
+      }],
+      weekend: [
+        { startHour: we1Start.startHour, startMinute: we1Start.startMinute, endHour: we1End.startHour, endMinute: we1End.startMinute },
+        { startHour: we2Start.startHour, startMinute: we2Start.startMinute, endHour: we2End.startHour, endMinute: we2End.startMinute },
+      ],
+    });
+  };
+
+  const timeOptions = [
+    '00:00', '01:00', '02:00', '03:00', '04:00', '05:00', '06:00', '07:00', '08:00', '09:00', '10:00', '11:00',
+    '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00', '21:00', '22:00', '23:00', '24:00'
+  ];
+
+  const formatTimeLabel = (t: string) => {
+    const [h] = t.split(':').map(Number);
+    if (h === 0) return '12 AM';
+    if (h === 12) return '12 PM';
+    if (h === 24) return '12 AM (Midnight)';
+    if (h > 12) return `${h - 12} PM`;
+    return `${h} AM`;
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-xl font-bold">Food Availability Schedule</h2>
+          <p className="text-sm text-muted-foreground mt-1">
+            Automatically show/hide food items on the customer menu based on time of day.
+            Beverages and Mochi Desserts are always available.
+          </p>
+        </div>
+        <div className="flex items-center gap-3">
+          <span className="text-sm font-medium">{enabled ? 'Active' : 'Disabled'}</span>
+          <button
+            onClick={() => setEnabled(!enabled)}
+            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+              enabled ? 'bg-green-600' : 'bg-gray-300'
+            }`}
+          >
+            <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+              enabled ? 'translate-x-6' : 'translate-x-1'
+            }`} />
+          </button>
+        </div>
+      </div>
+
+      {/* Current Status */}
+      <div className={`p-4 rounded-lg border-2 ${
+        scheduleData?.currentlyAvailable
+          ? 'border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950'
+          : 'border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950'
+      }`}>
+        <div className="flex items-center gap-2">
+          <div className={`w-3 h-3 rounded-full ${
+            scheduleData?.currentlyAvailable ? 'bg-green-500 animate-pulse' : 'bg-amber-500'
+          }`} />
+          <span className="font-semibold">
+            Food is currently {scheduleData?.currentlyAvailable ? 'AVAILABLE' : 'UNAVAILABLE'} on the menu
+          </span>
+        </div>
+        {!enabled && (
+          <p className="text-sm text-muted-foreground mt-1">
+            Schedule is disabled — food items are shown at all times regardless of schedule.
+          </p>
+        )}
+      </div>
+
+      {enabled && (
+        <div className="grid gap-6 md:grid-cols-2">
+          {/* Weekday Schedule */}
+          <div className="p-5 rounded-xl border bg-card">
+            <h3 className="font-semibold text-lg mb-1">Monday – Friday</h3>
+            <p className="text-xs text-muted-foreground mb-4">Single food service window</p>
+            <div className="flex items-center gap-3">
+              <div className="flex-1">
+                <label className="text-xs font-medium text-muted-foreground">From</label>
+                <select value={weekdayStart} onChange={e => setWeekdayStart(e.target.value)}
+                  className="w-full mt-1 px-3 py-2 rounded-md border bg-background text-sm">
+                  {timeOptions.filter(t => t !== '24:00').map(t => (
+                    <option key={t} value={t}>{formatTimeLabel(t)}</option>
+                  ))}
+                </select>
+              </div>
+              <span className="mt-5 text-muted-foreground">→</span>
+              <div className="flex-1">
+                <label className="text-xs font-medium text-muted-foreground">To</label>
+                <select value={weekdayEnd} onChange={e => setWeekdayEnd(e.target.value)}
+                  className="w-full mt-1 px-3 py-2 rounded-md border bg-background text-sm">
+                  {timeOptions.map(t => (
+                    <option key={t} value={t}>{formatTimeLabel(t)}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          </div>
+
+          {/* Weekend Schedule */}
+          <div className="p-5 rounded-xl border bg-card">
+            <h3 className="font-semibold text-lg mb-1">Saturday – Sunday</h3>
+            <p className="text-xs text-muted-foreground mb-4">Two food service windows</p>
+            
+            <div className="space-y-3">
+              <div>
+                <label className="text-xs font-medium text-green-700 dark:text-green-400">Slot 1 (Lunch)</label>
+                <div className="flex items-center gap-3 mt-1">
+                  <select value={weekendSlot1Start} onChange={e => setWeekendSlot1Start(e.target.value)}
+                    className="flex-1 px-3 py-2 rounded-md border bg-background text-sm">
+                    {timeOptions.filter(t => t !== '24:00').map(t => (
+                      <option key={t} value={t}>{formatTimeLabel(t)}</option>
+                    ))}
+                  </select>
+                  <span className="text-muted-foreground">→</span>
+                  <select value={weekendSlot1End} onChange={e => setWeekendSlot1End(e.target.value)}
+                    className="flex-1 px-3 py-2 rounded-md border bg-background text-sm">
+                    {timeOptions.map(t => (
+                      <option key={t} value={t}>{formatTimeLabel(t)}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              <div>
+                <label className="text-xs font-medium text-green-700 dark:text-green-400">Slot 2 (Dinner)</label>
+                <div className="flex items-center gap-3 mt-1">
+                  <select value={weekendSlot2Start} onChange={e => setWeekendSlot2Start(e.target.value)}
+                    className="flex-1 px-3 py-2 rounded-md border bg-background text-sm">
+                    {timeOptions.filter(t => t !== '24:00').map(t => (
+                      <option key={t} value={t}>{formatTimeLabel(t)}</option>
+                    ))}
+                  </select>
+                  <span className="text-muted-foreground">→</span>
+                  <select value={weekendSlot2End} onChange={e => setWeekendSlot2End(e.target.value)}
+                    className="flex-1 px-3 py-2 rounded-md border bg-background text-sm">
+                    {timeOptions.map(t => (
+                      <option key={t} value={t}>{formatTimeLabel(t)}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="flex items-center gap-4">
+        <Button onClick={handleSave} disabled={updateSchedule.isPending}>
+          {updateSchedule.isPending ? 'Saving...' : 'Save Schedule'}
+        </Button>
+        <p className="text-xs text-muted-foreground">
+          Changes take effect within 5 minutes (cached for performance).
+          The schedule uses Indian Standard Time (IST).
+        </p>
+      </div>
+
+      {/* Info box */}
+      <div className="p-4 rounded-lg bg-muted/50 border">
+        <h4 className="font-medium text-sm mb-2">How it works</h4>
+        <ul className="text-xs text-muted-foreground space-y-1">
+          <li>• When food is outside its scheduled hours, the entire Food category is hidden from the customer menu</li>
+          <li>• Beverages (Iced & Hot) and Sweet Bites (Mochis) are always visible during store hours</li>
+          <li>• Staff/admin menu always shows all items regardless of schedule</li>
+          <li>• Disable the schedule to show food items at all times (useful for special events)</li>
+        </ul>
+      </div>
     </div>
   );
 }

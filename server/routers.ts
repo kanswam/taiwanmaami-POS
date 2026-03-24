@@ -21,6 +21,7 @@ import { transcribeAudio } from './_core/voiceTranscription';
 import { textToSpeech, getVoiceForLanguage } from './tts';
 import { storagePut } from './storage';
 import { partnerRouter, calculatePartnerBenefits, getActivePartnerSubscription } from './partnerRouter';
+import { isFoodAvailable, getFoodCategoryId, getFoodSchedule, saveFoodSchedule, formatSchedule, invalidateScheduleCache } from './foodSchedule';
 import { partnerBenefitsLog, partnerSubscriptions } from '../drizzle/schema';
 
 // Admin procedure - only allows admin role
@@ -55,6 +56,14 @@ export const appRouter = router({
   menu: router({
     getCategories: publicProcedure.query(async () => {
       return db.getCategories();
+    }),
+
+    // Public food schedule status — tells the frontend if food is currently available
+    getFoodStatus: publicProcedure.query(async () => {
+      const available = await isFoodAvailable();
+      const config = await getFoodSchedule();
+      const formatted = formatSchedule(config);
+      return { foodAvailable: available, schedule: formatted };
     }),
 
     getSubcategories: publicProcedure
@@ -139,11 +148,21 @@ export const appRouter = router({
         const dbInstance = await getDb();
         if (!dbInstance) return { categories: [], subcategories: [], products: [], addons: [] };
 
-        const cats = await db.getCategories();
+        const allCats = await db.getCategories();
         const allSubs = await db.getSubcategories();
         
+        // Check if food is currently available based on time schedule
+        const foodAvailable = await isFoodAvailable();
+        const foodCategoryId = getFoodCategoryId();
+        
+        // Filter out food category entirely when outside food hours
+        const cats = foodAvailable ? allCats : allCats.filter(c => c.id !== foodCategoryId);
+        
         // Filter subcategories by availability for the order type
+        // Also filter out food subcategories when outside food hours
         const subs = allSubs.filter(sub => {
+          // If food is not available, exclude all food subcategories
+          if (!foodAvailable && sub.categoryId === foodCategoryId) return false;
           if (input.isDelivery) return sub.availableDelivery !== false;
           if (input.isPickup) return sub.availablePickup !== false;
           return sub.availableInstore !== false;
@@ -171,7 +190,7 @@ export const appRouter = router({
           .then(prods => prods.filter(p => availableSubcategoryIds.includes(p.subcategoryId)));
         const adds = await db.getAddons();
 
-        return { categories: cats, subcategories: subs, products: prods, addons: adds };
+        return { categories: cats, subcategories: subs, products: prods, addons: adds, foodAvailable };
       }),
   }),
 
@@ -2234,6 +2253,37 @@ export const appRouter = router({
 
       return { categories: cats, subcategories: subs, products: allProds, addons: adds };
     }),
+
+    // Food Schedule Management
+    getFoodSchedule: staffProcedure.query(async () => {
+      const config = await getFoodSchedule();
+      const formatted = formatSchedule(config);
+      const currentlyAvailable = await isFoodAvailable();
+      return { config, formatted, currentlyAvailable };
+    }),
+
+    updateFoodSchedule: adminProcedure
+      .input(z.object({
+        enabled: z.boolean(),
+        weekday: z.array(z.object({
+          startHour: z.number().min(0).max(24),
+          startMinute: z.number().min(0).max(59),
+          endHour: z.number().min(0).max(24),
+          endMinute: z.number().min(0).max(59),
+        })),
+        weekend: z.array(z.object({
+          startHour: z.number().min(0).max(24),
+          startMinute: z.number().min(0).max(59),
+          endHour: z.number().min(0).max(24),
+          endMinute: z.number().min(0).max(59),
+        })),
+      }))
+      .mutation(async ({ input }) => {
+        const success = await saveFoodSchedule(input);
+        if (!success) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to save food schedule' });
+        invalidateScheduleCache();
+        return { success: true };
+      }),
 
     // Seed database
     seed: adminProcedure.mutation(async () => {

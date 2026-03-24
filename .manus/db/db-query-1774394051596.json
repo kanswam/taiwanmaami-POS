@@ -1,0 +1,20 @@
+{
+  "query": "SELECT id, name, subcategoryId FROM products WHERE subcategoryId = 14;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT id, name, subcategoryId FROM products WHERE subcategoryId = 14;",
+  "rows": [
+    {
+      "id": "71",
+      "name": "Omunoodles",
+      "subcategoryId": "14"
+    },
+    {
+      "id": "72",
+      "name": "Omurice",
+      "subcategoryId": "14"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\tsubcategoryId\n71\tOmunoodles\t14\n72\tOmurice\t14\n",
+  "stderr": "",
+  "execution_time_ms": 371
+}
