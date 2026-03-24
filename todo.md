@@ -2600,3 +2600,8 @@ Orders fixed:
 - [x] Implement financial year-aware invoice numbering logic (shared orderNumberHelper.ts)
 - [x] Ensure previous FY invoices retain their numbers (query filters by FY start date)
 - [x] Write tests to verify the reset logic (12 tests passing)
+
+## Landing Page Food Banner (Mar 24)
+- [x] Add clean banner announcing no food service today with apology
+- [x] Display regular food timings (Mon-Fri 4pm-12am, Sat-Sun 12-3pm & 6pm-12am)
+- [x] Keep it non-cluttering and dismissible (X button to close)

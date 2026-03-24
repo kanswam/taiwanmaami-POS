@@ -152,6 +152,9 @@ export default function Home() {
     }
   };
 
+  // Food service banner dismiss state
+  const [foodBannerDismissed, setFoodBannerDismissed] = useState(false);
+
   // Quick Add modal state
   const [quickAddProductId, setQuickAddProductId] = useState<number | null>(null);
 
@@ -500,6 +503,46 @@ export default function Home() {
               ))}
             </div>
           </div>
+        </div>
+      )}
+
+      {/* ===== FOOD SERVICE ANNOUNCEMENT BANNER ===== */}
+      {!foodBannerDismissed && (
+        <div className="relative bg-amber-50 border-b border-amber-200">
+          <div className="container py-3 pr-10">
+            <div className="flex items-start gap-3">
+              <div className="flex-shrink-0 mt-0.5">
+                <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center">
+                  <span className="text-base">🍜</span>
+                </div>
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-amber-900">
+                  Food Service Unavailable Today
+                </p>
+                <p className="text-xs text-amber-700 mt-0.5">
+                  We sincerely apologise — due to staff shortage and an ongoing gas supply issue, we are unable to serve food items today. All beverages and mochis remain available as usual.
+                </p>
+                <div className="mt-2 flex flex-wrap gap-x-6 gap-y-1 text-xs text-amber-800">
+                  <span className="flex items-center gap-1.5">
+                    <Clock className="w-3 h-3" />
+                    <span><strong>Mon–Fri:</strong> 4 PM – 12 AM</span>
+                  </span>
+                  <span className="flex items-center gap-1.5">
+                    <Clock className="w-3 h-3" />
+                    <span><strong>Sat–Sun:</strong> 12 – 3 PM & 6 PM – 12 AM</span>
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <button
+            onClick={() => setFoodBannerDismissed(true)}
+            className="absolute top-2.5 right-3 p-1 rounded-full hover:bg-amber-200/60 transition-colors text-amber-600"
+            aria-label="Dismiss"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
         </div>
       )}
 
