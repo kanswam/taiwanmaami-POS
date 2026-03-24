@@ -1,0 +1,28 @@
+{
+  "query": "SELECT p.id, p.name, p.isAvailable, p.isInStock, p.isActive, p.availableInstore, p.availableDelivery, p.availableAtPalladium, p.availableAtTnagar, p.subcategoryId, sc.name as scName, sc.isActive as scActive, sc.availableInstore as scInstore, sc.availableDelivery as scDelivery, sc.availableAtPalladium as scPalladium, sc.availableAtTnagar as scTnagar FROM products p JOIN subcategories sc ON p.subcategoryId = sc.id WHERE p.name = 'Omunoodles'",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT p.id, p.name, p.isAvailable, p.isInStock, p.isActive, p.availableInstore, p.availableDelivery, p.availableAtPalladium, p.availableAtTnagar, p.subcategoryId, sc.name as scName, sc.isActive as scActive, sc.availableInstore as scInstore, sc.availableDelivery as scDelivery, sc.availableAtPalladium as scPalladium, sc.availableAtTnagar as scTnagar FROM products p JOIN subcategories sc ON p.subcategoryId = sc.id WHERE p.name = 'Omunoodles'",
+  "rows": [
+    {
+      "id": "71",
+      "name": "Omunoodles",
+      "isAvailable": "1",
+      "isInStock": "1",
+      "isActive": "1",
+      "availableInstore": "1",
+      "availableDelivery": "1",
+      "availableAtPalladium": "0",
+      "availableAtTnagar": "1",
+      "subcategoryId": "14",
+      "scName": "Omelette ",
+      "scActive": "1",
+      "scInstore": "0",
+      "scDelivery": "0",
+      "scPalladium": "0",
+      "scTnagar": "1"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\tisAvailable\tisInStock\tisActive\tavailableInstore\tavailableDelivery\tavailableAtPalladium\tavailableAtTnagar\tsubcategoryId\tscName\tscActive\tscInstore\tscDelivery\tscPalladium\tscTnagar\n71\tOmunoodles\t1\t1\t1\t1\t1\t0\t1\t14\tOmelette \t1\t0\t0\t0\t1\n",
+  "stderr": "",
+  "execution_time_ms": 374
+}

@@ -1,0 +1,8 @@
+{
+  "query": "SELECT p.id, p.name, p.slug, p.isAvailable, p.categoryId, p.subcategoryId, c.name as categoryName, c.isActive as categoryActive, sc.name as subcategoryName, sc.isActive as subcategoryActive FROM products p LEFT JOIN categories c ON p.categoryId = c.id LEFT JOIN subcategories sc ON p.subcategoryId = sc.id WHERE p.name LIKE '%Onu%' OR p.name LIKE '%onu%' OR p.name LIKE '%noodle%' OR p.name LIKE '%Noodle%'",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT p.id, p.name, p.slug, p.isAvailable, p.categoryId, p.subcategoryId, c.name as categoryName, c.isActive as categoryActive, sc.name as subcategoryName, sc.isActive as subcategoryActive FROM products p LEFT JOIN categories c ON p.categoryId = c.id LEFT JOIN subcategories sc ON p.subcategoryId = sc.id WHERE p.name LIKE '%Onu%' OR p.name LIKE '%onu%' OR p.name LIKE '%noodle%' OR p.name LIKE '%Noodle%'",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1054 (42S22) at line 1: Unknown column 'p.categoryid' in 'on clause'"
+  ]
+}

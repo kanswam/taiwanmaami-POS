@@ -518,25 +518,28 @@ export default function Home() {
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-semibold text-amber-900">
-                  Food Service Unavailable Today
+                  Our Service Hours
                 </p>
-                <p className="text-xs text-amber-700 mt-0.5">
-                  We sincerely apologise — due to staff shortage and an ongoing gas supply issue, we are unable to serve food items today. All beverages and mochis remain available as usual.
-                </p>
-                <div className="mt-2 flex flex-wrap gap-x-6 gap-y-1 text-xs text-amber-800">
-                  <span className="font-semibold">Food timings:</span>
-                  <span className="flex items-center gap-1.5">
-                    <Clock className="w-3 h-3" />
-                    <span><strong>Mon–Fri:</strong> 4 PM – 12 AM</span>
-                  </span>
-                  <span className="flex items-center gap-1.5">
-                    <Clock className="w-3 h-3" />
-                    <span><strong>Sat–Sun:</strong> 12 – 3 PM & 6 PM – 12 AM</span>
-                  </span>
+                <div className="mt-1.5 space-y-1.5">
+                  <div className="flex flex-wrap gap-x-6 gap-y-1 text-xs text-amber-800">
+                    <span className="font-semibold">Food:</span>
+                    <span className="flex items-center gap-1.5">
+                      <Clock className="w-3 h-3" />
+                      <span><strong>Mon–Fri:</strong> 4 PM – 12 AM</span>
+                    </span>
+                    <span className="flex items-center gap-1.5">
+                      <Clock className="w-3 h-3" />
+                      <span><strong>Sat–Sun:</strong> 12 – 3 PM & 6 PM – 12 AM</span>
+                    </span>
+                  </div>
+                  <div className="flex flex-wrap gap-x-4 text-xs text-amber-800">
+                    <span className="font-semibold">Beverages & Mochi Desserts:</span>
+                    <span className="flex items-center gap-1.5">
+                      <Clock className="w-3 h-3" />
+                      <span><strong>Every day:</strong> 12 Noon – 12 Midnight</span>
+                    </span>
+                  </div>
                 </div>
-                <p className="mt-1.5 text-xs text-amber-700 italic">
-                  Beverages & Mochis are available throughout the day.
-                </p>
               </div>
             </div>
           </div>

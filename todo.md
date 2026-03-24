@@ -2605,3 +2605,7 @@ Orders fixed:
 - [x] Add clean banner announcing no food service today with apology
 - [x] Display regular food timings (Mon-Fri 4pm-12am, Sat-Sun 12-3pm & 6pm-12am)
 - [x] Keep it non-cluttering and dismissible (X button to close)
+
+## Menu Toggle Bug - Onu Noodles (Mar 24)
+- [ ] Investigate why toggling different levels of food menu doesn't make Onu Noodles available
+- [ ] Fix the menu toggle logic
