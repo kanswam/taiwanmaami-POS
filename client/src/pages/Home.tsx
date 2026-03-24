@@ -524,6 +524,7 @@ export default function Home() {
                   We sincerely apologise — due to staff shortage and an ongoing gas supply issue, we are unable to serve food items today. All beverages and mochis remain available as usual.
                 </p>
                 <div className="mt-2 flex flex-wrap gap-x-6 gap-y-1 text-xs text-amber-800">
+                  <span className="font-semibold">Food timings:</span>
                   <span className="flex items-center gap-1.5">
                     <Clock className="w-3 h-3" />
                     <span><strong>Mon–Fri:</strong> 4 PM – 12 AM</span>
@@ -533,6 +534,9 @@ export default function Home() {
                     <span><strong>Sat–Sun:</strong> 12 – 3 PM & 6 PM – 12 AM</span>
                   </span>
                 </div>
+                <p className="mt-1.5 text-xs text-amber-700 italic">
+                  Beverages & Mochis are available throughout the day.
+                </p>
               </div>
             </div>
           </div>
