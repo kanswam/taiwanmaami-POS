@@ -8322,44 +8322,57 @@ export const appRouter = router({
     submitInquiry: publicProcedure
       .input(z.object({
         customerName: z.string().min(1),
-        customerEmail: z.string().email(),
-        customerPhone: z.string().min(10),
-        companyName: z.string().optional(),
-        eventType: z.enum(["wedding", "corporate", "school", "private", "other"]),
+        email: z.string().email(),
+        phone: z.string().min(10),
+        company: z.string().optional(),
+        eventType: z.enum(["wedding", "corporate", "school", "birthday", "private", "festival", "other"]),
         eventDate: z.string(),
-        eventTime: z.string().optional(),
+        eventTime: z.string(),
         venue: z.string().min(1),
         guestCount: z.number().min(1),
-        cateringType: z.enum(["beverages_only", "food_only", "both"]),
-        preferredItems: z.string().optional(),
+        serviceType: z.enum(["beverages_only", "food_only", "both"]),
+        preferredBeverages: z.string().optional(),
+        preferredFood: z.string().optional(),
         budgetRange: z.string().optional(),
         specialRequirements: z.string().optional(),
+        referralSource: z.string().optional(),
       }))
       .mutation(async ({ input }) => {
         const database = await getDb();
         if (!database) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Database not available' });
+        const refNum = `EV${Date.now().toString(36).toUpperCase()}`;
         const result = await database.insert(eventInquiries).values({
-          ...input,
-          companyName: input.companyName || null,
-          eventTime: input.eventTime || null,
-          preferredItems: input.preferredItems || null,
+          referenceNumber: refNum,
+          customerName: input.customerName,
+          email: input.email,
+          phone: input.phone,
+          company: input.company || null,
+          eventType: input.eventType,
+          eventDate: new Date(input.eventDate),
+          eventTime: input.eventTime,
+          venue: input.venue,
+          guestCount: input.guestCount,
+          serviceType: input.serviceType,
+          preferredBeverages: input.preferredBeverages || null,
+          preferredFood: input.preferredFood || null,
           budgetRange: input.budgetRange || null,
           specialRequirements: input.specialRequirements || null,
+          referralSource: input.referralSource || null,
         });
         
         // Notify owner about new inquiry
         await notifyOwner({
           title: `New Event Inquiry: ${input.eventType}`,
-          content: `New event inquiry from ${input.customerName} (${input.customerEmail})\n\nEvent: ${input.eventType}\nDate: ${input.eventDate}\nVenue: ${input.venue}\nGuests: ${input.guestCount}\nCatering: ${input.cateringType}`,
+          content: `New event inquiry from ${input.customerName} (${input.email})\n\nEvent: ${input.eventType}\nDate: ${input.eventDate}\nVenue: ${input.venue}\nGuests: ${input.guestCount}\nService: ${input.serviceType}`,
         });
         
-        return { success: true, id: result[0].insertId };
+        return { success: true, id: result[0].insertId, referenceNumber: refNum };
       }),
 
     // Get all inquiries (admin)
     getInquiries: adminProcedure
       .input(z.object({
-        status: z.enum(["new", "contacted", "quoted", "confirmed", "cancelled", "all"]).optional(),
+        status: z.enum(["new", "contacted", "quoted", "confirmed", "completed", "cancelled", "all"]).optional(),
       }).optional())
       .query(async ({ input }) => {
         const database = await getDb();
@@ -8379,8 +8392,8 @@ export const appRouter = router({
     updateInquiryStatus: adminProcedure
       .input(z.object({
         id: z.number(),
-        status: z.enum(["new", "contacted", "quoted", "confirmed", "cancelled"]),
-        adminNotes: z.string().optional(),
+        status: z.enum(["new", "contacted", "quoted", "confirmed", "completed", "cancelled"]),
+        internalNotes: z.string().optional(),
       }))
       .mutation(async ({ input }) => {
         const database = await getDb();
@@ -8388,7 +8401,7 @@ export const appRouter = router({
         await database.update(eventInquiries)
           .set({ 
             status: input.status,
-            adminNotes: input.adminNotes || null,
+            internalNotes: input.internalNotes || null,
           })
           .where(eq(eventInquiries.id, input.id));
         return { success: true };

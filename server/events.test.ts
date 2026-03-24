@@ -79,13 +79,14 @@ describe("Events Router - Input Validation", () => {
     await expect(
       caller.events.submitInquiry({
         customerName: "", // Empty name should fail
-        customerEmail: "test@example.com",
-        customerPhone: "9876543210",
+        email: "test@example.com",
+        phone: "9876543210",
         eventType: "wedding",
         eventDate: "2026-03-15",
+        eventTime: "18:00",
         venue: "Test Venue",
         guestCount: 50,
-        cateringType: "beverages_only",
+        serviceType: "beverages_only",
       })
     ).rejects.toThrow();
   });
@@ -98,13 +99,14 @@ describe("Events Router - Input Validation", () => {
     await expect(
       caller.events.submitInquiry({
         customerName: "Test User",
-        customerEmail: "invalid-email", // Invalid email format
-        customerPhone: "9876543210",
+        email: "invalid-email", // Invalid email format
+        phone: "9876543210",
         eventType: "wedding",
         eventDate: "2026-03-15",
+        eventTime: "18:00",
         venue: "Test Venue",
         guestCount: 50,
-        cateringType: "beverages_only",
+        serviceType: "beverages_only",
       })
     ).rejects.toThrow();
   });
@@ -117,13 +119,14 @@ describe("Events Router - Input Validation", () => {
     await expect(
       caller.events.submitInquiry({
         customerName: "Test User",
-        customerEmail: "test@example.com",
-        customerPhone: "123", // Too short
+        email: "test@example.com",
+        phone: "123", // Too short
         eventType: "wedding",
         eventDate: "2026-03-15",
+        eventTime: "18:00",
         venue: "Test Venue",
         guestCount: 50,
-        cateringType: "beverages_only",
+        serviceType: "beverages_only",
       })
     ).rejects.toThrow();
   });
@@ -136,13 +139,14 @@ describe("Events Router - Input Validation", () => {
     await expect(
       caller.events.submitInquiry({
         customerName: "Test User",
-        customerEmail: "test@example.com",
-        customerPhone: "9876543210",
+        email: "test@example.com",
+        phone: "9876543210",
         eventType: "wedding",
         eventDate: "2026-03-15",
+        eventTime: "18:00",
         venue: "Test Venue",
         guestCount: 0, // Zero guests
-        cateringType: "beverages_only",
+        serviceType: "beverages_only",
       })
     ).rejects.toThrow();
   });

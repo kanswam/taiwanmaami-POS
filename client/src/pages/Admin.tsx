@@ -8382,7 +8382,7 @@ function EventInquiriesTab() {
                   updateStatusMutation.mutate({
                     id: selectedInquiry.id,
                     status: newStatus as any,
-                    adminNotes,
+                    internalNotes: adminNotes,
                   });
                 }
               }}

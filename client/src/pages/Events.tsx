@@ -152,18 +152,20 @@ export default function Events() {
   // Inquiry form state
   const [inquiryForm, setInquiryForm] = useState({
     customerName: "",
-    customerEmail: "",
-    customerPhone: "",
-    companyName: "",
-    eventType: "" as "wedding" | "corporate" | "school" | "private" | "other" | "",
+    email: "",
+    phone: "",
+    company: "",
+    eventType: "" as "wedding" | "corporate" | "school" | "birthday" | "private" | "festival" | "other" | "",
     eventDate: "",
     eventTime: "",
     venue: "",
     guestCount: "",
-    cateringType: "" as "beverages_only" | "food_only" | "both" | "",
-    preferredItems: "",
+    serviceType: "" as "beverages_only" | "food_only" | "both" | "",
+    preferredBeverages: "",
+    preferredFood: "",
     budgetRange: "",
     specialRequirements: "",
+    referralSource: "",
   });
 
   // Workshop booking form state
@@ -192,18 +194,20 @@ export default function Events() {
       setInquiryDialogOpen(false);
       setInquiryForm({
         customerName: "",
-        customerEmail: "",
-        customerPhone: "",
-        companyName: "",
+        email: "",
+        phone: "",
+        company: "",
         eventType: "",
         eventDate: "",
         eventTime: "",
         venue: "",
         guestCount: "",
-        cateringType: "",
-        preferredItems: "",
+        serviceType: "",
+        preferredBeverages: "",
+        preferredFood: "",
         budgetRange: "",
         specialRequirements: "",
+        referralSource: "",
       });
     },
     onError: (error) => {
@@ -333,14 +337,14 @@ export default function Events() {
 
   const handleInquirySubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!inquiryForm.eventType || !inquiryForm.cateringType) {
-      toast.error("Please select event type and catering type.");
+    if (!inquiryForm.eventType || !inquiryForm.serviceType) {
+      toast.error("Please select event type and service type.");
       return;
     }
     submitInquiry.mutate({
       ...inquiryForm,
-      eventType: inquiryForm.eventType as "wedding" | "corporate" | "school" | "private" | "other",
-      cateringType: inquiryForm.cateringType as "beverages_only" | "food_only" | "both",
+      eventType: inquiryForm.eventType as "wedding" | "corporate" | "school" | "birthday" | "private" | "festival" | "other",
+      serviceType: inquiryForm.serviceType as "beverages_only" | "food_only" | "both",
       guestCount: parseInt(inquiryForm.guestCount) || 1,
     });
   };
@@ -468,29 +472,29 @@ export default function Events() {
                             />
                           </div>
                           <div className="space-y-2">
-                            <Label htmlFor="companyName">Company/Organization</Label>
+                            <Label htmlFor="company">Company/Organization</Label>
                             <Input
-                              id="companyName"
-                              value={inquiryForm.companyName}
-                              onChange={(e) => setInquiryForm({ ...inquiryForm, companyName: e.target.value })}
+                              id="company"
+                              value={inquiryForm.company}
+                              onChange={(e) => setInquiryForm({ ...inquiryForm, company: e.target.value })}
                             />
                           </div>
                           <div className="space-y-2">
-                            <Label htmlFor="customerEmail">Email *</Label>
+                            <Label htmlFor="email">Email *</Label>
                             <Input
-                              id="customerEmail"
+                              id="email"
                               type="email"
-                              value={inquiryForm.customerEmail}
-                              onChange={(e) => setInquiryForm({ ...inquiryForm, customerEmail: e.target.value })}
+                              value={inquiryForm.email}
+                              onChange={(e) => setInquiryForm({ ...inquiryForm, email: e.target.value })}
                               required
                             />
                           </div>
                           <div className="space-y-2">
-                            <Label htmlFor="customerPhone">Phone Number *</Label>
+                            <Label htmlFor="phone">Phone Number *</Label>
                             <Input
-                              id="customerPhone"
-                              value={inquiryForm.customerPhone}
-                              onChange={(e) => setInquiryForm({ ...inquiryForm, customerPhone: e.target.value })}
+                              id="phone"
+                              value={inquiryForm.phone}
+                              onChange={(e) => setInquiryForm({ ...inquiryForm, phone: e.target.value })}
                               required
                             />
                           </div>
@@ -572,13 +576,13 @@ export default function Events() {
                         <h3 className="font-semibold text-lg">Catering Requirements</h3>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <div className="space-y-2">
-                            <Label htmlFor="cateringType">Catering Type *</Label>
+                            <Label htmlFor="serviceType">Service Type *</Label>
                             <Select
-                              value={inquiryForm.cateringType}
-                              onValueChange={(value) => setInquiryForm({ ...inquiryForm, cateringType: value as typeof inquiryForm.cateringType })}
+                              value={inquiryForm.serviceType}
+                              onValueChange={(value) => setInquiryForm({ ...inquiryForm, serviceType: value as typeof inquiryForm.serviceType })}
                             >
                               <SelectTrigger>
-                                <SelectValue placeholder="Select catering type" />
+                                <SelectValue placeholder="Select service type" />
                               </SelectTrigger>
                               <SelectContent>
                                 <SelectItem value="beverages_only">Beverages Only (Bubble Tea, etc.)</SelectItem>
@@ -606,12 +610,21 @@ export default function Events() {
                             </Select>
                           </div>
                           <div className="space-y-2 md:col-span-2">
-                            <Label htmlFor="preferredItems">Preferred Items</Label>
+                            <Label htmlFor="preferredBeverages">Preferred Beverages</Label>
                             <Textarea
-                              id="preferredItems"
-                              placeholder="e.g., Bubble Tea Bar, Biang Biang Noodles, Mochi, etc."
-                              value={inquiryForm.preferredItems}
-                              onChange={(e) => setInquiryForm({ ...inquiryForm, preferredItems: e.target.value })}
+                              id="preferredBeverages"
+                              placeholder="e.g., Bubble Tea Bar, Matcha, Oolong, etc."
+                              value={inquiryForm.preferredBeverages}
+                              onChange={(e) => setInquiryForm({ ...inquiryForm, preferredBeverages: e.target.value })}
+                            />
+                          </div>
+                          <div className="space-y-2 md:col-span-2">
+                            <Label htmlFor="preferredFood">Preferred Food</Label>
+                            <Textarea
+                              id="preferredFood"
+                              placeholder="e.g., Biang Biang Noodles, Mochi, etc."
+                              value={inquiryForm.preferredFood}
+                              onChange={(e) => setInquiryForm({ ...inquiryForm, preferredFood: e.target.value })}
                             />
                           </div>
                           <div className="space-y-2 md:col-span-2">

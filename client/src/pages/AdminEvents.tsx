@@ -155,11 +155,11 @@ function InquiriesTab({
                   <CardDescription className="flex items-center gap-4 mt-1">
                     <span className="flex items-center gap-1">
                       <Mail className="h-3 w-3" />
-                      {inquiry.customerEmail}
+                      {inquiry.email}
                     </span>
                     <span className="flex items-center gap-1">
                       <Phone className="h-3 w-3" />
-                      {inquiry.customerPhone}
+                      {inquiry.phone}
                     </span>
                   </CardDescription>
                 </div>
@@ -176,15 +176,15 @@ function InquiriesTab({
                 </div>
                 <div>
                   <span className="text-muted-foreground">Date:</span>
-                  <p className="font-medium">{inquiry.eventDate}</p>
+                  <p className="font-medium">{new Date(inquiry.eventDate).toLocaleDateString('en-IN')}</p>
                 </div>
                 <div>
                   <span className="text-muted-foreground">Guests:</span>
                   <p className="font-medium">{inquiry.guestCount}</p>
                 </div>
                 <div>
-                  <span className="text-muted-foreground">Catering:</span>
-                  <p className="font-medium capitalize">{inquiry.cateringType.replace("_", " ")}</p>
+                  <span className="text-muted-foreground">Service:</span>
+                  <p className="font-medium capitalize">{inquiry.serviceType.replace("_", " ")}</p>
                 </div>
               </div>
               
@@ -195,10 +195,17 @@ function InquiriesTab({
                 </div>
               )}
 
-              {inquiry.preferredItems && (
+              {inquiry.preferredBeverages && (
                 <div className="mt-2 text-sm">
-                  <span className="text-muted-foreground">Preferred Items:</span>
-                  <p>{inquiry.preferredItems}</p>
+                  <span className="text-muted-foreground">Preferred Beverages:</span>
+                  <p>{inquiry.preferredBeverages}</p>
+                </div>
+              )}
+
+              {inquiry.preferredFood && (
+                <div className="mt-2 text-sm">
+                  <span className="text-muted-foreground">Preferred Food:</span>
+                  <p>{inquiry.preferredFood}</p>
                 </div>
               )}
 
@@ -214,7 +221,7 @@ function InquiriesTab({
                   value={inquiry.status}
                   onValueChange={(value) => updateStatus.mutate({ 
                     id: inquiry.id, 
-                    status: value as "new" | "contacted" | "quoted" | "confirmed" | "cancelled" 
+                    status: value as "new" | "contacted" | "quoted" | "confirmed" | "completed" | "cancelled" 
                   })}
                 >
                   <SelectTrigger className="w-[140px]">
@@ -225,6 +232,7 @@ function InquiriesTab({
                     <SelectItem value="contacted">Contacted</SelectItem>
                     <SelectItem value="quoted">Quoted</SelectItem>
                     <SelectItem value="confirmed">Confirmed</SelectItem>
+                    <SelectItem value="completed">Completed</SelectItem>
                     <SelectItem value="cancelled">Cancelled</SelectItem>
                   </SelectContent>
                 </Select>

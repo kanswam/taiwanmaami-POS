@@ -2621,3 +2621,13 @@ Orders fixed:
 - [x] Backend: foodSchedule.ts with IST time checking, DB persistence, 5-min caching
 - [x] API: getFoodStatus (public), getFoodSchedule (staff), updateFoodSchedule (admin) procedures
 - [x] Menu API filters out Food category (id=4) outside scheduled hours
+
+## Event Inquiries Schema Fix (Mar 24)
+- [x] Fix event_inquiries Drizzle schema to match actual DB columns (phone, email, company, serviceType, referenceNumber, etc.)
+- [x] Update submitInquiry procedure with new column names and reference number generation
+- [x] Update updateInquiryStatus procedure (adminNotes → internalNotes, added "completed" status)
+- [x] Update AdminEvents.tsx to use new column names (email, phone, serviceType, preferredBeverages/Food)
+- [x] Update Admin.tsx inquiry status dialog (adminNotes → internalNotes)
+- [x] Update Events.tsx public inquiry form with new field names
+- [x] Update events-workshops.test.ts and events.test.ts with new schema
+- [x] All 872 tests passing, zero TypeScript errors

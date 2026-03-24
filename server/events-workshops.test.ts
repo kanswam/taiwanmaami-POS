@@ -75,13 +75,14 @@ describe("Events Router", () => {
 
       const result = await caller.events.submitInquiry({
         customerName: "Test Customer",
-        customerEmail: "test@example.com",
-        customerPhone: "9876543210",
+        email: "test@example.com",
+        phone: "9876543210",
         eventType: "corporate",
         eventDate: "2026-02-15",
+        eventTime: "18:00",
         venue: "Test Venue",
         guestCount: 100,
-        cateringType: "both",
+        serviceType: "both",
         specialRequirements: "Vegetarian options needed",
       });
 
@@ -96,13 +97,14 @@ describe("Events Router", () => {
       await expect(
         caller.events.submitInquiry({
           customerName: "",
-          customerEmail: "test@example.com",
-          customerPhone: "9876543210",
+          email: "test@example.com",
+          phone: "9876543210",
           eventType: "corporate",
           eventDate: "2026-02-15",
+          eventTime: "18:00",
           venue: "Test Venue",
           guestCount: 100,
-          cateringType: "both",
+          serviceType: "both",
         })
       ).rejects.toThrow();
     });
