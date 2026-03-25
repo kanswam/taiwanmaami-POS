@@ -63,7 +63,7 @@ export const appRouter = router({
       const available = await isFoodAvailable();
       const config = await getFoodSchedule();
       const formatted = formatSchedule(config);
-      return { foodAvailable: available, schedule: formatted };
+      return { foodAvailable: available, schedule: formatted, manualOverride: config.manualOverride || null };
     }),
 
     getSubcategories: publicProcedure
@@ -2265,6 +2265,7 @@ export const appRouter = router({
     updateFoodSchedule: adminProcedure
       .input(z.object({
         enabled: z.boolean(),
+        manualOverride: z.enum(['on', 'off']).nullable().optional(),
         weekday: z.array(z.object({
           startHour: z.number().min(0).max(24),
           startMinute: z.number().min(0).max(59),

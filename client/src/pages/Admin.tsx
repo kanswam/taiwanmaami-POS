@@ -5534,6 +5534,7 @@ function FoodScheduleTab() {
   });
 
   const [enabled, setEnabled] = useState(true);
+  const [manualOverride, setManualOverride] = useState<'on' | 'off' | null>(null);
   const [weekdayStart, setWeekdayStart] = useState('16:00');
   const [weekdayEnd, setWeekdayEnd] = useState('24:00');
   const [weekendSlot1Start, setWeekendSlot1Start] = useState('12:00');
@@ -5541,10 +5542,47 @@ function FoodScheduleTab() {
   const [weekendSlot2Start, setWeekendSlot2Start] = useState('18:00');
   const [weekendSlot2End, setWeekendSlot2End] = useState('24:00');
 
+  // Quick toggle mutation — saves only the manual override without touching schedule times
+  const quickToggle = trpc.admin.updateFoodSchedule.useMutation({
+    onSuccess: () => {
+      refetch();
+    },
+    onError: (err: any) => toast.error(err.message || 'Failed to toggle food'),
+  });
+
+  const handleQuickToggle = (override: 'on' | 'off' | null) => {
+    setManualOverride(override);
+    // Save immediately with current schedule values
+    const wdStart = parseTime(weekdayStart);
+    const wdEnd = parseTime(weekdayEnd);
+    const we1Start = parseTime(weekendSlot1Start);
+    const we1End = parseTime(weekendSlot1End);
+    const we2Start = parseTime(weekendSlot2Start);
+    const we2End = parseTime(weekendSlot2End);
+    quickToggle.mutate({
+      enabled,
+      manualOverride: override,
+      weekday: [{ startHour: wdStart.startHour, startMinute: wdStart.startMinute, endHour: wdEnd.startHour, endMinute: wdEnd.startMinute }],
+      weekend: [
+        { startHour: we1Start.startHour, startMinute: we1Start.startMinute, endHour: we1End.startHour, endMinute: we1End.startMinute },
+        { startHour: we2Start.startHour, startMinute: we2Start.startMinute, endHour: we2End.startHour, endMinute: we2End.startMinute },
+      ],
+    });
+    if (override === 'on') toast.success('Food manually turned ON — visible to customers now');
+    else if (override === 'off') toast.success('Food manually turned OFF — hidden from customers');
+    else toast.success('Manual override removed — using automatic schedule');
+  };
+
+  const parseTime = (t: string) => {
+    const [h, m] = t.split(':').map(Number);
+    return { startHour: h, startMinute: m };
+  };
+
   useEffect(() => {
     if (scheduleData?.config) {
       const c = scheduleData.config;
       setEnabled(c.enabled);
+      setManualOverride((c as any).manualOverride || null);
       if (c.weekday.length > 0) {
         setWeekdayStart(`${String(c.weekday[0].startHour).padStart(2, '0')}:${String(c.weekday[0].startMinute).padStart(2, '0')}`);
         setWeekdayEnd(`${String(c.weekday[0].endHour).padStart(2, '0')}:${String(c.weekday[0].endMinute).padStart(2, '0')}`);
@@ -5560,11 +5598,6 @@ function FoodScheduleTab() {
     }
   }, [scheduleData]);
 
-  const parseTime = (t: string) => {
-    const [h, m] = t.split(':').map(Number);
-    return { startHour: h, startMinute: m };
-  };
-
   const handleSave = () => {
     const wdStart = parseTime(weekdayStart);
     const wdEnd = parseTime(weekdayEnd);
@@ -5575,6 +5608,7 @@ function FoodScheduleTab() {
 
     updateSchedule.mutate({
       enabled,
+      manualOverride,
       weekday: [{
         startHour: wdStart.startHour, startMinute: wdStart.startMinute,
         endHour: wdEnd.startHour, endMinute: wdEnd.startMinute,
@@ -5625,6 +5659,58 @@ function FoodScheduleTab() {
         </div>
       </div>
 
+      {/* Manual Override - Quick Toggle */}
+      <div className="p-5 rounded-xl border-2 border-dashed border-primary/30 bg-primary/5">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="font-bold text-lg">Quick Food Toggle</h3>
+            <p className="text-sm text-muted-foreground mt-0.5">
+              Instantly turn food ON or OFF for customers, overriding the automatic schedule.
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => handleQuickToggle(manualOverride === 'on' ? null : 'on')}
+              disabled={quickToggle.isPending}
+              className={`px-4 py-2 rounded-lg font-semibold text-sm transition-all ${
+                manualOverride === 'on'
+                  ? 'bg-green-600 text-white shadow-lg shadow-green-600/30 ring-2 ring-green-400'
+                  : 'bg-muted hover:bg-green-100 dark:hover:bg-green-900 text-muted-foreground'
+              }`}
+            >
+              Force ON
+            </button>
+            <button
+              onClick={() => handleQuickToggle(manualOverride === 'off' ? null : 'off')}
+              disabled={quickToggle.isPending}
+              className={`px-4 py-2 rounded-lg font-semibold text-sm transition-all ${
+                manualOverride === 'off'
+                  ? 'bg-red-600 text-white shadow-lg shadow-red-600/30 ring-2 ring-red-400'
+                  : 'bg-muted hover:bg-red-100 dark:hover:bg-red-900 text-muted-foreground'
+              }`}
+            >
+              Force OFF
+            </button>
+            {manualOverride && (
+              <button
+                onClick={() => handleQuickToggle(null)}
+                disabled={quickToggle.isPending}
+                className="px-3 py-2 rounded-lg text-sm text-muted-foreground hover:bg-muted transition-all"
+              >
+                Use Auto
+              </button>
+            )}
+          </div>
+        </div>
+        {manualOverride && (
+          <div className={`mt-3 p-2 rounded-md text-sm font-medium ${
+            manualOverride === 'on' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+          }`}>
+            Manual override active: Food is forced <strong>{manualOverride === 'on' ? 'ON' : 'OFF'}</strong>. The automatic schedule below is being ignored.
+          </div>
+        )}
+      </div>
+
       {/* Current Status */}
       <div className={`p-4 rounded-lg border-2 ${
         scheduleData?.currentlyAvailable
@@ -5639,9 +5725,24 @@ function FoodScheduleTab() {
             Food is currently {scheduleData?.currentlyAvailable ? 'AVAILABLE' : 'UNAVAILABLE'} on the menu
           </span>
         </div>
-        {!enabled && (
+        {manualOverride === 'on' && (
+          <p className="text-sm text-green-700 dark:text-green-300 mt-1">
+            Manually forced ON — food is visible to customers regardless of schedule.
+          </p>
+        )}
+        {manualOverride === 'off' && (
+          <p className="text-sm text-red-700 dark:text-red-300 mt-1">
+            Manually forced OFF — food is hidden from customers regardless of schedule.
+          </p>
+        )}
+        {!manualOverride && !enabled && (
           <p className="text-sm text-muted-foreground mt-1">
-            Schedule is disabled — food items are shown at all times regardless of schedule.
+            Schedule is disabled — food items are shown at all times.
+          </p>
+        )}
+        {!manualOverride && enabled && !scheduleData?.currentlyAvailable && (
+          <p className="text-sm text-muted-foreground mt-1">
+            Outside scheduled food hours. Use "Force ON" above to override.
           </p>
         )}
       </div>
@@ -5739,7 +5840,8 @@ function FoodScheduleTab() {
           <li>• When food is outside its scheduled hours, the entire Food category is hidden from the customer menu</li>
           <li>• Beverages (Iced & Hot) and Sweet Bites (Mochis) are always visible during store hours</li>
           <li>• Staff/admin menu always shows all items regardless of schedule</li>
-          <li>• Disable the schedule to show food items at all times (useful for special events)</li>
+          <li>• Use "Force ON" / "Force OFF" to instantly override the schedule with one click</li>
+          <li>• Click "Use Auto" to go back to the automatic time-based schedule</li>
         </ul>
       </div>
     </div>

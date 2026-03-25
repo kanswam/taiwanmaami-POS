@@ -380,3 +380,158 @@ describe('Food Schedule - Day/Time Scenarios', () => {
     expect(checkFoodAvailable('2026-03-27T12:30:00Z')).toBe(true);
   });
 });
+
+describe('Food Schedule - Manual Override Logic', () => {
+  // Test the manual override logic that takes priority over time-based schedule
+  // manualOverride: 'on' => food always available
+  // manualOverride: 'off' => food always unavailable
+  // manualOverride: null/undefined => use time-based schedule
+
+  const defaultWeekday = [{ startHour: 16, startMinute: 0, endHour: 24, endMinute: 0 }];
+  const defaultWeekend = [
+    { startHour: 12, startMinute: 0, endHour: 15, endMinute: 0 },
+    { startHour: 18, startMinute: 0, endHour: 24, endMinute: 0 },
+  ];
+
+  function isWithinWindow(hours: number, minutes: number, window: { startHour: number; startMinute: number; endHour: number; endMinute: number }): boolean {
+    const currentMinutes = hours * 60 + minutes;
+    const startMinutes = window.startHour * 60 + window.startMinute;
+    const endMinutes = window.endHour * 60 + window.endMinute;
+    return currentMinutes >= startMinutes && currentMinutes < endMinutes;
+  }
+
+  function checkFoodWithOverride(
+    utcTime: string,
+    config: { enabled: boolean; manualOverride?: 'on' | 'off' | null; weekday: any[]; weekend: any[] }
+  ): boolean {
+    // Manual override takes highest priority
+    if (config.manualOverride === 'on') return true;
+    if (config.manualOverride === 'off') return false;
+    // If scheduling is disabled, food is always available
+    if (!config.enabled) return true;
+
+    const ist = getISTTime(new Date(utcTime));
+    const isWeekend = ist.dayOfWeek === 0 || ist.dayOfWeek === 6;
+    const windows = isWeekend ? config.weekend : config.weekday;
+    return windows.some(w => isWithinWindow(ist.hours, ist.minutes, w));
+  }
+
+  it('manualOverride "on" forces food available even outside food hours', () => {
+    // Monday 10 AM IST (normally food NOT available)
+    const result = checkFoodWithOverride('2026-03-23T04:30:00Z', {
+      enabled: true,
+      manualOverride: 'on',
+      weekday: defaultWeekday,
+      weekend: defaultWeekend,
+    });
+    expect(result).toBe(true);
+  });
+
+  it('manualOverride "on" keeps food available during food hours too', () => {
+    // Monday 8 PM IST (food normally available anyway)
+    const result = checkFoodWithOverride('2026-03-23T14:30:00Z', {
+      enabled: true,
+      manualOverride: 'on',
+      weekday: defaultWeekday,
+      weekend: defaultWeekend,
+    });
+    expect(result).toBe(true);
+  });
+
+  it('manualOverride "off" forces food unavailable even during food hours', () => {
+    // Monday 8 PM IST (normally food available)
+    const result = checkFoodWithOverride('2026-03-23T14:30:00Z', {
+      enabled: true,
+      manualOverride: 'off',
+      weekday: defaultWeekday,
+      weekend: defaultWeekend,
+    });
+    expect(result).toBe(false);
+  });
+
+  it('manualOverride "off" keeps food unavailable outside food hours too', () => {
+    // Monday 10 AM IST (normally food NOT available)
+    const result = checkFoodWithOverride('2026-03-23T04:30:00Z', {
+      enabled: true,
+      manualOverride: 'off',
+      weekday: defaultWeekday,
+      weekend: defaultWeekend,
+    });
+    expect(result).toBe(false);
+  });
+
+  it('manualOverride null falls back to time-based schedule (outside hours)', () => {
+    // Monday 10 AM IST (food NOT available)
+    const result = checkFoodWithOverride('2026-03-23T04:30:00Z', {
+      enabled: true,
+      manualOverride: null,
+      weekday: defaultWeekday,
+      weekend: defaultWeekend,
+    });
+    expect(result).toBe(false);
+  });
+
+  it('manualOverride null falls back to time-based schedule (inside hours)', () => {
+    // Monday 8 PM IST (food available)
+    const result = checkFoodWithOverride('2026-03-23T14:30:00Z', {
+      enabled: true,
+      manualOverride: null,
+      weekday: defaultWeekday,
+      weekend: defaultWeekend,
+    });
+    expect(result).toBe(true);
+  });
+
+  it('manualOverride undefined falls back to time-based schedule', () => {
+    // Monday 10 AM IST (food NOT available)
+    const result = checkFoodWithOverride('2026-03-23T04:30:00Z', {
+      enabled: true,
+      weekday: defaultWeekday,
+      weekend: defaultWeekend,
+    });
+    expect(result).toBe(false);
+  });
+
+  it('manualOverride "on" overrides even when schedule is disabled', () => {
+    const result = checkFoodWithOverride('2026-03-23T04:30:00Z', {
+      enabled: false,
+      manualOverride: 'on',
+      weekday: defaultWeekday,
+      weekend: defaultWeekend,
+    });
+    expect(result).toBe(true);
+  });
+
+  it('manualOverride "off" overrides even when schedule is disabled', () => {
+    // With schedule disabled, food would normally always be available
+    const result = checkFoodWithOverride('2026-03-23T04:30:00Z', {
+      enabled: false,
+      manualOverride: 'off',
+      weekday: defaultWeekday,
+      weekend: defaultWeekend,
+    });
+    expect(result).toBe(false);
+  });
+
+  it('manualOverride "on" works on weekends outside both slots', () => {
+    // Saturday 4 PM IST (between lunch and dinner slots, normally NOT available)
+    const result = checkFoodWithOverride('2026-03-28T10:30:00Z', {
+      enabled: true,
+      manualOverride: 'on',
+      weekday: defaultWeekday,
+      weekend: defaultWeekend,
+    });
+    expect(result).toBe(true);
+  });
+
+  it('manualOverride "off" works on weekends during lunch slot', () => {
+    // Saturday 1 PM IST (lunch slot, normally available)
+    const result = checkFoodWithOverride('2026-03-28T07:30:00Z', {
+      enabled: true,
+      manualOverride: 'off',
+      weekday: defaultWeekday,
+      weekend: defaultWeekend,
+    });
+    expect(result).toBe(false);
+  });
+});

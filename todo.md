@@ -2631,3 +2631,9 @@ Orders fixed:
 - [x] Update Events.tsx public inquiry form with new field names
 - [x] Update events-workshops.test.ts and events.test.ts with new schema
 - [x] All 872 tests passing, zero TypeScript errors
+
+## Bug: Food category not showing on menu page (Mar 25)
+- [x] Food tab missing from menu page category tabs - scheduler hides it outside food hours
+- [x] Need admin override / manual toggle to force food on/off regardless of schedule
+- [x] Add manual ON/OFF toggle switch for Food category in admin Food Schedule page
+- [x] Manual override takes priority over time-based schedule

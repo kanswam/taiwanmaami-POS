@@ -36,6 +36,7 @@ interface TimeWindow {
  */
 interface FoodScheduleConfig {
   enabled: boolean;
+  manualOverride?: 'on' | 'off' | null;  // Force food on/off regardless of schedule
   weekday: TimeWindow[];  // Mon-Fri
   weekend: TimeWindow[];  // Sat-Sun
 }
@@ -160,6 +161,10 @@ function isWithinWindow(hours: number, minutes: number, window: TimeWindow): boo
  */
 export async function isFoodAvailable(now?: Date): Promise<boolean> {
   const schedule = await getFoodSchedule();
+
+  // Manual override takes highest priority
+  if (schedule.manualOverride === 'on') return true;
+  if (schedule.manualOverride === 'off') return false;
 
   // If scheduling is disabled, food is always available
   if (!schedule.enabled) return true;
