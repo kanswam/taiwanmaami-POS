@@ -160,6 +160,9 @@ export const productAddons = mysqlTable("product_addons", {
   id: int("id").autoincrement().primaryKey(),
   productId: int("productId").notNull(),
   addonId: int("addonId").notNull(),
+  // Selection mode: 'quantity' = traditional qty picker (None/1/2/3), 'single_select' = radio-style pick-one
+  // When all addons for a product use 'single_select', they render as a radio group (pick one flavor)
+  selectionMode: mysqlEnum("selectionMode", ["quantity", "single_select"]).default("quantity"),
 });
 
 // Junction table for category-specific add-ons

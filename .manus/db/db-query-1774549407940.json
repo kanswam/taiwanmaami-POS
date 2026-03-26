@@ -1,0 +1,46 @@
+{
+  "query": "SELECT a.id, a.name, a.type, a.fixedPrice, a.maxQuantity, sa.subcategoryId, s.name as subcatName FROM addons a LEFT JOIN subcategory_addons sa ON a.id = sa.addonId LEFT JOIN subcategories s ON sa.subcategoryId = s.id WHERE s.name LIKE '%Ice Cream%' OR a.name IN ('Strawberry', 'Blueberry', 'Mango', 'Chocolate', 'Vanilla') ORDER BY a.id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT a.id, a.name, a.type, a.fixedPrice, a.maxQuantity, sa.subcategoryId, s.name as subcatName FROM addons a LEFT JOIN subcategory_addons sa ON a.id = sa.addonId LEFT JOIN subcategories s ON sa.subcategoryId = s.id WHERE s.name LIKE '%Ice Cream%' OR a.name IN ('Strawberry', 'Blueberry', 'Mango', 'Chocolate', 'Vanilla') ORDER BY a.id;",
+  "rows": [
+    {
+      "id": "150001",
+      "name": "Strawberry ",
+      "type": "food_addon",
+      "fixedPrice": "NULL",
+      "maxQuantity": "3",
+      "subcategoryId": "NULL",
+      "subcatName": "NULL"
+    },
+    {
+      "id": "150002",
+      "name": "Blueberry",
+      "type": "food_addon",
+      "fixedPrice": "NULL",
+      "maxQuantity": "3",
+      "subcategoryId": "NULL",
+      "subcatName": "NULL"
+    },
+    {
+      "id": "150003",
+      "name": "Mango ",
+      "type": "food_addon",
+      "fixedPrice": "NULL",
+      "maxQuantity": "3",
+      "subcategoryId": "NULL",
+      "subcatName": "NULL"
+    },
+    {
+      "id": "150008",
+      "name": "Chocolate",
+      "type": "food_addon",
+      "fixedPrice": "NULL",
+      "maxQuantity": "3",
+      "subcategoryId": "NULL",
+      "subcatName": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\ttype\tfixedPrice\tmaxQuantity\tsubcategoryId\tsubcatName\n150001\tStrawberry \tfood_addon\tNULL\t3\tNULL\tNULL\n150002\tBlueberry\tfood_addon\tNULL\t3\tNULL\tNULL\n150003\tMango \tfood_addon\tNULL\t3\tNULL\tNULL\n150008\tChocolate\tfood_addon\tNULL\t3\tNULL\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 411
+}

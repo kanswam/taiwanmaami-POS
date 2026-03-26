@@ -198,7 +198,7 @@ export default function Cart() {
                       {item.productAddons && item.productAddons.length > 0 && (
                         <div className="text-xs">
                           {item.productAddons.map(addon => (
-                            <span key={addon.id}> • {addon.quantity}x {addon.name}</span>
+                            <span key={addon.id}> • {addon.selectionMode === 'single_select' ? `Flavor: ${addon.name}` : `${addon.quantity}x ${addon.name}`}</span>
                           ))}
                         </div>
                       )}

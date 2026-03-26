@@ -2637,3 +2637,9 @@ Orders fixed:
 - [x] Need admin override / manual toggle to force food on/off regardless of schedule
 - [x] Add manual ON/OFF toggle switch for Food category in admin Food Schedule page
 - [x] Manual override takes priority over time-based schedule
+
+## Ice Cream Mochi - Single Select Flavor Add-on (Mar 26)
+- [x] Change Ice Cream Mochi add-ons from quantity-based (None/1/2/3) to single-select flavor picker
+- [x] Customer picks ONE flavor only, no quantity selector
+- [x] Add selectionMode field to product_addons junction table to support 'single_select' vs 'quantity' modes
+- [x] Update product modal UI to render radio-button style flavor picker for single_select add-ons

@@ -228,17 +228,24 @@ export async function getAddons(type?: string) {
   return db.select().from(addons).where(eq(addons.isActive, true)).orderBy(asc(addons.displayOrder));
 }
 
-// Get addons linked to a specific product
+// Get addons linked to a specific product (includes selectionMode from junction table)
 export async function getProductAddonsForProduct(productId: number) {
   const db = await getDb();
   if (!db) return [];
   const links = await db.select().from(productAddons).where(eq(productAddons.productId, productId));
   if (links.length === 0) return [];
   const addonIds = links.map(l => l.addonId);
-  return db.select().from(addons).where(and(
+  // Build a map of addonId -> selectionMode from the junction table
+  const selectionModeMap = new Map(links.map(l => [l.addonId, l.selectionMode || 'quantity']));
+  const addonList = await db.select().from(addons).where(and(
     eq(addons.isActive, true),
     sql`${addons.id} IN (${sql.join(addonIds.map(id => sql`${id}`), sql`, `)})`
   )).orderBy(asc(addons.displayOrder));
+  // Attach selectionMode to each addon
+  return addonList.map(addon => ({
+    ...addon,
+    selectionMode: selectionModeMap.get(addon.id) || 'quantity',
+  }));
 }
 
 // Order functions

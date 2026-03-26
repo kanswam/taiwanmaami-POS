@@ -1,0 +1,73 @@
+{
+  "query": "SELECT pa.*, a.name as addonName FROM product_addons pa JOIN addons a ON pa.addonId = a.id WHERE pa.productId = 1260001;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT pa.*, a.name as addonName FROM product_addons pa JOIN addons a ON pa.addonId = a.id WHERE pa.productId = 1260001;",
+  "rows": [
+    {
+      "id": "210005",
+      "productId": "1260001",
+      "addonId": "150001",
+      "selectionMode": "single_select",
+      "addonName": "Strawberry "
+    },
+    {
+      "id": "210006",
+      "productId": "1260001",
+      "addonId": "150002",
+      "selectionMode": "single_select",
+      "addonName": "Blueberry"
+    },
+    {
+      "id": "210001",
+      "productId": "1260001",
+      "addonId": "150003",
+      "selectionMode": "single_select",
+      "addonName": "Mango "
+    },
+    {
+      "id": "210002",
+      "productId": "1260001",
+      "addonId": "150004",
+      "selectionMode": "quantity",
+      "addonName": "Lychee"
+    },
+    {
+      "id": "210004",
+      "productId": "1260001",
+      "addonId": "150005",
+      "selectionMode": "quantity",
+      "addonName": "Pink Guava"
+    },
+    {
+      "id": "210007",
+      "productId": "1260001",
+      "addonId": "150006",
+      "selectionMode": "quantity",
+      "addonName": "Rose "
+    },
+    {
+      "id": "210003",
+      "productId": "1260001",
+      "addonId": "150007",
+      "selectionMode": "quantity",
+      "addonName": "Banana"
+    },
+    {
+      "id": "210009",
+      "productId": "1260001",
+      "addonId": "150008",
+      "selectionMode": "single_select",
+      "addonName": "Chocolate"
+    },
+    {
+      "id": "210008",
+      "productId": "1260001",
+      "addonId": "150009",
+      "selectionMode": "quantity",
+      "addonName": "Caramel "
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tproductId\taddonId\tselectionMode\taddonName\n210005\t1260001\t150001\tsingle_select\tStrawberry \n210006\t1260001\t150002\tsingle_select\tBlueberry\n210001\t1260001\t150003\tsingle_select\tMango \n210002\t1260001\t150004\tquantity\tLychee\n210004\t1260001\t150005\tquantity\tPink Guava\n210007\t1260001\t150006\tquantity\tRose \n210003\t1260001\t150007\tquantity\tBanana\n210009\t1260001\t150008\tsingle_select\tChocolate\n210008\t1260001\t150009\tquantity\tCaramel \n",
+  "stderr": "",
+  "execution_time_ms": 348
+}

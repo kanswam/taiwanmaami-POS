@@ -1,0 +1,34 @@
+{
+  "query": "SELECT pa.productId, p.name as productName, pa.addonId, a.name as addonName FROM product_addons pa JOIN products p ON pa.productId = p.id JOIN addons a ON pa.addonId = a.id WHERE pa.addonId IN (150001, 150002, 150003, 150008) ORDER BY pa.productId;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT pa.productId, p.name as productName, pa.addonId, a.name as addonName FROM product_addons pa JOIN products p ON pa.productId = p.id JOIN addons a ON pa.addonId = a.id WHERE pa.addonId IN (150001, 150002, 150003, 150008) ORDER BY pa.productId;",
+  "rows": [
+    {
+      "productId": "1260001",
+      "productName": "Ice Cream Mochi (Vanilla Ice Cream)",
+      "addonId": "150008",
+      "addonName": "Chocolate"
+    },
+    {
+      "productId": "1260001",
+      "productName": "Ice Cream Mochi (Vanilla Ice Cream)",
+      "addonId": "150002",
+      "addonName": "Blueberry"
+    },
+    {
+      "productId": "1260001",
+      "productName": "Ice Cream Mochi (Vanilla Ice Cream)",
+      "addonId": "150001",
+      "addonName": "Strawberry "
+    },
+    {
+      "productId": "1260001",
+      "productName": "Ice Cream Mochi (Vanilla Ice Cream)",
+      "addonId": "150003",
+      "addonName": "Mango "
+    }
+  ],
+  "messages": [],
+  "stdout": "productId\tproductName\taddonId\taddonName\n1260001\tIce Cream Mochi (Vanilla Ice Cream)\t150008\tChocolate\n1260001\tIce Cream Mochi (Vanilla Ice Cream)\t150002\tBlueberry\n1260001\tIce Cream Mochi (Vanilla Ice Cream)\t150001\tStrawberry \n1260001\tIce Cream Mochi (Vanilla Ice Cream)\t150003\tMango \n",
+  "stderr": "",
+  "execution_time_ms": 372
+}

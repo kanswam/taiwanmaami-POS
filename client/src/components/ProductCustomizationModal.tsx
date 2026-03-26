@@ -379,17 +379,19 @@ export function ProductCustomizationModal({
       coconutCreamCap: wantCoconutCreamCap || undefined,
       // Hot beverage add-ons
       extraEspresso: wantExtraEspresso || undefined,
-      // Product-specific addons (e.g., eggs for Katsu Curry)
+      // Product-specific addons (e.g., eggs for Katsu Curry, flavor for Ice Cream Mochi)
       productAddons: Object.entries(productAddonQuantities)
         .filter(([_, qty]) => qty > 0)
         .map(([addonId, qty]) => {
-          const addon = productSpecificAddons?.find(a => a.id === Number(addonId));
+          const addon = productSpecificAddons?.find((a: any) => a.id === Number(addonId));
+          const isSingleSelect = (addon as any)?.selectionMode === 'single_select';
           return {
             id: Number(addonId),
-            name: addon?.name || '',
-            quantity: qty,
+            name: addon?.name?.trim() || '',
+            quantity: isSingleSelect ? 1 : qty,
             pricePerUnit: addon?.fixedPrice || 0,
-            totalPrice: (addon?.fixedPrice || 0) * qty,
+            totalPrice: (addon?.fixedPrice || 0) * (isSingleSelect ? 1 : qty),
+            selectionMode: isSingleSelect ? 'single_select' as const : 'quantity' as const,
           };
         }),
       quantity,
@@ -791,47 +793,96 @@ export function ProductCustomizationModal({
             </div>
           )}
 
-          {/* Product-Specific Add-ons (e.g., Extra Egg for Katsu Curry) */}
-          {productSpecificAddons && productSpecificAddons.length > 0 && (
-            <div>
-              <h4 className="font-medium mb-3">Add-ons (Optional)</h4>
-              <div className="space-y-3">
-                {productSpecificAddons.map((addon) => {
-                  const currentQty = productAddonQuantities[addon.id] || 0;
-                  const maxQty = addon.maxQuantity || 3;
-                  return (
-                    <div key={addon.id} className="p-3 rounded-lg border-2 border-muted">
-                      <div className="flex items-center justify-between mb-2">
-                        <div>
-                          <span className="font-medium">{addon.name}</span>
-                          <p className="text-xs text-muted-foreground">{formatPrice(addon.fixedPrice || 0)} each (max {maxQty})</p>
-                        </div>
-                        {currentQty > 0 && (
-                          <span className="text-sm font-medium text-primary">+{formatPrice((addon.fixedPrice || 0) * currentQty)}</span>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-2">
-                        {Array.from({ length: maxQty + 1 }, (_, i) => i).map((count) => (
+          {/* Product-Specific Add-ons (e.g., Extra Egg for Katsu Curry, Flavor for Ice Cream Mochi) */}
+          {productSpecificAddons && productSpecificAddons.length > 0 && (() => {
+            // Separate addons by selection mode
+            const singleSelectAddons = productSpecificAddons.filter((a: any) => a.selectionMode === 'single_select');
+            const quantityAddons = productSpecificAddons.filter((a: any) => a.selectionMode !== 'single_select');
+            // For single-select: find which addon is currently selected (qty = 1)
+            const selectedSingleAddonId = singleSelectAddons.find((a: any) => productAddonQuantities[a.id] === 1)?.id || null;
+            return (
+              <div className="space-y-4">
+                {/* Single-Select Flavor Picker (radio-style, pick one) */}
+                {singleSelectAddons.length > 0 && (
+                  <div>
+                    <h4 className="font-medium mb-3">Choose Flavor (Optional)</h4>
+                    <div className="grid grid-cols-3 gap-2">
+                      {singleSelectAddons.map((addon: any) => {
+                        const isSelected = selectedSingleAddonId === addon.id;
+                        return (
                           <button
-                            key={count}
+                            key={addon.id}
                             type="button"
-                            onClick={() => setProductAddonQuantities(prev => ({ ...prev, [addon.id]: count }))}
-                            className={`flex-1 py-2 px-3 rounded-lg border-2 text-sm font-medium transition-colors ${
-                              currentQty === count
+                            onClick={() => {
+                              // Clear all single-select addons first, then set the chosen one
+                              const newQuantities = { ...productAddonQuantities };
+                              singleSelectAddons.forEach((a: any) => { newQuantities[a.id] = 0; });
+                              if (!isSelected) {
+                                newQuantities[addon.id] = 1;
+                              }
+                              setProductAddonQuantities(newQuantities);
+                            }}
+                            className={`py-3 px-2 rounded-lg border-2 text-sm font-medium transition-colors text-center ${
+                              isSelected
                                 ? 'border-primary bg-primary/10 text-primary'
                                 : 'border-muted hover:border-muted-foreground/50'
                             }`}
                           >
-                            {count === 0 ? 'None' : count}
+                            {addon.name.trim()}
+                            {addon.fixedPrice ? (
+                              <span className="block text-xs mt-0.5 text-muted-foreground">+{formatPrice(addon.fixedPrice)}</span>
+                            ) : null}
                           </button>
-                        ))}
-                      </div>
+                        );
+                      })}
                     </div>
-                  );
-                })}
+                  </div>
+                )}
+
+                {/* Quantity-based Add-ons (traditional None/1/2/3 picker) */}
+                {quantityAddons.length > 0 && (
+                  <div>
+                    <h4 className="font-medium mb-3">Add-ons (Optional)</h4>
+                    <div className="space-y-3">
+                      {quantityAddons.map((addon: any) => {
+                        const currentQty = productAddonQuantities[addon.id] || 0;
+                        const maxQty = addon.maxQuantity || 3;
+                        return (
+                          <div key={addon.id} className="p-3 rounded-lg border-2 border-muted">
+                            <div className="flex items-center justify-between mb-2">
+                              <div>
+                                <span className="font-medium">{addon.name}</span>
+                                <p className="text-xs text-muted-foreground">{formatPrice(addon.fixedPrice || 0)} each (max {maxQty})</p>
+                              </div>
+                              {currentQty > 0 && (
+                                <span className="text-sm font-medium text-primary">+{formatPrice((addon.fixedPrice || 0) * currentQty)}</span>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-2">
+                              {Array.from({ length: maxQty + 1 }, (_, i) => i).map((count) => (
+                                <button
+                                  key={count}
+                                  type="button"
+                                  onClick={() => setProductAddonQuantities(prev => ({ ...prev, [addon.id]: count }))}
+                                  className={`flex-1 py-2 px-3 rounded-lg border-2 text-sm font-medium transition-colors ${
+                                    currentQty === count
+                                      ? 'border-primary bg-primary/10 text-primary'
+                                      : 'border-muted hover:border-muted-foreground/50'
+                                  }`}
+                                >
+                                  {count === 0 ? 'None' : count}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
               </div>
-            </div>
-          )}
+            );
+          })()}
 
           {/* Extra Espresso Shot - For Latte and Cappuccino */}
           {isHotBeverage && isLatteOrCappuccino && (
