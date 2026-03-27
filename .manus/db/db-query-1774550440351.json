@@ -1,0 +1,37 @@
+{
+  "query": "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'subcategories' AND COLUMN_NAME LIKE '%avail%' OR (TABLE_NAME = 'subcategories' AND COLUMN_NAME LIKE '%deliver%') ORDER BY ORDINAL_POSITION;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'subcategories' AND COLUMN_NAME LIKE '%avail%' OR (TABLE_NAME = 'subcategories' AND COLUMN_NAME LIKE '%deliver%') ORDER BY ORDINAL_POSITION;",
+  "rows": [
+    {
+      "COLUMN_NAME": "deliveryPriceRegularWithBoba"
+    },
+    {
+      "COLUMN_NAME": "deliveryPriceRegularNoBoba"
+    },
+    {
+      "COLUMN_NAME": "deliveryPriceLargeWithBoba"
+    },
+    {
+      "COLUMN_NAME": "deliveryPriceLargeNoBoba"
+    },
+    {
+      "COLUMN_NAME": "availableInstore"
+    },
+    {
+      "COLUMN_NAME": "availableDelivery"
+    },
+    {
+      "COLUMN_NAME": "availablePickup"
+    },
+    {
+      "COLUMN_NAME": "availableAtPalladium"
+    },
+    {
+      "COLUMN_NAME": "availableAtTnagar"
+    }
+  ],
+  "messages": [],
+  "stdout": "COLUMN_NAME\ndeliveryPriceRegularWithBoba\ndeliveryPriceRegularNoBoba\ndeliveryPriceLargeWithBoba\ndeliveryPriceLargeNoBoba\navailableInstore\navailableDelivery\navailablePickup\navailableAtPalladium\navailableAtTnagar\n",
+  "stderr": "",
+  "execution_time_ms": 380
+}

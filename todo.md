@@ -2643,3 +2643,11 @@ Orders fixed:
 - [x] Customer picks ONE flavor only, no quantity selector
 - [x] Add selectionMode field to product_addons junction table to support 'single_select' vs 'quantity' modes
 - [x] Update product modal UI to render radio-button style flavor picker for single_select add-ons
+
+## Ice Cream Mochi - Disable Delivery (Mar 26)
+- [x] Ice Cream Mochi should not be available for delivery orders (already disabled: availableDelivery=0, availablePickup=0)
+
+## Remove Food Timing Banner & Revert to Full Hours (Mar 27)
+- [x] Remove the food timing/availability banner from the customer-facing menu page
+- [x] Revert food schedule default to regular full timings (12 PM - 12 AM daily)
+- [x] Keep the Force ON/OFF toggle in admin Food Schedule settings

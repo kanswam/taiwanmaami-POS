@@ -122,9 +122,6 @@ export default function Menu() {
     isPickup: state.orderType === 'pickup',
   });
 
-  // Food schedule status
-  const { data: foodStatus } = trpc.menu.getFoodStatus.useQuery();
-
   // Get delivery settings (radius and enabled status)
   const { data: deliverySettings } = trpc.menu.getDeliverySettings.useQuery();
   const deliveryRadius = deliverySettings?.deliveryRadius || 15;
@@ -476,20 +473,7 @@ export default function Menu() {
         </div>
       )}
 
-      {/* Food Schedule Notice - shown when food is unavailable */}
-      {foodStatus && !foodStatus.foodAvailable && (
-        <div className="bg-amber-50 dark:bg-amber-950 border-b border-amber-200 dark:border-amber-800 py-2.5">
-          <div className="container">
-            <div className="flex items-center gap-2 text-amber-800 dark:text-amber-200">
-              <AlertCircle className="w-4 h-4 shrink-0" />
-              <p className="text-sm">
-                <span className="font-semibold">Food items are currently unavailable.</span>
-                {' '}Food hours: Mon–Fri {foodStatus.schedule.weekday} | Sat–Sun {foodStatus.schedule.weekend}
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
+
 
       {/* Order Type Toggle & Search */}
       <div className="sticky top-16 z-40 bg-background border-b border-border">

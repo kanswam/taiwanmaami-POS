@@ -4,9 +4,7 @@
  * Automatically determines whether food items should be shown on the menu
  * based on the current day and time in IST (Indian Standard Time).
  * 
- * Food timings:
- *   Mon–Fri: 4:00 PM – 12:00 AM (midnight)
- *   Sat–Sun: 12:00 PM – 3:00 PM  &  6:00 PM – 12:00 AM (midnight)
+ * Default food timings: 12:00 PM – 12:00 AM (midnight) every day
  * 
  * Beverages & Mochis: always available during store hours (12 Noon – 12 Midnight)
  * 
@@ -47,11 +45,10 @@ interface FoodScheduleConfig {
 const DEFAULT_SCHEDULE: FoodScheduleConfig = {
   enabled: true,
   weekday: [
-    { startHour: 16, startMinute: 0, endHour: 24, endMinute: 0 }  // 4 PM - 12 AM
+    { startHour: 12, startMinute: 0, endHour: 24, endMinute: 0 }  // 12 PM - 12 AM
   ],
   weekend: [
-    { startHour: 12, startMinute: 0, endHour: 15, endMinute: 0 },  // 12 PM - 3 PM
-    { startHour: 18, startMinute: 0, endHour: 24, endMinute: 0 }   // 6 PM - 12 AM
+    { startHour: 12, startMinute: 0, endHour: 24, endMinute: 0 }  // 12 PM - 12 AM
   ]
 };
 
