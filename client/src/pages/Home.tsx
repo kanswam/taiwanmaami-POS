@@ -152,8 +152,6 @@ export default function Home() {
     }
   };
 
-  // Food service banner dismiss state
-  const [foodBannerDismissed, setFoodBannerDismissed] = useState(false);
 
   // Quick Add modal state
   const [quickAddProductId, setQuickAddProductId] = useState<number | null>(null);
@@ -506,52 +504,7 @@ export default function Home() {
         </div>
       )}
 
-      {/* ===== FOOD SERVICE ANNOUNCEMENT BANNER ===== */}
-      {!foodBannerDismissed && (
-        <div className="relative bg-amber-50 border-b border-amber-200">
-          <div className="container py-3 pr-10">
-            <div className="flex items-start gap-3">
-              <div className="flex-shrink-0 mt-0.5">
-                <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center">
-                  <span className="text-base">🍜</span>
-                </div>
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-amber-900">
-                  Our Service Hours
-                </p>
-                <div className="mt-1.5 space-y-1.5">
-                  <div className="flex flex-wrap gap-x-6 gap-y-1 text-xs text-amber-800">
-                    <span className="font-semibold">Food:</span>
-                    <span className="flex items-center gap-1.5">
-                      <Clock className="w-3 h-3" />
-                      <span><strong>Mon–Fri:</strong> 4 PM – 12 AM</span>
-                    </span>
-                    <span className="flex items-center gap-1.5">
-                      <Clock className="w-3 h-3" />
-                      <span><strong>Sat–Sun:</strong> 12 – 3 PM & 6 PM – 12 AM</span>
-                    </span>
-                  </div>
-                  <div className="flex flex-wrap gap-x-4 text-xs text-amber-800">
-                    <span className="font-semibold">Beverages & Mochi Desserts:</span>
-                    <span className="flex items-center gap-1.5">
-                      <Clock className="w-3 h-3" />
-                      <span><strong>Every day:</strong> 12 Noon – 12 Midnight</span>
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          <button
-            onClick={() => setFoodBannerDismissed(true)}
-            className="absolute top-2.5 right-3 p-1 rounded-full hover:bg-amber-200/60 transition-colors text-amber-600"
-            aria-label="Dismiss"
-          >
-            <X className="w-3.5 h-3.5" />
-          </button>
-        </div>
-      )}
+
 
       {/* ===== 2. HERO SECTION with Warm Amber Overlay ===== */}
       <section className="relative overflow-hidden">
