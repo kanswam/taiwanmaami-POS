@@ -2651,3 +2651,10 @@ Orders fixed:
 - [x] Remove the food timing/availability banner from the customer-facing menu page
 - [x] Revert food schedule default to regular full timings (12 PM - 12 AM daily)
 - [x] Keep the Force ON/OFF toggle in admin Food Schedule settings
+
+## Deployment OOM Fix (Mar 27)
+- [x] Fix Vite build OOM (exit code 137) during deployment
+- [x] Split Admin.tsx (10,914 lines) into 26 separate tab files under admin/tabs/
+- [x] Added React.lazy() loading for all admin tabs
+- [x] Added NODE_OPTIONS='--max-old-space-size=1536' to build script
+- [x] Added manualChunks to Vite config for better code splitting

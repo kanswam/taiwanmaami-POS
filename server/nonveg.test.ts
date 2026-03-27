@@ -7,14 +7,15 @@ describe('Non-Veg Dietary Label', () => {
   let routersContent: string;
   let productCardContent: string;
   let indexCssContent: string;
-  let adminContent: string;
+  let productsTabContent: string;
 
   beforeAll(() => {
     schemaContent = readFileSync(resolve(__dirname, '../drizzle/schema.ts'), 'utf-8');
     routersContent = readFileSync(resolve(__dirname, './routers.ts'), 'utf-8');
     productCardContent = readFileSync(resolve(__dirname, '../client/src/components/ProductCard.tsx'), 'utf-8');
     indexCssContent = readFileSync(resolve(__dirname, '../client/src/index.css'), 'utf-8');
-    adminContent = readFileSync(resolve(__dirname, '../client/src/pages/Admin.tsx'), 'utf-8');
+    // After Admin.tsx was split into tabs, the products-related code is in ProductsTab.tsx
+    productsTabContent = readFileSync(resolve(__dirname, '../client/src/pages/admin/tabs/ProductsTab.tsx'), 'utf-8');
   });
 
   describe('Database Schema', () => {
@@ -81,26 +82,26 @@ describe('Non-Veg Dietary Label', () => {
     });
   });
 
-  describe('Admin Panel', () => {
+  describe('Admin Panel (ProductsTab)', () => {
     it('should have isNonVeg in edit product form state', () => {
-      expect(adminContent).toContain('isNonVeg: product.isNonVeg');
+      expect(productsTabContent).toContain('isNonVeg: product.isNonVeg');
     });
 
     it('should have isNonVeg in create product form state', () => {
       // Check that the create form has isNonVeg: false default
-      expect(adminContent).toContain('isNonVeg: false');
+      expect(productsTabContent).toContain('isNonVeg: false');
     });
 
     it('should have Non-Veg switch in edit product dialog', () => {
-      expect(adminContent).toContain('formData.isNonVeg');
+      expect(productsTabContent).toContain('formData.isNonVeg');
     });
 
     it('should have Non-Veg switch in create product dialog', () => {
-      expect(adminContent).toContain('create-nonveg');
+      expect(productsTabContent).toContain('create-nonveg');
     });
 
     it('should include isNonVeg in mutation calls', () => {
-      expect(adminContent).toContain('isNonVeg: formData.isNonVeg');
+      expect(productsTabContent).toContain('isNonVeg: formData.isNonVeg');
     });
   });
 });
