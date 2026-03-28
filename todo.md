@@ -2658,3 +2658,9 @@ Orders fixed:
 - [x] Added React.lazy() loading for all admin tabs
 - [x] Added NODE_OPTIONS='--max-old-space-size=1536' to build script
 - [x] Added manualChunks to Vite config for better code splitting
+
+## Website Slow Loading After Deploy (Mar 28)
+- [x] Optimize bundle size - replaced streamdown (10MB shiki + 2MB mermaid) with marked (lightweight)
+- [x] Bundle reduced from 18MB to 4.2MB (77% reduction)
+- [x] Build now succeeds even with 512MB memory limit
+- [x] Site should load within 2-3 seconds

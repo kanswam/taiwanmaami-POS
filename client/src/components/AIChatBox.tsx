@@ -4,7 +4,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { Loader2, Send, User, Sparkles } from "lucide-react";
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Streamdown } from "streamdown";
+import { marked } from 'marked';
 
 /**
  * Message type matching server-side LLM Message interface
@@ -92,7 +92,7 @@ function TypingAssistantMessage({ content, isLatest }: { content: string; isLate
 
   return (
     <div className="prose prose-sm dark:prose-invert max-w-none">
-      <Streamdown>{displayedText}</Streamdown>
+      <div dangerouslySetInnerHTML={{ __html: marked.parse(displayedText, { async: false }) as string }} />
       {isTyping && (
         <span className="inline-block w-[2px] h-4 bg-foreground/60 ml-0.5 animate-pulse align-text-bottom" />
       )}

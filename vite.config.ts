@@ -30,10 +30,7 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks(id) {
-          // Isolate heavy dependencies into their own chunks
-          if (id.includes('node_modules/mermaid') || id.includes('node_modules/cytoscape') || id.includes('node_modules/elkjs')) {
-            return 'vendor-mermaid';
-          }
+          // Isolate dependencies into their own chunks
           if (id.includes('node_modules/react-dom')) {
             return 'vendor-react';
           }
@@ -46,7 +43,7 @@ export default defineConfig({
           if (id.includes('node_modules/@radix-ui')) {
             return 'vendor-ui';
           }
-          if (id.includes('node_modules/streamdown') || id.includes('node_modules/react-markdown') || id.includes('node_modules/shiki') || id.includes('node_modules/@shikijs')) {
+          if (id.includes('node_modules/marked')) {
             return 'vendor-markdown';
           }
           if (id.includes('node_modules/lucide-react')) {

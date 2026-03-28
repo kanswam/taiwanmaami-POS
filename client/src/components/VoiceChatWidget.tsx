@@ -5,7 +5,7 @@ import { X, Send, Loader2, Sparkles, MessageSquare } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Streamdown } from 'streamdown';
+import { marked } from 'marked';
 import { useLocation } from 'wouter';
 
 const GREETING_LADY_URL = 'https://files.manuscdn.com/user_upload_by_module/session_file/114675165/cCIiqSZESwdbtugN.png';
@@ -306,7 +306,7 @@ export function VoiceChatWidget() {
                       )}>
                         {msg.role === 'assistant' ? (
                           <div className="prose prose-sm dark:prose-invert max-w-none text-sm">
-                            <Streamdown>{msg.content}</Streamdown>
+                            <div dangerouslySetInnerHTML={{ __html: marked.parse(msg.content, { async: false }) as string }} />
                           </div>
                         ) : (
                           <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
