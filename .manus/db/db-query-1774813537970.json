@@ -1,0 +1,28 @@
+{
+  "query": "SELECT id, orderNumber, paymentMethod, paymentStatus, totalAmount, orderType, createdAt FROM orders WHERE orderNumber IN ('00883', '00884', '0883', '0884', '883', '884') ORDER BY orderNumber;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT id, orderNumber, paymentMethod, paymentStatus, totalAmount, orderType, createdAt FROM orders WHERE orderNumber IN ('00883', '00884', '0883', '0884', '883', '884') ORDER BY orderNumber;",
+  "rows": [
+    {
+      "id": "3450024",
+      "orderNumber": "00883",
+      "paymentMethod": "upi",
+      "paymentStatus": "completed",
+      "totalAmount": "228900",
+      "orderType": "pickup",
+      "createdAt": "2026-03-29 16:29:00"
+    },
+    {
+      "id": "3450025",
+      "orderNumber": "00884",
+      "paymentMethod": "upi",
+      "paymentStatus": "completed",
+      "totalAmount": "38850",
+      "orderType": "instore",
+      "createdAt": "2026-03-29 16:29:33"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\torderNumber\tpaymentMethod\tpaymentStatus\ttotalAmount\torderType\tcreatedAt\n3450024\t00883\tupi\tcompleted\t228900\tpickup\t2026-03-29 16:29:00\n3450025\t00884\tupi\tcompleted\t38850\tinstore\t2026-03-29 16:29:33\n",
+  "stderr": "",
+  "execution_time_ms": 447
+}

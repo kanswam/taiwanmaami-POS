@@ -1,0 +1,24 @@
+{
+  "query": "SELECT id, orderNumber, paymentMethod, paymentStatus, totalAmount FROM orders WHERE orderNumber IN ('00883', '00884') ORDER BY orderNumber;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT id, orderNumber, paymentMethod, paymentStatus, totalAmount FROM orders WHERE orderNumber IN ('00883', '00884') ORDER BY orderNumber;",
+  "rows": [
+    {
+      "id": "3450024",
+      "orderNumber": "00883",
+      "paymentMethod": "cash",
+      "paymentStatus": "completed",
+      "totalAmount": "228900"
+    },
+    {
+      "id": "3450025",
+      "orderNumber": "00884",
+      "paymentMethod": "swiggy_dineout",
+      "paymentStatus": "completed",
+      "totalAmount": "38850"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\torderNumber\tpaymentMethod\tpaymentStatus\ttotalAmount\n3450024\t00883\tcash\tcompleted\t228900\n3450025\t00884\tswiggy_dineout\tcompleted\t38850\n",
+  "stderr": "",
+  "execution_time_ms": 364
+}

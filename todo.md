@@ -2691,3 +2691,10 @@ Orders fixed:
 - [x] Staff-facing sync dashboard — "Offline Queue" tab in Staff Orders with status badges, expandable order details, manual Sync/Retry, progress bar
 - [x] Admin offline mode toggle — per-outlet (Palladium + T. Nagar) enable/disable in Admin > Settings > Offline Mode, stored in site_settings
 - [x] Vitest tests for all three features (13 tests: KOT generation, batch print, sync dashboard data ops, admin API)
+
+## Payment Method Fixes (Mar 29)
+- [x] Order #0883: Change payment method from UPI to Cash
+- [x] Order #0884: Change payment method from UPI to Swiggy Dine-out
+
+## Bug Fixes (Mar 29)
+- [x] Maami chatbot button overlaps Actions column edit buttons on admin page — hidden on /admin and /staff pages

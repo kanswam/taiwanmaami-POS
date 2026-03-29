@@ -79,6 +79,9 @@ export function VoiceChatWidget() {
   // Get page-specific greeting
   const greeting = getGreetingForPage(location);
 
+  // Hide chatbot on admin and staff pages to avoid overlapping action buttons
+  const isAdminOrStaff = location.startsWith('/admin') || location.startsWith('/staff');
+
   // tRPC mutation
   const textChatMutation = trpc.chatbot.chat.useMutation();
 
@@ -220,6 +223,9 @@ export function VoiceChatWidget() {
       setShowGreeting(false);
     }
   }, [isOpen]);
+
+  // Don't render on admin/staff pages — the floating button overlaps action buttons
+  if (isAdminOrStaff) return null;
 
   return (
     <>
