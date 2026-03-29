@@ -2698,3 +2698,10 @@ Orders fixed:
 
 ## Bug Fixes (Mar 29)
 - [x] Maami chatbot button overlaps Actions column edit buttons on admin page — hidden on /admin and /staff pages
+
+## Product Catalog Excel Export/Import (Mar 29)
+- [x] Server endpoint: Export all products to formatted Excel (ID, name, Chinese name, category, subcategory, prices, description, new description column)
+- [x] Server endpoint: Import updated Excel to bulk-update product descriptions (with validation, error reporting)
+- [x] Admin UI: Export button in Admin > Settings > Catalog Export/Import
+- [x] Admin UI: Import with preview/confirm flow showing changed descriptions before applying
+- [x] Vitest tests for export/import logic (6 tests: procedure existence, schema validation, unicode, large batch)

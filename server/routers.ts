@@ -10143,6 +10143,69 @@ export const appRouter = router({
         return { success: true };
       }),
   }),
+
+  // ─── Product Catalog Export/Import ──────────────────────────────────
+  catalog: router({
+    /** Export all products with descriptions as JSON (frontend converts to Excel) */
+    exportProducts: adminProcedure.query(async () => {
+      const dbInstance = await getDb();
+      if (!dbInstance) return [];
+      const { products, subcategories, categories } = await import('../drizzle/schema.js');
+      const rows = await dbInstance.select({
+        id: products.id,
+        name: products.name,
+        chineseName: products.chineseName,
+        categoryName: categories.name,
+        subcategoryName: subcategories.name,
+        description: products.description,
+        isActive: products.isActive,
+        instorePrice: products.instorePrice,
+        basePriceRegularWithBoba: subcategories.basePriceRegularWithBoba,
+        basePriceLargeWithBoba: subcategories.basePriceLargeWithBoba,
+      })
+        .from(products)
+        .innerJoin(subcategories, eq(products.subcategoryId, subcategories.id))
+        .innerJoin(categories, eq(subcategories.categoryId, categories.id))
+        .orderBy(asc(categories.displayOrder), asc(subcategories.displayOrder), asc(products.displayOrder));
+      return rows;
+    }),
+
+    /** Bulk-update product descriptions from imported data */
+    importDescriptions: adminProcedure
+      .input(z.object({
+        updates: z.array(z.object({
+          id: z.number(),
+          description: z.string(),
+        })),
+      }))
+      .mutation(async ({ input }) => {
+        const dbInstance = await getDb();
+        if (!dbInstance) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
+        const { products } = await import('../drizzle/schema.js');
+
+        let updated = 0;
+        let skipped = 0;
+        const errors: { id: number; error: string }[] = [];
+
+        for (const { id, description } of input.updates) {
+          try {
+            const existing = await dbInstance.select({ id: products.id }).from(products).where(eq(products.id, id));
+            if (existing.length === 0) {
+              skipped++;
+              errors.push({ id, error: 'Product not found' });
+              continue;
+            }
+            await dbInstance.update(products).set({ description }).where(eq(products.id, id));
+            updated++;
+          } catch (err: any) {
+            errors.push({ id, error: err.message || 'Unknown error' });
+            skipped++;
+          }
+        }
+
+        return { updated, skipped, total: input.updates.length, errors };
+      }),
+  }),
 });
 
 export type AppRouter = typeof appRouter;
