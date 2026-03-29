@@ -10099,6 +10099,50 @@ export const appRouter = router({
         .orderBy(asc(categories.displayOrder), asc(subcategories.displayOrder), asc(products.displayOrder));
     }),
   }),
+
+  // ─── Offline Mode Settings ──────────────────────────────────────
+  offline: router({
+    /** Get offline mode settings (public — staff devices need this without admin auth) */
+    getSettings: publicProcedure.query(async () => {
+      const dbInstance = await getDb();
+      if (!dbInstance) return { palladiumEnabled: false, tNagarEnabled: false };
+      const { siteSettings } = await import('../drizzle/schema.js');
+      const rows = await dbInstance.select().from(siteSettings)
+        .where(sql`${siteSettings.key} IN ('offline_palladium_enabled', 'offline_tnagar_enabled')`);
+      const map = Object.fromEntries(rows.map(r => [r.key, r.value]));
+      return {
+        palladiumEnabled: map['offline_palladium_enabled'] === 'true',
+        tNagarEnabled: map['offline_tnagar_enabled'] === 'true',
+      };
+    }),
+
+    /** Admin: toggle offline mode per outlet */
+    updateSettings: adminProcedure
+      .input(z.object({
+        palladiumEnabled: z.boolean(),
+        tNagarEnabled: z.boolean(),
+      }))
+      .mutation(async ({ input }) => {
+        const dbInstance = await getDb();
+        if (!dbInstance) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
+        const { siteSettings } = await import('../drizzle/schema.js');
+
+        const pairs = [
+          { key: 'offline_palladium_enabled', value: String(input.palladiumEnabled) },
+          { key: 'offline_tnagar_enabled', value: String(input.tNagarEnabled) },
+        ];
+
+        for (const { key, value } of pairs) {
+          const existing = await dbInstance.select().from(siteSettings).where(eq(siteSettings.key, key));
+          if (existing.length > 0) {
+            await dbInstance.update(siteSettings).set({ value }).where(eq(siteSettings.key, key));
+          } else {
+            await dbInstance.insert(siteSettings).values({ key, value });
+          }
+        }
+        return { success: true };
+      }),
+  }),
 });
 
 export type AppRouter = typeof appRouter;

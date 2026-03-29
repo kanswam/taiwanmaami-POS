@@ -2685,3 +2685,9 @@ Orders fixed:
 - [x] Server-side offlineCreatedAt support — orders.create and guest.createOrder accept original timestamp
 - [x] Offline order confirmation page — /offline-order/:offlineId with sync status tracking
 - [x] Cleanup service — auto-removes synced orders older than 24 hours from IndexedDB
+
+## Offline Resilience Enhancements (Mar 29)
+- [x] Offline KOT local print trigger — 80mm thermal format, Print All button, KOT preview dialog
+- [x] Staff-facing sync dashboard — "Offline Queue" tab in Staff Orders with status badges, expandable order details, manual Sync/Retry, progress bar
+- [x] Admin offline mode toggle — per-outlet (Palladium + T. Nagar) enable/disable in Admin > Settings > Offline Mode, stored in site_settings
+- [x] Vitest tests for all three features (13 tests: KOT generation, batch print, sync dashboard data ops, admin API)

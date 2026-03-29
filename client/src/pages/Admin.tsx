@@ -9,7 +9,7 @@ import {
   Home, Package, ShoppingCart, Tag, LogOut, Plus,
   ChevronDown, UtensilsCrossed, AlertCircle, DollarSign, CreditCard, Users,
   Settings, Layers, TrendingUp, Calendar, Ticket, Mail, Printer,
-  ClipboardList, BarChart3, BookOpen, Star, Bot, Crown, MapPin, FileText, Download, Upload, History, Clock, RotateCcw
+  ClipboardList, BarChart3, BookOpen, Star, Bot, Crown, MapPin, FileText, Download, Upload, History, Clock, RotateCcw, WifiOff
 } from 'lucide-react';
 import OutletAvailabilityTab from '@/components/OutletAvailabilityTab';
 import HomepageSettingsTab from '@/components/HomepageSettingsTab';
@@ -42,6 +42,7 @@ const WorkshopBookingsTab = lazy(() => import('./admin/tabs/WorkshopBookingsTab'
 const BackupTab = lazy(() => import('./admin/tabs/BackupTab'));
 const ReconciliationTab = lazy(() => import('./admin/tabs/ReconciliationTab'));
 const LeelaRegistrationsTab = lazy(() => import('./admin/tabs/LeelaRegistrationsTab'));
+const OfflineSettingsTab = lazy(() => import('./admin/tabs/OfflineSettingsTab'));
 
 // Loading fallback for tabs
 function TabLoader() {
@@ -277,9 +278,9 @@ export default function Admin() {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button 
-                  variant={['settings', 'bulk-upload', 'cms', 'admin-pin', 'refunds', 'homepage-settings', 'food-schedule'].includes(activeTab) ? 'default' : 'outline'} 
+                  variant={['settings', 'bulk-upload', 'cms', 'admin-pin', 'refunds', 'homepage-settings', 'food-schedule', 'offline-settings'].includes(activeTab) ? 'default' : 'outline'} 
                   size="sm" 
-                  className={`gap-2 ${!['settings', 'bulk-upload', 'cms', 'admin-pin', 'refunds', 'backup', 'homepage-settings', 'food-schedule'].includes(activeTab) ? 'border-transparent hover:bg-accent' : ''}`}
+                  className={`gap-2 ${!['settings', 'bulk-upload', 'cms', 'admin-pin', 'refunds', 'backup', 'homepage-settings', 'food-schedule', 'offline-settings'].includes(activeTab) ? 'border-transparent hover:bg-accent' : ''}`}
                 >
                   <Settings className="w-4 h-4" />
                   Settings
@@ -310,6 +311,9 @@ export default function Admin() {
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setActiveTab('backup')} className={activeTab === 'backup' ? 'bg-accent' : ''}>
                   <History className="w-4 h-4 mr-2" /> Database Backup
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setActiveTab('offline-settings')} className={activeTab === 'offline-settings' ? 'bg-accent' : ''}>
+                  <WifiOff className="w-4 h-4 mr-2" /> Offline Mode
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => setActiveTab('bulk-upload')} className={activeTab === 'bulk-upload' ? 'bg-accent' : ''}>
@@ -441,6 +445,10 @@ export default function Admin() {
 
           <TabsContent value="outlet-availability">
             <OutletAvailabilityTab />
+          </TabsContent>
+
+          <TabsContent value="offline-settings">
+            <Suspense fallback={<TabLoader />}><OfflineSettingsTab /></Suspense>
           </TabsContent>
         </Tabs>
       </div>

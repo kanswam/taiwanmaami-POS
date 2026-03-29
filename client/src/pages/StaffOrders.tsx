@@ -23,6 +23,8 @@ import { Switch } from '@/components/ui/switch';
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogAction, AlertDialogCancel } from '@/components/ui/alert-dialog';
 import { AddItemsDialog } from '@/components/AddItemsDialog';
 import { useOrderNotification, playOrderNotification } from '@/hooks/useOrderNotification';
+import { OfflineSyncDashboard } from '@/components/OfflineSyncDashboard';
+import { OfflineIndicator } from '@/components/OfflineBanner';
 
 // Status flow for delivery orders
 const statusFlow = {
@@ -1117,6 +1119,9 @@ export default function StaffOrders() {
             </TabsTrigger>
             <TabsTrigger value="completed">Completed Today</TabsTrigger>
             <TabsTrigger value="availability">Availability</TabsTrigger>
+            <TabsTrigger value="offline-queue" className="relative">
+              Offline Queue
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="active">
@@ -1171,6 +1176,10 @@ export default function StaffOrders() {
 
           <TabsContent value="availability">
             <AvailabilityPanel />
+          </TabsContent>
+
+          <TabsContent value="offline-queue">
+            <OfflineSyncDashboard />
           </TabsContent>
         </Tabs>
       </div>
