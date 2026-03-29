@@ -1,0 +1,25 @@
+{
+  "query": "SHOW TABLES LIKE '%kot%'; SHOW TABLES LIKE '%outlet%'; SHOW TABLES LIKE '%printer%'; SHOW TABLES LIKE '%location%';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SHOW TABLES LIKE '%kot%'; SHOW TABLES LIKE '%outlet%'; SHOW TABLES LIKE '%printer%'; SHOW TABLES LIKE '%location%';",
+  "rows": [
+    {
+      "Tables_in_7xKVuVPoe4TavcqcxPZkpC (%kot%)": "kot_queue"
+    },
+    {
+      "Tables_in_7xKVuVPoe4TavcqcxPZkpC (%kot%)": "Tables_in_7xKVuVPoe4TavcqcxPZkpC (%outlet%)"
+    },
+    {
+      "Tables_in_7xKVuVPoe4TavcqcxPZkpC (%kot%)": "outlet_products"
+    },
+    {
+      "Tables_in_7xKVuVPoe4TavcqcxPZkpC (%kot%)": "Tables_in_7xKVuVPoe4TavcqcxPZkpC (%location%)"
+    },
+    {
+      "Tables_in_7xKVuVPoe4TavcqcxPZkpC (%kot%)": "store_locations"
+    }
+  ],
+  "messages": [],
+  "stdout": "Tables_in_7xKVuVPoe4TavcqcxPZkpC (%kot%)\nkot_queue\nTables_in_7xKVuVPoe4TavcqcxPZkpC (%outlet%)\noutlet_products\nTables_in_7xKVuVPoe4TavcqcxPZkpC (%location%)\nstore_locations\n",
+  "stderr": "",
+  "execution_time_ms": 490
+}

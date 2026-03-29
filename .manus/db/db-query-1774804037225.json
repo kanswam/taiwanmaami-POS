@@ -1,0 +1,16 @@
+{
+  "query": "SELECT id, outletId, orderNumber, kotData FROM kot_queue WHERE id = 3120040;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT id, outletId, orderNumber, kotData FROM kot_queue WHERE id = 3120040;",
+  "rows": [
+    {
+      "id": "3120040",
+      "outletId": "2",
+      "orderNumber": "00885",
+      "kotData": "{\"createdAt\": \"2026-03-29T17:02:27.233Z\", \"customerName\": \"kalvi\", \"customerPhone\": \"9384841118\", \"items\": [{\"addons\": [], \"price\": 36000, \"productName\": \"Hong Kong-Styled Yuen Yeung Milk Tea \", \"quantity\": 1, \"specialInstructions\": \"\"}, {\"addons\": [{\"name\": \"Chicken Bites\", \"price\": 16000}], \"price\": 41500, \"productName\": \"Biang Biang Noodles\", \"quantity\": 1, \"specialInstructions\": \"Minimal spice, NO EGG\"}, {\"addons\": [], \"iceLevel\": \"less_ice\", \"price\": 40500, \"productName\": \"Coconut Matcha Latte\", \"quantity\": 1, \"size\": \"regular\", \"specialInstructions\": \"\", \"sugarLevel\": \"75%\", \"withBoba\": true}, {\"addons\": [{\"name\": \"Mango\", \"price\": 0}], \"price\": 35000, \"productName\": \"Ice Cream Mochi (Vanilla Ice Cream)\", \"quantity\": 4, \"specialInstructions\": \"\"}, {\"addons\": [], \"price\": 48000, \"productName\": \"Coconut Japanese Imo Katsu Curry Rice\", \"quantity\": 1, \"specialInstructions\": \"\"}], \"orderId\": \"00885\", \"orderType\": \"INSTORE\", \"specialInstructions\": \"\", \"tableNumber\": \"5\", \"totalAmount\": 338100}"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\toutletId\torderNumber\tkotData\n3120040\t2\t00885\t{\"createdAt\": \"2026-03-29T17:02:27.233Z\", \"customerName\": \"kalvi\", \"customerPhone\": \"9384841118\", \"items\": [{\"addons\": [], \"price\": 36000, \"productName\": \"Hong Kong-Styled Yuen Yeung Milk Tea \", \"quantity\": 1, \"specialInstructions\": \"\"}, {\"addons\": [{\"name\": \"Chicken Bites\", \"price\": 16000}], \"price\": 41500, \"productName\": \"Biang Biang Noodles\", \"quantity\": 1, \"specialInstructions\": \"Minimal spice, NO EGG\"}, {\"addons\": [], \"iceLevel\": \"less_ice\", \"price\": 40500, \"productName\": \"Coconut Matcha Latte\", \"quantity\": 1, \"size\": \"regular\", \"specialInstructions\": \"\", \"sugarLevel\": \"75%\", \"withBoba\": true}, {\"addons\": [{\"name\": \"Mango\", \"price\": 0}], \"price\": 35000, \"productName\": \"Ice Cream Mochi (Vanilla Ice Cream)\", \"quantity\": 4, \"specialInstructions\": \"\"}, {\"addons\": [], \"price\": 48000, \"productName\": \"Coconut Japanese Imo Katsu Curry Rice\", \"quantity\": 1, \"specialInstructions\": \"\"}], \"orderId\": \"00885\", \"orderType\": \"INSTORE\", \"specialInstructions\": \"\", \"tableNumber\": \"5\", \"totalAmount\": 338100}\n",
+  "stderr": "",
+  "execution_time_ms": 365
+}

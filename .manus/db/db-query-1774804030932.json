@@ -1,0 +1,90 @@
+{
+  "query": "SELECT id, orderId, outletId, orderNumber, isPrinted, createdAt FROM kot_queue ORDER BY id DESC LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT id, orderId, outletId, orderNumber, isPrinted, createdAt FROM kot_queue ORDER BY id DESC LIMIT 10;",
+  "rows": [
+    {
+      "id": "3120040",
+      "orderId": "3450026",
+      "outletId": "2",
+      "orderNumber": "00885",
+      "isPrinted": "1",
+      "createdAt": "2026-03-29 17:02:27"
+    },
+    {
+      "id": "3120039",
+      "orderId": "3450025",
+      "outletId": "2",
+      "orderNumber": "00884",
+      "isPrinted": "1",
+      "createdAt": "2026-03-29 16:29:33"
+    },
+    {
+      "id": "3120038",
+      "orderId": "3450024",
+      "outletId": "2",
+      "orderNumber": "00883",
+      "isPrinted": "1",
+      "createdAt": "2026-03-29 16:29:00"
+    },
+    {
+      "id": "3120037",
+      "orderId": "3450022",
+      "outletId": "2",
+      "orderNumber": "00881",
+      "isPrinted": "1",
+      "createdAt": "2026-03-29 16:02:14"
+    },
+    {
+      "id": "3120036",
+      "orderId": "3450023",
+      "outletId": "2",
+      "orderNumber": "00882",
+      "isPrinted": "1",
+      "createdAt": "2026-03-29 16:01:33"
+    },
+    {
+      "id": "3120035",
+      "orderId": "3450022",
+      "outletId": "2",
+      "orderNumber": "00881",
+      "isPrinted": "1",
+      "createdAt": "2026-03-29 16:01:18"
+    },
+    {
+      "id": "3120034",
+      "orderId": "3450018",
+      "outletId": "2",
+      "orderNumber": "00877",
+      "isPrinted": "1",
+      "createdAt": "2026-03-29 15:57:31"
+    },
+    {
+      "id": "3120033",
+      "orderId": "3450018",
+      "outletId": "2",
+      "orderNumber": "00877",
+      "isPrinted": "1",
+      "createdAt": "2026-03-29 15:57:14"
+    },
+    {
+      "id": "3120032",
+      "orderId": "3450021",
+      "outletId": "2",
+      "orderNumber": "00880",
+      "isPrinted": "1",
+      "createdAt": "2026-03-29 15:53:52"
+    },
+    {
+      "id": "3120031",
+      "orderId": "3450020",
+      "outletId": "2",
+      "orderNumber": "00879",
+      "isPrinted": "1",
+      "createdAt": "2026-03-29 15:08:42"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\torderId\toutletId\torderNumber\tisPrinted\tcreatedAt\n3120040\t3450026\t2\t00885\t1\t2026-03-29 17:02:27\n3120039\t3450025\t2\t00884\t1\t2026-03-29 16:29:33\n3120038\t3450024\t2\t00883\t1\t2026-03-29 16:29:00\n3120037\t3450022\t2\t00881\t1\t2026-03-29 16:02:14\n3120036\t3450023\t2\t00882\t1\t2026-03-29 16:01:33\n3120035\t3450022\t2\t00881\t1\t2026-03-29 16:01:18\n3120034\t3450018\t2\t00877\t1\t2026-03-29 15:57:31\n3120033\t3450018\t2\t00877\t1\t2026-03-29 15:57:14\n3120032\t3450021\t2\t00880\t1\t2026-03-29 15:53:52\n3120031\t3450020\t2\t00879\t1\t2026-03-29 15:08:42\n",
+  "stderr": "",
+  "execution_time_ms": 355
+}

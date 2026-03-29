@@ -2668,3 +2668,20 @@ Orders fixed:
 ## Bug: Last Month Date Range Wrong (Mar 29)
 - [x] "Last Month" date range shows Start: 1 Mar instead of 1 Feb, End: 28 Feb — start date is wrong
 - [x] Fix: use new Date(year, month-1, 1) instead of mutating date with setMonth (avoids month overflow on day 29/30/31)
+
+## Level 2 Offline Resilience for Staff POS (Mar 29)
+- [x] Offline detection service (navigator.onLine + heartbeat ping every 5s)
+- [x] IndexedDB order queue (idb-keyval with dedicated stores for orders, KOTs, sync-meta)
+- [x] Offline order placement — save to IndexedDB when server unreachable (cash + instore/pickup only)
+- [x] Temporary offline order numbering (OFF-001, OFF-002, etc.) with mutex lock for concurrency
+- [x] Auto-sync engine — push queued orders to server when connectivity returns (sequential, throttled)
+- [x] Conflict resolution — timestamp-based ordering, max 3 retries, failed orders preserved for manual retry
+- [x] Offline KOT generation — store KOT data locally for local printing (auto-generated on queue)
+- [x] Staff POS UI integration — amber "Offline Mode" banner with pending count, OfflineProvider context
+- [x] Graceful degradation — only cash+instore/pickup allowed offline; delivery/online payment blocked
+- [x] Vitest unit tests for offline queue, sync engine, conflict resolution (27 tests)
+- [x] Vitest load simulation — 8 simultaneous table orders hitting queue (concurrent + sequential sync)
+- [x] NO production test data — all tests use mocks only (idb-keyval fully mocked)
+- [x] Server-side offlineCreatedAt support — orders.create and guest.createOrder accept original timestamp
+- [x] Offline order confirmation page — /offline-order/:offlineId with sync status tracking
+- [x] Cleanup service — auto-removes synced orders older than 24 hours from IndexedDB

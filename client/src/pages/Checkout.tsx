@@ -12,11 +12,12 @@ import { useCart } from '@/contexts/CartContext';
 import { useAuth } from '@/_core/hooks/useAuth';
 import { trpc } from '@/lib/trpc';
 import { formatPrice, CHENNAI_AREAS, isOrderingAvailable, isOutletOpen, OUTLET_HOURS, DELIVERY_CONFIG } from '@shared/types';
-import { ArrowLeft, MapPin, Clock, CreditCard, Banknote, Loader2, Gift, User, Stamp, Crown } from 'lucide-react';
+import { ArrowLeft, MapPin, Clock, CreditCard, Banknote, Loader2, Gift, User, Stamp, Crown, WifiOff } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { Link } from 'wouter';
 import { useLoginTransition } from '@/hooks/useLoginTransition';
+import { useOffline } from '@/contexts/OfflineContext';
 
 // Declare Razorpay types
 declare global {
@@ -31,6 +32,7 @@ export default function Checkout() {
   const { triggerLogin, transitionPortal } = useLoginTransition();
   const { state, subtotal, gst, total, clearCart, itemCount, tableNumber, setTableNumber, activeOrderId, setActiveOrderId } = useCart();
   const { data: stores } = trpc.stores.getAll.useQuery();
+  const { isOnline, offlineModeEnabled, placeOfflineOrder } = useOffline();
 
   const [paymentMethod, setPaymentMethod] = useState<'online' | 'cash'>('online');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -229,6 +231,38 @@ export default function Checkout() {
     setIsSubmitting(true);
 
     try {
+      // ─── OFFLINE MODE: Queue order locally when internet is down ───
+      // Only for cash orders (instore/pickup) — delivery and online payments require internet
+      if (offlineModeEnabled && !isOnline && paymentMethod === 'cash' && (state.orderType === 'instore' || state.orderType === 'pickup')) {
+        const outletId = selectedOutlet === 'palladium' ? 1 : 2;
+        const outletName = selectedOutlet === 'palladium' ? 'Palladium Mall' : 'T. Nagar';
+        
+        const offlineOrder = await placeOfflineOrder({
+          orderType: state.orderType as 'instore' | 'pickup',
+          outletId,
+          outletName,
+          tableNumber: formData.tableNumber || '',
+          customerName: formData.name,
+          customerPhone: formData.phone,
+          items: state.items,
+          specialInstructions: formData.notes || '',
+          discountCode: state.discountCode,
+          subtotal,
+          gstAmount: gst.total,
+          totalAmount: total,
+          userId: user?.id || null,
+          userName: user?.name || null,
+        });
+
+        clearCart();
+        toast.success(
+          `Order ${offlineOrder.offlineId} queued offline! KOT sent to kitchen.`,
+          { duration: 5000, icon: '📋' }
+        );
+        navigate(`/offline-order/${offlineOrder.offlineId}`);
+        return;
+      }
+
       // If there's an active order for this table, add items to it instead of creating new
       if (activeOrderId && state.orderType === 'instore') {
         const result = await addItemsToOrder.mutateAsync({
@@ -428,6 +462,37 @@ export default function Checkout() {
     setIsSubmitting(true);
 
     try {
+      // ─── OFFLINE MODE: Queue order locally when internet is down ───
+      if (offlineModeEnabled && !isOnline && paymentMethod === 'cash' && (state.orderType === 'instore' || state.orderType === 'pickup')) {
+        const outletId = selectedOutlet === 'palladium' ? 1 : 2;
+        const outletName = selectedOutlet === 'palladium' ? 'Palladium Mall' : 'T. Nagar';
+        
+        const offlineOrder = await placeOfflineOrder({
+          orderType: state.orderType as 'instore' | 'pickup',
+          outletId,
+          outletName,
+          tableNumber: formData.tableNumber || '',
+          customerName: formData.name,
+          customerPhone: formData.phone,
+          items: state.items,
+          specialInstructions: formData.notes || '',
+          discountCode: state.discountCode,
+          subtotal,
+          gstAmount: gst.total,
+          totalAmount: total,
+          userId: null,
+          userName: null,
+        });
+
+        clearCart();
+        toast.success(
+          `Order ${offlineOrder.offlineId} queued offline! KOT sent to kitchen.`,
+          { duration: 5000, icon: '📋' }
+        );
+        navigate(`/offline-order/${offlineOrder.offlineId}`);
+        return;
+      }
+
       // Generate stable idempotency key based on cart contents to prevent duplicate orders
       // Using cart hash instead of timestamp ensures retries reuse the same order
       const cartHash = state.items.map(i => `${i.productId}-${i.quantity}-${i.size || ''}`).join('|');

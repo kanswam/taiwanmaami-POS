@@ -245,6 +245,8 @@ export const appRouter = router({
         discountCode: z.string().optional(),
         specialInstructions: z.string().optional(),
         loyaltyPointsUsed: z.number().default(0),
+        // Offline sync: original timestamp when order was placed offline
+        offlineCreatedAt: z.number().optional(),
       }))
       .mutation(async ({ ctx, input }) => {
         const dbInstance = await getDb();
@@ -454,6 +456,8 @@ export const appRouter = router({
           specialInstructions: input.specialInstructions,
           partnerBenefitAmount,
           partnerSubscriptionId: partnerSubId,
+          // If this is an offline-synced order, use the original creation timestamp
+          ...(input.offlineCreatedAt ? { createdAt: new Date(input.offlineCreatedAt) } : {}),
         });
 
         const orderId = orderResult.insertId;
@@ -4055,6 +4059,8 @@ export const appRouter = router({
         specialInstructions: z.string().optional(),
         // Payment
         paymentMethod: z.enum(['online', 'cash_at_pickup']),
+        // Offline sync: original timestamp when order was placed offline
+        offlineCreatedAt: z.number().optional(),
       }))
       .mutation(async ({ input }) => {
         const dbInstance = await getDb();
@@ -4127,6 +4133,8 @@ export const appRouter = router({
           specialInstructions: input.specialInstructions,
           // Idempotency key to prevent duplicate orders on network retry
           idempotencyKey: input.idempotencyKey || null,
+          // If this is an offline-synced order, use the original creation timestamp
+          ...(input.offlineCreatedAt ? { createdAt: new Date(input.offlineCreatedAt) } : {}),
         });
         
         const orderId = orderResult.insertId;

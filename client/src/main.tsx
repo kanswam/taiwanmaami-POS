@@ -7,6 +7,7 @@ import superjson from "superjson";
 import { HelmetProvider } from "react-helmet-async";
 import App from "./App";
 import { getLoginUrl } from "./const";
+import { OfflineProvider } from "./contexts/OfflineContext";
 import "./index.css";
 
 const queryClient = new QueryClient();
@@ -102,7 +103,9 @@ createRoot(document.getElementById("root")!).render(
   <trpc.Provider client={trpcClient} queryClient={queryClient}>
     <QueryClientProvider client={queryClient}>
       <HelmetProvider>
-        <App />
+        <OfflineProvider>
+          <App />
+        </OfflineProvider>
       </HelmetProvider>
     </QueryClientProvider>
   </trpc.Provider>

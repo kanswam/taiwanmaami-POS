@@ -38,6 +38,7 @@ const CategorySubcategories = lazy(() => import("./pages/CategorySubcategories")
 // Admin pages - lazy loaded (very large)
 const Admin = lazy(() => import("./pages/Admin"));
 const StaffOrders = lazy(() => import("./pages/StaffOrders"));
+const OfflineOrderConfirmation = lazy(() => import("./pages/OfflineOrderConfirmation"));
 const Analytics = lazy(() => import("./pages/Analytics"));
 const WebTraffic = lazy(() => import("./pages/WebTraffic"));
 const AdminEvents = lazy(() => import("./pages/AdminEvents"));
@@ -54,6 +55,7 @@ const WholesaleCart = lazy(() => import("./pages/wholesale/WholesaleCart"));
 const WholesaleOrders = lazy(() => import("./pages/wholesale/WholesaleOrders"));
 
 import { CookieConsent } from "./components/CookieConsent";
+import { OfflineBanner } from "./components/OfflineBanner";
 import { VoiceChatWidget } from "./components/VoiceChatWidget";
 import { usePageTracking } from "./hooks/usePageTracking";
 import { BirthdayPromptWrapper } from "./components/BirthdayPromptWrapper";
@@ -103,6 +105,7 @@ function Router() {
         <Route path="/cart" component={Cart} />
         <Route path="/checkout" component={Checkout} />
         <Route path="/order-confirmation/:orderId" component={OrderConfirmation} />
+        <Route path="/offline-order/:offlineId" component={OfflineOrderConfirmation} />
         <Route path="/track" component={OrderTracking} />
         <Route path="/orders" component={Orders} />
         <Route path="/profile" component={Profile} />
@@ -158,6 +161,7 @@ function App() {
         <CartProvider>
           <TooltipProvider>
             <Toaster />
+            <OfflineBanner />
             <Router />
             <CookieConsent />
             <BirthdayPromptWrapper />
