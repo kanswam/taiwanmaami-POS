@@ -54,11 +54,11 @@ const getDatePreset = (preset: string) => {
     case 'thisMonth':
       startDate.setDate(1);
       return { start: startDate.toISOString().split('T')[0], end: today.toISOString().split('T')[0] };
-    case 'lastMonth':
-      startDate.setMonth(today.getMonth() - 1);
-      startDate.setDate(1);
-      const endOfLastMonth = new Date(today.getFullYear(), today.getMonth(), 0);
-      return { start: startDate.toISOString().split('T')[0], end: endOfLastMonth.toISOString().split('T')[0] };
+    case 'lastMonth': {
+      const lastMonthStart = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+      const lastMonthEnd = new Date(today.getFullYear(), today.getMonth(), 0);
+      return { start: lastMonthStart.toISOString().split('T')[0], end: lastMonthEnd.toISOString().split('T')[0] };
+    }
     default:
       startDate.setDate(today.getDate() - 30);
       return { start: startDate.toISOString().split('T')[0], end: today.toISOString().split('T')[0] };

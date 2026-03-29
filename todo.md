@@ -2664,3 +2664,7 @@ Orders fixed:
 - [x] Bundle reduced from 18MB to 4.2MB (77% reduction)
 - [x] Build now succeeds even with 512MB memory limit
 - [x] Site should load within 2-3 seconds
+
+## Bug: Last Month Date Range Wrong (Mar 29)
+- [x] "Last Month" date range shows Start: 1 Mar instead of 1 Feb, End: 28 Feb — start date is wrong
+- [x] Fix: use new Date(year, month-1, 1) instead of mutating date with setMonth (avoids month overflow on day 29/30/31)
