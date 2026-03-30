@@ -2711,3 +2711,5 @@ Orders fixed:
 - [x] Fix broken structured data image URLs (double URL concatenation)
 - [x] Add og:image:width, og:image:height, og:image:type meta tags for proper rendering
 - [x] Replace AI-generated OG image with real storefront photo (1200x630, 121KB JPEG, Palladium interior)
+- [x] Add twitter:site meta tag (@TaiwanMaami)
+- [x] Remove person from storefront photo and use as OG image (AI inpainted, 1200x630, 127KB)
