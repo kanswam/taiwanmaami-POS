@@ -1,0 +1,42 @@
+{
+  "query": "SELECT o.id, o.orderNumber, o.subtotal, o.stateGst, o.centralGst, o.totalAmount, o.paymentMethod, o.orderStatus,\n       oi.id as itemId, oi.productName, oi.quantity, oi.unitPrice, oi.lineTotal, oi.status\nFROM orders o\nLEFT JOIN order_items oi ON oi.orderId = o.id\nWHERE o.orderNumber = '00887';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT o.id, o.orderNumber, o.subtotal, o.stateGst, o.centralGst, o.totalAmount, o.paymentMethod, o.orderStatus,\n       oi.id as itemId, oi.productName, oi.quantity, oi.unitPrice, oi.lineTotal, oi.status\nFROM orders o\nLEFT JOIN order_items oi ON oi.orderId = o.id\nWHERE o.orderNumber = '00887';",
+  "rows": [
+    {
+      "id": "3450028",
+      "orderNumber": "00887",
+      "subtotal": "101000",
+      "stateGst": "2525",
+      "centralGst": "2525",
+      "totalAmount": "106050",
+      "paymentMethod": "zomato_dineout",
+      "orderStatus": "completed",
+      "itemId": "3450069",
+      "productName": "Crème Brûlée Oolong Latte",
+      "quantity": "1",
+      "unitPrice": "46500",
+      "lineTotal": "51500",
+      "status": "active"
+    },
+    {
+      "id": "3450028",
+      "orderNumber": "00887",
+      "subtotal": "101000",
+      "stateGst": "2525",
+      "centralGst": "2525",
+      "totalAmount": "106050",
+      "paymentMethod": "zomato_dineout",
+      "orderStatus": "completed",
+      "itemId": "3450070",
+      "productName": "Rose Milk Tea",
+      "quantity": "1",
+      "unitPrice": "44500",
+      "lineTotal": "49500",
+      "status": "active"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\torderNumber\tsubtotal\tstateGst\tcentralGst\ttotalAmount\tpaymentMethod\torderStatus\titemId\tproductName\tquantity\tunitPrice\tlineTotal\tstatus\n3450028\t00887\t101000\t2525\t2525\t106050\tzomato_dineout\tcompleted\t3450069\tCrème Brûlée Oolong Latte\t1\t46500\t51500\tactive\n3450028\t00887\t101000\t2525\t2525\t106050\tzomato_dineout\tcompleted\t3450070\tRose Milk Tea\t1\t44500\t49500\tactive\n",
+  "stderr": "",
+  "execution_time_ms": 355
+}

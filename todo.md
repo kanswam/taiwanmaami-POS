@@ -2705,3 +2705,8 @@ Orders fixed:
 - [x] Admin UI: Export button in Admin > Settings > Catalog Export/Import
 - [x] Admin UI: Import with preview/confirm flow showing changed descriptions before applying
 - [x] Vitest tests for export/import logic (6 tests: procedure existence, schema validation, unicode, large batch)
+
+## OG Image / Social Preview Fix (Mar 30)
+- [x] Fix missing Open Graph thumbnail image for Twitter/X and social media link previews
+- [x] Fix broken structured data image URLs (double URL concatenation)
+- [x] Add og:image:width, og:image:height, og:image:type meta tags for proper rendering

@@ -1,0 +1,32 @@
+{
+  "query": "SELECT o.orderNumber, o.subtotal, o.stateGst, o.centralGst, o.totalAmount,\n       oi.productName, oi.unitPrice, oi.lineTotal, oi.specialInstructions\nFROM orders o\nLEFT JOIN order_items oi ON oi.orderId = o.id\nWHERE o.orderNumber = '00887';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT o.orderNumber, o.subtotal, o.stateGst, o.centralGst, o.totalAmount,\n       oi.productName, oi.unitPrice, oi.lineTotal, oi.specialInstructions\nFROM orders o\nLEFT JOIN order_items oi ON oi.orderId = o.id\nWHERE o.orderNumber = '00887';",
+  "rows": [
+    {
+      "orderNumber": "00887",
+      "subtotal": "49500",
+      "stateGst": "1238",
+      "centralGst": "1238",
+      "totalAmount": "51975",
+      "productName": "Crème Brûlée Oolong Latte",
+      "unitPrice": "0",
+      "lineTotal": "0",
+      "specialInstructions": "Complimentary - replacement for leaked Zomato order"
+    },
+    {
+      "orderNumber": "00887",
+      "subtotal": "49500",
+      "stateGst": "1238",
+      "centralGst": "1238",
+      "totalAmount": "51975",
+      "productName": "Rose Milk Tea",
+      "unitPrice": "44500",
+      "lineTotal": "49500",
+      "specialInstructions": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "orderNumber\tsubtotal\tstateGst\tcentralGst\ttotalAmount\tproductName\tunitPrice\tlineTotal\tspecialInstructions\n00887\t49500\t1238\t1238\t51975\tCrème Brûlée Oolong Latte\t0\t0\tComplimentary - replacement for leaked Zomato order\n00887\t49500\t1238\t1238\t51975\tRose Milk Tea\t44500\t49500\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 391
+}
