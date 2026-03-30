@@ -2710,3 +2710,4 @@ Orders fixed:
 - [x] Fix missing Open Graph thumbnail image for Twitter/X and social media link previews
 - [x] Fix broken structured data image URLs (double URL concatenation)
 - [x] Add og:image:width, og:image:height, og:image:type meta tags for proper rendering
+- [x] Replace AI-generated OG image with real storefront photo (1200x630, 121KB JPEG, Palladium interior)
