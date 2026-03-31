@@ -2727,3 +2727,5 @@ Orders fixed:
 - [x] Integrated alert into Staff Orders page and Admin Orders tab
 - [x] Audio alert for new failed payments, urgency badges for orders < 15 min old
 - [x] Vitest tests for payment alert system (18 tests: auth, data shape, detection logic, time display)
+## Wholesale Portal Update (Mar 31)
+- [x] Replace wholesale portal page with "Coming Soon" message
