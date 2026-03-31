@@ -24,6 +24,7 @@ import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, A
 import { AddItemsDialog } from '@/components/AddItemsDialog';
 import { useOrderNotification, playOrderNotification } from '@/hooks/useOrderNotification';
 import { OfflineSyncDashboard } from '@/components/OfflineSyncDashboard';
+import { PaymentFailureAlert } from '@/components/PaymentFailureAlert';
 import { OfflineIndicator } from '@/components/OfflineBanner';
 
 // Status flow for delivery orders
@@ -1049,6 +1050,9 @@ export default function StaffOrders() {
             </Button>
           </div>
         </div>
+
+        {/* Payment Failure Alert */}
+        <PaymentFailureAlert />
 
         {/* Filters */}
         <div className="flex flex-wrap items-center gap-3 mb-6 p-3 bg-muted/30 rounded-lg">

@@ -1142,6 +1142,170 @@ export const appRouter = router({
         return ordersWithItems;
       }),
 
+    // Get orders with failed/pending Razorpay payments (for staff alert system)
+    getFailedPayments: staffProcedure
+      .query(async () => {
+        const dbInstance = await getDb();
+        if (!dbInstance) return [];
+        
+        // Find orders where:
+        // 1. razorpayOrderId exists (Razorpay checkout was initiated)
+        // 2. paymentStatus is still 'pending' (payment not completed)
+        // 3. Order is not cancelled
+        // 4. Created in the last 24 hours (recent enough to act on)
+        const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+        
+        const failedOrders = await dbInstance
+          .select({
+            id: orders.id,
+            orderNumber: orders.orderNumber,
+            customerName: orders.customerName,
+            customerPhone: orders.customerPhone,
+            totalAmount: orders.totalAmount,
+            orderType: orders.orderType,
+            orderStatus: orders.orderStatus,
+            paymentStatus: orders.paymentStatus,
+            razorpayOrderId: orders.razorpayOrderId,
+            razorpayPaymentId: orders.razorpayPaymentId,
+            tableNumber: orders.tableNumber,
+            outletId: orders.outletId,
+            createdAt: orders.createdAt,
+          })
+          .from(orders)
+          .where(
+            and(
+              sql`${orders.razorpayOrderId} IS NOT NULL AND ${orders.razorpayOrderId} != ''`,
+              eq(orders.paymentStatus, 'pending'),
+              sql`${orders.orderStatus} != 'cancelled'`,
+              gte(orders.createdAt, twentyFourHoursAgo),
+            )
+          )
+          .orderBy(desc(orders.createdAt));
+        
+        // Also get guest info for guest orders
+        const enrichedOrders = await Promise.all(
+          failedOrders.map(async (order) => {
+            let guestInfo = null;
+            if (!order.customerName || !order.customerPhone) {
+              const [guest] = await dbInstance.select().from(guestOrders).where(eq(guestOrders.orderId, order.id));
+              if (guest) {
+                guestInfo = { name: guest.guestName, phone: guest.guestPhone };
+              }
+            }
+            
+            const minutesAgo = Math.floor((Date.now() - new Date(order.createdAt).getTime()) / 60000);
+            
+            return {
+              ...order,
+              customerName: order.customerName || guestInfo?.name || 'Unknown',
+              customerPhone: order.customerPhone || guestInfo?.phone || '',
+              minutesAgo,
+              isUrgent: minutesAgo <= 15, // Within 15 min = customer might still be in shop
+            };
+          })
+        );
+        
+        return enrichedOrders;
+      }),
+
+    // Staff can verify a failed Razorpay payment via API and recover it
+    verifyFailedPayment: staffProcedure
+      .input(z.object({ orderId: z.number() }))
+      .mutation(async ({ input, ctx }) => {
+        const dbInstance = await getDb();
+        if (!dbInstance) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
+        
+        const [order] = await dbInstance.select().from(orders).where(eq(orders.id, input.orderId));
+        if (!order) throw new TRPCError({ code: 'NOT_FOUND', message: 'Order not found' });
+        
+        if (!order.razorpayOrderId) {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: 'No Razorpay order ID found' });
+        }
+        
+        if (order.paymentStatus === 'completed') {
+          return { success: true, alreadyPaid: true, message: 'Payment already completed' };
+        }
+        
+        // Check Razorpay API for any captured payment
+        const { fetchOrderPayments } = await import('./razorpay');
+        const rpPayments = await fetchOrderPayments(order.razorpayOrderId);
+        
+        const capturedPayment = rpPayments.find((p: any) => p.status === 'captured');
+        
+        if (!capturedPayment) {
+          // No payment found - return failure info for staff
+          const failedPayments = rpPayments.filter((p: any) => p.status === 'failed');
+          return { 
+            success: false, 
+            alreadyPaid: false, 
+            message: `No successful payment found. ${failedPayments.length} failed attempt(s).`,
+            failedAttempts: failedPayments.length,
+            lastFailReason: failedPayments[0]?.error_description || failedPayments[0]?.error_reason || 'Unknown',
+          };
+        }
+        
+        // Payment found! Recover it
+        let paymentMethod: 'upi' | 'card' | 'razorpay' = 'razorpay';
+        if (capturedPayment.method === 'upi') paymentMethod = 'upi';
+        else if (capturedPayment.method === 'card') paymentMethod = 'card';
+        
+        await dbInstance
+          .update(orders)
+          .set({
+            paymentStatus: 'completed',
+            razorpayPaymentId: capturedPayment.id,
+            paymentMethod: paymentMethod,
+            paymentCollectedBy: ctx.user.name || 'Staff',
+            paymentCollectedAt: new Date(),
+            paymentNote: `Recovered via failed payment alert by ${ctx.user.name || 'Staff'}. Payment ID: ${capturedPayment.id}, Amount: ₹${(capturedPayment.amount / 100).toFixed(2)}, Method: ${capturedPayment.method}`,
+          })
+          .where(eq(orders.id, input.orderId));
+        
+        // Also update order status to confirmed if still pending
+        if (order.orderStatus === 'pending') {
+          await dbInstance
+            .update(orders)
+            .set({ orderStatus: 'confirmed' })
+            .where(eq(orders.id, input.orderId));
+        }
+        
+        return { 
+          success: true, 
+          alreadyPaid: false, 
+          message: `Payment recovered! ₹${(capturedPayment.amount / 100).toFixed(2)} via ${capturedPayment.method}`,
+          paymentId: capturedPayment.id,
+          amount: capturedPayment.amount,
+        };
+      }),
+
+    // Staff can cancel a failed payment order
+    cancelFailedPaymentOrder: staffProcedure
+      .input(z.object({ 
+        orderId: z.number(),
+        reason: z.string().optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const dbInstance = await getDb();
+        if (!dbInstance) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
+        
+        const [order] = await dbInstance.select().from(orders).where(eq(orders.id, input.orderId));
+        if (!order) throw new TRPCError({ code: 'NOT_FOUND' });
+        
+        if (order.orderStatus === 'completed' || order.orderStatus === 'cancelled') {
+          return { success: false, message: 'Order already completed or cancelled' };
+        }
+        
+        await dbInstance
+          .update(orders)
+          .set({ 
+            orderStatus: 'cancelled',
+            staffNotes: `Cancelled via payment alert by ${ctx.user.name || 'Staff'}. Reason: ${input.reason || 'Payment failed - customer did not re-attempt'}`,
+          })
+          .where(eq(orders.id, input.orderId));
+        
+        return { success: true, message: 'Order cancelled' };
+      }),
+
     // Get active in-store orders for table dashboard
     getActiveInstoreOrders: staffProcedure
       .query(async () => {

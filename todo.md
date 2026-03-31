@@ -2717,3 +2717,13 @@ Orders fixed:
 - [x] Add twitter:site @TaiwanMaami to SEO.tsx component
 - [x] Add og:image:width/height/type to SEO.tsx for proper rendering
 - [x] Fix CDN image Content-Type: was serving application/octet-stream instead of image/jpeg — re-uploaded with correct MIME type
+## Razorpay Failed Payment Reconciliation & Alerts (Mar 31)
+- [x] Cross-reference 10 failed Razorpay payments (March 2026) against orders DB to find which were re-attempted
+- [x] Build real-time payment failure alert system for staff POS (notify staff when Razorpay payment fails before customer leaves)
+- [x] Backend: getFailedPayments query (detects stuck Razorpay orders within 24h)
+- [x] Backend: verifyFailedPayment mutation (checks Razorpay API for captured payment, recovers if found)
+- [x] Backend: cancelFailedPaymentOrder mutation (staff can cancel unrecoverable orders)
+- [x] Frontend: PaymentFailureAlert component with red alert banner, call/verify/cancel actions
+- [x] Integrated alert into Staff Orders page and Admin Orders tab
+- [x] Audio alert for new failed payments, urgency badges for orders < 15 min old
+- [x] Vitest tests for payment alert system (18 tests: auth, data shape, detection logic, time display)

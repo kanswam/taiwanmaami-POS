@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useOrderNotification, playOrderNotification } from '@/hooks/useOrderNotification';
+import { PaymentFailureAlert } from '@/components/PaymentFailureAlert';
 
 function generateOrderInvoice(order: any): string {
   const formatPrice = (paise: number) => `\u20B9${(paise / 100).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -378,6 +379,9 @@ export default function OrdersTab() {
 
   return (
     <div className="space-y-4">
+      {/* Payment Failure Alert */}
+      <PaymentFailureAlert />
+
       <div className="flex justify-between items-center">
         <div className="flex items-center gap-3">
           <h2 className="text-lg font-semibold">Recent Orders</h2>

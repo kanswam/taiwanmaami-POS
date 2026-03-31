@@ -1,0 +1,9 @@
+{
+  "query": "SELECT \n  o.orderNumber,\n  o.customerName,\n  o.customerPhone,\n  o.totalAmount,\n  o.paymentStatus,\n  o.paymentMethod,\n  o.razorpayPaymentId,\n  o.razorpayOrderId,\n  o.orderStatus,\n  o.createdAt\nFROM orders o\nWHERE o.razorpayPaymentId IN (\n  'pay_SXQhC5xlciUkr5',\n  'pay_SWfncQn73J3U1L',\n  'pay_SWeRwsID7ro68M',\n  'pay_STtonHN2t48Irq',\n  'pay_STp00F6AXG6Vco',\n  'pay_SSHhNkO6dUFhsa',\n  'pay_SRVCMkCdTKGUNi',\n  'pay_SRTlyKmxHUZzsV',\n  'pay_SPXEfjoqIROrbv',\n  'pay_SM0uEKP6JAhYg0'\n)",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT \n  o.orderNumber,\n  o.customerName,\n  o.customerPhone,\n  o.totalAmount,\n  o.paymentStatus,\n  o.paymentMethod,\n  o.razorpayPaymentId,\n  o.razorpayOrderId,\n  o.orderStatus,\n  o.createdAt\nFROM orders o\nWHERE o.razorpayPaymentId IN (\n  'pay_SXQhC5xlciUkr5',\n  'pay_SWfncQn73J3U1L',\n  'pay_SWeRwsID7ro68M',\n  'pay_STtonHN2t48Irq',\n  'pay_STp00F6AXG6Vco',\n  'pay_SSHhNkO6dUFhsa',\n  'pay_SRVCMkCdTKGUNi',\n  'pay_SRTlyKmxHUZzsV',\n  'pay_SPXEfjoqIROrbv',\n  'pay_SM0uEKP6JAhYg0'\n)",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 502
+}

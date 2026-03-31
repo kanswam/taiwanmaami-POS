@@ -1,0 +1,118 @@
+{
+  "query": "SELECT \n  o.orderNumber,\n  o.customerName,\n  o.customerPhone,\n  o.totalAmount / 100 as totalRupees,\n  o.paymentStatus,\n  o.paymentMethod,\n  o.razorpayPaymentId,\n  o.orderStatus,\n  o.orderType,\n  o.createdAt\nFROM orders o\nWHERE (\n  -- Mar 30 around 1:01pm - amount 1432.20\n  (DATE(o.createdAt) = '2026-03-30' AND o.totalAmount BETWEEN 143200 AND 143240)\n  -- Mar 28 around 2:08pm - amount 388.50\n  OR (DATE(o.createdAt) = '2026-03-28' AND o.totalAmount BETWEEN 38840 AND 38860)\n  -- Mar 28 around 12:49pm - amount 1281.00\n  OR (DATE(o.createdAt) = '2026-03-28' AND o.totalAmount BETWEEN 128090 AND 128110)\n  -- Mar 21 around 1:54pm - amount 824.50\n  OR (DATE(o.createdAt) = '2026-03-21' AND o.totalAmount BETWEEN 82440 AND 82460)\n  -- Mar 21 around 9:11am - amount 519.76\n  OR (DATE(o.createdAt) = '2026-03-21' AND o.totalAmount BETWEEN 51960 AND 51990)\n  -- Mar 17 around 11:57am - amount 1606.50\n  OR (DATE(o.createdAt) = '2026-03-17' AND o.totalAmount BETWEEN 160640 AND 160660)\n  -- Mar 15 around 12:31pm - amount 1265.26\n  OR (DATE(o.createdAt) = '2026-03-15' AND o.totalAmount BETWEEN 126510 AND 126540)\n  -- Mar 15 around 11:07am - amount 850.50\n  OR (DATE(o.createdAt) = '2026-03-15' AND o.totalAmount BETWEEN 85040 AND 85060)\n  -- Mar 10 around 1:12pm - amount 903.00\n  OR (DATE(o.createdAt) = '2026-03-10' AND o.totalAmount BETWEEN 90290 AND 90310)\n  -- Mar 1 around 3:38pm - amount 388.50\n  OR (DATE(o.createdAt) = '2026-03-01' AND o.totalAmount BETWEEN 38840 AND 38860)\n)\nORDER BY o.createdAt DESC",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT \n  o.orderNumber,\n  o.customerName,\n  o.customerPhone,\n  o.totalAmount / 100 as totalRupees,\n  o.paymentStatus,\n  o.paymentMethod,\n  o.razorpayPaymentId,\n  o.orderStatus,\n  o.orderType,\n  o.createdAt\nFROM orders o\nWHERE (\n  -- Mar 30 around 1:01pm - amount 1432.20\n  (DATE(o.createdAt) = '2026-03-30' AND o.totalAmount BETWEEN 143200 AND 143240)\n  -- Mar 28 around 2:08pm - amount 388.50\n  OR (DATE(o.createdAt) = '2026-03-28' AND o.totalAmount BETWEEN 38840 AND 38860)\n  -- Mar 28 around 12:49pm - amount 1281.00\n  OR (DATE(o.createdAt) = '2026-03-28' AND o.totalAmount BETWEEN 128090 AND 128110)\n  -- Mar 21 around 1:54pm - amount 824.50\n  OR (DATE(o.createdAt) = '2026-03-21' AND o.totalAmount BETWEEN 82440 AND 82460)\n  -- Mar 21 around 9:11am - amount 519.76\n  OR (DATE(o.createdAt) = '2026-03-21' AND o.totalAmount BETWEEN 51960 AND 51990)\n  -- Mar 17 around 11:57am - amount 1606.50\n  OR (DATE(o.createdAt) = '2026-03-17' AND o.totalAmount BETWEEN 160640 AND 160660)\n  -- Mar 15 around 12:31pm - amount 1265.26\n  OR (DATE(o.createdAt) = '2026-03-15' AND o.totalAmount BETWEEN 126510 AND 126540)\n  -- Mar 15 around 11:07am - amount 850.50\n  OR (DATE(o.createdAt) = '2026-03-15' AND o.totalAmount BETWEEN 85040 AND 85060)\n  -- Mar 10 around 1:12pm - amount 903.00\n  OR (DATE(o.createdAt) = '2026-03-10' AND o.totalAmount BETWEEN 90290 AND 90310)\n  -- Mar 1 around 3:38pm - amount 388.50\n  OR (DATE(o.createdAt) = '2026-03-01' AND o.totalAmount BETWEEN 38840 AND 38860)\n)\nORDER BY o.createdAt DESC",
+  "rows": [
+    {
+      "orderNumber": "00889",
+      "customerName": "NULL",
+      "customerPhone": "NULL",
+      "totalRupees": "1432.2000",
+      "paymentStatus": "completed",
+      "paymentMethod": "card",
+      "razorpayPaymentId": "pay_SXQjfsCtq4Kl4P",
+      "orderStatus": "completed",
+      "orderType": "instore",
+      "createdAt": "2026-03-30 12:00:31"
+    },
+    {
+      "orderNumber": "00852",
+      "customerName": "NULL",
+      "customerPhone": "NULL",
+      "totalRupees": "388.5000",
+      "paymentStatus": "completed",
+      "paymentMethod": "upi",
+      "razorpayPaymentId": "pay_SWgHo25wVbtphR",
+      "orderStatus": "completed",
+      "orderType": "instore",
+      "createdAt": "2026-03-28 14:07:54"
+    },
+    {
+      "orderNumber": "00782",
+      "customerName": "NULL",
+      "customerPhone": "NULL",
+      "totalRupees": "824.5000",
+      "paymentStatus": "pending",
+      "paymentMethod": "NULL",
+      "razorpayPaymentId": "NULL",
+      "orderStatus": "cancelled",
+      "orderType": "delivery",
+      "createdAt": "2026-03-21 13:53:55"
+    },
+    {
+      "orderNumber": "00767",
+      "customerName": "Krish",
+      "customerPhone": "9962269835",
+      "totalRupees": "519.7600",
+      "paymentStatus": "completed",
+      "paymentMethod": "upi",
+      "razorpayPaymentId": "NULL",
+      "orderStatus": "completed",
+      "orderType": "instore",
+      "createdAt": "2026-03-21 09:11:23"
+    },
+    {
+      "orderNumber": "00727",
+      "customerName": "NULL",
+      "customerPhone": "NULL",
+      "totalRupees": "1606.5000",
+      "paymentStatus": "completed",
+      "paymentMethod": "razorpay",
+      "razorpayPaymentId": "pay_SSHitHXzbdlxwa",
+      "orderStatus": "completed",
+      "orderType": "pickup",
+      "createdAt": "2026-03-17 11:56:22"
+    },
+    {
+      "orderNumber": "00694",
+      "customerName": "NULL",
+      "customerPhone": "NULL",
+      "totalRupees": "1265.2600",
+      "paymentStatus": "completed",
+      "paymentMethod": "razorpay",
+      "razorpayPaymentId": "pay_SRVDYG2zr3NYKb",
+      "orderStatus": "completed",
+      "orderType": "pickup",
+      "createdAt": "2026-03-15 12:31:02"
+    },
+    {
+      "orderNumber": "00688",
+      "customerName": "Sridharan Vignesh",
+      "customerPhone": "9962956156",
+      "totalRupees": "850.5000",
+      "paymentStatus": "completed",
+      "paymentMethod": "card",
+      "razorpayPaymentId": "NULL",
+      "orderStatus": "completed",
+      "orderType": "instore",
+      "createdAt": "2026-03-15 11:07:11"
+    },
+    {
+      "orderNumber": "00649",
+      "customerName": "Pandiyan Muthu",
+      "customerPhone": "9884461641",
+      "totalRupees": "903.0000",
+      "paymentStatus": "completed",
+      "paymentMethod": "upi",
+      "razorpayPaymentId": "NULL",
+      "orderStatus": "completed",
+      "orderType": "instore",
+      "createdAt": "2026-03-10 13:12:40"
+    },
+    {
+      "orderNumber": "00582",
+      "customerName": "NULL",
+      "customerPhone": "NULL",
+      "totalRupees": "388.5000",
+      "paymentStatus": "completed",
+      "paymentMethod": "upi",
+      "razorpayPaymentId": "NULL",
+      "orderStatus": "completed",
+      "orderType": "instore",
+      "createdAt": "2026-03-01 15:38:09"
+    }
+  ],
+  "messages": [],
+  "stdout": "orderNumber\tcustomerName\tcustomerPhone\ttotalRupees\tpaymentStatus\tpaymentMethod\trazorpayPaymentId\torderStatus\torderType\tcreatedAt\n00889\tNULL\tNULL\t1432.2000\tcompleted\tcard\tpay_SXQjfsCtq4Kl4P\tcompleted\tinstore\t2026-03-30 12:00:31\n00852\tNULL\tNULL\t388.5000\tcompleted\tupi\tpay_SWgHo25wVbtphR\tcompleted\tinstore\t2026-03-28 14:07:54\n00782\tNULL\tNULL\t824.5000\tpending\tNULL\tNULL\tcancelled\tdelivery\t2026-03-21 13:53:55\n00767\tKrish\t9962269835\t519.7600\tcompleted\tupi\tNULL\tcompleted\tinstore\t2026-03-21 09:11:23\n00727\tNULL\tNULL\t1606.5000\tcompleted\trazorpay\tpay_SSHitHXzbdlxwa\tcompleted\tpickup\t2026-03-17 11:56:22\n00694\tNULL\tNULL\t1265.2600\tcompleted\trazorpay\tpay_SRVDYG2zr3NYKb\tcompleted\tpickup\t2026-03-15 12:31:02\n00688\tSridharan Vignesh\t9962956156\t850.5000\tcompleted\tcard\tNULL\tcompleted\tinstore\t2026-03-15 11:07:11\n00649\tPandiyan Muthu\t9884461641\t903.0000\tcompleted\tupi\tNULL\tcompleted\tinstore\t2026-03-10 13:12:40\n00582\tNULL\tNULL\t388.5000\tcompleted\tupi\tNULL\tcompleted\tinstore\t2026-03-01 15:38:09\n",
+  "stderr": "",
+  "execution_time_ms": 353
+}

@@ -1,0 +1,58 @@
+{
+  "query": "-- All orders on Mar 28 to find hemadharshini's\nSELECT \n  o.orderNumber, o.customerName, o.customerPhone,\n  o.totalAmount / 100 as totalRupees, o.paymentStatus, o.paymentMethod,\n  o.razorpayPaymentId, o.orderStatus, o.orderType, o.createdAt\nFROM orders o\nWHERE DATE(o.createdAt) = '2026-03-28' \nAND o.createdAt >= '2026-03-28 12:00:00'\nAND o.createdAt <= '2026-03-28 13:30:00'\nORDER BY o.createdAt",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute -- All orders on Mar 28 to find hemadharshini's\nSELECT \n  o.orderNumber, o.customerName, o.customerPhone,\n  o.totalAmount / 100 as totalRupees, o.paymentStatus, o.paymentMethod,\n  o.razorpayPaymentId, o.orderStatus, o.orderType, o.createdAt\nFROM orders o\nWHERE DATE(o.createdAt) = '2026-03-28' \nAND o.createdAt >= '2026-03-28 12:00:00'\nAND o.createdAt <= '2026-03-28 13:30:00'\nORDER BY o.createdAt",
+  "rows": [
+    {
+      "orderNumber": "00848",
+      "customerName": "NULL",
+      "customerPhone": "NULL",
+      "totalRupees": "1937.2600",
+      "paymentStatus": "completed",
+      "paymentMethod": "upi",
+      "razorpayPaymentId": "NULL",
+      "orderStatus": "completed",
+      "orderType": "instore",
+      "createdAt": "2026-03-28 12:14:00"
+    },
+    {
+      "orderNumber": "00849",
+      "customerName": "NULL",
+      "customerPhone": "NULL",
+      "totalRupees": "1580.2600",
+      "paymentStatus": "completed",
+      "paymentMethod": "upi",
+      "razorpayPaymentId": "NULL",
+      "orderStatus": "completed",
+      "orderType": "instore",
+      "createdAt": "2026-03-28 12:49:12"
+    },
+    {
+      "orderNumber": "00850",
+      "customerName": "Dr Kripa Ranjini",
+      "customerPhone": "09176390098",
+      "totalRupees": "519.7600",
+      "paymentStatus": "completed",
+      "paymentMethod": "cash",
+      "razorpayPaymentId": "NULL",
+      "orderStatus": "completed",
+      "orderType": "instore",
+      "createdAt": "2026-03-28 13:13:13"
+    },
+    {
+      "orderNumber": "00851",
+      "customerName": "NULL",
+      "customerPhone": "NULL",
+      "totalRupees": "1338.7600",
+      "paymentStatus": "completed",
+      "paymentMethod": "upi",
+      "razorpayPaymentId": "pay_SWf1phGnsyEEPD",
+      "orderStatus": "completed",
+      "orderType": "instore",
+      "createdAt": "2026-03-28 13:23:09"
+    }
+  ],
+  "messages": [],
+  "stdout": "orderNumber\tcustomerName\tcustomerPhone\ttotalRupees\tpaymentStatus\tpaymentMethod\trazorpayPaymentId\torderStatus\torderType\tcreatedAt\n00848\tNULL\tNULL\t1937.2600\tcompleted\tupi\tNULL\tcompleted\tinstore\t2026-03-28 12:14:00\n00849\tNULL\tNULL\t1580.2600\tcompleted\tupi\tNULL\tcompleted\tinstore\t2026-03-28 12:49:12\n00850\tDr Kripa Ranjini\t09176390098\t519.7600\tcompleted\tcash\tNULL\tcompleted\tinstore\t2026-03-28 13:13:13\n00851\tNULL\tNULL\t1338.7600\tcompleted\tupi\tpay_SWf1phGnsyEEPD\tcompleted\tinstore\t2026-03-28 13:23:09\n",
+  "stderr": "",
+  "execution_time_ms": 376
+}

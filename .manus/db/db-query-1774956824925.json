@@ -1,0 +1,22 @@
+{
+  "query": "-- Check for hemadharshini's order on Mar 28 (amount 1281.00)\nSELECT \n  o.orderNumber, o.customerName, o.customerPhone,\n  o.totalAmount / 100 as totalRupees, o.paymentStatus, o.paymentMethod,\n  o.razorpayPaymentId, o.orderStatus, o.orderType, o.createdAt\nFROM orders o\nWHERE DATE(o.createdAt) = '2026-03-28' \nAND o.totalAmount BETWEEN 128000 AND 128200\nORDER BY o.createdAt;\n\n-- Check for monishgovind's order on Mar 21 (amount 824.50) - broader search\nSELECT \n  o.orderNumber, o.customerName, o.customerPhone,\n  o.totalAmount / 100 as totalRupees, o.paymentStatus, o.paymentMethod,\n  o.razorpayPaymentId, o.orderStatus, o.orderType, o.createdAt\nFROM orders o\nWHERE DATE(o.createdAt) = '2026-03-21' \nAND o.totalAmount BETWEEN 82400 AND 82500\nORDER BY o.createdAt",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute -- Check for hemadharshini's order on Mar 28 (amount 1281.00)\nSELECT \n  o.orderNumber, o.customerName, o.customerPhone,\n  o.totalAmount / 100 as totalRupees, o.paymentStatus, o.paymentMethod,\n  o.razorpayPaymentId, o.orderStatus, o.orderType, o.createdAt\nFROM orders o\nWHERE DATE(o.createdAt) = '2026-03-28' \nAND o.totalAmount BETWEEN 128000 AND 128200\nORDER BY o.createdAt;\n\n-- Check for monishgovind's order on Mar 21 (amount 824.50) - broader search\nSELECT \n  o.orderNumber, o.customerName, o.customerPhone,\n  o.totalAmount / 100 as totalRupees, o.paymentStatus, o.paymentMethod,\n  o.razorpayPaymentId, o.orderStatus, o.orderType, o.createdAt\nFROM orders o\nWHERE DATE(o.createdAt) = '2026-03-21' \nAND o.totalAmount BETWEEN 82400 AND 82500\nORDER BY o.createdAt",
+  "rows": [
+    {
+      "orderNumber": "00782",
+      "customerName": "NULL",
+      "customerPhone": "NULL",
+      "totalRupees": "824.5000",
+      "paymentStatus": "pending",
+      "paymentMethod": "NULL",
+      "razorpayPaymentId": "NULL",
+      "orderStatus": "cancelled",
+      "orderType": "delivery",
+      "createdAt": "2026-03-21 13:53:55"
+    }
+  ],
+  "messages": [],
+  "stdout": "orderNumber\tcustomerName\tcustomerPhone\ttotalRupees\tpaymentStatus\tpaymentMethod\trazorpayPaymentId\torderStatus\torderType\tcreatedAt\n00782\tNULL\tNULL\t824.5000\tpending\tNULL\tNULL\tcancelled\tdelivery\t2026-03-21 13:53:55\n",
+  "stderr": "",
+  "execution_time_ms": 442
+}

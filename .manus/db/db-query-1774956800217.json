@@ -1,0 +1,65 @@
+{
+  "query": "SELECT \n  o.orderNumber,\n  o.customerName,\n  o.customerPhone,\n  o.totalAmount / 100 as totalRupees,\n  o.paymentStatus,\n  o.paymentMethod,\n  o.razorpayPaymentId,\n  o.orderStatus,\n  o.createdAt\nFROM orders o\nWHERE o.customerPhone IN (\n  '+917548801774', '7548801774', '917548801774',\n  '+917200986798', '7200986798', '917200986798',\n  '+919790739055', '9790739055', '919790739055',\n  '+919840060104', '9840060104', '919840060104',\n  '+919962269835', '9962269835', '919962269835',\n  '+919344558375', '9344558375', '919344558375',\n  '+919962956156', '9962956156', '919962956156',\n  '+919884461641', '9884461641', '919884461641',\n  '+919884040352', '9884040352', '919884040352'\n)\nAND o.createdAt >= '2026-03-01'\nORDER BY o.createdAt DESC",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT \n  o.orderNumber,\n  o.customerName,\n  o.customerPhone,\n  o.totalAmount / 100 as totalRupees,\n  o.paymentStatus,\n  o.paymentMethod,\n  o.razorpayPaymentId,\n  o.orderStatus,\n  o.createdAt\nFROM orders o\nWHERE o.customerPhone IN (\n  '+917548801774', '7548801774', '917548801774',\n  '+917200986798', '7200986798', '917200986798',\n  '+919790739055', '9790739055', '919790739055',\n  '+919840060104', '9840060104', '919840060104',\n  '+919962269835', '9962269835', '919962269835',\n  '+919344558375', '9344558375', '919344558375',\n  '+919962956156', '9962956156', '919962956156',\n  '+919884461641', '9884461641', '919884461641',\n  '+919884040352', '9884040352', '919884040352'\n)\nAND o.createdAt >= '2026-03-01'\nORDER BY o.createdAt DESC",
+  "rows": [
+    {
+      "orderNumber": "00767",
+      "customerName": "Krish",
+      "customerPhone": "9962269835",
+      "totalRupees": "519.7600",
+      "paymentStatus": "completed",
+      "paymentMethod": "upi",
+      "razorpayPaymentId": "NULL",
+      "orderStatus": "completed",
+      "createdAt": "2026-03-21 09:11:23"
+    },
+    {
+      "orderNumber": "00688",
+      "customerName": "Sridharan Vignesh",
+      "customerPhone": "9962956156",
+      "totalRupees": "850.5000",
+      "paymentStatus": "completed",
+      "paymentMethod": "card",
+      "razorpayPaymentId": "NULL",
+      "orderStatus": "completed",
+      "createdAt": "2026-03-15 11:07:11"
+    },
+    {
+      "orderNumber": "00653",
+      "customerName": "Pandiyan Muthu",
+      "customerPhone": "9884461641",
+      "totalRupees": "1491.0000",
+      "paymentStatus": "completed",
+      "paymentMethod": "upi",
+      "razorpayPaymentId": "NULL",
+      "orderStatus": "completed",
+      "createdAt": "2026-03-11 13:49:21"
+    },
+    {
+      "orderNumber": "00650",
+      "customerName": "Pandiyan Muthu",
+      "customerPhone": "9884461641",
+      "totalRupees": "0.0000",
+      "paymentStatus": "pending",
+      "paymentMethod": "NULL",
+      "razorpayPaymentId": "NULL",
+      "orderStatus": "cancelled",
+      "createdAt": "2026-03-10 13:22:16"
+    },
+    {
+      "orderNumber": "00649",
+      "customerName": "Pandiyan Muthu",
+      "customerPhone": "9884461641",
+      "totalRupees": "903.0000",
+      "paymentStatus": "completed",
+      "paymentMethod": "upi",
+      "razorpayPaymentId": "NULL",
+      "orderStatus": "completed",
+      "createdAt": "2026-03-10 13:12:40"
+    }
+  ],
+  "messages": [],
+  "stdout": "orderNumber\tcustomerName\tcustomerPhone\ttotalRupees\tpaymentStatus\tpaymentMethod\trazorpayPaymentId\torderStatus\tcreatedAt\n00767\tKrish\t9962269835\t519.7600\tcompleted\tupi\tNULL\tcompleted\t2026-03-21 09:11:23\n00688\tSridharan Vignesh\t9962956156\t850.5000\tcompleted\tcard\tNULL\tcompleted\t2026-03-15 11:07:11\n00653\tPandiyan Muthu\t9884461641\t1491.0000\tcompleted\tupi\tNULL\tcompleted\t2026-03-11 13:49:21\n00650\tPandiyan Muthu\t9884461641\t0.0000\tpending\tNULL\tNULL\tcancelled\t2026-03-10 13:22:16\n00649\tPandiyan Muthu\t9884461641\t903.0000\tcompleted\tupi\tNULL\tcompleted\t2026-03-10 13:12:40\n",
+  "stderr": "",
+  "execution_time_ms": 353
+}
