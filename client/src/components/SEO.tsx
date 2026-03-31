@@ -13,8 +13,8 @@ interface SEOProps {
 const BASE_URL = "https://www.taiwanmaami.com";
 const DEFAULT_TITLE = "Taiwan Maami - Authentic Taiwanese Bubble Tea in Chennai";
 const DEFAULT_DESCRIPTION =
-  "Premium bubble tea with imported tapioca pearls from Taiwan. Visit T Nagar & Velachery, Chennai. Delivery, pickup & dine-in available!";
-const DEFAULT_IMAGE = `${BASE_URL}/taiwan-maami-og-image.jpg`;
+  "Taiwan Maami - Chennai's premium Taiwanese bubble tea cafe. Organic whole-leaf boba tea, mochi, Asian street food. Order online for delivery, pickup or dine-in at T Nagar & Velachery.";
+const DEFAULT_IMAGE = "https://d2xsxph8kpxj0f.cloudfront.net/114675165/7xKVuVPoe4TavcqcxPZkpC/taiwan-maami-og-final_0c906320.jpg";
 
 export function SEO({
   title,
@@ -45,8 +45,13 @@ export function SEO({
       <meta property="og:site_name" content="Taiwan Maami" />
       <meta property="og:locale" content="en_IN" />
 
+      <meta property="og:image:width" content="1200" />
+      <meta property="og:image:height" content="630" />
+      <meta property="og:image:type" content="image/jpeg" />
+
       {/* Twitter Card */}
       <meta name="twitter:card" content="summary_large_image" />
+      <meta name="twitter:site" content="@TaiwanMaami" />
       <meta name="twitter:title" content={fullTitle} />
       <meta name="twitter:description" content={description} />
       <meta name="twitter:image" content={ogImage} />

@@ -2713,3 +2713,6 @@ Orders fixed:
 - [x] Replace AI-generated OG image with real storefront photo (1200x630, 121KB JPEG, Palladium interior)
 - [x] Add twitter:site meta tag (@TaiwanMaami)
 - [x] Remove person from storefront photo and use as OG image (AI inpainted, 1200x630, 127KB)
+- [x] Fix SEO.tsx component overriding index.html OG tags with broken local URL — now uses CDN URL
+- [x] Add twitter:site @TaiwanMaami to SEO.tsx component
+- [x] Add og:image:width/height/type to SEO.tsx for proper rendering
