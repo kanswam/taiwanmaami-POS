@@ -2716,3 +2716,4 @@ Orders fixed:
 - [x] Fix SEO.tsx component overriding index.html OG tags with broken local URL — now uses CDN URL
 - [x] Add twitter:site @TaiwanMaami to SEO.tsx component
 - [x] Add og:image:width/height/type to SEO.tsx for proper rendering
+- [x] Fix CDN image Content-Type: was serving application/octet-stream instead of image/jpeg — re-uploaded with correct MIME type

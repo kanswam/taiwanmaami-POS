@@ -14,7 +14,7 @@ const BASE_URL = "https://www.taiwanmaami.com";
 const DEFAULT_TITLE = "Taiwan Maami - Authentic Taiwanese Bubble Tea in Chennai";
 const DEFAULT_DESCRIPTION =
   "Taiwan Maami - Chennai's premium Taiwanese bubble tea cafe. Organic whole-leaf boba tea, mochi, Asian street food. Order online for delivery, pickup or dine-in at T Nagar & Velachery.";
-const DEFAULT_IMAGE = "https://d2xsxph8kpxj0f.cloudfront.net/114675165/7xKVuVPoe4TavcqcxPZkpC/taiwan-maami-og-final_0c906320.jpg";
+const DEFAULT_IMAGE = "https://d2xsxph8kpxj0f.cloudfront.net/114675165/7xKVuVPoe4TavcqcxPZkpC/og-image/taiwan-maami-og.jpg";
 
 export function SEO({
   title,
