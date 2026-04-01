@@ -10,7 +10,7 @@ import { trpc } from '@/lib/trpc';
 import { ArrowRight, MapPin, Clock, Star, Sparkles, Instagram, Phone, Navigation, Store, Truck, ShoppingBag, Facebook, Twitter, Youtube, ChevronLeft, ChevronRight, Leaf, Globe, Plus, X, Check } from 'lucide-react';
 import { useCart } from '@/contexts/CartContext';
 import { toast } from 'sonner';
-import { formatPrice } from '@shared/types';
+import { formatPrice, OUTLET_HOURS } from '@shared/types';
 import { ProductCustomizationModal } from '@/components/ProductCustomizationModal';
 import { getOptimizedImageUrl, getResponsiveSrcSet } from '@/lib/imageOptimizer';
 
@@ -114,6 +114,10 @@ export default function Home() {
 
   // Handle outlet selection
   const handleOutletSelect = (outlet: 'palladium' | 'tnagar') => {
+    if (outlet === 'palladium' && !OUTLET_HOURS.palladium.orderingEnabled) {
+      toast('Online ordering not available at Palladium Mall yet. Please select T. Nagar.', { icon: '🚫' });
+      return;
+    }
     const type = pendingOrderType || cartState.orderType;
     setOrderType(type);
     if (type === 'instore') {
@@ -793,11 +797,18 @@ export default function Home() {
                   <div>
                     <p className="text-sm text-muted-foreground mb-4">Select your outlet</p>
                     <div className="space-y-3">
-                      <button onClick={() => handleOutletSelect('palladium')} className="w-full flex items-center gap-3 p-4 rounded-xl border-2 border-border hover:border-primary transition-colors text-left">
-                        <MapPin className="w-5 h-5 flex-shrink-0" />
+                      <button onClick={() => handleOutletSelect('palladium')} className={`w-full flex items-center gap-3 p-4 rounded-xl border-2 transition-colors text-left ${
+                        !OUTLET_HOURS.palladium.orderingEnabled
+                          ? 'border-gray-200 bg-gray-50 cursor-not-allowed opacity-60'
+                          : 'border-border hover:border-primary'
+                      }`}>
+                        <MapPin className={`w-5 h-5 flex-shrink-0 ${!OUTLET_HOURS.palladium.orderingEnabled ? 'text-gray-400' : ''}`} />
                         <div>
-                          <p className="font-semibold">Palladium Mall</p>
+                          <p className={`font-semibold ${!OUTLET_HOURS.palladium.orderingEnabled ? 'text-gray-400' : ''}`}>Palladium Mall</p>
                           <p className="text-xs text-muted-foreground">Velachery • 10am-10pm</p>
+                          {!OUTLET_HOURS.palladium.orderingEnabled && (
+                            <p className="text-xs text-orange-600 font-medium">Online ordering coming soon</p>
+                          )}
                         </div>
                       </button>
                       <button onClick={() => handleOutletSelect('tnagar')} className="w-full flex items-center gap-3 p-4 rounded-xl border-2 border-border hover:border-primary transition-colors text-left">

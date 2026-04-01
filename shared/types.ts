@@ -160,6 +160,7 @@ export const OUTLET_HOURS = {
     closeMinute: 0,
     lastOrderMinutesBefore: 0, // In-store orders till 10:00 PM
     onlineLastOrderMinutesBefore: 15, // Online orders till 9:45 PM
+    orderingEnabled: false, // DISABLED: KOT printer not set up yet at Palladium
   },
   tnagar: {
     id: 2,
@@ -170,8 +171,19 @@ export const OUTLET_HOURS = {
     closeMinute: 0,
     lastOrderMinutesBefore: 15, // In-store orders till 11:45 PM
     onlineLastOrderMinutesBefore: 15, // Online orders till 11:45 PM
+    orderingEnabled: true,
   },
-} as const;
+} satisfies Record<string, {
+  id: number;
+  name: string;
+  openHour: number;
+  openMinute: number;
+  closeHour: number;
+  closeMinute: number;
+  lastOrderMinutesBefore: number;
+  onlineLastOrderMinutesBefore: number;
+  orderingEnabled: boolean;
+}>;
 
 // Global ordering hours (most restrictive for delivery which can go to either outlet)
 export const GLOBAL_ORDER_HOURS = {
@@ -194,6 +206,15 @@ export function isOutletOpen(
   const currentTimeInMinutes = currentHour * 60 + currentMinute;
   
   const hours = OUTLET_HOURS[outlet];
+  
+  // Check if ordering is disabled for this outlet entirely
+  if (!hours.orderingEnabled) {
+    return {
+      available: false,
+      message: `Online ordering is not available at ${hours.name} right now. Please visit T Nagar (Moutan) outlet or order for delivery from T Nagar.`,
+    };
+  }
+  
   const openTimeInMinutes = hours.openHour * 60 + hours.openMinute;
   
   // For in-store, use lastOrderMinutesBefore; for online, use onlineLastOrderMinutesBefore

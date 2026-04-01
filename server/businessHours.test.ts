@@ -10,56 +10,31 @@ describe('Business Hours Enforcement', () => {
     vi.useRealTimers();
   });
 
-  describe('Palladium Mall (10 AM - 10 PM)', () => {
-    it('should be closed before 10 AM', () => {
-      // Set time to 9:30 AM IST
-      vi.setSystemTime(new Date('2026-01-08T04:00:00Z')); // 9:30 AM IST
-      const result = isOutletOpen('palladium', 'pickup');
-      expect(result.available).toBe(false);
-      expect(result.message).toContain('opens at');
-    });
-
-    it('should be open at 10 AM', () => {
-      // Set time to 10:00 AM IST
-      vi.setSystemTime(new Date('2026-01-08T04:30:00Z')); // 10:00 AM IST
-      const result = isOutletOpen('palladium', 'pickup');
-      expect(result.available).toBe(true);
-    });
-
-    it('should be open at 2 PM', () => {
-      // Set time to 2:00 PM IST
+  describe('Palladium Mall - Ordering Disabled', () => {
+    it('should be unavailable regardless of time when orderingEnabled is false', () => {
+      // Even during normal business hours, Palladium should be disabled
       vi.setSystemTime(new Date('2026-01-08T08:30:00Z')); // 2:00 PM IST
       const result = isOutletOpen('palladium', 'pickup');
-      expect(result.available).toBe(true);
-    });
-
-    it('should allow online orders until 9:45 PM', () => {
-      // Set time to 9:44 PM IST
-      vi.setSystemTime(new Date('2026-01-08T16:14:00Z')); // 9:44 PM IST
-      const result = isOutletOpen('palladium', 'pickup');
-      expect(result.available).toBe(true);
-    });
-
-    it('should block online orders after 9:45 PM', () => {
-      // Set time to 9:46 PM IST
-      vi.setSystemTime(new Date('2026-01-08T16:16:00Z')); // 9:46 PM IST
-      const result = isOutletOpen('palladium', 'pickup');
       expect(result.available).toBe(false);
-      expect(result.message).toContain('closed');
+      expect(result.message).toContain('not available');
+      expect(result.message).toContain('Palladium Mall');
     });
 
-    it('should allow in-store orders until 10 PM', () => {
-      // Set time to 9:55 PM IST
-      vi.setSystemTime(new Date('2026-01-08T16:25:00Z')); // 9:55 PM IST
-      const result = isOutletOpen('palladium', 'instore');
-      expect(result.available).toBe(true);
-    });
-
-    it('should block in-store orders at 10 PM', () => {
-      // Set time to 10:00 PM IST
-      vi.setSystemTime(new Date('2026-01-08T16:30:00Z')); // 10:00 PM IST
+    it('should be unavailable for instore orders when disabled', () => {
+      vi.setSystemTime(new Date('2026-01-08T08:30:00Z')); // 2:00 PM IST
       const result = isOutletOpen('palladium', 'instore');
       expect(result.available).toBe(false);
+      expect(result.message).toContain('not available');
+    });
+
+    it('should be unavailable for pickup orders when disabled', () => {
+      vi.setSystemTime(new Date('2026-01-08T04:30:00Z')); // 10:00 AM IST
+      const result = isOutletOpen('palladium', 'pickup');
+      expect(result.available).toBe(false);
+    });
+
+    it('should have orderingEnabled set to false', () => {
+      expect(OUTLET_HOURS.palladium.orderingEnabled).toBe(false);
     });
   });
 
@@ -113,6 +88,10 @@ describe('Business Hours Enforcement', () => {
       vi.setSystemTime(new Date('2026-01-08T18:16:00Z')); // 11:46 PM IST
       const result = isOutletOpen('tnagar', 'instore');
       expect(result.available).toBe(false);
+    });
+
+    it('should have orderingEnabled set to true', () => {
+      expect(OUTLET_HOURS.tnagar.orderingEnabled).toBe(true);
     });
   });
 

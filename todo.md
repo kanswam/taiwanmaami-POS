@@ -2735,3 +2735,13 @@ Orders fixed:
 - [x] Fix: Order numbers now use FY-prefixed format (26-00001 for FY 2026-27) to prevent collisions
 - [x] Updated ORDER BY to use createdAt DESC instead of CAST(orderNumber AS UNSIGNED) for mixed format compatibility
 - [x] All 957 existing tests pass
+## Razorpay Payment Flow Audit (Apr 1)
+- [ ] Verify Razorpay payment flow works with new FY-prefixed order numbers (26-NNNNN format)
+## Disable Palladium Ordering (Apr 1)
+- [x] Disable pickup, delivery, and dine-in ordering for Palladium outlet (KOT printer not set up)
+- [x] Added orderingEnabled flag to OUTLET_HOURS config
+- [x] isOutletOpen returns unavailable when orderingEnabled=false
+- [x] Disabled Palladium buttons in Menu.tsx (inline, full-page, modal selectors)
+- [x] Disabled Palladium button in Home.tsx outlet selector
+- [x] Checkout.tsx already blocks via isOutletOpen check
+- [x] Updated businessHours tests - all 955 tests pass

@@ -12,7 +12,8 @@ import { useCart } from '@/contexts/CartContext';
 import { Search, ShoppingCart, Truck, Store, ChevronRight, ArrowLeft, Home, AlertCircle, MapPin, Sparkles } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Link } from 'wouter';
-import { formatPrice } from '@shared/types';
+import { formatPrice, OUTLET_HOURS } from '@shared/types';
+import { toast } from 'sonner';
 
 // Product image mapping
 const PRODUCT_IMAGES: Record<string, string> = {
@@ -534,11 +535,19 @@ export default function Menu() {
                   <span className="text-sm font-medium text-muted-foreground">Location:</span>
                   <div className="flex gap-2">
                     <button
-                      onClick={() => setInstoreOutlet('palladium')}
+                      onClick={() => {
+                        if (!OUTLET_HOURS.palladium.orderingEnabled) {
+                          toast('Online ordering not available at Palladium Mall yet. Please select T. Nagar.', { icon: '🚫' });
+                          return;
+                        }
+                        setInstoreOutlet('palladium');
+                      }}
                       className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
                         instoreOutlet === 'palladium'
                           ? 'bg-primary text-white shadow-md'
-                          : 'bg-white border border-border hover:border-primary/50 text-muted-foreground hover:text-primary'
+                          : !OUTLET_HOURS.palladium.orderingEnabled
+                            ? 'bg-gray-100 border border-gray-200 text-gray-400 cursor-not-allowed line-through'
+                            : 'bg-white border border-border hover:border-primary/50 text-muted-foreground hover:text-primary'
                       }`}
                     >
                       Palladium Mall
@@ -574,11 +583,19 @@ export default function Menu() {
                 <span className="text-sm font-medium text-muted-foreground">Pickup from:</span>
                 <div className="flex gap-2">
                   <button
-                    onClick={() => setPickupOutlet('palladium')}
+                    onClick={() => {
+                      if (!OUTLET_HOURS.palladium.orderingEnabled) {
+                        toast('Online ordering not available at Palladium Mall yet. Please select T. Nagar.', { icon: '🚫' });
+                        return;
+                      }
+                      setPickupOutlet('palladium');
+                    }}
                     className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
                       pickupOutlet === 'palladium'
                         ? 'bg-primary text-white shadow-md'
-                        : 'bg-white border border-border hover:border-primary/50 text-muted-foreground hover:text-primary'
+                        : !OUTLET_HOURS.palladium.orderingEnabled
+                          ? 'bg-gray-100 border border-gray-200 text-gray-400 cursor-not-allowed line-through'
+                          : 'bg-white border border-border hover:border-primary/50 text-muted-foreground hover:text-primary'
                     }`}
                   >
                     Palladium Mall
@@ -643,22 +660,33 @@ export default function Menu() {
             <div className="space-y-4">
               <button
                 onClick={() => {
+                  if (!OUTLET_HOURS.palladium.orderingEnabled) {
+                    toast('Online ordering not available at Palladium Mall yet. Please select T. Nagar.', { icon: '🚫' });
+                    return;
+                  }
                   if (state.orderType === 'instore') {
                     setInstoreOutlet('palladium');
                   } else {
                     setPickupOutlet('palladium');
                   }
                 }}
-                className="w-full flex items-center gap-4 p-4 rounded-xl border-2 border-border hover:border-primary hover:bg-primary/5 transition-all group"
+                className={`w-full flex items-center gap-4 p-4 rounded-xl border-2 transition-all group ${
+                  !OUTLET_HOURS.palladium.orderingEnabled
+                    ? 'border-gray-200 bg-gray-50 cursor-not-allowed opacity-60'
+                    : 'border-border hover:border-primary hover:bg-primary/5'
+                }`}
               >
-                <div className="w-14 h-14 rounded-lg bg-primary/10 flex items-center justify-center">
-                  <Store className="w-7 h-7 text-primary" />
+                <div className={`w-14 h-14 rounded-lg flex items-center justify-center ${!OUTLET_HOURS.palladium.orderingEnabled ? 'bg-gray-100' : 'bg-primary/10'}`}>
+                  <Store className={`w-7 h-7 ${!OUTLET_HOURS.palladium.orderingEnabled ? 'text-gray-400' : 'text-primary'}`} />
                 </div>
                 <div className="text-left flex-1">
-                  <h3 className="font-bold text-lg group-hover:text-primary transition-colors">Palladium Mall</h3>
+                  <h3 className={`font-bold text-lg transition-colors ${!OUTLET_HOURS.palladium.orderingEnabled ? 'text-gray-400' : 'group-hover:text-primary'}`}>Palladium Mall</h3>
                   <p className="text-sm text-muted-foreground">Velachery, Chennai</p>
+                  {!OUTLET_HOURS.palladium.orderingEnabled && (
+                    <p className="text-xs text-orange-600 font-medium mt-1">Online ordering coming soon</p>
+                  )}
                 </div>
-                <ChevronRight className="w-6 h-6 text-muted-foreground group-hover:text-primary transition-colors" />
+                <ChevronRight className={`w-6 h-6 ${!OUTLET_HOURS.palladium.orderingEnabled ? 'text-gray-300' : 'text-muted-foreground group-hover:text-primary'} transition-colors`} />
               </button>
               <button
                 onClick={() => {
@@ -809,6 +837,10 @@ export default function Menu() {
           <div className="grid gap-4 py-4">
             <button
               onClick={() => {
+                if (!OUTLET_HOURS.palladium.orderingEnabled) {
+                  toast('Online ordering not available at Palladium Mall yet. Please select T. Nagar.', { icon: '🚫' });
+                  return;
+                }
                 if (pendingOrderType === 'instore') {
                   setOrderType('instore');
                   setInstoreOutlet('palladium');
@@ -819,16 +851,23 @@ export default function Menu() {
                 setShowOutletModal(false);
                 setPendingOrderType(null);
               }}
-              className="flex items-center gap-4 p-4 rounded-xl border-2 border-border hover:border-primary hover:bg-primary/5 transition-all group"
+              className={`flex items-center gap-4 p-4 rounded-xl border-2 transition-all group ${
+                !OUTLET_HOURS.palladium.orderingEnabled
+                  ? 'border-gray-200 bg-gray-50 cursor-not-allowed opacity-60'
+                  : 'border-border hover:border-primary hover:bg-primary/5'
+              }`}
             >
-              <div className="w-16 h-16 rounded-lg bg-primary/10 flex items-center justify-center">
-                <Store className="w-8 h-8 text-primary" />
+              <div className={`w-16 h-16 rounded-lg flex items-center justify-center ${!OUTLET_HOURS.palladium.orderingEnabled ? 'bg-gray-100' : 'bg-primary/10'}`}>
+                <Store className={`w-8 h-8 ${!OUTLET_HOURS.palladium.orderingEnabled ? 'text-gray-400' : 'text-primary'}`} />
               </div>
               <div className="text-left flex-1">
-                <h3 className="font-bold text-lg group-hover:text-primary transition-colors">Palladium Mall</h3>
+                <h3 className={`font-bold text-lg transition-colors ${!OUTLET_HOURS.palladium.orderingEnabled ? 'text-gray-400' : 'group-hover:text-primary'}`}>Palladium Mall</h3>
                 <p className="text-sm text-muted-foreground">Velachery, Chennai</p>
+                {!OUTLET_HOURS.palladium.orderingEnabled && (
+                  <p className="text-xs text-orange-600 font-medium mt-1">Online ordering coming soon</p>
+                )}
               </div>
-              <ChevronRight className="w-6 h-6 text-muted-foreground group-hover:text-primary transition-colors" />
+              <ChevronRight className={`w-6 h-6 ${!OUTLET_HOURS.palladium.orderingEnabled ? 'text-gray-300' : 'text-muted-foreground group-hover:text-primary'} transition-colors`} />
             </button>
             <button
               onClick={() => {
