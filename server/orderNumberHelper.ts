@@ -4,8 +4,14 @@
  * Indian financial year runs April 1 to March 31.
  * Order numbers reset to 00001 at the start of each financial year.
  * 
- * The helper queries only orders created within the current FY
- * to determine the next sequential number.
+ * Format: YY-NNNNN (e.g., "26-00001" for FY 2026-27)
+ * The FY prefix ensures uniqueness across financial years.
+ * 
+ * BACKWARD COMPATIBILITY:
+ * - Old orders (FY 2025-26) used plain 5-digit numbers like "00001"
+ * - New orders (FY 2026-27+) use prefixed format like "26-00001"
+ * - The query only counts orders within the current FY to determine the next number
+ * - Display: The prefix is part of the order number but staff can refer to just the number portion
  */
 
 import { sql } from 'drizzle-orm';
@@ -28,6 +34,14 @@ export function getCurrentFYStart(): Date {
 }
 
 /**
+ * Get the 2-digit FY start year (e.g., "26" for FY 2026-27)
+ */
+export function getCurrentFYPrefix(): string {
+  const fyStart = getCurrentFYStart();
+  return String(fyStart.getUTCFullYear()).slice(2); // "2026" -> "26"
+}
+
+/**
  * Get the FY label string (e.g., "2026-27" for FY starting Apr 2026)
  */
 export function getCurrentFYLabel(): string {
@@ -40,22 +54,39 @@ export function getCurrentFYLabel(): string {
  * Generate the next sequential order number for the current financial year.
  * Resets to 1 at the start of each FY (April 1st).
  * 
+ * For FY 2025-26 (old format): plain 5-digit numbers like "00001"
+ * For FY 2026-27+ (new format): prefixed like "26-00001"
+ * 
  * @param dbInstance - The database connection instance
- * @returns A zero-padded 5-digit order number string (e.g., "00001")
+ * @returns An order number string (e.g., "26-00001")
  */
 export async function generateNextOrderNumber(dbInstance: any): Promise<string> {
   const fyStart = getCurrentFYStart();
   const fyStartStr = fyStart.toISOString().slice(0, 19).replace('T', ' ');
+  const fyPrefix = getCurrentFYPrefix();
 
-  // Only look at orders created within the current financial year
-  const [maxOrderResult] = await dbInstance.execute(
+  // For FY 2026-27 onwards, use prefixed format
+  // Look for orders with the current FY prefix (e.g., "26-NNNNN")
+  // Also check for old-format orders in this FY period (in case of transition)
+  const [maxPrefixedResult] = await dbInstance.execute(
+    sql`SELECT MAX(CAST(SUBSTRING(orderNumber, 4) AS UNSIGNED)) as maxNum 
+        FROM orders 
+        WHERE orderNumber LIKE CONCAT(${fyPrefix}, '-%')
+        AND createdAt >= ${fyStartStr}`
+  );
+
+  // Also check old-format orders created in this FY (transition safety)
+  const [maxOldResult] = await dbInstance.execute(
     sql`SELECT MAX(CAST(orderNumber AS UNSIGNED)) as maxNum 
         FROM orders 
         WHERE orderNumber REGEXP '^[0-9]+$' 
         AND createdAt >= ${fyStartStr}`
   );
 
-  const maxNum = (maxOrderResult as any)[0]?.maxNum || 0;
+  const maxPrefixed = (maxPrefixedResult as any)[0]?.maxNum || 0;
+  const maxOld = (maxOldResult as any)[0]?.maxNum || 0;
+  const maxNum = Math.max(maxPrefixed, maxOld);
   const nextNum = maxNum + 1;
-  return String(nextNum).padStart(5, '0');
+  
+  return `${fyPrefix}-${String(nextNum).padStart(5, '0')}`;
 }

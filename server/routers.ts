@@ -426,7 +426,8 @@ export const appRouter = router({
         const finalGst = (birthdayFreeApplied || partnerBenefitAmount > 0) ? calculateGst(netAfterDiscount) : gst;
         const totalAmount = subtotal + finalGst.total + deliveryCharge - discountAmount - partnerBenefitAmount - input.loyaltyPointsUsed;
         
-        // Generate sequential 5-digit order number (resets each financial year on April 1st)
+        // Generate sequential order number (resets each financial year on April 1st)
+        // Format: YY-NNNNN (e.g., "26-00001" for FY 2026-27)
         const { generateNextOrderNumber } = await import('./orderNumberHelper');
         const orderNumber = await generateNextOrderNumber(dbInstance!);
 
@@ -1100,7 +1101,7 @@ export const appRouter = router({
           .select()
           .from(orders)
           .where(whereClause)
-          .orderBy(sql`CAST(${orders.orderNumber} AS UNSIGNED) DESC`)
+          .orderBy(sql`${orders.createdAt} DESC`)
           .limit(input?.limit || 50);
         
         // Get unredeemed rewards for registered CUSTOMER users in these orders (exclude staff/admin)
@@ -4271,7 +4272,8 @@ export const appRouter = router({
         }
         const totalAmount = subtotal + gstDetails.total + deliveryCharge;
         
-        // Generate sequential 5-digit order number (resets each financial year on April 1st)
+        // Generate sequential order number (resets each financial year on April 1st)
+        // Format: YY-NNNNN (e.g., "26-00001" for FY 2026-27)
         const { generateNextOrderNumber } = await import('./orderNumberHelper');
         const orderNumber = await generateNextOrderNumber(dbInstance!);
         

@@ -2729,3 +2729,9 @@ Orders fixed:
 - [x] Vitest tests for payment alert system (18 tests: auth, data shape, detection logic, time display)
 ## Wholesale Portal Update (Mar 31)
 - [x] Replace wholesale portal page with "Coming Soon" message
+## URGENT: Order Placement Failure (Apr 1)
+- [x] Fix: "Unable to place your order right now" error on checkout page — customers at outlet unable to order
+- [x] Root cause: FY reset on April 1st caused order number collision (UNIQUE constraint on orderNumber)
+- [x] Fix: Order numbers now use FY-prefixed format (26-00001 for FY 2026-27) to prevent collisions
+- [x] Updated ORDER BY to use createdAt DESC instead of CAST(orderNumber AS UNSIGNED) for mixed format compatibility
+- [x] All 957 existing tests pass
