@@ -5723,7 +5723,7 @@ export const appRouter = router({
       }))
       .query(async ({ input }) => {
         const dbInstance = await getDb();
-        if (!dbInstance) return { summary: { totalTaxableValue: 0, totalCgst: 0, totalSgst: 0, totalGst: 0 }, details: [] };
+        if (!dbInstance) return { summary: { totalTaxableValue: 0, totalCgst: 0, totalSgst: 0, totalIgst: 0, totalGst: 0 }, details: [], b2bSummary: { totalTaxableValue: 0, totalCgst: 0, totalSgst: 0, totalIgst: 0, totalGst: 0, invoiceCount: 0 } };
 
         const matchingOrders = await dbInstance
           .select()
@@ -5735,7 +5735,7 @@ export const appRouter = router({
           ));
 
         // Group by period
-        const periodStats: Record<string, { taxableValue: number; gst: number; cgst: number; sgst: number; orderCount: number }> = {};
+        const periodStats: Record<string, { taxableValue: number; gst: number; cgst: number; sgst: number; igst: number; orderCount: number; b2bTaxableValue: number; b2bCgst: number; b2bSgst: number; b2bIgst: number; b2bCount: number }> = {};
         
         matchingOrders.forEach(order => {
           let period: string;
@@ -5751,7 +5751,7 @@ export const appRouter = router({
             period = `${orderDate.getFullYear()}-${String(orderDate.getMonth() + 1).padStart(2, '0')}`;
           }
 
-          if (!periodStats[period]) periodStats[period] = { taxableValue: 0, gst: 0, cgst: 0, sgst: 0, orderCount: 0 };
+          if (!periodStats[period]) periodStats[period] = { taxableValue: 0, gst: 0, cgst: 0, sgst: 0, igst: 0, orderCount: 0, b2bTaxableValue: 0, b2bCgst: 0, b2bSgst: 0, b2bIgst: 0, b2bCount: 0 };
           
           const gstAmount = order.stateGst + order.centralGst;
           const taxableValue = order.totalAmount - gstAmount;
@@ -5783,13 +5783,15 @@ export const appRouter = router({
           } else {
             period = `${invDate.getFullYear()}-${String(invDate.getMonth() + 1).padStart(2, '0')}`;
           }
-          if (!periodStats[period]) periodStats[period] = { taxableValue: 0, gst: 0, cgst: 0, sgst: 0, orderCount: 0 };
-          periodStats[period].taxableValue += inv.subtotal;
+          if (!periodStats[period]) periodStats[period] = { taxableValue: 0, gst: 0, cgst: 0, sgst: 0, igst: 0, orderCount: 0, b2bTaxableValue: 0, b2bCgst: 0, b2bSgst: 0, b2bIgst: 0, b2bCount: 0 };
+          // B2B amounts tracked separately so they don't pollute retail CGST/SGST columns
+          periodStats[period].b2bTaxableValue += inv.subtotal;
+          periodStats[period].b2bCgst += inv.cgst;
+          periodStats[period].b2bSgst += inv.sgst;
+          periodStats[period].b2bIgst += inv.igst;
           periodStats[period].gst += inv.cgst + inv.sgst + inv.igst;
-          periodStats[period].cgst += inv.cgst;
-          periodStats[period].sgst += inv.sgst;
-          // IGST goes into a separate bucket but we add to gst total
-          periodStats[period].orderCount += 1;
+          periodStats[period].igst += inv.igst;
+          periodStats[period].b2bCount += 1;
         });
 
         const details = Object.entries(periodStats).map(([period, stats]) => ({
@@ -5797,8 +5799,14 @@ export const appRouter = router({
           taxableValue: stats.taxableValue,
           cgst: stats.cgst,
           sgst: stats.sgst,
+          igst: stats.igst,
           gst: stats.gst,
           orderCount: stats.orderCount,
+          b2bTaxableValue: stats.b2bTaxableValue,
+          b2bCgst: stats.b2bCgst,
+          b2bSgst: stats.b2bSgst,
+          b2bIgst: stats.b2bIgst,
+          b2bCount: stats.b2bCount,
         })).sort((a, b) => a.period.localeCompare(b.period));
 
         // B2B summary for separate display
@@ -5812,9 +5820,10 @@ export const appRouter = router({
         };
 
         const summary = {
-          totalTaxableValue: details.reduce((sum, d) => sum + d.taxableValue, 0),
-          totalCgst: details.reduce((sum, d) => sum + d.cgst, 0),
-          totalSgst: details.reduce((sum, d) => sum + d.sgst, 0),
+          totalTaxableValue: details.reduce((sum, d) => sum + d.taxableValue + d.b2bTaxableValue, 0),
+          totalCgst: details.reduce((sum, d) => sum + d.cgst + d.b2bCgst, 0),
+          totalSgst: details.reduce((sum, d) => sum + d.sgst + d.b2bSgst, 0),
+          totalIgst: details.reduce((sum, d) => sum + d.igst, 0),
           totalGst: details.reduce((sum, d) => sum + d.gst, 0),
         };
 

@@ -557,7 +557,7 @@ export default function Analytics() {
               <div className="text-2xl font-bold">
                 {loadingSummary ? '...' : formatCurrency(salesOverview?.totalGst || 0)}
               </div>
-              <p className="text-xs text-muted-foreground">CGST + SGST</p>
+              <p className="text-xs text-muted-foreground">CGST + SGST (Retail)</p>
             </CardContent>
           </Card>
 
@@ -1825,10 +1825,10 @@ export default function Analytics() {
                 ) : gstReport && gstReport.details && gstReport.details.length > 0 ? (
                   <div className="space-y-6">
                     {/* Summary */}
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div className={`grid grid-cols-1 gap-4 ${gstReport.summary.totalIgst > 0 ? 'md:grid-cols-5' : 'md:grid-cols-4'}`}>
                       <Card>
                         <CardContent className="pt-4">
-                          <p className="text-sm text-muted-foreground">Total Taxable Value</p>
+                          <p className="text-sm text-muted-foreground">Total Taxable Value (Retail + B2B)</p>
                           <p className="text-2xl font-bold">
                             {formatCurrency(gstReport.summary.totalTaxableValue)}
                           </p>
@@ -1850,9 +1850,19 @@ export default function Analytics() {
                           </p>
                         </CardContent>
                       </Card>
+                      {gstReport.summary.totalIgst > 0 && (
+                        <Card>
+                          <CardContent className="pt-4">
+                            <p className="text-sm text-muted-foreground">IGST (Inter-state)</p>
+                            <p className="text-2xl font-bold">
+                              {formatCurrency(gstReport.summary.totalIgst)}
+                            </p>
+                          </CardContent>
+                        </Card>
+                      )}
                       <Card>
                         <CardContent className="pt-4">
-                          <p className="text-sm text-muted-foreground">Total GST</p>
+                          <p className="text-sm text-muted-foreground">Total GST (Retail + B2B)</p>
                           <p className="text-2xl font-bold">
                             {formatCurrency(gstReport.summary.totalGst)}
                           </p>
@@ -1860,82 +1870,100 @@ export default function Analytics() {
                       </Card>
                     </div>
 
-                    {/* Detailed Table */}
-                    <div className="border rounded-lg overflow-hidden">
-                      <table className="w-full">
-                        <thead className="bg-muted">
-                          <tr>
-                            <th className="text-left p-3">Period</th>
-                            <th className="text-right p-3">Orders</th>
-                            <th className="text-right p-3">Taxable Value</th>
-                            <th className="text-right p-3">CGST</th>
-                            <th className="text-right p-3">SGST</th>
-                            <th className="text-right p-3">Total GST</th>
-                            <th className="text-right p-3">Invoice Total</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {gstReport.details.map((row, idx) => (
-                            <tr key={idx} className="border-t">
-                              <td className="p-3">{row.period}</td>
-                              <td className="text-right p-3">{row.orderCount}</td>
-                              <td className="text-right p-3">{formatCurrency(row.taxableValue)}</td>
-                              <td className="text-right p-3">{formatCurrency(row.cgst)}</td>
-                              <td className="text-right p-3">{formatCurrency(row.sgst)}</td>
-                              <td className="text-right p-3">{formatCurrency(row.gst)}</td>
-                              <td className="text-right p-3 font-medium">{formatCurrency(row.taxableValue + row.gst)}</td>
+                    {/* Retail Orders GST Table */}
+                    <div>
+                      <h3 className="text-lg font-semibold mb-2">Retail Orders GST</h3>
+                      <div className="border rounded-lg overflow-hidden">
+                        <table className="w-full">
+                          <thead className="bg-muted">
+                            <tr>
+                              <th className="text-left p-3">Period</th>
+                              <th className="text-right p-3">Orders</th>
+                              <th className="text-right p-3">Taxable Value</th>
+                              <th className="text-right p-3">CGST (2.5%)</th>
+                              <th className="text-right p-3">SGST (2.5%)</th>
+                              <th className="text-right p-3">Total GST</th>
+                              <th className="text-right p-3">Invoice Total</th>
                             </tr>
-                          ))}
-                        </tbody>
-                        <tfoot className="bg-muted font-bold">
-                          <tr>
-                            <td className="p-3">Total</td>
-                            <td className="text-right p-3">{gstReport.details.reduce((sum, r) => sum + r.orderCount, 0)}</td>
-                            <td className="text-right p-3">{formatCurrency(gstReport.summary.totalTaxableValue)}</td>
-                            <td className="text-right p-3">{formatCurrency(gstReport.summary.totalCgst)}</td>
-                            <td className="text-right p-3">{formatCurrency(gstReport.summary.totalSgst)}</td>
-                            <td className="text-right p-3">{formatCurrency(gstReport.summary.totalGst)}</td>
-                            <td className="text-right p-3">{formatCurrency(gstReport.summary.totalTaxableValue + gstReport.summary.totalGst)}</td>
-                          </tr>
-                        </tfoot>
-                      </table>
+                          </thead>
+                          <tbody>
+                            {gstReport.details.map((row, idx) => (
+                              <tr key={idx} className="border-t">
+                                <td className="p-3">{row.period}</td>
+                                <td className="text-right p-3">{row.orderCount}</td>
+                                <td className="text-right p-3">{formatCurrency(row.taxableValue)}</td>
+                                <td className="text-right p-3">{formatCurrency(row.cgst)}</td>
+                                <td className="text-right p-3">{formatCurrency(row.sgst)}</td>
+                                <td className="text-right p-3">{formatCurrency(row.cgst + row.sgst)}</td>
+                                <td className="text-right p-3 font-medium">{formatCurrency(row.taxableValue + row.cgst + row.sgst)}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                          <tfoot className="bg-muted font-bold">
+                            <tr>
+                              <td className="p-3">Total</td>
+                              <td className="text-right p-3">{gstReport.details.reduce((sum, r) => sum + r.orderCount, 0)}</td>
+                              <td className="text-right p-3">{formatCurrency(gstReport.details.reduce((sum, r) => sum + r.taxableValue, 0))}</td>
+                              <td className="text-right p-3">{formatCurrency(gstReport.details.reduce((sum, r) => sum + r.cgst, 0))}</td>
+                              <td className="text-right p-3">{formatCurrency(gstReport.details.reduce((sum, r) => sum + r.sgst, 0))}</td>
+                              <td className="text-right p-3">{formatCurrency(gstReport.details.reduce((sum, r) => sum + r.cgst + r.sgst, 0))}</td>
+                              <td className="text-right p-3">{formatCurrency(gstReport.details.reduce((sum, r) => sum + r.taxableValue + r.cgst + r.sgst, 0))}</td>
+                            </tr>
+                          </tfoot>
+                        </table>
+                      </div>
                     </div>
 
-                    {/* B2B Sales Breakdown */}
-                    {gstReport.b2bSummary && gstReport.b2bSummary.invoiceCount > 0 && (
-                      <Card className="border-blue-200 bg-blue-50/50">
-                        <CardHeader className="pb-2">
-                          <CardTitle className="text-base">B2B Sales Included Above</CardTitle>
-                          <CardDescription>{gstReport.b2bSummary.invoiceCount} B2B invoice(s) in this period (popup events, catering, etc.)</CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                          <div className="grid grid-cols-2 md:grid-cols-5 gap-3 text-sm">
-                            <div>
-                              <p className="text-muted-foreground">Taxable Value</p>
-                              <p className="font-semibold">{formatCurrency(gstReport.b2bSummary.totalTaxableValue)}</p>
-                            </div>
-                            <div>
-                              <p className="text-muted-foreground">CGST</p>
-                              <p className="font-semibold">{formatCurrency(gstReport.b2bSummary.totalCgst)}</p>
-                            </div>
-                            <div>
-                              <p className="text-muted-foreground">SGST</p>
-                              <p className="font-semibold">{formatCurrency(gstReport.b2bSummary.totalSgst)}</p>
-                            </div>
-                            {gstReport.b2bSummary.totalIgst > 0 && (
-                              <div>
-                                <p className="text-muted-foreground">IGST</p>
-                                <p className="font-semibold">{formatCurrency(gstReport.b2bSummary.totalIgst)}</p>
-                              </div>
-                            )}
-                            <div>
-                              <p className="text-muted-foreground">Total GST</p>
-                              <p className="font-semibold">{formatCurrency(gstReport.b2bSummary.totalGst)}</p>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
+                    {/* B2B Invoices GST Table - only show if there are B2B invoices */}
+                    {gstReport.details.some(d => d.b2bCount > 0) && (
+                      <div>
+                        <h3 className="text-lg font-semibold mb-2">B2B / External Invoices GST</h3>
+                        <div className="border rounded-lg overflow-hidden">
+                          <table className="w-full">
+                            <thead className="bg-muted">
+                              <tr>
+                                <th className="text-left p-3">Period</th>
+                                <th className="text-right p-3">Invoices</th>
+                                <th className="text-right p-3">Taxable Value</th>
+                                <th className="text-right p-3">CGST</th>
+                                <th className="text-right p-3">SGST</th>
+                                <th className="text-right p-3">IGST</th>
+                                <th className="text-right p-3">Total GST</th>
+                                <th className="text-right p-3">Invoice Total</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {gstReport.details.filter(d => d.b2bCount > 0).map((row, idx) => (
+                                <tr key={idx} className="border-t">
+                                  <td className="p-3">{row.period}</td>
+                                  <td className="text-right p-3">{row.b2bCount}</td>
+                                  <td className="text-right p-3">{formatCurrency(row.b2bTaxableValue)}</td>
+                                  <td className="text-right p-3">{formatCurrency(row.b2bCgst)}</td>
+                                  <td className="text-right p-3">{formatCurrency(row.b2bSgst)}</td>
+                                  <td className="text-right p-3">{formatCurrency(row.b2bIgst)}</td>
+                                  <td className="text-right p-3">{formatCurrency(row.b2bCgst + row.b2bSgst + row.b2bIgst)}</td>
+                                  <td className="text-right p-3 font-medium">{formatCurrency(row.b2bTaxableValue + row.b2bCgst + row.b2bSgst + row.b2bIgst)}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                            <tfoot className="bg-muted font-bold">
+                              <tr>
+                                <td className="p-3">Total</td>
+                                <td className="text-right p-3">{gstReport.b2bSummary?.invoiceCount ?? 0}</td>
+                                <td className="text-right p-3">{formatCurrency(gstReport.b2bSummary?.totalTaxableValue ?? 0)}</td>
+                                <td className="text-right p-3">{formatCurrency(gstReport.b2bSummary?.totalCgst ?? 0)}</td>
+                                <td className="text-right p-3">{formatCurrency(gstReport.b2bSummary?.totalSgst ?? 0)}</td>
+                                <td className="text-right p-3">{formatCurrency(gstReport.b2bSummary?.totalIgst ?? 0)}</td>
+                                <td className="text-right p-3">{formatCurrency(gstReport.b2bSummary?.totalGst ?? 0)}</td>
+                                <td className="text-right p-3">{formatCurrency((gstReport.b2bSummary?.totalTaxableValue ?? 0) + (gstReport.b2bSummary?.totalGst ?? 0))}</td>
+                              </tr>
+                            </tfoot>
+                          </table>
+                        </div>
+                      </div>
                     )}
+
+
 
                     <div className="text-sm text-muted-foreground">
                       <p>* HSN Code: 9963 (Restaurant Services)</p>

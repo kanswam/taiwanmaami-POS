@@ -2756,3 +2756,11 @@ Orders fixed:
 - [x] Fix "Last Month" filter showing end date as 30th instead of 31st March (timezone bug: toISOString converts to UTC, IST dates shift back 1 day)
 - [x] Fixed in Analytics.tsx and PredictionsTab.tsx — all date formatting now uses local timezone
 - [x] Also fixed channel period date calculations in Analytics.tsx
+## Bug Fix: GST Report B2B Integration (Apr 1)
+- [x] Fix B2B invoice GST showing incorrectly in daily GST breakdown (Leela showing ₹78.88 CGST/SGST instead of ₹32,071.50 IGST)
+- [x] B2B inter-state invoices now show IGST in separate B2B table, not mixed with retail CGST/SGST
+- [x] Audit entire GST report for correctness with B2B data
+- [x] Added IGST summary card (appears only when inter-state B2B invoices exist)
+- [x] Separated Retail Orders GST table from B2B Invoices GST table
+- [x] Summary cards labeled "Retail + B2B" for clarity
+- [x] Database amounts verified correct (all in paise)
