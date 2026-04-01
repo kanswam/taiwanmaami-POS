@@ -2745,3 +2745,10 @@ Orders fixed:
 - [x] Disabled Palladium button in Home.tsx outlet selector
 - [x] Checkout.tsx already blocks via isOutletOpen check
 - [x] Updated businessHours tests - all 955 tests pass
+## B2B/External Sales Entry System (Apr 1)
+- [x] Analyze Leela payment TDS deduction and present findings (TDS @ 10% u/s 194J on ₹1,78,175 = ₹17,817.50)
+- [x] Design B2B sales database schema (b2b_invoices + b2b_invoice_items tables)
+- [x] Build backend tRPC procedures for B2B sales CRUD (list, create, getById, updatePayment, delete, summary)
+- [x] Build admin UI page for entering and managing B2B sales (Admin → Reports → B2B Sales)
+- [x] Integrate B2B sales into the monthly GST report (b2bSummary in getGstReport)
+- [x] Write vitest tests for B2B sales feature (17 tests: access control, CRUD, validation, GST integration)

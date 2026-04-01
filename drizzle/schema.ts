@@ -1383,3 +1383,82 @@ export const partnerConfig = mysqlTable("partner_config", {
 
 export type PartnerConfig = typeof partnerConfig.$inferSelect;
 export type InsertPartnerConfig = typeof partnerConfig.$inferInsert;
+
+// ============================================================
+// B2B / External Sales (popup events, catering, corporate orders)
+// ============================================================
+
+// B2B Sales Invoices - records external invoices raised to businesses
+export const b2bInvoices = mysqlTable("b2b_invoices", {
+  id: int("id").autoincrement().primaryKey(),
+  // Invoice details
+  invoiceNumber: varchar("invoiceNumber", { length: 50 }).notNull().unique(),
+  invoiceDate: date("invoiceDate").notNull(),
+  // Client details
+  clientName: varchar("clientName", { length: 200 }).notNull(),
+  clientGstin: varchar("clientGstin", { length: 20 }), // GSTIN if registered
+  clientAddress: text("clientAddress"),
+  clientState: varchar("clientState", { length: 100 }),
+  clientStateCode: varchar("clientStateCode", { length: 5 }), // For IGST determination
+  // Description / category
+  category: mysqlEnum("category", [
+    "popup_event",
+    "catering",
+    "corporate_order",
+    "masterclass",
+    "franchise_fee",
+    "other",
+  ]).default("popup_event").notNull(),
+  description: text("description"),
+  // Amounts (all in paise for consistency with orders table)
+  subtotal: int("subtotal").notNull(), // Pre-GST total
+  gstRate: int("gstRate").default(18).notNull(), // GST percentage (5, 12, 18, 28)
+  cgst: int("cgst").notNull(), // Central GST
+  sgst: int("sgst").notNull(), // State GST (intra-state)
+  igst: int("igst").default(0).notNull(), // Integrated GST (inter-state)
+  totalAmount: int("totalAmount").notNull(), // subtotal + GST
+  // TDS tracking
+  tdsApplicable: boolean("tdsApplicable").default(false).notNull(),
+  tdsSection: varchar("tdsSection", { length: 20 }), // e.g., "194J", "194C"
+  tdsRate: int("tdsRate"), // TDS percentage (e.g., 10 for 10%)
+  tdsAmount: int("tdsAmount").default(0).notNull(), // TDS deducted (in paise)
+  // Payment tracking
+  paymentStatus: mysqlEnum("paymentStatus", [
+    "unpaid",
+    "partial",
+    "paid",
+    "overdue",
+  ]).default("unpaid").notNull(),
+  amountReceived: int("amountReceived").default(0).notNull(), // Actual amount received (in paise)
+  paymentDate: date("paymentDate"),
+  paymentReference: varchar("paymentReference", { length: 200 }), // NEFT ref, cheque no, etc.
+  paymentMode: mysqlEnum("paymentMode", [
+    "bank_transfer",
+    "upi",
+    "cheque",
+    "cash",
+    "other",
+  ]),
+  // Notes
+  notes: text("notes"),
+  // Audit
+  createdBy: int("createdBy"), // Admin user ID
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type B2bInvoice = typeof b2bInvoices.$inferSelect;
+export type InsertB2bInvoice = typeof b2bInvoices.$inferInsert;
+
+// B2B Invoice Line Items - individual items on each invoice
+export const b2bInvoiceItems = mysqlTable("b2b_invoice_items", {
+  id: int("id").autoincrement().primaryKey(),
+  invoiceId: int("invoiceId").notNull(),
+  description: varchar("description", { length: 500 }).notNull(),
+  quantity: int("quantity").default(1).notNull(),
+  unitPrice: int("unitPrice").notNull(), // Price per unit in paise
+  totalPrice: int("totalPrice").notNull(), // quantity × unitPrice in paise
+  hsnCode: varchar("hsnCode", { length: 20 }), // HSN/SAC code for GST
+  gstRate: int("gstRate").default(18).notNull(), // GST % for this line item
+});
+export type B2bInvoiceItem = typeof b2bInvoiceItems.$inferSelect;
+export type InsertB2bInvoiceItem = typeof b2bInvoiceItems.$inferInsert;

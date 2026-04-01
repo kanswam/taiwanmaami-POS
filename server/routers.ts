@@ -5762,6 +5762,36 @@ export const appRouter = router({
           periodStats[period].orderCount += 1;
         });
 
+        // Also fetch B2B invoices for the same period
+        const { b2bInvoices } = await import('../drizzle/schema.js');
+        const b2bResults = await dbInstance.select().from(b2bInvoices)
+          .where(and(
+            sql`${b2bInvoices.invoiceDate} >= ${input.startDate}`,
+            sql`${b2bInvoices.invoiceDate} <= ${input.endDate}`,
+          ));
+
+        // Add B2B invoices to period stats
+        b2bResults.forEach(inv => {
+          let period: string;
+          const invDate = new Date(inv.invoiceDate + 'T00:00:00');
+          if (input.groupBy === 'daily') {
+            period = inv.invoiceDate instanceof Date ? inv.invoiceDate.toISOString().split('T')[0] : String(inv.invoiceDate);
+          } else if (input.groupBy === 'weekly') {
+            const weekStart = new Date(invDate);
+            weekStart.setDate(invDate.getDate() - invDate.getDay());
+            period = `Week of ${weekStart.toISOString().split('T')[0]}`;
+          } else {
+            period = `${invDate.getFullYear()}-${String(invDate.getMonth() + 1).padStart(2, '0')}`;
+          }
+          if (!periodStats[period]) periodStats[period] = { taxableValue: 0, gst: 0, cgst: 0, sgst: 0, orderCount: 0 };
+          periodStats[period].taxableValue += inv.subtotal;
+          periodStats[period].gst += inv.cgst + inv.sgst + inv.igst;
+          periodStats[period].cgst += inv.cgst;
+          periodStats[period].sgst += inv.sgst;
+          // IGST goes into a separate bucket but we add to gst total
+          periodStats[period].orderCount += 1;
+        });
+
         const details = Object.entries(periodStats).map(([period, stats]) => ({
           period,
           taxableValue: stats.taxableValue,
@@ -5771,6 +5801,16 @@ export const appRouter = router({
           orderCount: stats.orderCount,
         })).sort((a, b) => a.period.localeCompare(b.period));
 
+        // B2B summary for separate display
+        const b2bSummary = {
+          totalTaxableValue: b2bResults.reduce((sum, inv) => sum + inv.subtotal, 0),
+          totalCgst: b2bResults.reduce((sum, inv) => sum + inv.cgst, 0),
+          totalSgst: b2bResults.reduce((sum, inv) => sum + inv.sgst, 0),
+          totalIgst: b2bResults.reduce((sum, inv) => sum + inv.igst, 0),
+          totalGst: b2bResults.reduce((sum, inv) => sum + inv.cgst + inv.sgst + inv.igst, 0),
+          invoiceCount: b2bResults.length,
+        };
+
         const summary = {
           totalTaxableValue: details.reduce((sum, d) => sum + d.taxableValue, 0),
           totalCgst: details.reduce((sum, d) => sum + d.cgst, 0),
@@ -5778,7 +5818,7 @@ export const appRouter = router({
           totalGst: details.reduce((sum, d) => sum + d.gst, 0),
         };
 
-        return { summary, details };
+        return { summary, details, b2bSummary };
       }),
 
     // Razorpay Payment Reconciliation Report
@@ -10370,6 +10410,225 @@ export const appRouter = router({
         }
 
         return { updated, skipped, total: input.updates.length, errors };
+      }),
+  }),
+
+  // B2B / External Sales (popup events, catering, corporate orders)
+  b2b: router({
+    // List all B2B invoices with optional filters
+    list: adminProcedure
+      .input(z.object({
+        startDate: z.string().optional(),
+        endDate: z.string().optional(),
+        category: z.enum(['popup_event', 'catering', 'corporate_order', 'masterclass', 'franchise_fee', 'other']).optional(),
+        paymentStatus: z.enum(['unpaid', 'partial', 'paid', 'overdue']).optional(),
+      }).optional())
+      .query(async ({ input }) => {
+        const { b2bInvoices, b2bInvoiceItems } = await import('../drizzle/schema.js');
+        const dbInstance = await getDb();
+        if (!dbInstance) return [];
+        const conditions: any[] = [];
+        if (input?.startDate) conditions.push(sql`${b2bInvoices.invoiceDate} >= ${input.startDate}`);
+        if (input?.endDate) conditions.push(sql`${b2bInvoices.invoiceDate} <= ${input.endDate}`);
+        if (input?.category) conditions.push(eq(b2bInvoices.category, input.category));
+        if (input?.paymentStatus) conditions.push(eq(b2bInvoices.paymentStatus, input.paymentStatus));
+        const invoices = await dbInstance.select().from(b2bInvoices)
+          .where(conditions.length > 0 ? and(...conditions) : undefined)
+          .orderBy(desc(b2bInvoices.invoiceDate));
+        // Fetch line items for each invoice
+        const result = await Promise.all(invoices.map(async (inv) => {
+          const items = await dbInstance.select().from(b2bInvoiceItems)
+            .where(eq(b2bInvoiceItems.invoiceId, inv.id));
+          return { ...inv, items };
+        }));
+        return result;
+      }),
+
+    // Get a single invoice by ID
+    getById: adminProcedure
+      .input(z.object({ id: z.number() }))
+      .query(async ({ input }) => {
+        const { b2bInvoices, b2bInvoiceItems } = await import('../drizzle/schema.js');
+        const dbInstance = await getDb();
+        if (!dbInstance) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
+        const [invoice] = await dbInstance.select().from(b2bInvoices).where(eq(b2bInvoices.id, input.id));
+        if (!invoice) throw new TRPCError({ code: 'NOT_FOUND', message: 'Invoice not found' });
+        const items = await dbInstance.select().from(b2bInvoiceItems)
+          .where(eq(b2bInvoiceItems.invoiceId, invoice.id));
+        return { ...invoice, items };
+      }),
+
+    // Create a new B2B invoice with line items
+    create: adminProcedure
+      .input(z.object({
+        invoiceNumber: z.string().min(1),
+        invoiceDate: z.string(), // YYYY-MM-DD
+        clientName: z.string().min(1),
+        clientGstin: z.string().optional(),
+        clientAddress: z.string().optional(),
+        clientState: z.string().optional(),
+        clientStateCode: z.string().optional(),
+        category: z.enum(['popup_event', 'catering', 'corporate_order', 'masterclass', 'franchise_fee', 'other']),
+        description: z.string().optional(),
+        gstRate: z.number().default(18),
+        isInterState: z.boolean().default(false),
+        items: z.array(z.object({
+          description: z.string().min(1),
+          quantity: z.number().int().min(1).default(1),
+          unitPrice: z.number().int().min(0), // in paise
+          hsnCode: z.string().optional(),
+          gstRate: z.number().default(18),
+        })).min(1),
+        // TDS
+        tdsApplicable: z.boolean().default(false),
+        tdsSection: z.string().optional(),
+        tdsRate: z.number().optional(),
+        // Payment (optional, can be added later)
+        paymentStatus: z.enum(['unpaid', 'partial', 'paid', 'overdue']).default('unpaid'),
+        amountReceived: z.number().int().default(0),
+        paymentDate: z.string().optional(),
+        paymentReference: z.string().optional(),
+        paymentMode: z.enum(['bank_transfer', 'upi', 'cheque', 'cash', 'other']).optional(),
+        notes: z.string().optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const { b2bInvoices, b2bInvoiceItems } = await import('../drizzle/schema.js');
+        const dbInstance = await getDb();
+        if (!dbInstance) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
+        // Calculate totals from line items
+        const lineItems = input.items.map(item => ({
+          ...item,
+          totalPrice: item.unitPrice * item.quantity,
+        }));
+        const subtotal = lineItems.reduce((sum, item) => sum + item.totalPrice, 0);
+        const gstAmount = Math.round(subtotal * (input.gstRate / 100));
+        const cgst = input.isInterState ? 0 : Math.round(gstAmount / 2);
+        const sgst = input.isInterState ? 0 : gstAmount - cgst;
+        const igst = input.isInterState ? gstAmount : 0;
+        const totalAmount = subtotal + gstAmount;
+        // Calculate TDS
+        const tdsAmount = input.tdsApplicable && input.tdsRate
+          ? Math.round(subtotal * (input.tdsRate / 100))
+          : 0;
+        // Insert invoice
+        const [result] = await dbInstance.insert(b2bInvoices).values({
+          invoiceNumber: input.invoiceNumber,
+          invoiceDate: input.invoiceDate,
+          clientName: input.clientName,
+          clientGstin: input.clientGstin,
+          clientAddress: input.clientAddress,
+          clientState: input.clientState,
+          clientStateCode: input.clientStateCode,
+          category: input.category,
+          description: input.description,
+          subtotal,
+          gstRate: input.gstRate,
+          cgst,
+          sgst,
+          igst,
+          totalAmount,
+          tdsApplicable: input.tdsApplicable,
+          tdsSection: input.tdsSection,
+          tdsRate: input.tdsRate,
+          tdsAmount,
+          paymentStatus: input.paymentStatus,
+          amountReceived: input.amountReceived,
+          paymentDate: input.paymentDate,
+          paymentReference: input.paymentReference,
+          paymentMode: input.paymentMode,
+          notes: input.notes,
+          createdBy: ctx.user.id,
+        } as any);
+        const invoiceId = result.insertId;
+        // Insert line items
+        for (const item of lineItems) {
+          await dbInstance.insert(b2bInvoiceItems).values({
+            invoiceId,
+            description: item.description,
+            quantity: item.quantity,
+            unitPrice: item.unitPrice,
+            totalPrice: item.totalPrice,
+            hsnCode: item.hsnCode,
+            gstRate: item.gstRate,
+          });
+        }
+        return { id: invoiceId, invoiceNumber: input.invoiceNumber, totalAmount, tdsAmount };
+      }),
+
+    // Update payment status on an existing invoice
+    updatePayment: adminProcedure
+      .input(z.object({
+        id: z.number(),
+        paymentStatus: z.enum(['unpaid', 'partial', 'paid', 'overdue']),
+        amountReceived: z.number().int(),
+        paymentDate: z.string().optional(),
+        paymentReference: z.string().optional(),
+        paymentMode: z.enum(['bank_transfer', 'upi', 'cheque', 'cash', 'other']).optional(),
+        tdsApplicable: z.boolean().optional(),
+        tdsSection: z.string().optional(),
+        tdsRate: z.number().optional(),
+        tdsAmount: z.number().int().optional(),
+        notes: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const { b2bInvoices } = await import('../drizzle/schema.js');
+        const dbInstance = await getDb();
+        if (!dbInstance) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
+        const updateData: any = {
+          paymentStatus: input.paymentStatus,
+          amountReceived: input.amountReceived,
+        };
+        if (input.paymentDate) updateData.paymentDate = input.paymentDate;
+        if (input.paymentReference) updateData.paymentReference = input.paymentReference;
+        if (input.paymentMode) updateData.paymentMode = input.paymentMode;
+        if (input.tdsApplicable !== undefined) updateData.tdsApplicable = input.tdsApplicable;
+        if (input.tdsSection) updateData.tdsSection = input.tdsSection;
+        if (input.tdsRate !== undefined) updateData.tdsRate = input.tdsRate;
+        if (input.tdsAmount !== undefined) updateData.tdsAmount = input.tdsAmount;
+        if (input.notes !== undefined) updateData.notes = input.notes;
+        await dbInstance.update(b2bInvoices).set(updateData).where(eq(b2bInvoices.id, input.id));
+        return { success: true };
+      }),
+
+    // Delete a B2B invoice and its line items
+    delete: adminProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        const { b2bInvoices, b2bInvoiceItems } = await import('../drizzle/schema.js');
+        const dbInstance = await getDb();
+        if (!dbInstance) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
+        await dbInstance.delete(b2bInvoiceItems).where(eq(b2bInvoiceItems.invoiceId, input.id));
+        await dbInstance.delete(b2bInvoices).where(eq(b2bInvoices.id, input.id));
+        return { success: true };
+      }),
+
+    // Summary for dashboard - total B2B revenue, outstanding, TDS
+    summary: adminProcedure
+      .input(z.object({
+        startDate: z.string().optional(),
+        endDate: z.string().optional(),
+      }).optional())
+      .query(async ({ input }) => {
+        const { b2bInvoices } = await import('../drizzle/schema.js');
+        const dbInstance = await getDb();
+        if (!dbInstance) return { totalInvoiced: 0, totalReceived: 0, totalOutstanding: 0, totalTds: 0, totalGst: 0, invoiceCount: 0 };
+        const conditions: any[] = [];
+        if (input?.startDate) conditions.push(sql`${b2bInvoices.invoiceDate} >= ${input.startDate}`);
+        if (input?.endDate) conditions.push(sql`${b2bInvoices.invoiceDate} <= ${input.endDate}`);
+        const invoices = await dbInstance.select().from(b2bInvoices)
+          .where(conditions.length > 0 ? and(...conditions) : undefined);
+        const totalInvoiced = invoices.reduce((sum, inv) => sum + inv.totalAmount, 0);
+        const totalReceived = invoices.reduce((sum, inv) => sum + inv.amountReceived, 0);
+        const totalTds = invoices.reduce((sum, inv) => sum + inv.tdsAmount, 0);
+        const totalGst = invoices.reduce((sum, inv) => sum + inv.cgst + inv.sgst + inv.igst, 0);
+        return {
+          totalInvoiced,
+          totalReceived,
+          totalOutstanding: totalInvoiced - totalReceived - totalTds,
+          totalTds,
+          totalGst,
+          invoiceCount: invoices.length,
+        };
       }),
   }),
 });

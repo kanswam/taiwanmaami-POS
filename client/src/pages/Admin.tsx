@@ -9,7 +9,7 @@ import {
   Home, Package, ShoppingCart, Tag, LogOut, Plus,
   ChevronDown, UtensilsCrossed, AlertCircle, DollarSign, CreditCard, Users,
   Settings, Layers, TrendingUp, Calendar, Ticket, Mail, Printer,
-  ClipboardList, BarChart3, BookOpen, Star, Bot, Crown, MapPin, FileText, Download, Upload, History, Clock, RotateCcw, WifiOff, FileSpreadsheet
+  ClipboardList, BarChart3, BookOpen, Star, Bot, Crown, MapPin, FileText, Download, Upload, History, Clock, RotateCcw, WifiOff, FileSpreadsheet, Building2
 } from 'lucide-react';
 import OutletAvailabilityTab from '@/components/OutletAvailabilityTab';
 import HomepageSettingsTab from '@/components/HomepageSettingsTab';
@@ -44,6 +44,7 @@ const ReconciliationTab = lazy(() => import('./admin/tabs/ReconciliationTab'));
 const LeelaRegistrationsTab = lazy(() => import('./admin/tabs/LeelaRegistrationsTab'));
 const OfflineSettingsTab = lazy(() => import('./admin/tabs/OfflineSettingsTab'));
 const CatalogExportImportTab = lazy(() => import('./admin/tabs/CatalogExportImportTab'));
+const B2BSalesTab = lazy(() => import('./admin/tabs/B2BSalesTab'));
 
 // Loading fallback for tabs
 function TabLoader() {
@@ -246,9 +247,9 @@ export default function Admin() {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button 
-                  variant={['analytics', 'audit', 'payment-report', 'reconciliation', 'bot-analytics'].includes(activeTab) ? 'default' : 'outline'} 
+                  variant={['analytics', 'audit', 'payment-report', 'reconciliation', 'bot-analytics', 'b2b-sales'].includes(activeTab) ? 'default' : 'outline'} 
                   size="sm" 
-                  className={`gap-2 ${!['analytics', 'audit', 'payment-report', 'reconciliation', 'bot-analytics'].includes(activeTab) ? 'border-transparent hover:bg-accent' : ''}`}
+                  className={`gap-2 ${!['analytics', 'audit', 'payment-report', 'reconciliation', 'bot-analytics', 'b2b-sales'].includes(activeTab) ? 'border-transparent hover:bg-accent' : ''}`}
                 >
                   <TrendingUp className="w-4 h-4" />
                   Reports
@@ -271,6 +272,10 @@ export default function Admin() {
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => setActiveTab('reconciliation')} className={activeTab === 'reconciliation' ? 'bg-accent' : ''}>
                   <AlertCircle className="w-4 h-4 mr-2" /> Razorpay Reconciliation
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => setActiveTab('b2b-sales')} className={activeTab === 'b2b-sales' ? 'bg-accent' : ''}>
+                  <Building2 className="w-4 h-4 mr-2" /> B2B Sales
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -457,6 +462,10 @@ export default function Admin() {
 
           <TabsContent value="catalog-export">
             <Suspense fallback={<TabLoader />}><CatalogExportImportTab /></Suspense>
+          </TabsContent>
+
+          <TabsContent value="b2b-sales">
+            <Suspense fallback={<TabLoader />}><B2BSalesTab /></Suspense>
           </TabsContent>
         </Tabs>
       </div>

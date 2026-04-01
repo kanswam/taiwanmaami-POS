@@ -1894,9 +1894,46 @@ export default function Analytics() {
                       </table>
                     </div>
 
+                    {/* B2B Sales Breakdown */}
+                    {gstReport.b2bSummary && gstReport.b2bSummary.invoiceCount > 0 && (
+                      <Card className="border-blue-200 bg-blue-50/50">
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-base">B2B Sales Included Above</CardTitle>
+                          <CardDescription>{gstReport.b2bSummary.invoiceCount} B2B invoice(s) in this period (popup events, catering, etc.)</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="grid grid-cols-2 md:grid-cols-5 gap-3 text-sm">
+                            <div>
+                              <p className="text-muted-foreground">Taxable Value</p>
+                              <p className="font-semibold">{formatCurrency(gstReport.b2bSummary.totalTaxableValue)}</p>
+                            </div>
+                            <div>
+                              <p className="text-muted-foreground">CGST</p>
+                              <p className="font-semibold">{formatCurrency(gstReport.b2bSummary.totalCgst)}</p>
+                            </div>
+                            <div>
+                              <p className="text-muted-foreground">SGST</p>
+                              <p className="font-semibold">{formatCurrency(gstReport.b2bSummary.totalSgst)}</p>
+                            </div>
+                            {gstReport.b2bSummary.totalIgst > 0 && (
+                              <div>
+                                <p className="text-muted-foreground">IGST</p>
+                                <p className="font-semibold">{formatCurrency(gstReport.b2bSummary.totalIgst)}</p>
+                              </div>
+                            )}
+                            <div>
+                              <p className="text-muted-foreground">Total GST</p>
+                              <p className="font-semibold">{formatCurrency(gstReport.b2bSummary.totalGst)}</p>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    )}
+
                     <div className="text-sm text-muted-foreground">
                       <p>* HSN Code: 9963 (Restaurant Services)</p>
                       <p>* GST Rate: 5% (2.5% CGST + 2.5% SGST) - applicable for restaurants without ITC</p>
+                      <p>* B2B invoices may have different GST rates (5%/12%/18%) depending on the service category</p>
                     </div>
                   </div>
                 ) : (
