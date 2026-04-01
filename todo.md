@@ -2774,3 +2774,9 @@ Orders fixed:
   - [x] Combined GST Summary section matches on-screen getGstReport totals exactly
   - [x] Event orders removed from daily retail breakdown (own section)
   - [x] 18 vitest consistency tests validating export matches on-screen (990 total tests passing)
+
+## Fix: Remove Event Orders from GST Export (Apr 2)
+- [x] Remove Event Orders GST section from Excel export (events are already B2B invoices — double-counting)
+- [x] Remove event order rows from Sales Report sheet
+- [x] Remove event totals from Combined GST Summary calculations
+- [x] Update tests to reflect removal

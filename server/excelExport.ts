@@ -1,7 +1,7 @@
 import ExcelJS from 'exceljs';
 import { getDb } from './db';
-import { orders, workshopBookings, eventOrders, b2bInvoices } from '../drizzle/schema';
-import { and, eq, sql, desc } from 'drizzle-orm';
+import { orders, workshopBookings, b2bInvoices } from '../drizzle/schema';
+import { and, eq, sql } from 'drizzle-orm';
 import type { Request, Response } from 'express';
 import { sdk } from './_core/sdk';
 import {
@@ -56,7 +56,6 @@ async function requireAdmin(req: Request, res: Response): Promise<boolean> {
 // Helper: format date string to local DD/MM/YYYY without timezone shift
 function formatDateLocal(d: Date | string): string {
   if (typeof d === 'string') {
-    // If it's already a date string like "2026-03-24", parse it directly
     if (/^\d{4}-\d{2}-\d{2}$/.test(d)) {
       const [y, m, day] = d.split('-');
       return `${day}/${m}/${y}`;
@@ -139,29 +138,7 @@ export async function handleSalesReportExport(req: Request, res: Response) {
       ))
       .orderBy(workshopBookings.createdAt);
 
-    // 3. Fetch completed/confirmed event orders
-    const paidEvents = await dbInstance
-      .select({
-        orderNumber: eventOrders.orderNumber,
-        totalAmount: eventOrders.totalAmount,
-        subtotal: eventOrders.subtotal,
-        gstAmount: eventOrders.gstAmount,
-        advanceAmount: eventOrders.advanceAmount,
-        advancePaid: eventOrders.advancePaid,
-        balanceAmount: eventOrders.balanceAmount,
-        balancePaid: eventOrders.balancePaid,
-        status: eventOrders.status,
-        createdAt: eventOrders.createdAt,
-      })
-      .from(eventOrders)
-      .where(and(
-        sql`${eventOrders.createdAt} >= ${startDate}`,
-        sql`${eventOrders.createdAt} <= ${endDate + ' 23:59:59'}`,
-        sql`${eventOrders.status} IN ('confirmed', 'in_progress', 'completed')`,
-      ))
-      .orderBy(eventOrders.createdAt);
-
-    // 4. Fetch B2B invoices from the b2b_invoices table
+    // 3. Fetch B2B invoices (includes popup events like The Leela — already entered as B2B)
     const b2bResults = await dbInstance
       .select({
         invoiceNumber: b2bInvoices.invoiceNumber,
@@ -190,15 +167,13 @@ export async function handleSalesReportExport(req: Request, res: Response) {
 
     // Build workbook
     const workbook = createWorkbook();
-    const retailCount = completedOrders.length;
-    const totalTransactions = retailCount + paidWorkshops.length + paidEvents.length;
+    const totalRetailTransactions = completedOrders.length + paidWorkshops.length;
 
-    // ===== Sheet 1: Sales Report (All Transactions) =====
+    // ===== Sheet 1: Sales Report (Retail Transactions) =====
     const salesSheet = workbook.addWorksheet('Sales Report');
     const SALES_COLS = 11;
-    addTitleBlock(salesSheet, 'Taiwan Maami — Sales Report', `Period: ${formatDate(startDate)} to ${formatDate(endDate)}  ·  ${totalTransactions} transactions`, SALES_COLS);
+    addTitleBlock(salesSheet, 'Taiwan Maami — Sales Report', `Period: ${formatDate(startDate)} to ${formatDate(endDate)}  ·  ${totalRetailTransactions} retail transactions`, SALES_COLS);
 
-    // Header row
     const headers = [
       'S.No', 'Invoice No.', 'Date', 'Source', 'Outlet',
       'Taxable Amount', 'CGST', 'SGST', 'Total GST',
@@ -208,7 +183,6 @@ export async function handleSalesReportExport(req: Request, res: Response) {
     headers.forEach((h, idx) => { headerRow.getCell(idx + 1).value = h; });
     styleHeaderRow(headerRow, SALES_COLS);
 
-    // Column widths
     setColumnWidths(salesSheet, [
       [1, 6], [2, 18], [3, 14], [4, 14], [5, 16],
       [6, 18], [7, 14], [8, 14], [9, 14],
@@ -217,10 +191,9 @@ export async function handleSalesReportExport(req: Request, res: Response) {
 
     let rowNum = 5;
     let serialNo = 1;
-    // Track retail-only totals for the Sales Report sheet
     let retailTaxable = 0, retailCgst = 0, retailSgst = 0, retailGst = 0, retailTotal = 0;
 
-    // Add regular orders (RETAIL ONLY in Sales Report)
+    // Regular orders
     for (const order of completedOrders) {
       const cgst = toRupees(order.centralGst);
       const sgst = toRupees(order.stateGst);
@@ -256,7 +229,7 @@ export async function handleSalesReportExport(req: Request, res: Response) {
       rowNum++;
     }
 
-    // Add workshop bookings
+    // Workshop bookings
     let workshopTaxable = 0, workshopCgst = 0, workshopSgst = 0, workshopGst = 0, workshopTotal = 0;
     for (const booking of paidWorkshops) {
       const total = toRupees(booking.totalAmount);
@@ -295,63 +268,22 @@ export async function handleSalesReportExport(req: Request, res: Response) {
       rowNum++;
     }
 
-    // Add event orders (but NOT in GST daily breakdown — they go in their own section)
-    let eventTaxable = 0, eventCgst = 0, eventSgst = 0, eventGst = 0, eventTotal = 0;
-    for (const event of paidEvents) {
-      const total = toRupees(event.totalAmount);
-      const gst = toRupees(event.gstAmount);
-      const taxable = total - gst;
-      // Event orders: assume intra-state (CGST/SGST) unless we have state info
-      const cgst = gst / 2;
-      const sgst = gst / 2;
-
-      eventTaxable += taxable;
-      eventCgst += cgst;
-      eventSgst += sgst;
-      eventGst += gst;
-      eventTotal += total;
-
-      const row = salesSheet.getRow(rowNum);
-      row.values = [
-        serialNo++,
-        event.orderNumber,
-        formatDate(event.createdAt),
-        'Event',
-        'T. Nagar',
-        round2(taxable),
-        round2(cgst),
-        round2(sgst),
-        round2(gst),
-        round2(total),
-        'N/A',
-      ];
-
-      styleDataRow(row, SALES_COLS, false, {
-        currencyCols: [6, 7, 8, 9, 10],
-        centerCols: [1, 3],
-        customBg: BRAND.EVENT_BG,
-      });
-      rowNum++;
-    }
-
-    // Separator + legend
+    // Legend
     rowNum++;
     rowNum = addLegend(salesSheet, rowNum, [
       { color: BRAND.ALT_ROW, label: 'Regular Order' },
       { color: BRAND.WORKSHOP_BG, label: 'Workshop Booking' },
-      { color: BRAND.EVENT_BG, label: 'Event Order' },
     ]);
 
     rowNum++;
-    addFooterNote(salesSheet, rowNum, '\u2192 See "Summary" and "GST Summary" sheets for totals. B2B invoices are shown separately in the GST Summary sheet.', SALES_COLS);
+    addFooterNote(salesSheet, rowNum, '\u2192 See "Summary" and "GST Summary" sheets for totals. B2B/external invoices are shown separately in the GST Summary sheet.', SALES_COLS);
 
     // ===== Sheet 2: Summary =====
     const summarySheet = workbook.addWorksheet('Summary');
     const SUM_COLS = 4;
     addTitleBlock(summarySheet, `Taiwan Maami — Sales Summary`, `${formatDate(startDate)} to ${formatDate(endDate)}`, SUM_COLS);
 
-    // Summary table headers
-    const sumHeaders = ['Category', 'Orders', 'Taxable Amount', 'Total Amount'];
+    const sumHeaders = ['Category', 'Count', 'Taxable Amount', 'Total Amount'];
     const sumHeaderRow = summarySheet.getRow(4);
     sumHeaders.forEach((h, idx) => { sumHeaderRow.getCell(idx + 1).value = h; });
     styleHeaderRow(sumHeaderRow, SUM_COLS);
@@ -360,11 +292,13 @@ export async function handleSalesReportExport(req: Request, res: Response) {
       [1, 30], [2, 12], [3, 22], [4, 22],
     ]);
 
+    const b2bTaxableTotal = toRupees(b2bResults.reduce((s, i) => s + i.subtotal, 0));
+    const b2bAmountTotal = toRupees(b2bResults.reduce((s, i) => s + i.totalAmount, 0));
+
     const summaryData: [string, number, number, number][] = [
       ['Food & Beverage Orders', completedOrders.length, round2(retailTaxable), round2(retailTotal)],
       ['Workshop Bookings', paidWorkshops.length, round2(workshopTaxable), round2(workshopTotal)],
-      ['Event Orders', paidEvents.length, round2(eventTaxable), round2(eventTotal)],
-      ['B2B / External Invoices', b2bResults.length, round2(toRupees(b2bResults.reduce((s, i) => s + i.subtotal, 0))), round2(toRupees(b2bResults.reduce((s, i) => s + i.totalAmount, 0)))],
+      ['B2B / External Invoices', b2bResults.length, round2(b2bTaxableTotal), round2(b2bAmountTotal)],
     ];
 
     let sumRowNum = 5;
@@ -378,13 +312,13 @@ export async function handleSalesReportExport(req: Request, res: Response) {
       sumRowNum++;
     });
 
-    // Grand Total row
-    const allTaxable = retailTaxable + workshopTaxable + eventTaxable + toRupees(b2bResults.reduce((s, i) => s + i.subtotal, 0));
-    const allTotal = retailTotal + workshopTotal + eventTotal + toRupees(b2bResults.reduce((s, i) => s + i.totalAmount, 0));
+    // Grand Total
+    const allTaxable = retailTaxable + workshopTaxable + b2bTaxableTotal;
+    const allTotal = retailTotal + workshopTotal + b2bAmountTotal;
     const grandRow = summarySheet.getRow(sumRowNum);
     grandRow.values = [
       'GRAND TOTAL',
-      totalTransactions + b2bResults.length,
+      totalRetailTransactions + b2bResults.length,
       round2(allTaxable),
       round2(allTotal),
     ];
@@ -394,15 +328,14 @@ export async function handleSalesReportExport(req: Request, res: Response) {
     });
     sumRowNum += 2;
 
-    // GST Breakdown section — must match on-screen GST summary exactly
+    // GST Breakdown
     const b2bTotalCgst = toRupees(b2bResults.reduce((s, i) => s + i.cgst, 0));
     const b2bTotalSgst = toRupees(b2bResults.reduce((s, i) => s + i.sgst, 0));
     const b2bTotalIgst = toRupees(b2bResults.reduce((s, i) => s + i.igst, 0));
-    const b2bTotalGst = b2bTotalCgst + b2bTotalSgst + b2bTotalIgst;
 
-    const combinedCgst = retailCgst + workshopCgst + eventCgst + b2bTotalCgst;
-    const combinedSgst = retailSgst + workshopSgst + eventSgst + b2bTotalSgst;
-    const combinedIgst = b2bTotalIgst; // Only B2B can have IGST
+    const combinedCgst = retailCgst + workshopCgst + b2bTotalCgst;
+    const combinedSgst = retailSgst + workshopSgst + b2bTotalSgst;
+    const combinedIgst = b2bTotalIgst;
     const combinedGst = combinedCgst + combinedSgst + combinedIgst;
 
     sumRowNum = addSectionTitle(summarySheet, sumRowNum, 'GST Breakdown (Retail + B2B)', SUM_COLS);
@@ -426,7 +359,6 @@ export async function handleSalesReportExport(req: Request, res: Response) {
       row.getCell(2).font = { size: 11, name: 'Calibri' };
       sumRowNum++;
     }
-    // Grand total with GST
     const gstGrandRow = summarySheet.getRow(sumRowNum);
     gstGrandRow.getCell(1).value = 'Grand Total (incl. GST)';
     gstGrandRow.getCell(1).font = { bold: true, size: 11, name: 'Calibri' };
@@ -439,7 +371,7 @@ export async function handleSalesReportExport(req: Request, res: Response) {
     }
     sumRowNum += 2;
 
-    // Payment method breakdown (retail + workshops only — events and B2B tracked separately)
+    // Payment method breakdown
     sumRowNum = addSectionTitle(summarySheet, sumRowNum, 'Payment Method Breakdown', SUM_COLS);
     const paymentMethods: Record<string, { count: number; total: number }> = {};
     for (const order of completedOrders) {
@@ -454,14 +386,8 @@ export async function handleSalesReportExport(req: Request, res: Response) {
       paymentMethods[method].count++;
       paymentMethods[method].total += toRupees(workshop.totalAmount);
     }
-    for (const event of paidEvents) {
-      const method = 'Event Payment';
-      if (!paymentMethods[method]) paymentMethods[method] = { count: 0, total: 0 };
-      paymentMethods[method].count++;
-      paymentMethods[method].total += toRupees(event.totalAmount);
-    }
     for (const inv of b2bResults) {
-      const method = 'B2B Invoice Payment';
+      const method = 'B2B Invoice';
       if (!paymentMethods[method]) paymentMethods[method] = { count: 0, total: 0 };
       paymentMethods[method].count++;
       paymentMethods[method].total += toRupees(inv.amountReceived);
@@ -481,7 +407,8 @@ export async function handleSalesReportExport(req: Request, res: Response) {
       sumRowNum++;
     }
 
-    // ===== Sheet 3: GST Summary (Daily) — RETAIL ORDERS ONLY =====
+    // ===== Sheet 3: GST Summary =====
+    // Two sections only: Retail Orders GST (Daily) and B2B / External Invoices GST
     const gstSheet = workbook.addWorksheet('GST Summary');
     const hasIgst = combinedIgst > 0;
     const GST_COLS = hasIgst ? 8 : 7;
@@ -500,7 +427,7 @@ export async function handleSalesReportExport(req: Request, res: Response) {
       [1, 14], [2, 16], [3, 18], [4, 16], [5, 16], [6, 16], [7, 18], [8, 18],
     ]);
 
-    // Group RETAIL orders only by date (no events, no B2B)
+    // Group retail orders + workshops by date
     const dailyRetailStats: Record<string, { invoiceCount: number; taxable: number; cgst: number; sgst: number; gst: number; total: number }> = {};
 
     for (const order of completedOrders) {
@@ -517,7 +444,6 @@ export async function handleSalesReportExport(req: Request, res: Response) {
       dailyRetailStats[dateKey].total += total;
     }
 
-    // Also add workshops to retail daily (they are intra-state, CGST/SGST)
     for (const booking of paidWorkshops) {
       const dateKey = getDateKey(booking.createdAt);
       if (!dailyRetailStats[dateKey]) dailyRetailStats[dateKey] = { invoiceCount: 0, taxable: 0, cgst: 0, sgst: 0, gst: 0, total: 0 };
@@ -533,7 +459,6 @@ export async function handleSalesReportExport(req: Request, res: Response) {
       dailyRetailStats[dateKey].total += total;
     }
 
-    // Sort by date key (YYYY-MM-DD sorts naturally)
     const sortedDates = Object.keys(dailyRetailStats).sort();
 
     gstRowNum++;
@@ -567,7 +492,7 @@ export async function handleSalesReportExport(req: Request, res: Response) {
       gstRowNum++;
     });
 
-    // Retail GST Totals row
+    // Retail GST Totals
     const retailGstTotalsRow = gstSheet.getRow(gstRowNum);
     retailGstTotalsRow.values = [
       'RETAIL TOTAL',
@@ -585,56 +510,7 @@ export async function handleSalesReportExport(req: Request, res: Response) {
     retailGstTotalsRow.getCell(1).alignment = { horizontal: 'right', vertical: 'middle' };
     gstRowNum += 2;
 
-    // Section 2: Event Orders GST (if any)
-    if (paidEvents.length > 0) {
-      gstRowNum = addSectionTitle(gstSheet, gstRowNum, 'Event Orders GST', GST_COLS);
-      const eventGstHeaderRow = gstSheet.getRow(gstRowNum);
-      ['Date', 'Invoice No.', 'Taxable Value', 'CGST', 'SGST', 'Total GST', 'Invoice Value'].forEach((h, idx) => {
-        eventGstHeaderRow.getCell(idx + 1).value = h;
-      });
-      styleHeaderRow(eventGstHeaderRow, 7);
-      gstRowNum++;
-
-      let evtTotalTaxable = 0, evtTotalCgst = 0, evtTotalSgst = 0, evtTotalGst = 0, evtTotalValue = 0;
-      for (const event of paidEvents) {
-        const total = toRupees(event.totalAmount);
-        const gst = toRupees(event.gstAmount);
-        const taxable = total - gst;
-        const cgst = gst / 2;
-        const sgst = gst / 2;
-
-        evtTotalTaxable += taxable;
-        evtTotalCgst += cgst;
-        evtTotalSgst += sgst;
-        evtTotalGst += gst;
-        evtTotalValue += total;
-
-        const row = gstSheet.getRow(gstRowNum);
-        row.values = [
-          formatDate(event.createdAt),
-          event.orderNumber,
-          round2(taxable),
-          round2(cgst),
-          round2(sgst),
-          round2(gst),
-          round2(total),
-        ];
-        styleDataRow(row, 7, false, {
-          currencyCols: [3, 4, 5, 6, 7],
-          centerCols: [1, 2],
-          customBg: BRAND.EVENT_BG,
-        });
-        gstRowNum++;
-      }
-
-      const evtTotalsRow = gstSheet.getRow(gstRowNum);
-      evtTotalsRow.values = ['EVENT TOTAL', paidEvents.length, round2(evtTotalTaxable), round2(evtTotalCgst), round2(evtTotalSgst), round2(evtTotalGst), round2(evtTotalValue)];
-      styleTotalsRow(evtTotalsRow, 7, { currencyCols: [3, 4, 5, 6, 7], centerCols: [2] });
-      evtTotalsRow.getCell(1).alignment = { horizontal: 'right', vertical: 'middle' };
-      gstRowNum += 2;
-    }
-
-    // Section 3: B2B / External Invoices GST (if any)
+    // Section 2: B2B / External Invoices GST (if any)
     if (b2bResults.length > 0) {
       gstRowNum = addSectionTitle(gstSheet, gstRowNum, 'B2B / External Invoices GST', GST_COLS);
       const b2bGstHeaders = ['Invoice Date', 'Invoice No.', 'Client', 'Taxable Value', 'CGST', 'SGST', 'IGST', 'Total GST'];
@@ -682,7 +558,7 @@ export async function handleSalesReportExport(req: Request, res: Response) {
       gstRowNum += 2;
     }
 
-    // Grand Total GST section — matches on-screen summary exactly
+    // Combined GST Summary — matches on-screen getGstReport exactly
     gstRowNum = addSectionTitle(gstSheet, gstRowNum, 'Combined GST Summary (for GSTR-1/GSTR-3B)', GST_COLS);
     const combinedGstItems: [string, number][] = [
       ['Total Taxable Value (Retail + B2B)', round2(allTaxable)],
@@ -724,7 +600,6 @@ export async function handleSalesReportExport(req: Request, res: Response) {
       [1, 22], [2, 20], [3, 20], [4, 16],
     ]);
 
-    // Aggregate by payment method (retail orders only for the percentage calculation)
     const paymentStats: Record<string, { count: number; total: number }> = {};
     for (const order of completedOrders) {
       const method = (order.paymentMethod || 'unknown').replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
@@ -759,7 +634,6 @@ export async function handleSalesReportExport(req: Request, res: Response) {
       payRowNum++;
     });
 
-    // Payment totals
     const payTotalsRow = paymentSheet.getRow(payRowNum);
     payTotalsRow.values = ['TOTAL', payGrandCount, round2(payGrandTotal), 100];
     styleTotalsRow(payTotalsRow, PAY_COLS, {
@@ -769,7 +643,7 @@ export async function handleSalesReportExport(req: Request, res: Response) {
     });
     payTotalsRow.getCell(1).alignment = { horizontal: 'right', vertical: 'middle' };
 
-    // Apply sheet setup to all sheets
+    // Apply sheet setup
     applySheetSetup(salesSheet);
     applySheetSetup(summarySheet, 3);
     applySheetSetup(gstSheet);
