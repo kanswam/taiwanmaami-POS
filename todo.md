@@ -2752,3 +2752,7 @@ Orders fixed:
 - [x] Build admin UI page for entering and managing B2B sales (Admin → Reports → B2B Sales)
 - [x] Integrate B2B sales into the monthly GST report (b2bSummary in getGstReport)
 - [x] Write vitest tests for B2B sales feature (17 tests: access control, CRUD, validation, GST integration)
+## Bug Fix: Last Month Date Filter (Apr 1)
+- [x] Fix "Last Month" filter showing end date as 30th instead of 31st March (timezone bug: toISOString converts to UTC, IST dates shift back 1 day)
+- [x] Fixed in Analytics.tsx and PredictionsTab.tsx — all date formatting now uses local timezone
+- [x] Also fixed channel period date calculations in Analytics.tsx

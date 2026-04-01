@@ -35,17 +35,23 @@ type PeriodOption = {
 
 function getPeriodOptions(): PeriodOption[] {
   const today = new Date();
-  const todayStr = today.toISOString().split('T')[0];
+  const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
 
+  const fmtLocal = (d: Date) => {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  };
   const daysAgo = (n: number) => {
     const d = new Date(today);
     d.setDate(d.getDate() - n);
-    return d.toISOString().split('T')[0];
+    return fmtLocal(d);
   };
 
-  const monthStart = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split('T')[0];
-  const lastMonthStart = new Date(today.getFullYear(), today.getMonth() - 1, 1).toISOString().split('T')[0];
-  const lastMonthEnd = new Date(today.getFullYear(), today.getMonth(), 0).toISOString().split('T')[0];
+  const monthStart = fmtLocal(new Date(today.getFullYear(), today.getMonth(), 1));
+  const lastMonthStart = fmtLocal(new Date(today.getFullYear(), today.getMonth() - 1, 1));
+  const lastMonthEnd = fmtLocal(new Date(today.getFullYear(), today.getMonth(), 0));
 
   return [
     {

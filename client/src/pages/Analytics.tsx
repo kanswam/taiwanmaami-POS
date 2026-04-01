@@ -35,33 +35,40 @@ const formatCurrency = (paise: number) => {
 };
 
 // Helper to get date range presets
+// Format date as YYYY-MM-DD using local timezone (not UTC)
+const formatLocalDate = (d: Date) => {
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
 const getDatePreset = (preset: string) => {
   const today = new Date();
   const startDate = new Date();
-  
   switch (preset) {
     case 'today':
-      return { start: today.toISOString().split('T')[0], end: today.toISOString().split('T')[0] };
+      return { start: formatLocalDate(today), end: formatLocalDate(today) };
     case 'yesterday':
       startDate.setDate(today.getDate() - 1);
-      return { start: startDate.toISOString().split('T')[0], end: startDate.toISOString().split('T')[0] };
+      return { start: formatLocalDate(startDate), end: formatLocalDate(startDate) };
     case 'last7days':
       startDate.setDate(today.getDate() - 7);
-      return { start: startDate.toISOString().split('T')[0], end: today.toISOString().split('T')[0] };
+      return { start: formatLocalDate(startDate), end: formatLocalDate(today) };
     case 'last30days':
       startDate.setDate(today.getDate() - 30);
-      return { start: startDate.toISOString().split('T')[0], end: today.toISOString().split('T')[0] };
+      return { start: formatLocalDate(startDate), end: formatLocalDate(today) };
     case 'thisMonth':
       startDate.setDate(1);
-      return { start: startDate.toISOString().split('T')[0], end: today.toISOString().split('T')[0] };
+      return { start: formatLocalDate(startDate), end: formatLocalDate(today) };
     case 'lastMonth': {
       const lastMonthStart = new Date(today.getFullYear(), today.getMonth() - 1, 1);
       const lastMonthEnd = new Date(today.getFullYear(), today.getMonth(), 0);
-      return { start: lastMonthStart.toISOString().split('T')[0], end: lastMonthEnd.toISOString().split('T')[0] };
+      return { start: formatLocalDate(lastMonthStart), end: formatLocalDate(lastMonthEnd) };
     }
     default:
       startDate.setDate(today.getDate() - 30);
-      return { start: startDate.toISOString().split('T')[0], end: today.toISOString().split('T')[0] };
+      return { start: formatLocalDate(startDate), end: formatLocalDate(today) };
   }
 };
 
@@ -228,11 +235,11 @@ export default function Analytics() {
     } else if (channelPeriod === 'all_time') {
       // Go back to business start (April 2024)
       setChannelStartDate('2024-04-01');
-      setChannelEndDate(new Date().toISOString().split('T')[0]);
+      setChannelEndDate(formatLocalDate(new Date()));
     } else if (channelPeriod === 'ytd') {
       const year = new Date().getFullYear();
       setChannelStartDate(`${year}-01-01`);
-      setChannelEndDate(new Date().toISOString().split('T')[0]);
+      setChannelEndDate(formatLocalDate(new Date()));
     } else {
       // Specific period - find it in deliveryPeriods
       const period = deliveryPeriods?.find(p => String(p.id) === channelPeriod);
@@ -247,16 +254,16 @@ export default function Analytics() {
           if (monthIdx >= 0) {
             const calStart = new Date(year, monthIdx, 1);
             const calEnd = new Date(year, monthIdx + 1, 0); // last day of month
-            setChannelStartDate(calStart.toISOString().split('T')[0]);
-            setChannelEndDate(calEnd.toISOString().split('T')[0]);
+            setChannelStartDate(formatLocalDate(calStart));
+            setChannelEndDate(formatLocalDate(calEnd));
           } else {
-            setChannelStartDate(new Date(period.periodStart).toISOString().split('T')[0]);
-            setChannelEndDate(new Date(period.periodEnd).toISOString().split('T')[0]);
+            setChannelStartDate(formatLocalDate(new Date(period.periodStart)));
+            setChannelEndDate(formatLocalDate(new Date(period.periodEnd)));
           }
         } else {
           // Partial periods (e.g. "mid Feb 2026") - use the upload's actual dates
-          setChannelStartDate(new Date(period.periodStart).toISOString().split('T')[0]);
-          setChannelEndDate(new Date(period.periodEnd).toISOString().split('T')[0]);
+          setChannelStartDate(formatLocalDate(new Date(period.periodStart)));
+          setChannelEndDate(formatLocalDate(new Date(period.periodEnd)));
         }
       }
     }
