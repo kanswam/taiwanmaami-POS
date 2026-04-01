@@ -2764,3 +2764,13 @@ Orders fixed:
 - [x] Separated Retail Orders GST table from B2B Invoices GST table
 - [x] Summary cards labeled "Retail + B2B" for clarity
 - [x] Database amounts verified correct (all in paise)
+## URGENT Bug Fix: GST Report Export Inconsistency (Apr 1)
+- [x] Fix GST numbers mismatch between on-screen display and exported Excel file
+- [x] Ensure Export Excel GST Summary sheet matches the on-screen GST Summary Report exactly
+- [x] Audit all export functions for data consistency with display
+  - [x] Rewrote excelExport.ts to query b2b_invoices table
+  - [x] GST Summary sheet now has 3 sections: Retail Orders GST (Daily), Event Orders GST, B2B/External Invoices GST
+  - [x] B2B section shows IGST column (not split into CGST/SGST for inter-state)
+  - [x] Combined GST Summary section matches on-screen getGstReport totals exactly
+  - [x] Event orders removed from daily retail breakdown (own section)
+  - [x] 18 vitest consistency tests validating export matches on-screen (990 total tests passing)
