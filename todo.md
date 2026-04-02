@@ -2799,3 +2799,16 @@ Orders fixed:
 - [x] Add payment method breakdown per month (with % of revenue)
 - [x] Add average order value insights (overall, by order type, by month)
 - [x] Add growth/trend indicators (MoM change)
+
+## Feature: Order Type Breakdown on Analytics Dashboard (Apr 2)
+- [x] Add order-type (Delivery/Pickup/Dine-in) breakdown section to Analytics dashboard
+- [x] Show monthly order counts and revenue split by order type
+- [x] Include visual indicators (cards or chart)
+
+## Fix: Partner Referral Link (Apr 2)
+- [x] Referral links should bypass the access key requirement
+- [x] Referred users should land on the partner page directly without needing ?key= param
+
+## Feature: Delivery Charge Summary in Export (Apr 2)
+- [x] Add delivery charge summary section to Excel export Summary sheet
+- [x] Show total delivery fees collected per month

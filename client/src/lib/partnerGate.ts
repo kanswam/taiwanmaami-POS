@@ -27,6 +27,13 @@ export function checkPartnerAccess(): boolean {
       sessionStorage.setItem(SESSION_STORAGE_KEY, "true");
       return true;
     }
+
+    // Allow access via referral link (?ref=CODE)
+    const ref = params.get("ref");
+    if (ref && ref.length > 0) {
+      sessionStorage.setItem(SESSION_STORAGE_KEY, "true");
+      return true;
+    }
   }
 
   return false;

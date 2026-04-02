@@ -183,6 +183,13 @@ export default function Analytics() {
       groupBy: 'daily',
     });
 
+  // Order Type Breakdown
+  const { data: orderTypeData, isLoading: loadingOrderType } = 
+    trpc.analytics.getOrderTypeBreakdown.useQuery({
+      startDate,
+      endDate,
+    });
+
   // Business recommendations
   const { data: recommendationsData, isLoading: loadingRecommendations } = 
     trpc.analytics.getBusinessRecommendations.useQuery({
@@ -671,6 +678,124 @@ export default function Analytics() {
                 </CardContent>
               </Card>
             </div>
+            {/* Order Type Breakdown */}
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="flex items-center gap-2">
+                      <Layers className="h-5 w-5" />
+                      Order Type Breakdown
+                    </CardTitle>
+                    <CardDescription>Delivery vs Pickup vs Dine-in by month</CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                {loadingOrderType ? (
+                  <div className="text-center py-8 text-muted-foreground">Loading...</div>
+                ) : orderTypeData?.monthly && orderTypeData.monthly.length > 0 ? (
+                  <div className="space-y-6">
+                    {/* Summary Cards */}
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                      <div className="bg-blue-50 dark:bg-blue-950/30 rounded-lg p-3 text-center">
+                        <div className="text-2xl font-bold text-blue-700 dark:text-blue-400">{orderTypeData.totals.delivery}</div>
+                        <div className="text-xs text-muted-foreground">Delivery Orders</div>
+                        <div className="text-sm font-medium text-blue-600 dark:text-blue-400">{formatCurrency(orderTypeData.totals.deliveryRev)}</div>
+                      </div>
+                      <div className="bg-amber-50 dark:bg-amber-950/30 rounded-lg p-3 text-center">
+                        <div className="text-2xl font-bold text-amber-700 dark:text-amber-400">{orderTypeData.totals.pickup}</div>
+                        <div className="text-xs text-muted-foreground">Pickup Orders</div>
+                        <div className="text-sm font-medium text-amber-600 dark:text-amber-400">{formatCurrency(orderTypeData.totals.pickupRev)}</div>
+                      </div>
+                      <div className="bg-green-50 dark:bg-green-950/30 rounded-lg p-3 text-center">
+                        <div className="text-2xl font-bold text-green-700 dark:text-green-400">{orderTypeData.totals.instore}</div>
+                        <div className="text-xs text-muted-foreground">Dine-in Orders</div>
+                        <div className="text-sm font-medium text-green-600 dark:text-green-400">{formatCurrency(orderTypeData.totals.instoreRev)}</div>
+                      </div>
+                      <div className="bg-purple-50 dark:bg-purple-950/30 rounded-lg p-3 text-center">
+                        <div className="text-2xl font-bold text-purple-700 dark:text-purple-400">{formatCurrency(orderTypeData.totals.deliveryCharges)}</div>
+                        <div className="text-xs text-muted-foreground">Delivery Charges</div>
+                        <div className="text-sm font-medium text-purple-600 dark:text-purple-400">Collected</div>
+                      </div>
+                    </div>
+
+                    {/* Monthly Table */}
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="border-b">
+                            <th className="text-left py-2 px-2 font-medium">Month</th>
+                            <th className="text-center py-2 px-2 font-medium">Delivery</th>
+                            <th className="text-right py-2 px-2 font-medium">Del. Revenue</th>
+                            <th className="text-center py-2 px-2 font-medium">Pickup</th>
+                            <th className="text-right py-2 px-2 font-medium">Pickup Rev.</th>
+                            <th className="text-center py-2 px-2 font-medium">Dine-in</th>
+                            <th className="text-right py-2 px-2 font-medium">Dine-in Rev.</th>
+                            <th className="text-right py-2 px-2 font-medium">Del. Charges</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {orderTypeData.monthly.map((m, idx) => {
+                            const totalOrders = m.delivery + m.pickup + m.instore;
+                            return (
+                              <tr key={m.monthKey} className={idx % 2 === 1 ? 'bg-muted/30' : ''}>
+                                <td className="py-2 px-2 font-medium">{m.month}</td>
+                                <td className="text-center py-2 px-2">
+                                  <span className="font-medium">{m.delivery}</span>
+                                  <span className="text-xs text-muted-foreground ml-1">({totalOrders > 0 ? ((m.delivery / totalOrders) * 100).toFixed(0) : 0}%)</span>
+                                </td>
+                                <td className="text-right py-2 px-2">{formatCurrency(m.deliveryRev)}</td>
+                                <td className="text-center py-2 px-2">
+                                  <span className="font-medium">{m.pickup}</span>
+                                  <span className="text-xs text-muted-foreground ml-1">({totalOrders > 0 ? ((m.pickup / totalOrders) * 100).toFixed(0) : 0}%)</span>
+                                </td>
+                                <td className="text-right py-2 px-2">{formatCurrency(m.pickupRev)}</td>
+                                <td className="text-center py-2 px-2">
+                                  <span className="font-medium">{m.instore}</span>
+                                  <span className="text-xs text-muted-foreground ml-1">({totalOrders > 0 ? ((m.instore / totalOrders) * 100).toFixed(0) : 0}%)</span>
+                                </td>
+                                <td className="text-right py-2 px-2">{formatCurrency(m.instoreRev)}</td>
+                                <td className="text-right py-2 px-2">{formatCurrency(m.deliveryCharges)}</td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+
+                    {/* AOV by Order Type */}
+                    <div>
+                      <h4 className="text-sm font-medium text-muted-foreground mb-2">Average Order Value by Type</h4>
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-sm">
+                          <thead>
+                            <tr className="border-b">
+                              <th className="text-left py-2 px-2 font-medium">Month</th>
+                              <th className="text-right py-2 px-2 font-medium">Delivery AOV</th>
+                              <th className="text-right py-2 px-2 font-medium">Pickup AOV</th>
+                              <th className="text-right py-2 px-2 font-medium">Dine-in AOV</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {orderTypeData.monthly.map((m, idx) => (
+                              <tr key={m.monthKey} className={idx % 2 === 1 ? 'bg-muted/30' : ''}>
+                                <td className="py-2 px-2 font-medium">{m.month}</td>
+                                <td className="text-right py-2 px-2">{m.avgDeliveryOrder > 0 ? formatCurrency(m.avgDeliveryOrder) : '—'}</td>
+                                <td className="text-right py-2 px-2">{m.avgPickupOrder > 0 ? formatCurrency(m.avgPickupOrder) : '—'}</td>
+                                <td className="text-right py-2 px-2">{m.avgInstoreOrder > 0 ? formatCurrency(m.avgInstoreOrder) : '—'}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-muted-foreground">No data available</div>
+                )}
+              </CardContent>
+            </Card>
           </TabsContent>
 
           {/* Products Tab */}

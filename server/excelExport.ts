@@ -327,7 +327,7 @@ export async function handleSalesReportExport(req: Request, res: Response) {
     // --- Section 2: Monthly Sales Breakdown ---
     // Group orders by month
     const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    type MonthStats = { orders: number; revenue: number; delivery: number; deliveryRev: number; pickup: number; pickupRev: number; instore: number; instoreRev: number; avgOrderValue: number };
+    type MonthStats = { orders: number; revenue: number; delivery: number; deliveryRev: number; pickup: number; pickupRev: number; instore: number; instoreRev: number; avgOrderValue: number; deliveryCharges: number };
     const monthlyStats: Record<string, MonthStats> = {};
 
     const getMonthKey = (d: Date | string): string => {
@@ -341,12 +341,12 @@ export async function handleSalesReportExport(req: Request, res: Response) {
 
     for (const order of completedOrders) {
       const mk = getMonthKey(order.createdAt);
-      if (!monthlyStats[mk]) monthlyStats[mk] = { orders: 0, revenue: 0, delivery: 0, deliveryRev: 0, pickup: 0, pickupRev: 0, instore: 0, instoreRev: 0, avgOrderValue: 0 };
+      if (!monthlyStats[mk]) monthlyStats[mk] = { orders: 0, revenue: 0, delivery: 0, deliveryRev: 0, pickup: 0, pickupRev: 0, instore: 0, instoreRev: 0, avgOrderValue: 0, deliveryCharges: 0 };
       const total = toRupees(order.totalAmount);
       monthlyStats[mk].orders++;
       monthlyStats[mk].revenue += total;
       const ot = (order.orderType || 'instore').toLowerCase();
-      if (ot === 'delivery') { monthlyStats[mk].delivery++; monthlyStats[mk].deliveryRev += total; }
+      if (ot === 'delivery') { monthlyStats[mk].delivery++; monthlyStats[mk].deliveryRev += total; monthlyStats[mk].deliveryCharges += toRupees(order.deliveryCharge || 0); }
       else if (ot === 'pickup') { monthlyStats[mk].pickup++; monthlyStats[mk].pickupRev += total; }
       else { monthlyStats[mk].instore++; monthlyStats[mk].instoreRev += total; }
     }
@@ -577,6 +577,34 @@ export async function handleSalesReportExport(req: Request, res: Response) {
       styleDataRow(row, 4, false, { currencyCols: [3], centerCols: [2, 4] });
       sumRowNum++;
     }
+
+    // --- Section 8: Delivery Charges Summary ---
+    sumRowNum += 1;
+    sumRowNum = addSectionTitle(summarySheet, sumRowNum, 'Delivery Charges Summary', SUM_COLS);
+    const delChargeHeaders = ['Month', 'Delivery Orders', 'Delivery Revenue', 'Delivery Charges Collected', 'Avg Delivery Charge'];
+    const dchRow = summarySheet.getRow(sumRowNum);
+    delChargeHeaders.forEach((h, idx) => { dchRow.getCell(idx + 1).value = h; });
+    styleHeaderRow(dchRow, 5);
+    sumRowNum++;
+
+    let totalDelOrders = 0, totalDelRevenue = 0, totalDelCharges = 0;
+    for (let i = 0; i < sortedMonths.length; i++) {
+      const mk = sortedMonths[i];
+      const s = monthlyStats[mk];
+      const row = summarySheet.getRow(sumRowNum);
+      const avgCharge = s.delivery > 0 ? round2(s.deliveryCharges / s.delivery) : 0;
+      row.values = [getMonthLabel(mk), s.delivery, round2(s.deliveryRev), round2(s.deliveryCharges), avgCharge];
+      styleDataRow(row, 5, i % 2 === 1, { currencyCols: [3, 4, 5], centerCols: [2] });
+      totalDelOrders += s.delivery;
+      totalDelRevenue += s.deliveryRev;
+      totalDelCharges += s.deliveryCharges;
+      sumRowNum++;
+    }
+    const delTotalRow = summarySheet.getRow(sumRowNum);
+    const avgDelCharge = totalDelOrders > 0 ? round2(totalDelCharges / totalDelOrders) : 0;
+    delTotalRow.values = ['TOTAL', totalDelOrders, round2(totalDelRevenue), round2(totalDelCharges), avgDelCharge];
+    styleSubtotalRow(delTotalRow, 5, { currencyCols: [3, 4, 5], centerCols: [2] });
+    sumRowNum += 2;
 
     // ===== Sheet 3: GST Summary =====
     // Two sections only: Retail Orders GST (Daily) and B2B / External Invoices GST

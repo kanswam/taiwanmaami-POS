@@ -5302,6 +5302,62 @@ export const appRouter = router({
         };
       }),
 
+    // Order Type Breakdown (monthly)
+    getOrderTypeBreakdown: adminProcedure
+      .input(z.object({
+        startDate: z.string().optional(),
+        endDate: z.string().optional(),
+      }).optional())
+      .query(async ({ input }) => {
+        const dbInstance = await getDb();
+        if (!dbInstance) return { monthly: [], totals: { delivery: 0, deliveryRev: 0, pickup: 0, pickupRev: 0, instore: 0, instoreRev: 0, deliveryCharges: 0 } };
+
+        let conditions: any[] = [sql`${orders.orderStatus} != 'cancelled'`];
+        if (input?.startDate) conditions.push(sql`${orders.createdAt} >= ${input.startDate}`);
+        if (input?.endDate) conditions.push(sql`${orders.createdAt} <= ${input.endDate + ' 23:59:59'}`);
+
+        const matchingOrders = await dbInstance.select({
+          createdAt: orders.createdAt,
+          orderType: orders.orderType,
+          totalAmount: orders.totalAmount,
+          deliveryCharge: orders.deliveryCharge,
+        }).from(orders).where(and(...conditions));
+
+        const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        type MonthData = { month: string; monthKey: string; delivery: number; deliveryRev: number; pickup: number; pickupRev: number; instore: number; instoreRev: number; total: number; totalRev: number; deliveryCharges: number; avgDeliveryOrder: number; avgPickupOrder: number; avgInstoreOrder: number };
+        const monthMap: Record<string, MonthData> = {};
+
+        let totDelivery = 0, totDeliveryRev = 0, totPickup = 0, totPickupRev = 0, totInstore = 0, totInstoreRev = 0, totDelCharges = 0;
+
+        for (const o of matchingOrders) {
+          const d = new Date(o.createdAt);
+          const mk = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+          if (!monthMap[mk]) monthMap[mk] = { month: `${monthNames[d.getMonth()]} ${d.getFullYear()}`, monthKey: mk, delivery: 0, deliveryRev: 0, pickup: 0, pickupRev: 0, instore: 0, instoreRev: 0, total: 0, totalRev: 0, deliveryCharges: 0, avgDeliveryOrder: 0, avgPickupOrder: 0, avgInstoreOrder: 0 };
+          const m = monthMap[mk];
+          const amt = o.totalAmount;
+          const delCharge = o.deliveryCharge || 0;
+          m.total++;
+          m.totalRev += amt;
+          const ot = (o.orderType || 'instore').toLowerCase();
+          if (ot === 'delivery') { m.delivery++; m.deliveryRev += amt; m.deliveryCharges += delCharge; totDelivery++; totDeliveryRev += amt; totDelCharges += delCharge; }
+          else if (ot === 'pickup') { m.pickup++; m.pickupRev += amt; totPickup++; totPickupRev += amt; }
+          else { m.instore++; m.instoreRev += amt; totInstore++; totInstoreRev += amt; }
+        }
+
+        // Calculate AOVs
+        for (const m of Object.values(monthMap)) {
+          m.avgDeliveryOrder = m.delivery > 0 ? Math.round(m.deliveryRev / m.delivery) : 0;
+          m.avgPickupOrder = m.pickup > 0 ? Math.round(m.pickupRev / m.pickup) : 0;
+          m.avgInstoreOrder = m.instore > 0 ? Math.round(m.instoreRev / m.instore) : 0;
+        }
+
+        const monthly = Object.values(monthMap).sort((a, b) => a.monthKey.localeCompare(b.monthKey));
+        return {
+          monthly,
+          totals: { delivery: totDelivery, deliveryRev: totDeliveryRev, pickup: totPickup, pickupRev: totPickupRev, instore: totInstore, instoreRev: totInstoreRev, deliveryCharges: totDelCharges },
+        };
+      }),
+
     // Sales by Category
     getSalesByCategory: adminProcedure
       .input(z.object({
