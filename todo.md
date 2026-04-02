@@ -2788,3 +2788,7 @@ Orders fixed:
 ## Fix: KOT Report Peak Hours Recommendations (Apr 2)
 - [x] Fix peak hours recommendations showing "High volume" for every time slot regardless of order count
 - [x] Use meaningful thresholds (low/moderate/high) based on actual order distribution
+
+## Add Order Type to Sales Report Export (Apr 2)
+- [x] Add Order Type column (Delivery/Pickup/Dine-in) to Sales Report sheet in Excel export
+- [x] Ensure the column is populated from the orders table orderType field

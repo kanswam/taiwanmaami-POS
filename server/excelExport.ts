@@ -171,11 +171,11 @@ export async function handleSalesReportExport(req: Request, res: Response) {
 
     // ===== Sheet 1: Sales Report (Retail Transactions) =====
     const salesSheet = workbook.addWorksheet('Sales Report');
-    const SALES_COLS = 11;
+    const SALES_COLS = 12;
     addTitleBlock(salesSheet, 'Taiwan Maami — Sales Report', `Period: ${formatDate(startDate)} to ${formatDate(endDate)}  ·  ${totalRetailTransactions} retail transactions`, SALES_COLS);
 
     const headers = [
-      'S.No', 'Invoice No.', 'Date', 'Source', 'Outlet',
+      'S.No', 'Invoice No.', 'Date', 'Source', 'Order Type', 'Outlet',
       'Taxable Amount', 'CGST', 'SGST', 'Total GST',
       'Total Amount', 'Payment Method'
     ];
@@ -184,9 +184,9 @@ export async function handleSalesReportExport(req: Request, res: Response) {
     styleHeaderRow(headerRow, SALES_COLS);
 
     setColumnWidths(salesSheet, [
-      [1, 6], [2, 18], [3, 14], [4, 14], [5, 16],
-      [6, 18], [7, 14], [8, 14], [9, 14],
-      [10, 18], [11, 18],
+      [1, 6], [2, 18], [3, 14], [4, 14], [5, 14], [6, 16],
+      [7, 18], [8, 14], [9, 14], [10, 14],
+      [11, 18], [12, 18],
     ]);
 
     let rowNum = 5;
@@ -207,12 +207,18 @@ export async function handleSalesReportExport(req: Request, res: Response) {
       retailGst += gst;
       retailTotal += total;
 
+      // Format order type for display
+      const orderTypeLabel = (order.orderType || 'instore').toLowerCase() === 'delivery' ? 'Delivery'
+        : (order.orderType || 'instore').toLowerCase() === 'pickup' ? 'Pickup'
+        : 'Dine-in';
+
       const row = salesSheet.getRow(rowNum);
       row.values = [
         serialNo++,
         order.orderNumber,
         formatDate(order.createdAt),
         'Order',
+        orderTypeLabel,
         outletName(order.outletId),
         round2(taxable),
         round2(cgst),
@@ -223,8 +229,8 @@ export async function handleSalesReportExport(req: Request, res: Response) {
       ];
 
       styleDataRow(row, SALES_COLS, serialNo % 2 === 0, {
-        currencyCols: [6, 7, 8, 9, 10],
-        centerCols: [1, 3],
+        currencyCols: [7, 8, 9, 10, 11],
+        centerCols: [1, 3, 5],
       });
       rowNum++;
     }
@@ -251,6 +257,7 @@ export async function handleSalesReportExport(req: Request, res: Response) {
         booking.bookingNumber,
         formatDate(booking.createdAt),
         'Workshop',
+        '—',
         'T. Nagar',
         round2(taxable),
         round2(cgst),
@@ -261,8 +268,8 @@ export async function handleSalesReportExport(req: Request, res: Response) {
       ];
 
       styleDataRow(row, SALES_COLS, false, {
-        currencyCols: [6, 7, 8, 9, 10],
-        centerCols: [1, 3],
+        currencyCols: [7, 8, 9, 10, 11],
+        centerCols: [1, 3, 5],
         customBg: BRAND.WORKSHOP_BG,
       });
       rowNum++;
