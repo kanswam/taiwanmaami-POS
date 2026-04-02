@@ -2783,4 +2783,4 @@ Orders fixed:
 
 ## Razorpay Test Mode (Temporary - Apr 2)
 - [x] Swapped RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET to test keys for partner program testing
-- [ ] Swap back to live keys after testing is complete
+- [x] Swap back to live keys after testing is complete
