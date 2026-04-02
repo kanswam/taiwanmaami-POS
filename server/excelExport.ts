@@ -287,55 +287,218 @@ export async function handleSalesReportExport(req: Request, res: Response) {
 
     // ===== Sheet 2: Summary =====
     const summarySheet = workbook.addWorksheet('Summary');
-    const SUM_COLS = 4;
+    const SUM_COLS = 7;
     addTitleBlock(summarySheet, `Taiwan Maami — Sales Summary`, `${formatDate(startDate)} to ${formatDate(endDate)}`, SUM_COLS);
 
-    const sumHeaders = ['Category', 'Count', 'Taxable Amount', 'Total Amount'];
-    const sumHeaderRow = summarySheet.getRow(4);
-    sumHeaders.forEach((h, idx) => { sumHeaderRow.getCell(idx + 1).value = h; });
-    styleHeaderRow(sumHeaderRow, SUM_COLS);
-
     setColumnWidths(summarySheet, [
-      [1, 30], [2, 12], [3, 22], [4, 22],
+      [1, 28], [2, 14], [3, 20], [4, 20], [5, 20], [6, 20], [7, 14],
     ]);
 
     const b2bTaxableTotal = toRupees(b2bResults.reduce((s, i) => s + i.subtotal, 0));
     const b2bAmountTotal = toRupees(b2bResults.reduce((s, i) => s + i.totalAmount, 0));
+    const allTaxable = retailTaxable + workshopTaxable + b2bTaxableTotal;
+    const allTotal = retailTotal + workshopTotal + b2bAmountTotal;
+
+    // --- Section 1: Overall Summary ---
+    let sumRowNum = 4;
+    sumRowNum = addSectionTitle(summarySheet, sumRowNum, 'Overall Summary', SUM_COLS);
+    const overallHeaders = ['Category', 'Orders', 'Taxable Amount', 'Total Amount'];
+    const ohRow = summarySheet.getRow(sumRowNum);
+    overallHeaders.forEach((h, idx) => { ohRow.getCell(idx + 1).value = h; });
+    styleHeaderRow(ohRow, 4);
+    sumRowNum++;
 
     const summaryData: [string, number, number, number][] = [
       ['Food & Beverage Orders', completedOrders.length, round2(retailTaxable), round2(retailTotal)],
       ['Workshop Bookings', paidWorkshops.length, round2(workshopTaxable), round2(workshopTotal)],
       ['B2B / External Invoices', b2bResults.length, round2(b2bTaxableTotal), round2(b2bAmountTotal)],
     ];
-
-    let sumRowNum = 5;
     summaryData.forEach(([label, count, taxable, amount], idx) => {
       const row = summarySheet.getRow(sumRowNum);
       row.values = [label, count, taxable, amount];
-      styleDataRow(row, SUM_COLS, idx % 2 === 1, {
-        currencyCols: [3, 4],
-        centerCols: [2],
-      });
+      styleDataRow(row, 4, idx % 2 === 1, { currencyCols: [3, 4], centerCols: [2] });
       sumRowNum++;
     });
-
-    // Grand Total
-    const allTaxable = retailTaxable + workshopTaxable + b2bTaxableTotal;
-    const allTotal = retailTotal + workshopTotal + b2bAmountTotal;
     const grandRow = summarySheet.getRow(sumRowNum);
-    grandRow.values = [
-      'GRAND TOTAL',
-      totalRetailTransactions + b2bResults.length,
-      round2(allTaxable),
-      round2(allTotal),
-    ];
-    styleSubtotalRow(grandRow, SUM_COLS, {
-      currencyCols: [3, 4],
-      centerCols: [2],
-    });
+    grandRow.values = ['GRAND TOTAL', totalRetailTransactions + b2bResults.length, round2(allTaxable), round2(allTotal)];
+    styleSubtotalRow(grandRow, 4, { currencyCols: [3, 4], centerCols: [2] });
     sumRowNum += 2;
 
-    // GST Breakdown
+    // --- Section 2: Monthly Sales Breakdown ---
+    // Group orders by month
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    type MonthStats = { orders: number; revenue: number; delivery: number; deliveryRev: number; pickup: number; pickupRev: number; instore: number; instoreRev: number; avgOrderValue: number };
+    const monthlyStats: Record<string, MonthStats> = {};
+
+    const getMonthKey = (d: Date | string): string => {
+      if (typeof d === 'string') d = new Date(d);
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+    };
+    const getMonthLabel = (key: string): string => {
+      const [y, m] = key.split('-');
+      return `${monthNames[parseInt(m) - 1]} ${y}`;
+    };
+
+    for (const order of completedOrders) {
+      const mk = getMonthKey(order.createdAt);
+      if (!monthlyStats[mk]) monthlyStats[mk] = { orders: 0, revenue: 0, delivery: 0, deliveryRev: 0, pickup: 0, pickupRev: 0, instore: 0, instoreRev: 0, avgOrderValue: 0 };
+      const total = toRupees(order.totalAmount);
+      monthlyStats[mk].orders++;
+      monthlyStats[mk].revenue += total;
+      const ot = (order.orderType || 'instore').toLowerCase();
+      if (ot === 'delivery') { monthlyStats[mk].delivery++; monthlyStats[mk].deliveryRev += total; }
+      else if (ot === 'pickup') { monthlyStats[mk].pickup++; monthlyStats[mk].pickupRev += total; }
+      else { monthlyStats[mk].instore++; monthlyStats[mk].instoreRev += total; }
+    }
+
+    // Calculate AOV per month
+    for (const mk of Object.keys(monthlyStats)) {
+      const s = monthlyStats[mk];
+      s.avgOrderValue = s.orders > 0 ? s.revenue / s.orders : 0;
+    }
+
+    const sortedMonths = Object.keys(monthlyStats).sort();
+
+    sumRowNum = addSectionTitle(summarySheet, sumRowNum, 'Monthly Sales Breakdown', SUM_COLS);
+    const monthHeaders = ['Month', 'Orders', 'Revenue', 'Avg. Order Value', 'Delivery', 'Pickup', 'Dine-in'];
+    const mhRow = summarySheet.getRow(sumRowNum);
+    monthHeaders.forEach((h, idx) => { mhRow.getCell(idx + 1).value = h; });
+    styleHeaderRow(mhRow, SUM_COLS);
+    sumRowNum++;
+
+    let prevMonthRev = 0;
+    for (let i = 0; i < sortedMonths.length; i++) {
+      const mk = sortedMonths[i];
+      const s = monthlyStats[mk];
+      const row = summarySheet.getRow(sumRowNum);
+      row.values = [
+        getMonthLabel(mk),
+        s.orders,
+        round2(s.revenue),
+        round2(s.avgOrderValue),
+        s.delivery,
+        s.pickup,
+        s.instore,
+      ];
+      styleDataRow(row, SUM_COLS, i % 2 === 1, { currencyCols: [3, 4], centerCols: [2, 5, 6, 7] });
+      sumRowNum++;
+      prevMonthRev = s.revenue;
+    }
+
+    // Monthly totals
+    const totalDelivery = Object.values(monthlyStats).reduce((s, m) => s + m.delivery, 0);
+    const totalPickup = Object.values(monthlyStats).reduce((s, m) => s + m.pickup, 0);
+    const totalInstore = Object.values(monthlyStats).reduce((s, m) => s + m.instore, 0);
+    const totalMonthlyRev = Object.values(monthlyStats).reduce((s, m) => s + m.revenue, 0);
+    const overallAov = completedOrders.length > 0 ? totalMonthlyRev / completedOrders.length : 0;
+    const monthTotalRow = summarySheet.getRow(sumRowNum);
+    monthTotalRow.values = ['TOTAL', completedOrders.length, round2(totalMonthlyRev), round2(overallAov), totalDelivery, totalPickup, totalInstore];
+    styleSubtotalRow(monthTotalRow, SUM_COLS, { currencyCols: [3, 4], centerCols: [2, 5, 6, 7] });
+    sumRowNum += 2;
+
+    // --- Section 3: Monthly Revenue by Order Type ---
+    sumRowNum = addSectionTitle(summarySheet, sumRowNum, 'Monthly Revenue by Order Type', SUM_COLS);
+    const revHeaders = ['Month', 'Delivery Revenue', '% of Total', 'Pickup Revenue', '% of Total', 'Dine-in Revenue', '% of Total'];
+    const rvhRow = summarySheet.getRow(sumRowNum);
+    revHeaders.forEach((h, idx) => { rvhRow.getCell(idx + 1).value = h; });
+    styleHeaderRow(rvhRow, SUM_COLS);
+    sumRowNum++;
+
+    for (let i = 0; i < sortedMonths.length; i++) {
+      const mk = sortedMonths[i];
+      const s = monthlyStats[mk];
+      const row = summarySheet.getRow(sumRowNum);
+      const delPct = s.revenue > 0 ? `${((s.deliveryRev / s.revenue) * 100).toFixed(1)}%` : '0%';
+      const pickPct = s.revenue > 0 ? `${((s.pickupRev / s.revenue) * 100).toFixed(1)}%` : '0%';
+      const inPct = s.revenue > 0 ? `${((s.instoreRev / s.revenue) * 100).toFixed(1)}%` : '0%';
+      row.values = [
+        getMonthLabel(mk),
+        round2(s.deliveryRev),
+        delPct,
+        round2(s.pickupRev),
+        pickPct,
+        round2(s.instoreRev),
+        inPct,
+      ];
+      styleDataRow(row, SUM_COLS, i % 2 === 1, { currencyCols: [2, 4, 6], centerCols: [3, 5, 7] });
+      sumRowNum++;
+    }
+
+    // Revenue totals
+    const totalDelRev = Object.values(monthlyStats).reduce((s, m) => s + m.deliveryRev, 0);
+    const totalPickRev = Object.values(monthlyStats).reduce((s, m) => s + m.pickupRev, 0);
+    const totalInsRev = Object.values(monthlyStats).reduce((s, m) => s + m.instoreRev, 0);
+    const revTotalRow = summarySheet.getRow(sumRowNum);
+    const tDelPct = totalMonthlyRev > 0 ? `${((totalDelRev / totalMonthlyRev) * 100).toFixed(1)}%` : '0%';
+    const tPickPct = totalMonthlyRev > 0 ? `${((totalPickRev / totalMonthlyRev) * 100).toFixed(1)}%` : '0%';
+    const tInPct = totalMonthlyRev > 0 ? `${((totalInsRev / totalMonthlyRev) * 100).toFixed(1)}%` : '0%';
+    revTotalRow.values = ['TOTAL', round2(totalDelRev), tDelPct, round2(totalPickRev), tPickPct, round2(totalInsRev), tInPct];
+    styleSubtotalRow(revTotalRow, SUM_COLS, { currencyCols: [2, 4, 6], centerCols: [3, 5, 7] });
+    sumRowNum += 2;
+
+    // --- Section 4: Month-over-Month Growth ---
+    if (sortedMonths.length >= 2) {
+      sumRowNum = addSectionTitle(summarySheet, sumRowNum, 'Month-over-Month Growth', SUM_COLS);
+      const growthHeaders = ['Month', 'Revenue', 'MoM Change', 'MoM %', 'Orders', 'Order Change', 'AOV Change'];
+      const ghRow = summarySheet.getRow(sumRowNum);
+      growthHeaders.forEach((h, idx) => { ghRow.getCell(idx + 1).value = h; });
+      styleHeaderRow(ghRow, SUM_COLS);
+      sumRowNum++;
+
+      for (let i = 0; i < sortedMonths.length; i++) {
+        const mk = sortedMonths[i];
+        const s = monthlyStats[mk];
+        const row = summarySheet.getRow(sumRowNum);
+
+        if (i === 0) {
+          row.values = [getMonthLabel(mk), round2(s.revenue), '—', '—', s.orders, '—', '—'];
+        } else {
+          const prev = monthlyStats[sortedMonths[i - 1]];
+          const revChange = s.revenue - prev.revenue;
+          const revPct = prev.revenue > 0 ? ((revChange / prev.revenue) * 100).toFixed(1) + '%' : 'N/A';
+          const ordChange = s.orders - prev.orders;
+          const aovChange = s.avgOrderValue - prev.avgOrderValue;
+          row.values = [
+            getMonthLabel(mk),
+            round2(s.revenue),
+            round2(revChange),
+            (revChange >= 0 ? '+' : '') + revPct,
+            s.orders,
+            (ordChange >= 0 ? '+' : '') + ordChange,
+            (aovChange >= 0 ? '+₹' : '-₹') + Math.abs(round2(aovChange)),
+          ];
+        }
+        styleDataRow(row, SUM_COLS, i % 2 === 1, { currencyCols: [2, 3], centerCols: [4, 5, 6, 7] });
+        sumRowNum++;
+      }
+      sumRowNum += 1;
+    }
+
+    // --- Section 5: Average Order Value by Order Type ---
+    sumRowNum = addSectionTitle(summarySheet, sumRowNum, 'Average Order Value by Order Type', SUM_COLS);
+    const aovHeaders = ['Month', 'Overall AOV', 'Delivery AOV', 'Pickup AOV', 'Dine-in AOV'];
+    const aovhRow = summarySheet.getRow(sumRowNum);
+    aovHeaders.forEach((h, idx) => { aovhRow.getCell(idx + 1).value = h; });
+    styleHeaderRow(aovhRow, 5);
+    sumRowNum++;
+
+    for (let i = 0; i < sortedMonths.length; i++) {
+      const mk = sortedMonths[i];
+      const s = monthlyStats[mk];
+      const row = summarySheet.getRow(sumRowNum);
+      row.values = [
+        getMonthLabel(mk),
+        round2(s.avgOrderValue),
+        s.delivery > 0 ? round2(s.deliveryRev / s.delivery) : 0,
+        s.pickup > 0 ? round2(s.pickupRev / s.pickup) : 0,
+        s.instore > 0 ? round2(s.instoreRev / s.instore) : 0,
+      ];
+      styleDataRow(row, 5, i % 2 === 1, { currencyCols: [2, 3, 4, 5], centerCols: [] });
+      sumRowNum++;
+    }
+    sumRowNum += 1;
+
+    // --- Section 6: GST Breakdown ---
     const b2bTotalCgst = toRupees(b2bResults.reduce((s, i) => s + i.cgst, 0));
     const b2bTotalSgst = toRupees(b2bResults.reduce((s, i) => s + i.sgst, 0));
     const b2bTotalIgst = toRupees(b2bResults.reduce((s, i) => s + i.igst, 0));
@@ -378,8 +541,14 @@ export async function handleSalesReportExport(req: Request, res: Response) {
     }
     sumRowNum += 2;
 
-    // Payment method breakdown
+    // --- Section 7: Payment Method Breakdown ---
     sumRowNum = addSectionTitle(summarySheet, sumRowNum, 'Payment Method Breakdown', SUM_COLS);
+    const pmHeaders = ['Payment Method', 'No. of Transactions', 'Total Amount', '% of Revenue'];
+    const pmhRow = summarySheet.getRow(sumRowNum);
+    pmHeaders.forEach((h, idx) => { pmhRow.getCell(idx + 1).value = h; });
+    styleHeaderRow(pmhRow, 4);
+    sumRowNum++;
+
     const paymentMethods: Record<string, { count: number; total: number }> = {};
     for (const order of completedOrders) {
       const method = (order.paymentMethod || 'N/A').replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
@@ -399,18 +568,13 @@ export async function handleSalesReportExport(req: Request, res: Response) {
       paymentMethods[method].count++;
       paymentMethods[method].total += toRupees(inv.amountReceived);
     }
+    const pmTotalRev = Object.values(paymentMethods).reduce((s, d) => s + d.total, 0);
     const sortedPayMethods = Object.entries(paymentMethods).sort((a, b) => b[1].total - a[1].total);
     for (const [method, data] of sortedPayMethods) {
       const row = summarySheet.getRow(sumRowNum);
-      row.getCell(1).value = method;
-      row.getCell(1).font = { size: 11, name: 'Calibri' };
-      row.getCell(2).value = data.count;
-      row.getCell(2).alignment = { horizontal: 'center' };
-      row.getCell(2).font = { size: 11, name: 'Calibri' };
-      row.getCell(3).value = round2(data.total);
-      row.getCell(3).numFmt = FMT.CURRENCY_SYMBOL;
-      row.getCell(3).alignment = { horizontal: 'right' };
-      row.getCell(3).font = { size: 11, name: 'Calibri' };
+      const pct = pmTotalRev > 0 ? `${((data.total / pmTotalRev) * 100).toFixed(1)}%` : '0%';
+      row.values = [method, data.count, round2(data.total), pct];
+      styleDataRow(row, 4, false, { currencyCols: [3], centerCols: [2, 4] });
       sumRowNum++;
     }
 

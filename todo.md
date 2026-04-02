@@ -2792,3 +2792,10 @@ Orders fixed:
 ## Add Order Type to Sales Report Export (Apr 2)
 - [x] Add Order Type column (Delivery/Pickup/Dine-in) to Sales Report sheet in Excel export
 - [x] Ensure the column is populated from the orders table orderType field
+
+## Enhanced Summary Sheet with Monthly Breakdown & Insights (Apr 2)
+- [x] Add month-wise sales breakdown table (orders, revenue per month)
+- [x] Add order type breakdown per month (Delivery/Pickup/Dine-in counts and revenue)
+- [x] Add payment method breakdown per month (with % of revenue)
+- [x] Add average order value insights (overall, by order type, by month)
+- [x] Add growth/trend indicators (MoM change)
