@@ -5046,16 +5046,29 @@ export const appRouter = router({
           }))
           .sort((a, b) => a.hour - b.hour);
         
-        // Find peak hours (hours with above-average orders)
-        const avgOrdersPerHour = dailyKots.length / 24;
-        const peakHours = hourlyBreakdown
-          .filter(h => h.count > avgOrdersPerHour && h.count > 0)
+        // Find peak hours — use meaningful thresholds based on active hours only
+        const activeHours = hourlyBreakdown.filter(h => h.count > 0);
+        const avgOrdersPerActiveHour = activeHours.length > 0 ? dailyKots.length / activeHours.length : 0;
+        const maxOrders = activeHours.length > 0 ? Math.max(...activeHours.map(h => h.count)) : 0;
+        
+        const getRecommendation = (count: number): string => {
+          if (maxOrders === 0) return 'No orders';
+          const ratio = count / avgOrdersPerActiveHour;
+          // Also consider absolute volume
+          if (ratio >= 2 && count >= 5) return 'Peak hour — schedule extra staff';
+          if (ratio >= 1.5 && count >= 4) return 'Busy — ensure full staffing';
+          if (ratio >= 1) return 'Moderate — standard staffing';
+          if (count >= 2) return 'Light — standard staffing sufficient';
+          return 'Quiet — minimal staffing needed';
+        };
+        
+        const peakHours = activeHours
           .sort((a, b) => b.count - a.count)
           .slice(0, 5)
           .map(h => ({
             hour: h.hourLabel,
             orders: h.count,
-            recommendation: h.count > avgOrdersPerHour * 2 ? 'High volume - add extra staff' : 'Moderate volume - standard staffing',
+            recommendation: getRecommendation(h.count),
           }));
         
         // Order type breakdown

@@ -2784,3 +2784,7 @@ Orders fixed:
 ## Razorpay Test Mode (Temporary - Apr 2)
 - [x] Swapped RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET to test keys for partner program testing
 - [x] Swap back to live keys after testing is complete
+
+## Fix: KOT Report Peak Hours Recommendations (Apr 2)
+- [x] Fix peak hours recommendations showing "High volume" for every time slot regardless of order count
+- [x] Use meaningful thresholds (low/moderate/high) based on actual order distribution
