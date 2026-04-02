@@ -2780,3 +2780,7 @@ Orders fixed:
 - [x] Remove event order rows from Sales Report sheet
 - [x] Remove event totals from Combined GST Summary calculations
 - [x] Update tests to reflect removal
+
+## Razorpay Test Mode (Temporary - Apr 2)
+- [x] Swapped RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET to test keys for partner program testing
+- [ ] Swap back to live keys after testing is complete
