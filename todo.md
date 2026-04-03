@@ -2812,3 +2812,8 @@ Orders fixed:
 ## Feature: Delivery Charge Summary in Export (Apr 2)
 - [x] Add delivery charge summary section to Excel export Summary sheet
 - [x] Show total delivery fees collected per month
+
+## Fix: Order Dashboard Default to Today's Orders (Apr 3)
+- [x] Default the admin order dashboard to show today's orders only
+- [x] Order counts (All Orders, In-Store, Delivery, Pickup) should reflect today's numbers
+- [x] Allow user to expand to other date ranges if needed

@@ -179,7 +179,8 @@ function generateOrderInvoice(order: any): string {
 // Orders Tab
 
 export default function OrdersTab() {
-  const { data: orders, refetch } = trpc.orders.getRecent.useQuery({ limit: 100 });
+  const [dateFilter, setDateFilter] = useState<'today' | 'yesterday' | 'week' | 'all'>('today');
+  const { data: orders, refetch } = trpc.orders.getRecent.useQuery({ limit: 200, dateFilter });
   const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null);
   const { data: orderDetails } = trpc.orders.getById.useQuery(
     { orderId: selectedOrderId! },
@@ -384,7 +385,9 @@ export default function OrdersTab() {
 
       <div className="flex justify-between items-center">
         <div className="flex items-center gap-3">
-          <h2 className="text-lg font-semibold">Recent Orders</h2>
+          <h2 className="text-lg font-semibold">
+            {dateFilter === 'today' ? "Today's Orders" : dateFilter === 'yesterday' ? "Yesterday's Orders" : dateFilter === 'week' ? 'This Week' : 'All Orders'}
+          </h2>
           <span className="text-xs text-muted-foreground bg-secondary px-2 py-1 rounded-full flex items-center gap-1">
             <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
             Auto-refresh 20s
@@ -422,6 +425,29 @@ export default function OrdersTab() {
             Refresh
           </Button>
         </div>
+      </div>
+
+      {/* Date Filter */}
+      <div className="flex gap-2 flex-wrap">
+        {[
+          { key: 'today' as const, label: 'Today', icon: '📅' },
+          { key: 'yesterday' as const, label: 'Yesterday', icon: '⏪' },
+          { key: 'week' as const, label: 'This Week', icon: '📆' },
+          { key: 'all' as const, label: 'All Time', icon: '📊' },
+        ].map(tab => (
+          <button
+            key={tab.key}
+            onClick={() => setDateFilter(tab.key)}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+              dateFilter === tab.key
+                ? 'bg-primary text-primary-foreground ring-2 ring-primary/50'
+                : 'bg-secondary/50 text-muted-foreground hover:bg-secondary'
+            }`}
+          >
+            <span>{tab.icon}</span>
+            <span>{tab.label}</span>
+          </button>
+        ))}
       </div>
 
       {/* Order Type Filter Tabs */}

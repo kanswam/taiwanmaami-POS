@@ -1067,16 +1067,41 @@ export const appRouter = router({
     // Staff can view recent orders
     getRecent: staffProcedure
       .input(z.object({ 
-        limit: z.number().default(50),
+        limit: z.number().default(200),
         outlet: z.enum(['all', 'palladium', 'tnagar']).optional(),
         orderType: z.enum(['all', 'instore', 'delivery', 'pickup']).optional(),
         status: z.enum(['all', 'pending', 'confirmed', 'preparing', 'ready', 'out_for_delivery', 'completed', 'cancelled']).optional(),
+        dateFilter: z.enum(['today', 'yesterday', 'week', 'all']).default('today'),
       }).optional())
       .query(async ({ input }) => {
         const dbInstance = await getDb();
         if (!dbInstance) return [];
         
         let conditions: any[] = [];
+        
+        // Date filter - default to today
+        const dateFilter = input?.dateFilter || 'today';
+        if (dateFilter !== 'all') {
+          const now = new Date();
+          // Use IST (UTC+5:30)
+          const istOffset = 5.5 * 60 * 60 * 1000;
+          const istNow = new Date(now.getTime() + istOffset);
+          let startDate: Date;
+          if (dateFilter === 'today') {
+            startDate = new Date(Date.UTC(istNow.getUTCFullYear(), istNow.getUTCMonth(), istNow.getUTCDate()) - istOffset);
+          } else if (dateFilter === 'yesterday') {
+            startDate = new Date(Date.UTC(istNow.getUTCFullYear(), istNow.getUTCMonth(), istNow.getUTCDate() - 1) - istOffset);
+          } else {
+            // week
+            startDate = new Date(Date.UTC(istNow.getUTCFullYear(), istNow.getUTCMonth(), istNow.getUTCDate() - 7) - istOffset);
+          }
+          conditions.push(gte(orders.createdAt, startDate));
+          // For yesterday, also add an upper bound
+          if (dateFilter === 'yesterday') {
+            const endDate = new Date(Date.UTC(istNow.getUTCFullYear(), istNow.getUTCMonth(), istNow.getUTCDate()) - istOffset);
+            conditions.push(sql`${orders.createdAt} < ${endDate}`);
+          }
+        }
         
         // Filter by outlet if specified - this website only handles T Nagar orders (outletId 2)
         if (input?.outlet && input.outlet !== 'all') {
@@ -1102,7 +1127,7 @@ export const appRouter = router({
           .from(orders)
           .where(whereClause)
           .orderBy(sql`${orders.createdAt} DESC`)
-          .limit(input?.limit || 50);
+          .limit(input?.limit || 200);
         
         // Get unredeemed rewards for registered CUSTOMER users in these orders (exclude staff/admin)
         const userIds = Array.from(new Set(recentOrders.filter(o => o.userId && o.userId > 0).map(o => o.userId!)));
