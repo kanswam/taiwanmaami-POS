@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
+import { Checkbox } from '@/components/ui/checkbox';
 import { useAuth } from '@/_core/hooks/useAuth';
 import { trpc } from '@/lib/trpc';
 import { formatPrice, GST_RATE } from '@shared/types';
@@ -209,6 +210,12 @@ export default function OrdersTab() {
   const [cancelItemDialog, setCancelItemDialog] = useState<{ open: boolean; item: any; order: any; reason: string }>({
     open: false, item: null, order: null, reason: ''
   });
+
+  // Merge Orders state
+  const [mergeMode, setMergeMode] = useState(false);
+  const [selectedMergeOrderIds, setSelectedMergeOrderIds] = useState<Set<number>>(new Set());
+  const [mergeDialogOpen, setMergeDialogOpen] = useState(false);
+  const [primaryOrderId, setPrimaryOrderId] = useState<number | null>(null);
   
   const updateStatus = trpc.orders.updateStatus.useMutation({
     onSuccess: () => {
@@ -290,6 +297,63 @@ export default function OrdersTab() {
     onError: (err: any) => toast.error(err.message || 'Failed to verify with Razorpay'),
   });
 
+
+  // Merge Orders mutation
+  const mergeOrders = trpc.orders.mergeOrders.useMutation({
+    onSuccess: (data) => {
+      toast.success(`Orders merged! ${data.itemCount} items now in Order #${data.primaryOrderNumber}. New total: ${formatPrice(data.newTotalAmount)}`);
+      setMergeMode(false);
+      setSelectedMergeOrderIds(new Set());
+      setMergeDialogOpen(false);
+      setPrimaryOrderId(null);
+      refetch();
+    },
+    onError: (err) => toast.error(err.message),
+  });
+
+  // Get mergeable orders (in-store, pending payment, not completed/cancelled)
+  const mergeableOrders = useMemo(() => {
+    if (!orders) return [];
+    return orders.filter((o: any) =>
+      o.orderType === 'instore' &&
+      o.paymentStatus === 'pending' &&
+      o.orderStatus !== 'completed' &&
+      o.orderStatus !== 'cancelled'
+    );
+  }, [orders]);
+
+  const toggleMergeSelection = (orderId: number) => {
+    setSelectedMergeOrderIds(prev => {
+      const next = new Set(prev);
+      if (next.has(orderId)) {
+        next.delete(orderId);
+      } else {
+        next.add(orderId);
+      }
+      return next;
+    });
+  };
+
+  const handleStartMerge = () => {
+    if (selectedMergeOrderIds.size < 2) {
+      toast.error('Select at least 2 orders to merge');
+      return;
+    }
+    // Default primary = the first (oldest) selected order
+    const ids = Array.from(selectedMergeOrderIds);
+    setPrimaryOrderId(ids[0]);
+    setMergeDialogOpen(true);
+  };
+
+  const handleConfirmMerge = () => {
+    if (!primaryOrderId) return;
+    const secondaryIds = Array.from(selectedMergeOrderIds).filter(id => id !== primaryOrderId);
+    if (secondaryIds.length === 0) {
+      toast.error('Need at least one secondary order to merge');
+      return;
+    }
+    mergeOrders.mutate({ primaryOrderId, secondaryOrderIds: secondaryIds });
+  };
 
   const handleApplyDiscount = () => {
     if (!discountOrderId || !discountValue) return;
@@ -424,8 +488,63 @@ export default function OrdersTab() {
             <RefreshCw className="w-4 h-4 mr-2" />
             Refresh
           </Button>
+          {/* Merge Orders Toggle */}
+          {mergeableOrders.length >= 2 && (
+            <Button
+              variant={mergeMode ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => {
+                if (mergeMode) {
+                  setMergeMode(false);
+                  setSelectedMergeOrderIds(new Set());
+                } else {
+                  setMergeMode(true);
+                }
+              }}
+              className={mergeMode ? 'bg-violet-600 hover:bg-violet-700 text-white' : 'border-violet-500 text-violet-600 hover:bg-violet-50'}
+            >
+              <GitMerge className="w-4 h-4 mr-1" />
+              {mergeMode ? 'Cancel Merge' : 'Merge Orders'}
+            </Button>
+          )}
         </div>
       </div>
+
+      {/* Merge Mode Banner */}
+      {mergeMode && (
+        <div className="bg-violet-50 border border-violet-200 rounded-lg p-3 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <GitMerge className="w-5 h-5 text-violet-600" />
+            <span className="text-sm font-medium text-violet-800">
+              Select 2 or more unpaid in-store orders to merge.
+              {selectedMergeOrderIds.size > 0 && (
+                <span className="ml-2 font-bold">{selectedMergeOrderIds.size} selected</span>
+              )}
+            </span>
+          </div>
+          <div className="flex gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => {
+                setMergeMode(false);
+                setSelectedMergeOrderIds(new Set());
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              size="sm"
+              disabled={selectedMergeOrderIds.size < 2}
+              className="bg-violet-600 hover:bg-violet-700 text-white"
+              onClick={handleStartMerge}
+            >
+              <GitMerge className="w-4 h-4 mr-1" />
+              Merge {selectedMergeOrderIds.size} Orders
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* Date Filter */}
       <div className="flex gap-2 flex-wrap">
@@ -491,6 +610,7 @@ export default function OrdersTab() {
           <table className="w-full">
             <thead className="bg-secondary">
               <tr>
+                {mergeMode && <th className="w-10 p-3"></th>}
                 <th className="text-left p-3 text-sm font-medium">Order #</th>
                 <th className="text-left p-3 text-sm font-medium">Customer</th>
                 <th className="text-left p-3 text-sm font-medium">Type</th>
@@ -503,7 +623,7 @@ export default function OrdersTab() {
             <tbody>
               {filteredOrders.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="p-8 text-center text-muted-foreground">
+                  <td colSpan={mergeMode ? 8 : 7} className="p-8 text-center text-muted-foreground">
                     No {orderTypeFilter !== 'all' ? orderTypeConfig[orderTypeFilter]?.label.toLowerCase() : ''} orders found
                   </td>
                 </tr>
@@ -511,15 +631,37 @@ export default function OrdersTab() {
               {filteredOrders.map((order: any) => {
                 const typeConf = orderTypeConfig[order.orderType] || orderTypeConfig.instore;
                 const isNew = newOrderIds.has(order.id);
+                const isMergeable = order.orderType === 'instore' && order.paymentStatus === 'pending' && order.orderStatus !== 'completed' && order.orderStatus !== 'cancelled';
+                const isSelectedForMerge = selectedMergeOrderIds.has(order.id);
                 return (
                 <tr 
                   key={order.id} 
                   className={`border-b hover:bg-secondary/50 cursor-pointer ${typeConf.border} ${
                     isNew ? 'animate-pulse bg-amber-50 ring-2 ring-amber-400 ring-inset' : ''
+                  } ${
+                    mergeMode && isSelectedForMerge ? 'bg-violet-50 ring-2 ring-violet-400 ring-inset' : ''
                   }`}
-                  onClick={() => setSelectedOrderId(order.id)}
+                  onClick={() => {
+                    if (mergeMode && isMergeable) {
+                      toggleMergeSelection(order.id);
+                    } else if (!mergeMode) {
+                      setSelectedOrderId(order.id);
+                    }
+                  }}
                 >
-
+                  {/* Merge checkbox column */}
+                  {mergeMode && (
+                    <td className="p-3" onClick={(e) => e.stopPropagation()}>
+                      {isMergeable ? (
+                        <Checkbox
+                          checked={isSelectedForMerge}
+                          onCheckedChange={() => toggleMergeSelection(order.id)}
+                        />
+                      ) : (
+                        <span className="text-xs text-muted-foreground" title="Cannot merge: order is paid, completed, or not in-store">—</span>
+                      )}
+                    </td>
+                  )}
                   <td className="p-3 font-medium text-primary underline">
                     {order.orderNumber}
                     {isNew && (
@@ -1098,6 +1240,95 @@ export default function OrdersTab() {
               disabled={cancelOrderItem.isPending}
             >
               {cancelOrderItem.isPending ? 'Cancelling...' : 'Cancel Item'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Merge Orders Confirmation Dialog */}
+      <Dialog open={mergeDialogOpen} onOpenChange={setMergeDialogOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <GitMerge className="w-5 h-5 text-violet-600" />
+              Merge Orders
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              All items from the secondary orders will be moved into the primary order. Secondary orders will be marked as cancelled with a merge audit note.
+            </p>
+
+            {/* Primary Order Selector */}
+            <div>
+              <Label className="text-sm font-medium">Primary Order (items merge INTO this one)</Label>
+              <Select
+                value={primaryOrderId?.toString() || ''}
+                onValueChange={(v) => setPrimaryOrderId(Number(v))}
+              >
+                <SelectTrigger className="mt-1">
+                  <SelectValue placeholder="Select primary order" />
+                </SelectTrigger>
+                <SelectContent>
+                  {Array.from(selectedMergeOrderIds).map(id => {
+                    const order = orders?.find((o: any) => o.id === id);
+                    if (!order) return null;
+                    return (
+                      <SelectItem key={id} value={id.toString()}>
+                        #{order.orderNumber} — {order.customerName || 'Guest'} — {formatPrice(order.totalAmount)}
+                        {order.tableNumber ? ` (Table ${order.tableNumber})` : ''}
+                      </SelectItem>
+                    );
+                  })}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Summary of what will happen */}
+            {primaryOrderId && (
+              <div className="bg-violet-50 border border-violet-200 rounded-lg p-3 space-y-2">
+                <p className="text-sm font-medium text-violet-800">Merge Summary:</p>
+                {Array.from(selectedMergeOrderIds).filter(id => id !== primaryOrderId).map(id => {
+                  const order = orders?.find((o: any) => o.id === id);
+                  if (!order) return null;
+                  return (
+                    <div key={id} className="flex items-center gap-2 text-sm">
+                      <ArrowRight className="w-4 h-4 text-violet-500" />
+                      <span>Order <strong>#{order.orderNumber}</strong></span>
+                      <span className="text-muted-foreground">({order.customerName || 'Guest'}, {formatPrice(order.totalAmount)})</span>
+                      <span className="text-violet-600">→ merged into #{orders?.find((o: any) => o.id === primaryOrderId)?.orderNumber}</span>
+                    </div>
+                  );
+                })}
+                <div className="border-t border-violet-200 pt-2 mt-2">
+                  <p className="text-xs text-violet-600">
+                    The merged orders will be cancelled and their items moved to the primary order. Totals will be recalculated.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 flex items-start gap-2">
+              <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+              <p className="text-sm text-amber-800">
+                This action cannot be undone. The secondary orders will be permanently marked as merged.
+              </p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setMergeDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              className="bg-violet-600 hover:bg-violet-700 text-white"
+              onClick={handleConfirmMerge}
+              disabled={mergeOrders.isPending || !primaryOrderId}
+            >
+              {mergeOrders.isPending ? (
+                <><RefreshCw className="w-4 h-4 mr-1 animate-spin" /> Merging...</>
+              ) : (
+                <><GitMerge className="w-4 h-4 mr-1" /> Confirm Merge</>
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>

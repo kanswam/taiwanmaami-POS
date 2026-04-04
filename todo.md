@@ -2817,3 +2817,12 @@ Orders fixed:
 - [x] Default the admin order dashboard to show today's orders only
 - [x] Order counts (All Orders, In-Store, Delivery, Pickup) should reflect today's numbers
 - [x] Allow user to expand to other date ranges if needed
+
+## Feature: Merge Orders
+- [x] Add backend mergeOrders endpoint that combines items from multiple orders into one
+- [x] Keep audit trail - merged orders marked as "merged into #XX" with original order reference
+- [x] Add Merge Orders button on admin order dashboard when multiple active orders exist for same table/customer
+- [x] Staff can select orders to merge, confirm, and collect single payment
+- [x] Combined order total reflects all items from merged orders
+- [x] Write vitest tests for merge logic
+- [x] No test data created in production database (pure code change, no DB seeding)

@@ -1921,6 +1921,138 @@ export const appRouter = router({
         return { success: true, message: 'Order cancelled' };
       }),
 
+    // Merge multiple orders into one (for same-table customers paying together)
+    mergeOrders: adminProcedure
+      .input(z.object({
+        primaryOrderId: z.number(),
+        secondaryOrderIds: z.array(z.number()).min(1),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const dbInstance = await getDb();
+        if (!dbInstance) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
+
+        // Fetch primary order
+        const [primaryOrder] = await dbInstance.select().from(orders).where(eq(orders.id, input.primaryOrderId));
+        if (!primaryOrder) throw new TRPCError({ code: 'NOT_FOUND', message: 'Primary order not found' });
+
+        // Validate primary order
+        if (primaryOrder.orderType !== 'instore') {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: 'Can only merge in-store orders' });
+        }
+        if (primaryOrder.paymentStatus !== 'pending') {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: 'Primary order payment is already completed' });
+        }
+        if (primaryOrder.orderStatus === 'completed' || primaryOrder.orderStatus === 'cancelled') {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: 'Cannot merge into a completed or cancelled order' });
+        }
+
+        // Fetch and validate all secondary orders
+        const secondaryOrders = await dbInstance.select().from(orders).where(inArray(orders.id, input.secondaryOrderIds));
+        if (secondaryOrders.length !== input.secondaryOrderIds.length) {
+          throw new TRPCError({ code: 'NOT_FOUND', message: 'One or more secondary orders not found' });
+        }
+
+        const mergedOrderNumbers: string[] = [];
+        for (const secOrder of secondaryOrders) {
+          if (secOrder.id === input.primaryOrderId) {
+            throw new TRPCError({ code: 'BAD_REQUEST', message: 'Cannot merge an order with itself' });
+          }
+          if (secOrder.orderType !== 'instore') {
+            throw new TRPCError({ code: 'BAD_REQUEST', message: `Order #${secOrder.orderNumber} is not an in-store order` });
+          }
+          if (secOrder.paymentStatus !== 'pending') {
+            throw new TRPCError({ code: 'BAD_REQUEST', message: `Order #${secOrder.orderNumber} payment is already completed` });
+          }
+          if (secOrder.orderStatus === 'completed' || secOrder.orderStatus === 'cancelled') {
+            throw new TRPCError({ code: 'BAD_REQUEST', message: `Order #${secOrder.orderNumber} is already ${secOrder.orderStatus}` });
+          }
+          mergedOrderNumbers.push(secOrder.orderNumber);
+        }
+
+        // Move all active items from secondary orders to primary order
+        for (const secOrder of secondaryOrders) {
+          // Get active items from secondary order
+          const secItems = await dbInstance.select().from(orderItemsTable)
+            .where(and(
+              eq(orderItemsTable.orderId, secOrder.id),
+              sql`(${orderItemsTable.status} = 'active' OR ${orderItemsTable.status} IS NULL)`
+            ));
+
+          // Re-assign each item to the primary order
+          for (const item of secItems) {
+            await dbInstance.update(orderItemsTable)
+              .set({ orderId: primaryOrder.id })
+              .where(eq(orderItemsTable.id, item.id));
+          }
+
+          // Mark secondary order as cancelled with merge audit trail
+          await dbInstance.update(orders)
+            .set({
+              orderStatus: 'cancelled',
+              staffNotes: `Merged into Order #${primaryOrder.orderNumber} by ${ctx.user.name || 'Admin'}. Items moved to primary order.`,
+              subtotal: 0,
+              stateGst: 0,
+              centralGst: 0,
+              totalAmount: 0,
+            })
+            .where(eq(orders.id, secOrder.id));
+        }
+
+        // Recalculate primary order totals from all active items
+        const allPrimaryItems = await dbInstance.select().from(orderItemsTable)
+          .where(and(
+            eq(orderItemsTable.orderId, primaryOrder.id),
+            sql`(${orderItemsTable.status} = 'active' OR ${orderItemsTable.status} IS NULL)`
+          ));
+
+        const newSubtotal = allPrimaryItems.reduce((sum, item) => sum + item.lineTotal, 0);
+
+        // Recalculate discount if percentage-based discount code is applied
+        let newDiscountAmount = 0;
+        if (primaryOrder.discountCode) {
+          const [discount] = await dbInstance.select().from(discounts).where(eq(discounts.code, primaryOrder.discountCode));
+          if (discount && discount.type === 'percentage') {
+            newDiscountAmount = Math.round(newSubtotal * discount.value / 100);
+            if (discount.maxDiscountAmount && newDiscountAmount > discount.maxDiscountAmount) {
+              newDiscountAmount = discount.maxDiscountAmount;
+            }
+          } else if (discount && discount.type === 'fixed_amount') {
+            newDiscountAmount = discount.value;
+          }
+        }
+        // Also keep any manual discount from the primary order
+        const manualDiscount = primaryOrder.manualDiscountAmount || 0;
+        const totalDiscount = newDiscountAmount + manualDiscount;
+
+        const discountedSubtotal = Math.max(0, newSubtotal - totalDiscount);
+        const newStateGst = Math.round(discountedSubtotal * 0.025);
+        const newCentralGst = Math.round(discountedSubtotal * 0.025);
+        const newTotalAmount = discountedSubtotal + newStateGst + newCentralGst + (primaryOrder.deliveryCharge || 0);
+
+        // Update primary order totals and add merge note
+        const existingNotes = primaryOrder.staffNotes || '';
+        const mergeNote = `[Merged] Orders #${mergedOrderNumbers.join(', #')} merged into this order by ${ctx.user.name || 'Admin'} on ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}`;
+
+        await dbInstance.update(orders)
+          .set({
+            subtotal: newSubtotal,
+            discountAmount: newDiscountAmount,
+            stateGst: newStateGst,
+            centralGst: newCentralGst,
+            totalAmount: newTotalAmount,
+            staffNotes: existingNotes ? `${existingNotes}\n${mergeNote}` : mergeNote,
+          })
+          .where(eq(orders.id, primaryOrder.id));
+
+        return {
+          success: true,
+          primaryOrderNumber: primaryOrder.orderNumber,
+          mergedOrderNumbers,
+          newTotalAmount,
+          itemCount: allPrimaryItems.length,
+        };
+      }),
+
     getById: adminProcedure
       .input(z.object({ orderId: z.number() }))
       .query(async ({ input }) => {
