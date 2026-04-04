@@ -1922,7 +1922,7 @@ export const appRouter = router({
       }),
 
     // Merge multiple orders into one (for same-table customers paying together)
-    mergeOrders: adminProcedure
+    mergeOrders: staffProcedure
       .input(z.object({
         primaryOrderId: z.number(),
         secondaryOrderIds: z.array(z.number()).min(1),

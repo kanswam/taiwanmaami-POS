@@ -2826,3 +2826,8 @@ Orders fixed:
 - [x] Combined order total reflects all items from merged orders
 - [x] Write vitest tests for merge logic
 - [x] No test data created in production database (pure code change, no DB seeding)
+
+## Feature: Merge Orders for Staff (Apr 4)
+- [x] Change mergeOrders backend from adminProcedure to staffProcedure so staff can use it
+- [x] Add Merge Orders UI to Staff Orders page (same flow as admin: select, pick primary, confirm)
+- [x] Update vitest tests for staff-level access

@@ -24,6 +24,26 @@ function createAdminContext(): TrpcContext {
   };
 }
 
+function createStaffContext(): TrpcContext {
+  const user: AuthenticatedUser = {
+    id: 98,
+    openId: "test-staff",
+    email: "staff@test.com",
+    name: "Test Staff",
+    loginMethod: "manus",
+    role: "staff",
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    lastSignedIn: new Date(),
+  };
+
+  return {
+    user,
+    req: { protocol: "https", headers: {} } as TrpcContext["req"],
+    res: { clearCookie: () => {} } as unknown as TrpcContext["res"],
+  };
+}
+
 function createCustomerContext(): TrpcContext {
   const user: AuthenticatedUser = {
     id: 100,
@@ -74,6 +94,19 @@ describe("orders.mergeOrders", () => {
     const ctx = createAdminContext();
     const caller = appRouter.createCaller(ctx);
 
+    await expect(
+      caller.orders.mergeOrders({
+        primaryOrderId: 999999,
+        secondaryOrderIds: [999998],
+      })
+    ).rejects.toThrow(/not found/i);
+  });
+
+  it("allows staff users to call mergeOrders", async () => {
+    const ctx = createStaffContext();
+    const caller = appRouter.createCaller(ctx);
+
+    // Should fail with "not found" (not "forbidden"), proving staff has access
     await expect(
       caller.orders.mergeOrders({
         primaryOrderId: 999999,
