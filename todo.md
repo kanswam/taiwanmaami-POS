@@ -2835,3 +2835,10 @@ Orders fixed:
 ## Fix: Ingredient Section Icons (Apr 5)
 - [x] Replace wrong emoji icons with proper ones: tea leaves (🍃), mochi (🍡), tapioca pearls (🧋), imported ingredients (✈️)
 - [x] Fix freshness_story icons in database - DB values override code defaults, updated DB directly
+
+## Bug Fix: In-store orders showing "Guest" instead of customer name (Apr 5)
+- [x] Fix admin orders page to show customer name/phone from order data instead of "Guest" for in-store orders
+- [x] Fix staff orders page to show customer name/phone from order data instead of "Guest" for in-store orders
+- [x] Root cause: guest order flow saved name to guest_orders table but not orders.customerName
+- [x] Fix: save customerName/Phone to orders table during creation + fallback lookup from guest_orders
+- [x] Backfilled 396 existing orders with customer names from guest_orders table

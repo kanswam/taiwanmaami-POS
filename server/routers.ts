@@ -1161,7 +1161,19 @@ export const appRouter = router({
           recentOrders.map(async (order) => {
             const items = await dbInstance.select().from(orderItemsTable).where(eq(orderItemsTable.orderId, order.id));
             const customerRewards = order.userId ? userRewardsMap[order.userId] : undefined;
-            return { ...order, items, customerRewards: customerRewards || null };
+            
+            // If customerName is missing, try to get it from guestOrders table
+            let customerName = order.customerName;
+            let customerPhone = order.customerPhone;
+            if (!customerName) {
+              const [guest] = await dbInstance.select().from(guestOrders).where(eq(guestOrders.orderId, order.id));
+              if (guest) {
+                customerName = guest.guestName;
+                customerPhone = customerPhone || guest.guestPhone;
+              }
+            }
+            
+            return { ...order, customerName, customerPhone, items, customerRewards: customerRewards || null };
           })
         );
         
@@ -2078,7 +2090,18 @@ export const appRouter = router({
           })
         );
         
-        return { ...order, items: itemsWithProducts };
+        // If customerName is missing, try to get it from guestOrders table
+        let customerName = order.customerName;
+        let customerPhone = order.customerPhone;
+        if (!customerName) {
+          const [guest] = await dbInstance.select().from(guestOrders).where(eq(guestOrders.orderId, order.id));
+          if (guest) {
+            customerName = guest.guestName;
+            customerPhone = customerPhone || guest.guestPhone;
+          }
+        }
+        
+        return { ...order, customerName, customerPhone, items: itemsWithProducts };
       }),
 
     // Razorpay payment procedures
@@ -4438,6 +4461,8 @@ export const appRouter = router({
         const [orderResult] = await dbInstance!.insert(orders).values({
           orderNumber,
           userId: 0, // Guest order marker
+          customerName: input.guestName,
+          customerPhone: input.guestPhone,
           orderType: input.orderType,
           tableNumber: input.orderType === 'instore' ? input.tableNumber : null,
           orderStatus: 'pending',
