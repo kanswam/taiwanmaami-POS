@@ -416,10 +416,10 @@ export default function Home() {
   const freshnessStoryTitle = freshnessSection?.title || 'Freshly Crafted. Authentically Taiwanese.';
   const freshnessStorySubtitle = freshnessSection?.subtitle || 'Every drink and food item is prepared fresh in-store using ingredients imported directly from Taiwan. No shortcuts, no compromises — just genuine Taiwanese flavours crafted with care.';
   const freshnessPillars = freshnessSection?.content?.pillars || [
-    { icon: '🍵', title: 'Organic Whole-Leaf Tea', description: 'Sourced from certified organic farms in Nantou, Taiwan' },
-    { icon: '🍞', title: 'Handmade Mochi', description: 'Prepared fresh daily using premium Japanese rice flour' },
-    { icon: '🥧', title: 'Real Tapioca Pearls', description: 'Cooked in small batches every 4 hours for perfect texture' },
-    { icon: '🌎', title: 'Imported Ingredients', description: 'Key ingredients flown in directly from Taiwan & Japan' },
+    { icon: '🍃', title: 'Organic Whole-Leaf Tea', description: 'Sourced from certified plantations from Nilgiris, Tamil Nadu' },
+    { icon: '🍡', title: 'Handmade Mochi', description: 'Prepared fresh daily using premium Japanese rice flour' },
+    { icon: '🧋', title: 'Real Tapioca Pearls', description: 'Cooked in small batches every 4 hours for perfect texture' },
+    { icon: '✈️', title: 'Imported Ingredients', description: 'Key ingredients flown in directly from Taiwan' },
   ];
 
   // Category cards with video backgrounds

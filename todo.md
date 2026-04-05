@@ -2831,3 +2831,6 @@ Orders fixed:
 - [x] Change mergeOrders backend from adminProcedure to staffProcedure so staff can use it
 - [x] Add Merge Orders UI to Staff Orders page (same flow as admin: select, pick primary, confirm)
 - [x] Update vitest tests for staff-level access
+
+## Fix: Ingredient Section Icons (Apr 5)
+- [x] Replace wrong emoji icons with proper ones: tea leaves (🍃), mochi (🍡), tapioca pearls (🧋), imported ingredients (✈️)
