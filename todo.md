@@ -2834,3 +2834,4 @@ Orders fixed:
 
 ## Fix: Ingredient Section Icons (Apr 5)
 - [x] Replace wrong emoji icons with proper ones: tea leaves (🍃), mochi (🍡), tapioca pearls (🧋), imported ingredients (✈️)
+- [x] Fix freshness_story icons in database - DB values override code defaults, updated DB directly
