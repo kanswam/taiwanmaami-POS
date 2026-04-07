@@ -7892,6 +7892,137 @@ export const appRouter = router({
         return { customers, total };
       }),
 
+    // Get full customer details with order history
+    getDetails: adminProcedure
+      .input(z.object({
+        customerId: z.union([z.number(), z.string()]),
+      }))
+      .query(async ({ input }) => {
+        const dbInstance = await getDb();
+        if (!dbInstance) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
+
+        const isGuest = typeof input.customerId === 'string' && String(input.customerId).startsWith('guest_');
+
+        if (isGuest) {
+          const phone = String(input.customerId).replace('guest_', '');
+          const guestOrdersList = await dbInstance.select().from(orders)
+            .where(and(
+              sql`${orders.customerPhone} = ${phone}`,
+              sql`(${orders.userId} IS NULL OR ${orders.userId} = 0)`,
+              sql`${orders.orderStatus} != 'cancelled'`
+            ))
+            .orderBy(desc(orders.createdAt))
+            .limit(50);
+
+          const orderIds = guestOrdersList.map(o => o.id);
+          let allItems: any[] = [];
+          if (orderIds.length > 0) {
+            allItems = await dbInstance.select().from(orderItemsTable)
+              .where(sql`${orderItemsTable.orderId} IN (${sql.join(orderIds.map(id => sql`${id}`), sql`, `)})`);
+          }
+
+          let guestEmail: string | null = null;
+          if (orderIds.length > 0) {
+            const guestDetails = await dbInstance.select().from(guestOrders)
+              .where(sql`${guestOrders.orderId} IN (${sql.join(orderIds.map(id => sql`${id}`), sql`, `)})`);
+            guestEmail = guestDetails.find(g => g.guestEmail)?.guestEmail || null;
+          }
+
+          const addressSet = new Map<string, string>();
+          guestOrdersList.forEach(o => {
+            if (o.deliveryAddress) addressSet.set(o.deliveryAddress, o.deliveryAddress);
+          });
+
+          const totalSpent = guestOrdersList.reduce((sum, o) => sum + o.totalAmount, 0);
+          const name = guestOrdersList.find(o => o.customerName)?.customerName || 'Guest';
+
+          return {
+            type: 'guest' as const, id: input.customerId, name, phone, email: guestEmail,
+            stampCount: 0, lifetimeStamps: 0, storeCredit: 0, loyaltyPoints: 0,
+            totalOrders: guestOrdersList.length, totalSpent,
+            createdAt: null, lastSignedIn: null, notes: null, birthMonth: null, birthDay: null,
+            addresses: Array.from(addressSet.values()).map(addr => ({ address: addr })),
+            orders: guestOrdersList.map(o => ({
+              id: o.id, orderNumber: o.orderNumber, orderType: o.orderType,
+              orderStatus: o.orderStatus, paymentStatus: o.paymentStatus,
+              totalAmount: o.totalAmount, subtotal: o.subtotal,
+              deliveryCharge: o.deliveryCharge, discountAmount: o.discountAmount,
+              deliveryAddress: o.deliveryAddress, tableNumber: o.tableNumber,
+              createdAt: o.createdAt, paymentMethod: o.paymentMethod,
+              items: allItems.filter(i => i.orderId === o.id).map(i => ({
+                productName: i.productName, size: i.size, quantity: i.quantity,
+                lineTotal: i.lineTotal, status: i.status,
+              })),
+            })),
+            stampHistory: [], rewards: [],
+          };
+        } else {
+          const userId = Number(input.customerId);
+          const [user] = await dbInstance.select().from(users).where(eq(users.id, userId));
+          if (!user) throw new TRPCError({ code: 'NOT_FOUND', message: 'Customer not found' });
+
+          const userAddresses = await dbInstance.select().from(addresses).where(eq(addresses.userId, userId));
+
+          const userOrders = await dbInstance.select().from(orders)
+            .where(and(eq(orders.userId, userId), sql`${orders.orderStatus} != 'cancelled'`))
+            .orderBy(desc(orders.createdAt))
+            .limit(50);
+
+          const orderIds = userOrders.map(o => o.id);
+          let allItems: any[] = [];
+          if (orderIds.length > 0) {
+            allItems = await dbInstance.select().from(orderItemsTable)
+              .where(sql`${orderItemsTable.orderId} IN (${sql.join(orderIds.map(id => sql`${id}`), sql`, `)})`);
+          }
+
+          const stampHistory = await dbInstance.select().from(stampTransactions)
+            .where(eq(stampTransactions.userId, userId))
+            .orderBy(desc(stampTransactions.createdAt)).limit(20);
+
+          const userRewards = await dbInstance.select().from(loyaltyRewards)
+            .where(eq(loyaltyRewards.userId, userId))
+            .orderBy(desc(loyaltyRewards.createdAt));
+
+          const totalSpent = userOrders.reduce((sum, o) => sum + o.totalAmount, 0);
+
+          return {
+            type: 'registered' as const, id: user.id, name: user.name,
+            phone: user.phone, email: user.email,
+            stampCount: user.stampCount, lifetimeStamps: user.lifetimeStamps,
+            storeCredit: user.storeCredit, loyaltyPoints: user.loyaltyPoints,
+            totalOrders: userOrders.length, totalSpent,
+            createdAt: user.createdAt, lastSignedIn: user.lastSignedIn,
+            notes: user.notes, birthMonth: user.birthMonth, birthDay: user.birthDay,
+            addresses: userAddresses.map(a => ({
+              id: a.id, addressLine1: a.addressLine1, addressLine2: a.addressLine2,
+              area: a.area, city: a.city, pincode: a.pincode,
+              landmark: a.landmark, isDefault: a.isDefault,
+            })),
+            orders: userOrders.map(o => ({
+              id: o.id, orderNumber: o.orderNumber, orderType: o.orderType,
+              orderStatus: o.orderStatus, paymentStatus: o.paymentStatus,
+              totalAmount: o.totalAmount, subtotal: o.subtotal,
+              deliveryCharge: o.deliveryCharge, discountAmount: o.discountAmount,
+              deliveryAddress: o.deliveryAddress, tableNumber: o.tableNumber,
+              createdAt: o.createdAt, paymentMethod: o.paymentMethod,
+              items: allItems.filter(i => i.orderId === o.id).map(i => ({
+                productName: i.productName, size: i.size, quantity: i.quantity,
+                lineTotal: i.lineTotal, status: i.status,
+              })),
+            })),
+            stampHistory: stampHistory.map(s => ({
+              action: s.action, stamps: s.stamps, orderTotal: s.orderTotal,
+              description: s.description, createdAt: s.createdAt,
+            })),
+            rewards: userRewards.map(r => ({
+              id: r.id, voucherCode: r.voucherCode, rewardType: r.rewardType,
+              isRedeemed: r.isRedeemed, redeemedAt: r.redeemedAt,
+              expiresAt: r.expiresAt, createdAt: r.createdAt,
+            })),
+          };
+        }
+      }),
+
     // Add a new customer manually
     create: adminProcedure
       .input(z.object({

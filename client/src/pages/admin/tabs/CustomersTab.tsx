@@ -7,6 +7,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
@@ -50,6 +54,15 @@ export default function CustomersTab() {
   const [stampsToAdd, setStampsToAdd] = useState(1);
   const [stampReason, setStampReason] = useState('Physical loyalty card transfer');
   const [stampMode, setStampMode] = useState<'add' | 'deduct'>('add');
+
+  // Customer detail panel state
+  const [selectedCustomerId, setSelectedCustomerId] = useState<number | string | null>(null);
+  const [showDetailPanel, setShowDetailPanel] = useState(false);
+
+  const customerDetails = trpc.customers.getDetails.useQuery(
+    { customerId: selectedCustomerId! },
+    { enabled: !!selectedCustomerId && showDetailPanel }
+  );
 
   // Account Merge state
   const [showMergeDialog, setShowMergeDialog] = useState(false);
@@ -286,7 +299,7 @@ const [mergeSource, setMergeSource] = useState<{ id: number | string; name: stri
             </thead>
             <tbody>
               {filteredCustomers.map((customer: any) => (
-                <tr key={customer.id} className="border-b hover:bg-secondary/50">
+                <tr key={customer.id} className="border-b hover:bg-secondary/50 cursor-pointer" onClick={() => { setSelectedCustomerId(customer.id); setShowDetailPanel(true); }}>
                   <td className="p-3 font-medium">{customer.name || 'N/A'}</td>
                   <td className="p-3">{customer.phone || 'N/A'}</td>
                   <td className="p-3">{customer.email || 'N/A'}</td>
@@ -374,7 +387,7 @@ const [mergeSource, setMergeSource] = useState<{ id: number | string; name: stri
                             <Button
                               variant="ghost"
                               size="sm"
-                              onClick={() => {
+                              onClick={(e) => { e.stopPropagation();
                                 setStampCustomer({
                                   id: customer.id,
                                   name: customer.name || 'Customer',
@@ -391,7 +404,7 @@ const [mergeSource, setMergeSource] = useState<{ id: number | string; name: stri
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => {
+                          onClick={(e) => { e.stopPropagation();
                             setEditingCustomer({
                               id: customer.id,
                               name: customer.name || '',
@@ -940,6 +953,250 @@ const [mergeSource, setMergeSource] = useState<{ id: number | string; name: stri
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Customer Detail Panel */}
+      <Sheet open={showDetailPanel} onOpenChange={setShowDetailPanel}>
+        <SheetContent className="w-[600px] sm:max-w-[600px] p-0 overflow-hidden">
+          <SheetHeader className="px-6 pt-6 pb-4 border-b">
+            <SheetTitle className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                <Users className="w-5 h-5 text-primary" />
+              </div>
+              <div>
+                <div className="text-lg">{customerDetails.data?.name || 'Loading...'}</div>
+                <div className="text-sm font-normal text-muted-foreground flex items-center gap-3">
+                  {customerDetails.data?.phone && <span className="flex items-center gap-1"><Phone className="w-3 h-3" />{customerDetails.data.phone}</span>}
+                  {customerDetails.data?.email && <span className="flex items-center gap-1"><Mail className="w-3 h-3" />{customerDetails.data.email}</span>}
+                </div>
+              </div>
+            </SheetTitle>
+          </SheetHeader>
+
+          {customerDetails.isLoading ? (
+            <div className="flex items-center justify-center h-64">
+              <RefreshCw className="w-6 h-6 animate-spin text-muted-foreground" />
+            </div>
+          ) : customerDetails.data ? (
+            <ScrollArea className="h-[calc(100vh-120px)]">
+              <div className="p-6 space-y-6">
+                {/* Stats Cards */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  <div className="bg-blue-50 rounded-lg p-3 text-center">
+                    <div className="text-2xl font-bold text-blue-700">{customerDetails.data.totalOrders}</div>
+                    <div className="text-xs text-blue-600">Orders</div>
+                  </div>
+                  <div className="bg-green-50 rounded-lg p-3 text-center">
+                    <div className="text-2xl font-bold text-green-700">{formatPrice(customerDetails.data.totalSpent)}</div>
+                    <div className="text-xs text-green-600">Total Spent</div>
+                  </div>
+                  <div className="bg-amber-50 rounded-lg p-3 text-center">
+                    <div className="text-2xl font-bold text-amber-700">{customerDetails.data.stampCount}/10</div>
+                    <div className="text-xs text-amber-600">Stamps</div>
+                  </div>
+                  <div className="bg-purple-50 rounded-lg p-3 text-center">
+                    <div className="text-2xl font-bold text-purple-700">{formatPrice(customerDetails.data.storeCredit)}</div>
+                    <div className="text-xs text-purple-600">Store Credit</div>
+                  </div>
+                </div>
+
+                {/* Additional Info */}
+                {customerDetails.data.type === 'registered' && (
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    {customerDetails.data.birthMonth && (
+                      <div className="flex items-center gap-2 text-muted-foreground">
+                        <Calendar className="w-4 h-4" />
+                        Birthday: {['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][(customerDetails.data.birthMonth || 1) - 1]} {customerDetails.data.birthDay}
+                      </div>
+                    )}
+                    {customerDetails.data.createdAt && (
+                      <div className="flex items-center gap-2 text-muted-foreground">
+                        <UserCheck className="w-4 h-4" />
+                        Joined: {new Date(customerDetails.data.createdAt).toLocaleDateString()}
+                      </div>
+                    )}
+                    {customerDetails.data.lastSignedIn && (
+                      <div className="flex items-center gap-2 text-muted-foreground">
+                        <Clock className="w-4 h-4" />
+                        Last active: {new Date(customerDetails.data.lastSignedIn).toLocaleDateString()}
+                      </div>
+                    )}
+                    {customerDetails.data.notes && (
+                      <div className="col-span-2 flex items-start gap-2 text-muted-foreground">
+                        <MessageSquare className="w-4 h-4 mt-0.5" />
+                        Notes: {customerDetails.data.notes}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Tabs: Orders, Addresses, Loyalty */}
+                <Tabs defaultValue="orders" className="w-full">
+                  <TabsList className="w-full grid grid-cols-3">
+                    <TabsTrigger value="orders">Orders ({customerDetails.data.orders.length})</TabsTrigger>
+                    <TabsTrigger value="addresses">Addresses ({customerDetails.data.addresses.length})</TabsTrigger>
+                    <TabsTrigger value="loyalty">Loyalty</TabsTrigger>
+                  </TabsList>
+
+                  <TabsContent value="orders" className="mt-4 space-y-3">
+                    {customerDetails.data.orders.length === 0 ? (
+                      <div className="text-center text-muted-foreground py-8">No orders found</div>
+                    ) : (
+                      customerDetails.data.orders.map((order: any) => (
+                        <Card key={order.id} className="p-4">
+                          <div className="flex justify-between items-start mb-2">
+                            <div>
+                              <span className="font-semibold text-primary">#{order.orderNumber}</span>
+                              <Badge variant="outline" className="ml-2 text-xs">{order.orderType}</Badge>
+                            </div>
+                            <div className="text-right">
+                              <div className="font-bold">{formatPrice(order.totalAmount)}</div>
+                              <div className="text-xs text-muted-foreground">{new Date(order.createdAt).toLocaleString()}</div>
+                            </div>
+                          </div>
+                          <div className="flex gap-2 mb-2">
+                            <Badge className={`text-xs ${
+                              order.orderStatus === 'completed' ? 'bg-green-100 text-green-700' :
+                              order.orderStatus === 'preparing' ? 'bg-yellow-100 text-yellow-700' :
+                              order.orderStatus === 'cancelled' ? 'bg-red-100 text-red-700' :
+                              'bg-gray-100 text-gray-700'
+                            }`}>{order.orderStatus}</Badge>
+                            <Badge className={`text-xs ${
+                              order.paymentStatus === 'completed' ? 'bg-green-100 text-green-700' :
+                              order.paymentStatus === 'pending' ? 'bg-orange-100 text-orange-700' :
+                              'bg-gray-100 text-gray-700'
+                            }`}>{order.paymentStatus}</Badge>
+                            {order.paymentMethod && <Badge variant="outline" className="text-xs">{order.paymentMethod}</Badge>}
+                          </div>
+                          {order.deliveryAddress && (
+                            <div className="text-xs text-muted-foreground flex items-center gap-1 mb-2">
+                              <MapPin className="w-3 h-3" />{order.deliveryAddress}
+                            </div>
+                          )}
+                          {order.tableNumber && (
+                            <div className="text-xs text-muted-foreground mb-2">Table: {order.tableNumber}</div>
+                          )}
+                          <div className="border-t pt-2 mt-2">
+                            {order.items.map((item: any, idx: number) => (
+                              <div key={idx} className="flex justify-between text-sm py-0.5">
+                                <span className={item.status === 'cancelled' ? 'line-through text-muted-foreground' : ''}>
+                                  {item.quantity}x {item.productName} {item.size ? `(${item.size})` : ''}
+                                </span>
+                                <span className="text-muted-foreground">{formatPrice(item.lineTotal)}</span>
+                              </div>
+                            ))}
+                          </div>
+                          {(order.discountAmount > 0 || order.deliveryCharge > 0) && (
+                            <div className="border-t pt-1 mt-1 text-xs text-muted-foreground">
+                              {order.discountAmount > 0 && <div>Discount: -{formatPrice(order.discountAmount)}</div>}
+                              {order.deliveryCharge > 0 && <div>Delivery: {formatPrice(order.deliveryCharge)}</div>}
+                            </div>
+                          )}
+                        </Card>
+                      ))
+                    )}
+                  </TabsContent>
+
+                  <TabsContent value="addresses" className="mt-4 space-y-3">
+                    {customerDetails.data.addresses.length === 0 ? (
+                      <div className="text-center text-muted-foreground py-8">No addresses found</div>
+                    ) : (
+                      customerDetails.data.addresses.map((addr: any, idx: number) => (
+                        <Card key={idx} className="p-4">
+                          <div className="flex items-start gap-2">
+                            <MapPin className="w-4 h-4 text-primary mt-0.5" />
+                            <div>
+                              {addr.address ? (
+                                <p className="text-sm">{addr.address}</p>
+                              ) : (
+                                <>
+                                  <p className="text-sm font-medium">{addr.addressLine1}</p>
+                                  {addr.addressLine2 && <p className="text-sm text-muted-foreground">{addr.addressLine2}</p>}
+                                  <p className="text-sm text-muted-foreground">
+                                    {[addr.area, addr.city, addr.pincode].filter(Boolean).join(', ')}
+                                  </p>
+                                  {addr.landmark && <p className="text-xs text-muted-foreground">Landmark: {addr.landmark}</p>}
+                                  {addr.isDefault && <Badge className="mt-1 text-xs bg-primary/10 text-primary">Default</Badge>}
+                                </>
+                              )}
+                            </div>
+                          </div>
+                        </Card>
+                      ))
+                    )}
+                  </TabsContent>
+
+                  <TabsContent value="loyalty" className="mt-4 space-y-4">
+                    {customerDetails.data.type === 'guest' ? (
+                      <div className="text-center text-muted-foreground py-8">Guest customers don't have loyalty data</div>
+                    ) : (
+                      <>
+                        {/* Stamp Progress */}
+                        <Card className="p-4">
+                          <h4 className="font-semibold mb-2 flex items-center gap-2"><Star className="w-4 h-4 text-amber-500" />Stamp Progress</h4>
+                          <div className="flex gap-1 mb-2">
+                            {Array.from({ length: 10 }).map((_, i) => (
+                              <div key={i} className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${
+                                i < (customerDetails.data?.stampCount || 0) ? 'bg-amber-500 text-white' : 'bg-gray-200 text-gray-400'
+                              }`}>{i + 1}</div>
+                            ))}
+                          </div>
+                          <p className="text-sm text-muted-foreground">
+                            {customerDetails.data.stampCount}/10 stamps • Lifetime: {customerDetails.data.lifetimeStamps} stamps earned
+                          </p>
+                        </Card>
+
+                        {/* Rewards */}
+                        {customerDetails.data.rewards.length > 0 && (
+                          <Card className="p-4">
+                            <h4 className="font-semibold mb-2 flex items-center gap-2"><Ticket className="w-4 h-4 text-green-600" />Rewards</h4>
+                            <div className="space-y-2">
+                              {customerDetails.data.rewards.map((r: any) => (
+                                <div key={r.id} className={`flex justify-between items-center p-2 rounded text-sm ${
+                                  r.isRedeemed ? 'bg-gray-50 text-muted-foreground' : 'bg-green-50'
+                                }`}>
+                                  <div>
+                                    <span className="font-medium">{r.rewardType || 'Free Large Bubble Tea'}</span>
+                                    <span className="ml-2 text-xs">({r.voucherCode})</span>
+                                  </div>
+                                  <Badge className={r.isRedeemed ? 'bg-gray-200 text-gray-600' : 'bg-green-100 text-green-700'}>
+                                    {r.isRedeemed ? `Redeemed ${r.redeemedAt ? new Date(r.redeemedAt).toLocaleDateString() : ''}` : `Expires ${new Date(r.expiresAt).toLocaleDateString()}`}
+                                  </Badge>
+                                </div>
+                              ))}
+                            </div>
+                          </Card>
+                        )}
+
+                        {/* Stamp History */}
+                        {customerDetails.data.stampHistory.length > 0 && (
+                          <Card className="p-4">
+                            <h4 className="font-semibold mb-2 flex items-center gap-2"><History className="w-4 h-4" />Stamp History</h4>
+                            <div className="space-y-1">
+                              {customerDetails.data.stampHistory.map((s: any, idx: number) => (
+                                <div key={idx} className="flex justify-between items-center text-sm py-1 border-b last:border-0">
+                                  <div>
+                                    <span className={`font-medium ${s.action === 'earn' ? 'text-green-600' : s.action === 'deduct' ? 'text-red-600' : 'text-blue-600'}`}>
+                                      {s.action === 'earn' ? '+' : s.action === 'deduct' ? '-' : ''}{s.stamps} stamp{Math.abs(s.stamps) !== 1 ? 's' : ''}
+                                    </span>
+                                    {s.description && <span className="ml-2 text-muted-foreground text-xs">{s.description}</span>}
+                                  </div>
+                                  <span className="text-xs text-muted-foreground">{new Date(s.createdAt).toLocaleDateString()}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </Card>
+                        )}
+                      </>
+                    )}
+                  </TabsContent>
+                </Tabs>
+              </div>
+            </ScrollArea>
+          ) : (
+            <div className="flex items-center justify-center h-64 text-muted-foreground">Failed to load customer details</div>
+          )}
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }

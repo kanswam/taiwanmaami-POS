@@ -2882,3 +2882,14 @@ Orders fixed:
 - [x] Add tax invoice download for customers once they have paid (on My Orders / Order Confirmation page)
 - [x] Extracted invoice generator to shared utility @/lib/generateInvoice.ts
 - [x] Auto-populate Checkout area + pincode from confirmed delivery area in localStorage
+
+## Feature: Enhanced Customer Details View (Apr 7)
+- [x] Add backend endpoint for full customer details (orders, addresses, stamps, rewards)
+- [x] Add clickable customer detail panel in admin Customer Database (Sheet slide-out)
+- [x] Show past orders with items, totals, status, payment method
+- [x] Show delivery addresses used
+- [x] Show loyalty stamp progress and history
+- [x] Show rewards earned and redeemed
+- [x] Stats cards: total orders, total spent, stamps, store credit
+- [x] Additional info: birthday, join date, last active, notes
+- [x] Vitest tests for getDetails endpoint (3 passing)
