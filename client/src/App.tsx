@@ -1,7 +1,7 @@
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/NotFound";
-import { Route, Switch, useLocation } from "wouter";
+import { Route, Switch, useLocation, Redirect } from "wouter";
 import { useEffect, lazy, Suspense } from "react";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
@@ -97,6 +97,9 @@ function Router() {
       <PageTracker />
       <Suspense fallback={<PageLoader />}>
         <Switch>
+        {/* Direct order redirect - for Instagram bio link */}
+        <Route path="/order">{() => <Redirect to="/menu?type=delivery&utm_source=instagram" />}</Route>
+        
         {/* Public Routes */}
         <Route path="/" component={Home} />
         <Route path="/menu" component={Menu} />

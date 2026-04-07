@@ -1,4 +1,4 @@
-import { Link } from 'wouter';
+import { Link, useLocation, useSearch } from 'wouter';
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 // Taiwan Maami Web Platform - Customer Ordering Website
 import { Button } from '@/components/ui/button';
@@ -19,6 +19,17 @@ const JADE_GREEN = '#5e6c48';
 const JADE_GREEN_HOVER = '#4d5a3b';
 
 export default function Home() {
+  const [, setLocation] = useLocation();
+  const searchString = useSearch();
+  
+  // Instagram bio redirect: ?order=now → go straight to menu/ordering
+  useEffect(() => {
+    const params = new URLSearchParams(searchString);
+    if (params.get('order') === 'now') {
+      setLocation('/menu?type=delivery&utm_source=instagram');
+    }
+  }, [searchString, setLocation]);
+
   // Fetch site settings from database (public endpoint - no auth required)
   const { data: siteSettings } = trpc.menu.getPublicSiteSettings.useQuery();
   

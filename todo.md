@@ -2899,3 +2899,7 @@ Orders fixed:
 - [x] Bug fix: Repeat customers showing 0% in analytics dashboard (Meenakshi is a regular but shows 0 of 6)
 - [x] Bug fix: Meenakshi (order #90, ₹1,397) didn't receive 3 stamps — stamps only awarded on order completion (working as designed)
 - [x] Ensure free drink reward auto-triggers when customer reaches 10 stamps on next order (verified: 9 + 3 = 12 → reward created → 2 remaining)
+
+## Instagram Digital Flywheel (Apr 7)
+
+- [x] Auto-redirect Instagram bio visitors directly to Order Now page (support ?order=now or /order query param)
