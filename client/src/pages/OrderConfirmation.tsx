@@ -8,7 +8,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Textarea } from '@/components/ui/textarea';
 import { trpc } from '@/lib/trpc';
 import { formatPrice } from '@shared/types';
-import { CheckCircle, Clock, MapPin, Phone, ArrowRight, RefreshCw, FileText, UtensilsCrossed } from 'lucide-react';
+import { generateOrderInvoice } from '@/lib/generateInvoice';
+import { CheckCircle, Clock, MapPin, Phone, ArrowRight, RefreshCw, FileText, UtensilsCrossed, Download, Eye } from 'lucide-react';
 import { OrderTracker } from '@/components/OrderTracker';
 
 export default function OrderConfirmation() {
@@ -272,29 +273,58 @@ export default function OrderConfirmation() {
           </Card>
 
           {/* Actions */}
-          <div className="flex flex-col sm:flex-row gap-4">
-            <Button 
-              variant="outline" 
-              className="flex-1"
-              onClick={() => {
-                // Redirect to My Orders where they can view/download invoice
-                window.location.href = '/orders';
-              }}
-            >
-              <FileText className="w-4 h-4 mr-2" />
-              View Invoice
-            </Button>
-            <Link href="/orders" className="flex-1">
-              <Button variant="outline" className="w-full">
-                View All Orders
-              </Button>
-            </Link>
-            <Link href="/menu" className="flex-1">
-              <Button className="w-full">
-                Order More
-                <ArrowRight className="w-4 h-4 ml-2" />
-              </Button>
-            </Link>
+          <div className="flex flex-col gap-3">
+            {/* Tax Invoice - show when payment is completed */}
+            {(order.paymentStatus === 'completed' || order.orderStatus === 'completed') && (
+              <div className="flex gap-2">
+                <Button 
+                  variant="outline" 
+                  className="flex-1 gap-2"
+                  onClick={() => {
+                    const invoiceContent = generateOrderInvoice(order);
+                    const blob = new Blob([invoiceContent], { type: 'text/html;charset=utf-8' });
+                    const url = URL.createObjectURL(blob);
+                    window.open(url, '_blank');
+                  }}
+                >
+                  <Eye className="w-4 h-4" />
+                  View Tax Invoice
+                </Button>
+                <Button 
+                  variant="outline" 
+                  className="flex-1 gap-2"
+                  onClick={() => {
+                    const invoiceContent = generateOrderInvoice(order);
+                    const blob = new Blob([invoiceContent], { type: 'text/html;charset=utf-8' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `tax-invoice-${order.orderNumber}.html`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                  }}
+                >
+                  <Download className="w-4 h-4" />
+                  Download Invoice
+                </Button>
+              </div>
+            )}
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Link href="/orders" className="flex-1">
+                <Button variant="outline" className="w-full">
+                  <FileText className="w-4 h-4 mr-2" />
+                  My Orders
+                </Button>
+              </Link>
+              <Link href="/menu" className="flex-1">
+                <Button className="w-full">
+                  Order More
+                  <ArrowRight className="w-4 h-4 ml-2" />
+                </Button>
+              </Link>
+            </div>
           </div>
         </div>
       </div>

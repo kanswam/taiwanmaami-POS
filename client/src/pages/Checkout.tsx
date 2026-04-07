@@ -52,9 +52,16 @@ export default function Checkout() {
     // Delivery address
     addressLine1: '',
     addressLine2: '',
-    area: '',
+    area: localStorage.getItem('deliveryAreaConfirmed') || '',
     city: 'Chennai',
-    pincode: '',
+    pincode: (() => {
+      const savedArea = localStorage.getItem('deliveryAreaConfirmed');
+      if (savedArea) {
+        const found = CHENNAI_AREAS.find(a => a.area === savedArea);
+        return found?.pincode || '';
+      }
+      return '';
+    })(),
     // Pickup
     selectedStoreId: stores?.[0]?.id || 1,
     // Scheduling

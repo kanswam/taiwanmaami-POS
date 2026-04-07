@@ -9,10 +9,13 @@ import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { trpc } from '@/lib/trpc';
 import { useCart } from '@/contexts/CartContext';
-import { Search, ShoppingCart, Truck, Store, ChevronRight, ArrowLeft, Home, AlertCircle, MapPin, Sparkles } from 'lucide-react';
+import { Search, ShoppingCart, Truck, Store, ChevronRight, ArrowLeft, Home, AlertCircle, MapPin, Sparkles, Check, ChevronsUpDown, Loader2 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Link } from 'wouter';
-import { formatPrice, OUTLET_HOURS } from '@shared/types';
+import { formatPrice, OUTLET_HOURS, CHENNAI_AREAS, DELIVERY_CONFIG } from '@shared/types';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
+import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
 // Product image mapping
@@ -68,8 +71,24 @@ export default function Menu() {
   const [searchQuery, setSearchQuery] = useState('');
   const [showOutletModal, setShowOutletModal] = useState(false);
   const [pendingOrderType, setPendingOrderType] = useState<'instore' | 'pickup' | null>(null);
+
+  // Delivery zone check state
+  const [deliveryAreaConfirmed, setDeliveryAreaConfirmed] = useState<string | null>(() => {
+    return localStorage.getItem('deliveryAreaConfirmed');
+  });
+  const [deliveryAreaOpen, setDeliveryAreaOpen] = useState(false);
+  const [selectedDeliveryArea, setSelectedDeliveryArea] = useState('');
+  const [isCheckingDelivery, setIsCheckingDelivery] = useState(false);
+  const [deliveryCheckResult, setDeliveryCheckResult] = useState<{
+    chargePaise: number;
+    chargeRupees: number;
+    tierLabel: string;
+    distanceKm: number;
+    distanceText: string;
+    durationText: string;
+  } | null>(null);
   const [showAddToOrderBanner, setShowAddToOrderBanner] = useState(false);
-  const { state, setOrderType, setTableNumber, tableNumber, setPickupOutlet, pickupOutlet, setInstoreOutlet, instoreOutlet, itemCount, total, setActiveOrderId } = useCart();
+  const { state, setOrderType, setTableNumber, tableNumber, setPickupOutlet, pickupOutlet, setInstoreOutlet, instoreOutlet, itemCount, subtotal, total, setActiveOrderId } = useCart();
   
   // Check for active order if table number is in URL
   const { data: activeOrder } = trpc.orders.getActiveOrderForTable.useQuery(
@@ -125,6 +144,50 @@ export default function Menu() {
 
   // Get delivery settings (radius and enabled status)
   const { data: deliverySettings } = trpc.menu.getDeliverySettings.useQuery();
+
+  // Delivery zone check - build address string for the query
+  const deliveryCheckAddress = useMemo(() => {
+    if (!selectedDeliveryArea || !isCheckingDelivery) return '';
+    const areaObj = CHENNAI_AREAS.find(a => a.area === selectedDeliveryArea);
+    return `${selectedDeliveryArea}, Chennai, Tamil Nadu ${areaObj?.pincode || '600000'}`;
+  }, [selectedDeliveryArea, isCheckingDelivery]);
+
+  const { data: deliveryCheckData, isFetching: isFetchingDeliveryCheck } = trpc.orders.getDeliveryCharge.useQuery(
+    { deliveryAddress: deliveryCheckAddress },
+    { 
+      enabled: deliveryCheckAddress.length > 10,
+      staleTime: 10 * 60 * 1000,
+    }
+  );
+
+  // Update result when data arrives
+  useEffect(() => {
+    if (deliveryCheckData && isCheckingDelivery) {
+      setDeliveryCheckResult(deliveryCheckData);
+      setIsCheckingDelivery(false);
+    }
+  }, [deliveryCheckData, isCheckingDelivery]);
+
+  const checkDeliveryArea = () => {
+    if (!selectedDeliveryArea) {
+      toast.error('Please select your delivery area');
+      return;
+    }
+    setIsCheckingDelivery(true);
+  };
+
+  const confirmDeliveryArea = () => {
+    localStorage.setItem('deliveryAreaConfirmed', selectedDeliveryArea);
+    setDeliveryAreaConfirmed(selectedDeliveryArea);
+    setDeliveryCheckResult(null);
+  };
+
+  const changeDeliveryArea = () => {
+    localStorage.removeItem('deliveryAreaConfirmed');
+    setDeliveryAreaConfirmed(null);
+    setSelectedDeliveryArea('');
+    setDeliveryCheckResult(null);
+  };
   const deliveryRadius = deliverySettings?.deliveryRadius || 15;
   const deliveryEnabled = deliverySettings?.deliveryEnabled !== false;
 
@@ -614,13 +677,28 @@ export default function Menu() {
               </div>
             )}
 
-            {/* Delivery - automatically T Nagar only */}
+            {/* Delivery - show confirmed area with charge info */}
             {state.orderType === 'delivery' && (
               deliveryEnabled ? (
-                <div className="flex items-center gap-2 px-3 py-2 bg-primary/10 border border-primary/20 rounded-lg">
-                  <Truck className="w-5 h-5 text-primary" />
-                  <span className="font-semibold text-primary">Delivery from T. Nagar only (within {deliveryRadius}km)</span>
-                </div>
+                deliveryAreaConfirmed ? (
+                  <div className="flex flex-col gap-1.5 w-full sm:w-auto">
+                    <div className="flex items-center gap-2 px-3 py-2 bg-green-50 border border-green-200 rounded-lg">
+                      <MapPin className="w-4 h-4 text-green-600 shrink-0" />
+                      <span className="text-sm font-medium text-green-800">Delivering to <strong>{deliveryAreaConfirmed}</strong></span>
+                      <button
+                        onClick={changeDeliveryArea}
+                        className="ml-auto text-xs text-primary hover:underline font-medium shrink-0"
+                      >
+                        Change
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2 px-3 py-2 bg-primary/10 border border-primary/20 rounded-lg">
+                    <Truck className="w-5 h-5 text-primary" />
+                    <span className="font-semibold text-primary">Delivery from T. Nagar</span>
+                  </div>
+                )
               ) : (
                 <div className="flex items-center gap-2 px-4 py-3 bg-red-100 border-2 border-red-300 rounded-lg">
                   <AlertCircle className="w-5 h-5 text-red-600" />
@@ -644,7 +722,144 @@ export default function Menu() {
       </div>
 
       {/* Check if outlet selection is required */}
-      {((state.orderType === 'instore' && !instoreOutlet) || (state.orderType === 'pickup' && !pickupOutlet)) ? (
+      {(state.orderType === 'delivery' && !deliveryAreaConfirmed && deliveryEnabled) ? (
+        /* Block menu access until delivery area is confirmed */
+        <div className="container py-12">
+          <div className="max-w-md mx-auto text-center">
+            <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-primary/10 flex items-center justify-center">
+              <Truck className="w-10 h-10 text-primary" />
+            </div>
+            <h2 className="text-2xl font-bold mb-3">Where should we deliver?</h2>
+            <p className="text-muted-foreground mb-6">
+              Select your area to check delivery availability and charges.
+            </p>
+
+            {/* Area selector combobox */}
+            <div className="mb-6">
+              <Popover open={deliveryAreaOpen} onOpenChange={setDeliveryAreaOpen}>
+                <PopoverTrigger asChild>
+                  <button
+                    role="combobox"
+                    aria-expanded={deliveryAreaOpen}
+                    className="w-full flex items-center justify-between px-4 py-3 rounded-xl border-2 border-border hover:border-primary transition-all bg-white text-left"
+                  >
+                    <span className={selectedDeliveryArea ? 'text-foreground font-medium' : 'text-muted-foreground'}>
+                      {selectedDeliveryArea || 'Search your area...'}
+                    </span>
+                    <ChevronsUpDown className="w-4 h-4 text-muted-foreground" />
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[calc(100vw-4rem)] sm:w-[400px] p-0" align="center">
+                  <Command>
+                    <CommandInput placeholder="Type your area name..." />
+                    <CommandList>
+                      <CommandEmpty>Area not found. Try a nearby area.</CommandEmpty>
+                      <CommandGroup className="max-h-[250px] overflow-y-auto">
+                        {CHENNAI_AREAS.map((area) => (
+                          <CommandItem
+                            key={area.area}
+                            value={area.area}
+                            onSelect={(val) => {
+                              setSelectedDeliveryArea(val === selectedDeliveryArea ? '' : area.area);
+                              setDeliveryAreaOpen(false);
+                              setDeliveryCheckResult(null);
+                            }}
+                          >
+                            <Check className={cn('mr-2 h-4 w-4', selectedDeliveryArea === area.area ? 'opacity-100' : 'opacity-0')} />
+                            <span>{area.area}</span>
+                            <span className="ml-auto text-xs text-muted-foreground">{area.pincode}</span>
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
+            </div>
+
+            {/* Check button */}
+            {!deliveryCheckResult && (
+              <button
+                onClick={checkDeliveryArea}
+                disabled={!selectedDeliveryArea || isCheckingDelivery || isFetchingDeliveryCheck}
+                className="w-full py-3 rounded-xl bg-primary text-white font-bold text-lg transition-all hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                {(isCheckingDelivery || isFetchingDeliveryCheck) ? (
+                  <><Loader2 className="w-5 h-5 animate-spin" /> Checking...</>
+                ) : (
+                  <>Check Delivery</>  
+                )}
+              </button>
+            )}
+
+            {/* Result card */}
+            {deliveryCheckResult && (
+              <div className="mt-4 space-y-4">
+                <div className="p-4 rounded-xl border-2 border-green-200 bg-green-50">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Check className="w-5 h-5 text-green-600" />
+                    <span className="font-bold text-green-800">We deliver to {selectedDeliveryArea}!</span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    <div className="text-left">
+                      <span className="text-muted-foreground">Distance</span>
+                      <p className="font-semibold">{deliveryCheckResult.distanceText || `${deliveryCheckResult.distanceKm} km`}</p>
+                    </div>
+                    <div className="text-left">
+                      <span className="text-muted-foreground">Est. Time</span>
+                      <p className="font-semibold">{deliveryCheckResult.durationText || 'N/A'}</p>
+                    </div>
+                    <div className="text-left col-span-2">
+                      <span className="text-muted-foreground">Delivery Charge</span>
+                      <p className="font-bold text-lg text-primary">{deliveryCheckResult.tierLabel}</p>
+                      <p className="text-xs text-muted-foreground">Free delivery on orders above {formatPrice(DELIVERY_CONFIG.freeDeliveryThresholdPaise)}</p>
+                    </div>
+                  </div>
+                </div>
+
+                <button
+                  onClick={confirmDeliveryArea}
+                  className="w-full py-3 rounded-xl bg-amber-600 text-white font-bold text-lg transition-all hover:bg-amber-700 flex items-center justify-center gap-2"
+                >
+                  Continue to Menu
+                  <ChevronRight className="w-5 h-5" />
+                </button>
+
+                <button
+                  onClick={() => {
+                    setSelectedDeliveryArea('');
+                    setDeliveryCheckResult(null);
+                  }}
+                  className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                >
+                  Choose a different area
+                </button>
+              </div>
+            )}
+
+            {/* Alternative options */}
+            <div className="mt-8 pt-6 border-t border-border">
+              <p className="text-sm text-muted-foreground mb-3">Or try another option:</p>
+              <div className="flex gap-3 justify-center">
+                <button
+                  onClick={() => setOrderType('pickup')}
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg border border-border hover:border-primary hover:bg-primary/5 transition-all text-sm font-medium"
+                >
+                  <Store className="w-4 h-4" />
+                  Pickup
+                </button>
+                <button
+                  onClick={() => setOrderType('instore')}
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg border border-border hover:border-primary hover:bg-primary/5 transition-all text-sm font-medium"
+                >
+                  <Home className="w-4 h-4" />
+                  Dine In
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : ((state.orderType === 'instore' && !instoreOutlet) || (state.orderType === 'pickup' && !pickupOutlet)) ? (
         /* Block menu access until outlet is selected */
         <div className="container py-12">
           <div className="max-w-md mx-auto text-center">
@@ -806,9 +1021,22 @@ export default function Menu() {
         )}
       </main>
 
-      {/* Floating Cart Button */}
+      {/* Floating Cart Button with Free Delivery Nudge */}
       {itemCount > 0 && (
-        <div className="fixed bottom-4 left-4 right-4 z-50">
+        <div className="fixed bottom-4 left-4 right-4 z-50 flex flex-col gap-2">
+          {/* Free delivery nudge - show when delivery order is within ₹500 of ₹2,500 threshold */}
+          {state.orderType === 'delivery' && subtotal > 0 && subtotal < DELIVERY_CONFIG.freeDeliveryThresholdPaise && subtotal >= (DELIVERY_CONFIG.freeDeliveryThresholdPaise - 50000) && (
+            <div className="bg-amber-50 border border-amber-300 rounded-xl px-4 py-2.5 text-center shadow-lg animate-in slide-in-from-bottom-2">
+              <p className="text-sm font-medium text-amber-800">
+                🚚 Add <strong>{formatPrice(DELIVERY_CONFIG.freeDeliveryThresholdPaise - subtotal)}</strong> more for <strong>FREE delivery!</strong>
+              </p>
+            </div>
+          )}
+          {state.orderType === 'delivery' && subtotal >= DELIVERY_CONFIG.freeDeliveryThresholdPaise && (
+            <div className="bg-green-50 border border-green-300 rounded-xl px-4 py-2 text-center shadow-lg">
+              <p className="text-sm font-medium text-green-700">🎉 You've unlocked <strong>FREE delivery!</strong></p>
+            </div>
+          )}
           <Link href="/cart">
             <Button className="w-full h-14 text-lg shadow-lg">
               <ShoppingCart className="w-5 h-5 mr-2" />

@@ -5,7 +5,7 @@ import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { useAuth } from '@/_core/hooks/useAuth';
 import { useCart } from '@/contexts/CartContext';
 import { useLoginTransition } from '@/hooks/useLoginTransition';
-import { Menu, ShoppingCart, User, LogOut, MapPin, Info, FileText, X, ClipboardList, BookOpen } from 'lucide-react';
+import { Menu, ShoppingCart, User, LogOut, MapPin, Info, FileText, X, ClipboardList, BookOpen, UtensilsCrossed } from 'lucide-react';
 import { formatPrice } from '@shared/types';
 import { isPartnerNavVisible } from '@/lib/partnerGate';
 
@@ -98,6 +98,16 @@ export function Header() {
                 </Link>
               )
             ))}
+
+            {/* Order Now CTA */}
+            <Link href="/menu?type=delivery">
+              <Button 
+                className="bg-amber-600 hover:bg-amber-700 text-white font-bold px-5 py-2 rounded-full shadow-md hover:shadow-lg transition-all duration-200 text-sm"
+              >
+                <UtensilsCrossed className="w-4 h-4 mr-1.5" />
+                Order Now
+              </Button>
+            </Link>
           </nav>
 
           {/* Right side actions */}
@@ -169,6 +179,18 @@ export function Header() {
               </SheetTrigger>
               <SheetContent side="right" className="w-[280px]">
                 <div className="flex flex-col gap-4 mt-8">
+                  {/* Order Now CTA - prominent at top of mobile menu */}
+                  <Link
+                    href="/menu?type=delivery"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex items-center justify-center gap-2 p-3 rounded-full bg-amber-600 text-white font-bold shadow-md"
+                  >
+                    <UtensilsCrossed className="w-5 h-5" />
+                    Order Now
+                  </Link>
+
+                  <hr className="my-1" />
+
                   {navLinks.map((link) => (
                     link.href.startsWith('/#') ? (
                       <a

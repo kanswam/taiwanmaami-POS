@@ -2848,3 +2848,37 @@ Orders fixed:
 - [x] Converted dropdown to searchable combobox for easy filtering with 145 areas
 - [ ] DEFERRED: Add Palladium delivery (waiting for KOT printer fix at Palladium)
 - [x] Delivery charges unchanged - still uses Google Maps Distance Matrix API for accurate distance-based pricing
+
+## CONVERSION PLAYBOOK - Prioritized Fix List (Apr 7)
+
+### P0 - CRITICAL (Week 1)
+- [x] Delivery zone eligibility check BEFORE menu browsing - modal asks area/pincode when customer selects Delivery, shows charge upfront, offers Pickup/Dine-in if too far
+- [x] Add prominent "Order Now" gold CTA button to navigation bar - links to /menu with Delivery pre-selected
+- [ ] Add enquiry forms to /wholesale and /franchise pages - capture 160+ monthly warm leads (name, phone, city, message)
+
+### P1 - HIGH (Week 2)
+- [ ] Lower loyalty stamp threshold from ₹450 to ₹350 per stamp
+- [ ] Retrospectively recalculate stamps for existing customers (only those who haven't already redeemed free drink)
+- [ ] Update all frontend references to ₹450 → ₹350 (StampCard, Checkout, Home, Profile)
+- [ ] Update all backend stamp calculation logic (3 places in routers.ts: line 907, 4008, 4052)
+
+### P2 - MEDIUM (Month 1-3)
+- [ ] DEFERRED: Palladium delivery (waiting for KOT printer fix)
+- [ ] Loyalty programme rules - surface stamp progress on ordering page, not buried in FAQ
+- [ ] Unify physical and virtual stamp systems into one phone-number linked account
+
+### EXTERNAL (Not code changes)
+- [ ] Print 500 QR code bag inserts for Swiggy/Zomato deliveries
+- [ ] Update Instagram bio CTA to link directly to /menu
+- [ ] Create 'ORDER NOW' Instagram Story Highlight with ordering flow
+- [ ] Set up WhatsApp order confirmation with stamp count reminder
+- [ ] Set up 45-day lapsed customer WhatsApp reactivation
+
+## Conversion Fixes - Implementation (Apr 7)
+- [x] Persist delivery area in localStorage (not just sessionStorage) so returning customers don't re-enter
+- [x] Add free delivery nudge on floating cart bar when subtotal is close to ₹2,500
+- [x] Show "FREE delivery unlocked" when subtotal exceeds ₹2,500
+- [x] Fix subtotal not available in Menu.tsx floating cart bar (need to destructure from useCart)
+- [x] Add tax invoice download for customers once they have paid (on My Orders / Order Confirmation page)
+- [x] Extracted invoice generator to shared utility @/lib/generateInvoice.ts
+- [x] Auto-populate Checkout area + pincode from confirmed delivery area in localStorage
