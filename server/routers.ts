@@ -5761,6 +5761,7 @@ export const appRouter = router({
         const dbInstance = await getDb();
         if (!dbInstance) return { totalCustomers: 0, repeatCustomers: 0, repeatRate: 0, avgOrdersPerCustomer: 0, avgLifetimeValue: 0 };
 
+        // Step 1: Get orders in the selected date range
         let conditions: any[] = [sql`${orders.orderStatus} != 'cancelled'`];
         if (input?.startDate) conditions.push(sql`${orders.createdAt} >= ${input.startDate}`);
         if (input?.endDate) conditions.push(sql`${orders.createdAt} <= ${input.endDate + ' 23:59:59'}`);
@@ -5768,20 +5769,63 @@ export const appRouter = router({
         const whereClause = and(...conditions);
         const matchingOrders = await dbInstance.select().from(orders).where(whereClause);
 
+        // Collect unique customer identifiers (userId for registered, phone for guests)
+        const registeredUserIds = new Set<number>();
+        const guestPhones = new Set<string>();
         const customerStats: Record<string, { orders: number; totalSpent: number }> = {};
+        
         matchingOrders.forEach(order => {
-          // Only count registered users (userId > 0) for repeat customer metrics
-          // Guest orders (userId = 0 or null) are excluded from repeat customer calculation
-          if (!order.userId || order.userId === 0) return;
-          const key = `user_${order.userId}`;
+          let key: string;
+          if (order.userId && order.userId > 0) {
+            key = `user_${order.userId}`;
+            registeredUserIds.add(order.userId);
+          } else if (order.customerPhone) {
+            key = `phone_${order.customerPhone}`;
+            guestPhones.add(order.customerPhone);
+          } else {
+            return; // Skip orders with no identifier
+          }
           if (!customerStats[key]) customerStats[key] = { orders: 0, totalSpent: 0 };
           customerStats[key].orders += 1;
           customerStats[key].totalSpent += order.totalAmount;
         });
 
+        // Step 2: Check which of these customers have ordered BEFORE the date range
+        // A "repeat customer" is someone who ordered in this period AND has ordered before
+        let repeatCustomers = 0;
+        const beforeDate = input?.startDate || null;
+        
+        if (beforeDate) {
+          // Check registered users with prior orders
+          for (const userId of Array.from(registeredUserIds)) {
+            const [prior] = await dbInstance.select({ cnt: sql<number>`COUNT(*)` })
+              .from(orders)
+              .where(and(
+                eq(orders.userId, userId),
+                sql`${orders.orderStatus} != 'cancelled'`,
+                sql`${orders.createdAt} < ${beforeDate}`
+              ));
+            if (prior && Number(prior.cnt) > 0) repeatCustomers++;
+          }
+          
+          // Check guest customers (by phone) with prior orders
+          for (const phone of Array.from(guestPhones)) {
+            const [prior] = await dbInstance.select({ cnt: sql<number>`COUNT(*)` })
+              .from(orders)
+              .where(and(
+                eq(orders.customerPhone, phone),
+                sql`${orders.orderStatus} != 'cancelled'`,
+                sql`${orders.createdAt} < ${beforeDate}`
+              ));
+            if (prior && Number(prior.cnt) > 0) repeatCustomers++;
+          }
+        } else {
+          // No date filter: count customers with >1 order in the dataset
+          repeatCustomers = Object.values(customerStats).filter(c => c.orders > 1).length;
+        }
+
         const customers = Object.values(customerStats);
         const totalCustomers = customers.length;
-        const repeatCustomers = customers.filter(c => c.orders > 1).length;
         const totalOrders = customers.reduce((sum, c) => sum + c.orders, 0);
         const totalSpent = customers.reduce((sum, c) => sum + c.totalSpent, 0);
 

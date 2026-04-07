@@ -2893,3 +2893,9 @@ Orders fixed:
 - [x] Stats cards: total orders, total spent, stamps, store credit
 - [x] Additional info: birthday, join date, last active, notes
 - [x] Vitest tests for getDetails endpoint (3 passing)
+
+## Bug Fixes (Apr 7)
+
+- [x] Bug fix: Repeat customers showing 0% in analytics dashboard (Meenakshi is a regular but shows 0 of 6)
+- [x] Bug fix: Meenakshi (order #90, ₹1,397) didn't receive 3 stamps — stamps only awarded on order completion (working as designed)
+- [x] Ensure free drink reward auto-triggers when customer reaches 10 stamps on next order (verified: 9 + 3 = 12 → reward created → 2 remaining)
