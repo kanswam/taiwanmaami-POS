@@ -14,6 +14,10 @@ import { trpc } from '@/lib/trpc';
 import { formatPrice, CHENNAI_AREAS, isOrderingAvailable, isOutletOpen, OUTLET_HOURS, DELIVERY_CONFIG } from '@shared/types';
 import { ArrowLeft, MapPin, Clock, CreditCard, Banknote, Loader2, Gift, User, Stamp, Crown, WifiOff } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
+import { Check, ChevronsUpDown } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { Link } from 'wouter';
 import { useLoginTransition } from '@/hooks/useLoginTransition';
@@ -740,28 +744,55 @@ export default function Checkout() {
                       <div className="grid sm:grid-cols-3 gap-4">
                         <div>
                           <Label>Area *</Label>
-                          <Select
-                            value={formData.area}
-                            onValueChange={(value) => {
-                              const selectedArea = CHENNAI_AREAS.find(a => a.area === value);
-                              setFormData({ 
-                                ...formData, 
-                                area: value,
-                                pincode: selectedArea?.pincode || formData.pincode
-                              });
-                            }}
-                          >
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select area" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {CHENNAI_AREAS.map((area) => (
-                                <SelectItem key={area.area} value={area.area}>
-                                  {area.area}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <Button
+                                variant="outline"
+                                role="combobox"
+                                className={cn(
+                                  "w-full justify-between font-normal",
+                                  !formData.area && "text-muted-foreground"
+                                )}
+                              >
+                                {formData.area || "Search area..."}
+                                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+                              <Command>
+                                <CommandInput placeholder="Type to search area..." />
+                                <CommandList>
+                                  <CommandEmpty>No area found.</CommandEmpty>
+                                  <CommandGroup>
+                                    {CHENNAI_AREAS.map((area) => (
+                                      <CommandItem
+                                        key={area.area}
+                                        value={area.area}
+                                        onSelect={(currentValue) => {
+                                          const selectedArea = CHENNAI_AREAS.find(a => a.area.toLowerCase() === currentValue.toLowerCase());
+                                          if (selectedArea) {
+                                            setFormData({
+                                              ...formData,
+                                              area: selectedArea.area,
+                                              pincode: selectedArea.pincode
+                                            });
+                                          }
+                                        }}
+                                      >
+                                        <Check
+                                          className={cn(
+                                            "mr-2 h-4 w-4",
+                                            formData.area === area.area ? "opacity-100" : "opacity-0"
+                                          )}
+                                        />
+                                        {area.area}
+                                      </CommandItem>
+                                    ))}
+                                  </CommandGroup>
+                                </CommandList>
+                              </Command>
+                            </PopoverContent>
+                          </Popover>
                         </div>
                         <div>
                           <Label>City</Label>
@@ -1026,28 +1057,55 @@ export default function Checkout() {
                     <div className="grid sm:grid-cols-3 gap-4">
                       <div>
                         <Label>Area *</Label>
-                        <Select
-                          value={formData.area}
-                          onValueChange={(value) => {
-                            const selectedArea = CHENNAI_AREAS.find(a => a.area === value);
-                            setFormData({ 
-                              ...formData, 
-                              area: value,
-                              pincode: selectedArea?.pincode || formData.pincode
-                            });
-                          }}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select area" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {CHENNAI_AREAS.map((area) => (
-                              <SelectItem key={area.area} value={area.area}>
-                                {area.area}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant="outline"
+                              role="combobox"
+                              className={cn(
+                                "w-full justify-between font-normal",
+                                !formData.area && "text-muted-foreground"
+                              )}
+                            >
+                              {formData.area || "Search area..."}
+                              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+                            <Command>
+                              <CommandInput placeholder="Type to search area..." />
+                              <CommandList>
+                                <CommandEmpty>No area found.</CommandEmpty>
+                                <CommandGroup>
+                                  {CHENNAI_AREAS.map((area) => (
+                                    <CommandItem
+                                      key={area.area}
+                                      value={area.area}
+                                      onSelect={(currentValue) => {
+                                        const selectedArea = CHENNAI_AREAS.find(a => a.area.toLowerCase() === currentValue.toLowerCase());
+                                        if (selectedArea) {
+                                          setFormData({
+                                            ...formData,
+                                            area: selectedArea.area,
+                                            pincode: selectedArea.pincode
+                                          });
+                                        }
+                                      }}
+                                    >
+                                      <Check
+                                        className={cn(
+                                          "mr-2 h-4 w-4",
+                                          formData.area === area.area ? "opacity-100" : "opacity-0"
+                                        )}
+                                      />
+                                      {area.area}
+                                    </CommandItem>
+                                  ))}
+                                </CommandGroup>
+                              </CommandList>
+                            </Command>
+                          </PopoverContent>
+                        </Popover>
                       </div>
                       <div>
                         <Label>City</Label>

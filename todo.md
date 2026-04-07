@@ -2842,3 +2842,9 @@ Orders fixed:
 - [x] Root cause: guest order flow saved name to guest_orders table but not orders.customerName
 - [x] Fix: save customerName/Phone to orders table during creation + fallback lookup from guest_orders
 - [x] Backfilled 396 existing orders with customer names from guest_orders table
+
+## Fix: Expand Locality Dropdown & Add Palladium Delivery (Apr 7)
+- [x] Expand area/locality dropdown to include ALL Chennai areas (145 areas, up from 31)
+- [x] Converted dropdown to searchable combobox for easy filtering with 145 areas
+- [ ] DEFERRED: Add Palladium delivery (waiting for KOT printer fix at Palladium)
+- [x] Delivery charges unchanged - still uses Google Maps Distance Matrix API for accurate distance-based pricing
