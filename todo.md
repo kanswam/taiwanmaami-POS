@@ -2924,3 +2924,7 @@ Orders fixed:
 ## Staff Orders Date Filter (Apr 12 - URGENT)
 
 - [x] Add date filter to Staff Orders page so staff can view previous day's unpaid orders
+
+## Manual Order Creation for Staff (Apr 12)
+
+- [x] Add manual order creation on Staff Orders page for placing in-store orders after POS shutdown (post 11:45 PM)

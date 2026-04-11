@@ -18,7 +18,7 @@ import {
   Filter, Store, UtensilsCrossed, ShoppingBag,
   MessageSquare, AlertTriangle, BarChart3, Volume2, VolumeX,
   X, Calendar, Hash, Camera, Upload, Image, ToggleLeft, Trash2, ChevronDown, Gift,
-  GitMerge, ArrowRight
+  GitMerge, ArrowRight, Plus, Search, Minus
 } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
@@ -571,6 +571,82 @@ export default function StaffOrders() {
     onError: (err) => toast.error(err.message || 'Failed to redeem reward'),
   });
 
+  // Quick Order state
+  const [quickOrderOpen, setQuickOrderOpen] = useState(false);
+  const [qoCustomerName, setQoCustomerName] = useState('');
+  const [qoCustomerPhone, setQoCustomerPhone] = useState('');
+  const [qoTableNumber, setQoTableNumber] = useState('');
+  const [qoOutletId, setQoOutletId] = useState(2);
+  const [qoSearch, setQoSearch] = useState('');
+  const [qoCart, setQoCart] = useState<Array<{
+    productId: number; productName: string; size?: string;
+    withBoba?: boolean; quantity: number; unitPrice: number;
+    addons: Array<{ id: number; name: string; price: number }>;
+  }>>([]);
+  const [qoPaymentMethod, setQoPaymentMethod] = useState<string>('');
+  const [qoSpecialInstructions, setQoSpecialInstructions] = useState('');
+
+  const staffCreateOrder = trpc.orders.staffCreateOrder.useMutation({
+    onSuccess: (data) => {
+      toast.success(`Order #${data.orderNumber} created! Total: ${formatPrice(data.totalAmount)}`);
+      utils.orders.getRecent.invalidate();
+      setQuickOrderOpen(false);
+      setQoCustomerName(''); setQoCustomerPhone(''); setQoTableNumber('');
+      setQoCart([]); setQoPaymentMethod(''); setQoSpecialInstructions(''); setQoSearch('');
+    },
+    onError: (err) => toast.error(err.message || 'Failed to create order'),
+  });
+
+  const qoFilteredProducts = useMemo(() => {
+    if (!allProducts || !qoSearch.trim()) return allProducts?.slice(0, 20) || [];
+    const search = qoSearch.toLowerCase();
+    return allProducts.filter((p: any) => p.name.toLowerCase().includes(search)).slice(0, 20);
+  }, [allProducts, qoSearch]);
+
+  const addToQoCart = (product: any) => {
+    const price = product.instorePrice || product.basePriceRegularWithBoba || product.basePriceRegularNoBoba || 0;
+    const existing = qoCart.find(c => c.productId === product.id);
+    if (existing) {
+      setQoCart(prev => prev.map(c => c.productId === product.id ? { ...c, quantity: c.quantity + 1 } : c));
+    } else {
+      setQoCart(prev => [...prev, {
+        productId: product.id, productName: product.name,
+        size: product.hasSizeVariants ? 'regular' : undefined,
+        withBoba: false, quantity: 1, unitPrice: price, addons: [],
+      }]);
+    }
+  };
+
+  const removeFromQoCart = (productId: number) => {
+    setQoCart(prev => {
+      const item = prev.find(c => c.productId === productId);
+      if (item && item.quantity > 1) {
+        return prev.map(c => c.productId === productId ? { ...c, quantity: c.quantity - 1 } : c);
+      }
+      return prev.filter(c => c.productId !== productId);
+    });
+  };
+
+  const qoCartTotal = useMemo(() => qoCart.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0), [qoCart]);
+
+  const handleQuickOrderSubmit = () => {
+    if (!qoCustomerName.trim()) { toast.error('Customer name is required'); return; }
+    if (qoCart.length === 0) { toast.error('Add at least one item'); return; }
+    staffCreateOrder.mutate({
+      customerName: qoCustomerName.trim(),
+      customerPhone: qoCustomerPhone.trim() || undefined,
+      tableNumber: qoTableNumber.trim() || undefined,
+      outletId: qoOutletId,
+      items: qoCart.map(item => ({
+        productId: item.productId, productName: item.productName,
+        size: item.size as any, withBoba: item.withBoba,
+        quantity: item.quantity, unitPrice: item.unitPrice, addons: item.addons,
+      })),
+      paymentMethod: (qoPaymentMethod && qoPaymentMethod !== 'pending') ? qoPaymentMethod as any : undefined,
+      specialInstructions: qoSpecialInstructions.trim() || undefined,
+    });
+  };
+
   // Order notification sounds & auto-poll (synced with admin page chimes)
   const { soundEnabled, toggleSound, newOrderIds } = useOrderNotification(ordersData, refetch, 20000);
 
@@ -1115,6 +1191,13 @@ export default function StaffOrders() {
               <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
               Auto-refresh
             </span>
+            <Button
+              size="sm"
+              className="bg-green-600 hover:bg-green-700 text-white"
+              onClick={() => setQuickOrderOpen(true)}
+            >
+              <Plus className="w-4 h-4 mr-1" /> Quick Order
+            </Button>
             <Button variant="outline" size="sm" onClick={() => refetch()}>
               <RefreshCw className="w-4 h-4 mr-1" />
               Refresh
@@ -1773,6 +1856,146 @@ export default function StaffOrders() {
                 <><RefreshCw className="w-4 h-4 mr-1 animate-spin" /> Merging...</>
               ) : (
                 <><GitMerge className="w-4 h-4 mr-1" /> Confirm Merge</>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Quick Order Dialog */}
+      <Dialog open={quickOrderOpen} onOpenChange={setQuickOrderOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Plus className="w-5 h-5 text-green-600" />
+              Quick Order (Staff)
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            {/* Customer Info */}
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-sm font-medium">Customer Name *</label>
+                <Input value={qoCustomerName} onChange={e => setQoCustomerName(e.target.value)} placeholder="Name" />
+              </div>
+              <div>
+                <label className="text-sm font-medium">Phone</label>
+                <Input value={qoCustomerPhone} onChange={e => setQoCustomerPhone(e.target.value)} placeholder="Phone number" />
+              </div>
+              <div>
+                <label className="text-sm font-medium">Table</label>
+                <Input value={qoTableNumber} onChange={e => setQoTableNumber(e.target.value)} placeholder="Table number" />
+              </div>
+              <div>
+                <label className="text-sm font-medium">Outlet</label>
+                <Select value={qoOutletId.toString()} onValueChange={v => setQoOutletId(Number(v))}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="1">Palladium Mall</SelectItem>
+                    <SelectItem value="2">T. Nagar</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* Product Search */}
+            <div>
+              <label className="text-sm font-medium">Add Items</label>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  value={qoSearch} onChange={e => setQoSearch(e.target.value)}
+                  placeholder="Search menu items..."
+                  className="pl-9"
+                />
+              </div>
+              <div className="mt-2 max-h-48 overflow-y-auto border rounded-lg divide-y">
+                {qoFilteredProducts.map((product: any) => {
+                  const price = product.instorePrice || product.basePriceRegularWithBoba || product.basePriceRegularNoBoba || 0;
+                  return (
+                    <div key={product.id} className="flex items-center justify-between p-2 hover:bg-muted/50 cursor-pointer" onClick={() => addToQoCart(product)}>
+                      <div>
+                        <span className="text-sm font-medium">{product.name}</span>
+                        <span className="text-xs text-muted-foreground ml-2">{formatPrice(price)}</span>
+                      </div>
+                      <Plus className="w-4 h-4 text-green-600" />
+                    </div>
+                  );
+                })}
+                {qoFilteredProducts.length === 0 && (
+                  <div className="p-3 text-center text-sm text-muted-foreground">No products found</div>
+                )}
+              </div>
+            </div>
+
+            {/* Cart */}
+            {qoCart.length > 0 && (
+              <div>
+                <label className="text-sm font-medium">Order Items ({qoCart.length})</label>
+                <div className="border rounded-lg divide-y">
+                  {qoCart.map(item => (
+                    <div key={item.productId} className="flex items-center justify-between p-2">
+                      <div className="flex-1">
+                        <span className="text-sm font-medium">{item.productName}</span>
+                        <span className="text-xs text-muted-foreground ml-2">{formatPrice(item.unitPrice)} each</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Button size="sm" variant="outline" className="h-7 w-7 p-0" onClick={() => removeFromQoCart(item.productId)}>
+                          <Minus className="w-3 h-3" />
+                        </Button>
+                        <span className="text-sm font-bold w-6 text-center">{item.quantity}</span>
+                        <Button size="sm" variant="outline" className="h-7 w-7 p-0" onClick={() => addToQoCart({ id: item.productId, name: item.productName, instorePrice: item.unitPrice })}>
+                          <Plus className="w-3 h-3" />
+                        </Button>
+                        <span className="text-sm font-bold w-20 text-right">{formatPrice(item.unitPrice * item.quantity)}</span>
+                      </div>
+                    </div>
+                  ))}
+                  <div className="flex items-center justify-between p-2 bg-muted/50 font-bold">
+                    <span>Subtotal</span>
+                    <span>{formatPrice(qoCartTotal)}</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Payment & Notes */}
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-sm font-medium">Payment Method</label>
+                <Select value={qoPaymentMethod} onValueChange={setQoPaymentMethod}>
+                  <SelectTrigger><SelectValue placeholder="Pay later" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="pending">Pay Later</SelectItem>
+                    <SelectItem value="cash">Cash</SelectItem>
+                    <SelectItem value="upi">GPay / UPI</SelectItem>
+                    <SelectItem value="card">Card</SelectItem>
+                    <SelectItem value="zomato_dineout">Zomato District</SelectItem>
+                    <SelectItem value="swiggy_dineout">Swiggy Dineout</SelectItem>
+                    <SelectItem value="eazydiner">EazyDiner</SelectItem>
+                    <SelectItem value="other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <label className="text-sm font-medium">Special Instructions</label>
+                <Input value={qoSpecialInstructions} onChange={e => setQoSpecialInstructions(e.target.value)} placeholder="Any notes..." />
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setQuickOrderOpen(false)}>Cancel</Button>
+            <Button
+              className="bg-green-600 hover:bg-green-700 text-white"
+              onClick={handleQuickOrderSubmit}
+              disabled={staffCreateOrder.isPending || qoCart.length === 0 || !qoCustomerName.trim()}
+            >
+              {staffCreateOrder.isPending ? (
+                <><RefreshCw className="w-4 h-4 mr-1 animate-spin" /> Creating...</>
+              ) : (
+                <><Plus className="w-4 h-4 mr-1" /> Create Order ({formatPrice(qoCartTotal)})</>
               )}
             </Button>
           </DialogFooter>

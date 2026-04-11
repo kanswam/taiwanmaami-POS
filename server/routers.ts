@@ -2093,6 +2093,150 @@ export const appRouter = router({
         };
       }),
 
+    // Staff quick order creation (for after POS shutdown or manual orders)
+    staffCreateOrder: staffProcedure
+      .input(z.object({
+        customerName: z.string().min(1),
+        customerPhone: z.string().optional(),
+        tableNumber: z.string().optional(),
+        outletId: z.number().default(2), // Default T Nagar
+        items: z.array(z.object({
+          productId: z.number(),
+          productName: z.string(),
+          size: z.enum(['petite', 'regular', 'large']).optional(),
+          withBoba: z.boolean().optional(),
+          sugarLevel: z.string().optional(),
+          iceLevel: z.string().optional(),
+          specialInstructions: z.string().optional(),
+          quantity: z.number().min(1),
+          unitPrice: z.number(),
+          addons: z.array(z.object({
+            id: z.number(),
+            name: z.string(),
+            price: z.number(),
+          })).default([]),
+        })).min(1),
+        paymentMethod: z.enum(['cash', 'upi', 'card', 'swiggy_dineout', 'zomato_dineout', 'eazydiner', 'other']).optional(),
+        specialInstructions: z.string().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const dbInstance = await getDb();
+        if (!dbInstance) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
+
+        // Calculate totals
+        let subtotal = 0;
+        for (const item of input.items) {
+          const addonsTotal = item.addons.reduce((sum, a) => sum + a.price, 0);
+          subtotal += (item.unitPrice + addonsTotal) * item.quantity;
+        }
+
+        const gstDetails = calculateGst(subtotal);
+        const totalAmount = subtotal + gstDetails.total;
+
+        // Generate order number
+        const { generateNextOrderNumber } = await import('./orderNumberHelper');
+        const orderNumber = await generateNextOrderNumber(dbInstance);
+
+        // Create order
+        const [orderResult] = await dbInstance.insert(orders).values({
+          orderNumber,
+          userId: 0, // Staff-created guest order
+          customerName: input.customerName,
+          customerPhone: input.customerPhone || '',
+          orderType: 'instore',
+          tableNumber: input.tableNumber || null,
+          outletId: input.outletId,
+          orderStatus: 'confirmed', // Skip pending since staff is creating it
+          paymentStatus: input.paymentMethod ? 'completed' : 'pending',
+          paymentMethod: input.paymentMethod || null,
+          subtotal,
+          stateGst: gstDetails.stateGst,
+          centralGst: gstDetails.centralGst,
+          deliveryCharge: 0,
+          totalAmount,
+          specialInstructions: input.specialInstructions,
+          staffNotes: `Created by staff: ${ctx.user.name || ctx.user.openId}`,
+        });
+
+        const orderId = orderResult.insertId;
+
+        // Create order items
+        for (const item of input.items) {
+          const addonsTotal = item.addons.reduce((sum, a) => sum + a.price, 0);
+          const lineTotal = (item.unitPrice + addonsTotal) * item.quantity;
+
+          const [itemResult] = await dbInstance.insert(orderItemsTable).values({
+            orderId,
+            productId: item.productId,
+            productName: item.productName,
+            size: item.size,
+            withBoba: item.withBoba,
+            sugarLevel: item.sugarLevel,
+            iceLevel: item.iceLevel,
+            specialInstructions: item.specialInstructions,
+            quantity: item.quantity,
+            unitPrice: item.unitPrice,
+            addonsTotal,
+            lineTotal,
+          });
+
+          // Add addons
+          for (const addon of item.addons) {
+            await dbInstance.insert(orderItemAddons).values({
+              orderItemId: itemResult.insertId,
+              addonId: addon.id,
+              addonName: addon.name,
+              addonPrice: addon.price,
+            });
+          }
+        }
+
+        // Create guest order record
+        await dbInstance.insert(guestOrders).values({
+          orderId,
+          guestName: input.customerName,
+          guestPhone: input.customerPhone || '',
+          guestEmail: '',
+        });
+
+        // Create KOT for kitchen
+        try {
+          const kotData = {
+            orderId: orderNumber,
+            orderType: 'INSTORE',
+            tableNumber: input.tableNumber || '',
+            customerName: input.customerName,
+            customerPhone: input.customerPhone || '',
+            specialInstructions: input.specialInstructions || '',
+            items: input.items.map(item => ({
+              productName: item.productName,
+              quantity: item.quantity,
+              price: item.unitPrice,
+              size: item.size,
+              withBoba: item.withBoba,
+              sugarLevel: item.sugarLevel,
+              iceLevel: item.iceLevel,
+              specialInstructions: item.specialInstructions || '',
+              addons: item.addons.map(a => ({ name: a.name, price: a.price })),
+            })),
+            totalAmount,
+            createdAt: new Date().toISOString(),
+          };
+
+          await dbInstance.insert(kotQueue).values({
+            orderId: orderId.toString(),
+            outletId: input.outletId,
+            orderNumber,
+            kotData,
+            isPrinted: false,
+          });
+        } catch (kotError) {
+          console.error('KOT queuing failed for staff order', orderNumber, kotError);
+        }
+
+        return { orderId, orderNumber, totalAmount };
+      }),
+
     getById: adminProcedure
       .input(z.object({ orderId: z.number() }))
       .query(async ({ input }) => {
