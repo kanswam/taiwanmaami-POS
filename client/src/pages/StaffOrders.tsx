@@ -380,6 +380,7 @@ export default function StaffOrders() {
   const [outletFilter, setOutletFilter] = useState<string>('all');
   const [orderTypeFilter, setOrderTypeFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [dateFilter, setDateFilter] = useState<string>('today');
   
   // Dialogs
   const [noteDialog, setNoteDialog] = useState<{ open: boolean; orderId: number | null; currentNote: string }>({
@@ -463,6 +464,7 @@ export default function StaffOrders() {
     outlet: outletFilter as any,
     orderType: orderTypeFilter as any,
     status: activeTab === 'active' ? undefined : undefined, // We filter client-side for tabs
+    dateFilter: dateFilter as any,
   }, {
     refetchInterval: 15000, // Auto-refresh every 15 seconds (reduced from 10s for better mobile performance)
     staleTime: 5000, // Consider data fresh for 5 seconds
@@ -1167,6 +1169,19 @@ export default function StaffOrders() {
         <div className="flex flex-wrap items-center gap-3 mb-6 p-3 bg-muted/30 rounded-lg">
           <Filter className="w-4 h-4 text-muted-foreground" />
           
+          <Select value={dateFilter} onValueChange={setDateFilter}>
+            <SelectTrigger className={`w-[140px] ${dateFilter !== 'today' ? 'border-orange-400 bg-orange-50 text-orange-700' : ''}`}>
+              <Calendar className="w-4 h-4 mr-2" />
+              <SelectValue placeholder="Date" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="today">Today</SelectItem>
+              <SelectItem value="yesterday">Yesterday</SelectItem>
+              <SelectItem value="week">Past 7 Days</SelectItem>
+              <SelectItem value="all">All Time</SelectItem>
+            </SelectContent>
+          </Select>
+
           <Select value={outletFilter} onValueChange={setOutletFilter}>
             <SelectTrigger className="w-[140px]">
               <Store className="w-4 h-4 mr-2" />
@@ -1205,7 +1220,7 @@ export default function StaffOrders() {
             </SelectContent>
           </Select>
           
-          {(outletFilter !== 'all' || orderTypeFilter !== 'all' || statusFilter !== 'all') && (
+          {(outletFilter !== 'all' || orderTypeFilter !== 'all' || statusFilter !== 'all' || dateFilter !== 'today') && (
             <Button 
               variant="ghost" 
               size="sm"
@@ -1213,6 +1228,7 @@ export default function StaffOrders() {
                 setOutletFilter('all');
                 setOrderTypeFilter('all');
                 setStatusFilter('all');
+                setDateFilter('today');
               }}
             >
               <X className="w-4 h-4 mr-1" /> Clear

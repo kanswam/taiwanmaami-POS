@@ -2920,3 +2920,7 @@ Orders fixed:
 
 - [x] Fix orders 128 and 131: change payment method from UPI to Zomato District (zomato_dineout)
 - [x] Add admin capability to change payment method on any order (✏️ Change Payment Method button in order details)
+
+## Staff Orders Date Filter (Apr 12 - URGENT)
+
+- [x] Add date filter to Staff Orders page so staff can view previous day's unpaid orders
