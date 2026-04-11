@@ -268,6 +268,8 @@ export const orderItems = mysqlTable("order_items", {
   productName: varchar("productName", { length: 200 }).notNull(),
   size: mysqlEnum("size", ["petite", "regular", "large"]),
   withBoba: boolean("withBoba"),
+  bobaType: varchar("bobaType", { length: 50 }),
+  poppingBobaFlavor: varchar("poppingBobaFlavor", { length: 100 }),
   sugarLevel: varchar("sugarLevel", { length: 50 }),
   iceLevel: varchar("iceLevel", { length: 50 }),
   quantity: int("quantity").default(1).notNull(),

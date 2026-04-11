@@ -116,7 +116,12 @@ function generateReceipt(kot) {
       if (item.size) parts.push(Buffer.from(`   Size: ${item.size}\n`, 'ascii'));
       if (item.sugarLevel) parts.push(Buffer.from(`   Sugar: ${item.sugarLevel}\n`, 'ascii'));
       if (item.iceLevel) parts.push(Buffer.from(`   Ice: ${item.iceLevel}\n`, 'ascii'));
-      if (item.withBoba) parts.push(Buffer.from(`   With Boba: Yes\n`, 'ascii'));
+      if (item.withBoba) {
+        const bobaLabel = item.bobaType === 'popping' 
+          ? `Popping Boba${item.poppingBobaFlavor ? ` (${item.poppingBobaFlavor})` : ''}`
+          : 'Tapioca Boba';
+        parts.push(Buffer.from(`   Boba: ${bobaLabel}\n`, 'ascii'));
+      }
       if (item.addons && item.addons.length > 0) {
         const addonsStr = item.addons.join(', ').replace(/[^\x20-\x7E,]/g, '');
         parts.push(Buffer.from(`   Add-ons: ${addonsStr}\n`, 'ascii'));

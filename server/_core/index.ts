@@ -309,12 +309,27 @@ async function startServer() {
         specialInstructions: order.specialInstructions || '',
         items: items.map(item => {
           const addons = itemAddons.filter(a => a.orderItemId === item.id);
+          // Derive bobaType from DB columns or from addons (fallback for older orders)
+          let bobaType = item.bobaType;
+          let poppingBobaFlavor = item.poppingBobaFlavor;
+          if (!bobaType && item.withBoba) {
+            // Check addons for popping boba flavor
+            const poppingAddon = addons.find(a => a.addonName.toLowerCase().includes('popping'));
+            if (poppingAddon) {
+              bobaType = 'popping';
+              poppingBobaFlavor = poppingAddon.addonName.replace(/popping\s*boba/i, '').trim() || poppingAddon.addonName;
+            } else {
+              bobaType = 'tapioca';
+            }
+          }
           return {
             productName: item.productName,
             quantity: item.quantity,
             price: item.unitPrice,
             size: item.size,
             withBoba: item.withBoba,
+            bobaType: bobaType || undefined,
+            poppingBobaFlavor: poppingBobaFlavor || undefined,
             sugarLevel: item.sugarLevel,
             iceLevel: item.iceLevel,
             specialInstructions: item.specialInstructions || '',

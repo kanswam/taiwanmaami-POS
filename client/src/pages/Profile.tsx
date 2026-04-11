@@ -90,7 +90,7 @@ export default function Profile() {
   
   const updateBirthdayMutation = trpc.profile.updateBirthday.useMutation({
     onSuccess: () => {
-      toast.success('Birthday saved! You\'ll receive a special treat on your birthday week!');
+      toast.success('Birthday saved! You\'ll receive a special treat on your actual birthday!');
       utils.profile.getProfile.invalidate();
       setIsEditingBirthday(false);
     },
@@ -318,7 +318,7 @@ export default function Profile() {
             <div className="space-y-4">
               <div className="p-4 bg-pink-50 rounded-lg border border-pink-100">
                 <p className="text-sm text-pink-700">
-                  🎂 Share your birthday and get a <strong>FREE large boba drink</strong> (worth over ₹450) when you order at least one other item during your birthday week!
+                  🎂 Share your birthday and get a <strong>FREE large boba drink</strong> (worth over ₹450) <u><strong>when you order at least one other item</strong></u> on your actual birthday!
                 </p>
               </div>
               <div className="grid grid-cols-2 gap-4">

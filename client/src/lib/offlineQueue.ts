@@ -120,6 +120,8 @@ export interface KotData {
     price: number;
     size?: string;
     withBoba?: boolean;
+    bobaType?: string;
+    poppingBobaFlavor?: string;
     sugarLevel?: string;
     iceLevel?: string;
     specialInstructions: string;

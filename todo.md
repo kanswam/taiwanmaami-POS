@@ -2928,3 +2928,16 @@ Orders fixed:
 ## Manual Order Creation for Staff (Apr 12)
 
 - [x] Add manual order creation on Staff Orders page for placing in-store orders after POS shutdown (post 11:45 PM)
+
+## Birthday Popup & KOT Fixes (Apr 12)
+
+- [x] Fix birthday popup: change "birthday week" to "actual birthday" only (already fixed in previous session - popup says "on your actual birthday")
+- [x] Highlight "when you order at least one other item" in birthday popup so customers don't expect a free drink alone (already underlined in popup)
+- [x] Fix popping boba not printing on KOT
+  - [x] Added bobaType and poppingBobaFlavor columns to order_items DB table
+  - [x] Updated all 5 order item INSERT locations to save bobaType/poppingBobaFlavor
+  - [x] Updated KOT reprint endpoint with addon-based fallback for older orders
+  - [x] Updated KOT report to show boba type/flavor instead of Yes/No
+  - [x] Updated all KOT printer clients (kitchen, palladium, v4, offline, staff)
+  - [x] Added KotData TypeScript interface with bobaType/poppingBobaFlavor fields
+  - [x] All 19 vitest tests passing

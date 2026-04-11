@@ -163,7 +163,14 @@ function formatKOT(kot) {
     }
     
     if (item.withBoba !== null && item.withBoba !== undefined) {
-      output += `   Boba: ${item.withBoba ? 'Yes' : 'No'}\n`;
+      if (item.withBoba) {
+        const bobaLabel = item.bobaType === 'popping' 
+          ? `Popping Boba${item.poppingBobaFlavor ? ` (${item.poppingBobaFlavor})` : ''}`
+          : 'Tapioca Boba';
+        output += `   Boba: ${bobaLabel}\n`;
+      } else {
+        output += `   Boba: No\n`;
+      }
     }
     
     if (item.sugarLevel) {

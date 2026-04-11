@@ -78,7 +78,7 @@ export function BirthdayPromptModal({ open, onClose }: BirthdayPromptModalProps)
           </div>
           <DialogTitle className="text-xl">Get a FREE Boba on Your Birthday!</DialogTitle>
           <DialogDescription className="text-muted-foreground">
-            Share your birthday with us and we'll send you a special treat - a FREE large boba drink (worth over ₹450) when you order at least one other item during your birthday week!
+            Share your birthday with us and we'll send you a special treat — a FREE large boba drink (worth over ₹450) <span className="font-semibold text-foreground underline">when you order at least one other item</span> on your actual birthday!
           </DialogDescription>
         </DialogHeader>
 

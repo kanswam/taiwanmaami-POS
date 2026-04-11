@@ -226,6 +226,9 @@ export const appRouter = router({
           productName: z.string(),
           size: z.enum(['petite', 'regular', 'large']).optional(),
           withBoba: z.boolean().optional(),
+          bobaType: z.string().optional(),
+          bobaSize: z.string().optional(),
+          poppingBobaFlavor: z.string().optional(),
           sugarLevel: z.string().optional(),
           iceLevel: z.string().optional(),
           quantity: z.number().min(1),
@@ -353,13 +356,12 @@ export const appRouter = router({
                 
                 // Check if birthday free drink already used this year
                 if (birthdayUser.birthdayCodeUsedYear !== currentYear) {
-                  // Check if today is within the birthday week (3 days before to 3 days after)
-                  const birthdayThisYear = new Date(currentYear, birthdayUser.birthMonth - 1, birthdayUser.birthDay);
-                  const diffMs = now.getTime() - birthdayThisYear.getTime();
-                  const diffDays = diffMs / (1000 * 60 * 60 * 24);
+                  // Check if today is the customer's actual birthday
+                  const todayMonth = now.getMonth() + 1; // 1-indexed
+                  const todayDay = now.getDate();
                   
-                  if (diffDays >= -3 && diffDays <= 3) {
-                    // Birthday week! Find the most expensive item to make free
+                  if (todayMonth === birthdayUser.birthMonth && todayDay === birthdayUser.birthDay) {
+                    // It's their birthday! Find the most expensive item to make free
                     const mostExpensiveItem = input.items.reduce((max, item) => 
                       item.lineTotal > max.lineTotal ? item : max, input.items[0]);
                     
@@ -471,6 +473,8 @@ export const appRouter = router({
             productName: item.productName,
             size: item.size,
             withBoba: item.withBoba,
+            bobaType: item.bobaType || (item.withBoba ? 'tapioca' : null),
+            poppingBobaFlavor: item.poppingBobaFlavor || null,
             sugarLevel: item.sugarLevel,
             iceLevel: item.iceLevel,
             quantity: item.quantity,
@@ -510,6 +514,8 @@ export const appRouter = router({
                 price: item.unitPrice,
                 size: item.size,
                 withBoba: item.withBoba,
+                bobaType: item.bobaType || (item.withBoba ? 'tapioca' : undefined),
+                poppingBobaFlavor: item.poppingBobaFlavor,
                 sugarLevel: item.sugarLevel,
                 iceLevel: item.iceLevel,
                 specialInstructions: item.specialInstructions || '',
@@ -559,6 +565,8 @@ export const appRouter = router({
                 price: item.unitPrice,
                 size: item.size,
                 withBoba: item.withBoba,
+                bobaType: item.bobaType || (item.withBoba ? 'tapioca' : undefined),
+                poppingBobaFlavor: item.poppingBobaFlavor,
                 sugarLevel: item.sugarLevel,
                 iceLevel: item.iceLevel,
                 specialInstructions: item.specialInstructions || '',
@@ -722,6 +730,8 @@ export const appRouter = router({
               price: item.unitPrice,
               size: item.size,
               withBoba: item.withBoba,
+              bobaType: item.bobaType || (item.withBoba ? 'tapioca' : undefined),
+              poppingBobaFlavor: item.poppingBobaFlavor,
               sugarLevel: item.sugarLevel,
               iceLevel: item.iceLevel,
               specialInstructions: item.specialInstructions || '',
@@ -1552,6 +1562,9 @@ export const appRouter = router({
           productName: z.string(),
           size: z.enum(['petite', 'regular', 'large']).optional(),
           withBoba: z.boolean().optional(),
+          bobaType: z.string().optional(),
+          bobaSize: z.string().optional(),
+          poppingBobaFlavor: z.string().optional(),
           sugarLevel: z.string().optional(),
           iceLevel: z.string().optional(),
           quantity: z.number().min(1),
@@ -1596,6 +1609,8 @@ export const appRouter = router({
             productName: item.productName,
             size: item.size || null,
             withBoba: item.withBoba ?? null,
+            bobaType: item.bobaType || (item.withBoba ? 'tapioca' : null),
+            poppingBobaFlavor: item.poppingBobaFlavor || null,
             sugarLevel: item.sugarLevel || null,
             iceLevel: item.iceLevel || null,
             quantity: item.quantity,
@@ -1665,6 +1680,8 @@ export const appRouter = router({
             price: item.unitPrice,
             size: item.size,
             withBoba: item.withBoba,
+            bobaType: item.bobaType || (item.withBoba ? 'tapioca' : undefined),
+            poppingBobaFlavor: item.poppingBobaFlavor,
             sugarLevel: item.sugarLevel,
             iceLevel: item.iceLevel,
             specialInstructions: item.specialInstructions || '',
@@ -2105,6 +2122,9 @@ export const appRouter = router({
           productName: z.string(),
           size: z.enum(['petite', 'regular', 'large']).optional(),
           withBoba: z.boolean().optional(),
+          bobaType: z.string().optional(),
+          bobaSize: z.string().optional(),
+          poppingBobaFlavor: z.string().optional(),
           sugarLevel: z.string().optional(),
           iceLevel: z.string().optional(),
           specialInstructions: z.string().optional(),
@@ -2171,6 +2191,8 @@ export const appRouter = router({
             productName: item.productName,
             size: item.size,
             withBoba: item.withBoba,
+            bobaType: item.bobaType || (item.withBoba ? 'tapioca' : null),
+            poppingBobaFlavor: item.poppingBobaFlavor || null,
             sugarLevel: item.sugarLevel,
             iceLevel: item.iceLevel,
             specialInstructions: item.specialInstructions,
@@ -2214,6 +2236,8 @@ export const appRouter = router({
               price: item.unitPrice,
               size: item.size,
               withBoba: item.withBoba,
+              bobaType: item.bobaType || (item.withBoba ? 'tapioca' : undefined),
+              poppingBobaFlavor: item.poppingBobaFlavor,
               sugarLevel: item.sugarLevel,
               iceLevel: item.iceLevel,
               specialInstructions: item.specialInstructions || '',
@@ -2390,6 +2414,8 @@ export const appRouter = router({
                 price: item.unitPrice,
                 size: item.size,
                 withBoba: item.withBoba,
+                bobaType: item.bobaType || (item.withBoba ? 'tapioca' : undefined),
+                poppingBobaFlavor: item.poppingBobaFlavor,
                 sugarLevel: item.sugarLevel,
                 iceLevel: item.iceLevel,
                 specialInstructions: item.specialInstructions || '',
@@ -4670,6 +4696,8 @@ export const appRouter = router({
             productName: item.productName,
             size: item.size,
             withBoba: item.withBoba,
+            bobaType: item.bobaType || (item.withBoba ? 'tapioca' : null),
+            poppingBobaFlavor: item.poppingBobaFlavor || null,
             sugarLevel: item.sugarLevel,
             iceLevel: item.iceLevel,
             specialInstructions: item.specialInstructions,
@@ -4717,6 +4745,8 @@ export const appRouter = router({
                 price: item.unitPrice,
                 size: item.size,
                 withBoba: item.withBoba,
+                bobaType: item.bobaType || (item.withBoba ? 'tapioca' : undefined),
+                poppingBobaFlavor: item.poppingBobaFlavor,
                 sugarLevel: item.sugarLevel,
                 iceLevel: item.iceLevel,
                 specialInstructions: item.specialInstructions || '',
@@ -4778,6 +4808,8 @@ export const appRouter = router({
                 price: item.unitPrice,
                 size: item.size,
                 withBoba: item.withBoba,
+                bobaType: item.bobaType || (item.withBoba ? 'tapioca' : undefined),
+                poppingBobaFlavor: item.poppingBobaFlavor,
                 sugarLevel: item.sugarLevel,
                 iceLevel: item.iceLevel,
                 specialInstructions: item.specialInstructions || '',
@@ -5369,7 +5401,13 @@ export const appRouter = router({
               quantity: item.quantity || 1,
               customizations: [
                 item.size ? `Size: ${item.size}` : null,
-                item.withBoba !== null && item.withBoba !== undefined ? `Boba: ${item.withBoba ? 'Yes' : 'No'}` : null,
+                item.withBoba !== null && item.withBoba !== undefined ? (
+                  item.withBoba 
+                    ? (item.bobaType === 'popping' 
+                        ? `Boba: ${item.poppingBobaFlavor || 'Popping'} Popping Boba` 
+                        : 'Boba: Tapioca')
+                    : 'Boba: No'
+                ) : null,
                 item.sugarLevel ? `Sugar: ${item.sugarLevel}` : null,
                 item.iceLevel ? `Ice: ${item.iceLevel}` : null,
               ].filter(Boolean).join(', '),

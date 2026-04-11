@@ -112,7 +112,7 @@ describe('Birthday Free Drink Detection', () => {
       expect(result.discountAmount).toBe(0);
     });
 
-    it('does not apply if not birthday week', () => {
+    it('does not apply if not actual birthday', () => {
       const result = calculateBirthdayDiscount(
         items, 5, 15, null, new Date(2026, 1, 17) // Birthday in May
       );
