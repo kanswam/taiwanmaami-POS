@@ -84,7 +84,7 @@ export default function Admin() {
       <header className="sticky top-0 z-50 bg-primary text-primary-foreground">
         <div className="container flex items-center justify-between h-14">
           <div className="flex items-center gap-4">
-            <h1 className="font-bold text-lg">Taiwan Maami Admin</h1>
+            <h1 className="font-bold text-lg">Taiwan Maami™ Admin</h1>
           </div>
           <div className="flex items-center gap-2">
             <Link href="/">

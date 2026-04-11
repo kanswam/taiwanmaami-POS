@@ -58,7 +58,7 @@ export default function About() {
             ) : (
               <div className="prose prose-lg max-w-none text-muted-foreground space-y-4">
                 <p>
-                  Taiwan Maami is a flagship bubble tea brand under Thamarai Foods and Trading Private Limited. 
+                  Taiwan Maami™ is a flagship bubble tea brand under Thamarai Foods and Trading Private Limited. 
                   We have been serving authentic premium bubble tea to our customers in Chennai since 2024.
                 </p>
                 <p>

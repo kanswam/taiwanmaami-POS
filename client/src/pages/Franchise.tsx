@@ -14,7 +14,7 @@ export default function Franchise() {
     <div className="min-h-screen bg-background">
       <SEO
         title="Franchise Opportunity"
-        description="Partner with Taiwan Maami - India's premium Taiwanese bubble tea brand. Explore franchise opportunities and bring authentic boba tea to your city."
+        description="Partner with Taiwan Maami™ - India's premium Taiwanese bubble tea brand. Explore franchise opportunities and bring authentic boba tea to your city."
         keywords="Taiwan Maami franchise, bubble tea franchise India, boba franchise opportunity, Taiwanese cafe franchise"
         canonicalPath="/franchise"
       />
@@ -26,7 +26,7 @@ export default function Franchise() {
           <div className="max-w-3xl mx-auto text-center">
             <h1 className="text-4xl md:text-5xl font-bold mb-4">Franchise Opportunity</h1>
             <p className="text-lg text-muted-foreground">
-              Partner with Taiwan Maami and bring authentic bubble tea to your city
+              Partner with Taiwan Maami™ and bring authentic bubble tea to your city
             </p>
           </div>
         </div>
@@ -54,16 +54,16 @@ export default function Franchise() {
                 />
               ) : (
                 <div className="prose prose-lg max-w-none space-y-6 text-muted-foreground">
-                  <h2 className="text-2xl font-bold text-foreground">Join the Taiwan Maami Family</h2>
+                  <h2 className="text-2xl font-bold text-foreground">Join the Taiwan Maami™ Family</h2>
                   <p>
-                    Taiwan Maami is expanding! We're looking for passionate entrepreneurs who share our 
+                    Taiwan Maami™ is expanding! We're looking for passionate entrepreneurs who share our 
                     vision of bringing authentic Taiwanese bubble tea culture to India.
                   </p>
 
                   <h3 className="text-xl font-semibold text-foreground mt-8 mb-4">Why Partner With Us?</h3>
                   <ul className="list-disc pl-6 space-y-2">
                     <li><strong className="text-foreground">Proven Business Model:</strong> Our outlets in Chennai have demonstrated strong customer loyalty and consistent growth</li>
-                    <li><strong className="text-foreground">Premium Brand:</strong> Taiwan Maami is known for quality, using imported Taiwanese tapioca pearls</li>
+                    <li><strong className="text-foreground">Premium Brand:</strong> Taiwan Maami™ is known for quality, using imported Taiwanese tapioca pearls</li>
                     <li><strong className="text-foreground">Comprehensive Training:</strong> Full training program for you and your staff</li>
                     <li><strong className="text-foreground">Marketing Support:</strong> National and local marketing campaigns to drive traffic</li>
                     <li><strong className="text-foreground">Ongoing Support:</strong> Dedicated franchise support team to help you succeed</li>
@@ -79,7 +79,7 @@ export default function Franchise() {
 
                   <h3 className="text-xl font-semibold text-foreground mt-8 mb-4">Next Steps</h3>
                   <p>
-                    If you're interested in becoming a Taiwan Maami franchise partner, please contact us 
+                    If you're interested in becoming a Taiwan Maami™ franchise partner, please contact us 
                     to learn more about this exciting opportunity.
                   </p>
                 </div>

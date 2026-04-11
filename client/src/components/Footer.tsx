@@ -101,7 +101,7 @@ export function Footer() {
           </div>
         </div>
         <div className="border-t border-background/20 mt-8 pt-8 text-center text-sm text-background/50">
-          <p>© {new Date().getFullYear()} Taiwan Maami. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} Taiwan Maami™. All rights reserved.</p>
           <p className="mt-1">A unit of Thamarai Foods and Trading Private Limited</p>
         </div>
       </div>

@@ -11,7 +11,7 @@ interface SEOProps {
 }
 
 const BASE_URL = "https://www.taiwanmaami.com";
-const DEFAULT_TITLE = "Taiwan Maami - Authentic Taiwanese Bubble Tea in Chennai";
+const DEFAULT_TITLE = "Taiwan Maami™ - Authentic Taiwanese Bubble Tea in Chennai";
 const DEFAULT_DESCRIPTION =
   "Taiwan Maami - Chennai's premium Taiwanese bubble tea cafe. Organic whole-leaf boba tea, mochi, Asian street food. Order online for delivery, pickup or dine-in at T Nagar & Velachery.";
 const DEFAULT_IMAGE = "https://d2xsxph8kpxj0f.cloudfront.net/114675165/7xKVuVPoe4TavcqcxPZkpC/og-image/taiwan-maami-og.jpg";
@@ -25,7 +25,7 @@ export function SEO({
   ogImage = DEFAULT_IMAGE,
   noindex = false,
 }: SEOProps) {
-  const fullTitle = title ? `${title} | Taiwan Maami` : DEFAULT_TITLE;
+  const fullTitle = title ? `${title} | Taiwan Maami™` : DEFAULT_TITLE;
   const canonicalUrl = canonicalPath ? `${BASE_URL}${canonicalPath}` : undefined;
 
   return (
@@ -42,7 +42,7 @@ export function SEO({
       <meta property="og:description" content={description} />
       <meta property="og:image" content={ogImage} />
       {canonicalUrl && <meta property="og:url" content={canonicalUrl} />}
-      <meta property="og:site_name" content="Taiwan Maami" />
+      <meta property="og:site_name" content="Taiwan Maami™" />
       <meta property="og:locale" content="en_IN" />
 
       <meta property="og:image:width" content="1200" />

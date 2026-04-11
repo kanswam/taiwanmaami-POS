@@ -209,7 +209,7 @@ export function generateEventDocument(
   
   <div class="header">
     <div>
-      <div class="logo">Taiwan Maami</div>
+      <div class="logo">Taiwan Maami™</div>
       <div class="logo-subtitle">Authentic Taiwanese Bubble Tea</div>
       <p style="margin-top: 10px; font-size: 12px; color: #6b7280;">
         T Nagar, Chennai<br>
@@ -300,7 +300,7 @@ export function generateEventDocument(
   </div>
 
   <div class="footer">
-    <p>Thank you for choosing Taiwan Maami for your event!</p>
+    <p>Thank you for choosing Taiwan Maami™ for your event!</p>
     <p>For any queries, please contact us at events@taiwanmaami.com or +91 98765 43210</p>
   </div>
 </body>

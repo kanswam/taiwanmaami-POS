@@ -86,7 +86,7 @@ function generateOrderInvoice(order: any): string {
 </head>
 <body>
   <div class="header">
-    <h1>Taiwan Maami</h1>
+    <h1>Taiwan Maami™</h1>
     <p>Thamarai Foods and Trading Private Limited</p>
     <p>GSTIN: 33AAKCT4782H1Z1</p>
     <p>Phone: +91 9150570557 | Email: hello@taiwanmaami.com</p>
@@ -169,7 +169,7 @@ function generateOrderInvoice(order: any): string {
   
   <div class="footer">
     <p>Thank you for your order!</p>
-    <p>Taiwan Maami - Crafted Daily. Enjoy Thoughtfully.</p>
+    <p>Taiwan Maami™ - Crafted Daily. Enjoy Thoughtfully.</p>
     <p>For queries: +91 9150570557 | hello@taiwanmaami.com</p>
   </div>
 </body>

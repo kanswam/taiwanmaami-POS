@@ -2903,3 +2903,10 @@ Orders fixed:
 ## Instagram Digital Flywheel (Apr 7)
 
 - [x] Auto-redirect Instagram bio visitors directly to Order Now page (support ?order=now or /order query param)
+- [ ] Bug fix: /order route returns 404 in production - needs server-side catch-all for SPA routing
+- [ ] Bug fix: Stamps not showing for guest customers in Customer Database (showing "-" instead of stamp count)
+
+## Trademark Update (Apr 11)
+
+- [x] Add ™ symbol to Taiwan Maami in website footer
+- [x] Add ™ symbol to key brand mentions across the site (header, about, franchise, receipts, SEO, admin, event docs)

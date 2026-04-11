@@ -62,7 +62,7 @@ export default function CatalogExportImportTab() {
     setIsExporting(true);
     try {
       const workbook = new ExcelJS.Workbook();
-      workbook.creator = 'Taiwan Maami Admin';
+      workbook.creator = 'Taiwan Maami™ Admin';
       workbook.created = new Date();
 
       const sheet = workbook.addWorksheet('Product Catalog', {

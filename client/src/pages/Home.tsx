@@ -1256,7 +1256,7 @@ export default function Home() {
             </div>
           </div>
           <div className="border-t border-background/20 mt-6 pt-6 sm:mt-8 sm:pt-8 text-center text-xs sm:text-sm text-background/50">
-            <p>&copy; {new Date().getFullYear()} Taiwan Maami. All rights reserved.</p>
+            <p>&copy; {new Date().getFullYear()} Taiwan Maami™. All rights reserved.</p>
             <p className="mt-1">A unit of Thamarai Foods and Trading Private Limited</p>
           </div>
         </div>
