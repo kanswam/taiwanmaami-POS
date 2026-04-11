@@ -298,6 +298,19 @@ export default function OrdersTab() {
   });
 
 
+  // Change payment method mutation
+  // @ts-ignore
+  const changePaymentMethod = trpc.orders.changePaymentMethod?.useMutation({
+    onSuccess: (data: any) => {
+      toast.success(`Payment method changed: ${data.oldMethod} → ${data.newMethod}`);
+      refetch();
+      setEditingPaymentOrderId(null);
+    },
+    onError: (err: any) => toast.error(err.message || 'Failed to change payment method'),
+  });
+  const [editingPaymentOrderId, setEditingPaymentOrderId] = useState<number | null>(null);
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string>('');
+
   // Merge Orders mutation
   const mergeOrders = trpc.orders.mergeOrders.useMutation({
     onSuccess: (data) => {
@@ -958,7 +971,64 @@ export default function OrdersTab() {
                         {verifyRazorpayPayment.isPending ? '⏳ Checking...' : '🔍 Verify Razorpay'}
                       </Button>
                     )}
-
+                    {/* Change Payment Method - Admin only */}
+                    {changePaymentMethod && (
+                      <>
+                        {editingPaymentOrderId === orderDetails.id ? (
+                          <div className="flex gap-1 items-center w-full mt-1">
+                            <Select value={selectedPaymentMethod} onValueChange={setSelectedPaymentMethod}>
+                              <SelectTrigger className="h-7 text-xs w-[160px]">
+                                <SelectValue placeholder="Select method" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="cash">💵 Cash</SelectItem>
+                                <SelectItem value="upi">📱 GPay / UPI</SelectItem>
+                                <SelectItem value="card">💳 Card</SelectItem>
+                                <SelectItem value="razorpay">💳 Razorpay</SelectItem>
+                                <SelectItem value="swiggy_dineout">🟠 Swiggy Dineout</SelectItem>
+                                <SelectItem value="zomato_dineout">🔴 Zomato District</SelectItem>
+                                <SelectItem value="eazydiner">🟣 EazyDiner</SelectItem>
+                                <SelectItem value="birthday_gift">🎂 Birthday Gift</SelectItem>
+                                <SelectItem value="complimentary">🎁 Complimentary</SelectItem>
+                                <SelectItem value="other">📋 Other</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <Button
+                              size="sm"
+                              className="h-7 text-xs"
+                              onClick={() => {
+                                if (selectedPaymentMethod) {
+                                  changePaymentMethod.mutate({ orderId: orderDetails.id, paymentMethod: selectedPaymentMethod as any });
+                                }
+                              }}
+                              disabled={!selectedPaymentMethod || changePaymentMethod.isPending}
+                            >
+                              {changePaymentMethod.isPending ? '...' : '✓'}
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-7 text-xs"
+                              onClick={() => { setEditingPaymentOrderId(null); setSelectedPaymentMethod(''); }}
+                            >
+                              ✕
+                            </Button>
+                          </div>
+                        ) : (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-7 text-xs"
+                            onClick={() => {
+                              setEditingPaymentOrderId(orderDetails.id);
+                              setSelectedPaymentMethod((orderDetails as any).paymentMethod || '');
+                            }}
+                          >
+                            ✏️ Change Payment Method
+                          </Button>
+                        )}
+                      </>
+                    )}
                   </div>
                 </div>
                 <div className="col-span-2">

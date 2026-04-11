@@ -1383,6 +1383,34 @@ export const appRouter = router({
         return { success: true };
       }),
 
+    // Admin can change payment method on any order
+    changePaymentMethod: adminProcedure
+      .input(z.object({
+        orderId: z.number(),
+        paymentMethod: z.enum(['cash', 'upi', 'card', 'razorpay', 'swiggy_dineout', 'zomato_dineout', 'eazydiner', 'birthday_gift', 'complimentary', 'other']),
+        reason: z.string().optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const dbInstance = await getDb();
+        if (!dbInstance) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
+        
+        const [order] = await dbInstance.select().from(orders).where(eq(orders.id, input.orderId));
+        if (!order) throw new TRPCError({ code: 'NOT_FOUND', message: 'Order not found' });
+        
+        const oldMethod = order.paymentMethod || 'unknown';
+        await dbInstance
+          .update(orders)
+          .set({ 
+            paymentMethod: input.paymentMethod,
+            staffNotes: order.staffNotes 
+              ? `${order.staffNotes}\n[Payment changed: ${oldMethod} → ${input.paymentMethod} by ${ctx.user.name || 'Admin'}${input.reason ? ` - ${input.reason}` : ''}]`
+              : `[Payment changed: ${oldMethod} → ${input.paymentMethod} by ${ctx.user.name || 'Admin'}${input.reason ? ` - ${input.reason}` : ''}]`,
+          })
+          .where(eq(orders.id, input.orderId));
+        
+        return { success: true, oldMethod, newMethod: input.paymentMethod };
+      }),
+
     // Verify payment with Razorpay API - for recovering missed callbacks
     verifyRazorpayPayment: staffProcedure
       .input(z.object({ orderId: z.number() }))

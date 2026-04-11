@@ -2910,3 +2910,13 @@ Orders fixed:
 
 - [x] Add ™ symbol to Taiwan Maami in website footer
 - [x] Add ™ symbol to key brand mentions across the site (header, about, franchise, receipts, SEO, admin, event docs)
+
+## OAuth Login Bug (Apr 11)
+
+- [ ] Bug: Customer getting "Permission denied - Redirect URI is not set" when trying to register via email on taiwanmaami.com
+- [ ] Remove email login option - force Google/Apple sign-in only to avoid "Redirect URI not set" error
+
+## Payment Method Fix (Apr 11)
+
+- [x] Fix orders 128 and 131: change payment method from UPI to Zomato District (zomato_dineout)
+- [x] Add admin capability to change payment method on any order (✏️ Change Payment Method button in order details)
