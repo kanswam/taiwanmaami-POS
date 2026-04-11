@@ -2941,3 +2941,16 @@ Orders fixed:
   - [x] Updated all KOT printer clients (kitchen, palladium, v4, offline, staff)
   - [x] Added KotData TypeScript interface with bobaType/poppingBobaFlavor fields
   - [x] All 19 vitest tests passing
+
+## Boba Size on KOT (Apr 12)
+
+- [x] Show boba size (small/large) on KOT when tapioca boba is selected
+  - [x] Added bobaSize column to order_items DB table
+  - [x] Updated all 4 order item INSERT locations to save bobaSize
+  - [x] Updated all KOT data builder objects (8 locations) to include bobaSize
+  - [x] Updated KOT report to show "Tapioca (small)" or "Tapioca (big)"
+  - [x] Updated all KOT printer clients (kitchen, palladium, v4, original, offline, staff)
+  - [x] Updated KOT reprint endpoint with bobaSize
+  - [x] Updated KotData TypeScript interface with bobaSize field
+  - [x] Updated offline queue KOT builder to pass bobaSize
+  - [x] All 25 vitest tests passing

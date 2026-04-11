@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'vitest';
 
 /**
- * Tests for KOT boba type display logic.
- * Verifies that bobaType and poppingBobaFlavor are correctly formatted
+ * Tests for KOT boba type and boba size display logic.
+ * Verifies that bobaType, bobaSize, and poppingBobaFlavor are correctly formatted
  * in KOT reports and print outputs.
  */
 
@@ -10,6 +10,7 @@ import { describe, it, expect } from 'vitest';
 function formatBobaCustomization(item: {
   withBoba?: boolean | null;
   bobaType?: string | null;
+  bobaSize?: string | null;
   poppingBobaFlavor?: string | null;
 }): string | null {
   if (item.withBoba !== null && item.withBoba !== undefined) {
@@ -17,7 +18,7 @@ function formatBobaCustomization(item: {
       if (item.bobaType === 'popping') {
         return `Boba: ${item.poppingBobaFlavor || 'Popping'} Popping Boba`;
       }
-      return 'Boba: Tapioca';
+      return `Boba: Tapioca${item.bobaSize ? ` (${item.bobaSize})` : ''}`;
     }
     return 'Boba: No';
   }
@@ -28,12 +29,13 @@ function formatBobaCustomization(item: {
 function formatBobaForPrint(item: {
   withBoba?: boolean | null;
   bobaType?: string | null;
+  bobaSize?: string | null;
   poppingBobaFlavor?: string | null;
 }): string {
   if (item.withBoba) {
     const bobaLabel = item.bobaType === 'popping'
       ? `Popping Boba${item.poppingBobaFlavor ? ` (${item.poppingBobaFlavor})` : ''}`
-      : 'Tapioca Boba';
+      : `Tapioca Boba${item.bobaSize ? ` (${item.bobaSize})` : ''}`;
     return `   Boba: ${bobaLabel}\n`;
   }
   return '';
@@ -70,12 +72,22 @@ function deriveBobaTypeFromAddons(
 
 describe('KOT Boba Type Display', () => {
   describe('formatBobaCustomization (KOT report)', () => {
-    it('shows Tapioca for regular boba', () => {
+    it('shows Tapioca for regular boba without size', () => {
       const result = formatBobaCustomization({ withBoba: true, bobaType: 'tapioca' });
       expect(result).toBe('Boba: Tapioca');
     });
 
-    it('shows popping boba with flavor', () => {
+    it('shows Tapioca with small size', () => {
+      const result = formatBobaCustomization({ withBoba: true, bobaType: 'tapioca', bobaSize: 'small' });
+      expect(result).toBe('Boba: Tapioca (small)');
+    });
+
+    it('shows Tapioca with big size', () => {
+      const result = formatBobaCustomization({ withBoba: true, bobaType: 'tapioca', bobaSize: 'big' });
+      expect(result).toBe('Boba: Tapioca (big)');
+    });
+
+    it('shows popping boba with flavor (no size)', () => {
       const result = formatBobaCustomization({ 
         withBoba: true, 
         bobaType: 'popping', 
@@ -107,12 +119,32 @@ describe('KOT Boba Type Display', () => {
       const result = formatBobaCustomization({ withBoba: true, bobaType: null });
       expect(result).toBe('Boba: Tapioca');
     });
+
+    it('does not show size for popping boba even if bobaSize is set', () => {
+      const result = formatBobaCustomization({ 
+        withBoba: true, 
+        bobaType: 'popping', 
+        bobaSize: 'big',
+        poppingBobaFlavor: 'Mango' 
+      });
+      expect(result).toBe('Boba: Mango Popping Boba');
+    });
   });
 
   describe('formatBobaForPrint (thermal printer)', () => {
-    it('prints Tapioca Boba for tapioca type', () => {
+    it('prints Tapioca Boba without size when not specified', () => {
       const result = formatBobaForPrint({ withBoba: true, bobaType: 'tapioca' });
       expect(result).toBe('   Boba: Tapioca Boba\n');
+    });
+
+    it('prints Tapioca Boba with small size', () => {
+      const result = formatBobaForPrint({ withBoba: true, bobaType: 'tapioca', bobaSize: 'small' });
+      expect(result).toBe('   Boba: Tapioca Boba (small)\n');
+    });
+
+    it('prints Tapioca Boba with big size', () => {
+      const result = formatBobaForPrint({ withBoba: true, bobaType: 'tapioca', bobaSize: 'big' });
+      expect(result).toBe('   Boba: Tapioca Boba (big)\n');
     });
 
     it('prints Popping Boba with flavor', () => {
@@ -136,6 +168,16 @@ describe('KOT Boba Type Display', () => {
     it('returns empty string when no boba', () => {
       const result = formatBobaForPrint({ withBoba: false });
       expect(result).toBe('');
+    });
+
+    it('does not show bobaSize for popping boba', () => {
+      const result = formatBobaForPrint({ 
+        withBoba: true, 
+        bobaType: 'popping', 
+        bobaSize: 'big',
+        poppingBobaFlavor: 'Lychee' 
+      });
+      expect(result).toBe('   Boba: Popping Boba (Lychee)\n');
     });
   });
 

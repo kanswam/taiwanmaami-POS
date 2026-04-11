@@ -121,6 +121,7 @@ export interface KotData {
     size?: string;
     withBoba?: boolean;
     bobaType?: string;
+    bobaSize?: string;
     poppingBobaFlavor?: string;
     sugarLevel?: string;
     iceLevel?: string;
@@ -407,6 +408,9 @@ async function generateOfflineKot(order: OfflineOrder): Promise<OfflineKot> {
       price: item.unitPrice,
       size: item.size,
       withBoba: item.withBoba,
+      bobaType: item.bobaType,
+      bobaSize: item.bobaSize,
+      poppingBobaFlavor: item.poppingBobaFlavor,
       sugarLevel: item.sugarLevel,
       iceLevel: item.iceLevel,
       specialInstructions: item.specialInstructions || '',

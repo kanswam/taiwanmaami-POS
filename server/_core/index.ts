@@ -329,6 +329,7 @@ async function startServer() {
             size: item.size,
             withBoba: item.withBoba,
             bobaType: bobaType || undefined,
+            bobaSize: item.bobaSize || undefined,
             poppingBobaFlavor: poppingBobaFlavor || undefined,
             sugarLevel: item.sugarLevel,
             iceLevel: item.iceLevel,

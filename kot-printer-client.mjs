@@ -166,7 +166,7 @@ function formatKOT(kot) {
       if (item.withBoba) {
         const bobaLabel = item.bobaType === 'popping' 
           ? `Popping Boba${item.poppingBobaFlavor ? ` (${item.poppingBobaFlavor})` : ''}`
-          : 'Tapioca Boba';
+          : `Tapioca Boba${item.bobaSize ? ` (${item.bobaSize})` : ''}`;
         output += `   Boba: ${bobaLabel}\n`;
       } else {
         output += `   Boba: No\n`;

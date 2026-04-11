@@ -119,7 +119,7 @@ function generateReceipt(kot) {
       if (item.withBoba) {
         const bobaLabel = item.bobaType === 'popping' 
           ? `Popping Boba${item.poppingBobaFlavor ? ` (${item.poppingBobaFlavor})` : ''}`
-          : 'Tapioca Boba';
+          : `Tapioca Boba${item.bobaSize ? ` (${item.bobaSize})` : ''}`;
         parts.push(Buffer.from(`   Boba: ${bobaLabel}\n`, 'ascii'));
       }
       if (item.addons && item.addons.length > 0) {

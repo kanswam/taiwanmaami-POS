@@ -67,7 +67,7 @@ function printOfflineKot(kot: OfflineKot): void {
                 ${item.size ? `Size: ${item.size}` : ''}
                 ${item.sugarLevel ? ` | Sugar: ${item.sugarLevel}` : ''}
                 ${item.iceLevel ? ` | Ice: ${item.iceLevel}` : ''}
-                ${item.withBoba ? (item.bobaType === 'popping' ? ` | +${item.poppingBobaFlavor || 'Popping'} Popping Boba` : ' | +Tapioca Boba') : ''}
+                ${item.withBoba ? (item.bobaType === 'popping' ? ` | +${item.poppingBobaFlavor || 'Popping'} Popping Boba` : ` | +Tapioca Boba${item.bobaSize ? ` (${item.bobaSize})` : ''}`) : ''}
               </div>
               ${item.addons.length > 0 ? item.addons.map(a => `<div class="addon">+ ${a.name}</div>`).join('') : ''}
               ${item.specialInstructions ? `<div class="item-details" style="color:#d97706">Note: ${item.specialInstructions}</div>` : ''}

@@ -817,7 +817,7 @@ export default function StaffOrders() {
                 <div class="item-name">${item.quantity}x ${item.productName}</div>
                 <div class="item-details">
                   ${item.size ? `Size: ${item.size}` : ''}
-                  ${item.withBoba ? (item.bobaType === 'popping' ? ` | <b>+${item.poppingBobaFlavor || 'Popping'} Popping Boba</b>` : ' | +Tapioca Boba') : ''}
+                  ${item.withBoba ? (item.bobaType === 'popping' ? ` | <b>+${item.poppingBobaFlavor || 'Popping'} Popping Boba</b>` : ` | +Tapioca Boba${item.bobaSize ? ` (${item.bobaSize})` : ''}`) : ''}
                   ${item.sugarLevel ? ` | Sugar: ${item.sugarLevel}` : ''}
                   ${item.iceLevel ? ` | Ice: ${item.iceLevel}` : ''}
                 </div>
