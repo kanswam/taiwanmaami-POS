@@ -2954,3 +2954,9 @@ Orders fixed:
   - [x] Updated KotData TypeScript interface with bobaSize field
   - [x] Updated offline queue KOT builder to pass bobaSize
   - [x] All 25 vitest tests passing
+
+## URGENT Bug Fix (Apr 12)
+
+- [x] Fix order placement failure - "Unable to place your order right now" error after bobaSize changes
+  - Root cause: bobaSize column was added to code but not migrated to production DB
+  - Fix: Ran ALTER TABLE to add bobaSize column to production order_items table
