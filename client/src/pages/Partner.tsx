@@ -59,6 +59,8 @@ export default function Partner() {
   const [selectedTier, setSelectedTier] = useState<'founding' | 'regular'>('founding');
   const [referralCode, setReferralCode] = useState('');
   const [isSubscribing, setIsSubscribing] = useState(false);
+  const [showWelcome, setShowWelcome] = useState(false);
+  const [welcomeData, setWelcomeData] = useState<{ referralCode: string; tier: string } | null>(null);
 
   // Secret gate check — during testing phase, only accessible with ?key=tmpartner2026
   const hasAccess = checkPartnerAccess();
@@ -150,8 +152,11 @@ export default function Partner() {
             });
 
             if (verified.success) {
-              toast.success('Welcome to the Maami Partner family!');
-              navigate('/partner/dashboard');
+              setWelcomeData({
+                referralCode: verified.referralCode,
+                tier: verified.tier,
+              });
+              setShowWelcome(true);
             }
           } catch (err) {
             toast.error('Payment verification failed. Please contact support.');
@@ -200,6 +205,147 @@ export default function Partner() {
   const slotsTotal = info?.foundingSlotsTotal || 100;
   const referrerReward = info?.referrerReward || 25000;
   const referredReward = info?.referredReward || 10000;
+
+  // Welcome screen after successful payment
+  if (showWelcome && welcomeData) {
+    const isFounder = welcomeData.tier === 'founding';
+    const partnerReferralLink = `${window.location.origin}/partner?ref=${welcomeData.referralCode}`;
+
+    const handleCopyWelcomeLink = () => {
+      navigator.clipboard.writeText(partnerReferralLink);
+      toast.success('Referral link copied!');
+    };
+
+    const handleShareWelcomeWhatsApp = () => {
+      const text = encodeURIComponent(
+        `Hey! I just joined the Maami Partner Programme at Taiwan Maami! 🎉🧋\n\n` +
+        `I get free Biang Biang Noodles every visit + 15% off my tea!\n\n` +
+        `Join using my link and we both earn Maami Rupees:\n${partnerReferralLink}\n\n` +
+        `Don't miss out — limited Founding Partner slots available!`
+      );
+      window.open(`https://wa.me/?text=${text}`, '_blank');
+    };
+
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-[#1a0a08] via-[#2d1210] to-[#1a0a08] text-white">
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute top-10 left-10 w-72 h-72 bg-[#bd302c] rounded-full blur-[120px] opacity-20" />
+          <div className="absolute bottom-10 right-10 w-96 h-96 bg-[#d4a574] rounded-full blur-[150px] opacity-15" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-[#d4a574] rounded-full blur-[200px] opacity-10" />
+        </div>
+
+        <div className="relative container max-w-2xl mx-auto py-12 md:py-20 px-4">
+          {/* Celebration Icon */}
+          <div className="text-center mb-8">
+            <div className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-gradient-to-br from-[#d4a574] to-[#f0c090] mb-6">
+              <Crown className="w-12 h-12 text-[#1a0a08]" />
+            </div>
+            <h1 className="text-3xl md:text-5xl font-bold tracking-tight mb-4">
+              Welcome to the{' '}
+              <span className="bg-gradient-to-r from-[#d4a574] to-[#f0c090] bg-clip-text text-transparent">
+                Maami Partner
+              </span>{' '}
+              Family!
+            </h1>
+            <Badge className={`text-sm px-4 py-1.5 ${isFounder ? 'bg-gradient-to-r from-[#d4a574] to-[#f0c090] text-[#1a0a08]' : 'bg-white/20 text-white'}`}>
+              <Crown className="w-4 h-4 mr-1.5" />
+              {isFounder ? 'Founding Partner' : 'Partner'}
+            </Badge>
+          </div>
+
+          {/* Benefits you can start enjoying */}
+          <Card className="bg-white/10 backdrop-blur-sm border-white/20 p-6 md:p-8 mb-8">
+            <h2 className="text-lg font-bold mb-5 text-center text-[#f0c090]">
+              Start Enjoying Your Benefits Right Away!
+            </h2>
+            <div className="space-y-4">
+              <div className="flex items-start gap-4 p-4 rounded-xl bg-white/5">
+                <div className="w-10 h-10 rounded-lg bg-[#bd302c]/30 flex items-center justify-center shrink-0">
+                  <UtensilsCrossed className="w-5 h-5 text-[#f0a080]" />
+                </div>
+                <div>
+                  <p className="font-semibold">Free Biang Biang Noodles</p>
+                  <p className="text-sm text-gray-400">Order at T. Nagar (Moutan) and your Biang Biang is on us — every single visit!</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-4 p-4 rounded-xl bg-white/5">
+                <div className="w-10 h-10 rounded-lg bg-[#bd302c]/30 flex items-center justify-center shrink-0">
+                  <CupSoda className="w-5 h-5 text-[#f0a080]" />
+                </div>
+                <div>
+                  <p className="font-semibold">Free Large Bubble Tea</p>
+                  <p className="text-sm text-gray-400">Visit Palladium Mall and enjoy a free large bubble tea with every order!</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-4 p-4 rounded-xl bg-white/5">
+                <div className="w-10 h-10 rounded-lg bg-[#bd302c]/30 flex items-center justify-center shrink-0">
+                  <Percent className="w-5 h-5 text-[#f0a080]" />
+                </div>
+                <div>
+                  <p className="font-semibold">15% Off All Teas</p>
+                  <p className="text-sm text-gray-400">Your tea is always discounted at both outlets. The savings start from your very first order!</p>
+                </div>
+              </div>
+            </div>
+          </Card>
+
+          {/* Referral Encouragement */}
+          <Card className="bg-white/10 backdrop-blur-sm border-white/20 p-6 md:p-8 mb-8">
+            <div className="text-center mb-5">
+              <Users className="w-8 h-8 text-[#f0c090] mx-auto mb-3" />
+              <h2 className="text-lg font-bold text-[#f0c090]">Refer Friends & Earn Rewards</h2>
+              <p className="text-sm text-gray-400 mt-2">
+                Share your referral link with friends. When they join, you get{' '}
+                <span className="text-[#d4a574] font-semibold">{formatPrice(referrerReward)}</span> in Maami Rupees and they get{' '}
+                <span className="text-[#d4a574] font-semibold">{formatPrice(referredReward)}</span>!
+              </p>
+            </div>
+
+            <div className="bg-white/5 rounded-xl p-4 mb-4">
+              <p className="text-xs text-gray-400 mb-2">Your referral code</p>
+              <p className="text-xl font-mono font-bold tracking-wider text-[#d4a574] text-center">
+                {welcomeData.referralCode}
+              </p>
+            </div>
+
+            <div className="space-y-3">
+              <Button
+                className="w-full bg-[#25D366] hover:bg-[#1da851] text-white"
+                onClick={handleShareWelcomeWhatsApp}
+              >
+                <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+                </svg>
+                Share with Friends on WhatsApp
+              </Button>
+              <Button
+                variant="outline"
+                className="w-full border-white/30 text-white hover:bg-white/10"
+                onClick={handleCopyWelcomeLink}
+              >
+                <Gift className="w-4 h-4 mr-2" />
+                Copy Referral Link
+              </Button>
+            </div>
+          </Card>
+
+          {/* CTA to Dashboard */}
+          <div className="text-center">
+            <Button
+              size="lg"
+              className="bg-[#bd302c] hover:bg-[#9e0b0f] text-white text-lg px-10 py-6"
+              onClick={() => navigate('/partner/dashboard')}
+            >
+              Go to My Partner Dashboard <ArrowRight className="w-5 h-5 ml-2" />
+            </Button>
+            <p className="text-sm text-gray-500 mt-4">
+              Place your next order and watch the savings add up!
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">

@@ -2975,3 +2975,19 @@ Orders fixed:
   - [x] 14 vitest tests passing
   - Free item is the lowest-priced bubble tea (large or regular) in the order
   - Clearly shown in order summary with green "Loyalty Reward Applied!" banner
+
+## Partner Program Audit & Fixes (Apr 16)
+
+- [x] Audit partner program: join flow, payment, welcome message, free Biang Biang, discounted drink, referrals
+  - Join flow + Razorpay payment: working
+  - Referral code generation + validation: working
+  - Referral rewards (₹250 referrer, ₹100 referred): working
+  - Free Biang Biang at T. Nagar: working (1 unit free per order)
+  - Free Large Bubble Tea at Palladium: working (most expensive large tea free)
+  - 15% tea discount: working (1 tea per order, cheapest eligible)
+  - Benefit logging: working
+  - Owner notification on new partner: working
+- [x] Fix missing welcome message after partner signup payment
+  - Added full-screen welcome page with benefits summary, referral code, WhatsApp share button
+  - Replaces the old toast + immediate redirect
+- [x] 16 vitest tests passing for partner benefits calculation
