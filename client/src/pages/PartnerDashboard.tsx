@@ -254,7 +254,7 @@ export default function PartnerDashboard() {
                 </div>
                 <div>
                   <p className="font-semibold text-sm">Free Biang Biang Noodles</p>
-                  <p className="text-xs text-muted-foreground">Every visit at T. Nagar (Moutan)</p>
+                  <p className="text-xs text-muted-foreground">When you order another item at T. Nagar (Moutan)</p>
                 </div>
               </div>
               <div className="flex items-start gap-4 p-4 rounded-xl bg-[#faf6f1]">
@@ -263,7 +263,7 @@ export default function PartnerDashboard() {
                 </div>
                 <div>
                   <p className="font-semibold text-sm">Free Large Bubble Tea</p>
-                  <p className="text-xs text-muted-foreground">Every visit at Palladium Mall</p>
+                  <p className="text-xs text-muted-foreground">When you order another drink at Palladium Mall</p>
                 </div>
               </div>
               <div className="flex items-start gap-4 p-4 rounded-xl bg-[#faf6f1]">
