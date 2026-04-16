@@ -1380,7 +1380,7 @@ export default function Checkout() {
                           <span>
                             {b.type === 'free_biang_biang' ? `Free ${b.itemName}` :
                              b.type === 'free_large_tea' ? `Free ${b.itemName}` :
-                             `${b.discountPercent}% tea discount (${b.teaItemsCount} items)`}
+                             `Partner benefit`}
                           </span>
                           <span>-{formatPrice(b.amount)}</span>
                         </div>

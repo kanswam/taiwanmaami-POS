@@ -2991,3 +2991,15 @@ Orders fixed:
   - Added full-screen welcome page with benefits summary, referral code, WhatsApp share button
   - Replaces the old toast + immediate redirect
 - [x] 16 vitest tests passing for partner benefits calculation
+
+## Partner Program Rule Updates (Apr 16)
+
+- [x] Update backend: free Biang Biang requires purchase of another food or drink
+- [x] Update backend: free Palladium drink requires purchase of another drink
+- [x] Update backend: remove 15% tea discount (teaDiscountPercent set to 0, all references removed)
+- [x] Update backend: no loyalty stamps on free items (stamps on amount paid only — totalAmount already excludes partner benefit)
+- [x] Update welcome message after partner signup to reflect new rules (removed tea discount, updated descriptions)
+- [x] Email notification to partners when referral joins — already implemented in partnerRouter.ts (sendReferralNotificationEmail)
+- [x] Updated Partner page: hero, benefits cards, pricing cards, FAQ, savings calculator all reflect new rules
+- [x] Updated Checkout.tsx: removed tea discount benefit display
+- [x] 24 vitest tests passing for updated partner benefits (1092 total tests pass)

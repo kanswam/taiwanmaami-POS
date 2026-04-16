@@ -200,7 +200,6 @@ export default function Partner() {
   const info = programmeInfo!;
   const foundingPrice = info?.foundingPrice || 250000;
   const regularPrice = info?.regularPrice || 350000;
-  const teaDiscount = info?.teaDiscountPercent || 15;
   const slotsRemaining = info?.foundingSlotsRemaining || 0;
   const slotsTotal = info?.foundingSlotsTotal || 100;
   const referrerReward = info?.referrerReward || 25000;
@@ -219,7 +218,7 @@ export default function Partner() {
     const handleShareWelcomeWhatsApp = () => {
       const text = encodeURIComponent(
         `Hey! I just joined the Maami Partner Programme at Taiwan Maami! 🎉🧋\n\n` +
-        `I get free Biang Biang Noodles every visit + 15% off my tea!\n\n` +
+        `I get free Biang Biang Noodles + free Large Bubble Tea every visit!\n\n` +
         `Join using my link and we both earn Maami Rupees:\n${partnerReferralLink}\n\n` +
         `Don't miss out — limited Founding Partner slots available!`
       );
@@ -265,7 +264,7 @@ export default function Partner() {
                 </div>
                 <div>
                   <p className="font-semibold">Free Biang Biang Noodles</p>
-                  <p className="text-sm text-gray-400">Order at T. Nagar (Moutan) and your Biang Biang is on us — every single visit!</p>
+                  <p className="text-sm text-gray-400">Order any food or drink at T. Nagar (Moutan) and add Biang Biang — it's on us, every visit!</p>
                 </div>
               </div>
               <div className="flex items-start gap-4 p-4 rounded-xl bg-white/5">
@@ -274,16 +273,16 @@ export default function Partner() {
                 </div>
                 <div>
                   <p className="font-semibold">Free Large Bubble Tea</p>
-                  <p className="text-sm text-gray-400">Visit Palladium Mall and enjoy a free large bubble tea with every order!</p>
+                  <p className="text-sm text-gray-400">Order any other drink at Palladium Mall and get a free large bubble tea on us!</p>
                 </div>
               </div>
               <div className="flex items-start gap-4 p-4 rounded-xl bg-white/5">
                 <div className="w-10 h-10 rounded-lg bg-[#bd302c]/30 flex items-center justify-center shrink-0">
-                  <Percent className="w-5 h-5 text-[#f0a080]" />
+                  <Users className="w-5 h-5 text-[#f0a080]" />
                 </div>
                 <div>
-                  <p className="font-semibold">15% Off All Teas</p>
-                  <p className="text-sm text-gray-400">Your tea is always discounted at both outlets. The savings start from your very first order!</p>
+                  <p className="font-semibold">Refer & Earn Maami Rupees</p>
+                  <p className="text-sm text-gray-400">Share your link with friends — earn {formatPrice(referrerReward)} for every friend who joins!</p>
                 </div>
               </div>
             </div>
@@ -371,7 +370,7 @@ export default function Partner() {
               </span>
             </h1>
             <p className="text-lg md:text-xl text-gray-300 mb-8 max-w-2xl mx-auto leading-relaxed">
-              Free Biang Biang Noodles every visit. {teaDiscount}% off your tea.
+              Free Biang Biang Noodles at T. Nagar. Free Large Bubble Tea at Palladium.
               Earn rewards when friends join. One annual fee, unlimited benefits.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -415,8 +414,8 @@ export default function Partner() {
               </div>
               <h3 className="text-xl font-bold mb-3">Free Biang Biang Noodles</h3>
               <p className="text-muted-foreground leading-relaxed">
-                Our most popular dish — free with every order at T. Nagar (Moutan). 
-                Worth ₹415, yours every single visit.
+                Our most popular dish — free when you order any other food or drink at T. Nagar (Moutan). 
+                Worth ₹415, yours every visit.
               </p>
               <p className="mt-3 text-sm font-medium text-[#bd302c]">
                 T. Nagar / Moutan outlet
@@ -430,7 +429,7 @@ export default function Partner() {
               </div>
               <h3 className="text-xl font-bold mb-3">Free Large Bubble Tea</h3>
               <p className="text-muted-foreground leading-relaxed">
-                A free Large bubble tea with every order at Palladium Mall. 
+                A free Large bubble tea when you order another drink at Palladium Mall. 
                 Choose any flavour — it's on us.
               </p>
               <p className="mt-3 text-sm font-medium text-[#bd302c]">
@@ -438,15 +437,15 @@ export default function Partner() {
               </p>
             </Card>
 
-            {/* Tea Discount */}
+            {/* Loyalty Stamps */}
             <Card className="p-8 border-2 border-[#bd302c]/20 bg-white hover:shadow-lg transition-shadow">
               <div className="w-14 h-14 rounded-2xl bg-[#bd302c]/10 flex items-center justify-center mb-5">
-                <Percent className="w-7 h-7 text-[#bd302c]" />
+                <Heart className="w-7 h-7 text-[#bd302c]" />
               </div>
-              <h3 className="text-xl font-bold mb-3">{teaDiscount}% Off Your Tea</h3>
+              <h3 className="text-xl font-bold mb-3">Loyalty Stamps</h3>
               <p className="text-muted-foreground leading-relaxed">
-                {teaDiscount}% off one tea per visit — your own drink, at both outlets.
-                Stacks with the free Biang Biang or free Large Tea.
+                Earn loyalty stamps on every order. Collect 10 stamps and get a free bubble tea on us.
+                Partner benefits stack with loyalty rewards.
               </p>
               <p className="mt-3 text-sm font-medium text-[#bd302c]">
                 Both outlets
@@ -512,22 +511,22 @@ export default function Partner() {
               <div className="grid md:grid-cols-3 gap-8 text-center">
                 <div>
                   <p className="text-sm text-muted-foreground mb-2">Visit once a week</p>
-                  <p className="text-3xl font-bold text-[#bd302c]">₹26,000+</p>
+                  <p className="text-3xl font-bold text-[#bd302c]">₹21,500+</p>
                   <p className="text-sm text-muted-foreground mt-1">saved per year</p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground mb-2">Visit twice a week</p>
-                  <p className="text-3xl font-bold text-[#bd302c]">₹52,000+</p>
+                  <p className="text-3xl font-bold text-[#bd302c]">₹43,000+</p>
                   <p className="text-sm text-muted-foreground mt-1">saved per year</p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground mb-2">Visit 3x a week</p>
-                  <p className="text-3xl font-bold text-[#bd302c]">₹78,000+</p>
+                  <p className="text-3xl font-bold text-[#bd302c]">₹64,500+</p>
                   <p className="text-sm text-muted-foreground mt-1">saved per year</p>
                 </div>
               </div>
               <p className="text-center text-sm text-muted-foreground mt-8">
-                Based on 1 free Biang Biang (₹415) + {teaDiscount}% off 1 tea (~₹250 × {teaDiscount}% = ~₹37 saved) per visit
+                Based on 1 free Biang Biang (₹415) per visit at T. Nagar, or 1 free Large Bubble Tea per visit at Palladium
               </p>
             </div>
           </div>
@@ -572,10 +571,10 @@ export default function Partner() {
                 </div>
                 <ul className="text-left space-y-3 mb-6">
                   {[
-                    'Free Biang Biang every visit (T. Nagar)',
-                    'Free Large Bubble Tea every visit (Palladium)',
-                    `${teaDiscount}% off your tea (1 per visit)`,
+                    'Free Biang Biang with any purchase (T. Nagar)',
+                    'Free Large Bubble Tea with another drink (Palladium)',
                     'Refer & earn Maami Rupees',
+                    'Loyalty stamps on every order',
                     'Gold Partner badge',
                     'Founding Partner recognition',
                   ].map((item) => (
@@ -610,10 +609,10 @@ export default function Partner() {
                 </div>
                 <ul className="text-left space-y-3 mb-6">
                   {[
-                    'Free Biang Biang every visit (T. Nagar)',
-                    'Free Large Bubble Tea every visit (Palladium)',
-                    `${teaDiscount}% off your tea (1 per visit)`,
+                    'Free Biang Biang with any purchase (T. Nagar)',
+                    'Free Large Bubble Tea with another drink (Palladium)',
                     'Refer & earn Maami Rupees',
+                    'Loyalty stamps on every order',
                     'Partner badge',
                   ].map((item) => (
                     <li key={item} className="flex items-start gap-2 text-sm">
@@ -701,15 +700,15 @@ export default function Partner() {
             {[
               {
                 q: 'How does the free Biang Biang work?',
-                a: 'Add Biang Biang Noodles to your order at T. Nagar (Moutan). The system automatically makes one Biang Biang free. If you order multiple, only one is free per visit.',
+                a: 'Order any food or drink at T. Nagar (Moutan) and add Biang Biang Noodles. The system automatically makes one Biang Biang free. You just need at least one other item in your order.',
               },
               {
                 q: 'What about Palladium Mall?',
-                a: 'At Palladium, you get a free Large Bubble Tea instead (any flavour). The most expensive large tea in your order becomes free.',
+                a: 'At Palladium, order at least two drinks and the most expensive large tea in your order becomes free. Choose any flavour!',
               },
               {
-                q: 'Does the tea discount stack with the free item?',
-                a: `Yes! You get the free item PLUS ${teaDiscount}% off all other teas in your order. They're separate benefits.`,
+                q: 'Do I earn loyalty stamps on free items?',
+                a: 'Loyalty stamps are earned based on the amount you actually pay. Free partner benefit items are not counted towards stamp calculation.',
               },
               {
                 q: 'How do referrals work?',

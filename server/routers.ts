@@ -898,6 +898,9 @@ export const appRouter = router({
         
         // Award stamps when order is marked as completed
         if (input.status === 'completed' && order && order.userId) {
+          // POLICY: Stamps are calculated on amount actually paid, excluding free partner benefit items
+          // partnerBenefitAmount is already subtracted from totalAmount during order creation,
+          // so totalAmount already reflects the paid amount. No additional subtraction needed.
           const orderTotal = order.totalAmount || 0;
           
           // Get current user info including role

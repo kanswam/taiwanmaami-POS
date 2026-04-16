@@ -7,6 +7,7 @@ import { partnerSubscriptions, partnerReferrals, partnerBenefitsLog, partnerConf
 import { eq, and, desc, sql, gte, lte } from "drizzle-orm";
 import { createRazorpayOrder, verifyPaymentSignature, getRazorpayKeyId } from "./razorpay";
 import { notifyOwner } from "./_core/notification";
+import { invokeLLM } from "./_core/llm";
 import crypto from "crypto";
 
 // Admin procedure - only allows admin role
@@ -76,6 +77,11 @@ export async function getActivePartnerSubscription(userId: number) {
 }
 
 // Helper: calculate Partner benefits for an order
+// UPDATED RULES (Apr 16):
+// 1. Free Biang Biang at T. Nagar requires purchase of at least 1 other food or drink
+// 2. Free Large Bubble Tea at Palladium requires purchase of at least 1 other drink
+// 3. 15% tea discount REMOVED
+// 4. Loyalty stamps should NOT be awarded on free items (handled in order creation, not here)
 export async function calculatePartnerBenefits(
   userId: number,
   outletId: number,
@@ -92,14 +98,12 @@ export async function calculatePartnerBenefits(
   if (!subscription) return null;
 
   const config = await getConfigs([
-    "tea_discount_percent",
     "free_food_product_slug",
     "free_tea_size",
     "tnagar_outlet_id",
     "palladium_outlet_id",
   ]);
 
-  const teaDiscountPercent = parseInt(config.tea_discount_percent || "15");
   const freeFoodSlug = config.free_food_product_slug || "biang-biang-noodles";
   const freeTeaSize = config.free_tea_size || "large";
   const tnagarOutletId = parseInt(config.tnagar_outlet_id || "2");
@@ -110,19 +114,16 @@ export async function calculatePartnerBenefits(
   if (!dbInstance) return null;
 
   const benefits: Array<{
-    type: "free_biang_biang" | "free_large_tea" | "tea_discount";
+    type: "free_biang_biang" | "free_large_tea";
     amount: number; // paise saved
     itemName?: string;
     itemOriginalPrice?: number;
-    discountPercent?: number;
-    teaItemsCount?: number;
   }> = [];
 
   let totalBenefitAmount = 0;
 
-  // 1. FREE ITEM BENEFIT
+  // 1. FREE BIANG BIANG at T. Nagar (requires at least 1 other item in the order)
   if (outletId === tnagarOutletId) {
-    // T.Nagar: Free Biang Biang Noodles
     const [freeFoodProduct] = await dbInstance
       .select({ id: products.id, name: products.name, instorePrice: products.instorePrice })
       .from(products)
@@ -134,24 +135,36 @@ export async function calculatePartnerBenefits(
         (item) => item.productId === freeFoodProduct.id
       );
       if (biangItem) {
-        // Make one Biang Biang free (use the unit price, not lineTotal which may include qty > 1)
-        const freeAmount = Math.round(biangItem.lineTotal / biangItem.quantity);
-        benefits.push({
-          type: "free_biang_biang",
-          amount: freeAmount,
-          itemName: freeFoodProduct.name,
-          itemOriginalPrice: freeAmount,
-        });
-        totalBenefitAmount += freeAmount;
+        // Check minimum purchase: must have at least 1 other item (any food or drink)
+        const otherItems = items.filter(
+          (item) => item.productId !== freeFoodProduct.id || item.quantity > 1
+        );
+        const hasOtherItems = otherItems.length > 0 || (biangItem.quantity > 1 && items.length === 1);
+        // More precise: count total items excluding 1 unit of Biang Biang
+        const totalOtherQuantity = items.reduce((sum, item) => {
+          if (item.productId === freeFoodProduct.id) {
+            return sum + Math.max(0, item.quantity - 1); // exclude 1 unit of BB
+          }
+          return sum + item.quantity;
+        }, 0);
+
+        if (totalOtherQuantity >= 1) {
+          // Make one Biang Biang free (use the unit price)
+          const freeAmount = Math.round(biangItem.lineTotal / biangItem.quantity);
+          benefits.push({
+            type: "free_biang_biang",
+            amount: freeAmount,
+            itemName: freeFoodProduct.name,
+            itemOriginalPrice: freeAmount,
+          });
+          totalBenefitAmount += freeAmount;
+        }
       }
     }
-  } else if (outletId === palladiumOutletId) {
-    // Palladium: Free Large Bubble Tea
-    // Find the most expensive large tea in the order
-    // Tea categories: Iced Beverages (slug: bubble-tea) and Hot Beverages (slug: coffee)
-    const teaCategorySlugs = ["bubble-tea", "coffee"];
-    
-    // Get tea category IDs
+  }
+
+  // 2. FREE LARGE BUBBLE TEA at Palladium (requires at least 1 other drink in the order)
+  if (outletId === palladiumOutletId) {
     const teaCategories = await dbInstance
       .select({ id: categories.id })
       .from(categories)
@@ -159,7 +172,6 @@ export async function calculatePartnerBenefits(
     const teaCategoryIds = teaCategories.map((c) => c.id);
 
     if (teaCategoryIds.length > 0) {
-      // Find tea items in the order that are large size
       const teaProducts = await dbInstance
         .select({
           productId: products.id,
@@ -179,94 +191,35 @@ export async function calculatePartnerBenefits(
       );
 
       if (largeTeaItems.length > 0) {
-        // Make the most expensive large tea free
-        const mostExpensive = largeTeaItems.reduce((max, item) => {
-          const unitPrice = Math.round(item.lineTotal / item.quantity);
-          const maxUnitPrice = Math.round(max.lineTotal / max.quantity);
-          return unitPrice > maxUnitPrice ? item : max;
-        }, largeTeaItems[0]);
+        // Check minimum purchase: must have at least 1 other drink in the order
+        // Count total drink items excluding 1 unit of the free large tea
+        const allDrinkItems = items.filter((item) => teaProductIds.has(item.productId));
+        const totalDrinkQuantity = allDrinkItems.reduce((sum, item) => sum + item.quantity, 0);
 
-        const freeAmount = Math.round(mostExpensive.lineTotal / mostExpensive.quantity);
-        benefits.push({
-          type: "free_large_tea",
-          amount: freeAmount,
-          itemName: mostExpensive.productName,
-          itemOriginalPrice: freeAmount,
-        });
-        totalBenefitAmount += freeAmount;
+        // Need at least 2 drinks total (1 free + 1 purchased)
+        if (totalDrinkQuantity >= 2) {
+          // Make the most expensive large tea free
+          const mostExpensive = largeTeaItems.reduce((max, item) => {
+            const unitPrice = Math.round(item.lineTotal / item.quantity);
+            const maxUnitPrice = Math.round(max.lineTotal / max.quantity);
+            return unitPrice > maxUnitPrice ? item : max;
+          }, largeTeaItems[0]);
+
+          const freeAmount = Math.round(mostExpensive.lineTotal / mostExpensive.quantity);
+          benefits.push({
+            type: "free_large_tea",
+            amount: freeAmount,
+            itemName: mostExpensive.productName,
+            itemOriginalPrice: freeAmount,
+          });
+          totalBenefitAmount += freeAmount;
+        }
       }
     }
   }
 
-  // 2. TEA DISCOUNT BENEFIT (applies at both outlets)
-  // Limited to 1 tea per visit — the Partner's own drink only
-  const teaCategories2 = await dbInstance
-    .select({ id: categories.id })
-    .from(categories)
-    .where(sql`${categories.slug} IN ('bubble-tea', 'coffee')`);
-  const teaCategoryIds2 = teaCategories2.map((c) => c.id);
-
-  if (teaCategoryIds2.length > 0) {
-    const teaProducts2 = await dbInstance
-      .select({
-        productId: products.id,
-        categoryId: subcategories.categoryId,
-      })
-      .from(products)
-      .innerJoin(subcategories, eq(products.subcategoryId, subcategories.id))
-      .where(sql`${subcategories.categoryId} IN (${sql.join(teaCategoryIds2.map((id) => sql`${id}`), sql`, `)})`);
-
-    const teaProductIds2 = new Set(teaProducts2.map((p) => p.productId));
-
-    // Find tea items in the order
-    const teaItemsInOrder = items.filter((item) => teaProductIds2.has(item.productId));
-
-    // Check if one tea is already free (Palladium free large tea)
-    const freeTeaBenefitExists = benefits.some((b) => b.type === "free_large_tea");
-
-    // Apply discount to only 1 tea (the Partner's own drink)
-    // If a free tea was already given at Palladium, pick the next cheapest tea for the discount
-    // If no free tea (T.Nagar), pick the cheapest tea for the discount
-    let eligibleTeaItems = teaItemsInOrder;
-
-    if (freeTeaBenefitExists) {
-      // At Palladium: the free large tea is already accounted for.
-      // Find a different tea item for the discount, or if same product with qty > 1, discount one unit
-      const freeTeaItem = teaItemsInOrder.find((i) => i.size === "large");
-      eligibleTeaItems = teaItemsInOrder.filter((i) => {
-        if (!freeTeaItem) return true;
-        // If it's a different product, it's eligible
-        if (i.productId !== freeTeaItem.productId) return true;
-        // If same product but qty > 1, one unit is free, another can get discount
-        if (i.productId === freeTeaItem.productId && i.quantity > 1) return true;
-        // Same product, qty = 1 — this is the free one, skip
-        return false;
-      });
-    }
-
-    if (eligibleTeaItems.length > 0) {
-      // Pick the cheapest tea for the discount (1 unit only)
-      const cheapestTea = eligibleTeaItems.reduce((min, item) => {
-        const unitPrice = Math.round(item.lineTotal / item.quantity);
-        const minUnitPrice = Math.round(min.lineTotal / min.quantity);
-        return unitPrice < minUnitPrice ? item : min;
-      }, eligibleTeaItems[0]);
-
-      // Discount applies to 1 unit of this tea only
-      const unitPrice = Math.round(cheapestTea.lineTotal / cheapestTea.quantity);
-      const discount = Math.round((unitPrice * teaDiscountPercent) / 100);
-
-      if (discount > 0) {
-        benefits.push({
-          type: "tea_discount",
-          amount: discount,
-          discountPercent: teaDiscountPercent,
-          teaItemsCount: 1,
-        });
-        totalBenefitAmount += discount;
-      }
-    }
-  }
+  // NOTE: 15% tea discount has been REMOVED as of Apr 16
+  // NOTE: Loyalty stamps should be calculated on (subtotal - totalBenefitAmount) in order creation
 
   return {
     subscription,
@@ -281,7 +234,6 @@ export const partnerRouter = router({
     const config = await getConfigs([
       "founding_price_paise",
       "regular_price_paise",
-      "tea_discount_percent",
       "founding_slots_remaining",
       "founding_slots_total",
       "programme_active",
@@ -292,7 +244,7 @@ export const partnerRouter = router({
     return {
       foundingPrice: parseInt(config.founding_price_paise || "250000"),
       regularPrice: parseInt(config.regular_price_paise || "350000"),
-      teaDiscountPercent: parseInt(config.tea_discount_percent || "15"),
+      teaDiscountPercent: 0, // Tea discount removed
       foundingSlotsRemaining: parseInt(config.founding_slots_remaining || "100"),
       foundingSlotsTotal: parseInt(config.founding_slots_total || "100"),
       programmeActive: config.programme_active === "true",
@@ -484,7 +436,7 @@ export const partnerRouter = router({
         referredByCode: input.referralCode || null,
         startDate: now,
         endDate,
-        razorpaySubscriptionId: razorpayOrder.id, // Store Razorpay order ID here
+        razorpaySubscriptionId: razorpayOrder.id,
       });
 
       const subscriptionId = subResult.insertId;
@@ -656,6 +608,25 @@ export const partnerRouter = router({
               .update(partnerReferrals)
               .set({ referredRewardCredited: true })
               .where(eq(partnerReferrals.id, referral.id));
+          }
+
+          // Send email notification to the referrer about the successful referral
+          try {
+            const [referrerUser] = await dbInstance
+              .select({ name: users.name, email: users.email })
+              .from(users)
+              .where(eq(users.id, referral.referrerUserId));
+
+            if (referrerUser?.email) {
+              await sendReferralNotificationEmail(
+                referrerUser.email,
+                referrerUser.name || "Partner",
+                ctx.user.name || "Someone",
+                referral.referrerRewardAmount
+              );
+            }
+          } catch (e) {
+            console.error("Failed to send referral notification email:", e);
           }
         }
       }
@@ -939,3 +910,77 @@ export const partnerRouter = router({
       return { success: true };
     }),
 });
+
+// Helper: Send email notification to referrer when their referral joins
+async function sendReferralNotificationEmail(
+  referrerEmail: string,
+  referrerName: string,
+  referredName: string,
+  rewardAmountPaise: number
+) {
+  const rewardRupees = rewardAmountPaise / 100;
+  const env = process.env;
+  const forgeApiUrl = env.BUILT_IN_FORGE_API_URL;
+  const forgeApiKey = env.BUILT_IN_FORGE_API_KEY;
+
+  if (!forgeApiUrl || !forgeApiKey) {
+    console.error("Missing FORGE API credentials for email notification");
+    return;
+  }
+
+  const emailHtml = `
+    <div style="font-family: 'Georgia', serif; max-width: 600px; margin: 0 auto; background: #FFF8F0; border-radius: 12px; overflow: hidden;">
+      <div style="background: linear-gradient(135deg, #8B4513 0%, #A0522D 100%); padding: 32px; text-align: center;">
+        <h1 style="color: #FFD700; margin: 0; font-size: 24px;">Taiwan Maami\u2122</h1>
+        <p style="color: #FFF8F0; margin: 8px 0 0; font-size: 14px;">Partner Programme</p>
+      </div>
+      <div style="padding: 32px;">
+        <h2 style="color: #8B4513; margin: 0 0 16px;">Great news, ${referrerName}! \ud83c\udf89</h2>
+        <p style="color: #5D4037; line-height: 1.6; font-size: 16px;">
+          Your friend <strong>${referredName}</strong> just joined the Maami Partner Programme using your referral!
+        </p>
+        <div style="background: #FFF3E0; border-left: 4px solid #FFD700; padding: 16px; margin: 24px 0; border-radius: 0 8px 8px 0;">
+          <p style="color: #8B4513; margin: 0; font-size: 18px; font-weight: bold;">
+            \u20b9${rewardRupees} Maami Rupees credited to your account!
+          </p>
+          <p style="color: #5D4037; margin: 8px 0 0; font-size: 14px;">
+            Use them on your next order at any Taiwan Maami outlet.
+          </p>
+        </div>
+        <p style="color: #5D4037; line-height: 1.6; font-size: 16px;">
+          Keep sharing your referral link and earn \u20b9${rewardRupees} for every friend who joins. The more friends you refer, the more you save!
+        </p>
+        <div style="text-align: center; margin: 32px 0;">
+          <a href="https://www.taiwanmaami.com/partner/dashboard" 
+             style="background: #8B4513; color: #FFD700; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 16px; display: inline-block;">
+            View Your Dashboard
+          </a>
+        </div>
+        <p style="color: #8D6E63; font-size: 13px; text-align: center; margin-top: 24px;">
+          Thank you for being a valued Maami Partner!
+        </p>
+      </div>
+    </div>
+  `;
+
+  try {
+    const response = await fetch(`${forgeApiUrl}/v1/notification/email`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${forgeApiKey}`,
+      },
+      body: JSON.stringify({
+        to: referrerEmail,
+        subject: `\ud83c\udf89 ${referredName} joined Maami Partner using your referral! \u20b9${rewardRupees} credited`,
+        html: emailHtml,
+      }),
+    });
+
+    if (!response.ok) {
+      console.error("Email notification failed:", await response.text());
+    }
+  } catch (e) {
+    console.error("Failed to send referral email notification:", e);
+  }
+}
