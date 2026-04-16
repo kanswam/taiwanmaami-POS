@@ -3009,3 +3009,8 @@ Orders fixed:
 - [x] Enforce minimum purchase in calculatePartnerBenefits backend (already implemented correctly in partnerRouter.ts)
 - [x] Add "How it works" visual step-by-step guide to Partner page (T. Nagar + Palladium flows, 3 steps each)
 - [x] Write/update vitest tests for backend enforcement (30 tests, 6 new edge cases added)
+
+## Bug Fix: Partner Dashboard still showing 15% tea discount (Apr 16)
+
+- [x] Remove "15% Off All Teas" from Partner Dashboard benefits list (replaced with Loyalty Stamps card)
+- [x] Updated WhatsApp share text to mention free items instead of 15% discount

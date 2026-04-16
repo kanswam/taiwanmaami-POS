@@ -20,7 +20,7 @@ import {
   Calendar,
   UtensilsCrossed,
   CupSoda,
-  Percent,
+  Heart,
   Users,
   Loader2,
   ExternalLink,
@@ -130,7 +130,7 @@ export default function PartnerDashboard() {
     const text = encodeURIComponent(
       `Hey! I'm a Maami Partner at Taiwan Maami and I love it 🧋\n\n` +
       `Join using my link and we both earn Maami Rupees:\n${referralLink}\n\n` +
-      `You get free Biang Biang Noodles every visit + 15% off your tea!`
+      `You get free Biang Biang Noodles + free Large Bubble Tea every visit!`
     );
     window.open(`https://wa.me/?text=${text}`, '_blank');
   };
@@ -268,11 +268,11 @@ export default function PartnerDashboard() {
               </div>
               <div className="flex items-start gap-4 p-4 rounded-xl bg-[#faf6f1]">
                 <div className="w-10 h-10 rounded-lg bg-[#bd302c]/10 flex items-center justify-center shrink-0">
-                  <Percent className="w-5 h-5 text-[#bd302c]" />
+                  <Heart className="w-5 h-5 text-[#bd302c]" />
                 </div>
                 <div>
-                  <p className="font-semibold text-sm">15% Off All Teas</p>
-                  <p className="text-xs text-muted-foreground">Both outlets, every order</p>
+                  <p className="font-semibold text-sm">Loyalty Stamps</p>
+                  <p className="text-xs text-muted-foreground">Earn stamps on every order, 10 = free drink</p>
                 </div>
               </div>
             </div>
