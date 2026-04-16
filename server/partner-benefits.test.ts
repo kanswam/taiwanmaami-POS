@@ -251,6 +251,60 @@ describe("Partner Programme: Referral Email Notification", () => {
   });
 });
 
+describe("Partner Programme: Backend Enforcement Edge Cases", () => {
+  it("free BB with multiple other items (3 items total)", () => {
+    const result = calculateFreeBiangBiang(TNAGAR_OUTLET, TNAGAR_OUTLET, [
+      { productId: BIANG_PRODUCT_ID, productName: "Biang Biang Noodles", lineTotal: 41500, quantity: 1 },
+      { productId: 200, productName: "Brown Sugar Milk Tea", lineTotal: 35000, quantity: 1 },
+      { productId: 301, productName: "Yaki Onigiri", lineTotal: 25000, quantity: 1 },
+    ], BIANG_PRODUCT_ID);
+    expect(result).not.toBeNull();
+    expect(result!.amount).toBe(41500);
+  });
+
+  it("free BB with 1 other item qty=3 (plenty of other items)", () => {
+    const result = calculateFreeBiangBiang(TNAGAR_OUTLET, TNAGAR_OUTLET, [
+      { productId: BIANG_PRODUCT_ID, productName: "Biang Biang Noodles", lineTotal: 41500, quantity: 1 },
+      { productId: 200, productName: "Brown Sugar Milk Tea", lineTotal: 105000, quantity: 3 },
+    ], BIANG_PRODUCT_ID);
+    expect(result).not.toBeNull();
+    expect(result!.amount).toBe(41500);
+  });
+
+  it("free large tea with 1 large + 1 large (both large, picks most expensive)", () => {
+    const result = calculateFreeLargeTea(PALLADIUM_OUTLET, PALLADIUM_OUTLET, [
+      { productId: 200, productName: "Brown Sugar Milk Tea", lineTotal: 45000, quantity: 1, size: "large", isTea: true },
+      { productId: 202, productName: "Taro Milk Tea", lineTotal: 42000, quantity: 1, size: "large", isTea: true },
+    ], "large");
+    expect(result).not.toBeNull();
+    expect(result!.amount).toBe(45000);
+    expect(result!.itemName).toBe("Brown Sugar Milk Tea");
+  });
+
+  it("free large tea with 1 large + 1 regular (regular counts as other drink)", () => {
+    const result = calculateFreeLargeTea(PALLADIUM_OUTLET, PALLADIUM_OUTLET, [
+      { productId: 200, productName: "Brown Sugar Milk Tea", lineTotal: 45000, quantity: 1, size: "large", isTea: true },
+      { productId: 201, productName: "Jasmine Green Tea", lineTotal: 30000, quantity: 1, size: "regular", isTea: true },
+    ], "large");
+    expect(result).not.toBeNull();
+    expect(result!.amount).toBe(45000);
+  });
+
+  it("no free large tea with 1 large tea + 1 food only (food doesn't count)", () => {
+    const result = calculateFreeLargeTea(PALLADIUM_OUTLET, PALLADIUM_OUTLET, [
+      { productId: 200, productName: "Brown Sugar Milk Tea", lineTotal: 45000, quantity: 1, size: "large", isTea: true },
+      { productId: 300, productName: "Mochi", lineTotal: 18500, quantity: 1, size: null, isTea: false },
+    ], "large");
+    expect(result).toBeNull();
+  });
+
+  it("stamps: large order with partner benefit still gets correct stamps", () => {
+    // Order ₹1800 total, partner benefit ₹450 → totalAmount = ₹1350
+    const stamps = calculateStamps(135000, 0);
+    expect(stamps).toBe(3); // ₹1350 / ₹450 = 3
+  });
+});
+
 describe("Partner Programme: Welcome Screen Data", () => {
   it("verifyPayment returns referralCode and tier for welcome screen", () => {
     const verifiedResponse = {

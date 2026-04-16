@@ -3003,3 +3003,9 @@ Orders fixed:
 - [x] Updated Partner page: hero, benefits cards, pricing cards, FAQ, savings calculator all reflect new rules
 - [x] Updated Checkout.tsx: removed tea discount benefit display
 - [x] 24 vitest tests passing for updated partner benefits (1092 total tests pass)
+
+## Partner Program Backend Enforcement & Visual Guide (Apr 16)
+
+- [x] Enforce minimum purchase in calculatePartnerBenefits backend (already implemented correctly in partnerRouter.ts)
+- [x] Add "How it works" visual step-by-step guide to Partner page (T. Nagar + Palladium flows, 3 steps each)
+- [x] Write/update vitest tests for backend enforcement (30 tests, 6 new edge cases added)

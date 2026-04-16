@@ -27,6 +27,9 @@ import {
   Sparkles,
   Clock,
   Heart,
+  ShoppingBag,
+  ChevronRight,
+  MapPin,
 } from 'lucide-react';
 
 // Declare Razorpay types
@@ -500,8 +503,116 @@ export default function Partner() {
         </div>
       </section>
 
+      {/* How It Works — Visual Step-by-Step Guide */}
+      <section className="py-20 bg-white">
+        <div className="container">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
+              How It Works
+            </h2>
+            <p className="text-muted-foreground text-lg max-w-xl mx-auto">
+              Claiming your free items is automatic. Just order normally and the system does the rest.
+            </p>
+          </div>
+
+          <div className="max-w-5xl mx-auto space-y-16">
+            {/* T. Nagar Flow */}
+            <div>
+              <div className="flex items-center gap-3 mb-8 justify-center">
+                <MapPin className="w-5 h-5 text-[#bd302c]" />
+                <h3 className="text-xl font-bold text-foreground">At T. Nagar (Moutan)</h3>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr_auto_1fr] items-center gap-4 md:gap-2">
+                {/* Step 1 */}
+                <div className="bg-[#faf6f1] rounded-2xl p-6 text-center">
+                  <div className="w-12 h-12 rounded-full bg-[#bd302c] text-white flex items-center justify-center mx-auto mb-4 text-lg font-bold">1</div>
+                  <ShoppingBag className="w-8 h-8 text-[#bd302c] mx-auto mb-3" />
+                  <p className="font-semibold text-foreground mb-1">Order any item</p>
+                  <p className="text-sm text-muted-foreground">Any food or drink — tea, mochi, onigiri, anything!</p>
+                </div>
+                {/* Arrow */}
+                <div className="hidden md:flex items-center justify-center">
+                  <ChevronRight className="w-6 h-6 text-[#bd302c]/40" />
+                </div>
+                {/* Step 2 */}
+                <div className="bg-[#faf6f1] rounded-2xl p-6 text-center">
+                  <div className="w-12 h-12 rounded-full bg-[#bd302c] text-white flex items-center justify-center mx-auto mb-4 text-lg font-bold">2</div>
+                  <UtensilsCrossed className="w-8 h-8 text-[#bd302c] mx-auto mb-3" />
+                  <p className="font-semibold text-foreground mb-1">Add Biang Biang Noodles</p>
+                  <p className="text-sm text-muted-foreground">Add it to your cart like any other item</p>
+                </div>
+                {/* Arrow */}
+                <div className="hidden md:flex items-center justify-center">
+                  <ChevronRight className="w-6 h-6 text-[#bd302c]/40" />
+                </div>
+                {/* Step 3 */}
+                <div className="bg-gradient-to-br from-[#bd302c]/10 to-[#d4a574]/10 rounded-2xl p-6 text-center border-2 border-[#bd302c]/20">
+                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#bd302c] to-[#d4a574] text-white flex items-center justify-center mx-auto mb-4 text-lg font-bold">
+                    <CheckCircle2 className="w-6 h-6" />
+                  </div>
+                  <Sparkles className="w-8 h-8 text-[#bd302c] mx-auto mb-3" />
+                  <p className="font-semibold text-foreground mb-1">Biang Biang is FREE!</p>
+                  <p className="text-sm text-muted-foreground">Automatically deducted at checkout. Save ₹415!</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Palladium Flow */}
+            <div>
+              <div className="flex items-center gap-3 mb-8 justify-center">
+                <MapPin className="w-5 h-5 text-[#bd302c]" />
+                <h3 className="text-xl font-bold text-foreground">At Palladium Mall</h3>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr_auto_1fr] items-center gap-4 md:gap-2">
+                {/* Step 1 */}
+                <div className="bg-[#faf6f1] rounded-2xl p-6 text-center">
+                  <div className="w-12 h-12 rounded-full bg-[#bd302c] text-white flex items-center justify-center mx-auto mb-4 text-lg font-bold">1</div>
+                  <CupSoda className="w-8 h-8 text-[#bd302c] mx-auto mb-3" />
+                  <p className="font-semibold text-foreground mb-1">Order any drink</p>
+                  <p className="text-sm text-muted-foreground">Pick your favourite bubble tea or coffee</p>
+                </div>
+                {/* Arrow */}
+                <div className="hidden md:flex items-center justify-center">
+                  <ChevronRight className="w-6 h-6 text-[#bd302c]/40" />
+                </div>
+                {/* Step 2 */}
+                <div className="bg-[#faf6f1] rounded-2xl p-6 text-center">
+                  <div className="w-12 h-12 rounded-full bg-[#bd302c] text-white flex items-center justify-center mx-auto mb-4 text-lg font-bold">2</div>
+                  <CupSoda className="w-8 h-8 text-[#bd302c] mx-auto mb-3" />
+                  <p className="font-semibold text-foreground mb-1">Add a Large Bubble Tea</p>
+                  <p className="text-sm text-muted-foreground">Any flavour in Large size — your pick!</p>
+                </div>
+                {/* Arrow */}
+                <div className="hidden md:flex items-center justify-center">
+                  <ChevronRight className="w-6 h-6 text-[#bd302c]/40" />
+                </div>
+                {/* Step 3 */}
+                <div className="bg-gradient-to-br from-[#bd302c]/10 to-[#d4a574]/10 rounded-2xl p-6 text-center border-2 border-[#bd302c]/20">
+                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#bd302c] to-[#d4a574] text-white flex items-center justify-center mx-auto mb-4 text-lg font-bold">
+                    <CheckCircle2 className="w-6 h-6" />
+                  </div>
+                  <Sparkles className="w-8 h-8 text-[#bd302c] mx-auto mb-3" />
+                  <p className="font-semibold text-foreground mb-1">Large Tea is FREE!</p>
+                  <p className="text-sm text-muted-foreground">The most expensive large tea is on us. Save up to ₹450!</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Tip callout */}
+            <div className="bg-[#faf6f1] border border-[#d4a574]/30 rounded-2xl p-6 md:p-8 text-center max-w-2xl mx-auto">
+              <Shield className="w-8 h-8 text-[#bd302c] mx-auto mb-3" />
+              <p className="font-semibold text-foreground mb-2">No codes needed. Fully automatic.</p>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                Just log in and place your order. The system recognises your Partner status and applies the benefit at checkout.
+                You'll see the discount in your order summary before you pay.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Value Proposition */}
-      <section className="py-16 bg-white">
+      <section className="py-16 bg-[#faf6f1]">
         <div className="container">
           <div className="max-w-4xl mx-auto">
             <h2 className="text-3xl font-bold text-center mb-12">
