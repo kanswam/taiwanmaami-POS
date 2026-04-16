@@ -130,7 +130,7 @@ export default function PartnerDashboard() {
     const text = encodeURIComponent(
       `Hey! I'm a Maami Partner at Taiwan Maami and I love it 🧋\n\n` +
       `Join using my link and we both earn Maami Rupees:\n${referralLink}\n\n` +
-      `You get free Biang Biang Noodles + free Large Bubble Tea every visit!`
+      `You get free Biang Biang Noodles at T. Nagar & free Large Bubble Tea at Palladium — every visit!`
     );
     window.open(`https://wa.me/?text=${text}`, '_blank');
   };
