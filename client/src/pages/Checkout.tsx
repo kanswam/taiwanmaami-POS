@@ -34,7 +34,7 @@ export default function Checkout() {
   const [, navigate] = useLocation();
   const { isAuthenticated, user } = useAuth();
   const { triggerLogin, transitionPortal } = useLoginTransition();
-  const { state, subtotal, gst, total, clearCart, itemCount, tableNumber, setTableNumber, activeOrderId, setActiveOrderId } = useCart();
+  const { state, subtotal, gst, total, clearCart, itemCount, tableNumber, setTableNumber, activeOrderId, setActiveOrderId, applyDiscount, removeDiscount } = useCart();
   const { data: stores } = trpc.stores.getAll.useQuery();
   const { isOnline, offlineModeEnabled, placeOfflineOrder } = useOffline();
 
@@ -96,6 +96,32 @@ export default function Checkout() {
       document.body.removeChild(script);
     };
   }, []);
+
+  // ─── AUTO-APPLY LOYALTY REWARD ───
+  // Query available rewards for logged-in users
+  const { data: availableRewards } = trpc.loyalty.getAvailableRewards.useQuery(
+    undefined,
+    { enabled: isAuthenticated && state.items.length > 0 }
+  );
+
+  // Auto-apply reward when available and not already applied
+  useEffect(() => {
+    if (!availableRewards || availableRewards.length === 0) return;
+    // Don't override if a discount is already applied
+    if (state.discountCode) return;
+
+    const reward = availableRewards[0]; // Use the earliest expiring reward
+    // Find the cheapest drink (large or regular) in the cart to make free
+    const drinkItems = state.items.filter(item => item.size === 'large' || item.size === 'regular');
+    if (drinkItems.length === 0) return;
+
+    const cheapest = drinkItems.reduce((min, item) =>
+      item.unitPrice < min.unitPrice ? item : min, drinkItems[0]);
+
+    const rewardCode = `REWARD:${reward.voucherCode}`;
+    applyDiscount(rewardCode, cheapest.unitPrice);
+    toast.success('Loyalty reward auto-applied! Your cheapest bubble tea is FREE.', { duration: 5000 });
+  }, [availableRewards, state.items, state.discountCode, applyDiscount]);
 
   // Mutation to cancel order if payment fails
   const cancelOrder = trpc.orders.cancelOrder.useMutation();
@@ -1318,7 +1344,26 @@ export default function Checkout() {
                     <span className="text-muted-foreground">Central GST (2.5%)</span>
                     <span>{formatPrice(gst.centralGst)}</span>
                   </div>
-                  {state.discountAmount > 0 && (
+                  {state.discountAmount > 0 && state.discountCode?.startsWith('REWARD:') && (
+                    <div className="bg-green-50 border border-green-200 rounded-lg p-3 -mx-1">
+                      <div className="flex items-center gap-1.5 mb-1">
+                        <Gift className="w-3.5 h-3.5 text-green-600" />
+                        <span className="text-xs font-semibold text-green-700">Loyalty Reward Applied!</span>
+                      </div>
+                      <div className="flex justify-between text-sm text-green-700">
+                        <span>Free Bubble Tea</span>
+                        <span>-{formatPrice(state.discountAmount)}</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => removeDiscount()}
+                        className="text-xs text-muted-foreground underline mt-1 hover:text-foreground"
+                      >
+                        Remove reward
+                      </button>
+                    </div>
+                  )}
+                  {state.discountAmount > 0 && !state.discountCode?.startsWith('REWARD:') && (
                     <div className="flex justify-between text-green-600">
                       <span>Discount</span>
                       <span>-{formatPrice(state.discountAmount)}</span>

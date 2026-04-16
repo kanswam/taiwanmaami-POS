@@ -288,12 +288,14 @@ export const appRouter = router({
                 eq(loyaltyRewards.isRedeemed, false)
               ));
             if (reward && new Date(reward.expiresAt) > new Date()) {
-              // Find the most expensive large drink in the order to make free
-              const largeDrinkItems = input.items.filter(item => item.size === 'large');
-              if (largeDrinkItems.length > 0) {
-                const mostExpensive = largeDrinkItems.reduce((max, item) => 
-                  item.unitPrice > max.unitPrice ? item : max, largeDrinkItems[0]);
-                discountAmount = mostExpensive.unitPrice;
+              // Find the lowest-priced bubble tea in the order to make free
+              // Prefer large size, fall back to regular if no large exists
+              const drinkItems = input.items.filter(item => item.size === 'large' || item.size === 'regular');
+              if (drinkItems.length > 0) {
+                // Find the cheapest drink (lowest unit price)
+                const cheapest = drinkItems.reduce((min, item) => 
+                  item.unitPrice < min.unitPrice ? item : min, drinkItems[0]);
+                discountAmount = cheapest.unitPrice;
               }
             } else {
               // Invalid or expired reward, ignore

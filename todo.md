@@ -2960,3 +2960,18 @@ Orders fixed:
 - [x] Fix order placement failure - "Unable to place your order right now" error after bobaSize changes
   - Root cause: bobaSize column was added to code but not migrated to production DB
   - Fix: Ran ALTER TABLE to add bobaSize column to production order_items table
+- [x] Delete cancelled orders from Apr 12 caused by bobaSize bug (user-approved)
+  - Deleted 8 cancelled orders: 26-00138 to 26-00144, 26-00146
+  - Also deleted 1 order_item, 0 addons, 1 KOT queue entry
+  - Order 26-00145 (completed) was preserved
+
+## Loyalty Reward Improvements (Apr 16)
+
+- [x] Add StampCard with reward display to Profile page (already exists - Loyalty Rewards card + Reward History)
+- [x] Auto-apply loyalty reward at checkout (detect available reward, auto-set discountCode, show discount in order summary)
+  - [x] Backend: Fixed reward logic to discount cheapest drink (large or regular) instead of most expensive large
+  - [x] Frontend: Added useEffect to auto-query rewards and apply discount code on checkout page
+  - [x] UI: Added green reward banner in order summary with "Remove reward" option
+  - [x] 14 vitest tests passing
+  - Free item is the lowest-priced bubble tea (large or regular) in the order
+  - Clearly shown in order summary with green "Loyalty Reward Applied!" banner
