@@ -390,12 +390,13 @@ export const appRouter = router({
         let partnerBenefitAmount = 0;
         let partnerSubId: number | null = null;
         let partnerBenefitsToLog: Array<{
-          type: 'free_biang_biang' | 'free_large_tea' | 'tea_discount';
+          type: 'free_biang_biang' | 'free_large_tea' | 'tea_discount' | 'complimentary_item' | 'drink_discount' | 'workshop_discount';
           amount: number;
           itemName?: string;
           itemOriginalPrice?: number;
           discountPercent?: number;
           teaItemsCount?: number;
+          drinkItemsCount?: number;
         }> = [];
 
         if (ctx.user?.id) {

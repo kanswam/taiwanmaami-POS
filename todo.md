@@ -3014,3 +3014,59 @@ Orders fixed:
 
 - [x] Remove "15% Off All Teas" from Partner Dashboard benefits list (replaced with Loyalty Stamps card)
 - [x] Updated WhatsApp share text to mention free items instead of 15% discount
+
+## Partner Programme Overhaul (Apr 19)
+
+### Database Schema
+- [x] Add partner tier field (founder/regular) to partners table
+- [x] Add complimentary items claimed count/tracking (via partnerBenefitsLog)
+- [x] Add subscription year start date for per-year limit tracking
+- [x] Track which items were claimed (complimentary item log)
+
+### Backend
+- [x] Update calculatePartnerBenefits: complimentary food item at T.Nagar (no min purchase required)
+- [x] Eligible items: Biang Biang, Dan Dan Noodles, Cong You Bing, Egg Cong You Bing, any Brioche
+- [x] 25 complimentary items per subscription year limit
+- [x] 1 complimentary item per visit/order
+- [x] 5% discount on all drinks in partner orders
+- [x] 10% discount on workshops
+- [x] Remove referral programme entirely (referral code, referral tracking, referral rewards)
+- [x] Founder tier: ₹2,500/year, first 50 only
+- [x] Regular tier: ₹3,500/year, same benefits
+
+### Customer-Facing Partner Page
+- [x] Update Partner page: new pricing (Founder ₹2,500 / Regular ₹3,500)
+- [x] Update benefits display (complimentary item, 5% drinks, 10% workshops)
+- [x] Remove all referral sections from Partner page
+- [x] Show founder slots remaining (X of 50)
+
+### Partner Dashboard (customer-facing)
+- [x] Remove referral section and share buttons
+- [x] Update benefits cards to new rules
+- [x] Show complimentary items claimed vs 25 limit
+- [x] Show subscription year and renewal date
+
+### Admin Partner Dashboard (new standalone page)
+- [x] Total partners count (founder vs regular breakdown)
+- [x] Founder slots remaining (out of 50) with progress bar
+- [x] Subscription revenue
+- [x] Benefits given total
+- [x] Individual partner activity list with tier badges
+- [x] Programme configuration management
+
+### Checkout
+- [x] Apply complimentary item (1 per order, from eligible list)
+- [x] Apply 5% drink discount on all drinks in order
+- [x] Check 25/year limit before applying complimentary item
+- [x] Updated labels: "Complimentary" instead of "Free"
+
+### Tests
+- [x] 36 vitest tests for new benefit calculation (all passing)
+- [x] Test 25-item yearly limit
+- [x] Test 1-item-per-visit limit
+- [x] Test 5% drink discount
+- [x] Test founder vs regular tier pricing
+- [x] Test eligible items validation
+- [x] Test combined benefits scenarios
+- [x] Updated partner.test.ts integration test (removed teaDiscountPercent, referral fields)
+- [x] All 1,104 tests passing across 99 test files

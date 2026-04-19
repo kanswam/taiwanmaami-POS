@@ -16,8 +16,10 @@ import {
   Settings,
   Loader2,
   Ban,
-  Search,
   RefreshCw,
+  UtensilsCrossed,
+  CupSoda,
+  Star,
 } from 'lucide-react';
 
 export default function AdminPartners() {
@@ -39,7 +41,7 @@ export default function AdminPartners() {
       setEditingConfig(null);
       refetchStats();
     },
-    onError: (err) => toast.error(err.message),
+    onError: (err: any) => toast.error(err.message),
   });
 
   const cancelSubscription = trpc.partner.adminCancelSubscription.useMutation({
@@ -48,7 +50,7 @@ export default function AdminPartners() {
       refetchPartners();
       refetchStats();
     },
-    onError: (err) => toast.error(err.message),
+    onError: (err: any) => toast.error(err.message),
   });
 
   const handleUpdateConfig = (key: string) => {
@@ -71,17 +73,19 @@ export default function AdminPartners() {
     );
   }
 
+  const foundingSlotsRemaining = parseInt(stats?.config?.founding_slots_remaining || '50');
+  const foundingSlotsTotal = parseInt(stats?.config?.founding_slots_total || '50');
+  const foundingSlotsFilled = foundingSlotsTotal - foundingSlotsRemaining;
+
   const configItems = stats?.config ? [
     { key: 'programme_active', label: 'Programme Active', type: 'toggle' },
     { key: 'founding_price_paise', label: 'Founding Price (paise)', type: 'number' },
     { key: 'regular_price_paise', label: 'Regular Price (paise)', type: 'number' },
-    { key: 'tea_discount_percent', label: 'Tea Discount %', type: 'number' },
     { key: 'founding_slots_remaining', label: 'Founding Slots Remaining', type: 'number' },
     { key: 'founding_slots_total', label: 'Founding Slots Total', type: 'number' },
-    { key: 'referrer_reward_paise', label: 'Referrer Reward (paise)', type: 'number' },
-    { key: 'referred_reward_paise', label: 'Referred Reward (paise)', type: 'number' },
-    { key: 'free_food_product_slug', label: 'Free Food Product Slug', type: 'text' },
-    { key: 'free_tea_size', label: 'Free Tea Size', type: 'text' },
+    { key: 'complimentary_items_per_year', label: 'Complimentary Items / Year', type: 'number' },
+    { key: 'drink_discount_percent', label: 'Drink Discount %', type: 'number' },
+    { key: 'workshop_discount_percent', label: 'Workshop Discount %', type: 'number' },
   ] : [];
 
   return (
@@ -93,7 +97,7 @@ export default function AdminPartners() {
               <Crown className="w-6 h-6 text-[#d4a574]" />
               Partner Programme
             </h1>
-            <p className="text-muted-foreground text-sm mt-1">Manage subscriptions, referrals, and programme settings</p>
+            <p className="text-muted-foreground text-sm mt-1">Manage subscriptions and programme settings</p>
           </div>
           <Button variant="outline" size="sm" onClick={() => { refetchStats(); refetchPartners(); }}>
             <RefreshCw className="w-4 h-4 mr-1" /> Refresh
@@ -139,13 +143,56 @@ export default function AdminPartners() {
           <Card className="p-5">
             <div className="flex items-center gap-3 mb-2">
               <div className="w-9 h-9 rounded-lg bg-purple-100 flex items-center justify-center">
-                <Users className="w-5 h-5 text-purple-600" />
+                <Crown className="w-5 h-5 text-purple-600" />
               </div>
             </div>
-            <p className="text-2xl font-bold">{stats?.totalReferrals || 0}</p>
-            <p className="text-xs text-muted-foreground">Total Referrals</p>
+            <p className="text-2xl font-bold">{foundingSlotsFilled} / {foundingSlotsTotal}</p>
+            <p className="text-xs text-muted-foreground">Founding Slots Filled</p>
+            <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
+              <div
+                className="bg-gradient-to-r from-[#d4a574] to-[#bd302c] h-2 rounded-full transition-all"
+                style={{ width: `${Math.min(100, (foundingSlotsFilled / foundingSlotsTotal) * 100)}%` }}
+              />
+            </div>
           </Card>
         </div>
+
+        {/* Benefits Summary */}
+        <Card className="p-6">
+          <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+            <Star className="w-5 h-5 text-[#d4a574]" />
+            Current Benefits
+          </h2>
+          <div className="grid md:grid-cols-3 gap-4">
+            <div className="flex items-start gap-3 p-4 rounded-xl bg-muted/50">
+              <UtensilsCrossed className="w-5 h-5 text-[#bd302c] mt-0.5 shrink-0" />
+              <div>
+                <p className="font-medium text-sm">Complimentary Food Item</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  1 per visit at T. Nagar. {stats?.config?.complimentary_items_per_year || '25'}/year limit. No min purchase.
+                </p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3 p-4 rounded-xl bg-muted/50">
+              <CupSoda className="w-5 h-5 text-[#bd302c] mt-0.5 shrink-0" />
+              <div>
+                <p className="font-medium text-sm">{stats?.config?.drink_discount_percent || '5'}% Off All Drinks</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Applied to every drink in every partner order.
+                </p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3 p-4 rounded-xl bg-muted/50">
+              <Star className="w-5 h-5 text-[#bd302c] mt-0.5 shrink-0" />
+              <div>
+                <p className="font-medium text-sm">{stats?.config?.workshop_discount_percent || '10'}% Off Workshops</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  All Taiwan Maami workshops and events.
+                </p>
+              </div>
+            </div>
+          </div>
+        </Card>
 
         {/* Partners List */}
         <Card className="p-6">
@@ -181,9 +228,8 @@ export default function AdminPartners() {
                     <th className="pb-3 font-medium">Partner</th>
                     <th className="pb-3 font-medium">Tier</th>
                     <th className="pb-3 font-medium">Status</th>
-                    <th className="pb-3 font-medium">Referral Code</th>
-                    <th className="pb-3 font-medium">Referrals</th>
                     <th className="pb-3 font-medium">Benefits Used</th>
+                    <th className="pb-3 font-medium">Paid</th>
                     <th className="pb-3 font-medium">Expires</th>
                     <th className="pb-3 font-medium">Actions</th>
                   </tr>
@@ -208,9 +254,8 @@ export default function AdminPartners() {
                           {p.status}
                         </Badge>
                       </td>
-                      <td className="py-3 font-mono text-xs">{p.referralCode}</td>
-                      <td className="py-3">{p.referralCount}</td>
                       <td className="py-3">{formatPrice(p.totalBenefitsUsed)}</td>
+                      <td className="py-3">{formatPrice(p.amountPaid)}</td>
                       <td className="py-3 text-xs">
                         {p.endDate ? new Date(p.endDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : '-'}
                       </td>

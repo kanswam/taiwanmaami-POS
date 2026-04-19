@@ -1378,7 +1378,9 @@ export default function Checkout() {
                       {partnerBenefits.benefits.map((b, i) => (
                         <div key={i} className="flex justify-between text-xs text-green-700 mb-0.5">
                           <span>
-                            {b.type === 'free_biang_biang' ? `Free ${b.itemName}` :
+                            {b.type === 'complimentary_item' ? `Complimentary ${b.itemName}` :
+                             b.type === 'drink_discount' ? `5% off ${b.itemName}` :
+                             b.type === 'free_biang_biang' ? `Complimentary ${b.itemName}` :
                              b.type === 'free_large_tea' ? `Free ${b.itemName}` :
                              `Partner benefit`}
                           </span>
@@ -1395,7 +1397,7 @@ export default function Checkout() {
                     <div className="text-center py-2">
                       <Link href="/partner" className="text-xs text-[#bd302c] hover:underline flex items-center justify-center gap-1">
                         <Crown className="w-3 h-3" />
-                        Join Maami Partner for free Biang Biang every visit
+                        Join Maami Partner for complimentary food & drink discounts
                       </Link>
                     </div>
                   )}

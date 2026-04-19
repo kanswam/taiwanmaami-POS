@@ -77,11 +77,14 @@ export async function getActivePartnerSubscription(userId: number) {
 }
 
 // Helper: calculate Partner benefits for an order
-// UPDATED RULES (Apr 16):
-// 1. Free Biang Biang at T. Nagar requires purchase of at least 1 other food or drink
-// 2. Free Large Bubble Tea at Palladium requires purchase of at least 1 other drink
-// 3. 15% tea discount REMOVED
-// 4. Loyalty stamps should NOT be awarded on free items (handled in order creation, not here)
+// UPDATED RULES (Apr 19):
+// 1. Complimentary food item at T. Nagar — NO minimum purchase required
+//    Eligible items: Biang Biang, Dan Dan Noodles, any Cong You Bing, any Brioche
+//    Limit: 1 per visit, 25 per subscription year
+// 2. 5% off all drinks in the order (all outlets)
+// 3. 10% off workshops (handled separately in workshop booking)
+// 4. Referral programme REMOVED
+// 5. Loyalty stamps should NOT be awarded on free items (handled in order creation)
 export async function calculatePartnerBenefits(
   userId: number,
   outletId: number,
@@ -98,133 +101,133 @@ export async function calculatePartnerBenefits(
   if (!subscription) return null;
 
   const config = await getConfigs([
-    "free_food_product_slug",
-    "free_tea_size",
     "tnagar_outlet_id",
-    "palladium_outlet_id",
+    "complimentary_items_per_year",
+    "drink_discount_percent",
+    "eligible_food_subcategories",
+    "eligible_sweet_subcategories",
   ]);
 
-  const freeFoodSlug = config.free_food_product_slug || "biang-biang-noodles";
-  const freeTeaSize = config.free_tea_size || "large";
   const tnagarOutletId = parseInt(config.tnagar_outlet_id || "2");
-  const palladiumOutletId = parseInt(config.palladium_outlet_id || "1");
+  const maxComplimentaryPerYear = parseInt(config.complimentary_items_per_year || "25");
+  const drinkDiscountPercent = parseInt(config.drink_discount_percent || "5");
+  const eligibleFoodSubcats = (config.eligible_food_subcategories || "saucy-noodles,flat-bread,pillow-brioche").split(",").map(s => s.trim());
+  const eligibleSweetSubcats = (config.eligible_sweet_subcategories || "sweet-pillow-brioche").split(",").map(s => s.trim());
 
-  // Look up the free food product
   const dbInstance = await getDb();
   if (!dbInstance) return null;
 
   const benefits: Array<{
-    type: "free_biang_biang" | "free_large_tea";
+    type: "complimentary_item" | "drink_discount" | "free_biang_biang" | "free_large_tea";
     amount: number; // paise saved
     itemName?: string;
     itemOriginalPrice?: number;
+    discountPercent?: number;
+    drinkItemsCount?: number;
   }> = [];
 
   let totalBenefitAmount = 0;
 
-  // 1. FREE BIANG BIANG at T. Nagar (requires at least 1 other item in the order)
+  // 1. COMPLIMENTARY FOOD ITEM at T. Nagar (no minimum purchase required)
   if (outletId === tnagarOutletId) {
-    const [freeFoodProduct] = await dbInstance
-      .select({ id: products.id, name: products.name, instorePrice: products.instorePrice })
-      .from(products)
-      .where(eq(products.slug, freeFoodSlug));
-
-    if (freeFoodProduct) {
-      // Check if the order contains Biang Biang
-      const biangItem = items.find(
-        (item) => item.productId === freeFoodProduct.id
+    // Check how many complimentary items used this subscription year
+    const complimentaryUsed = await dbInstance
+      .select({ count: sql<number>`COUNT(*)` })
+      .from(partnerBenefitsLog)
+      .where(
+        and(
+          eq(partnerBenefitsLog.userId, userId),
+          eq(partnerBenefitsLog.subscriptionId, subscription.id),
+          sql`${partnerBenefitsLog.benefitType} IN ('complimentary_item', 'free_biang_biang')`
+        )
       );
-      if (biangItem) {
-        // Check minimum purchase: must have at least 1 other item (any food or drink)
-        const otherItems = items.filter(
-          (item) => item.productId !== freeFoodProduct.id || item.quantity > 1
-        );
-        const hasOtherItems = otherItems.length > 0 || (biangItem.quantity > 1 && items.length === 1);
-        // More precise: count total items excluding 1 unit of Biang Biang
-        const totalOtherQuantity = items.reduce((sum, item) => {
-          if (item.productId === freeFoodProduct.id) {
-            return sum + Math.max(0, item.quantity - 1); // exclude 1 unit of BB
-          }
-          return sum + item.quantity;
-        }, 0);
+    const usedCount = Number(complimentaryUsed[0]?.count) || 0;
 
-        if (totalOtherQuantity >= 1) {
-          // Make one Biang Biang free (use the unit price)
-          const freeAmount = Math.round(biangItem.lineTotal / biangItem.quantity);
-          benefits.push({
-            type: "free_biang_biang",
-            amount: freeAmount,
-            itemName: freeFoodProduct.name,
-            itemOriginalPrice: freeAmount,
-          });
-          totalBenefitAmount += freeAmount;
-        }
-      }
-    }
-  }
-
-  // 2. FREE LARGE BUBBLE TEA at Palladium (requires at least 1 other drink in the order)
-  if (outletId === palladiumOutletId) {
-    const teaCategories = await dbInstance
-      .select({ id: categories.id })
-      .from(categories)
-      .where(sql`${categories.slug} IN ('bubble-tea', 'coffee')`);
-    const teaCategoryIds = teaCategories.map((c) => c.id);
-
-    if (teaCategoryIds.length > 0) {
-      const teaProducts = await dbInstance
+    if (usedCount < maxComplimentaryPerYear) {
+      // Get all eligible product IDs from eligible subcategories
+      const allEligibleSubcats = [...eligibleFoodSubcats, ...eligibleSweetSubcats];
+      const eligibleProducts = await dbInstance
         .select({
           productId: products.id,
-          categoryId: subcategories.categoryId,
+          productName: products.name,
+          subcatSlug: subcategories.slug,
         })
         .from(products)
         .innerJoin(subcategories, eq(products.subcategoryId, subcategories.id))
-        .where(sql`${subcategories.categoryId} IN (${sql.join(teaCategoryIds.map((id) => sql`${id}`), sql`, `)})`);
+        .where(sql`${subcategories.slug} IN (${sql.join(allEligibleSubcats.map(s => sql`${s}`), sql`, `)})`);
 
-      const teaProductIds = new Set(teaProducts.map((p) => p.productId));
+      const eligibleProductIds = new Set(eligibleProducts.map(p => p.productId));
 
-      // Find large tea items in the order
-      const largeTeaItems = items.filter(
-        (item) =>
-          teaProductIds.has(item.productId) &&
-          item.size === freeTeaSize
-      );
+      // Find eligible items in the order
+      const eligibleOrderItems = items.filter(item => eligibleProductIds.has(item.productId));
 
-      if (largeTeaItems.length > 0) {
-        // Check minimum purchase: must have at least 1 other drink in the order
-        // Count total drink items excluding 1 unit of the free large tea
-        const allDrinkItems = items.filter((item) => teaProductIds.has(item.productId));
-        const totalDrinkQuantity = allDrinkItems.reduce((sum, item) => sum + item.quantity, 0);
+      if (eligibleOrderItems.length > 0) {
+        // Make the most expensive eligible item complimentary (1 unit)
+        const mostExpensive = eligibleOrderItems.reduce((max, item) => {
+          const unitPrice = Math.round(item.lineTotal / item.quantity);
+          const maxUnitPrice = Math.round(max.lineTotal / max.quantity);
+          return unitPrice > maxUnitPrice ? item : max;
+        }, eligibleOrderItems[0]);
 
-        // Need at least 2 drinks total (1 free + 1 purchased)
-        if (totalDrinkQuantity >= 2) {
-          // Make the most expensive large tea free
-          const mostExpensive = largeTeaItems.reduce((max, item) => {
-            const unitPrice = Math.round(item.lineTotal / item.quantity);
-            const maxUnitPrice = Math.round(max.lineTotal / max.quantity);
-            return unitPrice > maxUnitPrice ? item : max;
-          }, largeTeaItems[0]);
-
-          const freeAmount = Math.round(mostExpensive.lineTotal / mostExpensive.quantity);
-          benefits.push({
-            type: "free_large_tea",
-            amount: freeAmount,
-            itemName: mostExpensive.productName,
-            itemOriginalPrice: freeAmount,
-          });
-          totalBenefitAmount += freeAmount;
-        }
+        const freeAmount = Math.round(mostExpensive.lineTotal / mostExpensive.quantity);
+        benefits.push({
+          type: "complimentary_item",
+          amount: freeAmount,
+          itemName: mostExpensive.productName,
+          itemOriginalPrice: freeAmount,
+        });
+        totalBenefitAmount += freeAmount;
       }
     }
   }
 
-  // NOTE: 15% tea discount has been REMOVED as of Apr 16
-  // NOTE: Loyalty stamps should be calculated on (subtotal - totalBenefitAmount) in order creation
+  // 2. 5% OFF ALL DRINKS in the order (any outlet)
+  if (drinkDiscountPercent > 0) {
+    // Get drink category IDs (Iced Beverages + Hot Beverages)
+    const drinkCategories = await dbInstance
+      .select({ id: categories.id })
+      .from(categories)
+      .where(sql`${categories.slug} IN ('bubble-tea', 'coffee')`);
+    const drinkCategoryIds = drinkCategories.map(c => c.id);
+
+    if (drinkCategoryIds.length > 0) {
+      const drinkProducts = await dbInstance
+        .select({ productId: products.id })
+        .from(products)
+        .innerJoin(subcategories, eq(products.subcategoryId, subcategories.id))
+        .where(sql`${subcategories.categoryId} IN (${sql.join(drinkCategoryIds.map(id => sql`${id}`), sql`, `)})`);
+
+      const drinkProductIds = new Set(drinkProducts.map(p => p.productId));
+
+      // Calculate discount on all drink items
+      const drinkItems = items.filter(item => drinkProductIds.has(item.productId));
+      if (drinkItems.length > 0) {
+        let totalDrinkDiscount = 0;
+        let drinkItemsCount = 0;
+        for (const item of drinkItems) {
+          const discount = Math.round(item.lineTotal * drinkDiscountPercent / 100);
+          totalDrinkDiscount += discount;
+          drinkItemsCount += item.quantity;
+        }
+
+        if (totalDrinkDiscount > 0) {
+          benefits.push({
+            type: "drink_discount",
+            amount: totalDrinkDiscount,
+            discountPercent: drinkDiscountPercent,
+            drinkItemsCount,
+          });
+          totalBenefitAmount += totalDrinkDiscount;
+        }
+      }
+    }
+  }
 
   return {
     subscription,
     benefits,
     totalBenefitAmount,
+    complimentaryItemsUsedThisYear: undefined as number | undefined, // populated in getMySubscription
   };
 }
 
@@ -237,19 +240,20 @@ export const partnerRouter = router({
       "founding_slots_remaining",
       "founding_slots_total",
       "programme_active",
-      "referrer_reward_paise",
-      "referred_reward_paise",
+      "complimentary_items_per_year",
+      "drink_discount_percent",
+      "workshop_discount_percent",
     ]);
 
     return {
       foundingPrice: parseInt(config.founding_price_paise || "250000"),
       regularPrice: parseInt(config.regular_price_paise || "350000"),
-      teaDiscountPercent: 0, // Tea discount removed
-      foundingSlotsRemaining: parseInt(config.founding_slots_remaining || "100"),
-      foundingSlotsTotal: parseInt(config.founding_slots_total || "100"),
+      foundingSlotsRemaining: parseInt(config.founding_slots_remaining || "50"),
+      foundingSlotsTotal: parseInt(config.founding_slots_total || "50"),
       programmeActive: config.programme_active === "true",
-      referrerReward: parseInt(config.referrer_reward_paise || "25000"),
-      referredReward: parseInt(config.referred_reward_paise || "10000"),
+      complimentaryItemsPerYear: parseInt(config.complimentary_items_per_year || "25"),
+      drinkDiscountPercent: parseInt(config.drink_discount_percent || "5"),
+      workshopDiscountPercent: parseInt(config.workshop_discount_percent || "10"),
     };
   }),
 
@@ -297,8 +301,22 @@ export const partnerRouter = router({
     );
     const freeItemsThisMonth = monthlyBenefits.filter(
       (b) =>
-        b.benefitType === "free_biang_biang" || b.benefitType === "free_large_tea"
+        b.benefitType === "free_biang_biang" || b.benefitType === "free_large_tea" || b.benefitType === "complimentary_item"
     ).length;
+
+    // Count complimentary items used this subscription year
+    const complimentaryUsed = await dbInstance
+      .select({ count: sql<number>`COUNT(*)` })
+      .from(partnerBenefitsLog)
+      .where(
+        and(
+          eq(partnerBenefitsLog.userId, ctx.user.id),
+          eq(partnerBenefitsLog.subscriptionId, sub.id),
+          sql`${partnerBenefitsLog.benefitType} IN ('complimentary_item', 'free_biang_biang')`
+        )
+      );
+    const complimentaryItemsUsed = Number(complimentaryUsed[0]?.count) || 0;
+    const maxComplimentaryPerYear = parseInt((await getConfig("complimentary_items_per_year")) || "25");
 
     // Get total lifetime savings
     const allBenefits = await dbInstance
@@ -321,6 +339,8 @@ export const partnerRouter = router({
         totalSavedThisMonth,
         freeItemsThisMonth,
         lifetimeSavings,
+        complimentaryItemsUsed,
+        maxComplimentaryPerYear,
       },
     };
   }),

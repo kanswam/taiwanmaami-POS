@@ -1355,19 +1355,22 @@ export const partnerBenefitsLog = mysqlTable("partner_benefits_log", {
   outletId: int("outletId").notNull(), // Which outlet
   // Benefit details
   benefitType: mysqlEnum("benefitType", [
-    "free_biang_biang",     // Free Biang Biang Noodles at T.Nagar
-    "free_large_tea",       // Free Large Bubble Tea at Palladium
-    "tea_discount",         // 10-15% off tea items
+    "free_biang_biang",     // Legacy: Free Biang Biang Noodles at T.Nagar
+    "free_large_tea",       // Legacy: Free Large Bubble Tea at Palladium
+    "tea_discount",         // Legacy: tea discount
     "maami_rupee_credit",   // Store credit from referral rewards
+    "complimentary_item",   // Complimentary food item at T.Nagar (new)
+    "drink_discount",       // 5% off all drinks in order (new)
+    "workshop_discount",    // 10% off workshops (new)
   ]).notNull(),
   // Amount saved (in paise)
   benefitAmount: int("benefitAmount").notNull(), // How much the partner saved
   // Item details (for free item benefits)
   itemName: varchar("itemName", { length: 200 }), // e.g., "Biang Biang Noodles" or "Taro Milk Tea - Large"
   itemOriginalPrice: int("itemOriginalPrice"), // Original price before discount (paise)
-  // Tea discount details
-  discountPercent: int("discountPercent"), // e.g., 15 for 15%
-  teaItemsCount: int("teaItemsCount"), // Number of tea items discounted
+  // Discount details
+  discountPercent: int("discountPercent"), // e.g., 5 for 5%
+  teaItemsCount: int("teaItemsCount"), // Number of drink items discounted (renamed from tea)
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 

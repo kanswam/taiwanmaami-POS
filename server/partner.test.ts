@@ -53,12 +53,12 @@ describe("Partner Programme", () => {
       expect(info).toBeDefined();
       expect(info.foundingPrice).toBeTypeOf("number");
       expect(info.regularPrice).toBeTypeOf("number");
-      expect(info.teaDiscountPercent).toBeTypeOf("number");
       expect(info.foundingSlotsRemaining).toBeTypeOf("number");
       expect(info.foundingSlotsTotal).toBeTypeOf("number");
       expect(typeof info.programmeActive).toBe("boolean");
-      expect(info.referrerReward).toBeTypeOf("number");
-      expect(info.referredReward).toBeTypeOf("number");
+      expect(info.drinkDiscountPercent).toBeTypeOf("number");
+      expect(info.workshopDiscountPercent).toBeTypeOf("number");
+      expect(info.complimentaryItemsPerYear).toBeTypeOf("number");
     });
 
     it("returns founding price less than or equal to regular price", async () => {

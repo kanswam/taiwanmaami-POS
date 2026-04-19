@@ -205,28 +205,13 @@ export default function Partner() {
   const regularPrice = info?.regularPrice || 350000;
   const slotsRemaining = info?.foundingSlotsRemaining || 0;
   const slotsTotal = info?.foundingSlotsTotal || 100;
-  const referrerReward = info?.referrerReward || 25000;
-  const referredReward = info?.referredReward || 10000;
+  const complimentaryPerYear = info?.complimentaryItemsPerYear || 25;
+  const drinkDiscount = info?.drinkDiscountPercent || 5;
+  const workshopDiscount = info?.workshopDiscountPercent || 10;
 
   // Welcome screen after successful payment
   if (showWelcome && welcomeData) {
     const isFounder = welcomeData.tier === 'founding';
-    const partnerReferralLink = `${window.location.origin}/partner?ref=${welcomeData.referralCode}`;
-
-    const handleCopyWelcomeLink = () => {
-      navigator.clipboard.writeText(partnerReferralLink);
-      toast.success('Referral link copied!');
-    };
-
-    const handleShareWelcomeWhatsApp = () => {
-      const text = encodeURIComponent(
-        `Hey! I just joined the Maami Partner Programme at Taiwan Maami! 🎉🧋\n\n` +
-        `I get free Biang Biang Noodles + free Large Bubble Tea every visit!\n\n` +
-        `Join using my link and we both earn Maami Rupees:\n${partnerReferralLink}\n\n` +
-        `Don't miss out — limited Founding Partner slots available!`
-      );
-      window.open(`https://wa.me/?text=${text}`, '_blank');
-    };
 
     return (
       <div className="min-h-screen bg-gradient-to-br from-[#1a0a08] via-[#2d1210] to-[#1a0a08] text-white">
@@ -266,8 +251,8 @@ export default function Partner() {
                   <UtensilsCrossed className="w-5 h-5 text-[#f0a080]" />
                 </div>
                 <div>
-                  <p className="font-semibold">Free Biang Biang Noodles</p>
-                  <p className="text-sm text-gray-400">Order any food or drink at T. Nagar (Moutan) and add Biang Biang — it's on us, every visit!</p>
+                  <p className="font-semibold">Complimentary Food Item</p>
+                  <p className="text-sm text-gray-400">Choose from Biang Biang, Dan Dan Noodles, Cong You Bing, Egg Cong You Bing, or any Brioche — on us at T. Nagar, every visit! ({complimentaryPerYear} per year)</p>
                 </div>
               </div>
               <div className="flex items-start gap-4 p-4 rounded-xl bg-white/5">
@@ -275,59 +260,19 @@ export default function Partner() {
                   <CupSoda className="w-5 h-5 text-[#f0a080]" />
                 </div>
                 <div>
-                  <p className="font-semibold">Free Large Bubble Tea</p>
-                  <p className="text-sm text-gray-400">Order any other drink at Palladium Mall and get a free large bubble tea on us!</p>
+                  <p className="font-semibold">{drinkDiscount}% Off All Drinks</p>
+                  <p className="text-sm text-gray-400">Every drink in your order gets {drinkDiscount}% off — bubble tea, coffee, everything!</p>
                 </div>
               </div>
               <div className="flex items-start gap-4 p-4 rounded-xl bg-white/5">
                 <div className="w-10 h-10 rounded-lg bg-[#bd302c]/30 flex items-center justify-center shrink-0">
-                  <Users className="w-5 h-5 text-[#f0a080]" />
+                  <Star className="w-5 h-5 text-[#f0a080]" />
                 </div>
                 <div>
-                  <p className="font-semibold">Refer & Earn Maami Rupees</p>
-                  <p className="text-sm text-gray-400">Share your link with friends — earn {formatPrice(referrerReward)} for every friend who joins!</p>
+                  <p className="font-semibold">{workshopDiscount}% Off Workshops</p>
+                  <p className="text-sm text-gray-400">Get {workshopDiscount}% off on all workshops run by Taiwan Maami.</p>
                 </div>
               </div>
-            </div>
-          </Card>
-
-          {/* Referral Encouragement */}
-          <Card className="bg-white/10 backdrop-blur-sm border-white/20 p-6 md:p-8 mb-8">
-            <div className="text-center mb-5">
-              <Users className="w-8 h-8 text-[#f0c090] mx-auto mb-3" />
-              <h2 className="text-lg font-bold text-[#f0c090]">Refer Friends & Earn Rewards</h2>
-              <p className="text-sm text-gray-400 mt-2">
-                Share your referral link with friends. When they join, you get{' '}
-                <span className="text-[#d4a574] font-semibold">{formatPrice(referrerReward)}</span> in Maami Rupees and they get{' '}
-                <span className="text-[#d4a574] font-semibold">{formatPrice(referredReward)}</span>!
-              </p>
-            </div>
-
-            <div className="bg-white/5 rounded-xl p-4 mb-4">
-              <p className="text-xs text-gray-400 mb-2">Your referral code</p>
-              <p className="text-xl font-mono font-bold tracking-wider text-[#d4a574] text-center">
-                {welcomeData.referralCode}
-              </p>
-            </div>
-
-            <div className="space-y-3">
-              <Button
-                className="w-full bg-[#25D366] hover:bg-[#1da851] text-white"
-                onClick={handleShareWelcomeWhatsApp}
-              >
-                <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
-                </svg>
-                Share with Friends on WhatsApp
-              </Button>
-              <Button
-                variant="outline"
-                className="w-full border-white/30 text-white hover:bg-white/10"
-                onClick={handleCopyWelcomeLink}
-              >
-                <Gift className="w-4 h-4 mr-2" />
-                Copy Referral Link
-              </Button>
             </div>
           </Card>
 
@@ -373,8 +318,8 @@ export default function Partner() {
               </span>
             </h1>
             <p className="text-lg md:text-xl text-gray-300 mb-8 max-w-2xl mx-auto leading-relaxed">
-              Free Biang Biang Noodles at T. Nagar. Free Large Bubble Tea at Palladium.
-              Earn rewards when friends join. One annual fee, unlimited benefits.
+              Complimentary food every visit at T. Nagar. {drinkDiscount}% off all drinks.
+              {workshopDiscount}% off workshops. One annual fee, {complimentaryPerYear} complimentary items a year.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button
@@ -410,33 +355,48 @@ export default function Partner() {
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-5xl mx-auto">
-            {/* Free Biang Biang */}
+            {/* Complimentary Food Item */}
             <Card className="p-8 border-2 border-[#bd302c]/20 bg-white hover:shadow-lg transition-shadow">
               <div className="w-14 h-14 rounded-2xl bg-[#bd302c]/10 flex items-center justify-center mb-5">
                 <UtensilsCrossed className="w-7 h-7 text-[#bd302c]" />
               </div>
-              <h3 className="text-xl font-bold mb-3">Free Biang Biang Noodles</h3>
+              <h3 className="text-xl font-bold mb-3">Complimentary Food Item</h3>
               <p className="text-muted-foreground leading-relaxed">
-                Our most popular dish — free when you order any other food or drink at T. Nagar (Moutan). 
-                Worth ₹415, yours every visit.
+                Choose from Biang Biang Noodles, Dan Dan Noodles, Cong You Bing, Egg Cong You Bing, or any Brioche — 
+                complimentary at T. Nagar, every visit. No minimum purchase needed.
               </p>
               <p className="mt-3 text-sm font-medium text-[#bd302c]">
-                T. Nagar / Moutan outlet
+                {complimentaryPerYear} items per year · T. Nagar
               </p>
             </Card>
 
-            {/* Free Large Tea */}
+            {/* Drink Discount */}
             <Card className="p-8 border-2 border-[#bd302c]/20 bg-white hover:shadow-lg transition-shadow">
               <div className="w-14 h-14 rounded-2xl bg-[#bd302c]/10 flex items-center justify-center mb-5">
                 <CupSoda className="w-7 h-7 text-[#bd302c]" />
               </div>
-              <h3 className="text-xl font-bold mb-3">Free Large Bubble Tea</h3>
+              <h3 className="text-xl font-bold mb-3">{drinkDiscount}% Off All Drinks</h3>
               <p className="text-muted-foreground leading-relaxed">
-                A free Large bubble tea when you order another drink at Palladium Mall. 
-                Choose any flavour — it's on us.
+                Every bubble tea, coffee, and beverage in your order gets {drinkDiscount}% off. 
+                Applies automatically at checkout.
               </p>
               <p className="mt-3 text-sm font-medium text-[#bd302c]">
-                Palladium Mall outlet
+                All outlets · Every order
+              </p>
+            </Card>
+
+            {/* Workshop Discount */}
+            <Card className="p-8 border-2 border-[#bd302c]/20 bg-white hover:shadow-lg transition-shadow">
+              <div className="w-14 h-14 rounded-2xl bg-[#bd302c]/10 flex items-center justify-center mb-5">
+                <Star className="w-7 h-7 text-[#bd302c]" />
+              </div>
+              <h3 className="text-xl font-bold mb-3">{workshopDiscount}% Off Workshops</h3>
+              <p className="text-muted-foreground leading-relaxed">
+                Get {workshopDiscount}% off on all workshops and events run by Taiwan Maami. 
+                Learn to make noodles, bubble tea, and more.
+              </p>
+              <p className="mt-3 text-sm font-medium text-[#bd302c]">
+                All workshops
               </p>
             </Card>
 
@@ -455,40 +415,10 @@ export default function Partner() {
               </p>
             </Card>
 
-            {/* Referral Rewards */}
+            {/* Partner Badge */}
             <Card className="p-8 border-2 border-[#bd302c]/20 bg-white hover:shadow-lg transition-shadow">
               <div className="w-14 h-14 rounded-2xl bg-[#bd302c]/10 flex items-center justify-center mb-5">
-                <Users className="w-7 h-7 text-[#bd302c]" />
-              </div>
-              <h3 className="text-xl font-bold mb-3">Refer & Earn</h3>
-              <p className="text-muted-foreground leading-relaxed">
-                Share your referral link. When a friend joins, you get {formatPrice(referrerReward)} in 
-                Maami Rupees store credit, and they get {formatPrice(referredReward)}.
-              </p>
-              <p className="mt-3 text-sm font-medium text-[#bd302c]">
-                Unlimited referrals
-              </p>
-            </Card>
-
-            {/* Maami Rupees */}
-            <Card className="p-8 border-2 border-[#bd302c]/20 bg-white hover:shadow-lg transition-shadow">
-              <div className="w-14 h-14 rounded-2xl bg-[#bd302c]/10 flex items-center justify-center mb-5">
-                <Gift className="w-7 h-7 text-[#bd302c]" />
-              </div>
-              <h3 className="text-xl font-bold mb-3">Maami Rupees</h3>
-              <p className="text-muted-foreground leading-relaxed">
-                Earn store credit through referrals. Use Maami Rupees to pay for 
-                orders — like cash, but better.
-              </p>
-              <p className="mt-3 text-sm font-medium text-[#bd302c]">
-                Usable on any order
-              </p>
-            </Card>
-
-            {/* Priority */}
-            <Card className="p-8 border-2 border-[#bd302c]/20 bg-white hover:shadow-lg transition-shadow">
-              <div className="w-14 h-14 rounded-2xl bg-[#bd302c]/10 flex items-center justify-center mb-5">
-                <Star className="w-7 h-7 text-[#bd302c]" />
+                <Crown className="w-7 h-7 text-[#bd302c]" />
               </div>
               <h3 className="text-xl font-bold mb-3">Partner Badge</h3>
               <p className="text-muted-foreground leading-relaxed">
@@ -497,6 +427,21 @@ export default function Partner() {
               </p>
               <p className="mt-3 text-sm font-medium text-[#bd302c]">
                 Founding Partners get a gold badge
+              </p>
+            </Card>
+
+            {/* No Minimum Purchase */}
+            <Card className="p-8 border-2 border-[#bd302c]/20 bg-white hover:shadow-lg transition-shadow">
+              <div className="w-14 h-14 rounded-2xl bg-[#bd302c]/10 flex items-center justify-center mb-5">
+                <Gift className="w-7 h-7 text-[#bd302c]" />
+              </div>
+              <h3 className="text-xl font-bold mb-3">No Minimum Purchase</h3>
+              <p className="text-muted-foreground leading-relaxed">
+                Walk in, pick your complimentary item, and leave. No need to buy anything else. 
+                It's that simple.
+              </p>
+              <p className="mt-3 text-sm font-medium text-[#bd302c]">
+                T. Nagar outlet
               </p>
             </Card>
           </div>
@@ -511,7 +456,7 @@ export default function Partner() {
               How It Works
             </h2>
             <p className="text-muted-foreground text-lg max-w-xl mx-auto">
-              Claiming your free items is automatic. Just order normally and the system does the rest.
+              Claiming your complimentary item is automatic. Just order normally and the system does the rest.
             </p>
           </div>
 
@@ -527,8 +472,8 @@ export default function Partner() {
                 <div className="bg-[#faf6f1] rounded-2xl p-6 text-center">
                   <div className="w-12 h-12 rounded-full bg-[#bd302c] text-white flex items-center justify-center mx-auto mb-4 text-lg font-bold">1</div>
                   <ShoppingBag className="w-8 h-8 text-[#bd302c] mx-auto mb-3" />
-                  <p className="font-semibold text-foreground mb-1">Order any item</p>
-                  <p className="text-sm text-muted-foreground">Any food or drink — tea, mochi, onigiri, anything!</p>
+                  <p className="font-semibold text-foreground mb-1">Walk in</p>
+                  <p className="text-sm text-muted-foreground">No minimum purchase needed. Just be a Partner!</p>
                 </div>
                 {/* Arrow */}
                 <div className="hidden md:flex items-center justify-center">
@@ -538,8 +483,8 @@ export default function Partner() {
                 <div className="bg-[#faf6f1] rounded-2xl p-6 text-center">
                   <div className="w-12 h-12 rounded-full bg-[#bd302c] text-white flex items-center justify-center mx-auto mb-4 text-lg font-bold">2</div>
                   <UtensilsCrossed className="w-8 h-8 text-[#bd302c] mx-auto mb-3" />
-                  <p className="font-semibold text-foreground mb-1">Add Biang Biang Noodles</p>
-                  <p className="text-sm text-muted-foreground">Add it to your cart like any other item</p>
+                  <p className="font-semibold text-foreground mb-1">Pick your item</p>
+                  <p className="text-sm text-muted-foreground">Biang Biang, Dan Dan, Cong You Bing, Brioche — your choice!</p>
                 </div>
                 {/* Arrow */}
                 <div className="hidden md:flex items-center justify-center">
@@ -551,17 +496,17 @@ export default function Partner() {
                     <CheckCircle2 className="w-6 h-6" />
                   </div>
                   <Sparkles className="w-8 h-8 text-[#bd302c] mx-auto mb-3" />
-                  <p className="font-semibold text-foreground mb-1">Biang Biang is FREE!</p>
-                  <p className="text-sm text-muted-foreground">Automatically deducted at checkout. Save ₹415!</p>
+                  <p className="font-semibold text-foreground mb-1">It's complimentary!</p>
+                  <p className="text-sm text-muted-foreground">Automatically deducted at checkout. Save up to ₹415!</p>
                 </div>
               </div>
             </div>
 
-            {/* Palladium Flow */}
+            {/* Drink Discount Flow */}
             <div>
               <div className="flex items-center gap-3 mb-8 justify-center">
-                <MapPin className="w-5 h-5 text-[#bd302c]" />
-                <h3 className="text-xl font-bold text-foreground">At Palladium Mall</h3>
+                <CupSoda className="w-5 h-5 text-[#bd302c]" />
+                <h3 className="text-xl font-bold text-foreground">Drink Discount (Any Outlet)</h3>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr_auto_1fr] items-center gap-4 md:gap-2">
                 {/* Step 1 */}
@@ -569,7 +514,7 @@ export default function Partner() {
                   <div className="w-12 h-12 rounded-full bg-[#bd302c] text-white flex items-center justify-center mx-auto mb-4 text-lg font-bold">1</div>
                   <CupSoda className="w-8 h-8 text-[#bd302c] mx-auto mb-3" />
                   <p className="font-semibold text-foreground mb-1">Order any drink</p>
-                  <p className="text-sm text-muted-foreground">Pick your favourite bubble tea or coffee</p>
+                  <p className="text-sm text-muted-foreground">Bubble tea, coffee, any beverage</p>
                 </div>
                 {/* Arrow */}
                 <div className="hidden md:flex items-center justify-center">
@@ -578,9 +523,9 @@ export default function Partner() {
                 {/* Step 2 */}
                 <div className="bg-[#faf6f1] rounded-2xl p-6 text-center">
                   <div className="w-12 h-12 rounded-full bg-[#bd302c] text-white flex items-center justify-center mx-auto mb-4 text-lg font-bold">2</div>
-                  <CupSoda className="w-8 h-8 text-[#bd302c] mx-auto mb-3" />
-                  <p className="font-semibold text-foreground mb-1">Add a Large Bubble Tea</p>
-                  <p className="text-sm text-muted-foreground">Any flavour in Large size — your pick!</p>
+                  <Sparkles className="w-8 h-8 text-[#bd302c] mx-auto mb-3" />
+                  <p className="font-semibold text-foreground mb-1">Partner detected</p>
+                  <p className="text-sm text-muted-foreground">System recognises your Partner status</p>
                 </div>
                 {/* Arrow */}
                 <div className="hidden md:flex items-center justify-center">
@@ -591,9 +536,9 @@ export default function Partner() {
                   <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#bd302c] to-[#d4a574] text-white flex items-center justify-center mx-auto mb-4 text-lg font-bold">
                     <CheckCircle2 className="w-6 h-6" />
                   </div>
-                  <Sparkles className="w-8 h-8 text-[#bd302c] mx-auto mb-3" />
-                  <p className="font-semibold text-foreground mb-1">Large Tea is FREE!</p>
-                  <p className="text-sm text-muted-foreground">The most expensive large tea is on us. Save up to ₹450!</p>
+                  <Percent className="w-8 h-8 text-[#bd302c] mx-auto mb-3" />
+                  <p className="font-semibold text-foreground mb-1">{drinkDiscount}% off applied!</p>
+                  <p className="text-sm text-muted-foreground">Discount on every drink in your order</p>
                 </div>
               </div>
             </div>
@@ -603,8 +548,8 @@ export default function Partner() {
               <Shield className="w-8 h-8 text-[#bd302c] mx-auto mb-3" />
               <p className="font-semibold text-foreground mb-2">No codes needed. Fully automatic.</p>
               <p className="text-sm text-muted-foreground leading-relaxed">
-                Just log in and place your order. The system recognises your Partner status and applies the benefit at checkout.
-                You'll see the discount in your order summary before you pay.
+                Just log in and place your order. The system recognises your Partner status and applies all benefits at checkout.
+                You'll see the savings in your order summary before you pay.
               </p>
             </div>
           </div>
@@ -627,17 +572,17 @@ export default function Partner() {
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground mb-2">Visit twice a week</p>
-                  <p className="text-3xl font-bold text-[#bd302c]">₹43,000+</p>
-                  <p className="text-sm text-muted-foreground mt-1">saved per year</p>
+                  <p className="text-3xl font-bold text-[#bd302c]">₹10,750+</p>
+                  <p className="text-sm text-muted-foreground mt-1">saved (25 item limit)</p>
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground mb-2">Visit 3x a week</p>
-                  <p className="text-3xl font-bold text-[#bd302c]">₹64,500+</p>
-                  <p className="text-sm text-muted-foreground mt-1">saved per year</p>
+                  <p className="text-sm text-muted-foreground mb-2">Plus drink savings</p>
+                  <p className="text-3xl font-bold text-[#bd302c]">{drinkDiscount}% off</p>
+                  <p className="text-sm text-muted-foreground mt-1">on every drink, every order</p>
                 </div>
               </div>
               <p className="text-center text-sm text-muted-foreground mt-8">
-                Based on 1 free Biang Biang (₹415) per visit at T. Nagar, or 1 free Large Bubble Tea per visit at Palladium
+                Based on 1 complimentary item (~₹415) per visit at T. Nagar, capped at {complimentaryPerYear} per year, plus {drinkDiscount}% off drinks
               </p>
             </div>
           </div>
@@ -682,9 +627,9 @@ export default function Partner() {
                 </div>
                 <ul className="text-left space-y-3 mb-6">
                   {[
-                    'Free Biang Biang with any purchase (T. Nagar)',
-                    'Free Large Bubble Tea with another drink (Palladium)',
-                    'Refer & earn Maami Rupees',
+                    `Complimentary food item at T. Nagar (${complimentaryPerYear}/year)`,
+                    `${drinkDiscount}% off all drinks, every order`,
+                    `${workshopDiscount}% off all workshops`,
                     'Loyalty stamps on every order',
                     'Gold Partner badge',
                     'Founding Partner recognition',
@@ -720,9 +665,9 @@ export default function Partner() {
                 </div>
                 <ul className="text-left space-y-3 mb-6">
                   {[
-                    'Free Biang Biang with any purchase (T. Nagar)',
-                    'Free Large Bubble Tea with another drink (Palladium)',
-                    'Refer & earn Maami Rupees',
+                    `Complimentary food item at T. Nagar (${complimentaryPerYear}/year)`,
+                    `${drinkDiscount}% off all drinks, every order`,
+                    `${workshopDiscount}% off all workshops`,
                     'Loyalty stamps on every order',
                     'Partner badge',
                   ].map((item) => (
@@ -736,29 +681,7 @@ export default function Partner() {
             </Card>
           </div>
 
-          {/* Referral Code Input */}
-          <div className="max-w-md mx-auto mt-10">
-            <div className="bg-white rounded-xl p-6 border">
-              <label className="text-sm font-medium mb-2 block">
-                Have a referral code?
-              </label>
-              <div className="flex gap-2">
-                <Input
-                  placeholder="e.g. PRIYA26ABC"
-                  value={referralCode}
-                  onChange={(e) => setReferralCode(e.target.value.toUpperCase())}
-                  className="uppercase"
-                />
-              </div>
-              {referralCode && referralValidation && (
-                <p className={`text-sm mt-2 ${referralValidation.valid ? 'text-green-600' : 'text-red-500'}`}>
-                  {referralValidation.valid
-                    ? `Referred by ${referralValidation.partnerName} — you'll both earn Maami Rupees!`
-                    : 'Invalid referral code'}
-                </p>
-              )}
-            </div>
-          </div>
+
 
           {/* Subscribe Button */}
           <div className="text-center mt-10">
@@ -810,24 +733,20 @@ export default function Partner() {
           <div className="max-w-2xl mx-auto space-y-6">
             {[
               {
-                q: 'How does the free Biang Biang work?',
-                a: 'Order any food or drink at T. Nagar (Moutan) and add Biang Biang Noodles. The system automatically makes one Biang Biang free. You just need at least one other item in your order.',
+                q: 'What complimentary items can I choose from?',
+                a: 'At T. Nagar, you can choose from Biang Biang Noodles, Dan Dan Noodles, Cong You Bing, Egg Cong You Bing, or any Brioche. One item per visit, up to ' + complimentaryPerYear + ' per year.',
               },
               {
-                q: 'What about Palladium Mall?',
-                a: 'At Palladium, order at least two drinks and the most expensive large tea in your order becomes free. Choose any flavour!',
+                q: 'Do I need to buy something else to get my complimentary item?',
+                a: 'No! There is no minimum purchase. Walk in, pick your complimentary item, and enjoy. You can of course order more if you like.',
               },
               {
-                q: 'Do I earn loyalty stamps on free items?',
-                a: 'Loyalty stamps are earned based on the amount you actually pay. Free partner benefit items are not counted towards stamp calculation.',
+                q: `How does the ${drinkDiscount}% drink discount work?`,
+                a: `Every drink in your order — bubble tea, coffee, any beverage — gets ${drinkDiscount}% off automatically. This works at all outlets, on every order.`,
               },
               {
-                q: 'How do referrals work?',
-                a: `Share your unique referral link via WhatsApp. When a friend joins as a Partner, you get ${formatPrice(referrerReward)} and they get ${formatPrice(referredReward)} in Maami Rupees (store credit). No limit on referrals.`,
-              },
-              {
-                q: 'What are Maami Rupees?',
-                a: 'Maami Rupees are store credit on your Taiwan Maami account. Use them to pay for any order — they work like cash.',
+                q: 'Do I earn loyalty stamps on complimentary items?',
+                a: 'Loyalty stamps are earned based on the amount you actually pay. Complimentary items are not counted towards stamp calculation.',
               },
               {
                 q: 'Is this a subscription? Does it auto-renew?',
