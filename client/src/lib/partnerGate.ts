@@ -2,7 +2,7 @@
 // During testing phase, Partner pages are only accessible with a secret key
 // Once the programme launches publicly, set PARTNER_GATE_ACTIVE to false
 
-const PARTNER_GATE_ACTIVE = true;
+const PARTNER_GATE_ACTIVE = false;
 const PARTNER_GATE_KEY = "tmpartner2026";
 const SESSION_STORAGE_KEY = "partner_access_granted";
 

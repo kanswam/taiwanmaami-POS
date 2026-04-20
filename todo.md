@@ -3070,3 +3070,11 @@ Orders fixed:
 - [x] Test combined benefits scenarios
 - [x] Updated partner.test.ts integration test (removed teaDiscountPercent, referral fields)
 - [x] All 1,104 tests passing across 99 test files
+
+## Bug Fix: KOT showing "Boba: true" instead of actual boba selection (Apr 20)
+
+- [ ] Fix KOT to show boba type (Tapioca Pearls / Popping Boba flavor), size if applicable
+
+## Open Partner Page to Customers (Apr 20)
+
+- [x] Set PARTNER_GATE_ACTIVE to false in partnerGate.ts — Partner page now visible to all customers
