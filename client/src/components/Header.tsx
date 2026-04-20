@@ -82,7 +82,7 @@ export function Header() {
                       window.location.href = '/';
                     }
                   }}
-                  className={`text-base font-semibold transition-colors hover:text-primary text-foreground cursor-pointer`}
+                  className={`text-base font-semibold transition-colors hover:text-primary text-foreground cursor-pointer whitespace-nowrap`}
                 >
                   {link.label}
                 </a>
@@ -90,7 +90,7 @@ export function Header() {
                 <Link
                   key={link.href}
                   href={link.href}
-                  className={`text-base font-semibold transition-colors hover:text-primary ${
+                  className={`text-base font-semibold transition-colors hover:text-primary whitespace-nowrap ${
                     isActive(link.href) ? 'text-primary' : 'text-muted-foreground'
                   }`}
                 >
