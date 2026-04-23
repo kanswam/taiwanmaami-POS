@@ -5,7 +5,7 @@ import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { useAuth } from '@/_core/hooks/useAuth';
 import { useCart } from '@/contexts/CartContext';
 import { useLoginTransition } from '@/hooks/useLoginTransition';
-import { Menu, ShoppingCart, User, LogOut, MapPin, Info, FileText, X, ClipboardList, BookOpen, UtensilsCrossed, AlertTriangle } from 'lucide-react';
+import { Menu, ShoppingCart, User, LogOut, MapPin, Info, FileText, X, ClipboardList, BookOpen, UtensilsCrossed } from 'lucide-react';
 import { formatPrice } from '@shared/types';
 import { isPartnerNavVisible } from '@/lib/partnerGate';
 
@@ -29,32 +29,8 @@ export function Header() {
 
   const isActive = (href: string) => location === href;
 
-  const [bannerDismissed, setBannerDismissed] = useState(false);
-
-  // Election day banner — remove this block after the election
-  const showElectionBanner = !bannerDismissed;
-
   return (
     <div className="sticky top-0 z-50">
-
-      {/* Election Day Announcement Banner */}
-      {showElectionBanner && (
-        <div className="bg-amber-600 text-white px-4 py-2.5 text-center relative">
-          <div className="container flex items-center justify-center gap-2 text-sm md:text-base font-medium">
-            <AlertTriangle className="h-4 w-4 flex-shrink-0" />
-            <span>
-              <strong>Palladium Mall outlet closed today</strong> due to elections. Open 6–10 PM only. Order from our <strong>T. Nagar (Moutan)</strong> outlet for full-day service!
-            </span>
-          </div>
-          <button
-            onClick={() => setBannerDismissed(true)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-white/80 hover:text-white transition-colors"
-            aria-label="Dismiss"
-          >
-            <X className="h-4 w-4" />
-          </button>
-        </div>
-      )}
 
       <header className="bg-background/95 backdrop-blur-sm border-b border-border shadow-sm">
       <div className="container">

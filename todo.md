@@ -3082,3 +3082,4 @@ Orders fixed:
 ## Election Day: Palladium Mall Closure Banner (Apr 23)
 
 - [x] Add prominent dismissible banner about Palladium Mall closure (elections), redirect to T. Nagar
+- [x] Remove election day banner from Header.tsx (bannerDismissed state, showElectionBanner variable, JSX block, AlertTriangle import)
