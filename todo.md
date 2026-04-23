@@ -3078,3 +3078,7 @@ Orders fixed:
 ## Open Partner Page to Customers (Apr 20)
 
 - [x] Set PARTNER_GATE_ACTIVE to false in partnerGate.ts — Partner page now visible to all customers
+
+## Election Day: Palladium Mall Closure Banner (Apr 23)
+
+- [x] Add prominent dismissible banner about Palladium Mall closure (elections), redirect to T. Nagar
