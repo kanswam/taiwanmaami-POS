@@ -254,7 +254,7 @@ export async function handlePetpoojaHistory(req: Request, res: Response) {
     const dbInstance = await getDb();
     if (!dbInstance) return res.status(500).json({ error: 'Database not available' });
     
-    // Get last 14 uploads (covers ~5 days x 3 outlets)
+    // Get last 14 uploads that have valid date-based period labels (covers ~5 days x 3 outlets)
     const uploads = await dbInstance.select({
       id: deliverySalesUploads.id,
       periodLabel: deliverySalesUploads.periodLabel,
@@ -263,6 +263,7 @@ export async function handlePetpoojaHistory(req: Request, res: Response) {
       createdAt: deliverySalesUploads.createdAt,
     })
       .from(deliverySalesUploads)
+      .where(sql`${deliverySalesUploads.periodLabel} REGEXP '^[A-Z]+-[A-Z]+-[0-9]{4}-[0-9]{2}-[0-9]{2}$'`)
       .orderBy(desc(deliverySalesUploads.id))
       .limit(14);
     
