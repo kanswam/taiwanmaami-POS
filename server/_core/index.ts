@@ -9,7 +9,7 @@ import { handleSalesReportExport } from "../excelExport";
 import { handleItemwiseExport, handleChannelsExport, handleLeelaRegistrationsExport, handleCustomerDatabaseExport } from "../excelExportExtra";
 import { handleBackupExcelExport } from "../excelBackupExport";
 import { handleDeliveryUpload, handleGetDeliveryUploads, handleDeleteDeliveryUpload, deliveryUploadMiddleware } from "../deliveryUpload";
-import { handlePetpoojaQuickUpload, handleVerifyPin, petpoojaUploadMiddleware } from "../petpoojaQuickUpload";
+import { handlePetpoojaQuickUpload, handleVerifyPin, handlePetpoojaHistory, petpoojaUploadMiddleware } from "../petpoojaQuickUpload";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
 
@@ -532,6 +532,7 @@ async function startServer() {
   // Petpooja quick upload (PIN-protected, no login required)
   app.post('/api/petpooja/verify-pin', handleVerifyPin as any);
   app.post('/api/petpooja/upload', petpoojaUploadMiddleware as any, handlePetpoojaQuickUpload as any);
+  app.get('/api/petpooja/history', handlePetpoojaHistory as any);
 
   // ============ PAGEVIEW TRACKING ENDPOINT ============
   // Lightweight endpoint for client-side analytics tracking

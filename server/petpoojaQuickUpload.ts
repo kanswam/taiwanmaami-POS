@@ -3,7 +3,7 @@ import multer from 'multer';
 import ExcelJS from 'exceljs';
 import { getDb } from './db';
 import { deliverySalesUploads, deliveryItemSales } from '../drizzle/schema';
-import { eq, and } from 'drizzle-orm';
+import { eq, and, desc, sql } from 'drizzle-orm';
 
 // Multer memory storage for file uploads
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } });
@@ -238,5 +238,57 @@ export async function handlePetpoojaQuickUpload(req: Request, res: Response) {
   } catch (error: any) {
     console.error('Petpooja quick upload error:', error);
     return res.status(500).json({ error: 'Failed to process file: ' + error.message });
+  }
+}
+
+// Get upload history (PIN-protected)
+export async function handlePetpoojaHistory(req: Request, res: Response) {
+  try {
+    const { pin } = req.query;
+    const correctPin = getUploadPin();
+    
+    if (!correctPin || pin !== correctPin) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+    
+    const dbInstance = await getDb();
+    if (!dbInstance) return res.status(500).json({ error: 'Database not available' });
+    
+    // Get last 14 uploads (covers ~5 days x 3 outlets)
+    const uploads = await dbInstance.select({
+      id: deliverySalesUploads.id,
+      periodLabel: deliverySalesUploads.periodLabel,
+      fileName: deliverySalesUploads.fileName,
+      grandTotal: deliverySalesUploads.grandTotal,
+      createdAt: deliverySalesUploads.createdAt,
+    })
+      .from(deliverySalesUploads)
+      .orderBy(desc(deliverySalesUploads.id))
+      .limit(14);
+    
+    // Get item counts for each upload
+    const history = await Promise.all(uploads.map(async (upload) => {
+      const [itemStats] = await dbInstance.select({
+        itemCount: sql<number>`COUNT(*)`,
+        totalQty: sql<number>`COALESCE(SUM(quantity), 0)`,
+      })
+        .from(deliveryItemSales)
+        .where(eq(deliveryItemSales.uploadId, upload.id));
+      
+      return {
+        id: upload.id,
+        periodLabel: upload.periodLabel,
+        fileName: upload.fileName,
+        totalAmount: (upload.grandTotal || 0) / 100,
+        itemCount: itemStats?.itemCount || 0,
+        totalQty: itemStats?.totalQty || 0,
+        createdAt: upload.createdAt,
+      };
+    }));
+    
+    return res.json({ history });
+  } catch (error: any) {
+    console.error('Petpooja history error:', error);
+    return res.status(500).json({ error: 'Failed to fetch history' });
   }
 }

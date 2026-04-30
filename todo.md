@@ -3089,3 +3089,4 @@ Orders fixed:
 - [x] Backend: File upload endpoint with outlet + date tagging (POST /api/petpooja/upload)
 - [x] Frontend: Mobile-first upload page with PIN entry, outlet selection, date picker, file upload
 - [x] Tests: Vitest coverage for PIN verification and upload validation
+- [x] Add upload history view below the upload form (shows last 14 uploads grouped by date)
