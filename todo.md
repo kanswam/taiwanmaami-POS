@@ -3083,3 +3083,9 @@ Orders fixed:
 
 - [x] Add prominent dismissible banner about Palladium Mall closure (elections), redirect to T. Nagar
 - [x] Remove election day banner from Header.tsx (bannerDismissed state, showElectionBanner variable, JSX block, AlertTriangle import)
+
+- [x] Build PIN-protected Petpooja quick upload page at /petpooja-upload
+- [x] Backend: PIN verification endpoint (POST /api/petpooja/verify-pin)
+- [x] Backend: File upload endpoint with outlet + date tagging (POST /api/petpooja/upload)
+- [x] Frontend: Mobile-first upload page with PIN entry, outlet selection, date picker, file upload
+- [x] Tests: Vitest coverage for PIN verification and upload validation

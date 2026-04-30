@@ -20,4 +20,6 @@ export const ENV = {
   // Umami Analytics
   analyticsEndpoint: process.env.VITE_ANALYTICS_ENDPOINT ?? "",
   analyticsWebsiteId: process.env.VITE_ANALYTICS_WEBSITE_ID ?? "",
+  // Petpooja quick upload PIN
+  petpoojaUploadPin: process.env.PETPOOJA_UPLOAD_PIN ?? "",
 };

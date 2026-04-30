@@ -45,6 +45,7 @@ const AdminEvents = lazy(() => import("./pages/AdminEvents"));
 const AdminBlog = lazy(() => import("./pages/AdminBlog"));
 const WholesaleAdmin = lazy(() => import("./pages/admin/WholesaleAdmin"));
 const AdminPartners = lazy(() => import("./pages/admin/AdminPartners"));
+const PetpoojaUpload = lazy(() => import("./pages/PetpoojaUpload"));
 
 // Wholesale pages - lazy loaded
 const WholesaleLanding = lazy(() => import("./pages/wholesale/WholesaleLanding"));
@@ -136,6 +137,9 @@ function Router() {
         <Route path="/wholesale/products" component={WholesaleProducts} />
         <Route path="/wholesale/cart" component={WholesaleCart} />
         <Route path="/wholesale/orders" component={WholesaleOrders} />
+        
+        {/* Quick Upload (PIN-protected, no login) */}
+        <Route path="/petpooja-upload" component={PetpoojaUpload} />
         
         {/* Admin Routes */}
         <Route path="/staff/orders" component={StaffOrders} />
