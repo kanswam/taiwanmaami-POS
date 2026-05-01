@@ -10,6 +10,7 @@ import { handleItemwiseExport, handleChannelsExport, handleLeelaRegistrationsExp
 import { handleBackupExcelExport } from "../excelBackupExport";
 import { handleDeliveryUpload, handleGetDeliveryUploads, handleDeleteDeliveryUpload, deliveryUploadMiddleware } from "../deliveryUpload";
 import { handlePetpoojaQuickUpload, handleVerifyPin, handlePetpoojaHistory, petpoojaUploadMiddleware } from "../petpoojaQuickUpload";
+import { handlePetpoojaWebhook, handlePetpoojaWebhookStatus } from "../petpoojaWebhook";
 import { serviceAuthMiddleware, handleServiceHealth, handleOrdersList, handleEmployeesList, handleMenuProducts, handleMenuToggleAvailability, handleEmployeeMasterProxy } from "../serviceAuth";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
@@ -534,6 +535,12 @@ async function startServer() {
   app.post('/api/petpooja/verify-pin', handleVerifyPin as any);
   app.post('/api/petpooja/upload', petpoojaUploadMiddleware as any, handlePetpoojaQuickUpload as any);
   app.get('/api/petpooja/history', handlePetpoojaHistory as any);
+
+  // ============ PETPOOJA WEBHOOK (real-time order push) ============
+  // Open endpoint — Petpooja sends orders here when bills are printed
+  // No auth required (Petpooja does not support auth headers)
+  app.post('/api/petpooja/webhook', handlePetpoojaWebhook as any);
+  app.get('/api/petpooja/webhook/status', handlePetpoojaWebhookStatus as any);
 
   // ============ MAAMITECH SERVICE API ============
   // All /api/service/* routes require MAAMITECH_SERVICE_TOKEN bearer auth

@@ -1468,3 +1468,78 @@ export const b2bInvoiceItems = mysqlTable("b2b_invoice_items", {
 });
 export type B2bInvoiceItem = typeof b2bInvoiceItems.$inferSelect;
 export type InsertB2bInvoiceItem = typeof b2bInvoiceItems.$inferInsert;
+
+
+// =============================================
+// PETPOOJA WEBHOOK — Real-time order push
+// =============================================
+
+// Petpooja webhook orders — stores every order pushed from Petpooja POS in real-time
+export const petpoojaWebhookOrders = mysqlTable("petpooja_webhook_orders", {
+  id: int("id").autoincrement().primaryKey(),
+  // Petpooja identifiers
+  petpoojaOrderId: varchar("petpoojaOrderId", { length: 50 }).notNull(), // orderID from Petpooja
+  restId: varchar("restId", { length: 50 }).notNull(), // Restaurant ID from Petpooja
+  // Outlet mapping
+  outletId: int("outletId"), // Mapped to our outlet ID (null if unmapped)
+  outletName: varchar("outletName", { length: 100 }), // Resolved outlet name
+  // Order details
+  orderType: varchar("orderType", { length: 50 }).notNull(), // "Dine In", "Pick Up", "Delivery"
+  orderFrom: varchar("orderFrom", { length: 50 }).notNull(), // "POS", "Zomato", "Swiggy"
+  orderFromId: varchar("orderFromId", { length: 100 }), // Aggregator reference ID
+  subOrderType: varchar("subOrderType", { length: 50 }), // "AC", "Non-AC", "Zomato", "Swiggy"
+  tokenNo: varchar("tokenNo", { length: 20 }), // Token/table number
+  // Customer
+  customerName: varchar("customerName", { length: 200 }),
+  customerPhone: varchar("customerPhone", { length: 20 }),
+  customerAddress: text("customerAddress"),
+  // Amounts (stored in paise for consistency)
+  subtotal: int("subtotal").default(0).notNull(), // Before tax/discount
+  discount: int("discount").default(0).notNull(),
+  tax: int("tax").default(0).notNull(), // Total tax
+  cgst: int("cgst").default(0).notNull(),
+  sgst: int("sgst").default(0).notNull(),
+  packagingCharge: int("packagingCharge").default(0).notNull(),
+  deliveryCharge: int("deliveryCharge").default(0).notNull(),
+  totalAmount: int("totalAmount").default(0).notNull(), // Grand total
+  // Payment
+  paymentType: varchar("paymentType", { length: 50 }).notNull(), // "Cash", "Card", "Online", "Part Payment"
+  partPayments: json("partPayments").$type<Array<{ type: string; amount: number }>>(), // For part payments
+  // Status
+  status: varchar("status", { length: 20 }).default("Success").notNull(), // "Success", "Cancelled"
+  // Items stored as JSON for flexibility
+  items: json("items").$type<Array<{
+    name: string;
+    quantity: number;
+    price: number; // in paise
+    total: number; // in paise
+    itemId?: string;
+    variation?: string;
+    addons?: Array<{ name: string; price: number }>;
+  }>>().notNull(),
+  // Raw payload for debugging
+  rawPayload: json("rawPayload"),
+  // Timestamps
+  orderTime: timestamp("orderTime").notNull(), // When the order was placed in Petpooja
+  receivedAt: timestamp("receivedAt").defaultNow().notNull(), // When we received the webhook
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type PetpoojaWebhookOrder = typeof petpoojaWebhookOrders.$inferSelect;
+export type InsertPetpoojaWebhookOrder = typeof petpoojaWebhookOrders.$inferInsert;
+
+// Petpooja webhook log — audit trail of every webhook call received
+export const petpoojaWebhookLog = mysqlTable("petpooja_webhook_log", {
+  id: int("id").autoincrement().primaryKey(),
+  eventType: varchar("eventType", { length: 50 }).notNull(), // "orderdetails"
+  restId: varchar("restId", { length: 50 }),
+  petpoojaOrderId: varchar("petpoojaOrderId", { length: 50 }),
+  httpStatus: int("httpStatus").default(200).notNull(), // Response status we sent back
+  success: boolean("success").default(true).notNull(),
+  errorMessage: text("errorMessage"), // If processing failed
+  processingTimeMs: int("processingTimeMs"), // How long it took to process
+  receivedAt: timestamp("receivedAt").defaultNow().notNull(),
+});
+
+export type PetpoojaWebhookLog = typeof petpoojaWebhookLog.$inferSelect;
+export type InsertPetpoojaWebhookLog = typeof petpoojaWebhookLog.$inferInsert;

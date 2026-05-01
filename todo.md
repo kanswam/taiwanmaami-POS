@@ -3139,3 +3139,23 @@ Orders fixed:
 - [x] Prices in rupees
 - [x] Write vitest tests
 - [x] Validate with curl
+
+## MaamiTech Phase 1 — Task 5: Petpooja Webhook (Real-time Order Push)
+
+- [x] Create petpooja_webhook_orders table in database
+- [x] Create petpooja_webhook_log table for audit trail
+- [x] Build POST /api/petpooja/webhook endpoint (open, no auth per Petpooja spec)
+- [x] Handle standard dine-in orders
+- [x] Handle aggregator orders (Zomato/Swiggy) with CGST/SGST tax parsing
+- [x] Handle part payment orders
+- [x] Parse items with addons
+- [x] Convert amounts to paise for storage
+- [x] Parse IST timestamps from Petpooja
+- [x] Outlet mapping via restID (placeholder — needs Petpooja restIDs)
+- [x] Acknowledge unhandled event types gracefully
+- [x] Build GET /api/petpooja/webhook/status endpoint (health + stats)
+- [x] Store raw payload for debugging
+- [x] Audit log every webhook call (success and failure)
+- [x] Write vitest tests (10 tests covering all payload types + error cases)
+- [x] Clean up test data after tests
+- [ ] Configure outlet mapping once Petpooja provides restIDs for Palladium and T. Nagar
