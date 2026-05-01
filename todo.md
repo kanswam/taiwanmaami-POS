@@ -3159,3 +3159,19 @@ Orders fixed:
 - [x] Write vitest tests (10 tests covering all payload types + error cases)
 - [x] Clean up test data after tests
 - [ ] Configure outlet mapping once Petpooja provides restIDs for Palladium and T. Nagar
+
+## MaamiTech Phase 1 — Task 6: Data Lake ETL (Supabase)
+
+- [x] Create Supabase project (ouktqqgmipygehhakoie.supabase.co)
+- [x] Create four tables: sales_facts, stock_snapshots, wastage_facts, data_completeness
+- [x] Store Supabase credentials as env secrets (SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
+- [x] Build ETL handler (server/etl.ts) — pulls POS orders, Petpooja webhook, Petpooja CSV
+- [x] Add Supabase REST API helpers (insert, upsert)
+- [x] Register routes: POST /api/service/etl/run, GET /api/service/etl/status
+- [x] Register scheduled task route: POST /api/scheduled/etl
+- [x] Fix TypeScript errors (getDb() pattern, schema field names)
+- [x] Test with real data — 70 sales_facts rows inserted for Apr 30 (28 POS + 42 CSV)
+- [x] Verify data_completeness rows in Supabase (palladium + tnagar)
+- [x] Write vitest tests (11 tests, all passing)
+- [x] Set up Manus scheduled task for 1am IST daily trigger
+- [ ] Inventory stock/wastage pull (blocked until Inventory system has service auth — Tasks 3/4)

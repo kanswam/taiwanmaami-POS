@@ -12,6 +12,7 @@ import { handleDeliveryUpload, handleGetDeliveryUploads, handleDeleteDeliveryUpl
 import { handlePetpoojaQuickUpload, handleVerifyPin, handlePetpoojaHistory, petpoojaUploadMiddleware } from "../petpoojaQuickUpload";
 import { handlePetpoojaWebhook, handlePetpoojaWebhookStatus } from "../petpoojaWebhook";
 import { serviceAuthMiddleware, handleServiceHealth, handleOrdersList, handleEmployeesList, handleMenuProducts, handleMenuToggleAvailability, handleEmployeeMasterProxy } from "../serviceAuth";
+import { handleETL, handleETLStatus } from "../etl";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
 
@@ -552,6 +553,12 @@ async function startServer() {
   app.get('/api/service/menu/products', handleMenuProducts as any);
   app.post('/api/service/menu/toggle-availability', handleMenuToggleAvailability as any);
   app.all('/api/service/employee-master/*', handleEmployeeMasterProxy as any);
+  app.post('/api/service/etl/run', handleETL as any);
+  app.get('/api/service/etl/status', handleETLStatus as any);
+
+  // ============ SCHEDULED TASK ENDPOINT ============
+  // POST /api/scheduled/etl — triggered by Manus scheduled task (uses OAuth session cookie)
+  app.post('/api/scheduled/etl', handleETL as any);
 
   // ============ PAGEVIEW TRACKING ENDPOINT ============
   // Lightweight endpoint for client-side analytics tracking

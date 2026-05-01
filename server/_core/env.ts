@@ -28,4 +28,7 @@ export const ENV = {
   // Employee Master API (for proxy)
   empMasterApiUrl: process.env.EMP_MASTER_API_URL ?? "",
   empMasterApiKey: process.env.EMP_MASTER_API_KEY ?? "",
+  // Supabase Data Lake
+  supabaseUrl: process.env.SUPABASE_URL ?? "",
+  supabaseServiceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY ?? "",
 };
