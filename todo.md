@@ -3175,3 +3175,21 @@ Orders fixed:
 - [x] Write vitest tests (11 tests, all passing)
 - [x] Set up Manus scheduled task for 1am IST daily trigger
 - [ ] Inventory stock/wastage pull (blocked until Inventory system has service auth — Tasks 3/4)
+
+## MaamiTech Phase 1 — Task 8: Daily Digest Agent
+
+- [ ] Build POST /api/scheduled/digest endpoint
+- [ ] Query Supabase data_completeness + sales_facts for yesterday
+- [ ] Use LLM to generate natural-language daily summary
+- [ ] Send digest via notifyOwner() to Kannan
+- [ ] Include: revenue, order count, outlet comparison, top items, data gaps
+- [ ] Write vitest tests
+- [ ] Set up Manus scheduled task for 7am IST daily
+
+## Task 8 — ETL Fixes & Digest Rework
+- [x] Remove Petpooja CSV from ETL (webhook only)
+- [x] Make ETL idempotent with scoped delete: WHERE outlet=X AND order_date=Y AND source=Z
+- [x] Fix digest to show 4 revenue lines: T.Nagar In-store, T.Nagar Delivery, Palladium In-store, Palladium Delivery
+- [x] Show "No data (webhook pending)" for missing channels
+- [x] Clean up duplicate Supabase rows from earlier test runs
+- [x] Set up 7am IST scheduled task for daily digest via Twilio WhatsApp
