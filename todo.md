@@ -3101,3 +3101,19 @@ Orders fixed:
 - [x] Register service routes in server/_core/index.ts
 - [x] Write vitest tests for service auth middleware
 - [x] Validate with curl command showing successful authenticated call
+
+## MaamiTech Phase 1 — Task 2: orders.listForService Endpoint
+
+- [x] Build GET /api/service/orders endpoint with date range, outlet, orderType, status filters
+- [x] Include order items and addons in response (nested)
+- [x] Support pagination (limit/offset) with metadata
+- [x] Support date range filtering (from/to as ISO timestamps)
+- [x] Support outlet filtering (outletId)
+- [x] Support orderType filtering (instore/delivery/pickup)
+- [x] Support orderStatus filtering
+- [x] Support paymentMethod filtering
+- [x] Exclude test data (isTestData = false)
+- [x] Return amounts in rupees (not paise) for agent readability
+- [x] Register route in _core/index.ts under service auth
+- [x] Write vitest tests for the endpoint
+- [x] Validate with curl returning real production data

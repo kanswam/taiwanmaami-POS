@@ -10,7 +10,7 @@ import { handleItemwiseExport, handleChannelsExport, handleLeelaRegistrationsExp
 import { handleBackupExcelExport } from "../excelBackupExport";
 import { handleDeliveryUpload, handleGetDeliveryUploads, handleDeleteDeliveryUpload, deliveryUploadMiddleware } from "../deliveryUpload";
 import { handlePetpoojaQuickUpload, handleVerifyPin, handlePetpoojaHistory, petpoojaUploadMiddleware } from "../petpoojaQuickUpload";
-import { serviceAuthMiddleware, handleServiceHealth, handleEmployeeMasterProxy } from "../serviceAuth";
+import { serviceAuthMiddleware, handleServiceHealth, handleOrdersList, handleEmployeeMasterProxy } from "../serviceAuth";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
 
@@ -540,6 +540,7 @@ async function startServer() {
   // Gated behind MAAMITECH_API_ENABLED feature flag
   app.use('/api/service', serviceAuthMiddleware as any);
   app.get('/api/service/health', handleServiceHealth as any);
+  app.get('/api/service/orders', handleOrdersList as any);
   app.all('/api/service/employee-master/*', handleEmployeeMasterProxy as any);
 
   // ============ PAGEVIEW TRACKING ENDPOINT ============

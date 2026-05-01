@@ -100,7 +100,7 @@ describe("MaamiTech Service Auth (Task 1)", () => {
 
   describe("Employee Master Proxy", () => {
     it("should proxy requests to Employee Master API with valid token", async () => {
-      const response = await fetch(`${BASE_URL}/api/service/employee-master/staff`, {
+      const response = await fetch(`${BASE_URL}/api/service/employee-master/employees?limit=1&status=active`, {
         headers: { Authorization: `Bearer ${TEST_TOKEN}` },
       });
       
