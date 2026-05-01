@@ -3090,3 +3090,14 @@ Orders fixed:
 - [x] Frontend: Mobile-first upload page with PIN entry, outlet selection, date picker, file upload
 - [x] Tests: Vitest coverage for PIN verification and upload validation
 - [x] Add upload history view below the upload form (shows last 14 uploads grouped by date)
+
+## MaamiTech Phase 1 — Task 1: Service Auth Token
+
+- [x] Create MAAMITECH_API_ENABLED feature flag (env var, default false)
+- [x] Create MAAMITECH_SERVICE_TOKEN env var
+- [x] Build server/serviceAuth.ts middleware (validates Bearer token, checks feature flag)
+- [x] Create /api/service/health endpoint (basic connectivity test)
+- [x] Create /api/service/employee-master proxy endpoint
+- [x] Register service routes in server/_core/index.ts
+- [x] Write vitest tests for service auth middleware
+- [x] Validate with curl command showing successful authenticated call

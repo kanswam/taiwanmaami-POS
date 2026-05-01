@@ -22,4 +22,10 @@ export const ENV = {
   analyticsWebsiteId: process.env.VITE_ANALYTICS_WEBSITE_ID ?? "",
   // Petpooja quick upload PIN
   petpoojaUploadPin: process.env.PETPOOJA_UPLOAD_PIN ?? "",
+  // MaamiTech Agentic AI — service-to-service auth
+  maamitechApiEnabled: process.env.MAAMITECH_API_ENABLED === "true",
+  maamitechServiceToken: process.env.MAAMITECH_SERVICE_TOKEN ?? "",
+  // Employee Master API (for proxy)
+  empMasterApiUrl: process.env.EMP_MASTER_API_URL ?? "",
+  empMasterApiKey: process.env.EMP_MASTER_API_KEY ?? "",
 };
