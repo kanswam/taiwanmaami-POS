@@ -5689,7 +5689,7 @@ export const appRouter = router({
         const dbInstance = await getDb();
         if (!dbInstance) return { totalRevenue: 0, totalOrders: 0, avgOrderValue: 0, totalGst: 0 };
 
-        let conditions: any[] = [sql`${orders.orderStatus} != 'cancelled'`];
+        let conditions: any[] = [sql`${orders.orderStatus} != 'cancelled'`, sql`${orders.isTestData} = false`];
         if (input?.startDate) conditions.push(sql`${orders.createdAt} >= ${input.startDate}`);
         if (input?.endDate) conditions.push(sql`${orders.createdAt} <= ${input.endDate + ' 23:59:59'}`);
         if (input?.orderType && input.orderType !== 'all') conditions.push(eq(orders.orderType, input.orderType));
@@ -5722,7 +5722,7 @@ export const appRouter = router({
         const dbInstance = await getDb();
         if (!dbInstance) return { monthly: [], totals: { delivery: 0, deliveryRev: 0, pickup: 0, pickupRev: 0, instore: 0, instoreRev: 0, deliveryCharges: 0 } };
 
-        let conditions: any[] = [sql`${orders.orderStatus} != 'cancelled'`];
+        let conditions: any[] = [sql`${orders.orderStatus} != 'cancelled'`, sql`${orders.isTestData} = false`];
         if (input?.startDate) conditions.push(sql`${orders.createdAt} >= ${input.startDate}`);
         if (input?.endDate) conditions.push(sql`${orders.createdAt} <= ${input.endDate + ' 23:59:59'}`);
 
@@ -5779,7 +5779,7 @@ export const appRouter = router({
         const dbInstance = await getDb();
         if (!dbInstance) return [];
 
-        let conditions: any[] = [sql`${orders.orderStatus} != 'cancelled'`];
+        let conditions: any[] = [sql`${orders.orderStatus} != 'cancelled'`, sql`${orders.isTestData} = false`];
         if (input?.startDate) conditions.push(sql`${orders.createdAt} >= ${input.startDate}`);
         if (input?.endDate) conditions.push(sql`${orders.createdAt} <= ${input.endDate + ' 23:59:59'}`);
         if (input?.orderType && input.orderType !== 'all') conditions.push(eq(orders.orderType, input.orderType));
@@ -5799,7 +5799,7 @@ export const appRouter = router({
           })
           .from(orderItemsTable)
           .leftJoin(products, eq(orderItemsTable.productId, products.id))
-          .where(sql`${orderItemsTable.orderId} IN (${sql.join(orderIds, sql`, `)})`);
+          .where(and(sql`${orderItemsTable.orderId} IN (${sql.join(orderIds, sql`, `)})`, sql`${orderItemsTable.status} = 'active'`));
 
         const allCategories = await dbInstance.select().from(categories);
         const allSubcategories = await dbInstance.select().from(subcategories);
@@ -5850,7 +5850,7 @@ export const appRouter = router({
         const dbInstance = await getDb();
         if (!dbInstance) return [];
 
-        let conditions: any[] = [sql`${orders.orderStatus} != 'cancelled'`];
+        let conditions: any[] = [sql`${orders.orderStatus} != 'cancelled'`, sql`${orders.isTestData} = false`];
         if (input?.startDate) conditions.push(sql`${orders.createdAt} >= ${input.startDate}`);
         if (input?.endDate) conditions.push(sql`${orders.createdAt} <= ${input.endDate + ' 23:59:59'}`);
         if (input?.orderType && input.orderType !== 'all') conditions.push(eq(orders.orderType, input.orderType));
@@ -5870,7 +5870,7 @@ export const appRouter = router({
           })
           .from(orderItemsTable)
           .leftJoin(products, eq(orderItemsTable.productId, products.id))
-          .where(sql`${orderItemsTable.orderId} IN (${sql.join(orderIds, sql`, `)})`);
+          .where(and(sql`${orderItemsTable.orderId} IN (${sql.join(orderIds, sql`, `)})`, sql`${orderItemsTable.status} = 'active'`));
 
         const allSubcategories = await dbInstance.select().from(subcategories);
         let filteredSubcategories = allSubcategories;
@@ -5927,7 +5927,7 @@ export const appRouter = router({
         const dbInstance = await getDb();
         if (!dbInstance) return [];
 
-        let conditions: any[] = [sql`${orders.orderStatus} != 'cancelled'`];
+        let conditions: any[] = [sql`${orders.orderStatus} != 'cancelled'`, sql`${orders.isTestData} = false`];
         if (input?.startDate) conditions.push(sql`${orders.createdAt} >= ${input.startDate}`);
         if (input?.endDate) conditions.push(sql`${orders.createdAt} <= ${input.endDate + ' 23:59:59'}`);
         if (input?.orderType && input.orderType !== 'all') conditions.push(eq(orders.orderType, input.orderType));
@@ -5948,7 +5948,7 @@ export const appRouter = router({
           })
           .from(orderItemsTable)
           .leftJoin(products, eq(orderItemsTable.productId, products.id))
-          .where(sql`${orderItemsTable.orderId} IN (${sql.join(orderIds, sql`, `)})`);
+          .where(and(sql`${orderItemsTable.orderId} IN (${sql.join(orderIds, sql`, `)})`, sql`${orderItemsTable.status} = 'active'`));
 
         let filteredItems = items;
         if (input?.subcategoryId) {
@@ -5990,7 +5990,7 @@ export const appRouter = router({
         if (!dbInstance) return { totalCustomers: 0, repeatCustomers: 0, repeatRate: 0, avgOrdersPerCustomer: 0, avgLifetimeValue: 0 };
 
         // Step 1: Get orders in the selected date range
-        let conditions: any[] = [sql`${orders.orderStatus} != 'cancelled'`];
+        let conditions: any[] = [sql`${orders.orderStatus} != 'cancelled'`, sql`${orders.isTestData} = false`];
         if (input?.startDate) conditions.push(sql`${orders.createdAt} >= ${input.startDate}`);
         if (input?.endDate) conditions.push(sql`${orders.createdAt} <= ${input.endDate + ' 23:59:59'}`);
 
@@ -6085,7 +6085,7 @@ export const appRouter = router({
         const staffUserIds = new Set(staffUsers.map(u => u.id));
         const staffPhones = new Set(staffUsers.map(u => u.phone).filter(Boolean));
 
-        let conditions: any[] = [sql`${orders.orderStatus} != 'cancelled'`];
+        let conditions: any[] = [sql`${orders.orderStatus} != 'cancelled'`, sql`${orders.isTestData} = false`];
         if (input?.startDate) conditions.push(sql`${orders.createdAt} >= ${input.startDate}`);
         if (input?.endDate) conditions.push(sql`${orders.createdAt} <= ${input.endDate + ' 23:59:59'}`);
 
@@ -6128,7 +6128,7 @@ export const appRouter = router({
         const dbInstance = await getDb();
         if (!dbInstance) return [];
 
-        let conditions: any[] = [sql`${orders.orderStatus} != 'cancelled'`];
+        let conditions: any[] = [sql`${orders.orderStatus} != 'cancelled'`, sql`${orders.isTestData} = false`];
         if (input?.startDate) conditions.push(sql`${orders.createdAt} >= ${input.startDate}`);
         if (input?.endDate) conditions.push(sql`${orders.createdAt} <= ${input.endDate + ' 23:59:59'}`);
 
@@ -6164,7 +6164,7 @@ export const appRouter = router({
         const dbInstance = await getDb();
         if (!dbInstance) return [];
 
-        let conditions: any[] = [sql`${orders.orderStatus} != 'cancelled'`];
+        let conditions: any[] = [sql`${orders.orderStatus} != 'cancelled'`, sql`${orders.isTestData} = false`];
         if (input?.startDate) conditions.push(sql`${orders.createdAt} >= ${input.startDate}`);
         if (input?.endDate) conditions.push(sql`${orders.createdAt} <= ${input.endDate + ' 23:59:59'}`);
 
@@ -6652,7 +6652,7 @@ export const appRouter = router({
           })
           .from(orderItemsTable)
           .innerJoin(products, eq(orderItemsTable.productId, products.id))
-          .where(sql`${orderItemsTable.orderId} IN (${sql.join(orderIds, sql`, `)})`);
+          .where(and(sql`${orderItemsTable.orderId} IN (${sql.join(orderIds, sql`, `)})`, sql`${orderItemsTable.status} = 'active'`));
 
         // Filter by category/subcategory
         let filteredItems = items.filter(i => i.status === 'active' || !i.status);
@@ -6733,7 +6733,7 @@ export const appRouter = router({
             status: orderItemsTable.status,
           })
           .from(orderItemsTable)
-          .where(sql`${orderItemsTable.orderId} IN (${sql.join(orderIds, sql`, `)})`);
+          .where(and(sql`${orderItemsTable.orderId} IN (${sql.join(orderIds, sql`, `)})`, sql`${orderItemsTable.status} = 'active'`));
 
         const activeItems = items.filter(i => i.status === 'active' || !i.status);
 
@@ -6852,7 +6852,7 @@ export const appRouter = router({
           })
           .from(orderItemsTable)
           .innerJoin(products, eq(orderItemsTable.productId, products.id))
-          .where(sql`${orderItemsTable.orderId} IN (${sql.join(orderIds, sql`, `)})`);
+          .where(and(sql`${orderItemsTable.orderId} IN (${sql.join(orderIds, sql`, `)})`, sql`${orderItemsTable.status} = 'active'`));
 
         const activeItems = items.filter(i => i.status === 'active' || !i.status);
 
@@ -7721,7 +7721,7 @@ export const appRouter = router({
         const dbInstance = await getDb();
         if (!dbInstance) return { items: [], summary: { totalItems: 0, totalQuantity: 0, totalRevenue: 0, totalOrders: 0 } };
 
-        let conditions: any[] = [sql`${orders.orderStatus} != 'cancelled'`];
+        let conditions: any[] = [sql`${orders.orderStatus} != 'cancelled'`, sql`${orders.isTestData} = false`];
         if (input.startDate) conditions.push(sql`${orders.createdAt} >= ${input.startDate}`);
         if (input.endDate) conditions.push(sql`${orders.createdAt} <= ${input.endDate + ' 23:59:59'}`);
         if (input.orderType && input.orderType !== 'all') conditions.push(eq(orders.orderType, input.orderType));
@@ -7750,7 +7750,7 @@ export const appRouter = router({
           })
           .from(orderItemsTable)
           .leftJoin(products, eq(orderItemsTable.productId, products.id))
-          .where(sql`${orderItemsTable.orderId} IN (${sql.join(orderIds, sql`, `)})`);
+          .where(and(sql`${orderItemsTable.orderId} IN (${sql.join(orderIds, sql`, `)})`, sql`${orderItemsTable.status} = 'active'`));
 
         // Get all subcategories and categories for grouping
         const allSubcategories = await dbInstance.select().from(subcategories);

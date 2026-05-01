@@ -3193,3 +3193,9 @@ Orders fixed:
 - [x] Show "No data (webhook pending)" for missing channels
 - [x] Clean up duplicate Supabase rows from earlier test runs
 - [x] Set up 7am IST scheduled task for daily digest via Twilio WhatsApp
+
+## Bug Fix — POS Analytics Dashboard
+- [x] Fix: biang biang showing ₹6,230 / 23 sold on analytics dashboard — user says this is wrong
+- [x] Investigate orderItems table for April 30 to find actual biang biang data
+- [x] Fix analytics dashboard product aggregation logic (added isTestData=false + orderItems.status='active' to all 10 analytics procedures)
+- [x] After dashboard fix, verify ETL digest numbers match corrected dashboard (ETL=₹2,075 for biang biang, matches DB)
