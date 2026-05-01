@@ -19,7 +19,7 @@ import { Request, Response, NextFunction } from "express";
 import { ENV } from "./_core/env";
 import crypto from "crypto";
 import { eq, and, gte, lte, inArray, sql, desc } from "drizzle-orm";
-import { orders, orderItems, orderItemAddons } from "../drizzle/schema";
+import { orders, orderItems, orderItemAddons, products, subcategories, categories } from "../drizzle/schema";
 
 // Constant-time string comparison to prevent timing attacks
 function secureCompare(a: string, b: string): boolean {
@@ -356,6 +356,274 @@ export async function handleOrdersList(req: Request, res: Response) {
       message: "Failed to fetch orders.",
       detail: error.message,
     });
+  }
+}
+
+/**
+ * Employees list handler for /api/service/employees
+ * Wraps the Employee Master proxy with a standardized response format.
+ * 
+ * Query parameters:
+ *   status  — Filter by status: active, inactive (default: active)
+ *   limit   — Max records (default 50)
+ *   offset  — Skip N records (default 0)
+ *   outlet  — Filter by primary outlet name (partial match)
+ */
+export async function handleEmployeesList(req: Request, res: Response) {
+  if (!ENV.empMasterApiUrl || !ENV.empMasterApiKey) {
+    return res.status(503).json({
+      error: "service_misconfigured",
+      message: "Employee Master API credentials not configured.",
+    });
+  }
+
+  try {
+    const status = (req.query.status as string) || "active";
+    const limit = Math.min(Math.max(parseInt(req.query.limit as string) || 50, 1), 200);
+    const offset = Math.max(parseInt(req.query.offset as string) || 0, 0);
+    const outlet = req.query.outlet as string;
+
+    // Build query params for Employee Master API
+    const params = new URLSearchParams();
+    params.set("status", status);
+    params.set("limit", String(limit));
+    params.set("offset", String(offset));
+
+    const targetUrl = `${ENV.empMasterApiUrl}/api/v1/employees?${params.toString()}`;
+    console.log(`[ServiceAuth:Employees] Fetching ${targetUrl}`);
+
+    const response = await fetch(targetUrl, {
+      headers: {
+        "Content-Type": "application/json",
+        "X-API-Key": ENV.empMasterApiKey,
+      },
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      return res.status(response.status).json({
+        success: false,
+        error: "upstream_error",
+        message: `Employee Master returned ${response.status}`,
+        detail: errorText.substring(0, 200),
+      });
+    }
+
+    const upstream = await response.json();
+    let employees = upstream.data || [];
+
+    // Client-side outlet filter (Employee Master may not support this filter)
+    if (outlet) {
+      const outletLower = outlet.toLowerCase();
+      employees = employees.filter((emp: any) =>
+        emp.primaryOutlet && emp.primaryOutlet.toLowerCase().includes(outletLower)
+      );
+    }
+
+    // Strip sensitive fields for agent consumption
+    const sanitized = employees.map((emp: any) => ({
+      id: emp.id,
+      employeeCode: emp.employeeCode,
+      name: emp.name?.trim(),
+      email: emp.email,
+      phone: emp.phone,
+      primaryOutlet: emp.primaryOutlet,
+      department: emp.department,
+      role: emp.role,
+      employmentType: emp.employmentType,
+      status: emp.status,
+      employmentStartDate: emp.employmentStartDate,
+      employmentEndDate: emp.employmentEndDate,
+      probationEndDate: emp.probationEndDate,
+      confirmationDate: emp.confirmationDate,
+      baseSalary: emp.baseSalary,
+      hraAllowance: emp.hraAllowance,
+      transportAllowance: emp.transportAllowance,
+      foodAllowance: emp.foodAllowance,
+      otherAllowances: emp.otherAllowances,
+    }));
+
+    return res.json({
+      success: true,
+      data: sanitized,
+      meta: {
+        total: upstream.meta?.count ?? sanitized.length,
+        limit,
+        offset,
+        hasMore: (upstream.meta?.count ?? 0) > offset + limit,
+        filters: {
+          status,
+          outlet: outlet || null,
+        },
+      },
+    });
+  } catch (error: any) {
+    console.error(`[ServiceAuth:Employees] Error:`, error.message);
+    return res.status(502).json({
+      error: "proxy_error",
+      message: "Failed to reach Employee Master API.",
+      detail: error.message,
+    });
+  }
+}
+
+/**
+ * Menu products list handler for /api/service/menu/products
+ * Returns all products with their availability status.
+ * 
+ * Query parameters:
+ *   outletId    — Filter by outlet: 1 (Palladium), 2 (T.Nagar)
+ *   available   — Filter: true (in-stock only), false (out-of-stock only), omit for all
+ *   categoryId  — Filter by category ID
+ *   limit       — Max records (default 100, max 500)
+ *   offset      — Skip N records (default 0)
+ */
+export async function handleMenuProducts(req: Request, res: Response) {
+  const { getDb } = await import("./db");
+  const db = await getDb();
+  if (!db) {
+    return res.status(503).json({ error: "database_unavailable", message: "Database connection not available." });
+  }
+
+  try {
+    const limit = Math.min(Math.max(parseInt(req.query.limit as string) || 100, 1), 500);
+    const offset = Math.max(parseInt(req.query.offset as string) || 0, 0);
+
+    const conditions: any[] = [eq(products.isActive, true)];
+
+    if (req.query.available === "true") {
+      conditions.push(eq(products.isAvailable, true));
+    } else if (req.query.available === "false") {
+      conditions.push(eq(products.isAvailable, false));
+    }
+
+    if (req.query.categoryId) {
+      const catId = parseInt(req.query.categoryId as string);
+      if (!isNaN(catId)) {
+        // Get subcategories for this category, then filter products
+        const subs = await db.select({ id: subcategories.id }).from(subcategories).where(eq(subcategories.categoryId, catId));
+        const subIds = subs.map(s => s.id);
+        if (subIds.length > 0) {
+          conditions.push(inArray(products.subcategoryId, subIds));
+        } else {
+          // No subcategories = no products
+          return res.json({ success: true, data: [], meta: { total: 0, limit, offset, hasMore: false } });
+        }
+      }
+    }
+
+    const whereClause = and(...conditions);
+
+    const countResult = await db.select({ count: sql<number>`COUNT(*)` }).from(products).where(whereClause);
+    const totalCount = Number(countResult[0]?.count ?? 0);
+
+    const productRows = await db.select().from(products).where(whereClause)
+      .orderBy(products.displayOrder)
+      .limit(limit)
+      .offset(offset);
+
+    const toRupees = (paise: number | null | undefined): number | null => {
+      if (paise === null || paise === undefined) return null;
+      return paise / 100;
+    };
+
+    const data = productRows.map(p => ({
+      id: p.id,
+      name: p.name,
+      slug: p.slug,
+      subcategoryId: p.subcategoryId,
+      // Availability
+      isAvailable: p.isAvailable,
+      isInStock: p.isInStock,
+      isActive: p.isActive,
+      availableInstore: p.availableInstore,
+      availableDelivery: p.availableDelivery,
+      availableAtPalladium: p.availableAtPalladium,
+      availableAtTnagar: p.availableAtTnagar,
+      // Pricing in rupees
+      instorePrice: toRupees(p.instorePrice),
+      deliveryPrice: toRupees(p.deliveryPrice),
+      // Dietary
+      isVegetarian: p.isVegetarian,
+      isVegan: p.isVegan,
+      containsEgg: p.containsEgg,
+      isNonVeg: p.isNonVeg,
+    }));
+
+    return res.json({
+      success: true,
+      data,
+      meta: {
+        total: totalCount,
+        limit,
+        offset,
+        hasMore: offset + limit < totalCount,
+        filters: {
+          available: req.query.available || null,
+          categoryId: req.query.categoryId || null,
+        },
+      },
+    });
+  } catch (error: any) {
+    console.error(`[ServiceAuth:Menu] Error:`, error.message);
+    return res.status(500).json({ error: "internal_error", message: "Failed to fetch menu products.", detail: error.message });
+  }
+}
+
+/**
+ * Menu toggle availability handler for POST /api/service/menu/toggle-availability
+ * Toggles a product's real-time availability (isAvailable + isInStock).
+ * 
+ * Request body:
+ *   productId  — The product ID to toggle
+ *   available  — Boolean: true = mark available, false = mark unavailable
+ */
+export async function handleMenuToggleAvailability(req: Request, res: Response) {
+  const { getDb } = await import("./db");
+  const db = await getDb();
+  if (!db) {
+    return res.status(503).json({ error: "database_unavailable", message: "Database connection not available." });
+  }
+
+  try {
+    const { productId, available } = req.body;
+
+    if (typeof productId !== "number" || typeof available !== "boolean") {
+      return res.status(400).json({
+        error: "invalid_input",
+        message: "Request body must include productId (number) and available (boolean).",
+      });
+    }
+
+    // Verify product exists
+    const existing = await db.select({ id: products.id, name: products.name, isAvailable: products.isAvailable })
+      .from(products)
+      .where(eq(products.id, productId));
+
+    if (existing.length === 0) {
+      return res.status(404).json({
+        error: "not_found",
+        message: `Product with ID ${productId} not found.`,
+      });
+    }
+
+    // Update both isAvailable AND isInStock (same logic as the staff toggle)
+    await db.update(products).set({ isAvailable: available, isInStock: available }).where(eq(products.id, productId));
+
+    console.log(`[ServiceAuth:Menu] Agent toggled product ${productId} (${existing[0].name}) availability: ${existing[0].isAvailable} → ${available}`);
+
+    return res.json({
+      success: true,
+      data: {
+        productId,
+        productName: existing[0].name,
+        previousAvailability: existing[0].isAvailable,
+        currentAvailability: available,
+      },
+    });
+  } catch (error: any) {
+    console.error(`[ServiceAuth:MenuToggle] Error:`, error.message);
+    return res.status(500).json({ error: "internal_error", message: "Failed to toggle product availability.", detail: error.message });
   }
 }
 

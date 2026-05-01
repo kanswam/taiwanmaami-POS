@@ -3117,3 +3117,25 @@ Orders fixed:
 - [x] Register route in _core/index.ts under service auth
 - [x] Write vitest tests for the endpoint
 - [x] Validate with curl returning real production data
+
+## MaamiTech Phase 1 — Task 7: employees.list Endpoint
+
+- [x] Build GET /api/service/employees wrapper around Employee Master proxy
+- [x] Standardize response format (success, data, meta) matching orders pattern
+- [x] Support filtering by status (active/inactive), outlet (partial match)
+- [x] Support limit/offset pagination
+- [x] Strip sensitive fields from response
+- [x] Write vitest tests (13 tests in serviceEndpoints.test.ts)
+- [x] Validate with curl returning real employee data
+
+## MaamiTech Phase 1 — Menu Toggle Service Auth
+
+- [x] Build POST /api/service/menu/toggle-availability endpoint
+- [x] Accept productId and available (boolean) in request body
+- [x] Return previous + current availability state in response
+- [x] 404 for non-existent products, 400 for invalid input
+- [x] Build GET /api/service/menu/products endpoint (list products with availability)
+- [x] Support available filter and categoryId filter
+- [x] Prices in rupees
+- [x] Write vitest tests
+- [x] Validate with curl
