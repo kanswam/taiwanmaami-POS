@@ -11,6 +11,7 @@ import { handleBackupExcelExport } from "../excelBackupExport";
 import { handleDeliveryUpload, handleGetDeliveryUploads, handleDeleteDeliveryUpload, deliveryUploadMiddleware } from "../deliveryUpload";
 import { handlePetpoojaQuickUpload, handleVerifyPin, handlePetpoojaHistory, petpoojaUploadMiddleware } from "../petpoojaQuickUpload";
 import { handlePetpoojaWebhook, handlePetpoojaWebhookStatus } from "../petpoojaWebhook";
+import { handlePetpoojaWebhookV2, handlePetpoojaWebhookV2Status } from "../petpoojaWebhookV2";
 import { serviceAuthMiddleware, handleServiceHealth, handleOrdersList, handleEmployeesList, handleMenuProducts, handleMenuToggleAvailability, handleEmployeeMasterProxy } from "../serviceAuth";
 import { handleETL, handleETLStatus } from "../etl";
 import { createContext } from "./context";
@@ -537,11 +538,15 @@ async function startServer() {
   app.post('/api/petpooja/upload', petpoojaUploadMiddleware as any, handlePetpoojaQuickUpload as any);
   app.get('/api/petpooja/history', handlePetpoojaHistory as any);
 
-  // ============ PETPOOJA WEBHOOK (real-time order push) ============
+  // ============ PETPOOJA WEBHOOK v2 (Supabase-backed with raw archive) ============
   // Open endpoint — Petpooja sends orders here when bills are printed
   // No auth required (Petpooja does not support auth headers)
-  app.post('/api/petpooja/webhook', handlePetpoojaWebhook as any);
-  app.get('/api/petpooja/webhook/status', handlePetpoojaWebhookStatus as any);
+  // v2 writes to Supabase: raw archive → parsed orders/items → ingestion log
+  app.post('/api/petpooja/webhook', handlePetpoojaWebhookV2 as any);
+  app.get('/api/petpooja/webhook/status', handlePetpoojaWebhookV2Status as any);
+  // Legacy v1 endpoints (MySQL-backed) — kept for reference, mounted on /v1 path
+  app.post('/api/petpooja/webhook/v1', handlePetpoojaWebhook as any);
+  app.get('/api/petpooja/webhook/v1/status', handlePetpoojaWebhookStatus as any);
 
   // ============ MAAMITECH SERVICE API ============
   // All /api/service/* routes require MAAMITECH_SERVICE_TOKEN bearer auth

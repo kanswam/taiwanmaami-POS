@@ -3205,3 +3205,19 @@ Orders fixed:
 - [x] Also add orderItems.status = 'active' filter to ETL item query
 - [x] Re-run ETL for May 1 and verify 10 orders / matches dashboard (10 orders, ₹12,125 pre-tax = matches dashboard ₹12,731 inc GST)
 - [x] Re-send corrected May 1 digest (SID: SM244f5250b88f92ae9ac5565f84c12724)
+
+## Petpooja Webhook v2 — Supabase-backed with Raw Archive
+- [x] Run supabase-schema.sql in Supabase to create new tables (petpooja_orders, petpooja_order_items, petpooja_ingestion_log, petpooja_raw_archive, etl_run_log)
+- [x] Install @supabase/supabase-js dependency (already installed)
+- [x] Create server/petpoojaWebhookV2.ts — adapted for Express stack with archive→process→status flow
+- [x] Wire POST /api/petpooja/webhook to v2 handler (v1 kept at /api/petpooja/webhook/v1)
+- [x] Keep GET /api/petpooja/webhook/status endpoint working (v2 with Supabase stats)
+- [x] Verify SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY env vars are available (already in env.ts)
+- [x] Write vitest tests for the new webhook handler (16 tests passing)
+- [x] Test end-to-end with simulated Petpooja payload (ingestion + idempotency + status all verified)
+- [ ] Save checkpoint and deploy (pending)
+
+## Daily Digest — Multi-recipient
+- [x] Update daily-digest.py to send to 3 WhatsApp numbers: +917845053909, +447736539098, +447780886480
+- [x] Update scheduled task prompt with all 3 recipients
+- [x] Send May 1 digest to all 3 recipients (SIDs: SMd57fa646, SM696985e3, SMe6612c11)
