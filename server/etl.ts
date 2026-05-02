@@ -130,6 +130,8 @@ async function pullPOSOrders(reportDate: string, batchId: string): Promise<{ row
     const startOfDay = new Date(`${reportDate}T00:00:00.000+05:30`);
     const endOfDay = new Date(`${reportDate}T23:59:59.999+05:30`);
 
+    const { ne } = await import("drizzle-orm");
+
     const orderResults = await db
       .select()
       .from(orders)
@@ -137,7 +139,8 @@ async function pullPOSOrders(reportDate: string, batchId: string): Promise<{ row
         and(
           gte(orders.createdAt, startOfDay),
           lte(orders.createdAt, endOfDay),
-          eq(orders.isTestData, false)
+          eq(orders.isTestData, false),
+          ne(orders.orderStatus, "cancelled")
         )
       );
 
@@ -145,7 +148,12 @@ async function pullPOSOrders(reportDate: string, batchId: string): Promise<{ row
       const items = await db
         .select()
         .from(orderItems)
-        .where(eq(orderItems.orderId, order.id));
+        .where(
+          and(
+            eq(orderItems.orderId, order.id),
+            eq(orderItems.status, "active")
+          )
+        );
 
       const outlet = POS_OUTLET_MAP[order.outletId ?? 1] || "unknown";
       const orderTotal = (order.totalAmount ?? 0) / 100;

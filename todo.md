@@ -3199,3 +3199,9 @@ Orders fixed:
 - [x] Investigate orderItems table for April 30 to find actual biang biang data
 - [x] Fix analytics dashboard product aggregation logic (added isTestData=false + orderItems.status='active' to all 10 analytics procedures)
 - [x] After dashboard fix, verify ETL digest numbers match corrected dashboard (ETL=₹2,075 for biang biang, matches DB)
+
+## Bug Fix — ETL Missing orderStatus Filter
+- [x] ETL pullPOSOrders includes cancelled orders — add orderStatus != 'cancelled' filter
+- [x] Also add orderItems.status = 'active' filter to ETL item query
+- [x] Re-run ETL for May 1 and verify 10 orders / matches dashboard (10 orders, ₹12,125 pre-tax = matches dashboard ₹12,731 inc GST)
+- [x] Re-send corrected May 1 digest (SID: SM244f5250b88f92ae9ac5565f84c12724)
