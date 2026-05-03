@@ -1,5 +1,6 @@
 import "dotenv/config";
 import express from "express";
+import { ENV } from "./env";
 import { createServer } from "http";
 import net from "net";
 import { createExpressMiddleware } from "@trpc/server/adapters/express";
@@ -46,7 +47,11 @@ async function startServer() {
   // Razorpay webhook handler - shared between both URL paths
   const razorpayWebhookHandler = async (req: any, res: any) => {
     try {
-      const webhookSecret = process.env.RAZORPAY_KEY_SECRET || '';
+      const webhookSecret = ENV.razorpayKeySecret;
+      if (!webhookSecret) {
+        console.error('[Razorpay Webhook] RAZORPAY_KEY_SECRET is not set');
+        return res.status(500).json({ error: 'Server misconfiguration' });
+      }
       const signature = req.headers['x-razorpay-signature'] as string;
       const body = Buffer.isBuffer(req.body) ? req.body.toString('utf8') : (typeof req.body === 'string' ? req.body : JSON.stringify(req.body));
       

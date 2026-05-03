@@ -4,10 +4,17 @@
  * Provides server-side integration with the Employee Master system
  * for POS staff authentication and employee data retrieval.
  */
+import { ENV } from './_core/env';
 
-// Use env vars with hardcoded fallback to ensure production works
-const EMP_MASTER_API_URL = process.env.EMP_MASTER_API_URL || 'https://employees.thamaraifoods.com';
-const EMP_MASTER_API_KEY = process.env.EMP_MASTER_API_KEY || 'tk_1HfTsuKSxqo715o_jmDhOy9hX0ltO4Tkmhx_n2ACKYNC4V-k';
+const EMP_MASTER_API_URL = ENV.empMasterApiUrl;
+const EMP_MASTER_API_KEY = ENV.empMasterApiKey;
+
+if (!EMP_MASTER_API_URL) {
+  throw new Error('EMP_MASTER_API_URL is not set. Check your environment config.');
+}
+if (!EMP_MASTER_API_KEY) {
+  throw new Error('EMP_MASTER_API_KEY is not set. Check your environment config.');
+}
 
 export interface Employee {
   id: string;

@@ -9,9 +9,15 @@ import { eq, and, desc, sql } from 'drizzle-orm';
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } });
 export const petpoojaUploadMiddleware = upload.single('file');
 
-// PIN is stored in env var
+// PIN is stored in env var — hard-fail if missing
+import { ENV } from './_core/env';
+
 function getUploadPin(): string {
-  return process.env.PETPOOJA_UPLOAD_PIN || '';
+  const pin = ENV.petpoojaUploadPin;
+  if (!pin) {
+    throw new Error('PETPOOJA_UPLOAD_PIN is not set. Check your environment config.');
+  }
+  return pin;
 }
 
 // Outlet configuration

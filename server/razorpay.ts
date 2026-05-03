@@ -2,8 +2,15 @@
 import { ENV } from './_core/env';
 import crypto from 'crypto';
 
-const RAZORPAY_KEY_ID = process.env.RAZORPAY_KEY_ID || '';
-const RAZORPAY_KEY_SECRET = process.env.RAZORPAY_KEY_SECRET || '';
+const RAZORPAY_KEY_ID = ENV.razorpayKeyId;
+const RAZORPAY_KEY_SECRET = ENV.razorpayKeySecret;
+
+if (!RAZORPAY_KEY_ID) {
+  throw new Error('RAZORPAY_KEY_ID is not set. Check your environment config.');
+}
+if (!RAZORPAY_KEY_SECRET) {
+  throw new Error('RAZORPAY_KEY_SECRET is not set. Check your environment config.');
+}
 
 interface RazorpayOrder {
   id: string;

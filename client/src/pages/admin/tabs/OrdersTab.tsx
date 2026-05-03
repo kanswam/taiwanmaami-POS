@@ -24,6 +24,7 @@ import {
 import { toast } from 'sonner';
 import { useOrderNotification, playOrderNotification } from '@/hooks/useOrderNotification';
 import { PaymentFailureAlert } from '@/components/PaymentFailureAlert';
+import { KOT_PRINT_SECRET } from '@/lib/env';
 
 function generateOrderInvoice(order: any): string {
   const formatPrice = (paise: number) => `\u20B9${(paise / 100).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -235,7 +236,7 @@ export default function OrdersTab() {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            secret: import.meta.env.VITE_KOT_PRINT_SECRET || 'tmm-kot-print-2024-secure',
+            secret: KOT_PRINT_SECRET,
             orderId: variables.orderId,
           }),
         });
@@ -816,7 +817,7 @@ export default function OrdersTab() {
                               method: 'POST',
                               headers: { 'Content-Type': 'application/json' },
                               body: JSON.stringify({
-                                secret: import.meta.env.VITE_KOT_PRINT_SECRET || 'tmm-kot-print-2024-secure',
+                                secret: KOT_PRINT_SECRET,
                                 orderId: order.id,
                               }),
                             });
@@ -839,7 +840,7 @@ export default function OrdersTab() {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
                                 body: JSON.stringify({
-                                  secret: import.meta.env.VITE_KOT_PRINT_SECRET || 'tmm-kot-print-2024-secure',
+                                  secret: KOT_PRINT_SECRET,
                                   orderId: order.id,
                                 }),
                               });
@@ -883,7 +884,7 @@ export default function OrdersTab() {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
                                 body: JSON.stringify({
-                                  secret: import.meta.env.VITE_KOT_PRINT_SECRET || 'your-kot-secret',
+                                  secret: KOT_PRINT_SECRET,
                                   orderId: order.id,
                                 }),
                               });

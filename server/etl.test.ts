@@ -1,9 +1,21 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi, beforeAll } from "vitest";
+
+beforeAll(() => {
+  if (!process.env.MAAMITECH_SERVICE_TOKEN) {
+    vi.stubEnv('MAAMITECH_SERVICE_TOKEN', 'test-token-for-ci');
+  }
+  if (!process.env.SUPABASE_URL) {
+    vi.stubEnv('SUPABASE_URL', 'https://test.supabase.co');
+  }
+  if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    vi.stubEnv('SUPABASE_SERVICE_ROLE_KEY', 'test-service-role-key');
+  }
+});
 
 const BASE_URL = "http://localhost:3000";
-const TEST_TOKEN = process.env.MAAMITECH_SERVICE_TOKEN || "test-token-not-set";
-const SUPABASE_URL = process.env.SUPABASE_URL || "";
-const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
+const TEST_TOKEN = process.env.MAAMITECH_SERVICE_TOKEN!;
+const SUPABASE_URL = process.env.SUPABASE_URL!;
+const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
 describe("MaamiTech Task 6 — Data Lake ETL", () => {
   describe("ETL Run Endpoint (POST /api/service/etl/run)", () => {

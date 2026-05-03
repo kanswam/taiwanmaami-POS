@@ -1,7 +1,13 @@
-import { describe, it, expect, beforeAll } from "vitest";
+import { describe, it, expect, vi, beforeAll } from "vitest";
+
+beforeAll(() => {
+  if (!process.env.MAAMITECH_SERVICE_TOKEN) {
+    vi.stubEnv('MAAMITECH_SERVICE_TOKEN', 'test-token-for-ci');
+  }
+});
 
 const BASE_URL = "http://localhost:3000";
-const TEST_TOKEN = process.env.MAAMITECH_SERVICE_TOKEN || "test-token-not-set";
+const TEST_TOKEN = process.env.MAAMITECH_SERVICE_TOKEN!;
 
 describe("MaamiTech Service Auth (Task 1)", () => {
   describe("Feature Flag Gate", () => {

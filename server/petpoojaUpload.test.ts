@@ -1,4 +1,11 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi, beforeAll } from 'vitest';
+
+beforeAll(() => {
+  // Ensure required env vars are set for tests
+  if (!process.env.PETPOOJA_UPLOAD_PIN) {
+    vi.stubEnv('PETPOOJA_UPLOAD_PIN', 'test-pin-for-ci');
+  }
+});
 
 const BASE_URL = `http://localhost:${process.env.PORT || 3000}`;
 
@@ -49,7 +56,7 @@ describe('Petpooja Quick Upload - PIN Verification', () => {
 
   it('should reject upload with invalid outlet', async () => {
     const formData = new FormData();
-    formData.append('pin', process.env.PETPOOJA_UPLOAD_PIN || '');
+    formData.append('pin', process.env.PETPOOJA_UPLOAD_PIN!);
     formData.append('outlet', 'invalid-outlet');
     formData.append('date', '2026-04-30');
 
@@ -64,7 +71,7 @@ describe('Petpooja Quick Upload - PIN Verification', () => {
 
   it('should reject upload without file', async () => {
     const formData = new FormData();
-    formData.append('pin', process.env.PETPOOJA_UPLOAD_PIN || '');
+    formData.append('pin', process.env.PETPOOJA_UPLOAD_PIN!);
     formData.append('outlet', 'palladium-instore');
     formData.append('date', '2026-04-30');
 

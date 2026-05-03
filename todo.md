@@ -3251,3 +3251,15 @@ Orders fixed:
 - [x] Configure MAAMITECH_TOKEN_REGISTRY env var (9 validation tests passing)
 - [x] Document access matrix (docs/TOKEN_ACCESS_MATRIX.md)
 - [ ] Legacy token stays active until all agents confirmed on scoped tokens
+
+## POS Security Sprint — Hardcoded Secret Removal (CWE-547)
+- [x] Full codebase sweep: 17 instances found across 8 files
+- [x] Presented complete list to user — confirmed fix plan
+- [x] Applied hard-fail validation to all instances:
+  - Items 1-6: VITE_KOT_PRINT_SECRET → client/src/lib/env.ts validated const
+  - Item 7: EMP_MASTER_API_URL → ENV with throw
+  - Item 8: EMP_MASTER_API_KEY → ENV with throw (rotated token via env)
+  - Items 9-12: Razorpay/Petpooja → ENV with throw on missing
+  - Items 14-17: Test files → vi.stubEnv mocking pattern
+- [x] Build verified: 0 TS errors, dev server running, 46 security tests passing
+- [ ] Push to main to trigger Snyk rescan (checkpoint needed)

@@ -25,6 +25,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogAction, AlertDialogCancel } from '@/components/ui/alert-dialog';
 import { AddItemsDialog } from '@/components/AddItemsDialog';
+import { KOT_PRINT_SECRET } from '@/lib/env';
 import { useOrderNotification, playOrderNotification } from '@/hooks/useOrderNotification';
 import { OfflineSyncDashboard } from '@/components/OfflineSyncDashboard';
 import { PaymentFailureAlert } from '@/components/PaymentFailureAlert';
@@ -523,7 +524,7 @@ export default function StaffOrders() {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            secret: import.meta.env.VITE_KOT_PRINT_SECRET || 'tmm-kot-print-2024-secure',
+            secret: KOT_PRINT_SECRET,
             orderId: variables.orderId,
           }),
         });
@@ -548,7 +549,7 @@ export default function StaffOrders() {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            secret: import.meta.env.VITE_KOT_PRINT_SECRET || 'tmm-kot-print-2024-secure',
+            secret: KOT_PRINT_SECRET,
             orderId: variables.orderId,
           }),
         });
