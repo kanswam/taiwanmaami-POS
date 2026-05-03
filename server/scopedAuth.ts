@@ -67,7 +67,7 @@ let tokenRegistry: TokenEntry[] | null = null;
 function getTokenRegistry(): TokenEntry[] {
   if (tokenRegistry !== null) return tokenRegistry;
 
-  const registryJson = process.env.MAAMITECH_TOKEN_REGISTRY;
+  const registryJson = ENV.maamitechTokenRegistry || process.env.MAAMITECH_TOKEN_REGISTRY;
   if (!registryJson) {
     // Fallback: if no registry is configured, use the legacy single token
     // with admin:* scope for backward compatibility

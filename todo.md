@@ -3241,3 +3241,13 @@ Orders fixed:
 - [x] 6. Confirmed: all /api/service/* behind MAAMITECH_API_ENABLED flag, no debug endpoints exposed
 - [x] 7. Confirmed: TLS 1.2+ enforced via Cloudflare (TLS 1.1 rejected, HSTS max-age=31536000)
 - [x] 8. Multi-tenant architecture designed (docs/MULTI_TENANT_ARCHITECTURE.md) — separate Supabase per client
+
+## Scoped Token Generation
+- [x] Generate mmt_aiagent token (orders:read, etl:read, health:read)
+- [x] Generate mmt_inventory token (employees:proxy, health:read)
+- [x] Generate mmt_pos token (orders:read, menu:read, menu:write, health:read)
+- [x] Generate mmt_etl token (orders:read, employees:read, menu:read, etl:run, etl:read, health:read)
+- [x] Generate mmt_kotprinter token (health:read)
+- [x] Configure MAAMITECH_TOKEN_REGISTRY env var (9 validation tests passing)
+- [x] Document access matrix (docs/TOKEN_ACCESS_MATRIX.md)
+- [ ] Legacy token stays active until all agents confirmed on scoped tokens
