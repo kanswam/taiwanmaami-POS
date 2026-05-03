@@ -3221,3 +3221,23 @@ Orders fixed:
 - [x] Update daily-digest.py to send to 3 WhatsApp numbers: +917845053909, +447736539098, +447780886480
 - [x] Update scheduled task prompt with all 3 recipients
 - [x] Send May 1 digest to all 3 recipients (SIDs: SMd57fa646, SM696985e3, SMe6612c11)
+
+## Historical Sales Backfill — 6 Excel Files into Supabase sales_facts
+- [x] Inspect all 6 files: columns, date ranges, row counts
+- [x] Map each file to outlet/source/order_type
+- [x] Add is_backfill, period_start, period_end columns to sales_facts
+- [x] Build backfill ETL script with is_backfill=true, period_start/end, order_date=period_end
+- [x] T.Nagar mixed file loaded as order_type='mixed'
+- [x] Run backfill for all 6 files (1486 rows inserted, 64,781 units, ₹23,600,275)
+- [x] Run verification GROUP BY query and share output (1648 rows, 64,971 units, ₹23,672,478)
+- [x] Ensure backfill rows excluded from data_completeness checks (backfill uses separate source/etl_batch_id, daily ETL only processes pos/petpooja_webhook sources)
+
+## Security Hardening Sprint
+- [x] 1. Split single service token into scoped tokens per agent/system + document access matrix (scopedAuth.ts)
+- [x] 2. Add rate limiting to /api/service/ endpoints (100 req/min/token) (rateLimiter.ts)
+- [x] 3. Add explicit input validation to all service endpoint query parameters (inputValidation.ts)
+- [x] 4. Implement audit logging for write operations (token, timestamp, IP, before/after) to audit_log table (auditLog.ts)
+- [x] 5. npm audit: 0 critical, 0 high remaining (patched drizzle-orm, @aws-sdk, trpc, multer, vite, axios, removed xlsx)
+- [x] 6. Confirmed: all /api/service/* behind MAAMITECH_API_ENABLED flag, no debug endpoints exposed
+- [x] 7. Confirmed: TLS 1.2+ enforced via Cloudflare (TLS 1.1 rejected, HSTS max-age=31536000)
+- [x] 8. Multi-tenant architecture designed (docs/MULTI_TENANT_ARCHITECTURE.md) — separate Supabase per client

@@ -13,6 +13,10 @@ import { handlePetpoojaQuickUpload, handleVerifyPin, handlePetpoojaHistory, petp
 import { handlePetpoojaWebhook, handlePetpoojaWebhookStatus } from "../petpoojaWebhook";
 import { handlePetpoojaWebhookV2, handlePetpoojaWebhookV2Status } from "../petpoojaWebhookV2";
 import { serviceAuthMiddleware, handleServiceHealth, handleOrdersList, handleEmployeesList, handleMenuProducts, handleMenuToggleAvailability, handleEmployeeMasterProxy } from "../serviceAuth";
+import { scopedAuthMiddleware } from "../scopedAuth";
+import { rateLimitMiddleware } from "../rateLimiter";
+import { validateOrdersQuery, validateEmployeesQuery, validateMenuProductsQuery, validateMenuToggleBody, validateEtlRunBody, validateEtlStatusQuery } from "../inputValidation";
+import { auditLogMiddleware } from "../auditLog";
 import { handleETL, handleETLStatus } from "../etl";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
@@ -549,17 +553,19 @@ async function startServer() {
   app.get('/api/petpooja/webhook/v1/status', handlePetpoojaWebhookStatus as any);
 
   // ============ MAAMITECH SERVICE API ============
-  // All /api/service/* routes require MAAMITECH_SERVICE_TOKEN bearer auth
-  // Gated behind MAAMITECH_API_ENABLED feature flag
-  app.use('/api/service', serviceAuthMiddleware as any);
+  // All /api/service/* routes require scoped token auth + rate limiting + audit logging
+  // Middleware chain: scopedAuth → rateLimit → audit → [validation] → handler
+  app.use('/api/service', scopedAuthMiddleware as any);
+  app.use('/api/service', rateLimitMiddleware as any);
+  app.use('/api/service', auditLogMiddleware as any);
   app.get('/api/service/health', handleServiceHealth as any);
-  app.get('/api/service/orders', handleOrdersList as any);
-  app.get('/api/service/employees', handleEmployeesList as any);
-  app.get('/api/service/menu/products', handleMenuProducts as any);
-  app.post('/api/service/menu/toggle-availability', handleMenuToggleAvailability as any);
+  app.get('/api/service/orders', validateOrdersQuery as any, handleOrdersList as any);
+  app.get('/api/service/employees', validateEmployeesQuery as any, handleEmployeesList as any);
+  app.get('/api/service/menu/products', validateMenuProductsQuery as any, handleMenuProducts as any);
+  app.post('/api/service/menu/toggle-availability', validateMenuToggleBody as any, handleMenuToggleAvailability as any);
   app.all('/api/service/employee-master/*', handleEmployeeMasterProxy as any);
-  app.post('/api/service/etl/run', handleETL as any);
-  app.get('/api/service/etl/status', handleETLStatus as any);
+  app.post('/api/service/etl/run', validateEtlRunBody as any, handleETL as any);
+  app.get('/api/service/etl/status', validateEtlStatusQuery as any, handleETLStatus as any);
 
   // ============ SCHEDULED TASK ENDPOINT ============
   // POST /api/scheduled/etl — triggered by Manus scheduled task (uses OAuth session cookie)
