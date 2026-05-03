@@ -71,7 +71,11 @@
     "drizzle-orm": "^0.45.2",
     "embla-carousel-react": "^8.6.0",
     "exceljs": "^4.4.0",
+<<<<<<< Updated upstream
     "express": "^4.22.0",
+=======
+    "express": "^4.22.1",
+>>>>>>> Stashed changes
     "framer-motion": "^12.23.22",
     "idb-keyval": "^6.2.2",
     "input-otp": "^1.4.2",
