@@ -3271,3 +3271,20 @@ Orders fixed:
 - [x] ETL run tested successfully via scoped token (38 rows for May 3)
 - [x] All 33 tests passing (ETL + security)
 - [ ] Deploy and confirm tomorrow's scheduled task runs successfully
+
+## Petpooja Webhook 405 Fix
+- [x] Identified root cause: bare domain taiwanmaami.com redirect server only allows GET/HEAD, returns 405 for POST
+- [x] Fix: Petpooja updated webhook URL to https://www.taiwanmaami.com/api/petpooja/webhook (with www)
+- [x] Confirmed endpoint works on www domain (returns 400 validation for incomplete payload, 200 for valid)
+- [x] No code change needed — infrastructure/DNS redirect issue
+
+## Petpooja Outlet Mapping (May 2026)
+- [x] Map restID s16db4mw → palladium_instore (License 157805)
+- [x] Map restID 9itpu6o0 → palladium_delivery (License 334130)
+- [x] Map restID que6b2myco → tnagar_delivery (License 395793)
+- [x] Updated OUTLET_MAP in petpoojaWebhookV2.ts (v2 Supabase handler)
+- [x] Updated OUTLET_MAP in petpoojaWebhook.ts (v1 MySQL handler)
+- [x] Local curl tests: all 3 outlets resolve correctly + unknown fallback works
+- [x] All 19 v2 webhook tests passing (including 4 new outlet mapping tests)
+- [x] Test data cleaned up from Supabase
+- [ ] Deploy and confirm live Petpooja orders land with correct outlet names

@@ -10,12 +10,11 @@ import { petpoojaWebhookOrders, petpoojaWebhookLog } from '../drizzle/schema';
 // to an open URL), but optional token validation is supported.
 
 // Outlet mapping: restID → our outlet system
-// These will need to be configured once Petpooja provides the restIDs
+// Live Petpooja restID → outlet mapping (confirmed May 2026)
 const OUTLET_MAP: Record<string, { outletId: number; outletName: string }> = {
-  // Populate these after Petpooja configures the webhook for each outlet
-  // Example:
-  // "cp81ghin": { outletId: 1, outletName: "Palladium" },
-  // "ab12xyz": { outletId: 2, outletName: "T. Nagar" },
+  's16db4mw':   { outletId: 1, outletName: 'Palladium In-store'  }, // License 157805
+  '9itpu6o0':   { outletId: 1, outletName: 'Palladium Delivery'  }, // License 334130
+  'que6b2myco': { outletId: 2, outletName: 'T.Nagar Delivery'    }, // License 395793
 };
 
 // Convert rupees to paise (our standard storage format)

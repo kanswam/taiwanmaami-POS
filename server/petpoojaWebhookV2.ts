@@ -27,11 +27,11 @@ function getSupabase(): SupabaseClient {
 }
 
 // ── Outlet mapping: Petpooja restID → our internal outlet identifiers ───────
-// Populate with real restIDs once Petpooja confirms them
+// Live Petpooja restID → outlet mapping (confirmed May 2026)
 const OUTLET_MAP: Record<string, { outletId: string; outletName: string }> = {
-  // Will be filled when webhook activates, e.g.:
-  // 'cp81ghin': { outletId: 'palladium', outletName: 'Palladium' },
-  // 'xxxxxxxx': { outletId: 'tnagar',    outletName: 'T. Nagar'  },
+  's16db4mw':   { outletId: 'palladium_instore',  outletName: 'Palladium In-store'  }, // License 157805
+  '9itpu6o0':   { outletId: 'palladium_delivery',  outletName: 'Palladium Delivery'  }, // License 334130
+  'que6b2myco': { outletId: 'tnagar_delivery',     outletName: 'T.Nagar Delivery'    }, // License 395793
 };
 
 // ── Types ────────────────────────────────────────────────────────────────────

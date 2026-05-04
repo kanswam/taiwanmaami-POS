@@ -220,11 +220,11 @@ describe('Petpooja Webhook', () => {
     expect(data.last_24h.webhook_calls).toBeGreaterThanOrEqual(3);
   });
 
-  it('reports unmapped outlets correctly', async () => {
+  it('reports outlet mappings correctly', async () => {
     const res = await fetch(`${BASE}/api/petpooja/webhook/status`);
     const data = await res.json();
-    expect(data.outlet_mappings).toBe(0);
-    expect(data.unmapped_outlets_note).toContain('No outlets mapped');
+    expect(data.outlet_mappings).toBe(3);
+    expect(data.unmapped_outlets_note).toBeUndefined();
   });
 
   // Cleanup test data

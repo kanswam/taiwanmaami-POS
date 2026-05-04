@@ -131,12 +131,20 @@ describe('petpoojaWebhookV2 — pure functions', () => {
       expect(resolveOutlet('unknown_rest_id')).toBeNull();
     });
 
-    it('returns mapped outlet when configured', () => {
-      // Temporarily add a mapping
-      OUTLET_MAP['test_mapped'] = { outletId: 'palladium', outletName: 'Palladium' };
-      expect(resolveOutlet('test_mapped')).toEqual({ outletId: 'palladium', outletName: 'Palladium' });
-      // Clean up
-      delete OUTLET_MAP['test_mapped'];
+    it('resolves Palladium In-store (s16db4mw)', () => {
+      expect(resolveOutlet('s16db4mw')).toEqual({ outletId: 'palladium_instore', outletName: 'Palladium In-store' });
+    });
+
+    it('resolves Palladium Delivery (9itpu6o0)', () => {
+      expect(resolveOutlet('9itpu6o0')).toEqual({ outletId: 'palladium_delivery', outletName: 'Palladium Delivery' });
+    });
+
+    it('resolves T.Nagar Delivery (que6b2myco)', () => {
+      expect(resolveOutlet('que6b2myco')).toEqual({ outletId: 'tnagar_delivery', outletName: 'T.Nagar Delivery' });
+    });
+
+    it('has exactly 3 outlet mappings configured', () => {
+      expect(Object.keys(OUTLET_MAP)).toHaveLength(3);
     });
   });
 
