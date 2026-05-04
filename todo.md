@@ -3266,5 +3266,8 @@ Orders fixed:
 
 ## ETL Scheduled Task 403 Fix
 - [x] Fix /api/scheduled/etl auth middleware — removed role check, accepts any valid session (TS error was comparing 'user' against 'customer'|'staff' enum)
-- [ ] Test endpoint works with user-level auth
-- [ ] Deploy and confirm tomorrow's ETL runs successfully
+- [x] Fix scopedAuth.ts req.path bug — was using relative path (e.g. /etl/run) instead of full path (/api/service/etl/run), causing all scoped token requests to fall through to admin:* requirement
+- [x] Fix legacy token not included when MAAMITECH_TOKEN_REGISTRY is set — now appends legacy token with admin:* scope for backward compatibility
+- [x] ETL run tested successfully via scoped token (38 rows for May 3)
+- [x] All 33 tests passing (ETL + security)
+- [ ] Deploy and confirm tomorrow's scheduled task runs successfully

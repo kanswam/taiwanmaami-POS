@@ -88,6 +88,18 @@ function getTokenRegistry(): TokenEntry[] {
 
   try {
     tokenRegistry = JSON.parse(registryJson);
+    // Also include legacy token with admin:* scope for backward compatibility
+    const legacyToken = ENV.maamitechServiceToken;
+    if (legacyToken && !tokenRegistry!.some(t => t.token === legacyToken)) {
+      tokenRegistry!.push({
+        token: legacyToken,
+        agentId: "legacy_single_token",
+        scopes: ["admin:*"],
+        description: "Legacy single service token (backward compat)",
+        createdAt: "2026-01-01T00:00:00Z",
+        active: true,
+      });
+    }
     return tokenRegistry!;
   } catch (e) {
     console.error("[ScopedAuth] CRITICAL: Failed to parse MAAMITECH_TOKEN_REGISTRY JSON");
@@ -208,10 +220,12 @@ export function scopedAuthMiddleware(req: AuthenticatedRequest, res: Response, n
     }
   }
 
-  // Check scope
-  const requiredScope = getRequiredScope(req.path, req.method);
+  // Check scope — use originalUrl (not req.path which is relative when mounted via app.use)
+  // Strip query string from originalUrl to get the clean path
+  const fullPath = (req.originalUrl || req.path).split('?')[0];
+  const requiredScope = getRequiredScope(fullPath, req.method);
   if (requiredScope && !hasScope(matchedEntry.scopes, requiredScope)) {
-    console.log(`[ScopedAuth] Rejected: Insufficient scope | agent=${matchedEntry.agentId} | required=${requiredScope} | has=${matchedEntry.scopes.join(",")}`);
+    console.log(`[ScopedAuth] Rejected: Insufficient scope | agent=${matchedEntry.agentId} | required=${requiredScope} | has=${matchedEntry.scopes.join(",")} | path=${fullPath}`);
     return res.status(403).json({
       error: "insufficient_scope",
       message: `Token does not have required scope: ${requiredScope}`,
@@ -227,7 +241,7 @@ export function scopedAuthMiddleware(req: AuthenticatedRequest, res: Response, n
     token: maskToken(token),
   };
 
-  console.log(`[ScopedAuth] Authenticated | agent=${matchedEntry.agentId} | path=${req.path} | method=${req.method} | scope=${requiredScope}`);
+  console.log(`[ScopedAuth] Authenticated | agent=${matchedEntry.agentId} | path=${fullPath} | method=${req.method} | scope=${requiredScope}`);
   next();
 }
 

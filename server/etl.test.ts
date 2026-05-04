@@ -189,30 +189,40 @@ describe("MaamiTech Task 6 — Data Lake ETL", () => {
       const rows = await res.json();
       const sources = [...new Set(rows.map((r: any) => r.source))];
       
-      // Should only contain valid source types
+      // Should only contain valid source types (petpooja_report = historical backfill)
       for (const source of sources) {
-        expect(["pos", "petpooja_webhook", "petpooja_csv"]).toContain(source);
+        expect(["pos", "petpooja_webhook", "petpooja_csv", "petpooja_report"]).toContain(source);
       }
     });
   });
 
   describe("Scheduled Task Endpoint (POST /api/scheduled/etl)", () => {
-    it("should be accessible without service auth (for scheduled task cookie auth)", async () => {
-      // The /api/scheduled/etl endpoint is NOT behind serviceAuthMiddleware
-      // It should work with the scheduled task's session cookie
+    it("should reject requests without a valid session cookie", async () => {
+      // The /api/scheduled/etl endpoint requires OAuth session cookie auth
+      // Without a cookie, it should return 401 or 403
       const response = await fetch(`${BASE_URL}/api/scheduled/etl?date=2026-04-30`, {
         method: "POST",
       });
 
-      // Without any auth, it should still execute (no serviceAuthMiddleware on this route)
-      // It will either succeed or fail based on Supabase config
-      expect([200, 207, 500, 503]).toContain(response.status);
+      // Without auth cookie, should be rejected
+      expect([401, 403]).toContain(response.status);
       const data = await response.json();
-      
-      if (response.status !== 503) {
-        expect(data.result).toBeDefined();
-        expect(data.result.reportDate).toBe("2026-04-30");
-      }
+      expect(data.error).toBeDefined();
+    }, 30000);
+
+    it("should NOT be behind scoped token auth (separate from /api/service/*)", async () => {
+      // Verify that scoped token auth does NOT apply to /api/scheduled/etl
+      // (it uses session cookie auth instead)
+      const response = await fetch(`${BASE_URL}/api/scheduled/etl?date=2026-04-30`, {
+        method: "POST",
+        headers: { "Authorization": "Bearer invalid_token" },
+      });
+
+      // Should get 401/403 from session cookie check, NOT from scoped auth
+      expect([401, 403]).toContain(response.status);
+      const data = await response.json();
+      // Should NOT have scoped auth error format
+      expect(data.error).not.toBe("insufficient_scope");
     }, 30000);
   });
 });
