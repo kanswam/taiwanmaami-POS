@@ -3314,3 +3314,10 @@ Orders fixed:
 - [x] Zero TypeScript errors
 - [x] All 64 tests passing (5 test suites)
 - [ ] Verify Snyk rescan shows reduced High findings
+
+## CI Fix — package.json JSON Syntax Error
+- [x] Fixed JSON syntax error at position 4441 (missing closing quote on packageManager field)
+- [x] Set packageManager to exactly "pnpm@10.27.0" (clean version, no sha512 hash)
+- [x] Validated with node -e "require('./package.json')"
+- [x] Pushed fix to GitHub main
+- [ ] ci.yml still needs version line removed (GitHub App lacks workflows permission — user must update manually)
