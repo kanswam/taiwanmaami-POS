@@ -3288,3 +3288,12 @@ Orders fixed:
 - [x] All 19 v2 webhook tests passing (including 4 new outlet mapping tests)
 - [x] Test data cleaned up from Supabase
 - [ ] Deploy and confirm live Petpooja orders land with correct outlet names
+
+## Daily Digest — All 4 Revenue Lines
+- [x] Digest already had 4 revenue lines (T.Nagar In-store, T.Nagar Delivery, Palladium In-store, Palladium Delivery)
+- [x] Updated filters to include petpooja_report and petpooja_csv sources (historical backfill)
+- [x] Added fallback: if order_subtotal_rupees is null, sum item_total_rupees instead
+- [x] Updated data gaps messaging: "No orders received" instead of "Webhook pending"
+- [x] Updated ETL PETPOOJA_OUTLET_MAP with live restIDs (s16db4mw→palladium, 9itpu6o0→palladium, que6b2myco→tnagar)
+- [x] All 12 ETL tests passing
+- [x] Removed "webhook pending" display — now shows ₹0.00 cleanly

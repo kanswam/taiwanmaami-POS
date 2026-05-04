@@ -34,13 +34,12 @@ const POS_OUTLET_MAP: Record<number, string> = {
   2: "tnagar",
 };
 
-// Petpooja restId to outlet mapping
-// These will be populated once Petpooja activates the webhook
-// restId mapping will be determined from the first webhook payloads
+// Petpooja restId to outlet mapping (confirmed May 2026)
+// Maps to the same outlet names used in sales_facts ("palladium" or "tnagar")
 const PETPOOJA_OUTLET_MAP: Record<string, string> = {
-  // Will be filled when webhook activates, e.g.:
-  // "rest_abc123": "palladium",
-  // "rest_def456": "tnagar",
+  's16db4mw':   'palladium',  // License 157805 — Palladium In-store
+  '9itpu6o0':   'palladium',  // License 334130 — Palladium Delivery
+  'que6b2myco': 'tnagar',     // License 395793 — T.Nagar Delivery
 };
 
 interface ETLResult {
