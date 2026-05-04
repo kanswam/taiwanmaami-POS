@@ -3321,3 +3321,6 @@ Orders fixed:
 - [x] Validated with node -e "require('./package.json')"
 - [x] Pushed fix to GitHub main
 - [ ] ci.yml still needs version line removed (GitHub App lacks workflows permission — user must update manually)
+- [x] Added .npmrc with audit-level=high
+- [x] Added pnpm.auditConfig.ignoreCves for GHSA-2phv-j68v-wwqx (false positive — already on patched 10.27.0)
+- [x] Updated ci.yml audit step to use --ignore GHSA-2phv-j68v-wwqx flag (local only — needs manual push)
