@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import { getDb } from './db';
+import { sql } from 'drizzle-orm';
 
 describe('CMS, Admin PIN, and Refunds Features', () => {
   let db: any;
@@ -11,7 +12,7 @@ describe('CMS, Admin PIN, and Refunds Features', () => {
   describe('CMS Content', () => {
     it('should have site_settings table for CMS content', async () => {
       // Verify the site_settings table exists and can be queried
-      const result = await db.execute('SELECT COUNT(*) as count FROM site_settings WHERE `key` LIKE "cms_%"');
+      const result = await db.execute(sql`SELECT COUNT(*) as count FROM site_settings WHERE \`key\` LIKE 'cms_%'`);
       expect(result).toBeDefined();
     });
 
@@ -19,21 +20,21 @@ describe('CMS, Admin PIN, and Refunds Features', () => {
       const testKey = `cms_test_${Date.now()}`;
       const testValue = 'Test content for CMS';
       
-      // Insert test content
-      await db.execute(`INSERT INTO site_settings (\`key\`, value) VALUES ('${testKey}', '${testValue}') ON DUPLICATE KEY UPDATE value = '${testValue}'`);
+      // Insert test content using parameterised query (prevents SQL injection)
+      await db.execute(sql`INSERT INTO site_settings (\`key\`, value) VALUES (${testKey}, ${testValue}) ON DUPLICATE KEY UPDATE value = ${testValue}`);
       
-      // Retrieve it
-      const [result] = await db.execute(`SELECT * FROM site_settings WHERE \`key\` = '${testKey}'`);
+      // Retrieve it using parameterised query
+      const [result] = await db.execute(sql`SELECT * FROM site_settings WHERE \`key\` = ${testKey}`);
       expect(result).toBeDefined();
       
-      // Clean up
-      await db.execute(`DELETE FROM site_settings WHERE \`key\` = '${testKey}'`);
+      // Clean up using parameterised query
+      await db.execute(sql`DELETE FROM site_settings WHERE \`key\` = ${testKey}`);
     });
   });
 
   describe('Admin PIN', () => {
     it('should have adminPins table', async () => {
-      const result = await db.execute('SELECT COUNT(*) as count FROM adminPins');
+      const result = await db.execute(sql`SELECT COUNT(*) as count FROM adminPins`);
       expect(result).toBeDefined();
     });
 
@@ -50,12 +51,12 @@ describe('CMS, Admin PIN, and Refunds Features', () => {
 
   describe('Refund Requests', () => {
     it('should have refundRequests table', async () => {
-      const result = await db.execute('SELECT COUNT(*) as count FROM refundRequests');
+      const result = await db.execute(sql`SELECT COUNT(*) as count FROM refundRequests`);
       expect(result).toBeDefined();
     });
 
     it('should have correct columns in refundRequests table', async () => {
-      const [columns] = await db.execute('DESCRIBE refundRequests');
+      const [columns] = await db.execute(sql.raw('DESCRIBE refundRequests'));
       const columnNames = columns.map((c: any) => c.Field);
       
       expect(columnNames).toContain('id');
@@ -72,7 +73,7 @@ describe('CMS, Admin PIN, and Refunds Features', () => {
 
   describe('Discount Authorizations', () => {
     it('should have discountAuthorizations table', async () => {
-      const result = await db.execute('SELECT COUNT(*) as count FROM discountAuthorizations');
+      const result = await db.execute(sql`SELECT COUNT(*) as count FROM discountAuthorizations`);
       expect(result).toBeDefined();
     });
   });

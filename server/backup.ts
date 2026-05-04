@@ -619,8 +619,12 @@ export async function restoreFromBackup(
       }
     }
     
-    // Step 2: Fetch the backup JSON from S3
-    console.log(`Fetching backup from: ${backupUrl}`);
+    // Step 2: Validate and fetch the backup JSON from S3
+    if (!backupUrl.startsWith('https://')) {
+      throw new Error('Backup URL must use HTTPS to prevent cleartext transmission (CWE-319)');
+    }
+    const maskedUrl = backupUrl.replace(/(https:\/\/[^/]+\/)(.*)/, '$1***');
+    console.log(`Fetching backup from: ${maskedUrl}`);
     const response = await fetch(backupUrl);
     if (!response.ok) {
       throw new Error(`Failed to fetch backup: ${response.statusText}`);

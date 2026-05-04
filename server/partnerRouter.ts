@@ -948,6 +948,11 @@ async function sendReferralNotificationEmail(
     return;
   }
 
+  if (!forgeApiUrl.startsWith('https://')) {
+    console.error('FORGE API URL must use HTTPS to prevent cleartext credential transmission (CWE-319)');
+    return;
+  }
+
   const emailHtml = `
     <div style="font-family: 'Georgia', serif; max-width: 600px; margin: 0 auto; background: #FFF8F0; border-radius: 12px; overflow: hidden;">
       <div style="background: linear-gradient(135deg, #8B4513 0%, #A0522D 100%); padding: 32px; text-align: center;">

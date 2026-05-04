@@ -12,6 +12,9 @@ const EMP_MASTER_API_KEY = ENV.empMasterApiKey;
 if (!EMP_MASTER_API_URL) {
   throw new Error('EMP_MASTER_API_URL is not set. Check your environment config.');
 }
+if (!EMP_MASTER_API_URL.startsWith('https://')) {
+  throw new Error('EMP_MASTER_API_URL must use HTTPS to prevent cleartext credential transmission.');
+}
 if (!EMP_MASTER_API_KEY) {
   throw new Error('EMP_MASTER_API_KEY is not set. Check your environment config.');
 }
@@ -42,7 +45,7 @@ export async function authenticateStaffByMobile(mobile: string): Promise<AuthRes
   console.log('[EMP_MASTER] URL configured:', !!EMP_MASTER_API_URL, 'Key configured:', !!EMP_MASTER_API_KEY);
   
   if (!EMP_MASTER_API_URL || !EMP_MASTER_API_KEY) {
-    console.error('Employee Master API credentials not configured. URL:', EMP_MASTER_API_URL, 'Key:', EMP_MASTER_API_KEY ? '[SET]' : '[NOT SET]');
+    console.error('Employee Master API credentials not configured. URL:', EMP_MASTER_API_URL ? '[SET]' : '[NOT SET]', 'Key:', EMP_MASTER_API_KEY ? '[SET]' : '[NOT SET]');
     return {
       success: false,
       error: 'Employee authentication service not configured'

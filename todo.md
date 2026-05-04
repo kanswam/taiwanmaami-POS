@@ -3297,3 +3297,19 @@ Orders fixed:
 - [x] Updated ETL PETPOOJA_OUTLET_MAP with live restIDs (s16db4mw→palladium, 9itpu6o0→palladium, que6b2myco→tnagar)
 - [x] All 12 ETL tests passing
 - [x] Removed "webhook pending" display — now shows ₹0.00 cleanly
+
+## BRIEF 1 — GitHub Actions CI
+- [x] Created .github/workflows/ci.yml (push to main + PR triggers)
+- [x] pnpm audit --audit-level=high step
+- [x] vitest run step with CI env vars for secrets
+- [ ] Verify GitHub Actions run passes (green)
+
+## BRIEF 2 — SQL Injection + Cleartext Transmission Fixes
+- [x] SQL Injection (CWE-89): Replaced raw string interpolation in cms-refunds.test.ts with Drizzle `sql` tagged template (parameterised queries)
+- [x] Cleartext Transmission (CWE-319): cookies.ts — enforce sameSite=lax when not secure to prevent cleartext cookie transmission
+- [x] Cleartext Transmission (CWE-319): backup.ts — validate backup URL starts with https://, mask URL in logs
+- [x] Cleartext Transmission (CWE-319): employeeMaster.ts — enforce HTTPS for EMP_MASTER_API_URL, mask credentials in error logs
+- [x] Cleartext Transmission (CWE-319): partnerRouter.ts — enforce HTTPS for FORGE API URL
+- [x] Zero TypeScript errors
+- [x] All 64 tests passing (5 test suites)
+- [ ] Verify Snyk rescan shows reduced High findings
