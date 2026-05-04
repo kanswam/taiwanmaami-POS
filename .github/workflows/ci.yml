@@ -9,15 +9,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v3
+      - uses: pnpm/action-setup@v4
         with:
-          version: 8
+          version: 10
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: 'pnpm'
       - name: Install dependencies
-        run: pnpm install --no-frozen-lockfile
+        run: pnpm install --frozen-lockfile
       - name: Security audit
         run: pnpm audit --audit-level=high
       - name: Run tests
@@ -30,3 +30,4 @@ jobs:
           RAZORPAY_KEY_ID: test-razorpay-id-for-ci
           RAZORPAY_KEY_SECRET: test-razorpay-secret-for-ci
           PETPOOJA_UPLOAD_PIN: test-pin-for-ci
+
