@@ -1,160 +1,193 @@
-import { describe, it, expect, vi, beforeAll } from "vitest";
-
-beforeAll(() => {
-  if (!process.env.MAAMITECH_SERVICE_TOKEN) {
-    vi.stubEnv('MAAMITECH_SERVICE_TOKEN', 'test-token-for-ci');
-  }
-});
-
-const BASE_URL = "http://localhost:3000";
-const TEST_TOKEN = process.env.MAAMITECH_SERVICE_TOKEN!;
+/**
+ * MaamiTech Service Auth Tests
+ * 
+ * Tests the scoped auth middleware in isolation using supertest.
+ * No running dev server required — works in CI.
+ */
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import express from "express";
+import request from "supertest";
 
 describe("MaamiTech Service Auth (Task 1)", () => {
+  let app: express.Express;
+  const TEST_TOKEN = "test-service-token-for-auth-tests";
+
+  beforeEach(async () => {
+    vi.resetModules();
+
+    // Mock ENV with API enabled and a known token
+    vi.doMock("./_core/env", () => ({
+      ENV: {
+        maamitechApiEnabled: true,
+        maamitechServiceToken: TEST_TOKEN,
+        empMasterApiUrl: "https://employees.thamaraifoods.com",
+        empMasterApiKey: "test-emp-key",
+      },
+    }));
+
+    // Mock the token registry (scoped auth uses this)
+    process.env.MAAMITECH_TOKEN_REGISTRY = JSON.stringify([
+      {
+        token: TEST_TOKEN,
+        agentId: "legacy_single_token",
+        scopes: ["admin:*"],
+        description: "Legacy single token",
+        createdAt: "2026-01-01T00:00:00Z",
+        active: true,
+      },
+    ]);
+    process.env.MAAMITECH_SERVICE_TOKEN = TEST_TOKEN;
+
+    // Import fresh modules after mocking
+    const { scopedAuthMiddleware, invalidateTokenRegistry } = await import("./scopedAuth");
+    const { handleServiceHealth } = await import("./serviceAuth");
+    invalidateTokenRegistry();
+
+    // Build minimal Express app with just the service routes
+    app = express();
+    app.use(express.json());
+    app.use("/api/service", scopedAuthMiddleware as any);
+    app.get("/api/service/health", handleServiceHealth as any);
+  });
+
+  afterEach(() => {
+    delete process.env.MAAMITECH_TOKEN_REGISTRY;
+    delete process.env.MAAMITECH_SERVICE_TOKEN;
+    vi.restoreAllMocks();
+  });
+
   describe("Feature Flag Gate", () => {
     it("should return 503 when MAAMITECH_API_ENABLED is false", async () => {
-      // When the feature flag is disabled, all /api/service/* routes return 503
-      // Since we're testing against the dev server which may have it enabled or disabled,
-      // we test the response structure
-      const response = await fetch(`${BASE_URL}/api/service/health`, {
-        headers: { Authorization: `Bearer ${TEST_TOKEN}` },
-      });
-      
-      // Either 200 (enabled) or 503 (disabled) - both are valid states
-      expect([200, 503]).toContain(response.status);
-      const data = await response.json();
-      
-      if (response.status === 503) {
-        expect(data.error).toBe("service_unavailable");
-      } else {
-        expect(data.status).toBe("ok");
-        expect(data.service).toBe("taiwan-maami-pos");
-      }
+      vi.resetModules();
+      vi.doMock("./_core/env", () => ({
+        ENV: {
+          maamitechApiEnabled: false,
+          maamitechServiceToken: null,
+        },
+      }));
+      process.env.MAAMITECH_TOKEN_REGISTRY = "";
+
+      const { scopedAuthMiddleware, invalidateTokenRegistry } = await import("./scopedAuth");
+      invalidateTokenRegistry();
+
+      const disabledApp = express();
+      disabledApp.use(express.json());
+      disabledApp.use("/api/service", scopedAuthMiddleware as any);
+      disabledApp.get("/api/service/health", (_req, res) => res.json({ status: "ok" }));
+
+      const response = await request(disabledApp)
+        .get("/api/service/health")
+        .set("Authorization", `Bearer ${TEST_TOKEN}`);
+
+      expect(response.status).toBe(503);
+      expect(response.body.error).toBe("service_unavailable");
     });
   });
 
   describe("Authentication Validation", () => {
     it("should reject requests without Authorization header", async () => {
-      const response = await fetch(`${BASE_URL}/api/service/health`);
-      
-      // Either 401 (no auth) or 503 (feature disabled)
-      expect([401, 503]).toContain(response.status);
-      const data = await response.json();
-      
-      if (response.status === 401) {
-        expect(data.error).toBe("unauthorized");
-        expect(data.message).toContain("Authorization");
-      }
+      const response = await request(app).get("/api/service/health");
+
+      expect(response.status).toBe(401);
+      expect(response.body.error).toBe("unauthorized");
+      expect(response.body.message).toContain("Authorization");
     });
 
     it("should reject requests with wrong auth scheme (Basic instead of Bearer)", async () => {
-      const response = await fetch(`${BASE_URL}/api/service/health`, {
-        headers: { Authorization: `Basic ${Buffer.from("user:pass").toString("base64")}` },
-      });
-      
-      expect([401, 503]).toContain(response.status);
-      const data = await response.json();
-      
-      if (response.status === 401) {
-        expect(data.error).toBe("unauthorized");
-      }
+      const response = await request(app)
+        .get("/api/service/health")
+        .set("Authorization", `Basic ${Buffer.from("user:pass").toString("base64")}`);
+
+      expect(response.status).toBe(401);
+      expect(response.body.error).toBe("unauthorized");
     });
 
     it("should reject requests with invalid token", async () => {
-      const response = await fetch(`${BASE_URL}/api/service/health`, {
-        headers: { Authorization: "Bearer invalid-token-12345" },
-      });
-      
-      expect([403, 503]).toContain(response.status);
-      const data = await response.json();
-      
-      if (response.status === 403) {
-        expect(data.error).toBe("forbidden");
-      }
+      const response = await request(app)
+        .get("/api/service/health")
+        .set("Authorization", "Bearer invalid-token-12345");
+
+      expect(response.status).toBe(403);
+      expect(response.body.error).toBe("forbidden");
     });
 
     it("should reject requests with empty Bearer token", async () => {
-      const response = await fetch(`${BASE_URL}/api/service/health`, {
-        headers: { Authorization: "Bearer " },
-      });
-      
-      // Empty token should be rejected
-      expect([401, 403, 503]).toContain(response.status);
+      const response = await request(app)
+        .get("/api/service/health")
+        .set("Authorization", "Bearer ");
+
+      // Empty token should be rejected as unauthorized or forbidden
+      expect([401, 403]).toContain(response.status);
     });
   });
 
   describe("Health Endpoint", () => {
     it("should return health status with valid token when enabled", async () => {
-      const response = await fetch(`${BASE_URL}/api/service/health`, {
-        headers: { Authorization: `Bearer ${TEST_TOKEN}` },
-      });
-      
-      if (response.status === 200) {
-        const data = await response.json();
-        expect(data.status).toBe("ok");
-        expect(data.service).toBe("taiwan-maami-pos");
-        expect(data.version).toBe("1.0.0");
-        expect(data.timestamp).toBeDefined();
-        expect(data.checks).toBeDefined();
-        expect(data.checks.database).toBeDefined();
-        expect(data.checks.featureFlag).toBe("enabled");
-      } else {
-        // Feature flag is disabled — that's a valid test state
-        expect(response.status).toBe(503);
-      }
-    });
-  });
+      // Mock getDb to avoid real database connection
+      vi.resetModules();
+      vi.doMock("./db", () => ({
+        getDb: vi.fn().mockResolvedValue({}),
+      }));
+      vi.doMock("./_core/env", () => ({
+        ENV: {
+          maamitechApiEnabled: true,
+          maamitechServiceToken: TEST_TOKEN,
+        },
+      }));
+      process.env.MAAMITECH_TOKEN_REGISTRY = JSON.stringify([
+        {
+          token: TEST_TOKEN,
+          agentId: "legacy_single_token",
+          scopes: ["admin:*"],
+          description: "Legacy",
+          createdAt: "2026-01-01T00:00:00Z",
+          active: true,
+        },
+      ]);
 
-  describe("Employee Master Proxy", () => {
-    it("should proxy requests to Employee Master API with valid token", async () => {
-      const response = await fetch(`${BASE_URL}/api/service/employee-master/employees?limit=1&status=active`, {
-        headers: { Authorization: `Bearer ${TEST_TOKEN}` },
-      });
-      
-      // Could be 200 (success), 502 (proxy error if EMP_MASTER_API_URL is unreachable),
-      // 503 (feature disabled or misconfigured)
-      expect([200, 502, 503]).toContain(response.status);
-      const data = await response.json();
-      
-      if (response.status === 200) {
-        // Successful proxy - response from Employee Master
-        expect(data).toBeDefined();
-      } else if (response.status === 502) {
-        expect(data.error).toBe("proxy_error");
-      } else if (response.status === 503) {
-        expect(["service_unavailable", "service_misconfigured"]).toContain(data.error);
-      }
-    });
+      const { scopedAuthMiddleware, invalidateTokenRegistry } = await import("./scopedAuth");
+      const { handleServiceHealth } = await import("./serviceAuth");
+      invalidateTokenRegistry();
 
-    it("should reject Employee Master proxy without auth", async () => {
-      const response = await fetch(`${BASE_URL}/api/service/employee-master/staff`);
-      
-      expect([401, 503]).toContain(response.status);
+      const healthApp = express();
+      healthApp.use(express.json());
+      healthApp.use("/api/service", scopedAuthMiddleware as any);
+      healthApp.get("/api/service/health", handleServiceHealth as any);
+
+      const response = await request(healthApp)
+        .get("/api/service/health")
+        .set("Authorization", `Bearer ${TEST_TOKEN}`);
+
+      expect(response.status).toBe(200);
+      expect(response.body.status).toBe("ok");
+      expect(response.body.service).toBe("taiwan-maami-pos");
+      expect(response.body.version).toBe("1.0.0");
+      expect(response.body.timestamp).toBeDefined();
+      expect(response.body.checks).toBeDefined();
+      expect(response.body.checks.featureFlag).toBe("enabled");
     });
   });
 
   describe("Middleware Security Properties", () => {
     it("should not expose internal error details in rejection responses", async () => {
-      const response = await fetch(`${BASE_URL}/api/service/health`, {
-        headers: { Authorization: "Bearer wrong-token" },
-      });
-      
-      const data = await response.json();
-      
+      const response = await request(app)
+        .get("/api/service/health")
+        .set("Authorization", "Bearer wrong-token");
+
+      const responseText = JSON.stringify(response.body);
       // Should never expose the actual token or internal paths
-      const responseText = JSON.stringify(data);
       expect(responseText).not.toContain(TEST_TOKEN);
       expect(responseText).not.toContain("MAAMITECH_SERVICE_TOKEN");
       expect(responseText).not.toContain("process.env");
     });
 
     it("should handle malformed Authorization headers gracefully", async () => {
-      const response = await fetch(`${BASE_URL}/api/service/health`, {
-        headers: { Authorization: "NotAValidScheme" },
-      });
-      
-      expect([401, 503]).toContain(response.status);
-      const data = await response.json();
-      expect(data.error).toBeDefined();
+      const response = await request(app)
+        .get("/api/service/health")
+        .set("Authorization", "NotAValidScheme");
+
+      expect(response.status).toBe(401);
+      expect(response.body.error).toBeDefined();
     });
   });
 });

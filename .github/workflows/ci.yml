@@ -19,7 +19,7 @@ jobs:
       - name: Security audit
         run: pnpm audit --audit-level=high --ignore GHSA-2phv-j68v-wwqx
       - name: Run tests
-        run: pnpm vitest run
+        run: pnpm vitest run --config vitest.ci.config.ts
         env:
           MAAMITECH_SERVICE_TOKEN: test-token-for-ci
           VITE_KOT_PRINT_SECRET: test-kot-secret-for-ci
