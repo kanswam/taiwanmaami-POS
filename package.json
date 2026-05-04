@@ -141,7 +141,9 @@
       "sharp"
     ],
     "auditConfig": {
-      "ignoreCves": ["GHSA-2phv-j68v-wwqx"]
+      "ignoreCves": [
+        "GHSA-2phv-j68v-wwqx"
+      ]
     }
   }
 }
