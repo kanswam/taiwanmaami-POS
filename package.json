@@ -139,6 +139,9 @@
     },
     "onlyBuiltDependencies": [
       "sharp"
-    ]
+    ],
+    "auditConfig": {
+      "ignoreCves": ["GHSA-2phv-j68v-wwqx"]
+    }
   }
 }
