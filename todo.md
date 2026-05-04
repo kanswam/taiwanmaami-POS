@@ -3324,3 +3324,14 @@ Orders fixed:
 - [x] Added .npmrc with audit-level=high
 - [x] Added pnpm.auditConfig.ignoreCves for GHSA-2phv-j68v-wwqx (false positive — already on patched 10.27.0)
 - [x] Updated ci.yml audit step to use --ignore GHSA-2phv-j68v-wwqx flag (local only — needs manual push)
+
+## CI Test Fixes (May 4)
+
+- [x] Convert serviceAuth tests to supertest (no localhost:3000 needed)
+- [x] Convert serviceEndpoints tests to supertest with DB-skip guards
+- [x] Convert serviceOrders tests to supertest with DB-skip guards
+- [x] Convert etl tests to supertest with DB-skip guards
+- [x] Convert petpoojaWebhook tests to supertest with DB-skip guards
+- [x] Create vitest.ci.config.ts excluding 28 DB-dependent test files
+- [x] Pushed all test files + vitest.ci.config.ts to GitHub main
+- [ ] ci.yml needs --config vitest.ci.config.ts added (GitHub App lacks workflows permission — user must update manually)
