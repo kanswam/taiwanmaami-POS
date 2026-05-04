@@ -3302,7 +3302,8 @@ Orders fixed:
 - [x] Created .github/workflows/ci.yml (push to main + PR triggers)
 - [x] pnpm audit --audit-level=high step
 - [x] vitest run step with CI env vars for secrets
-- [ ] Verify GitHub Actions run passes (green)
+- [x] Fixed pnpm version mismatch: CI was using pnpm 8 but project uses pnpm 10.4.1 (lockfile v9.0). Updated to pnpm@10 + node 22
+- [ ] Verify GitHub Actions run passes (green) — requires manual push (GitHub App lacks workflows permission)
 
 ## BRIEF 2 — SQL Injection + Cleartext Transmission Fixes
 - [x] SQL Injection (CWE-89): Replaced raw string interpolation in cms-refunds.test.ts with Drizzle `sql` tagged template (parameterised queries)
