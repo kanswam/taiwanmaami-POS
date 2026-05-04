@@ -1,0 +1,32 @@
+name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v3
+        with:
+          version: 8
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Security audit
+        run: pnpm audit --audit-level=high
+      - name: Run tests
+        run: pnpm vitest run
+        env:
+          MAAMITECH_SERVICE_TOKEN: test-token-for-ci
+          VITE_KOT_PRINT_SECRET: test-kot-secret-for-ci
+          EMP_MASTER_API_KEY: test-emp-key-for-ci
+          EMP_MASTER_API_URL: https://employees.thamaraifoods.com
+          RAZORPAY_KEY_ID: test-razorpay-id-for-ci
+          RAZORPAY_KEY_SECRET: test-razorpay-secret-for-ci
+          PETPOOJA_UPLOAD_PIN: test-pin-for-ci
