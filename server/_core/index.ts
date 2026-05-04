@@ -20,6 +20,7 @@ import { validateOrdersQuery, validateEmployeesQuery, validateMenuProductsQuery,
 import { auditLogMiddleware } from "../auditLog";
 import { handleETL, handleETLStatus } from "../etl";
 import { createContext } from "./context";
+import { sdk } from "./sdk";
 import { serveStatic, setupVite } from "./vite";
 
 function isPortAvailable(port: number): Promise<boolean> {
@@ -574,7 +575,20 @@ async function startServer() {
 
   // ============ SCHEDULED TASK ENDPOINT ============
   // POST /api/scheduled/etl — triggered by Manus scheduled task (uses OAuth session cookie)
-  app.post('/api/scheduled/etl', handleETL as any);
+  // Platform auto-injects $SCHEDULED_TASK_COOKIE which resolves to a valid session
+  // Any authenticated user (customer/staff/admin) can trigger the ETL
+  app.post('/api/scheduled/etl', async (req: any, res: any, next: any) => {
+    try {
+      const user = await sdk.authenticateRequest(req);
+      if (!user) {
+        return res.status(401).json({ error: 'unauthorized', message: 'Valid session cookie required' });
+      }
+      // Any valid authenticated session can trigger ETL (scheduled task uses platform-assigned role)
+      next();
+    } catch (err: any) {
+      return res.status(403).json({ error: 'auth_failed', message: err.message || 'Authentication failed' });
+    }
+  }, handleETL as any);
 
   // ============ PAGEVIEW TRACKING ENDPOINT ============
   // Lightweight endpoint for client-side analytics tracking
