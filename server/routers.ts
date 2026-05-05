@@ -1092,6 +1092,7 @@ export const appRouter = router({
         orderType: z.enum(['all', 'instore', 'delivery', 'pickup']).optional(),
         status: z.enum(['all', 'pending', 'confirmed', 'preparing', 'ready', 'out_for_delivery', 'completed', 'cancelled']).optional(),
         dateFilter: z.enum(['today', 'yesterday', 'week', 'all']).default('today'),
+        localDate: z.string().optional(), // YYYY-MM-DD in client's local timezone (e.g. IST) — fixes timezone boundary bug
       }).optional())
       .query(async ({ input }) => {
         const dbInstance = await getDb();
@@ -1100,26 +1101,38 @@ export const appRouter = router({
         let conditions: any[] = [];
         
         // Date filter - default to today
+        // FIX: Use localDate string from client (YYYY-MM-DD in client's local timezone) for accurate
+        // day boundaries. The previous IST-computed UTC timestamp caused orders placed before midnight
+        // IST to be excluded when the server clock rolled past IST midnight.
         const dateFilter = input?.dateFilter || 'today';
         if (dateFilter !== 'all') {
-          const now = new Date();
-          // Use IST (UTC+5:30)
-          const istOffset = 5.5 * 60 * 60 * 1000;
-          const istNow = new Date(now.getTime() + istOffset);
-          let startDate: Date;
-          if (dateFilter === 'today') {
-            startDate = new Date(Date.UTC(istNow.getUTCFullYear(), istNow.getUTCMonth(), istNow.getUTCDate()) - istOffset);
-          } else if (dateFilter === 'yesterday') {
-            startDate = new Date(Date.UTC(istNow.getUTCFullYear(), istNow.getUTCMonth(), istNow.getUTCDate() - 1) - istOffset);
+          // Use client-provided local date string, or fall back to server-side IST computation
+          const localDate = input?.localDate;
+          let todayStr: string;
+          if (localDate) {
+            todayStr = localDate;
           } else {
-            // week
-            startDate = new Date(Date.UTC(istNow.getUTCFullYear(), istNow.getUTCMonth(), istNow.getUTCDate() - 7) - istOffset);
+            // Fallback: compute today's date in IST on the server
+            const istOffset = 5.5 * 60 * 60 * 1000;
+            const istNow = new Date(Date.now() + istOffset);
+            todayStr = `${istNow.getUTCFullYear()}-${String(istNow.getUTCMonth() + 1).padStart(2, '0')}-${String(istNow.getUTCDate()).padStart(2, '0')}`;
           }
-          conditions.push(gte(orders.createdAt, startDate));
-          // For yesterday, also add an upper bound
-          if (dateFilter === 'yesterday') {
-            const endDate = new Date(Date.UTC(istNow.getUTCFullYear(), istNow.getUTCMonth(), istNow.getUTCDate()) - istOffset);
-            conditions.push(sql`${orders.createdAt} < ${endDate}`);
+          const [todayYear, todayMonth, todayDay] = todayStr.split('-').map(Number);
+          if (dateFilter === 'today') {
+            conditions.push(sql`${orders.createdAt} >= ${todayStr}`);
+            const tomorrowDate = new Date(todayYear, todayMonth - 1, todayDay + 1);
+            const tomorrowStr = `${tomorrowDate.getFullYear()}-${String(tomorrowDate.getMonth() + 1).padStart(2, '0')}-${String(tomorrowDate.getDate()).padStart(2, '0')}`;
+            conditions.push(sql`${orders.createdAt} < ${tomorrowStr}`);
+          } else if (dateFilter === 'yesterday') {
+            const yesterdayDate = new Date(todayYear, todayMonth - 1, todayDay - 1);
+            const yesterdayStr = `${yesterdayDate.getFullYear()}-${String(yesterdayDate.getMonth() + 1).padStart(2, '0')}-${String(yesterdayDate.getDate()).padStart(2, '0')}`;
+            conditions.push(sql`${orders.createdAt} >= ${yesterdayStr}`);
+            conditions.push(sql`${orders.createdAt} < ${todayStr}`);
+          } else {
+            // week - last 7 days from start of today
+            const weekAgoDate = new Date(todayYear, todayMonth - 1, todayDay - 7);
+            const weekAgoStr = `${weekAgoDate.getFullYear()}-${String(weekAgoDate.getMonth() + 1).padStart(2, '0')}-${String(weekAgoDate.getDate()).padStart(2, '0')}`;
+            conditions.push(sql`${orders.createdAt} >= ${weekAgoStr}`);
           }
         }
         

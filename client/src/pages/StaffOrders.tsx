@@ -459,6 +459,17 @@ export default function StaffOrders() {
   
   const utils = trpc.useUtils();
   
+  // Compute localDate for the selected dateFilter in client's local timezone (fixes IST midnight bug)
+  const getLocalDateStr = (offsetDays = 0): string => {
+    const d = new Date();
+    d.setDate(d.getDate() + offsetDays);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  };
+  const localDate = dateFilter === 'today' ? getLocalDateStr(0)
+    : dateFilter === 'yesterday' ? getLocalDateStr(-1)
+    : dateFilter === 'week' ? getLocalDateStr(-7)
+    : undefined;
+
   // Fetch orders with filters and auto-refresh every 10 seconds
   const { data: ordersData, isLoading, refetch } = trpc.orders.getRecent.useQuery({
     limit: 100,
@@ -466,6 +477,7 @@ export default function StaffOrders() {
     orderType: orderTypeFilter as any,
     status: activeTab === 'active' ? undefined : undefined, // We filter client-side for tabs
     dateFilter: dateFilter as any,
+    localDate,
   }, {
     refetchInterval: 15000, // Auto-refresh every 15 seconds (reduced from 10s for better mobile performance)
     staleTime: 5000, // Consider data fresh for 5 seconds
