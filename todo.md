@@ -3341,3 +3341,5 @@ Orders fixed:
 - [x] Fix pullPetpoojaWebhookOrders to read from Supabase petpooja_orders/petpooja_order_items instead of empty MySQL table
 - [x] Amounts in Supabase are already in rupees (not paise) — no /100 conversion needed
 - [x] Verified: 50 sales rows for May 5 (palladium_instore: 17, palladium_delivery: 12, tnagar_delivery: 6, tnagar_instore: 15)
+- [x] Fix inventory stock/wastage API calls (POST→GET for tRPC query procedures)
+- [x] Ensure digest reports item_total (without GST) as revenue, not order_total
