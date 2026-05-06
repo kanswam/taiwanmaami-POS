@@ -3335,3 +3335,9 @@ Orders fixed:
 - [x] Create vitest.ci.config.ts excluding 28 DB-dependent test files
 - [x] Pushed all test files + vitest.ci.config.ts to GitHub main
 - [ ] ci.yml needs --config vitest.ci.config.ts added (GitHub App lacks workflows permission — user must update manually)
+
+## ETL Supabase Fix (May 6)
+
+- [x] Fix pullPetpoojaWebhookOrders to read from Supabase petpooja_orders/petpooja_order_items instead of empty MySQL table
+- [x] Amounts in Supabase are already in rupees (not paise) — no /100 conversion needed
+- [x] Verified: 50 sales rows for May 5 (palladium_instore: 17, palladium_delivery: 12, tnagar_delivery: 6, tnagar_instore: 15)
