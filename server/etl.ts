@@ -20,7 +20,7 @@
 import { Request, Response } from "express";
 import { ENV } from "./_core/env";
 import { eq, and, gte, lte, sql, desc } from "drizzle-orm";
-import { orders, orderItems, petpoojaWebhookOrders } from "../drizzle/schema";
+import { orders, orderItems } from "../drizzle/schema";
 import { getDb } from "./db";
 
 const MAAMITECH_SERVICE_TOKEN = ENV.maamitechServiceToken;
@@ -212,75 +212,134 @@ async function pullPetpoojaWebhookOrders(reportDate: string, batchId: string): P
   const rows: any[] = [];
 
   try {
-    const db = await getDb();
-    if (!db) { errors.push("Database not available"); return { rows, count: 0, errors }; }
+    if (!ENV.supabaseUrl || !ENV.supabaseServiceRoleKey) {
+      errors.push("Supabase not configured");
+      return { rows, count: 0, errors };
+    }
 
-    const startOfDay = new Date(`${reportDate}T00:00:00.000+05:30`);
-    const endOfDay = new Date(`${reportDate}T23:59:59.999+05:30`);
+    // Query Supabase petpooja_orders for this date (IST)
+    const startISO = `${reportDate}T00:00:00+05:30`;
+    const endISO = `${reportDate}T23:59:59+05:30`;
+    const ordersUrl = `${ENV.supabaseUrl}/rest/v1/petpooja_orders?select=*&petpooja_created_at=gte.${encodeURIComponent(startISO)}&petpooja_created_at=lte.${encodeURIComponent(endISO)}&status=eq.Success`;
+    const ordersRes = await fetch(ordersUrl, {
+      headers: {
+        apikey: ENV.supabaseServiceRoleKey,
+        Authorization: `Bearer ${ENV.supabaseServiceRoleKey}`,
+      },
+    });
+    if (!ordersRes.ok) {
+      const errText = await ordersRes.text();
+      errors.push(`Supabase petpooja_orders fetch failed: ${ordersRes.status}: ${errText}`);
+      return { rows, count: 0, errors };
+    }
+    const webhookOrders: any[] = await ordersRes.json();
+    console.log(`[ETL] Petpooja webhook: found ${webhookOrders.length} orders in Supabase for ${reportDate}`);
 
-    const webhookOrders = await db
-      .select()
-      .from(petpoojaWebhookOrders)
-      .where(
-        and(
-          gte(petpoojaWebhookOrders.receivedAt, startOfDay),
-          lte(petpoojaWebhookOrders.receivedAt, endOfDay)
-        )
-      );
+    // Fetch all items for these orders
+    const orderIds = webhookOrders.map(o => o.petpooja_order_id);
+    let allItems: any[] = [];
+    if (orderIds.length > 0) {
+      // Fetch items in batches of 50 order IDs
+      for (let i = 0; i < orderIds.length; i += 50) {
+        const batch = orderIds.slice(i, i + 50);
+        const itemFilter = batch.map(id => `petpooja_order_id.eq.${id}`).join(',');
+        const itemsUrl = `${ENV.supabaseUrl}/rest/v1/petpooja_order_items?select=*&or=(${itemFilter})`;
+        const itemsRes = await fetch(itemsUrl, {
+          headers: {
+            apikey: ENV.supabaseServiceRoleKey,
+            Authorization: `Bearer ${ENV.supabaseServiceRoleKey}`,
+          },
+        });
+        if (itemsRes.ok) {
+          const batchItems = await itemsRes.json();
+          allItems = allItems.concat(batchItems);
+        }
+      }
+    }
+
+    // Group items by petpooja_order_id
+    const itemsByOrderId: Record<number, any[]> = {};
+    for (const item of allItems) {
+      if (!itemsByOrderId[item.petpooja_order_id]) itemsByOrderId[item.petpooja_order_id] = [];
+      itemsByOrderId[item.petpooja_order_id].push(item);
+    }
 
     for (const order of webhookOrders) {
-      const items = order.items || [];
-      
-      // Determine outlet from outletName, outletId, or restId mapping
+      // outlet_id from Supabase already has the mapped value (e.g. "palladium_instore", "tnagar_delivery")
+      // Extract base outlet name: "palladium_instore" → "palladium", "tnagar_delivery" → "tnagar"
       let outlet = "unknown";
-      if (order.outletName) {
-        const name = order.outletName.toLowerCase();
-        if (name.includes("palladium") || name.includes("velachery")) outlet = "palladium";
-        else if (name.includes("tnagar") || name.includes("t.nagar") || name.includes("t nagar")) outlet = "tnagar";
-        else outlet = name;
-      } else if (order.outletId && POS_OUTLET_MAP[order.outletId]) {
-        outlet = POS_OUTLET_MAP[order.outletId];
-      } else if (order.restId && PETPOOJA_OUTLET_MAP[order.restId]) {
-        outlet = PETPOOJA_OUTLET_MAP[order.restId];
-      }
+      const outletId = order.outlet_id || "";
+      if (outletId.startsWith("palladium")) outlet = "palladium";
+      else if (outletId.startsWith("tnagar")) outlet = "tnagar";
+      else outlet = outletId;
 
-      // Determine order type: normalize Petpooja's orderType values
-      // "Dine In" → instore, "Delivery" → delivery, "Pick Up" → pickup
+      // Determine order type from Supabase order_type field
       let orderType = "delivery";
-      const rawOrderType = (order.orderType || "").toLowerCase();
+      const rawOrderType = (order.order_type || "").toLowerCase();
       if (rawOrderType.includes("dine")) orderType = "instore";
       else if (rawOrderType.includes("pick")) orderType = "pickup";
       else orderType = "delivery";
 
       // Determine aggregator (Zomato, Swiggy, or null for POS/dine-in)
-      const aggregator = order.orderFrom !== "POS" ? order.orderFrom : null;
+      const aggregator = order.order_from !== "POS" ? order.order_from : null;
 
-      for (const item of items) {
+      const items = itemsByOrderId[order.petpooja_order_id] || [];
+      
+      if (items.length === 0) {
+        // If no line items, still create a single row for the order total
         rows.push({
           source: "petpooja_webhook",
-          source_order_id: order.petpoojaOrderId || String(order.id),
+          source_order_id: String(order.petpooja_order_id),
           order_date: reportDate,
-          order_timestamp: order.receivedAt?.toISOString() || new Date().toISOString(),
+          order_timestamp: order.petpooja_created_at || order.ingested_at,
           outlet,
           order_type: orderType,
-          payment_method: order.paymentType || null,
-          payment_status: order.status === "Success" ? "completed" : "cancelled",
-          customer_name: order.customerName || null,
-          customer_phone: order.customerPhone || null,
-          item_name: item.name || "Unknown",
+          payment_method: order.payment_type || null,
+          payment_status: "completed",
+          customer_name: null,
+          customer_phone: null,
+          item_name: "Order Total (no line items)",
           item_category: null,
-          item_quantity: item.quantity || 1,
-          item_unit_price_rupees: ((item.price || 0) / 100).toFixed(2),
-          item_total_rupees: ((item.total || 0) / 100).toFixed(2),
-          order_subtotal_rupees: ((order.subtotal ?? 0) / 100).toFixed(2),
-          order_tax_rupees: ((order.tax ?? 0) / 100).toFixed(2),
-          order_discount_rupees: ((order.discount ?? 0) / 100).toFixed(2),
-          order_total_rupees: ((order.totalAmount ?? 0) / 100).toFixed(2),
+          item_quantity: 1,
+          item_unit_price_rupees: String(order.total || 0),
+          item_total_rupees: String(order.total || 0),
+          order_subtotal_rupees: String(order.core_total || 0),
+          order_tax_rupees: String(order.tax_total || 0),
+          order_discount_rupees: String(order.discount_total || 0),
+          order_total_rupees: String(order.total || 0),
           aggregator,
           channel: "petpooja",
-          raw_data: { webhookOrderId: order.id },
+          raw_data: { supabaseOrderId: order.id },
           etl_batch_id: batchId,
         });
+      } else {
+        for (const item of items) {
+          rows.push({
+            source: "petpooja_webhook",
+            source_order_id: String(order.petpooja_order_id),
+            order_date: reportDate,
+            order_timestamp: order.petpooja_created_at || order.ingested_at,
+            outlet,
+            order_type: orderType,
+            payment_method: order.payment_type || null,
+            payment_status: "completed",
+            customer_name: null,
+            customer_phone: null,
+            item_name: item.item_name || "Unknown",
+            item_category: item.category_name || null,
+            item_quantity: item.quantity || 1,
+            item_unit_price_rupees: String(item.price || 0),
+            item_total_rupees: String(item.total || 0),
+            order_subtotal_rupees: String(order.core_total || 0),
+            order_tax_rupees: String(order.tax_total || 0),
+            order_discount_rupees: String(order.discount_total || 0),
+            order_total_rupees: String(order.total || 0),
+            aggregator,
+            channel: "petpooja",
+            raw_data: { supabaseOrderId: order.id },
+            etl_batch_id: batchId,
+          });
+        }
       }
     }
 
