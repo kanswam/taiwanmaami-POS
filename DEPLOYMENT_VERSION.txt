@@ -6,3 +6,4 @@ Changes:
 - Added /api/kot/printed REST endpoint for marking KOTs as printed
 - Fixed KOT tRPC endpoint kotData JSON parsing
 - Removed POS button from header
+# ETL Fix deployed Wed May  6 02:18:40 EDT 2026
