@@ -358,13 +358,13 @@ async function pullInventoryStock(reportDate: string, batchId: string): Promise<
   const rows: any[] = [];
 
   try {
-    const res = await fetch(`${INVENTORY_BASE_URL}/api/trpc/stock.levels`, {
-      method: "POST",
+    // tRPC query procedures require GET with input as URL-encoded JSON
+    const input = encodeURIComponent(JSON.stringify({ json: { date: reportDate } }));
+    const res = await fetch(`${INVENTORY_BASE_URL}/api/trpc/stock.levels?input=${input}`, {
+      method: "GET",
       headers: {
-        "Content-Type": "application/json",
         Authorization: `Bearer ${MAAMITECH_SERVICE_TOKEN}`,
       },
-      body: JSON.stringify({ json: { date: reportDate } }),
     });
 
     if (!res.ok) {
@@ -378,16 +378,19 @@ async function pullInventoryStock(reportDate: string, batchId: string): Promise<
 
     if (Array.isArray(stockItems)) {
       for (const item of stockItems) {
+        // Map locationName to outlet slug
+        const locName = (item.locationName || "").toLowerCase();
+        const outlet = locName.includes("palladium") ? "palladium" : locName.includes("nagar") ? "tnagar" : "all";
         rows.push({
           snapshot_date: reportDate,
-          item_name: item.name || item.itemName || "Unknown",
-          item_sku: item.sku || item.code || null,
+          item_name: item.itemName || item.name || "Unknown",
+          item_sku: item.itemCode || item.sku || null,
           category: item.category || null,
-          current_quantity: item.currentQuantity ?? item.quantity ?? 0,
-          unit: item.unit || null,
-          min_stock_level: item.minStockLevel ?? item.reorderLevel ?? null,
-          is_low_stock: item.isLowStock ?? (item.currentQuantity < (item.minStockLevel || 0)),
-          outlet: item.outlet || "all",
+          current_quantity: item.totalIssueUnits ?? item.currentQuantity ?? 0,
+          unit: item.uomIssue || item.unit || null,
+          min_stock_level: parseFloat(item.lowStockThreshold) || null,
+          is_low_stock: item.isLowStock ?? false,
+          outlet,
           raw_data: item,
           etl_batch_id: batchId,
         });
@@ -409,18 +412,23 @@ async function pullInventoryWastage(reportDate: string, batchId: string): Promis
   const rows: any[] = [];
 
   try {
-    const res = await fetch(`${INVENTORY_BASE_URL}/api/trpc/wastage.logs`, {
-      method: "POST",
+    // tRPC query procedures require GET with input as URL-encoded JSON
+    const input = encodeURIComponent(JSON.stringify({ json: { date: reportDate } }));
+    const res = await fetch(`${INVENTORY_BASE_URL}/api/trpc/wastage.logs?input=${input}`, {
+      method: "GET",
       headers: {
-        "Content-Type": "application/json",
         Authorization: `Bearer ${MAAMITECH_SERVICE_TOKEN}`,
       },
-      body: JSON.stringify({ json: { date: reportDate } }),
     });
 
     if (!res.ok) {
       const errText = await res.text();
-      errors.push(`Inventory wastage API returned ${res.status}: ${errText.substring(0, 200)}`);
+      // wastage.logs may require user-level auth — log but don't fail the whole ETL
+      if (res.status === 401) {
+        errors.push(`Inventory wastage API requires user auth (401) — skipping`);
+      } else {
+        errors.push(`Inventory wastage API returned ${res.status}: ${errText.substring(0, 200)}`);
+      }
       return { rows, count: 0, errors };
     }
 
@@ -429,15 +437,17 @@ async function pullInventoryWastage(reportDate: string, batchId: string): Promis
 
     if (Array.isArray(wastageItems)) {
       for (const item of wastageItems) {
+        const locName = (item.locationName || "").toLowerCase();
+        const outlet = locName.includes("palladium") ? "palladium" : locName.includes("nagar") ? "tnagar" : "all";
         rows.push({
           wastage_date: reportDate,
-          item_name: item.name || item.itemName || "Unknown",
-          item_sku: item.sku || item.code || null,
+          item_name: item.itemName || item.name || "Unknown",
+          item_sku: item.itemCode || item.sku || null,
           quantity: item.quantity ?? 0,
-          unit: item.unit || null,
+          unit: item.uomIssue || item.unit || null,
           reason: item.reason || null,
           reported_by: item.reportedBy || item.createdBy || null,
-          outlet: item.outlet || "all",
+          outlet,
           cost_rupees: item.cost ?? item.costRupees ?? null,
           raw_data: item,
           etl_batch_id: batchId,
