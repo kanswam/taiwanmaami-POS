@@ -13,7 +13,7 @@ jobs:
         run: |
           response=$(curl -s -o /dev/null -w "%{http_code}" \
             -X POST https://www.taiwanmaami.com/api/service/etl/run \
-            -H "X-Service-Token: ${{ secrets.MAAMITECH_SERVICE_TOKEN }}" \
+            -H "Authorization: Bearer ${{ secrets.MAAMITECH_SERVICE_TOKEN }}" \
             -H "Content-Type: application/json")
           echo "ETL response code: $response"
           if [ "$response" != "200" ]; then
