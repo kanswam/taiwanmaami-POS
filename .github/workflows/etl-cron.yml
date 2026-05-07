@@ -16,7 +16,7 @@ jobs:
             -H "Authorization: Bearer ${{ secrets.MAAMITECH_SERVICE_TOKEN }}" \
             -H "Content-Type: application/json")
           echo "ETL response code: $response"
-          if [ "$response" != "200" ]; then
+          if [ "$response" != "200" ] && [ "$response" != "207" ]; then
             echo "ETL failed with status $response"
             exit 1
           fi
