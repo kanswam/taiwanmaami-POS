@@ -3351,3 +3351,7 @@ Orders fixed:
 - [ ] T.Nagar POS orders missing from Petpooja webhook data (no T.Nagar in-store restID mapped)
 
 - [ ] Set up reliable daily scheduled task for ETL + digest notification
+
+- [ ] Move ETL trigger from Manus scheduled task to GitHub Actions (service token auth)
+- [ ] Add MAAMITECH_SERVICE_TOKEN secret to GitHub repo
+- [ ] Test workflow via manual dispatch
