@@ -3343,3 +3343,11 @@ Orders fixed:
 - [x] Verified: 50 sales rows for May 5 (palladium_instore: 17, palladium_delivery: 12, tnagar_delivery: 6, tnagar_instore: 15)
 - [x] Fix inventory stock/wastage API calls (POST→GET for tRPC query procedures)
 - [x] Ensure digest reports item_total (without GST) as revenue, not order_total
+
+- [ ] INCIDENT: Daily digest returned zero values for May 6 — ETL scheduled task didn't fire
+- [ ] Manually trigger ETL for May 6 and confirm sales_facts populated
+- [ ] Run digest and send via WhatsApp for May 6
+- [ ] Investigate why scheduled task didn't fire for May 6
+- [ ] T.Nagar POS orders missing from Petpooja webhook data (no T.Nagar in-store restID mapped)
+
+- [ ] Set up reliable daily scheduled task for ETL + digest notification

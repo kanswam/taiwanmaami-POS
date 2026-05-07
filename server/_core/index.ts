@@ -590,6 +590,26 @@ async function startServer() {
     }
   }, handleETL as any);
 
+  // POST /api/scheduled/digest — triggered by Manus scheduled task to send daily digest notification
+  app.post('/api/scheduled/digest', async (req: any, res: any) => {
+    try {
+      const user = await sdk.authenticateRequest(req);
+      if (!user) {
+        return res.status(401).json({ error: 'unauthorized', message: 'Valid session cookie required' });
+      }
+      const { title, content } = req.body;
+      if (!title || !content) {
+        return res.status(400).json({ error: 'bad_request', message: 'title and content are required' });
+      }
+      const { notifyOwner } = await import('./notification');
+      const delivered = await notifyOwner({ title, content });
+      return res.json({ success: delivered });
+    } catch (err: any) {
+      console.error('[Scheduled Digest] Error:', err.message);
+      return res.status(500).json({ error: 'internal', message: err.message || 'Failed to send digest' });
+    }
+  });
+
   // ============ PAGEVIEW TRACKING ENDPOINT ============
   // Lightweight endpoint for client-side analytics tracking
   app.post('/api/track', async (req, res) => {
