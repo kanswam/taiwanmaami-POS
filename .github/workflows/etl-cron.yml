@@ -24,12 +24,14 @@ jobs:
 
       - name: Send digest notification
         run: |
+          sleep 5
           response=$(curl -s -o /dev/null -w "%{http_code}" \
-            -X POST https://www.taiwanmaami.com/api/scheduled/digest \
+            -X POST https://www.taiwanmaami.com/api/service/digest \
             -H "Authorization: Bearer ${{ secrets.MAAMITECH_SERVICE_TOKEN }}" \
-            -H "Content-Type: application/json")
+            -H "Content-Type: application/json" \
+            -d '{}')
           echo "Digest response code: $response"
-          if [ "$response" != "200" ] && [ "$response" != "207" ]; then
+          if [ "$response" != "200" ]; then
             echo "Digest notification failed with status $response"
             exit 1
           fi

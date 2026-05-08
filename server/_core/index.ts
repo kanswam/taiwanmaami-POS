@@ -590,22 +590,76 @@ async function startServer() {
     }
   }, handleETL as any);
 
-  // POST /api/scheduled/digest — triggered by Manus scheduled task to send daily digest notification
-  app.post('/api/scheduled/digest', async (req: any, res: any) => {
+  // POST /api/service/digest — triggered by GitHub Actions to send daily digest notification
+  // Uses scopedAuthMiddleware (Bearer token) since it's under /api/service/*
+  // If title/content provided in body, sends that directly.
+  // If no body, auto-composes digest from yesterday's Supabase sales_facts.
+  app.post('/api/service/digest', async (req: any, res: any) => {
     try {
-      const user = await sdk.authenticateRequest(req);
-      if (!user) {
-        return res.status(401).json({ error: 'unauthorized', message: 'Valid session cookie required' });
-      }
-      const { title, content } = req.body;
+      let { title, content } = req.body || {};
+
+      // Auto-compose from Supabase if no content provided
       if (!title || !content) {
-        return res.status(400).json({ error: 'bad_request', message: 'title and content are required' });
+        const { createClient } = await import('@supabase/supabase-js');
+        const supabaseUrl = process.env.SUPABASE_URL;
+        const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+        if (!supabaseUrl || !supabaseKey) {
+          return res.status(500).json({ error: 'config_error', message: 'Supabase credentials not configured' });
+        }
+        const supabase = createClient(supabaseUrl, supabaseKey);
+
+        // Get yesterday's date in IST (UTC+5:30)
+        const now = new Date();
+        const istOffset = 5.5 * 60 * 60 * 1000;
+        const istNow = new Date(now.getTime() + istOffset);
+        const yesterday = new Date(istNow);
+        yesterday.setDate(yesterday.getDate() - 1);
+        const dateStr = yesterday.toISOString().split('T')[0];
+
+        // Query sales_facts for that date
+        const { data: salesData, error: sfError } = await supabase
+          .from('sales_facts')
+          .select('outlet, item_total_rupees, order_total_rupees, source, channel')
+          .eq('order_date', dateStr);
+
+        if (sfError) {
+          return res.status(500).json({ error: 'query_error', message: sfError.message });
+        }
+
+        // Aggregate by outlet
+        const byOutlet: Record<string, { revenue: number; items: number; orders: Set<string> }> = {};
+        for (const row of (salesData || [])) {
+          const key = row.outlet || 'unknown';
+          if (!byOutlet[key]) byOutlet[key] = { revenue: 0, items: 0, orders: new Set() };
+          byOutlet[key].revenue += (row.item_total_rupees || 0);
+          byOutlet[key].items += 1;
+          if (row.order_total_rupees) byOutlet[key].orders.add(row.order_total_rupees.toString() + '_' + Math.random());
+        }
+
+        const totalRevenue = Object.values(byOutlet).reduce((s, v) => s + v.revenue, 0);
+        const totalItems = Object.values(byOutlet).reduce((s, v) => s + v.items, 0);
+
+        // Format the digest
+        title = `Taiwan Maami Daily Digest — ${dateStr}`;
+        let lines = [`📊 Sales Summary for ${dateStr}\n`];
+        for (const [outlet, data] of Object.entries(byOutlet).sort()) {
+          const outletName = outlet === 'tnagar' ? 'T.Nagar' : outlet === 'palladium' ? 'Palladium' : outlet;
+          lines.push(`${outletName}: ₹${data.revenue.toLocaleString('en-IN')} (${data.items} items)`);
+        }
+        lines.push(`\nTotal: ₹${totalRevenue.toLocaleString('en-IN')} (${totalItems} items)`);
+
+        if (totalItems === 0) {
+          lines = [`⚠️ No sales data found for ${dateStr}. ETL may not have run or no orders were placed.`];
+        }
+
+        content = lines.join('\n');
       }
+
       const { notifyOwner } = await import('./notification');
       const delivered = await notifyOwner({ title, content });
-      return res.json({ success: delivered });
+      return res.json({ success: delivered, title, content });
     } catch (err: any) {
-      console.error('[Scheduled Digest] Error:', err.message);
+      console.error('[Service Digest] Error:', err.message);
       return res.status(500).json({ error: 'internal', message: err.message || 'Failed to send digest' });
     }
   });
