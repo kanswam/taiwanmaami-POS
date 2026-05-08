@@ -3355,3 +3355,14 @@ Orders fixed:
 - [ ] Move ETL trigger from Manus scheduled task to GitHub Actions (service token auth)
 - [ ] Add MAAMITECH_SERVICE_TOKEN secret to GitHub repo
 - [ ] Test workflow via manual dispatch
+
+## WhatsApp Daily Digest (May 8)
+
+- [x] Add Twilio WhatsApp integration for daily digest delivery
+- [x] Wire WhatsApp send into /api/service/digest endpoint
+- [x] Fix digest revenue calculation: use order_total_rupees per unique order (not item_total sum)
+- [x] Fix channel grouping: pickup orders count as instore
+- [x] Delete cancelled test order 312 from sales_facts and petpooja_orders
+- [x] Add full digest format: revenue by channel, gross margin, top 3 items, stock alerts, wastage
+- [x] Validate Twilio credentials (vitest passing)
+- [ ] Add proper order cancellation mechanism (filter cancelled orders from ETL)

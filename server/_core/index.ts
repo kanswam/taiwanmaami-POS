@@ -593,7 +593,7 @@ async function startServer() {
   // POST /api/service/digest — triggered by GitHub Actions to send daily digest notification
   // Uses scopedAuthMiddleware (Bearer token) since it's under /api/service/*
   // If title/content provided in body, sends that directly.
-  // If no body, auto-composes digest from yesterday's Supabase sales_facts.
+  // If no body, auto-composes full digest from yesterday's Supabase data.
   app.post('/api/service/digest', async (req: any, res: any) => {
     try {
       let { title, content } = req.body || {};
@@ -616,48 +616,198 @@ async function startServer() {
         yesterday.setDate(yesterday.getDate() - 1);
         const dateStr = yesterday.toISOString().split('T')[0];
 
-        // Query sales_facts for that date
+        // Query sales_facts for that date (include item_name, order_type for breakdown)
         const { data: salesData, error: sfError } = await supabase
           .from('sales_facts')
-          .select('outlet, item_total_rupees, order_total_rupees, source, channel')
+          .select('outlet, item_name, item_total_rupees, order_total_rupees, order_subtotal_rupees, order_tax_rupees, source, channel, order_type, source_order_id')
           .eq('order_date', dateStr);
 
         if (sfError) {
           return res.status(500).json({ error: 'query_error', message: sfError.message });
         }
 
-        // Aggregate by outlet
-        const byOutlet: Record<string, { revenue: number; items: number; orders: Set<string> }> = {};
+        // Query stock_snapshots for low stock alerts
+        const { data: stockData } = await supabase
+          .from('stock_snapshots')
+          .select('item_name, current_quantity, unit, outlet, is_low_stock')
+          .eq('snapshot_date', dateStr)
+          .eq('is_low_stock', true);
+
+        // Query wastage_facts
+        const { data: wastageData } = await supabase
+          .from('wastage_facts')
+          .select('item_name, quantity, unit, outlet, cost_rupees')
+          .eq('wastage_date', dateStr);
+
+        // Query margin_facts (if available)
+        const { data: marginData } = await supabase
+          .from('margin_facts')
+          .select('outlet, gross_margin_rupees, gross_margin_pct')
+          .eq('report_date', dateStr);
+
+        // ═══ REVENUE BREAKDOWN ═══
+        // Use order_subtotal_rupees (pre-GST) and order_tax_rupees per UNIQUE order
+        type ChannelData = { subtotal: number; tax: number; total: number; orders: Set<string> };
+        const byChannel: Record<string, ChannelData> = {};
+        const itemCounts: Record<string, number> = {};
+        let totalSubtotal = 0;
+        let totalTax = 0;
+        let totalRevenue = 0;
+        const allOrders = new Set<string>();
+        // Track unique orders to avoid double-counting
+        const seenOrders: Record<string, { key: string }> = {};
+
         for (const row of (salesData || [])) {
-          const key = row.outlet || 'unknown';
-          if (!byOutlet[key]) byOutlet[key] = { revenue: 0, items: 0, orders: new Set() };
-          byOutlet[key].revenue += (row.item_total_rupees || 0);
-          byOutlet[key].items += 1;
-          if (row.order_total_rupees) byOutlet[key].orders.add(row.order_total_rupees.toString() + '_' + Math.random());
+          const outlet = row.outlet || 'unknown';
+          // Determine channel: delivery vs instore (pickup = instore)
+          let channelLabel: string;
+          if (row.order_type === 'delivery') {
+            channelLabel = 'delivery';
+          } else {
+            // instore, pickup, dine_in all count as instore
+            channelLabel = 'instore';
+          }
+
+          const key = `${outlet}_${channelLabel}`;
+          if (!byChannel[key]) byChannel[key] = { subtotal: 0, tax: 0, total: 0, orders: new Set() };
+
+          // Track unique orders — only count totals once per order
+          const orderId = `${row.source}_${row.source_order_id}`;
+          if (!seenOrders[orderId]) {
+            const orderSubtotal = parseFloat(row.order_subtotal_rupees) || 0;
+            const orderTax = parseFloat(row.order_tax_rupees) || 0;
+            const orderTotal = parseFloat(row.order_total_rupees) || 0;
+            seenOrders[orderId] = { key };
+            byChannel[key].subtotal += orderSubtotal;
+            byChannel[key].tax += orderTax;
+            byChannel[key].total += orderTotal;
+            totalSubtotal += orderSubtotal;
+            totalTax += orderTax;
+            totalRevenue += orderTotal;
+          }
+          byChannel[key].orders.add(orderId);
+          allOrders.add(orderId);
+
+          // Track item popularity (count each line item row)
+          const itemName = row.item_name || 'Unknown';
+          if (itemName !== 'Order Total (no line items)') {
+            itemCounts[itemName] = (itemCounts[itemName] || 0) + 1;
+          }
         }
 
-        const totalRevenue = Object.values(byOutlet).reduce((s, v) => s + v.revenue, 0);
-        const totalItems = Object.values(byOutlet).reduce((s, v) => s + v.items, 0);
-
-        // Format the digest
+        // ═══ FORMAT DIGEST ═══
         title = `Taiwan Maami Daily Digest — ${dateStr}`;
-        let lines = [`📊 Sales Summary for ${dateStr}\n`];
-        for (const [outlet, data] of Object.entries(byOutlet).sort()) {
-          const outletName = outlet === 'tnagar' ? 'T.Nagar' : outlet === 'palladium' ? 'Palladium' : outlet;
-          lines.push(`${outletName}: ₹${data.revenue.toLocaleString('en-IN')} (${data.items} items)`);
-        }
-        lines.push(`\nTotal: ₹${totalRevenue.toLocaleString('en-IN')} (${totalItems} items)`);
+        const lines: string[] = [];
 
-        if (totalItems === 0) {
-          lines = [`⚠️ No sales data found for ${dateStr}. ETL may not have run or no orders were placed.`];
+        if (totalRevenue === 0 && (salesData || []).length === 0) {
+          lines.push(`⚠️ No sales data found for ${dateStr}. ETL may not have run or no orders were placed.`);
+        } else {
+          // 💰 REVENUE section
+          lines.push(`🏪 *Taiwan Maami Daily Digest* _${dateStr}_`);
+          lines.push('');
+          lines.push(`💰 *REVENUE*`);
+
+          const channelOrder = ['palladium_instore', 'palladium_delivery', 'tnagar_instore', 'tnagar_delivery'];
+          const channelLabels: Record<string, string> = {
+            'palladium_instore': 'Palladium In-store',
+            'palladium_delivery': 'Palladium Delivery',
+            'tnagar_instore': 'T.Nagar In-store',
+            'tnagar_delivery': 'T.Nagar Delivery',
+          };
+
+          for (const key of channelOrder) {
+            const data = byChannel[key];
+            if (data) {
+              lines.push(`${channelLabels[key]}: ₹${Math.round(data.subtotal).toLocaleString('en-IN')} (${data.orders.size} orders)`);
+            } else {
+              lines.push(`${channelLabels[key]}: ₹0 (0 orders)`);
+            }
+          }
+
+          lines.push(`Net Sales: ₹${Math.round(totalSubtotal).toLocaleString('en-IN')}`);
+          lines.push(`GST Collected: ₹${Math.round(totalTax).toLocaleString('en-IN')}`);
+          lines.push(`*Gross Revenue: ₹${Math.round(totalRevenue).toLocaleString('en-IN')} | Orders: ${allOrders.size}*`);
+
+          // 📊 GROSS MARGIN section
+          lines.push('');
+          lines.push(`📊 *GROSS MARGIN*`);
+          if (marginData && marginData.length > 0) {
+            for (const m of marginData) {
+              const outletName = m.outlet === 'tnagar' ? 'T.Nagar' : m.outlet === 'palladium' ? 'Palladium' : m.outlet;
+              lines.push(`${outletName}: ₹${Math.round(m.gross_margin_rupees).toLocaleString('en-IN')} (${m.gross_margin_pct}%)`);
+            }
+            const totalMargin = marginData.reduce((s: number, m: any) => s + (m.gross_margin_rupees || 0), 0);
+            const avgPct = marginData.reduce((s: number, m: any) => s + (m.gross_margin_pct || 0), 0) / marginData.length;
+            lines.push(`*Combined: ₹${Math.round(totalMargin).toLocaleString('en-IN')} (${avgPct.toFixed(0)}%)*`);
+          } else {
+            lines.push(`_(populates once recipe costing is complete)_`);
+          }
+
+          // 🏆 TOP 3 ITEMS section
+          lines.push('');
+          lines.push(`🏆 *TOP 3 ITEMS TODAY*`);
+          const sortedItems = Object.entries(itemCounts).sort((a, b) => b[1] - a[1]).slice(0, 3);
+          if (sortedItems.length > 0) {
+            for (const [name, count] of sortedItems) {
+              lines.push(`• ${name}: ${count} orders`);
+            }
+          } else {
+            lines.push(`_(no item-level data available)_`);
+          }
+
+          // 📦 STOCK ALERTS section
+          lines.push('');
+          lines.push(`📦 *STOCK ALERTS*`);
+          if (stockData && stockData.length > 0) {
+            // Show top 5 most critical
+            const alerts = stockData.slice(0, 5);
+            for (const item of alerts) {
+              const outletName = item.outlet === 'tnagar' ? 'T.Nagar' : item.outlet === 'palladium' ? 'Palladium' : item.outlet;
+              lines.push(`• ${item.item_name} low at ${outletName}: ${item.current_quantity} ${item.unit || 'units'}`);
+            }
+            if (stockData.length > 5) {
+              lines.push(`_(+${stockData.length - 5} more alerts)_`);
+            }
+          } else {
+            lines.push(`No alerts today ✅`);
+          }
+
+          // 🗑️ WASTAGE section
+          lines.push('');
+          lines.push(`🗑️ *WASTAGE*`);
+          if (wastageData && wastageData.length > 0) {
+            let totalWastageCost = 0;
+            for (const item of wastageData.slice(0, 3)) {
+              const outletName = item.outlet === 'tnagar' ? 'T.Nagar' : item.outlet === 'palladium' ? 'Palladium' : item.outlet;
+              lines.push(`• ${item.item_name}: ${item.quantity} ${item.unit || 'units'} (${outletName})`);
+              totalWastageCost += (item.cost_rupees || 0);
+            }
+            if (totalWastageCost > 0) {
+              lines.push(`Total wastage cost: ₹${Math.round(totalWastageCost).toLocaleString('en-IN')}`);
+            }
+          } else {
+            lines.push(`_(populates after stock take sync)_`);
+          }
         }
 
         content = lines.join('\n');
       }
 
       const { notifyOwner } = await import('./notification');
-      const delivered = await notifyOwner({ title, content });
-      return res.json({ success: delivered, title, content });
+      const { sendWhatsApp } = await import('../whatsapp');
+
+      // Send via both channels
+      const [delivered, whatsappResult] = await Promise.all([
+        notifyOwner({ title, content }),
+        sendWhatsApp({ body: content }),
+      ]);
+
+      return res.json({
+        success: delivered || whatsappResult.success,
+        title,
+        content,
+        whatsapp: whatsappResult.success ? 'sent' : whatsappResult.error,
+      });
     } catch (err: any) {
       console.error('[Service Digest] Error:', err.message);
       return res.status(500).json({ error: 'internal', message: err.message || 'Failed to send digest' });
