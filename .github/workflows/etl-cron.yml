@@ -25,7 +25,7 @@ jobs:
       - name: Send digest notification
         run: |
           response=$(curl -s -o /dev/null -w "%{http_code}" \
-            -X POST https://www.taiwanmaami.com/api/scheduled/digest \
+            -X POST https://www.taiwanmaami.com/api/service/digest \
             -H "Authorization: Bearer ${{ secrets.MAAMITECH_SERVICE_TOKEN }}" \
             -H "Content-Type: application/json")
           echo "Digest response code: $response"
