@@ -2,8 +2,8 @@ name: Daily ETL Digest
 
 on:
   schedule:
-    - cron: '30 19 * * *'  # 1am IST = 19:30 UTC daily
-  workflow_dispatch:  # allows manual trigger from GitHub Actions tab
+    - cron: '30 19 * * *'
+  workflow_dispatch:
 
 jobs:
   run-etl:
@@ -21,3 +21,16 @@ jobs:
             exit 1
           fi
           echo "ETL completed successfully"
+
+      - name: Send digest notification
+        run: |
+          response=$(curl -s -o /dev/null -w "%{http_code}" \
+            -X POST https://www.taiwanmaami.com/api/scheduled/digest \
+            -H "Authorization: Bearer ${{ secrets.MAAMITECH_SERVICE_TOKEN }}" \
+            -H "Content-Type: application/json")
+          echo "Digest response code: $response"
+          if [ "$response" != "200" ] && [ "$response" != "207" ]; then
+            echo "Digest notification failed with status $response"
+            exit 1
+          fi
+          echo "Digest sent successfully"
