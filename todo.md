@@ -3366,3 +3366,18 @@ Orders fixed:
 - [x] Add full digest format: revenue by channel, gross margin, top 3 items, stock alerts, wastage
 - [x] Validate Twilio credentials (vitest passing)
 - [ ] Add proper order cancellation mechanism (filter cancelled orders from ETL)
+
+## WhatsApp Digest & Margin Integration (May 8)
+
+- [x] Add Twilio WhatsApp integration for daily digest delivery
+- [x] Fix revenue calculation to use order_total_rupees per unique order (not item_total sum)
+- [x] Group pickup orders with instore in digest
+- [x] Show pre-GST net sales per channel with GST + Gross Revenue summary
+- [x] Update boba portion weights: Regular 40g, Large 60g (confirmed by Theresa)
+- [x] Create WITHOUT boba recipe variants for all 16 drinks
+- [x] Add delivery packaging costs (cup holder ₹8.50, take-away bag ₹6.22, paper bag ₹6.50)
+- [x] Create order_packaging table with delivery packaging logic
+- [x] Wire margin calculation into digest - queries sales_facts for ingredient_cost_inr/gross_margin_inr
+- [x] Gross margin section shows per-outlet figures with coverage % that auto-updates
+- [ ] Load recipes for remaining items: Taro Lattes, Matcha Lattes, Food, Mochi, Slush, Coffee
+- [ ] Add order cancellation filtering to ETL (prevent test/cancelled orders entering sales_facts)

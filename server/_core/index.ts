@@ -639,11 +639,18 @@ async function startServer() {
           .select('item_name, quantity, unit, outlet, cost_rupees')
           .eq('wastage_date', dateStr);
 
-        // Query margin_facts (if available)
-        const { data: marginData } = await supabase
-          .from('margin_facts')
-          .select('outlet, gross_margin_rupees, gross_margin_pct')
-          .eq('report_date', dateStr);
+        // Query margin data from sales_facts directly (items that have ingredient_cost_inr populated)
+        const { data: marginRawData } = await supabase
+          .from('sales_facts')
+          .select('outlet, item_quantity, item_unit_price_rupees, ingredient_cost_inr, gross_margin_inr')
+          .eq('order_date', dateStr)
+          .not('ingredient_cost_inr', 'is', null);
+
+        // Also get total line count for coverage %
+        const { count: totalLineCount } = await supabase
+          .from('sales_facts')
+          .select('*', { count: 'exact', head: true })
+          .eq('order_date', dateStr);
 
         // ═══ REVENUE BREAKDOWN ═══
         // Use order_subtotal_rupees (pre-GST) and order_tax_rupees per UNIQUE order
@@ -730,16 +737,36 @@ async function startServer() {
 
           // 📊 GROSS MARGIN section
           lines.push('');
-          lines.push(`📊 *GROSS MARGIN*`);
-          if (marginData && marginData.length > 0) {
-            for (const m of marginData) {
-              const outletName = m.outlet === 'tnagar' ? 'T.Nagar' : m.outlet === 'palladium' ? 'Palladium' : m.outlet;
-              lines.push(`${outletName}: ₹${Math.round(m.gross_margin_rupees).toLocaleString('en-IN')} (${m.gross_margin_pct}%)`);
+          if (marginRawData && marginRawData.length > 0) {
+            // Aggregate margin by outlet
+            const marginByOutlet: Record<string, { revenue: number; margin: number }> = {};
+            for (const row of marginRawData) {
+              const outlet = row.outlet || 'unknown';
+              if (!marginByOutlet[outlet]) marginByOutlet[outlet] = { revenue: 0, margin: 0 };
+              const qty = parseInt(row.item_quantity) || 1;
+              marginByOutlet[outlet].revenue += (parseFloat(row.item_unit_price_rupees) || 0) * qty;
+              marginByOutlet[outlet].margin += parseFloat(row.gross_margin_inr) || 0;
             }
-            const totalMargin = marginData.reduce((s: number, m: any) => s + (m.gross_margin_rupees || 0), 0);
-            const avgPct = marginData.reduce((s: number, m: any) => s + (m.gross_margin_pct || 0), 0) / marginData.length;
-            lines.push(`*Combined: ₹${Math.round(totalMargin).toLocaleString('en-IN')} (${avgPct.toFixed(0)}%)*`);
+            const costedCount = marginRawData.length;
+            const coveragePct = totalLineCount ? Math.round((costedCount / totalLineCount) * 100) : 0;
+            lines.push(`📊 *GROSS MARGIN* _(${coveragePct}% of items costed)_`);
+            const outletOrder = ['palladium', 'tnagar'];
+            let combinedMargin = 0;
+            let combinedRevenue = 0;
+            for (const outlet of outletOrder) {
+              const data = marginByOutlet[outlet];
+              if (data) {
+                const pct = data.revenue > 0 ? (data.margin / data.revenue * 100) : 0;
+                const outletName = outlet === 'tnagar' ? 'T.Nagar' : 'Palladium';
+                lines.push(`${outletName}: ₹${Math.round(data.margin).toLocaleString('en-IN')} (${pct.toFixed(1)}%)`);
+                combinedMargin += data.margin;
+                combinedRevenue += data.revenue;
+              }
+            }
+            const combinedPct = combinedRevenue > 0 ? (combinedMargin / combinedRevenue * 100) : 0;
+            lines.push(`*Combined: ₹${Math.round(combinedMargin).toLocaleString('en-IN')} (${combinedPct.toFixed(1)}%)*`);
           } else {
+            lines.push(`📊 *GROSS MARGIN*`);
             lines.push(`_(populates once recipe costing is complete)_`);
           }
 
