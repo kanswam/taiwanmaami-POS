@@ -654,6 +654,7 @@ async function startServer() {
 
         // ═══ REVENUE BREAKDOWN ═══
         // Use order_subtotal_rupees (pre-GST) and order_tax_rupees per UNIQUE order
+        // Exclude voided orders (order_total_rupees = 0)
         type ChannelData = { subtotal: number; tax: number; total: number; orders: Set<string> };
         const byChannel: Record<string, ChannelData> = {};
         const itemCounts: Record<string, number> = {};
@@ -663,8 +664,23 @@ async function startServer() {
         const allOrders = new Set<string>();
         // Track unique orders to avoid double-counting
         const seenOrders: Record<string, { key: string }> = {};
+        // Track voided orders to exclude them
+        const voidedOrders = new Set<string>();
+
+        // First pass: identify voided orders (order_total = 0)
+        for (const row of (salesData || [])) {
+          const orderId = `${row.source}_${row.source_order_id}`;
+          const orderTotal = parseFloat(row.order_total_rupees) || 0;
+          if (orderTotal === 0 && !voidedOrders.has(orderId)) {
+            voidedOrders.add(orderId);
+          }
+        }
 
         for (const row of (salesData || [])) {
+          const orderId = `${row.source}_${row.source_order_id}`;
+          // Skip voided orders entirely
+          if (voidedOrders.has(orderId)) continue;
+
           const outlet = row.outlet || 'unknown';
           // Determine channel: delivery vs instore (pickup = instore)
           let channelLabel: string;
@@ -679,7 +695,6 @@ async function startServer() {
           if (!byChannel[key]) byChannel[key] = { subtotal: 0, tax: 0, total: 0, orders: new Set() };
 
           // Track unique orders — only count totals once per order
-          const orderId = `${row.source}_${row.source_order_id}`;
           if (!seenOrders[orderId]) {
             const orderSubtotal = parseFloat(row.order_subtotal_rupees) || 0;
             const orderTax = parseFloat(row.order_tax_rupees) || 0;
@@ -731,9 +746,16 @@ async function startServer() {
             }
           }
 
-          lines.push(`Net Sales: ₹${Math.round(totalSubtotal).toLocaleString('en-IN')}`);
+          // Menu Sales = subtotal + tax (what was sold at menu price)
+          const menuSales = totalSubtotal + totalTax;
+          // Platform Commission = menu sales - net collected
+          const platformCommission = menuSales - totalRevenue;
+          lines.push(`Menu Sales: ₹${Math.round(menuSales).toLocaleString('en-IN')}`);
+          if (platformCommission > 0) {
+            lines.push(`Platform Commission: -₹${Math.round(platformCommission).toLocaleString('en-IN')}`);
+          }
           lines.push(`GST Collected: ₹${Math.round(totalTax).toLocaleString('en-IN')}`);
-          lines.push(`*Gross Revenue: ₹${Math.round(totalRevenue).toLocaleString('en-IN')} | Orders: ${allOrders.size}*`);
+          lines.push(`*Net Collected: ₹${Math.round(totalRevenue).toLocaleString('en-IN')} | Orders: ${allOrders.size}*`);
 
           // 📊 GROSS MARGIN section
           lines.push('');

@@ -3409,4 +3409,9 @@ Orders fixed:
 - [ ] Investigate gross margin calculation in daily digest
 
 ## Urgent — OAuth Login Broken (May 10)
-- [ ] Fix OAuth callback failure — wrap isEmployeeEmail in try-catch with timeout so login never fails due to Employee Master API
+- [x] Fix OAuth callback failure — root cause: isManager/outletId columns missing from DigitalOcean MySQL (only added to TiDB). Added columns to DO DB + wrapped isEmployeeEmail in try-catch with timeout
+
+## Digest Revenue Fix (May 10)
+- [x] Update digest to Option C format: Menu Sales + Platform Commission + Net Collected
+- [x] Exclude voided orders (order_total_rupees = 0) from all calculations
+- [x] Verify corrected figures for May 10

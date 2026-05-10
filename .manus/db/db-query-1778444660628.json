@@ -1,0 +1,33 @@
+{
+  "query": "SELECT id, openId, name, email, phone, loginMethod, role, loyaltyPoints, storeCredit, stampCount, lifetimeStamps, lastStampDate, notes, birthMonth, birthDay, birthdayCodeUsedYear, isManager, outletId, createdAt, updatedAt, lastSignedIn FROM users WHERE openId = '2gK7ZwbkTauz62X7eRsecT' LIMIT 1;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT id, openId, name, email, phone, loginMethod, role, loyaltyPoints, storeCredit, stampCount, lifetimeStamps, lastStampDate, notes, birthMonth, birthDay, birthdayCodeUsedYear, isManager, outletId, createdAt, updatedAt, lastSignedIn FROM users WHERE openId = '2gK7ZwbkTauz62X7eRsecT' LIMIT 1;",
+  "rows": [
+    {
+      "id": "15510360",
+      "openId": "2gK7ZwbkTauz62X7eRsecT",
+      "name": "Kannan Swamy",
+      "email": "kannanswamy@hotmail.com",
+      "phone": "NULL",
+      "loginMethod": "email",
+      "role": "admin",
+      "loyaltyPoints": "0",
+      "storeCredit": "0",
+      "stampCount": "0",
+      "lifetimeStamps": "0",
+      "lastStampDate": "NULL",
+      "notes": "NULL",
+      "birthMonth": "NULL",
+      "birthDay": "NULL",
+      "birthdayCodeUsedYear": "NULL",
+      "isManager": "0",
+      "outletId": "NULL",
+      "createdAt": "2026-01-04 11:39:29",
+      "updatedAt": "2026-05-07 09:21:03",
+      "lastSignedIn": "2026-05-07 09:21:04"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\topenId\tname\temail\tphone\tloginMethod\trole\tloyaltyPoints\tstoreCredit\tstampCount\tlifetimeStamps\tlastStampDate\tnotes\tbirthMonth\tbirthDay\tbirthdayCodeUsedYear\tisManager\toutletId\tcreatedAt\tupdatedAt\tlastSignedIn\n15510360\t2gK7ZwbkTauz62X7eRsecT\tKannan Swamy\tkannanswamy@hotmail.com\tNULL\temail\tadmin\t0\t0\t0\t0\tNULL\tNULL\tNULL\tNULL\tNULL\t0\tNULL\t2026-01-04 11:39:29\t2026-05-07 09:21:03\t2026-05-07 09:21:04\n",
+  "stderr": "",
+  "execution_time_ms": 359
+}
