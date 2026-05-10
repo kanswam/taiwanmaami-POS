@@ -619,7 +619,7 @@ async function startServer() {
         // Query sales_facts for that date (include item_name, order_type for breakdown)
         const { data: salesData, error: sfError } = await supabase
           .from('sales_facts')
-          .select('outlet, item_name, item_total_rupees, order_total_rupees, order_subtotal_rupees, order_tax_rupees, source, channel, order_type, source_order_id')
+          .select('outlet, item_name, item_total_rupees, order_total_rupees, order_subtotal_rupees, order_tax_rupees, order_discount_rupees, source, channel, order_type, source_order_id')
           .eq('order_date', dateStr);
 
         if (sfError) {
@@ -655,12 +655,13 @@ async function startServer() {
         // ═══ REVENUE BREAKDOWN ═══
         // Use order_subtotal_rupees (pre-GST) and order_tax_rupees per UNIQUE order
         // Exclude voided orders (order_total_rupees = 0)
-        type ChannelData = { subtotal: number; tax: number; total: number; orders: Set<string> };
+        type ChannelData = { subtotal: number; tax: number; total: number; discount: number; orders: Set<string> };
         const byChannel: Record<string, ChannelData> = {};
         const itemCounts: Record<string, number> = {};
         let totalSubtotal = 0;
         let totalTax = 0;
         let totalRevenue = 0;
+        let totalDiscount = 0;
         const allOrders = new Set<string>();
         // Track unique orders to avoid double-counting
         const seenOrders: Record<string, { key: string }> = {};
@@ -692,20 +693,23 @@ async function startServer() {
           }
 
           const key = `${outlet}_${channelLabel}`;
-          if (!byChannel[key]) byChannel[key] = { subtotal: 0, tax: 0, total: 0, orders: new Set() };
+          if (!byChannel[key]) byChannel[key] = { subtotal: 0, tax: 0, total: 0, discount: 0, orders: new Set() };
 
           // Track unique orders — only count totals once per order
           if (!seenOrders[orderId]) {
             const orderSubtotal = parseFloat(row.order_subtotal_rupees) || 0;
             const orderTax = parseFloat(row.order_tax_rupees) || 0;
             const orderTotal = parseFloat(row.order_total_rupees) || 0;
+            const orderDiscount = parseFloat(row.order_discount_rupees) || 0;
             seenOrders[orderId] = { key };
             byChannel[key].subtotal += orderSubtotal;
             byChannel[key].tax += orderTax;
             byChannel[key].total += orderTotal;
+            byChannel[key].discount += orderDiscount;
             totalSubtotal += orderSubtotal;
             totalTax += orderTax;
             totalRevenue += orderTotal;
+            totalDiscount += orderDiscount;
           }
           byChannel[key].orders.add(orderId);
           allOrders.add(orderId);
@@ -746,13 +750,10 @@ async function startServer() {
             }
           }
 
-          // Menu Sales = subtotal + tax (what was sold at menu price)
-          const menuSales = totalSubtotal + totalTax;
-          // Platform Commission = menu sales - net collected
-          const platformCommission = menuSales - totalRevenue;
-          lines.push(`Menu Sales: ₹${Math.round(menuSales).toLocaleString('en-IN')}`);
-          if (platformCommission > 0) {
-            lines.push(`Platform Commission: -₹${Math.round(platformCommission).toLocaleString('en-IN')}`);
+          // Menu Sales = subtotal (core_total, pre-tax pre-discount)
+          lines.push(`Menu Sales: ₹${Math.round(totalSubtotal).toLocaleString('en-IN')}`);
+          if (totalDiscount > 0) {
+            lines.push(`Aggregator Discounts: -₹${Math.round(totalDiscount).toLocaleString('en-IN')}`);
           }
           lines.push(`GST Collected: ₹${Math.round(totalTax).toLocaleString('en-IN')}`);
           lines.push(`*Net Collected: ₹${Math.round(totalRevenue).toLocaleString('en-IN')} | Orders: ${allOrders.size}*`);

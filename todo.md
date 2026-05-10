@@ -3415,3 +3415,7 @@ Orders fixed:
 - [x] Update digest to Option C format: Menu Sales + Platform Commission + Net Collected
 - [x] Exclude voided orders (order_total_rupees = 0) from all calculations
 - [x] Verify corrected figures for May 10
+
+## Digest Label Fix (May 10)
+- [x] Rename 'Platform Commission' to 'Aggregator Discounts' in digest
+- [x] Use order_discount_rupees from sales_facts for accurate discount tracking
