@@ -28,4 +28,9 @@ jobs:
           RAZORPAY_KEY_ID: test-razorpay-id-for-ci
           RAZORPAY_KEY_SECRET: test-razorpay-secret-for-ci
           PETPOOJA_UPLOAD_PIN: test-pin-for-ci
+          TWILIO_ACCOUNT_SID: ${{ secrets.TWILIO_ACCOUNT_SID }}
+          TWILIO_AUTH_TOKEN: ${{ secrets.TWILIO_AUTH_TOKEN }}
+          TWILIO_WHATSAPP_FROM: ${{ secrets.TWILIO_WHATSAPP_FROM }}
+          TWILIO_WHATSAPP_TO: ${{ secrets.TWILIO_WHATSAPP_TO }}
+
 
