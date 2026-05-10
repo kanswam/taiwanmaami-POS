@@ -3419,3 +3419,8 @@ Orders fixed:
 ## Digest Label Fix (May 10)
 - [x] Rename 'Platform Commission' to 'Aggregator Discounts' in digest
 - [x] Use order_discount_rupees from sales_facts for accurate discount tracking
+
+## Digest Full Reconciliation (May 10)
+- [x] Compute Packaging & Other as remainder (no new Supabase columns needed)
+- [x] Update digest to show Packaging & Other line — reconciles to zero exactly
+- [ ] Trigger manual digest run and confirm WhatsApp delivery

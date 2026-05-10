@@ -751,9 +751,15 @@ async function startServer() {
           }
 
           // Menu Sales = subtotal (core_total, pre-tax pre-discount)
+          // Packaging & Other = total - (subtotal - discount + tax) — the remainder that reconciles exactly
+          const packagingOther = Math.round(totalRevenue - (totalSubtotal - totalDiscount + totalTax));
           lines.push(`Menu Sales: ₹${Math.round(totalSubtotal).toLocaleString('en-IN')}`);
           if (totalDiscount > 0) {
             lines.push(`Aggregator Discounts: -₹${Math.round(totalDiscount).toLocaleString('en-IN')}`);
+          }
+          if (packagingOther !== 0) {
+            const sign = packagingOther > 0 ? '+' : '-';
+            lines.push(`Packaging & Other: ${sign}₹${Math.abs(packagingOther).toLocaleString('en-IN')}`);
           }
           lines.push(`GST Collected: ₹${Math.round(totalTax).toLocaleString('en-IN')}`);
           lines.push(`*Net Collected: ₹${Math.round(totalRevenue).toLocaleString('en-IN')} | Orders: ${allOrders.size}*`);
