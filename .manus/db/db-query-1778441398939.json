@@ -1,0 +1,9 @@
+{
+  "query": "SELECT \n  sl.name AS outlet,\n  o.orderType,\n  COUNT(*) AS order_count,\n  ROUND(SUM(o.subtotal) / 100, 2) AS subtotal,\n  ROUND(SUM(o.stateGst + o.centralGst) / 100, 2) AS gst,\n  ROUND(SUM(o.totalAmount) / 100, 2) AS gross_revenue\nFROM orders o\nLEFT JOIN store_locations sl ON o.outletId = sl.id\nWHERE o.createdAt >= '2026-05-10 00:00:00' \n  AND o.createdAt < '2026-05-11 00:00:00'\n  AND o.orderStatus != 'cancelled'\nGROUP BY sl.name, o.orderType\nORDER BY sl.name, o.orderType;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT \n  sl.name AS outlet,\n  o.orderType,\n  COUNT(*) AS order_count,\n  ROUND(SUM(o.subtotal) / 100, 2) AS subtotal,\n  ROUND(SUM(o.stateGst + o.centralGst) / 100, 2) AS gst,\n  ROUND(SUM(o.totalAmount) / 100, 2) AS gross_revenue\nFROM orders o\nLEFT JOIN store_locations sl ON o.outletId = sl.id\nWHERE o.createdAt >= '2026-05-10 00:00:00' \n  AND o.createdAt < '2026-05-11 00:00:00'\n  AND o.orderStatus != 'cancelled'\nGROUP BY sl.name, o.orderType\nORDER BY sl.name, o.orderType;",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 1037
+}

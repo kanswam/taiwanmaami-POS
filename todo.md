@@ -3401,3 +3401,12 @@ Orders fixed:
 - [ ] Multi-Outlet Phase 3: Admin UI availability matrix
 - [ ] Wire margin calculation into ETL pipeline
 - [ ] Fix Twilio sandbox session expiry (keep-alive or Business API upgrade)
+
+## Pre-Phase 2 — Operational Fixes
+- [ ] Add TWILIO secrets to ci.yml env section (TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_WHATSAPP_FROM, TWILIO_WHATSAPP_TO)
+- [ ] Add TWILIO secrets to etl-cron.yml as env for digest step
+- [ ] Verify WhatsApp daily digest sends successfully after workflow update
+- [ ] Investigate gross margin calculation in daily digest
+
+## Urgent — OAuth Login Broken (May 10)
+- [ ] Fix OAuth callback failure — wrap isEmployeeEmail in try-catch with timeout so login never fails due to Employee Master API
