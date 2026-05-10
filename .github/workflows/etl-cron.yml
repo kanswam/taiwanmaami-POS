@@ -1,10 +1,8 @@
 name: Daily ETL Digest
-
 on:
   schedule:
     - cron: '30 19 * * *'
   workflow_dispatch:
-
 jobs:
   run-etl:
     runs-on: ubuntu-latest
@@ -14,23 +12,23 @@ jobs:
           response=$(curl -s -o /dev/null -w "%{http_code}" \
             -X POST https://www.taiwanmaami.com/api/service/etl/run \
             -H "Authorization: Bearer ${{ secrets.MAAMITECH_SERVICE_TOKEN }}" \
-            -H "Content-Type: application/json")
+            -H "Content-Type: application/json" )
           echo "ETL response code: $response"
           if [ "$response" != "200" ] && [ "$response" != "207" ]; then
             echo "ETL failed with status $response"
             exit 1
           fi
           echo "ETL completed successfully"
-
       - name: Send digest notification
         run: |
           response=$(curl -s -o /dev/null -w "%{http_code}" \
             -X POST https://www.taiwanmaami.com/api/service/digest \
             -H "Authorization: Bearer ${{ secrets.MAAMITECH_SERVICE_TOKEN }}" \
-            -H "Content-Type: application/json")
+            -H "Content-Type: application/json" )
           echo "Digest response code: $response"
           if [ "$response" != "200" ] && [ "$response" != "207" ]; then
             echo "Digest notification failed with status $response"
             exit 1
           fi
           echo "Digest sent successfully"
+
