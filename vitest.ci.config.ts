@@ -49,6 +49,10 @@ export default defineConfig({
       "server/tokenRegistry.test.ts",
       "server/voiceChat.test.ts",
       "server/wholesale.test.ts",
+      // DB-dependent tests (added after Phase 1 audit)
+      "server/adminMenu.test.ts",
+      "server/serviceEndpoints.test.ts",
+      "server/serviceOrders.test.ts",
     ],
   },
 });

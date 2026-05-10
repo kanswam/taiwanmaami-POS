@@ -22,6 +22,9 @@ export const users = mysqlTable("users", {
   birthMonth: int("birthMonth"), // 1-12
   birthDay: int("birthDay"), // 1-31
   birthdayCodeUsedYear: int("birthdayCodeUsedYear"), // Track which year they used their birthday code
+  // Manager role and outlet assignment
+  isManager: boolean("isManager").default(false).notNull(),
+  outletId: int("outletId"), // Assigned outlet for managers (null = all outlets / admin)
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
   lastSignedIn: timestamp("lastSignedIn").defaultNow().notNull(),
@@ -354,6 +357,7 @@ export const loyaltyTransactions = mysqlTable("loyalty_transactions", {
 export const storeLocations = mysqlTable("store_locations", {
   id: int("id").autoincrement().primaryKey(),
   name: varchar("name", { length: 200 }).notNull(),
+  slug: varchar("slug", { length: 50 }),
   address: text("address").notNull(),
   area: varchar("area", { length: 100 }).notNull(),
   city: varchar("city", { length: 100 }).default("Chennai").notNull(),
@@ -362,6 +366,11 @@ export const storeLocations = mysqlTable("store_locations", {
   email: varchar("email", { length: 320 }),
   openingHours: text("openingHours"),
   googleMapsUrl: text("googleMapsUrl"),
+  // Geo coordinates for distance-based delivery routing
+  lat: decimal("lat", { precision: 10, scale: 7 }),
+  lng: decimal("lng", { precision: 10, scale: 7 }),
+  deliveryRadiusKm: decimal("deliveryRadiusKm", { precision: 5, scale: 2 }),
+  hasFood: boolean("hasFood").default(false).notNull(),
   isActive: boolean("isActive").default(true).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
@@ -420,7 +429,21 @@ export const deliveryAreas = mysqlTable("delivery_areas", {
   areaName: varchar("areaName", { length: 100 }).notNull().unique(),
   pincode: varchar("pincode", { length: 10 }).notNull(),
   deliveryCharge: int("deliveryCharge").default(0).notNull(),
+  outletId: int("outletId"), // Which outlet serves this area (null = all active outlets)
   isActive: boolean("isActive").default(true).notNull(),
+});
+
+// Outlet availability matrix — controls what is available at each outlet per channel
+// Inheritance: category > subcategory > product (most specific wins)
+export const outletAvailability = mysqlTable("outlet_availability", {
+  id: int("id").autoincrement().primaryKey(),
+  outletId: int("outletId").notNull(), // References storeLocations.id
+  scopeType: mysqlEnum("scopeType", ["category", "subcategory", "product"]).notNull(),
+  scopeId: int("scopeId").notNull(), // References category.id, subcategory.id, or product.id
+  channel: mysqlEnum("channel", ["instore", "delivery", "pickup"]).notNull(),
+  available: boolean("available").default(true).notNull(),
+  updatedBy: int("updatedBy"), // References users.id
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
 
 // Loyalty rewards (vouchers earned from stamp card)

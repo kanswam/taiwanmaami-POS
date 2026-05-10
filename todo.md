@@ -3381,3 +3381,23 @@ Orders fixed:
 - [x] Gross margin section shows per-outlet figures with coverage % that auto-updates
 - [ ] Load recipes for remaining items: Taro Lattes, Matcha Lattes, Food, Mochi, Slush, Coffee
 - [ ] Add order cancellation filtering to ETL (prevent test/cancelled orders entering sales_facts)
+
+## Bug (May 10)
+- [ ] Rice dishes not showing on delivery menu (shows for dine-in but not delivery)
+
+## Multi-Outlet Phase 1 — Schema Migration
+- [x] Add columns to store_locations: slug, lat, lng, deliveryRadiusKm, hasFood
+- [x] Add columns to users: isManager, outletId
+- [x] Add outletId column to delivery_areas
+- [x] Create outlet_availability junction table (outletId, scopeType, scopeId, channel, available)
+- [x] Seed outlets: Palladium (id=1, hasFood=0), T.Nagar (id=2, hasFood=1), Anna Nagar (id=30001, isActive=0)
+- [x] Migrate subcategory availability flags → 138 rows in outlet_availability
+- [x] Migrate product-level overrides → 222 rows in outlet_availability
+- [x] Fix Drizzle snapshot drift (event_inquiries + new tables/columns)
+- [x] Create migration 0039 (no-op SQL, snapshot catch-up)
+- [x] Verify drizzle-kit generate shows "No schema changes"
+- [x] All 967 CI tests pass (vitest.ci.config.ts)
+- [ ] Multi-Outlet Phase 2: Backend API changes (getFullMenu outlet-aware, delivery routing)
+- [ ] Multi-Outlet Phase 3: Admin UI availability matrix
+- [ ] Wire margin calculation into ETL pipeline
+- [ ] Fix Twilio sandbox session expiry (keep-alive or Business API upgrade)
