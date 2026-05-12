@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { useAuth } from '@/_core/hooks/useAuth';
 import { useCart } from '@/contexts/CartContext';
-import { useLoginTransition } from '@/hooks/useLoginTransition';
+import { SignInButton, useClerk } from '@clerk/clerk-react';
 import { Menu, ShoppingCart, User, LogOut, MapPin, Info, FileText, X, ClipboardList, BookOpen, UtensilsCrossed } from 'lucide-react';
 import { formatPrice } from '@shared/types';
 import { isPartnerNavVisible } from '@/lib/partnerGate';
@@ -14,7 +14,7 @@ export function Header() {
   const { user, isAuthenticated, logout } = useAuth();
   const { itemCount, total } = useCart();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const { triggerLogin, transitionPortal } = useLoginTransition();
+  const { signOut } = useClerk();
 
   const partnerVisible = isPartnerNavVisible();
   const navLinks = [
@@ -158,15 +158,17 @@ export function Header() {
                     </Button>
                   </Link>
                 )}
-                <Button variant="ghost" size="sm" onClick={() => logout()}>
+                <Button variant="ghost" size="sm" onClick={() => { signOut(); logout(); }}>
                   <LogOut className="w-4 h-4" />
                 </Button>
               </div>
             ) : (
-              <Button variant="ghost" size="sm" className="hidden md:block" onClick={triggerLogin}>
+              <SignInButton mode="modal">
+                <Button variant="ghost" size="sm" className="hidden md:block">
                   <User className="w-4 h-4 mr-2" />
                   Login
-              </Button>
+                </Button>
+              </SignInButton>
             )}
 
             {/* Mobile menu */}
@@ -279,6 +281,7 @@ export function Header() {
                         variant="ghost"
                         className="justify-start gap-3 p-3"
                         onClick={() => {
+                          signOut();
                           logout();
                           setMobileMenuOpen(false);
                         }}
@@ -288,10 +291,12 @@ export function Header() {
                       </Button>
                     </>
                   ) : (
-                    <Button className="w-full" onClick={triggerLogin}>
+                    <SignInButton mode="modal">
+                      <Button className="w-full">
                         <User className="w-4 h-4 mr-2" />
                         Login
-                    </Button>
+                      </Button>
+                    </SignInButton>
                   )}
                 </div>
               </SheetContent>
@@ -300,7 +305,6 @@ export function Header() {
         </div>
       </div>
     </header>
-      {transitionPortal}
     </div>
   );
 }

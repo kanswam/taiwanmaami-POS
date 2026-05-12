@@ -3440,9 +3440,9 @@ Orders fixed:
 - [x] Step 3: Replace notification.ts internals with Twilio WhatsApp (sendWhatsApp, same signature)
 - [x] Step 4: Replace storage.ts with Cloudinary-only (storagePut/storageGet same API, hybridStorage simplified)
 - [x] Step 5: Replace map.ts with direct Google Maps API (GOOGLE_MAPS_API_KEY env var)
-- [ ] Step 6: Install Clerk packages, create clerk.ts + clerkWebhook.ts
-- [ ] Step 7: Update context.ts, env.ts, db.ts for Clerk auth
-- [ ] Step 8: Update frontend — ClerkProvider, Header, remove getLoginUrl, vite.config.ts
-- [ ] Step 9: Delete sdk.ts, oauth.ts, llm.ts, imageGeneration.ts, voiceTranscription.ts
-- [ ] Step 10: Test full flow locally
+- [x] Step 6: Install Clerk packages, create clerk.ts + clerkWebhook.ts
+- [x] Step 7: Update context.ts, env.ts, db.ts for Clerk auth
+- [x] Step 8: Update frontend — ClerkProvider, Header, remove getLoginUrl, vite.config.ts
+- [x] Step 9: Delete sdk.ts, oauth.ts, llm.ts, imageGeneration.ts, voiceTranscription.ts, dataApi.ts, manusTypes.ts
+- [x] Step 10: Test full flow locally (TS: 0 errors, Tests: 923/924 passed, 1 pre-existing timeout)
 - [ ] Step 11: Deploy to DigitalOcean App Platform at thamaraifoods.com

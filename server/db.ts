@@ -6,7 +6,6 @@ import {
   addresses, loyaltyTransactions, storeLocations, deliveryAreas,
   productAddons, customizationOptions, orderAuditLog
 } from "../drizzle/schema";
-import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
 
@@ -51,9 +50,6 @@ export async function upsertUser(user: InsertUser): Promise<void> {
       values.role = user.role;
       updateSet.role = user.role;
     }
-  } else if (user.openId === ENV.ownerOpenId) {
-    values.role = 'admin';
-    updateSet.role = 'admin';
   }
 
   if (!values.lastSignedIn) values.lastSignedIn = new Date();
@@ -74,6 +70,21 @@ export async function getUserById(id: number) {
   if (!db) return undefined;
   const result = await db.select().from(users).where(eq(users.id, id)).limit(1);
   return result.length > 0 ? result[0] : undefined;
+}
+
+// Find user by email (for Clerk lazy migration)
+export async function getUserByEmail(email: string) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(users).where(eq(users.email, email)).limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+// Migrate user openId from Manus to Clerk (preserves all data)
+export async function migrateUserOpenId(oldOpenId: string, newOpenId: string) {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(users).set({ openId: newOpenId }).where(eq(users.openId, oldOpenId));
 }
 
 // Birthday functions

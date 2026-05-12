@@ -3,7 +3,7 @@ import { getDb } from './db';
 import { orders, orderItems, products, categories, subcategories, deliverySalesUploads } from '../drizzle/schema';
 import { and, eq, sql, desc, sum, count } from 'drizzle-orm';
 import type { Request, Response } from 'express';
-import { sdk } from './_core/sdk';
+import { authenticateClerkRequest } from './_core/clerk';
 import {
   BRAND, FMT,
   addTitleBlock, styleHeaderRow, styleDataRow, styleTotalsRow, styleSubtotalRow,
@@ -14,7 +14,7 @@ import {
 // Admin auth middleware
 async function requireAdmin(req: Request, res: Response): Promise<boolean> {
   try {
-    const user = await sdk.authenticateRequest(req as any);
+    const user = await authenticateClerkRequest(req as any);
     if (!user || user.role !== 'admin') {
       res.status(403).json({ error: 'Admin access required' });
       return false;

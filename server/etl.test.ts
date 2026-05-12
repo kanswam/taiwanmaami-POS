@@ -211,7 +211,7 @@ describe("MaamiTech Task 6 — Data Lake ETL", () => {
       const rows = await res.json();
       const sources = [...new Set(rows.map((r: any) => r.source))];
       for (const source of sources) {
-        expect(["pos", "petpooja_webhook", "petpooja_csv", "petpooja_report"]).toContain(source);
+        expect(["pos", "pos_report", "petpooja_webhook", "petpooja_csv", "petpooja_report"]).toContain(source);
       }
     });
   });

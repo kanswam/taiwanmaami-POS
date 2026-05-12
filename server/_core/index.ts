@@ -4,7 +4,8 @@ import { ENV } from "./env";
 import { createServer } from "http";
 import net from "net";
 import { createExpressMiddleware } from "@trpc/server/adapters/express";
-import { registerOAuthRoutes } from "./oauth";
+import { clerkMiddleware } from "@clerk/express";
+import { registerClerkWebhookRoute } from "./clerkWebhook";
 import { appRouter } from "../routers";
 import { handleSalesReportExport } from "../excelExport";
 import { handleItemwiseExport, handleChannelsExport, handleLeelaRegistrationsExport, handleCustomerDatabaseExport } from "../excelExportExtra";
@@ -20,7 +21,7 @@ import { validateOrdersQuery, validateEmployeesQuery, validateMenuProductsQuery,
 import { auditLogMiddleware } from "../auditLog";
 import { handleETL, handleETLStatus } from "../etl";
 import { createContext } from "./context";
-import { sdk } from "./sdk";
+import { authenticateClerkRequest } from "./clerk";
 import { serveStatic, setupVite } from "./vite";
 
 function isPortAvailable(port: number): Promise<boolean> {
@@ -201,8 +202,9 @@ async function startServer() {
   // Configure body parser with larger size limit for file uploads
   app.use(express.json({ limit: "50mb" }));
   app.use(express.urlencoded({ limit: "50mb", extended: true }));
-  // OAuth callback under /api/oauth/callback
-  registerOAuthRoutes(app);
+  // Clerk middleware — must be applied before any route that uses getAuth()
+  app.use(clerkMiddleware());
+  registerClerkWebhookRoute(app);
   
   // Version marker for deployment verification: v2025.12.14.3
   app.get('/api/version', (req, res) => res.json({ version: '2025.12.14.3', timestamp: new Date().toISOString() }));
@@ -579,7 +581,7 @@ async function startServer() {
   // Any authenticated user (customer/staff/admin) can trigger the ETL
   app.post('/api/scheduled/etl', async (req: any, res: any, next: any) => {
     try {
-      const user = await sdk.authenticateRequest(req);
+      const user = await authenticateClerkRequest(req);
       if (!user) {
         return res.status(401).json({ error: 'unauthorized', message: 'Valid session cookie required' });
       }
