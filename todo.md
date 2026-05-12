@@ -3437,9 +3437,9 @@ Orders fixed:
 - [x] Step 1: CDN asset inventory — list all manuscdn.com URLs with types and sizes (33/33 accessible)
 - [x] Step 1b: CDN migration — 26 images → Cloudinary, 7 videos → DO Spaces, 33 URL replacements across 8 files
 - [x] Step 2: Delete chatbot/TTS/voice files + remove ChatWidget from UI (12 files deleted, routers.ts cleaned)
-- [ ] Step 3: Replace notification.ts internals with Twilio WhatsApp
-- [ ] Step 4: Replace storage.ts with Cloudinary-only implementation
-- [ ] Step 5: Replace map.ts with direct Google Maps API key
+- [x] Step 3: Replace notification.ts internals with Twilio WhatsApp (sendWhatsApp, same signature)
+- [x] Step 4: Replace storage.ts with Cloudinary-only (storagePut/storageGet same API, hybridStorage simplified)
+- [x] Step 5: Replace map.ts with direct Google Maps API (GOOGLE_MAPS_API_KEY env var)
 - [ ] Step 6: Install Clerk packages, create clerk.ts + clerkWebhook.ts
 - [ ] Step 7: Update context.ts, env.ts, db.ts for Clerk auth
 - [ ] Step 8: Update frontend — ClerkProvider, Header, remove getLoginUrl, vite.config.ts

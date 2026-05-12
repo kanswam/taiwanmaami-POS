@@ -1,23 +1,20 @@
 /**
  * Hybrid Storage Module for Taiwan Maami
- * 
- * Implements dual storage strategy:
- * 1. Manus S3 - Original high-res backup (you control)
- * 2. Cloudinary - Optimized delivery (fast loading)
- * 
+ *
+ * Now uses Cloudinary as the sole storage backend.
+ * The "hybrid" name is kept for backward compatibility with all import sites.
+ *
  * Benefits:
- * - Originals always safe on your storage
- * - Customers get optimized, fast-loading images
- * - No vendor lock-in
+ * - Customers get optimized, fast-loading images via Cloudinary CDN
+ * - Automatic format conversion (WebP/AVIF) and responsive sizing
  */
 
-import { storagePut } from './storage';
 import { uploadToCloudinary, getOptimizedImageUrl, isCloudinaryConfigured } from './cloudinary';
 
 export interface HybridUploadResult {
-  // Manus S3 URL (original backup)
+  // backupUrl kept for backward compat — same as deliveryUrl now
   backupUrl: string;
-  // Cloudinary URL (optimized delivery) - falls back to backupUrl if Cloudinary not configured
+  // Cloudinary URL (optimized delivery)
   deliveryUrl: string;
   // Cloudinary public_id for transformations
   cloudinaryPublicId?: string;
@@ -29,82 +26,55 @@ export interface HybridUploadResult {
 }
 
 /**
- * Upload image to both Manus S3 (backup) and Cloudinary (delivery)
- * 
+ * Upload image to Cloudinary
+ *
  * @param fileBuffer - The image file as Buffer
  * @param options - Upload options
- * @returns URLs for both storage locations
+ * @returns URLs and metadata
  */
 export async function hybridUpload(
   fileBuffer: Buffer,
   options: {
-    folder: string;        // e.g., 'products', 'categories', 'subcategories'
-    fileName: string;      // e.g., 'product-123-img1-1234567890.jpg'
-    mimeType: string;      // e.g., 'image/jpeg'
-    tags?: string[];       // Optional tags for Cloudinary
+    folder: string;
+    fileName: string;
+    mimeType: string;
+    tags?: string[];
   }
 ): Promise<HybridUploadResult> {
   const { folder, fileName, mimeType, tags } = options;
-  
-  // Step 1: Upload to Manus S3 (backup - always do this first)
-  const s3Key = `${folder}/${fileName}`;
-  console.log(`[hybridUpload] Uploading to Manus S3: ${s3Key}`);
-  
-  const { url: backupUrl } = await storagePut(s3Key, fileBuffer, mimeType);
-  console.log(`[hybridUpload] Manus S3 upload complete: ${backupUrl}`);
-  
-  // Step 2: Upload to Cloudinary (delivery) if configured
-  if (isCloudinaryConfigured()) {
-    try {
-      console.log(`[hybridUpload] Uploading to Cloudinary...`);
-      
-      const cloudinaryResult = await uploadToCloudinary(fileBuffer, {
-        folder: `taiwan-maami/${folder}`,
-        publicId: fileName.replace(/\.[^.]+$/, ''), // Remove extension
-        tags: tags || [folder],
-      });
-      
-      console.log(`[hybridUpload] Cloudinary upload complete: ${cloudinaryResult.secureUrl}`);
-      
-      return {
-        backupUrl,
-        deliveryUrl: cloudinaryResult.secureUrl,
-        cloudinaryPublicId: cloudinaryResult.publicId,
-        format: cloudinaryResult.format,
-        width: cloudinaryResult.width,
-        height: cloudinaryResult.height,
-        bytes: cloudinaryResult.bytes,
-      };
-    } catch (error) {
-      // If Cloudinary fails, fall back to S3 URL
-      console.error('[hybridUpload] Cloudinary upload failed, using S3 URL:', error);
-      return {
-        backupUrl,
-        deliveryUrl: backupUrl, // Fall back to S3
-        format: mimeType.split('/')[1] || 'jpeg',
-        bytes: fileBuffer.length,
-      };
-    }
-  } else {
-    // Cloudinary not configured, use S3 only
-    console.log('[hybridUpload] Cloudinary not configured, using S3 only');
-    return {
-      backupUrl,
-      deliveryUrl: backupUrl,
-      format: mimeType.split('/')[1] || 'jpeg',
-      bytes: fileBuffer.length,
-    };
+
+  if (!isCloudinaryConfigured()) {
+    throw new Error(
+      "Cloudinary is not configured. Set CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET."
+    );
   }
+
+  console.log(`[hybridUpload] Uploading to Cloudinary: taiwan-maami/${folder}/${fileName}`);
+
+  const cloudinaryResult = await uploadToCloudinary(fileBuffer, {
+    folder: `taiwan-maami/${folder}`,
+    publicId: fileName.replace(/\.[^.]+$/, ''),
+    tags: tags || [folder],
+  });
+
+  console.log(`[hybridUpload] Cloudinary upload complete: ${cloudinaryResult.secureUrl}`);
+
+  return {
+    backupUrl: cloudinaryResult.secureUrl,
+    deliveryUrl: cloudinaryResult.secureUrl,
+    cloudinaryPublicId: cloudinaryResult.publicId,
+    format: cloudinaryResult.format,
+    width: cloudinaryResult.width,
+    height: cloudinaryResult.height,
+    bytes: cloudinaryResult.bytes,
+  };
 }
 
 /**
  * Get optimized URL for an image
- * 
+ *
  * If the URL is from Cloudinary, applies transformations.
- * If the URL is from S3/CloudFront, returns as-is (no optimization available).
- * 
- * @param imageUrl - The image URL (can be Cloudinary or S3)
- * @param options - Transformation options
+ * Otherwise returns as-is.
  */
 export function getOptimizedUrl(
   imageUrl: string,
@@ -117,30 +87,24 @@ export function getOptimizedUrl(
   } = {}
 ): string {
   if (!imageUrl) return imageUrl;
-  
-  // Check if this is a Cloudinary URL
+
   if (imageUrl.includes('cloudinary.com') || imageUrl.includes('res.cloudinary.com')) {
     return getOptimizedImageUrl(imageUrl, options);
   }
-  
-  // For S3/CloudFront URLs, return as-is (no server-side optimization)
+
   return imageUrl;
 }
 
 /**
  * Get responsive image srcset for an image
- * 
- * @param imageUrl - The image URL
- * @returns srcset string for responsive images
  */
 export function getResponsiveSrcSet(imageUrl: string): string {
   if (!imageUrl) return '';
-  
-  // Only generate srcset for Cloudinary URLs
+
   if (!imageUrl.includes('cloudinary.com')) {
     return imageUrl;
   }
-  
+
   const sizes = [300, 400, 600, 800, 1200];
   const srcset = sizes
     .map(width => {
@@ -148,7 +112,7 @@ export function getResponsiveSrcSet(imageUrl: string): string {
       return `${url} ${width}w`;
     })
     .join(', ');
-  
+
   return srcset;
 }
 

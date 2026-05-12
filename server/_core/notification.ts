@@ -1,5 +1,5 @@
 import { TRPCError } from "@trpc/server";
-import { ENV } from "./env";
+import { sendWhatsApp } from "../whatsapp";
 
 export type NotificationPayload = {
   title: string;
@@ -12,16 +12,6 @@ const CONTENT_MAX_LENGTH = 20000;
 const trimValue = (value: string): string => value.trim();
 const isNonEmptyString = (value: unknown): value is string =>
   typeof value === "string" && value.trim().length > 0;
-
-const buildEndpointUrl = (baseUrl: string): string => {
-  const normalizedBase = baseUrl.endsWith("/")
-    ? baseUrl
-    : `${baseUrl}/`;
-  return new URL(
-    "webdevtoken.v1.WebDevService/SendNotification",
-    normalizedBase
-  ).toString();
-};
 
 const validatePayload = (input: NotificationPayload): NotificationPayload => {
   if (!isNonEmptyString(input.title)) {
@@ -58,57 +48,43 @@ const validatePayload = (input: NotificationPayload): NotificationPayload => {
 };
 
 /**
- * Dispatches a project-owner notification through the Manus Notification Service.
- * Returns `true` if the request was accepted, `false` when the upstream service
- * cannot be reached (callers can fall back to email/slack). Validation errors
+ * Dispatches a project-owner notification via Twilio WhatsApp.
+ * Returns `true` if the message was accepted, `false` when the upstream service
+ * cannot be reached (callers can fall back to other channels). Validation errors
  * bubble up as TRPC errors so callers can fix the payload.
+ *
+ * WhatsApp messages are capped at 1600 characters, so long content is truncated
+ * with a note indicating the full message was trimmed.
  */
 export async function notifyOwner(
   payload: NotificationPayload
 ): Promise<boolean> {
   const { title, content } = validatePayload(payload);
 
-  if (!ENV.forgeApiUrl) {
-    throw new TRPCError({
-      code: "INTERNAL_SERVER_ERROR",
-      message: "Notification service URL is not configured.",
-    });
-  }
+  // WhatsApp has a 1600-char limit per message.
+  // Format: "🔔 {title}\n\n{content}" — truncate content if needed.
+  const header = `🔔 *${title}*`;
+  const maxContentLen = 1600 - header.length - 4; // 4 for "\n\n" + buffer
+  const truncatedContent =
+    content.length > maxContentLen
+      ? content.slice(0, maxContentLen - 30) + "\n\n_(message truncated)_"
+      : content;
 
-  if (!ENV.forgeApiKey) {
-    throw new TRPCError({
-      code: "INTERNAL_SERVER_ERROR",
-      message: "Notification service API key is not configured.",
-    });
-  }
-
-  const endpoint = buildEndpointUrl(ENV.forgeApiUrl);
+  const body = `${header}\n\n${truncatedContent}`;
 
   try {
-    const response = await fetch(endpoint, {
-      method: "POST",
-      headers: {
-        accept: "application/json",
-        authorization: `Bearer ${ENV.forgeApiKey}`,
-        "content-type": "application/json",
-        "connect-protocol-version": "1",
-      },
-      body: JSON.stringify({ title, content }),
-    });
+    const result = await sendWhatsApp({ body });
 
-    if (!response.ok) {
-      const detail = await response.text().catch(() => "");
+    if (!result.success) {
       console.warn(
-        `[Notification] Failed to notify owner (${response.status} ${response.statusText})${
-          detail ? `: ${detail}` : ""
-        }`
+        `[Notification] WhatsApp delivery failed: ${result.error}`
       );
       return false;
     }
 
     return true;
   } catch (error) {
-    console.warn("[Notification] Error calling notification service:", error);
+    console.warn("[Notification] Error sending WhatsApp notification:", error);
     return false;
   }
 }

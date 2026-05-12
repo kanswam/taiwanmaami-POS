@@ -1,102 +1,138 @@
-// Preconfigured storage helpers for Manus WebDev templates
-// Uses the Biz-provided storage proxy (Authorization: Bearer <token>)
+/**
+ * Storage helpers for Taiwan Maami
+ *
+ * Uses Cloudinary for all file storage (images, PDFs, JSON backups).
+ * Maintains the same storagePut / storageGet API signature so all
+ * existing call sites (backup.ts, workshopInvoice.ts, routers.ts,
+ * hybridStorage.ts) continue to work without changes.
+ */
 
-import { ENV } from './_core/env';
+import { ENV } from "./_core/env";
+import crypto from "crypto";
 
-type StorageConfig = { baseUrl: string; apiKey: string };
+// ── Cloudinary config ────────────────────────────────────────────
+const CLOUD_NAME = ENV.cloudinaryCloudName;
+const API_KEY = ENV.cloudinaryApiKey;
+const API_SECRET = ENV.cloudinaryApiSecret;
 
-function getStorageConfig(): StorageConfig {
-  const baseUrl = ENV.forgeApiUrl;
-  const apiKey = ENV.forgeApiKey;
-
-  if (!baseUrl || !apiKey) {
+function ensureCloudinaryConfig() {
+  if (!CLOUD_NAME || !API_KEY || !API_SECRET) {
     throw new Error(
-      "Storage proxy credentials missing: set BUILT_IN_FORGE_API_URL and BUILT_IN_FORGE_API_KEY"
+      "Cloudinary credentials missing: set CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET"
     );
   }
-
-  return { baseUrl: baseUrl.replace(/\/+$/, ""), apiKey };
 }
 
-function buildUploadUrl(baseUrl: string, relKey: string): URL {
-  const url = new URL("v1/storage/upload", ensureTrailingSlash(baseUrl));
-  url.searchParams.set("path", normalizeKey(relKey));
-  return url;
+function generateSignature(params: Record<string, string | number>): string {
+  const sortedParams = Object.keys(params)
+    .sort()
+    .map((key) => `${key}=${params[key]}`)
+    .join("&");
+  return crypto
+    .createHash("sha1")
+    .update(sortedParams + API_SECRET)
+    .digest("hex");
 }
 
-async function buildDownloadUrl(
-  baseUrl: string,
-  relKey: string,
-  apiKey: string
-): Promise<string> {
-  const downloadApiUrl = new URL(
-    "v1/storage/downloadUrl",
-    ensureTrailingSlash(baseUrl)
-  );
-  downloadApiUrl.searchParams.set("path", normalizeKey(relKey));
-  const response = await fetch(downloadApiUrl, {
-    method: "GET",
-    headers: buildAuthHeaders(apiKey),
-  });
-  return (await response.json()).url;
+// Map common MIME types to Cloudinary resource_type
+function resourceTypeFor(contentType: string): "image" | "raw" | "video" {
+  if (contentType.startsWith("image/")) return "image";
+  if (contentType.startsWith("video/") || contentType.startsWith("audio/"))
+    return "video";
+  return "raw"; // PDFs, JSON, etc.
 }
 
-function ensureTrailingSlash(value: string): string {
-  return value.endsWith("/") ? value : `${value}/`;
-}
+// ── Public API ───────────────────────────────────────────────────
 
-function normalizeKey(relKey: string): string {
-  return relKey.replace(/^\/+/, "");
-}
-
-function toFormData(
-  data: Buffer | Uint8Array | string,
-  contentType: string,
-  fileName: string
-): FormData {
-  const blob =
-    typeof data === "string"
-      ? new Blob([data], { type: contentType })
-      : new Blob([data as any], { type: contentType });
-  const form = new FormData();
-  form.append("file", blob, fileName || "file");
-  return form;
-}
-
-function buildAuthHeaders(apiKey: string): HeadersInit {
-  return { Authorization: `Bearer ${apiKey}` };
-}
-
+/**
+ * Upload bytes to Cloudinary.
+ *
+ * @param relKey  Logical path, e.g. "backups/daily-2026-05-12.json"
+ * @param data    File bytes
+ * @param contentType  MIME type (used to pick resource_type)
+ * @returns { key, url } — url is the public Cloudinary URL
+ */
 export async function storagePut(
   relKey: string,
   data: Buffer | Uint8Array | string,
   contentType = "application/octet-stream"
 ): Promise<{ key: string; url: string }> {
-  const { baseUrl, apiKey } = getStorageConfig();
-  const key = normalizeKey(relKey);
-  const uploadUrl = buildUploadUrl(baseUrl, key);
-  const formData = toFormData(data, contentType, key.split("/").pop() ?? key);
+  ensureCloudinaryConfig();
+
+  const key = relKey.replace(/^\/+/, "");
+  const resourceType = resourceTypeFor(contentType);
+
+  // Derive folder + public_id from the relKey
+  const parts = key.split("/");
+  const fileName = parts.pop() ?? key;
+  const folder = parts.length > 0 ? `taiwan-maami/${parts.join("/")}` : "taiwan-maami";
+  const publicId = fileName.replace(/\.[^.]+$/, ""); // strip extension
+
+  const timestamp = Math.floor(Date.now() / 1000);
+
+  const signatureParams: Record<string, string | number> = {
+    folder,
+    public_id: publicId,
+    timestamp,
+    overwrite: 1,
+  };
+  const signature = generateSignature(signatureParams);
+
+  // Build base64 data URI for the upload
+  const buf =
+    typeof data === "string" ? Buffer.from(data) : Buffer.from(data as any);
+  const base64 = `data:${contentType};base64,${buf.toString("base64")}`;
+
+  const formData = new FormData();
+  formData.append("file", base64);
+  formData.append("api_key", API_KEY);
+  formData.append("timestamp", timestamp.toString());
+  formData.append("signature", signature);
+  formData.append("folder", folder);
+  formData.append("public_id", publicId);
+  formData.append("overwrite", "true");
+
+  const uploadUrl = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/${resourceType}/upload`;
+
   const response = await fetch(uploadUrl, {
     method: "POST",
-    headers: buildAuthHeaders(apiKey),
     body: formData,
   });
 
   if (!response.ok) {
     const message = await response.text().catch(() => response.statusText);
     throw new Error(
-      `Storage upload failed (${response.status} ${response.statusText}): ${message}`
+      `Cloudinary upload failed (${response.status} ${response.statusText}): ${message}`
     );
   }
-  const url = (await response.json()).url;
-  return { key, url };
+
+  const result = await response.json();
+  return { key, url: result.secure_url };
 }
 
-export async function storageGet(relKey: string): Promise<{ key: string; url: string; }> {
-  const { baseUrl, apiKey } = getStorageConfig();
-  const key = normalizeKey(relKey);
-  return {
-    key,
-    url: await buildDownloadUrl(baseUrl, key, apiKey),
-  };
+/**
+ * Get a public URL for a previously-uploaded file.
+ *
+ * Cloudinary URLs are already public, so this simply constructs the
+ * delivery URL from the relKey. No signing or expiry needed.
+ */
+export async function storageGet(
+  relKey: string
+): Promise<{ key: string; url: string }> {
+  ensureCloudinaryConfig();
+
+  const key = relKey.replace(/^\/+/, "");
+  const parts = key.split("/");
+  const fileName = parts.pop() ?? key;
+  const folder = parts.length > 0 ? `taiwan-maami/${parts.join("/")}` : "taiwan-maami";
+  const publicId = fileName.replace(/\.[^.]+$/, "");
+  const ext = fileName.includes(".") ? fileName.split(".").pop() : "";
+
+  // For raw resources (JSON, PDF) the URL pattern differs
+  const isRaw = ["json", "pdf", "csv", "txt", "zip"].includes(ext ?? "");
+  const resourceType = isRaw ? "raw" : "image";
+
+  const url = `https://res.cloudinary.com/${CLOUD_NAME}/${resourceType}/upload/taiwan-maami/${parts.length > 0 ? parts.join("/") + "/" : ""}${publicId}${ext ? "." + ext : ""}`;
+
+  return { key, url };
 }
