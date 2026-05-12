@@ -438,25 +438,25 @@ export default function Home() {
     {
       name: cat3Name,
       description: cat3Desc,
-      video: 'https://files.manuscdn.com/user_upload_by_module/session_file/114675165/bNweCHEHeGisBBOW.mp4',
+      video: 'https://maami-media.sgp1.cdn.digitaloceanspaces.com/videos/bNweCHEHeGisBBOW.mp4',
       href: '/menu?category=food',
     },
     {
       name: cat1Name,
       description: cat1Desc,
-      video: 'https://files.manuscdn.com/user_upload_by_module/session_file/114675165/CKsMrsUAUMbuMMbu.mov',
+      video: 'https://maami-media.sgp1.cdn.digitaloceanspaces.com/videos/CKsMrsUAUMbuMMbu.mp4',
       href: '/menu?category=bubble-tea',
     },
     {
       name: cat2Name,
       description: cat2Desc,
-      video: 'https://files.manuscdn.com/user_upload_by_module/session_file/114675165/OXrITxhITgHnggSH.mp4',
+      video: 'https://maami-media.sgp1.cdn.digitaloceanspaces.com/videos/OXrITxhITgHnggSH.mp4',
       href: '/menu?category=coffee',
     },
     {
       name: cat4Name,
       description: cat4Desc,
-      video: 'https://files.manuscdn.com/user_upload_by_module/session_file/114675165/SidroKXBRlTSURyD.mp4',
+      video: 'https://maami-media.sgp1.cdn.digitaloceanspaces.com/videos/SidroKXBRlTSURyD.mp4',
       href: '/menu?category=mochis',
     },
   ];
@@ -468,7 +468,7 @@ export default function Home() {
       subtitle: loc1Subtitle,
       address: loc1Address,
       city: loc1City,
-      video: 'https://files.manuscdn.com/user_upload_by_module/session_file/114675165/tRoWoigbWbPFdWft.mp4',
+      video: 'https://maami-media.sgp1.cdn.digitaloceanspaces.com/videos/tRoWoigbWbPFdWft.mp4',
       mapUrl: 'https://maps.google.com/?q=Palladium+Mall+Velachery+Chennai',
       phone: '+91 89259 14303',
       hours: '10:00 AM - 10:00 PM',
@@ -478,7 +478,7 @@ export default function Home() {
       subtitle: loc2Subtitle,
       address: loc2Address,
       city: loc2City,
-      video: 'https://files.manuscdn.com/user_upload_by_module/session_file/114675165/bnVxigSNwrNZdrqE.mp4',
+      video: 'https://maami-media.sgp1.cdn.digitaloceanspaces.com/videos/bnVxigSNwrNZdrqE.mp4',
       mapUrl: 'https://maps.google.com/?q=29+Burkit+Road+TNagar+Chennai',
       phone: '+91 91505 70557',
       hours: '12:00 PM - 12:00 AM',
@@ -531,11 +531,11 @@ export default function Home() {
             playsInline
             preload="metadata"
             className="w-full h-full object-cover"
-            poster="https://files.manuscdn.com/user_upload_by_module/session_file/114675165/cuoZWmjPGnGiJcSS.jpg"
+            poster="https://res.cloudinary.com/drpu1dbqk/image/upload/f_auto,q_auto/v1778606599/taiwan-maami/static/cuoZWmjPGnGiJcSS.jpg"
           >
-            <source src="https://files.manuscdn.com/user_upload_by_module/session_file/114675165/ecOaguDqCiMAAaot.mp4" type="video/mp4" />
+            <source src="https://maami-media.sgp1.cdn.digitaloceanspaces.com/videos/ecOaguDqCiMAAaot.mp4" type="video/mp4" />
             <img
-              src="https://files.manuscdn.com/user_upload_by_module/session_file/114675165/cuoZWmjPGnGiJcSS.jpg"
+              src="https://res.cloudinary.com/drpu1dbqk/image/upload/f_auto,q_auto/v1778606599/taiwan-maami/static/cuoZWmjPGnGiJcSS.jpg"
               alt="Taiwan Maami Interior"
               className="w-full h-full object-cover"
             />
@@ -1047,7 +1047,7 @@ export default function Home() {
               <Card key={index} className="group overflow-hidden hover:shadow-2xl transition-all duration-300 relative aspect-[4/3]">
                 <LazyVideo
                   src={location.video}
-                  poster="https://files.manuscdn.com/user_upload_by_module/session_file/114675165/fYHiyJVvyVYquZaW.jpg"
+                  poster="https://res.cloudinary.com/drpu1dbqk/image/upload/f_auto,q_auto/v1778606603/taiwan-maami/static/fYHiyJVvyVYquZaW.webp"
                   className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                   autoPlay
                   loop

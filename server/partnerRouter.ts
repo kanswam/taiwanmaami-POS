@@ -7,7 +7,6 @@ import { partnerSubscriptions, partnerReferrals, partnerBenefitsLog, partnerConf
 import { eq, and, desc, sql, gte, lte } from "drizzle-orm";
 import { createRazorpayOrder, verifyPaymentSignature, getRazorpayKeyId } from "./razorpay";
 import { notifyOwner } from "./_core/notification";
-import { invokeLLM } from "./_core/llm";
 import crypto from "crypto";
 
 // Admin procedure - only allows admin role

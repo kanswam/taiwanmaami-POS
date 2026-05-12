@@ -3423,4 +3423,26 @@ Orders fixed:
 ## Digest Full Reconciliation (May 10)
 - [x] Compute Packaging & Other as remainder (no new Supabase columns needed)
 - [x] Update digest to show Packaging & Other line — reconciles to zero exactly
-- [ ] Trigger manual digest run and confirm WhatsApp delivery
+- [x] Trigger manual digest run and confirm WhatsApp delivery — verified on production with Packaging & Other line
+
+## Phase B — Deploy POS to DigitalOcean App Platform
+- [x] Step 1: Audit all Manus OAuth usage in codebase
+- [x] Step 2: Map auth flows (what Clerk replaces)
+- [x] Step 3: Clerk integration plan (features, roles, login flows, data migration) — plan approved 12 May 2026
+- [ ] Step 4: Complete environment variable list for DO deployment
+- [ ] Step 5: DigitalOcean App Platform deployment with app spec
+- [ ] Step 6: Verification of all functionality on thamaraifoods.com
+
+## Phase B — Implementation (Approved 12 May 2026)
+- [x] Step 1: CDN asset inventory — list all manuscdn.com URLs with types and sizes (33/33 accessible)
+- [x] Step 1b: CDN migration — 26 images → Cloudinary, 7 videos → DO Spaces, 33 URL replacements across 8 files
+- [x] Step 2: Delete chatbot/TTS/voice files + remove ChatWidget from UI (12 files deleted, routers.ts cleaned)
+- [ ] Step 3: Replace notification.ts internals with Twilio WhatsApp
+- [ ] Step 4: Replace storage.ts with Cloudinary-only implementation
+- [ ] Step 5: Replace map.ts with direct Google Maps API key
+- [ ] Step 6: Install Clerk packages, create clerk.ts + clerkWebhook.ts
+- [ ] Step 7: Update context.ts, env.ts, db.ts for Clerk auth
+- [ ] Step 8: Update frontend — ClerkProvider, Header, remove getLoginUrl, vite.config.ts
+- [ ] Step 9: Delete sdk.ts, oauth.ts, llm.ts, imageGeneration.ts, voiceTranscription.ts
+- [ ] Step 10: Test full flow locally
+- [ ] Step 11: Deploy to DigitalOcean App Platform at thamaraifoods.com

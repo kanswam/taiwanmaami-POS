@@ -49,7 +49,7 @@ export function Header() {
             }}
           >
             <img 
-              src="https://files.manuscdn.com/user_upload_by_module/session_file/114675165/PNSTmVAGBQQgOlVy.png" 
+              src="https://res.cloudinary.com/drpu1dbqk/image/upload/f_auto,q_auto/v1778606585/taiwan-maami/static/PNSTmVAGBQQgOlVy.png" 
               alt="Taiwan Maami™" 
               fetchPriority="high"
               className="h-16 md:h-24 w-auto"

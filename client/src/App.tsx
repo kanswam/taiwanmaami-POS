@@ -57,7 +57,6 @@ const WholesaleOrders = lazy(() => import("./pages/wholesale/WholesaleOrders"));
 
 import { CookieConsent } from "./components/CookieConsent";
 import { OfflineBanner } from "./components/OfflineBanner";
-import { VoiceChatWidget } from "./components/VoiceChatWidget";
 import { usePageTracking } from "./hooks/usePageTracking";
 import { BirthdayPromptWrapper } from "./components/BirthdayPromptWrapper";
 import { WholesaleAuthProvider } from "./contexts/WholesaleAuthContext";
@@ -172,7 +171,6 @@ function App() {
             <Router />
             <CookieConsent />
             <BirthdayPromptWrapper />
-            <VoiceChatWidget />
           </TooltipProvider>
         </CartProvider>
         </WholesaleAuthProvider>

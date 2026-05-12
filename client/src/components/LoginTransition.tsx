@@ -37,7 +37,7 @@ export function LoginTransition({ targetUrl, onComplete }: LoginTransitionProps)
     >
       {/* Logo */}
       <img
-        src="https://files.manuscdn.com/user_upload_by_module/session_file/114675165/PNSTmVAGBQQgOlVy.png"
+        src="https://res.cloudinary.com/drpu1dbqk/image/upload/f_auto,q_auto/v1778606585/taiwan-maami/static/PNSTmVAGBQQgOlVy.png"
         alt="Taiwan Maami"
         className="h-24 md:h-32 w-auto mb-6"
       />

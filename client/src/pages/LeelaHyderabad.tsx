@@ -16,7 +16,7 @@ import { Footer } from "@/components/Footer";
 import { SEO } from "@/components/SEO";
 
 const EVENT_SLUG = "leela-hyderabad-march-2026";
-const POSTER_URL = "https://files.manuscdn.com/user_upload_by_module/session_file/114675165/CWmnTPwxvTOuCjdR.jpg";
+const POSTER_URL = "https://res.cloudinary.com/drpu1dbqk/image/upload/f_auto,q_auto/v1778606562/taiwan-maami/static/CWmnTPwxvTOuCjdR.jpg";
 
 // Dinner dates: 5-8 March 2026
 const DINNER_DATES = [

@@ -20,41 +20,41 @@ import { toast } from 'sonner';
 
 // Product image mapping
 const PRODUCT_IMAGES: Record<string, string> = {
-  'hazelnut-milk-tea': 'https://files.manuscdn.com/user_upload_by_module/session_file/114675165/WkPwhHgxpahbIVvi.jpg',
-  'caramel-milk-tea': 'https://files.manuscdn.com/user_upload_by_module/session_file/114675165/ycWWgbSAUZVoaeTy.jpg',
-  'butterscotch-milk-oolong': 'https://files.manuscdn.com/user_upload_by_module/session_file/114675165/pYbRhiNlPbOcebsT.jpg',
-  'creme-brulee-oolong-latte': 'https://files.manuscdn.com/user_upload_by_module/session_file/114675165/uefHOGNUJaQUNIhx.jpg',
-  'creme-caramel-taro-latte': 'https://files.manuscdn.com/user_upload_by_module/session_file/114675165/CdvihcYqWwSGVVqs.jpg',
-  'banoffee-matcha-latte': 'https://files.manuscdn.com/user_upload_by_module/session_file/114675165/FpNjaMkCtHPSSjAg.jpg',
-  'dragon-speck-mochi': 'https://files.manuscdn.com/user_upload_by_module/session_file/114675165/JIfaoWUoeItjtLNs.jpg',
-  'mango-mochi': 'https://files.manuscdn.com/user_upload_by_module/session_file/114675165/gijTUDecXirMLNbg.jpg',
-  'banoffee-mochi': 'https://files.manuscdn.com/user_upload_by_module/session_file/114675165/soALHhslexdCuzFf.jpg',
-  'biang-biang-noodles': 'https://files.manuscdn.com/user_upload_by_module/session_file/114675165/kTxbrdufpmJRQCdX.jpg',
-  'yaki-onigiri': 'https://files.manuscdn.com/user_upload_by_module/session_file/114675165/lQcSLUexheHdEdYh.jpg',
-  'stir-fried-veg-cong-you-bing': 'https://files.manuscdn.com/user_upload_by_module/session_file/114675165/AcVAopeVLVKfoKoM.jpg',
-  'cheesy-corn-cong-you-bing': 'https://files.manuscdn.com/user_upload_by_module/session_file/114675165/HzuOkwViKWywSApJ.jpg',
-  'egg-cong-you-bing': 'https://files.manuscdn.com/user_upload_by_module/session_file/114675165/NyxsfcZEQisPUFXb.jpg',
-  'velvety-aubergine-stew-noodle': 'https://files.manuscdn.com/user_upload_by_module/session_file/114675165/VumwBnugNbUPZfGP.jpg',
-  'boba-creme-caramel': 'https://files.manuscdn.com/user_upload_by_module/session_file/114675165/aJzlzKDqlmGFMmbT.jpg',
+  'hazelnut-milk-tea': 'https://res.cloudinary.com/drpu1dbqk/image/upload/f_auto,q_auto/v1778606592/taiwan-maami/static/WkPwhHgxpahbIVvi.jpg',
+  'caramel-milk-tea': 'https://res.cloudinary.com/drpu1dbqk/image/upload/f_auto,q_auto/v1778606639/taiwan-maami/static/ycWWgbSAUZVoaeTy.jpg',
+  'butterscotch-milk-oolong': 'https://res.cloudinary.com/drpu1dbqk/image/upload/f_auto,q_auto/v1778606626/taiwan-maami/static/pYbRhiNlPbOcebsT.webp',
+  'creme-brulee-oolong-latte': 'https://res.cloudinary.com/drpu1dbqk/image/upload/f_auto,q_auto/v1778606632/taiwan-maami/static/uefHOGNUJaQUNIhx.jpg',
+  'creme-caramel-taro-latte': 'https://res.cloudinary.com/drpu1dbqk/image/upload/f_auto,q_auto/v1778606566/taiwan-maami/static/CdvihcYqWwSGVVqs.jpg',
+  'banoffee-matcha-latte': 'https://res.cloudinary.com/drpu1dbqk/image/upload/f_auto,q_auto/v1778606569/taiwan-maami/static/FpNjaMkCtHPSSjAg.webp',
+  'dragon-speck-mochi': 'https://res.cloudinary.com/drpu1dbqk/image/upload/f_auto,q_auto/v1778606579/taiwan-maami/static/JIfaoWUoeItjtLNs.webp',
+  'mango-mochi': 'https://res.cloudinary.com/drpu1dbqk/image/upload/f_auto,q_auto/v1778606613/taiwan-maami/static/gijTUDecXirMLNbg.webp',
+  'banoffee-mochi': 'https://res.cloudinary.com/drpu1dbqk/image/upload/f_auto,q_auto/v1778606629/taiwan-maami/static/soALHhslexdCuzFf.webp',
+  'biang-biang-noodles': 'https://res.cloudinary.com/drpu1dbqk/image/upload/f_auto,q_auto/v1778606617/taiwan-maami/static/kTxbrdufpmJRQCdX.jpg',
+  'yaki-onigiri': 'https://res.cloudinary.com/drpu1dbqk/image/upload/f_auto,q_auto/v1778606621/taiwan-maami/static/lQcSLUexheHdEdYh.webp',
+  'stir-fried-veg-cong-you-bing': 'https://res.cloudinary.com/drpu1dbqk/image/upload/f_auto,q_auto/v1778606556/taiwan-maami/static/AcVAopeVLVKfoKoM.jpg',
+  'cheesy-corn-cong-you-bing': 'https://res.cloudinary.com/drpu1dbqk/image/upload/f_auto,q_auto/v1778606572/taiwan-maami/static/HzuOkwViKWywSApJ.jpg',
+  'egg-cong-you-bing': 'https://res.cloudinary.com/drpu1dbqk/image/upload/f_auto,q_auto/v1778606582/taiwan-maami/static/NyxsfcZEQisPUFXb.jpg',
+  'velvety-aubergine-stew-noodle': 'https://res.cloudinary.com/drpu1dbqk/image/upload/f_auto,q_auto/v1778606589/taiwan-maami/static/VumwBnugNbUPZfGP.webp',
+  'boba-creme-caramel': 'https://res.cloudinary.com/drpu1dbqk/image/upload/f_auto,q_auto/v1778606595/taiwan-maami/static/aJzlzKDqlmGFMmbT.webp',
 };
 
 // Subcategory image mapping
 const SUBCATEGORY_IMAGES: Record<string, string> = {
-  'organic-black-tea': 'https://files.manuscdn.com/user_upload_by_module/session_file/114675165/ycWWgbSAUZVoaeTy.jpg',
-  'organic-oolong-tea': 'https://files.manuscdn.com/user_upload_by_module/session_file/114675165/pYbRhiNlPbOcebsT.jpg',
-  'organic-green-tea': 'https://files.manuscdn.com/user_upload_by_module/session_file/114675165/IWpHWvXBnTknigfp.jpg',
-  'matcha-blend': 'https://files.manuscdn.com/user_upload_by_module/session_file/114675165/FpNjaMkCtHPSSjAg.jpg',
-  'taro-blend': 'https://files.manuscdn.com/user_upload_by_module/session_file/114675165/CdvihcYqWwSGVVqs.jpg',
-  'iced-coffee': 'https://files.manuscdn.com/user_upload_by_module/session_file/114675165/WkPwhHgxpahbIVvi.jpg',
-  'hot-coffee': 'https://files.manuscdn.com/user_upload_by_module/session_file/114675165/WkPwhHgxpahbIVvi.jpg',
-  'fruit-mochi': 'https://files.manuscdn.com/user_upload_by_module/session_file/114675165/gijTUDecXirMLNbg.jpg',
-  'signature-mochi': 'https://files.manuscdn.com/user_upload_by_module/session_file/114675165/JIfaoWUoeItjtLNs.jpg',
-  'noodles': 'https://files.manuscdn.com/user_upload_by_module/session_file/114675165/kTxbrdufpmJRQCdX.jpg',
-  'flat-bread': 'https://files.manuscdn.com/user_upload_by_module/session_file/114675165/AcVAopeVLVKfoKoM.jpg',
-  'onigiri': 'https://files.manuscdn.com/user_upload_by_module/session_file/114675165/lQcSLUexheHdEdYh.jpg',
-  'desserts': 'https://files.manuscdn.com/user_upload_by_module/session_file/114675165/aJzlzKDqlmGFMmbT.jpg',
-  'pillow-brioche': 'https://files.manuscdn.com/user_upload_by_module/session_file/114675165/fwbObkBdJAfUquQz.jpg',
-  'fruit-slush': 'https://files.manuscdn.com/user_upload_by_module/session_file/114675165/wtAnUeYdJDFoSgKS.jpg',
+  'organic-black-tea': 'https://res.cloudinary.com/drpu1dbqk/image/upload/f_auto,q_auto/v1778606639/taiwan-maami/static/ycWWgbSAUZVoaeTy.jpg',
+  'organic-oolong-tea': 'https://res.cloudinary.com/drpu1dbqk/image/upload/f_auto,q_auto/v1778606626/taiwan-maami/static/pYbRhiNlPbOcebsT.webp',
+  'organic-green-tea': 'https://res.cloudinary.com/drpu1dbqk/image/upload/f_auto,q_auto/v1778606575/taiwan-maami/static/IWpHWvXBnTknigfp.webp',
+  'matcha-blend': 'https://res.cloudinary.com/drpu1dbqk/image/upload/f_auto,q_auto/v1778606569/taiwan-maami/static/FpNjaMkCtHPSSjAg.webp',
+  'taro-blend': 'https://res.cloudinary.com/drpu1dbqk/image/upload/f_auto,q_auto/v1778606566/taiwan-maami/static/CdvihcYqWwSGVVqs.jpg',
+  'iced-coffee': 'https://res.cloudinary.com/drpu1dbqk/image/upload/f_auto,q_auto/v1778606592/taiwan-maami/static/WkPwhHgxpahbIVvi.jpg',
+  'hot-coffee': 'https://res.cloudinary.com/drpu1dbqk/image/upload/f_auto,q_auto/v1778606592/taiwan-maami/static/WkPwhHgxpahbIVvi.jpg',
+  'fruit-mochi': 'https://res.cloudinary.com/drpu1dbqk/image/upload/f_auto,q_auto/v1778606613/taiwan-maami/static/gijTUDecXirMLNbg.webp',
+  'signature-mochi': 'https://res.cloudinary.com/drpu1dbqk/image/upload/f_auto,q_auto/v1778606579/taiwan-maami/static/JIfaoWUoeItjtLNs.webp',
+  'noodles': 'https://res.cloudinary.com/drpu1dbqk/image/upload/f_auto,q_auto/v1778606617/taiwan-maami/static/kTxbrdufpmJRQCdX.jpg',
+  'flat-bread': 'https://res.cloudinary.com/drpu1dbqk/image/upload/f_auto,q_auto/v1778606556/taiwan-maami/static/AcVAopeVLVKfoKoM.jpg',
+  'onigiri': 'https://res.cloudinary.com/drpu1dbqk/image/upload/f_auto,q_auto/v1778606621/taiwan-maami/static/lQcSLUexheHdEdYh.webp',
+  'desserts': 'https://res.cloudinary.com/drpu1dbqk/image/upload/f_auto,q_auto/v1778606595/taiwan-maami/static/aJzlzKDqlmGFMmbT.webp',
+  'pillow-brioche': 'https://res.cloudinary.com/drpu1dbqk/image/upload/f_auto,q_auto/v1778606607/taiwan-maami/static/fwbObkBdJAfUquQz.jpg',
+  'fruit-slush': 'https://res.cloudinary.com/drpu1dbqk/image/upload/f_auto,q_auto/v1778606635/taiwan-maami/static/wtAnUeYdJDFoSgKS.jpg',
 };
 
 export default function Menu() {
@@ -327,7 +327,7 @@ export default function Menu() {
 
           // Get a representative image from the first subcategory
           const firstSub = subcategories[0];
-          const imageUrl = firstSub?.imageUrl || SUBCATEGORY_IMAGES[firstSub?.slug] || 'https://files.manuscdn.com/user_upload_by_module/session_file/114675165/fYHiyJVvyVYquZaW.jpg';
+          const imageUrl = firstSub?.imageUrl || SUBCATEGORY_IMAGES[firstSub?.slug] || 'https://res.cloudinary.com/drpu1dbqk/image/upload/f_auto,q_auto/v1778606603/taiwan-maami/static/fYHiyJVvyVYquZaW.webp';
 
           return (
             <button
@@ -343,7 +343,7 @@ export default function Menu() {
                   decoding="async"
                   className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                   onError={(e) => {
-                    (e.target as HTMLImageElement).src = 'https://files.manuscdn.com/user_upload_by_module/session_file/114675165/fYHiyJVvyVYquZaW.jpg';
+                    (e.target as HTMLImageElement).src = 'https://res.cloudinary.com/drpu1dbqk/image/upload/f_auto,q_auto/v1778606603/taiwan-maami/static/fYHiyJVvyVYquZaW.webp';
                   }}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
@@ -400,7 +400,7 @@ export default function Menu() {
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
           {visibleSubcategories.map((subcategory) => {
             const productCount = menuData?.products.filter(p => p.subcategoryId === subcategory.id).length || 0;
-            const imageUrl = subcategory.imageUrl || SUBCATEGORY_IMAGES[subcategory.slug] || 'https://files.manuscdn.com/user_upload_by_module/session_file/114675165/fYHiyJVvyVYquZaW.jpg';
+            const imageUrl = subcategory.imageUrl || SUBCATEGORY_IMAGES[subcategory.slug] || 'https://res.cloudinary.com/drpu1dbqk/image/upload/f_auto,q_auto/v1778606603/taiwan-maami/static/fYHiyJVvyVYquZaW.webp';
             
             return (
               <button
@@ -416,7 +416,7 @@ export default function Menu() {
                     decoding="async"
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     onError={(e) => {
-                      (e.target as HTMLImageElement).src = 'https://files.manuscdn.com/user_upload_by_module/session_file/114675165/fYHiyJVvyVYquZaW.jpg';
+                      (e.target as HTMLImageElement).src = 'https://res.cloudinary.com/drpu1dbqk/image/upload/f_auto,q_auto/v1778606603/taiwan-maami/static/fYHiyJVvyVYquZaW.webp';
                     }}
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />

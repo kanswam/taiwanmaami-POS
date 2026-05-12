@@ -9,11 +9,10 @@ import {
   Home, Package, ShoppingCart, Tag, LogOut, Plus,
   ChevronDown, UtensilsCrossed, AlertCircle, DollarSign, CreditCard, Users,
   Settings, Layers, TrendingUp, Calendar, Ticket, Mail, Printer,
-  ClipboardList, BarChart3, BookOpen, Star, Bot, Crown, MapPin, FileText, Download, Upload, History, Clock, RotateCcw, WifiOff, FileSpreadsheet, Building2
+  ClipboardList, BarChart3, BookOpen, Star, Crown, MapPin, FileText, Download, Upload, History, Clock, RotateCcw, WifiOff, FileSpreadsheet, Building2
 } from 'lucide-react';
 import OutletAvailabilityTab from '@/components/OutletAvailabilityTab';
 import HomepageSettingsTab from '@/components/HomepageSettingsTab';
-import { BotAnalyticsTab } from '@/components/BotAnalyticsTab';
 
 // Lazy-loaded admin tab components
 const ProductsTab = lazy(() => import('./admin/tabs/ProductsTab'));
@@ -247,9 +246,9 @@ export default function Admin() {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button 
-                  variant={['analytics', 'audit', 'payment-report', 'reconciliation', 'bot-analytics', 'b2b-sales'].includes(activeTab) ? 'default' : 'outline'} 
+                  variant={['analytics', 'audit', 'payment-report', 'reconciliation', 'b2b-sales'].includes(activeTab) ? 'default' : 'outline'} 
                   size="sm" 
-                  className={`gap-2 ${!['analytics', 'audit', 'payment-report', 'reconciliation', 'bot-analytics', 'b2b-sales'].includes(activeTab) ? 'border-transparent hover:bg-accent' : ''}`}
+                  className={`gap-2 ${!['analytics', 'audit', 'payment-report', 'reconciliation', 'b2b-sales'].includes(activeTab) ? 'border-transparent hover:bg-accent' : ''}`}
                 >
                   <TrendingUp className="w-4 h-4" />
                   Reports
@@ -265,9 +264,6 @@ export default function Admin() {
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setActiveTab('audit')} className={activeTab === 'audit' ? 'bg-accent' : ''}>
                   <ClipboardList className="w-4 h-4 mr-2" /> Audit Log
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setActiveTab('bot-analytics')} className={activeTab === 'bot-analytics' ? 'bg-accent' : ''}>
-                  <Bot className="w-4 h-4 mr-2" /> Bot Analytics
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => setActiveTab('reconciliation')} className={activeTab === 'reconciliation' ? 'bg-accent' : ''}>
@@ -420,9 +416,6 @@ export default function Admin() {
             <Suspense fallback={<TabLoader />}><ReconciliationTab /></Suspense>
           </TabsContent>
 
-          <TabsContent value="bot-analytics">
-            <BotAnalyticsTab />
-          </TabsContent>
 
           <TabsContent value="event-inquiries">
             <Suspense fallback={<TabLoader />}><EventInquiriesTab /></Suspense>
