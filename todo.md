@@ -3446,3 +3446,8 @@ Orders fixed:
 - [ ] Step 9: Delete sdk.ts, oauth.ts, llm.ts, imageGeneration.ts, voiceTranscription.ts
 - [ ] Step 10: Test full flow locally
 - [ ] Step 11: Deploy to DigitalOcean App Platform at thamaraifoods.com
+
+## Revert — 13 May 2026
+- [x] Reverted Clerk auth back to Manus OAuth (rolled back to pre-Clerk commit 68d6bf7)
+- [x] Applied DATABASE_URL fix: db.ts and env.ts now use only built-in DATABASE_URL, ignoring CUSTOM_DATABASE_URL
+- [x] Clerk will be implemented separately on thamaraifoods.com (DO App Platform)
