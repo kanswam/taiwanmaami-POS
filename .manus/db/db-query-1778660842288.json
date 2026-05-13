@@ -1,0 +1,9 @@
+{
+  "query": "SELECT DATE(FROM_UNIXTIME(createdAt/1000)) as order_date, COUNT(*) as order_count, SUM(totalAmount) as total_revenue FROM orders WHERE createdAt >= UNIX_TIMESTAMP('2026-05-01') * 1000 AND createdAt <= UNIX_TIMESTAMP('2026-05-14') * 1000 GROUP BY order_date ORDER BY order_date;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT DATE(FROM_UNIXTIME(createdAt/1000)) as order_date, COUNT(*) as order_count, SUM(totalAmount) as total_revenue FROM orders WHERE createdAt >= UNIX_TIMESTAMP('2026-05-01') * 1000 AND createdAt <= UNIX_TIMESTAMP('2026-05-14') * 1000 GROUP BY order_date ORDER BY order_date;",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 299
+}

@@ -205,7 +205,18 @@ async function startServer() {
   registerOAuthRoutes(app);
   
   // Version marker for deployment verification: v2025.12.14.3
-  app.get('/api/version', (req, res) => res.json({ version: '2025.12.14.3', timestamp: new Date().toISOString() }));
+  app.get('/api/version', (req, res) => res.json({ version: '2025.12.14.5', timestamp: new Date().toISOString() }));
+
+  // Temporary: report server outbound IP for DO database whitelisting
+  app.get('/api/server-ip', async (req, res) => {
+    try {
+      const resp = await fetch('https://api.ipify.org?format=json');
+      const data = await resp.json();
+      res.json({ outbound_ip: data.ip, note: 'Add this IP to DO database trusted sources' });
+    } catch (e) {
+      res.status(500).json({ error: 'Could not determine outbound IP' });
+    }
+  });
   
   // Simple REST endpoint for KOT polling (easier for external clients)
   app.get('/api/kot/poll', async (req, res) => {

@@ -1,0 +1,16 @@
+{
+  "query": "SHOW TABLES LIKE '%petpooja%';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SHOW TABLES LIKE '%petpooja%';",
+  "rows": [
+    {
+      "Tables_in_7xKVuVPoe4TavcqcxPZkpC (%petpooja%)": "petpooja_webhook_log"
+    },
+    {
+      "Tables_in_7xKVuVPoe4TavcqcxPZkpC (%petpooja%)": "petpooja_webhook_orders"
+    }
+  ],
+  "messages": [],
+  "stdout": "Tables_in_7xKVuVPoe4TavcqcxPZkpC (%petpooja%)\npetpooja_webhook_log\npetpooja_webhook_orders\n",
+  "stderr": "",
+  "execution_time_ms": 262
+}

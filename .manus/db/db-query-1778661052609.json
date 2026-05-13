@@ -1,0 +1,45 @@
+{
+  "query": "SELECT DATE(createdAt) as order_date, COUNT(*) as order_count, SUM(totalAmount) as total_revenue FROM orders WHERE createdAt >= '2026-05-01' AND createdAt <= '2026-05-14' GROUP BY order_date ORDER BY order_date;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT DATE(createdAt) as order_date, COUNT(*) as order_count, SUM(totalAmount) as total_revenue FROM orders WHERE createdAt >= '2026-05-01' AND createdAt <= '2026-05-14' GROUP BY order_date ORDER BY order_date;",
+  "rows": [
+    {
+      "order_date": "2026-05-01",
+      "order_count": "11",
+      "total_revenue": "1273130"
+    },
+    {
+      "order_date": "2026-05-02",
+      "order_count": "19",
+      "total_revenue": "2556074"
+    },
+    {
+      "order_date": "2026-05-03",
+      "order_count": "15",
+      "total_revenue": "1423980"
+    },
+    {
+      "order_date": "2026-05-04",
+      "order_count": "7",
+      "total_revenue": "737154"
+    },
+    {
+      "order_date": "2026-05-05",
+      "order_count": "5",
+      "total_revenue": "859952"
+    },
+    {
+      "order_date": "2026-05-06",
+      "order_count": "13",
+      "total_revenue": "1514474"
+    },
+    {
+      "order_date": "2026-05-07",
+      "order_count": "4",
+      "total_revenue": "328652"
+    }
+  ],
+  "messages": [],
+  "stdout": "order_date\torder_count\ttotal_revenue\n2026-05-01\t11\t1273130\n2026-05-02\t19\t2556074\n2026-05-03\t15\t1423980\n2026-05-04\t7\t737154\n2026-05-05\t5\t859952\n2026-05-06\t13\t1514474\n2026-05-07\t4\t328652\n",
+  "stderr": "",
+  "execution_time_ms": 265
+}

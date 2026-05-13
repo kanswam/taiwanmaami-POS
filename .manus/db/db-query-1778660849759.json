@@ -1,0 +1,80 @@
+{
+  "query": "SELECT id, createdAt, FROM_UNIXTIME(createdAt/1000) as created_date, totalAmount, orderType FROM orders ORDER BY createdAt DESC LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT id, createdAt, FROM_UNIXTIME(createdAt/1000) as created_date, totalAmount, orderType FROM orders ORDER BY createdAt DESC LIMIT 10;",
+  "rows": [
+    {
+      "id": "4680004",
+      "createdAt": "2026-05-07 08:44:32",
+      "created_date": "2612-01-12 14:38:04.4320",
+      "totalAmount": "132300",
+      "orderType": "instore"
+    },
+    {
+      "id": "4680003",
+      "createdAt": "2026-05-07 08:24:02",
+      "created_date": "2612-01-12 14:38:02.4020",
+      "totalAmount": "103950",
+      "orderType": "instore"
+    },
+    {
+      "id": "4680002",
+      "createdAt": "2026-05-07 08:07:10",
+      "created_date": "2612-01-12 14:38:00.7100",
+      "totalAmount": "51976",
+      "orderType": "instore"
+    },
+    {
+      "id": "4680001",
+      "createdAt": "2026-05-07 07:21:57",
+      "created_date": "2612-01-12 14:37:52.1570",
+      "totalAmount": "40426",
+      "orderType": "instore"
+    },
+    {
+      "id": "4650013",
+      "createdAt": "2026-05-06 16:51:48",
+      "created_date": "2612-01-12 14:22:45.1480",
+      "totalAmount": "45676",
+      "orderType": "instore"
+    },
+    {
+      "id": "4650012",
+      "createdAt": "2026-05-06 15:38:06",
+      "created_date": "2612-01-12 14:22:33.8060",
+      "totalAmount": "49350",
+      "orderType": "instore"
+    },
+    {
+      "id": "4650011",
+      "createdAt": "2026-05-06 15:32:42",
+      "created_date": "2612-01-12 14:22:33.2420",
+      "totalAmount": "96600",
+      "orderType": "instore"
+    },
+    {
+      "id": "4650010",
+      "createdAt": "2026-05-06 14:50:40",
+      "created_date": "2612-01-12 14:22:25.0400",
+      "totalAmount": "95970",
+      "orderType": "instore"
+    },
+    {
+      "id": "4650009",
+      "createdAt": "2026-05-06 14:40:05",
+      "created_date": "2612-01-12 14:22:24.0050",
+      "totalAmount": "265126",
+      "orderType": "instore"
+    },
+    {
+      "id": "4650008",
+      "createdAt": "2026-05-06 14:39:10",
+      "created_date": "2612-01-12 14:22:23.9100",
+      "totalAmount": "54626",
+      "orderType": "delivery"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tcreatedAt\tcreated_date\ttotalAmount\torderType\n4680004\t2026-05-07 08:44:32\t2612-01-12 14:38:04.4320\t132300\tinstore\n4680003\t2026-05-07 08:24:02\t2612-01-12 14:38:02.4020\t103950\tinstore\n4680002\t2026-05-07 08:07:10\t2612-01-12 14:38:00.7100\t51976\tinstore\n4680001\t2026-05-07 07:21:57\t2612-01-12 14:37:52.1570\t40426\tinstore\n4650013\t2026-05-06 16:51:48\t2612-01-12 14:22:45.1480\t45676\tinstore\n4650012\t2026-05-06 15:38:06\t2612-01-12 14:22:33.8060\t49350\tinstore\n4650011\t2026-05-06 15:32:42\t2612-01-12 14:22:33.2420\t96600\tinstore\n4650010\t2026-05-06 14:50:40\t2612-01-12 14:22:25.0400\t95970\tinstore\n4650009\t2026-05-06 14:40:05\t2612-01-12 14:22:24.0050\t265126\tinstore\n4650008\t2026-05-06 14:39:10\t2612-01-12 14:22:23.9100\t54626\tdelivery\n",
+  "stderr": "",
+  "execution_time_ms": 263
+}
