@@ -11,8 +11,8 @@ import { ENV } from './_core/env';
 let _db: ReturnType<typeof drizzle> | null = null;
 
 export async function getDb() {
-  // Always use built-in DATABASE_URL (CUSTOM_DATABASE_URL disabled — Manus deployment cannot reach external DB)
-  const connectionString = process.env.DATABASE_URL;
+  // Use CUSTOM_DATABASE_URL (DigitalOcean MySQL) as primary, fall back to built-in DATABASE_URL
+  const connectionString = process.env.CUSTOM_DATABASE_URL || process.env.DATABASE_URL;
   if (!_db && connectionString) {
     try {
       _db = drizzle(connectionString);

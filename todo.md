@@ -3451,3 +3451,5 @@ Orders fixed:
 - [x] Reverted Clerk auth back to Manus OAuth (rolled back to pre-Clerk commit 68d6bf7)
 - [x] Applied DATABASE_URL fix: db.ts and env.ts now use only built-in DATABASE_URL, ignoring CUSTOM_DATABASE_URL
 - [x] Clerk will be implemented separately on thamaraifoods.com (DO App Platform)
+- [x] Set CUSTOM_DATABASE_URL to DO MySQL as primary database
+- [x] Remove temporary /api/server-ip endpoint
