@@ -3446,3 +3446,9 @@ Orders fixed:
 - [x] Step 9: Delete sdk.ts, oauth.ts, llm.ts, imageGeneration.ts, voiceTranscription.ts, dataApi.ts, manusTypes.ts
 - [x] Step 10: Test full flow locally (TS: 0 errors, Tests: 923/924 passed, 1 pre-existing timeout)
 - [ ] Step 11: Deploy to DigitalOcean App Platform at thamaraifoods.com
+- [x] Fix: Make clerkMiddleware and ClerkProvider graceful when Clerk keys are missing (blank page bug)
+  - Created clerkSafe.tsx with useClerkSafe() and SafeSignInButton wrappers
+  - Conditional ClerkProvider in main.tsx (only wraps when VITE_CLERK_PUBLISHABLE_KEY set)
+  - Conditional clerkMiddleware in server index.ts (only when CLERK_SECRET_KEY set)
+  - Updated Header.tsx, Checkout.tsx, Partner.tsx, DashboardLayout.tsx, Orders.tsx to use safe wrappers
+  - Site loads correctly without Clerk keys — auth features gracefully hidden

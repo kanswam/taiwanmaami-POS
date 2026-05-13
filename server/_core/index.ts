@@ -202,9 +202,13 @@ async function startServer() {
   // Configure body parser with larger size limit for file uploads
   app.use(express.json({ limit: "50mb" }));
   app.use(express.urlencoded({ limit: "50mb", extended: true }));
-  // Clerk middleware — must be applied before any route that uses getAuth()
-  app.use(clerkMiddleware());
-  registerClerkWebhookRoute(app);
+  // Clerk middleware — only apply if Clerk keys are configured
+  if (process.env.CLERK_SECRET_KEY) {
+    app.use(clerkMiddleware());
+    registerClerkWebhookRoute(app);
+  } else {
+    console.warn('[Server] CLERK_SECRET_KEY not set — Clerk auth disabled, running without authentication');
+  }
   
   // Version marker for deployment verification: v2025.12.14.3
   app.get('/api/version', (req, res) => res.json({ version: '2025.12.14.3', timestamp: new Date().toISOString() }));

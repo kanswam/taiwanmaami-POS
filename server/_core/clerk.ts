@@ -8,17 +8,27 @@ import * as db from "../db";
  * Returns the local database User or null if unauthenticated.
  *
  * Replaces sdk.authenticateRequest(req) from the Manus OAuth flow.
- * Clerk's clerkMiddleware() must be applied globally before this is called.
+ * When Clerk is not configured (no CLERK_SECRET_KEY), returns null
+ * gracefully so the app still works without authentication.
  */
 export async function authenticateClerkRequest(
   req: Request
 ): Promise<User | null> {
-  const { userId } = getAuth(req);
+  // If Clerk is not configured, skip authentication entirely
+  if (!process.env.CLERK_SECRET_KEY) return null;
 
-  if (!userId) return null;
+  try {
+    const { userId } = getAuth(req);
 
-  // userId is Clerk's user_xxx ID, stored in our openId column
-  const user = await db.getUserByOpenId(userId);
+    if (!userId) return null;
 
-  return user ?? null;
+    // userId is Clerk's user_xxx ID, stored in our openId column
+    const user = await db.getUserByOpenId(userId);
+
+    return user ?? null;
+  } catch (error) {
+    // getAuth() throws if clerkMiddleware() wasn't applied or keys are invalid
+    console.warn("[Clerk] authenticateClerkRequest failed:", (error as Error).message);
+    return null;
+  }
 }

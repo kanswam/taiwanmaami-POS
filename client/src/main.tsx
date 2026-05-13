@@ -28,8 +28,25 @@ const trpcClient = trpc.createClient({
   ],
 });
 
+/**
+ * Conditionally wrap with ClerkProvider only when the publishable key is set.
+ * This allows the app to render in environments where Clerk isn't configured
+ * (e.g., Manus sandbox) — auth features are simply disabled.
+ */
+function AuthWrapper({ children }: { children: React.ReactNode }) {
+  if (CLERK_PUBLISHABLE_KEY) {
+    return (
+      <ClerkProvider publishableKey={CLERK_PUBLISHABLE_KEY}>
+        {children}
+      </ClerkProvider>
+    );
+  }
+  // No Clerk key — render without auth provider
+  return <>{children}</>;
+}
+
 createRoot(document.getElementById("root")!).render(
-  <ClerkProvider publishableKey={CLERK_PUBLISHABLE_KEY}>
+  <AuthWrapper>
     <trpc.Provider client={trpcClient} queryClient={queryClient}>
       <QueryClientProvider client={queryClient}>
         <HelmetProvider>
@@ -39,5 +56,5 @@ createRoot(document.getElementById("root")!).render(
         </HelmetProvider>
       </QueryClientProvider>
     </trpc.Provider>
-  </ClerkProvider>
+  </AuthWrapper>
 );

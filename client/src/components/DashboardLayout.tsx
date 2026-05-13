@@ -19,7 +19,7 @@ import {
   SidebarTrigger,
   useSidebar,
 } from "@/components/ui/sidebar";
-import { SignInButton } from "@clerk/clerk-react";
+import { SafeSignInButton } from "@/lib/clerkSafe";
 import { useIsMobile } from "@/hooks/useMobile";
 import { LayoutDashboard, LogOut, PanelLeft, Users } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
@@ -69,14 +69,14 @@ export default function DashboardLayout({
               Access to this dashboard requires authentication. Continue to launch the login flow.
             </p>
           </div>
-          <SignInButton mode="modal">
+          <SafeSignInButton mode="modal">
             <Button
               size="lg"
               className="w-full shadow-lg hover:shadow-xl transition-all"
             >
               Sign in
             </Button>
-          </SignInButton>
+          </SafeSignInButton>
         </div>
       </div>
     );

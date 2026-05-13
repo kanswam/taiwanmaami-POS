@@ -10,7 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/_core/hooks/useAuth';
 import { trpc } from '@/lib/trpc';
 import { formatPrice } from '@shared/types';
-import { useClerk } from '@clerk/clerk-react';
+import { useClerkSafe } from '@/lib/clerkSafe';
 import { toast } from 'sonner';
 import {
   Crown,
@@ -57,7 +57,7 @@ export default function Partner() {
   const [, navigate] = useLocation();
   const searchString = useSearch();
   const { isAuthenticated, user } = useAuth();
-  const { openSignIn } = useClerk();
+  const { openSignIn } = useClerkSafe();
 
   const [selectedTier, setSelectedTier] = useState<'founding' | 'regular'>('founding');
   const [referralCode, setReferralCode] = useState('');

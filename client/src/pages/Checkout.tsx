@@ -20,7 +20,7 @@ import { Check, ChevronsUpDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { Link } from 'wouter';
-import { useClerk } from '@clerk/clerk-react';
+import { useClerkSafe } from '@/lib/clerkSafe';
 import { useOffline } from '@/contexts/OfflineContext';
 
 // Declare Razorpay types
@@ -33,7 +33,7 @@ declare global {
 export default function Checkout() {
   const [, navigate] = useLocation();
   const { isAuthenticated, user } = useAuth();
-  const { openSignIn } = useClerk();
+  const { openSignIn } = useClerkSafe();
   const { state, subtotal, gst, total, clearCart, itemCount, tableNumber, setTableNumber, activeOrderId, setActiveOrderId, applyDiscount, removeDiscount } = useCart();
   const { data: stores } = trpc.stores.getAll.useQuery();
   const { isOnline, offlineModeEnabled, placeOfflineOrder } = useOffline();

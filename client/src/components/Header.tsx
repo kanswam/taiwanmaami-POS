@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { useAuth } from '@/_core/hooks/useAuth';
 import { useCart } from '@/contexts/CartContext';
-import { SignInButton, useClerk } from '@clerk/clerk-react';
+import { SafeSignInButton, useClerkSafe } from '@/lib/clerkSafe';
 import { Menu, ShoppingCart, User, LogOut, MapPin, Info, FileText, X, ClipboardList, BookOpen, UtensilsCrossed } from 'lucide-react';
 import { formatPrice } from '@shared/types';
 import { isPartnerNavVisible } from '@/lib/partnerGate';
@@ -14,7 +14,7 @@ export function Header() {
   const { user, isAuthenticated, logout } = useAuth();
   const { itemCount, total } = useCart();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const { signOut } = useClerk();
+  const { signOut } = useClerkSafe();
 
   const partnerVisible = isPartnerNavVisible();
   const navLinks = [
@@ -163,12 +163,12 @@ export function Header() {
                 </Button>
               </div>
             ) : (
-              <SignInButton mode="modal">
+              <SafeSignInButton mode="modal">
                 <Button variant="ghost" size="sm" className="hidden md:block">
                   <User className="w-4 h-4 mr-2" />
                   Login
                 </Button>
-              </SignInButton>
+              </SafeSignInButton>
             )}
 
             {/* Mobile menu */}
@@ -291,12 +291,12 @@ export function Header() {
                       </Button>
                     </>
                   ) : (
-                    <SignInButton mode="modal">
+                    <SafeSignInButton mode="modal">
                       <Button className="w-full">
                         <User className="w-4 h-4 mr-2" />
                         Login
                       </Button>
-                    </SignInButton>
+                    </SafeSignInButton>
                   )}
                 </div>
               </SheetContent>
