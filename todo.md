@@ -3459,3 +3459,5 @@ Orders fixed:
 - [x] BUG: Menu items not loading on production (empty skeleton cards — DB connection or API issue)
   - Root cause: CUSTOM_DATABASE_URL set in sandbox; sandbox can't reach DO MySQL (firewall/trusted sources) but DO App Platform can
   - Menu will load correctly on production after autodeploy
+- [ ] BUG: Products not showing on DO App Platform production (DB query failing — need to check how CUSTOM_DATABASE_URL is used in deployed code)
+- [ ] BUG: Clerk login shows "Couldn't find your account" + "Development mode" — pk_test_ key only works with test accounts
