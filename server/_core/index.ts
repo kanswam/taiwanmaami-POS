@@ -211,7 +211,26 @@ async function startServer() {
   }
   
   // Version marker for deployment verification: v2025.12.14.3
-  app.get('/api/version', (req, res) => res.json({ version: '2025.12.14.3', timestamp: new Date().toISOString() }));
+  app.get('/api/version', (req, res) => res.json({ version: '2025.12.14.4', timestamp: new Date().toISOString() }));
+
+  // Temporary debug endpoint — remove after diagnosis
+  app.get('/api/debug-db-env', (req, res) => {
+    const customUrl = process.env.CUSTOM_DATABASE_URL || '';
+    const dbUrl = process.env.DATABASE_URL || '';
+    const maskUrl = (url: string) => {
+      if (!url) return '(not set)';
+      try {
+        const u = new URL(url);
+        return `${u.protocol}//${u.username.substring(0,4)}***@${u.hostname}:${u.port}/${u.pathname.substring(1)}${u.search ? '?...' : ''}`;
+      } catch { return '(invalid URL format)'; }
+    };
+    res.json({
+      custom_database_url: maskUrl(customUrl),
+      database_url: maskUrl(dbUrl),
+      active: customUrl ? 'CUSTOM_DATABASE_URL' : 'DATABASE_URL',
+      version: '2025.12.14.4'
+    });
+  });
   
   // Simple REST endpoint for KOT polling (easier for external clients)
   app.get('/api/kot/poll', async (req, res) => {
