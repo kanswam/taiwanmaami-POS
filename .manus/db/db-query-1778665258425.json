@@ -1,0 +1,13 @@
+{
+  "query": "SELECT COUNT(*) as item_count FROM order_items WHERE orderId BETWEEN 4680014 AND 4680079;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT COUNT(*) as item_count FROM order_items WHERE orderId BETWEEN 4680014 AND 4680079;",
+  "rows": [
+    {
+      "item_count": "175"
+    }
+  ],
+  "messages": [],
+  "stdout": "item_count\n175\n",
+  "stderr": "",
+  "execution_time_ms": 259
+}

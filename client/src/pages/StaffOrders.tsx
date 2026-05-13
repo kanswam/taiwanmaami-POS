@@ -465,10 +465,8 @@ export default function StaffOrders() {
     d.setDate(d.getDate() + offsetDays);
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   };
-  const localDate = dateFilter === 'today' ? getLocalDateStr(0)
-    : dateFilter === 'yesterday' ? getLocalDateStr(-1)
-    : dateFilter === 'week' ? getLocalDateStr(-7)
-    : undefined;
+  // Always send today's local date — the server applies the offset based on dateFilter
+  const localDate = dateFilter !== 'all' ? getLocalDateStr(0) : undefined;
 
   // Fetch orders with filters and auto-refresh every 10 seconds
   const { data: ordersData, isLoading, refetch } = trpc.orders.getRecent.useQuery({

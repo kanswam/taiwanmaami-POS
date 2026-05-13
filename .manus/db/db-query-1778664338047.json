@@ -1,0 +1,62 @@
+{
+  "query": "SELECT COLUMN_NAME, DATA_TYPE FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'orders' AND TABLE_SCHEMA = DATABASE() ORDER BY ORDINAL_POSITION LIMIT 20 OFFSET 40;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT COLUMN_NAME, DATA_TYPE FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'orders' AND TABLE_SCHEMA = DATABASE() ORDER BY ORDINAL_POSITION LIMIT 20 OFFSET 40;",
+  "rows": [
+    {
+      "COLUMN_NAME": "refundReason",
+      "DATA_TYPE": "text"
+    },
+    {
+      "COLUMN_NAME": "refundProcessedAt",
+      "DATA_TYPE": "timestamp"
+    },
+    {
+      "COLUMN_NAME": "refundProcessedBy",
+      "DATA_TYPE": "int"
+    },
+    {
+      "COLUMN_NAME": "idempotencyKey",
+      "DATA_TYPE": "varchar"
+    },
+    {
+      "COLUMN_NAME": "isTestData",
+      "DATA_TYPE": "tinyint"
+    },
+    {
+      "COLUMN_NAME": "reconciliationNote",
+      "DATA_TYPE": "text"
+    },
+    {
+      "COLUMN_NAME": "reconciledAt",
+      "DATA_TYPE": "timestamp"
+    },
+    {
+      "COLUMN_NAME": "reconciledBy",
+      "DATA_TYPE": "int"
+    },
+    {
+      "COLUMN_NAME": "paymentCollectedBy",
+      "DATA_TYPE": "varchar"
+    },
+    {
+      "COLUMN_NAME": "paymentCollectedAt",
+      "DATA_TYPE": "timestamp"
+    },
+    {
+      "COLUMN_NAME": "paymentNote",
+      "DATA_TYPE": "text"
+    },
+    {
+      "COLUMN_NAME": "partnerBenefitAmount",
+      "DATA_TYPE": "int"
+    },
+    {
+      "COLUMN_NAME": "partnerSubscriptionId",
+      "DATA_TYPE": "int"
+    }
+  ],
+  "messages": [],
+  "stdout": "COLUMN_NAME\tDATA_TYPE\nrefundReason\ttext\nrefundProcessedAt\ttimestamp\nrefundProcessedBy\tint\nidempotencyKey\tvarchar\nisTestData\ttinyint\nreconciliationNote\ttext\nreconciledAt\ttimestamp\nreconciledBy\tint\npaymentCollectedBy\tvarchar\npaymentCollectedAt\ttimestamp\npaymentNote\ttext\npartnerBenefitAmount\tint\npartnerSubscriptionId\tint\n",
+  "stderr": "",
+  "execution_time_ms": 256
+}

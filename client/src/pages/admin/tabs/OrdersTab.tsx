@@ -190,10 +190,8 @@ function getLocalDateStr(offsetDays = 0): string {
 export default function OrdersTab() {
   const [dateFilter, setDateFilter] = useState<'today' | 'yesterday' | 'week' | 'all'>('today');
   // Pass localDate so the server uses the client's local date (fixes IST midnight timezone bug)
-  const localDate = dateFilter === 'today' ? getLocalDateStr(0)
-    : dateFilter === 'yesterday' ? getLocalDateStr(-1)
-    : dateFilter === 'week' ? getLocalDateStr(-7)
-    : undefined;
+  // Always send today's local date — the server applies the offset based on dateFilter
+  const localDate = dateFilter !== 'all' ? getLocalDateStr(0) : undefined;
   const { data: orders, refetch } = trpc.orders.getRecent.useQuery({ limit: 200, dateFilter, localDate });
   const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null);
   const { data: orderDetails } = trpc.orders.getById.useQuery(

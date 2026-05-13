@@ -1,0 +1,13 @@
+{
+  "query": "SELECT COUNT(*) as cnt FROM orders WHERE id >= 4680005 OR orderNumber IN ('26-00447','26-00448','26-00449','26-00450','26-00456','26-00457','26-00458');",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT COUNT(*) as cnt FROM orders WHERE id >= 4680005 OR orderNumber IN ('26-00447','26-00448','26-00449','26-00450','26-00456','26-00457','26-00458');",
+  "rows": [
+    {
+      "cnt": "0"
+    }
+  ],
+  "messages": [],
+  "stdout": "cnt\n0\n",
+  "stderr": "",
+  "execution_time_ms": 270
+}

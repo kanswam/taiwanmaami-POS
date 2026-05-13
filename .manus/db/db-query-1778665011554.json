@@ -1,0 +1,70 @@
+{
+  "query": "SELECT DATE(createdAt) as order_date, orderType, COUNT(*) as cnt, SUM(totalAmount)/100 as total_rupees FROM orders WHERE createdAt >= '2026-05-08' AND createdAt < '2026-05-14' GROUP BY DATE(createdAt), orderType ORDER BY order_date, orderType;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT DATE(createdAt) as order_date, orderType, COUNT(*) as cnt, SUM(totalAmount)/100 as total_rupees FROM orders WHERE createdAt >= '2026-05-08' AND createdAt < '2026-05-14' GROUP BY DATE(createdAt), orderType ORDER BY order_date, orderType;",
+  "rows": [
+    {
+      "order_date": "2026-05-08",
+      "orderType": "instore",
+      "cnt": "7",
+      "total_rupees": "10377.1800"
+    },
+    {
+      "order_date": "2026-05-08",
+      "orderType": "delivery",
+      "cnt": "1",
+      "total_rupees": "831.5000"
+    },
+    {
+      "order_date": "2026-05-09",
+      "orderType": "instore",
+      "cnt": "20",
+      "total_rupees": "21768.2800"
+    },
+    {
+      "order_date": "2026-05-09",
+      "orderType": "pickup",
+      "cnt": "3",
+      "total_rupees": "2567.2600"
+    },
+    {
+      "order_date": "2026-05-10",
+      "orderType": "instore",
+      "cnt": "9",
+      "total_rupees": "14268.5200"
+    },
+    {
+      "order_date": "2026-05-10",
+      "orderType": "pickup",
+      "cnt": "2",
+      "total_rupees": "829.5200"
+    },
+    {
+      "order_date": "2026-05-11",
+      "orderType": "instore",
+      "cnt": "10",
+      "total_rupees": "10373.0000"
+    },
+    {
+      "order_date": "2026-05-11",
+      "orderType": "pickup",
+      "cnt": "1",
+      "total_rupees": "1638.0000"
+    },
+    {
+      "order_date": "2026-05-12",
+      "orderType": "instore",
+      "cnt": "9",
+      "total_rupees": "9352.0200"
+    },
+    {
+      "order_date": "2026-05-12",
+      "orderType": "pickup",
+      "cnt": "2",
+      "total_rupees": "2462.2600"
+    }
+  ],
+  "messages": [],
+  "stdout": "order_date\torderType\tcnt\ttotal_rupees\n2026-05-08\tinstore\t7\t10377.1800\n2026-05-08\tdelivery\t1\t831.5000\n2026-05-09\tinstore\t20\t21768.2800\n2026-05-09\tpickup\t3\t2567.2600\n2026-05-10\tinstore\t9\t14268.5200\n2026-05-10\tpickup\t2\t829.5200\n2026-05-11\tinstore\t10\t10373.0000\n2026-05-11\tpickup\t1\t1638.0000\n2026-05-12\tinstore\t9\t9352.0200\n2026-05-12\tpickup\t2\t2462.2600\n",
+  "stderr": "",
+  "execution_time_ms": 265
+}

@@ -1,0 +1,40 @@
+{
+  "query": "SELECT DATE(createdAt) as order_date, outletId, COUNT(*) as cnt, SUM(totalAmount)/100 as total_rupees FROM orders WHERE id BETWEEN 4680014 AND 4680079 GROUP BY DATE(createdAt), outletId ORDER BY order_date;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT DATE(createdAt) as order_date, outletId, COUNT(*) as cnt, SUM(totalAmount)/100 as total_rupees FROM orders WHERE id BETWEEN 4680014 AND 4680079 GROUP BY DATE(createdAt), outletId ORDER BY order_date;",
+  "rows": [
+    {
+      "order_date": "2026-05-08",
+      "outletId": "2",
+      "cnt": "8",
+      "total_rupees": "11208.6800"
+    },
+    {
+      "order_date": "2026-05-09",
+      "outletId": "2",
+      "cnt": "23",
+      "total_rupees": "24335.5400"
+    },
+    {
+      "order_date": "2026-05-10",
+      "outletId": "2",
+      "cnt": "11",
+      "total_rupees": "15098.0400"
+    },
+    {
+      "order_date": "2026-05-11",
+      "outletId": "2",
+      "cnt": "11",
+      "total_rupees": "12011.0000"
+    },
+    {
+      "order_date": "2026-05-12",
+      "outletId": "2",
+      "cnt": "11",
+      "total_rupees": "11814.2800"
+    }
+  ],
+  "messages": [],
+  "stdout": "order_date\toutletId\tcnt\ttotal_rupees\n2026-05-08\t2\t8\t11208.6800\n2026-05-09\t2\t23\t24335.5400\n2026-05-10\t2\t11\t15098.0400\n2026-05-11\t2\t11\t12011.0000\n2026-05-12\t2\t11\t11814.2800\n",
+  "stderr": "",
+  "execution_time_ms": 266
+}

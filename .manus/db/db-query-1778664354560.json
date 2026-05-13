@@ -1,0 +1,43 @@
+{
+  "query": "SELECT id, orderNumber, customerName, orderType, subtotal, totalAmount, paymentMethod, outletId, createdAt FROM orders ORDER BY id DESC LIMIT 3;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT id, orderNumber, customerName, orderType, subtotal, totalAmount, paymentMethod, outletId, createdAt FROM orders ORDER BY id DESC LIMIT 3;",
+  "rows": [
+    {
+      "id": "4680004",
+      "orderNumber": "26-00446",
+      "customerName": "Rinold Thousen",
+      "orderType": "instore",
+      "subtotal": "126000",
+      "totalAmount": "132300",
+      "paymentMethod": "cash",
+      "outletId": "2",
+      "createdAt": "2026-05-07 08:44:32"
+    },
+    {
+      "id": "4680003",
+      "orderNumber": "26-00445",
+      "customerName": "Rinold Thousen",
+      "orderType": "instore",
+      "subtotal": "99000",
+      "totalAmount": "103950",
+      "paymentMethod": "card",
+      "outletId": "2",
+      "createdAt": "2026-05-07 08:24:02"
+    },
+    {
+      "id": "4680002",
+      "orderNumber": "26-00444",
+      "customerName": "Rinold Thousen",
+      "orderType": "instore",
+      "subtotal": "49500",
+      "totalAmount": "51976",
+      "paymentMethod": "card",
+      "outletId": "2",
+      "createdAt": "2026-05-07 08:07:10"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\torderNumber\tcustomerName\torderType\tsubtotal\ttotalAmount\tpaymentMethod\toutletId\tcreatedAt\n4680004\t26-00446\tRinold Thousen\tinstore\t126000\t132300\tcash\t2\t2026-05-07 08:44:32\n4680003\t26-00445\tRinold Thousen\tinstore\t99000\t103950\tcard\t2\t2026-05-07 08:24:02\n4680002\t26-00444\tRinold Thousen\tinstore\t49500\t51976\tcard\t2\t2026-05-07 08:07:10\n",
+  "stderr": "",
+  "execution_time_ms": 265
+}

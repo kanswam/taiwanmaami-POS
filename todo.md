@@ -94,6 +94,10 @@
 - [x] Phase 54: Bulk image migration to Cloudinary
 - [x] Phase 53: Cloudinary hybrid image optimization
 
+## Bug Fix (May 13)
+
+- [x] Fix: "Yesterday" date filter on admin orders page shows May 11 instead of May 12 (double-subtraction bug — client was subtracting 1 day AND server was subtracting 1 day)
+
 ## Notes
 
 - Full project history archived to /home/ubuntu/taiwan-maami-archive/

@@ -1,0 +1,37 @@
+{
+  "query": "SELECT id, orderId, productId, productName, quantity, unitPrice, lineTotal FROM order_items WHERE orderId = 4680004;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT id, orderId, productId, productName, quantity, unitPrice, lineTotal FROM order_items WHERE orderId = 4680004;",
+  "rows": [
+    {
+      "id": "4680004",
+      "orderId": "4680004",
+      "productId": "76",
+      "productName": "Yaki Onigiri",
+      "quantity": "1",
+      "unitPrice": "45000",
+      "lineTotal": "45000"
+    },
+    {
+      "id": "4680005",
+      "orderId": "4680004",
+      "productId": "19",
+      "productName": "Blueberry Lemon Oolong (no milk)",
+      "quantity": "1",
+      "unitPrice": "40500",
+      "lineTotal": "40500"
+    },
+    {
+      "id": "4680006",
+      "orderId": "4680004",
+      "productId": "46",
+      "productName": "Iced Hong Kong Style Yuen-Yeung",
+      "quantity": "1",
+      "unitPrice": "40500",
+      "lineTotal": "40500"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\torderId\tproductId\tproductName\tquantity\tunitPrice\tlineTotal\n4680004\t4680004\t76\tYaki Onigiri\t1\t45000\t45000\n4680005\t4680004\t19\tBlueberry Lemon Oolong (no milk)\t1\t40500\t40500\n4680006\t4680004\t46\tIced Hong Kong Style Yuen-Yeung\t1\t40500\t40500\n",
+  "stderr": "",
+  "execution_time_ms": 279
+}
