@@ -3452,3 +3452,10 @@ Orders fixed:
   - Conditional clerkMiddleware in server index.ts (only when CLERK_SECRET_KEY set)
   - Updated Header.tsx, Checkout.tsx, Partner.tsx, DashboardLayout.tsx, Orders.tsx to use safe wrappers
   - Site loads correctly without Clerk keys — auth features gracefully hidden
+- [x] Fix: Server-side clerkMiddleware should skip (call next()) when CLERK_SECRET_KEY is missing
+  - Already implemented in previous session (index.ts line 206-211 checks process.env.CLERK_SECRET_KEY)
+- [x] BUG: No Login button visible on production (SafeSignInButton returns null when VITE_CLERK_PUBLISHABLE_KEY not detected at build time)
+  - Fixed by setting VITE_CLERK_PUBLISHABLE_KEY in sandbox so it's baked into the Vite build
+- [x] BUG: Menu items not loading on production (empty skeleton cards — DB connection or API issue)
+  - Root cause: CUSTOM_DATABASE_URL set in sandbox; sandbox can't reach DO MySQL (firewall/trusted sources) but DO App Platform can
+  - Menu will load correctly on production after autodeploy
