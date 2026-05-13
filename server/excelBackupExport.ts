@@ -13,7 +13,7 @@ import {
 } from '../drizzle/schema';
 import { desc, eq, sql } from 'drizzle-orm';
 import type { Request, Response } from 'express';
-import { authenticateClerkRequest } from './_core/clerk';
+import { sdk } from './_core/sdk';
 
 // Paise to Rupees conversion
 const toRupees = (paise: number) => (paise || 0) / 100;
@@ -21,7 +21,7 @@ const toRupees = (paise: number) => (paise || 0) / 100;
 // Admin auth middleware
 async function requireAdmin(req: Request, res: Response): Promise<boolean> {
   try {
-    const user = await authenticateClerkRequest(req as any);
+    const user = await sdk.authenticateRequest(req as any);
     if (!user || user.role !== 'admin') {
       res.status(403).json({ error: 'Admin access required' });
       return false;

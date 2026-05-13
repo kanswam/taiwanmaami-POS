@@ -4,8 +4,10 @@ import react from "@vitejs/plugin-react";
 import fs from "node:fs";
 import path from "path";
 import { defineConfig } from "vite";
+import { vitePluginManusRuntime } from "vite-plugin-manus-runtime";
 
-const plugins = [react(), tailwindcss(), jsxLocPlugin()];
+
+const plugins = [react(), tailwindcss(), jsxLocPlugin(), vitePluginManusRuntime()];
 
 export default defineConfig({
   plugins,
@@ -22,11 +24,13 @@ export default defineConfig({
   build: {
     outDir: path.resolve(import.meta.dirname, "dist/public"),
     emptyOutDir: true,
+    // Reduce memory usage during build
     minify: 'esbuild',
     sourcemap: false,
     rollupOptions: {
       output: {
         manualChunks(id) {
+          // Isolate dependencies into their own chunks
           if (id.includes('node_modules/react-dom')) {
             return 'vendor-react';
           }
@@ -63,7 +67,6 @@ export default defineConfig({
       ".manus-asia.computer",
       ".manuscomputer.ai",
       ".manusvm.computer",
-      ".thamaraifoods.com",
       "localhost",
       "127.0.0.1",
     ],

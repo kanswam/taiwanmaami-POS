@@ -3440,24 +3440,9 @@ Orders fixed:
 - [x] Step 3: Replace notification.ts internals with Twilio WhatsApp (sendWhatsApp, same signature)
 - [x] Step 4: Replace storage.ts with Cloudinary-only (storagePut/storageGet same API, hybridStorage simplified)
 - [x] Step 5: Replace map.ts with direct Google Maps API (GOOGLE_MAPS_API_KEY env var)
-- [x] Step 6: Install Clerk packages, create clerk.ts + clerkWebhook.ts
-- [x] Step 7: Update context.ts, env.ts, db.ts for Clerk auth
-- [x] Step 8: Update frontend — ClerkProvider, Header, remove getLoginUrl, vite.config.ts
-- [x] Step 9: Delete sdk.ts, oauth.ts, llm.ts, imageGeneration.ts, voiceTranscription.ts, dataApi.ts, manusTypes.ts
-- [x] Step 10: Test full flow locally (TS: 0 errors, Tests: 923/924 passed, 1 pre-existing timeout)
+- [ ] Step 6: Install Clerk packages, create clerk.ts + clerkWebhook.ts
+- [ ] Step 7: Update context.ts, env.ts, db.ts for Clerk auth
+- [ ] Step 8: Update frontend — ClerkProvider, Header, remove getLoginUrl, vite.config.ts
+- [ ] Step 9: Delete sdk.ts, oauth.ts, llm.ts, imageGeneration.ts, voiceTranscription.ts
+- [ ] Step 10: Test full flow locally
 - [ ] Step 11: Deploy to DigitalOcean App Platform at thamaraifoods.com
-- [x] Fix: Make clerkMiddleware and ClerkProvider graceful when Clerk keys are missing (blank page bug)
-  - Created clerkSafe.tsx with useClerkSafe() and SafeSignInButton wrappers
-  - Conditional ClerkProvider in main.tsx (only wraps when VITE_CLERK_PUBLISHABLE_KEY set)
-  - Conditional clerkMiddleware in server index.ts (only when CLERK_SECRET_KEY set)
-  - Updated Header.tsx, Checkout.tsx, Partner.tsx, DashboardLayout.tsx, Orders.tsx to use safe wrappers
-  - Site loads correctly without Clerk keys — auth features gracefully hidden
-- [x] Fix: Server-side clerkMiddleware should skip (call next()) when CLERK_SECRET_KEY is missing
-  - Already implemented in previous session (index.ts line 206-211 checks process.env.CLERK_SECRET_KEY)
-- [x] BUG: No Login button visible on production (SafeSignInButton returns null when VITE_CLERK_PUBLISHABLE_KEY not detected at build time)
-  - Fixed by setting VITE_CLERK_PUBLISHABLE_KEY in sandbox so it's baked into the Vite build
-- [x] BUG: Menu items not loading on production (empty skeleton cards — DB connection or API issue)
-  - Root cause: CUSTOM_DATABASE_URL set in sandbox; sandbox can't reach DO MySQL (firewall/trusted sources) but DO App Platform can
-  - Menu will load correctly on production after autodeploy
-- [ ] BUG: Products not showing on DO App Platform production (DB query failing — need to check how CUSTOM_DATABASE_URL is used in deployed code)
-- [ ] BUG: Clerk login shows "Couldn't find your account" + "Development mode" — pk_test_ key only works with test accounts

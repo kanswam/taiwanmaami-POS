@@ -4,8 +4,7 @@ import { ENV } from "./env";
 import { createServer } from "http";
 import net from "net";
 import { createExpressMiddleware } from "@trpc/server/adapters/express";
-import { clerkMiddleware } from "@clerk/express";
-import { registerClerkWebhookRoute } from "./clerkWebhook";
+import { registerOAuthRoutes } from "./oauth";
 import { appRouter } from "../routers";
 import { handleSalesReportExport } from "../excelExport";
 import { handleItemwiseExport, handleChannelsExport, handleLeelaRegistrationsExport, handleCustomerDatabaseExport } from "../excelExportExtra";
@@ -21,7 +20,7 @@ import { validateOrdersQuery, validateEmployeesQuery, validateMenuProductsQuery,
 import { auditLogMiddleware } from "../auditLog";
 import { handleETL, handleETLStatus } from "../etl";
 import { createContext } from "./context";
-import { authenticateClerkRequest } from "./clerk";
+import { sdk } from "./sdk";
 import { serveStatic, setupVite } from "./vite";
 
 function isPortAvailable(port: number): Promise<boolean> {
@@ -202,35 +201,11 @@ async function startServer() {
   // Configure body parser with larger size limit for file uploads
   app.use(express.json({ limit: "50mb" }));
   app.use(express.urlencoded({ limit: "50mb", extended: true }));
-  // Clerk middleware — only apply if Clerk keys are configured
-  if (process.env.CLERK_SECRET_KEY) {
-    app.use(clerkMiddleware());
-    registerClerkWebhookRoute(app);
-  } else {
-    console.warn('[Server] CLERK_SECRET_KEY not set — Clerk auth disabled, running without authentication');
-  }
+  // OAuth callback under /api/oauth/callback
+  registerOAuthRoutes(app);
   
   // Version marker for deployment verification: v2025.12.14.3
-  app.get('/api/version', (req, res) => res.json({ version: '2025.12.14.4', timestamp: new Date().toISOString() }));
-
-  // Temporary debug endpoint — remove after diagnosis
-  app.get('/api/debug-db-env', (req, res) => {
-    const customUrl = process.env.CUSTOM_DATABASE_URL || '';
-    const dbUrl = process.env.DATABASE_URL || '';
-    const maskUrl = (url: string) => {
-      if (!url) return '(not set)';
-      try {
-        const u = new URL(url);
-        return `${u.protocol}//${u.username.substring(0,4)}***@${u.hostname}:${u.port}/${u.pathname.substring(1)}${u.search ? '?...' : ''}`;
-      } catch { return '(invalid URL format)'; }
-    };
-    res.json({
-      custom_database_url: maskUrl(customUrl),
-      database_url: maskUrl(dbUrl),
-      active: customUrl ? 'CUSTOM_DATABASE_URL' : 'DATABASE_URL',
-      version: '2025.12.14.4'
-    });
-  });
+  app.get('/api/version', (req, res) => res.json({ version: '2025.12.14.3', timestamp: new Date().toISOString() }));
   
   // Simple REST endpoint for KOT polling (easier for external clients)
   app.get('/api/kot/poll', async (req, res) => {
@@ -604,7 +579,7 @@ async function startServer() {
   // Any authenticated user (customer/staff/admin) can trigger the ETL
   app.post('/api/scheduled/etl', async (req: any, res: any, next: any) => {
     try {
-      const user = await authenticateClerkRequest(req);
+      const user = await sdk.authenticateRequest(req);
       if (!user) {
         return res.status(401).json({ error: 'unauthorized', message: 'Valid session cookie required' });
       }

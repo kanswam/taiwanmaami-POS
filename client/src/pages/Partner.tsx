@@ -10,7 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/_core/hooks/useAuth';
 import { trpc } from '@/lib/trpc';
 import { formatPrice } from '@shared/types';
-import { useClerkSafe } from '@/lib/clerkSafe';
+import { useLoginTransition } from '@/hooks/useLoginTransition';
 import { toast } from 'sonner';
 import {
   Crown,
@@ -57,7 +57,7 @@ export default function Partner() {
   const [, navigate] = useLocation();
   const searchString = useSearch();
   const { isAuthenticated, user } = useAuth();
-  const { openSignIn } = useClerkSafe();
+  const { triggerLogin, transitionPortal } = useLoginTransition();
 
   const [selectedTier, setSelectedTier] = useState<'founding' | 'regular'>('founding');
   const [referralCode, setReferralCode] = useState('');
@@ -117,7 +117,7 @@ export default function Partner() {
 
   const handleSubscribe = async () => {
     if (!isAuthenticated) {
-      openSignIn();
+      triggerLogin();
       return;
     }
 
@@ -297,6 +297,8 @@ export default function Partner() {
   return (
     <div className="min-h-screen bg-background">
       <Header />
+      {transitionPortal}
+
       {/* Hero Section */}
       <section className="relative overflow-hidden bg-gradient-to-br from-[#1a0a08] via-[#2d1210] to-[#1a0a08] text-white">
         <div className="absolute inset-0 opacity-10">

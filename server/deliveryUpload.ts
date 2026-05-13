@@ -1,7 +1,7 @@
 import type { Request, Response } from 'express';
 import multer from 'multer';
 import ExcelJS from 'exceljs';
-import { authenticateClerkRequest } from './_core/clerk';
+import { sdk } from './_core/sdk';
 import { getDb } from './db';
 import { deliverySalesUploads, deliveryItemSales } from '../drizzle/schema';
 import { eq, sql } from 'drizzle-orm';
@@ -16,7 +16,7 @@ export const deliveryUploadMiddleware = upload.fields([
 // Admin auth check
 async function requireAdmin(req: Request, res: Response): Promise<any> {
   try {
-    const user = await authenticateClerkRequest(req as any);
+    const user = await sdk.authenticateRequest(req as any);
     if (!user || user.role !== 'admin') {
       res.status(403).json({ error: 'Admin access required' });
       return null;

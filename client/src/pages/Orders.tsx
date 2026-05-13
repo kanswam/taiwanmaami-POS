@@ -7,7 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/_core/hooks/useAuth';
 import { trpc } from '@/lib/trpc';
 import { formatPrice } from '@shared/types';
-import { SafeSignInButton } from '@/lib/clerkSafe';
+import { getLoginUrl } from '@/const';
 import { Link } from 'wouter';
 import { Package, Clock, ChevronRight, ShoppingBag, Star, MessageSquare, Download, FileText, Eye } from 'lucide-react';
 import { StampCard } from '@/components/StampCard';
@@ -49,9 +49,9 @@ export default function Orders() {
             <p className="text-muted-foreground mb-6">
               Track your orders and reorder your favorites
             </p>
-            <SafeSignInButton mode="modal">
+            <a href={getLoginUrl()}>
               <Button size="lg">Sign In</Button>
-            </SafeSignInButton>
+            </a>
           </div>
         </div>
       </div>

@@ -1,17 +1,74 @@
-import { ClerkProvider } from "@clerk/clerk-react";
 import { trpc } from "@/lib/trpc";
+import { UNAUTHED_ERR_MSG } from '@shared/const';
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { httpBatchLink } from "@trpc/client";
+import { httpBatchLink, TRPCClientError } from "@trpc/client";
 import { createRoot } from "react-dom/client";
 import superjson from "superjson";
 import { HelmetProvider } from "react-helmet-async";
 import App from "./App";
+import { getLoginUrl } from "./const";
 import { OfflineProvider } from "./contexts/OfflineContext";
 import "./index.css";
 
-const CLERK_PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
-
 const queryClient = new QueryClient();
+
+/**
+ * Show a branded transition overlay before redirecting to OAuth.
+ * Used for automatic unauthorized redirects from tRPC errors.
+ */
+function showLoginTransitionAndRedirect() {
+  // Prevent duplicate overlays
+  if (document.getElementById('login-transition-overlay')) return;
+
+  const overlay = document.createElement('div');
+  overlay.id = 'login-transition-overlay';
+  overlay.style.cssText = `
+    position: fixed; inset: 0; z-index: 99999;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    background-color: rgb(210, 180, 140);
+    opacity: 0; transition: opacity 0.3s ease;
+  `;
+  overlay.innerHTML = `
+    <img src="https://res.cloudinary.com/drpu1dbqk/image/upload/f_auto,q_auto/v1778606585/taiwan-maami/static/PNSTmVAGBQQgOlVy.png" alt="Taiwan Maami" style="height: 8rem; width: auto; margin-bottom: 1.5rem;" />
+    <div style="width: 2rem; height: 2rem; border: 3px solid #bd302c; border-top-color: transparent; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 1rem;"></div>
+    <p style="font-size: 1rem; font-weight: 500; color: #3d2c24; letter-spacing: 0.025em;">Redirecting to secure login\u2026</p>
+    <p style="font-size: 0.875rem; color: #7a6a5f; margin-top: 0.25rem;">You\u2019ll be right back</p>
+    <style>@keyframes spin { to { transform: rotate(360deg); } }</style>
+  `;
+  document.body.appendChild(overlay);
+  requestAnimationFrame(() => { overlay.style.opacity = '1'; });
+
+  setTimeout(() => {
+    window.location.href = getLoginUrl();
+  }, 1400);
+}
+
+const redirectToLoginIfUnauthorized = (error: unknown) => {
+  if (!(error instanceof TRPCClientError)) return;
+  if (typeof window === "undefined") return;
+
+  const isUnauthorized = error.message === UNAUTHED_ERR_MSG;
+
+  if (!isUnauthorized) return;
+
+  showLoginTransitionAndRedirect();
+};
+
+queryClient.getQueryCache().subscribe(event => {
+  if (event.type === "updated" && event.action.type === "error") {
+    const error = event.query.state.error;
+    redirectToLoginIfUnauthorized(error);
+    console.error("[API Query Error]", error);
+  }
+});
+
+queryClient.getMutationCache().subscribe(event => {
+  if (event.type === "updated" && event.action.type === "error") {
+    const error = event.mutation.state.error;
+    redirectToLoginIfUnauthorized(error);
+    console.error("[API Mutation Error]", error);
+  }
+});
 
 const trpcClient = trpc.createClient({
   links: [
@@ -28,33 +85,28 @@ const trpcClient = trpc.createClient({
   ],
 });
 
-/**
- * Conditionally wrap with ClerkProvider only when the publishable key is set.
- * This allows the app to render in environments where Clerk isn't configured
- * (e.g., Manus sandbox) — auth features are simply disabled.
- */
-function AuthWrapper({ children }: { children: React.ReactNode }) {
-  if (CLERK_PUBLISHABLE_KEY) {
-    return (
-      <ClerkProvider publishableKey={CLERK_PUBLISHABLE_KEY}>
-        {children}
-      </ClerkProvider>
-    );
-  }
-  // No Clerk key — render without auth provider
-  return <>{children}</>;
-}
+// Hide platform watermark badge
+(function hidePlatformBadge() {
+  const hide = () => {
+    const root = document.querySelector('manus-content-root');
+    if (root?.shadowRoot) {
+      const fw = root.shadowRoot.querySelector('footer-watermark');
+      if (fw) { (fw as HTMLElement).style.display = 'none'; return; }
+    }
+    // Retry until element appears (injected after page load)
+    setTimeout(hide, 500);
+  };
+  hide();
+})();
 
 createRoot(document.getElementById("root")!).render(
-  <AuthWrapper>
-    <trpc.Provider client={trpcClient} queryClient={queryClient}>
-      <QueryClientProvider client={queryClient}>
-        <HelmetProvider>
-          <OfflineProvider>
-            <App />
-          </OfflineProvider>
-        </HelmetProvider>
-      </QueryClientProvider>
-    </trpc.Provider>
-  </AuthWrapper>
+  <trpc.Provider client={trpcClient} queryClient={queryClient}>
+    <QueryClientProvider client={queryClient}>
+      <HelmetProvider>
+        <OfflineProvider>
+          <App />
+        </OfflineProvider>
+      </HelmetProvider>
+    </QueryClientProvider>
+  </trpc.Provider>
 );
