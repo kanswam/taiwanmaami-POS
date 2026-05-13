@@ -10,7 +10,8 @@ import {
 let _db: ReturnType<typeof drizzle> | null = null;
 
 export async function getDb() {
-  const connectionString = process.env.CUSTOM_DATABASE_URL || process.env.DATABASE_URL;
+  // Always use built-in DATABASE_URL (CUSTOM_DATABASE_URL disabled — Manus deployment cannot reach external DB)
+  const connectionString = process.env.DATABASE_URL;
   if (!_db && connectionString) {
     try {
       _db = drizzle(connectionString);

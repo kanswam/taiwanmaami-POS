@@ -1,5 +1,5 @@
 export const ENV = {
-  databaseUrl: process.env.CUSTOM_DATABASE_URL || process.env.DATABASE_URL || "",
+  databaseUrl: process.env.DATABASE_URL || "",
   isProduction: process.env.NODE_ENV === "production",
   // Clerk authentication
   clerkSecretKey: process.env.CLERK_SECRET_KEY ?? "",
