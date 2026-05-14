@@ -3457,3 +3457,5 @@ Orders fixed:
 - [x] Clerk will be implemented separately on thamaraifoods.com (DO App Platform)
 - [x] Set CUSTOM_DATABASE_URL to DO MySQL as primary database
 - [x] Remove temporary /api/server-ip endpoint
+- [x] Investigate: KOT did not auto-print for order #26-00522 (instore, UPI payment recovered via failed payment alert) — KOT was queued correctly, printer client getting HTTP 500
+- [x] Fix: /api/kot/poll and receipt poll returning HTTP 500 Internal Server Error to printer client — caused by Clerk migration deployment (now reverted), endpoints working again

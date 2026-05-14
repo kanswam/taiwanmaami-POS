@@ -1,0 +1,20 @@
+{
+  "query": "SELECT * FROM kot_queue WHERE orderNumber = '26-00522';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT * FROM kot_queue WHERE orderNumber = '26-00522';",
+  "rows": [
+    {
+      "id": "4380001",
+      "orderId": "4740001",
+      "outletId": "2",
+      "kotData": "{\"createdAt\": \"2026-05-13T12:18:16.250Z\", \"customerName\": \"Rosy\", \"customerPhone\": \"8099658506\", \"items\": [{\"addons\": [], \"iceLevel\": \"less_ice\", \"price\": 34500, \"productName\": \"Black Forest Tea Latte\", \"quantity\": 1, \"size\": \"regular\", \"specialInstructions\": \"\", \"sugarLevel\": \"75%\", \"withBoba\": false}, {\"addons\": [{\"name\": \"Spicy Japanese Curry\", \"price\": 0}], \"price\": 58000, \"productName\": \"Japanese ChickGozilla Curry Rice\", \"quantity\": 1, \"specialInstructions\": \"\"}], \"orderId\": \"26-00522\", \"orderType\": \"INSTORE\", \"specialInstructions\": \"\", \"tableNumber\": \"3\", \"totalAmount\": 97126}",
+      "isPrinted": "0",
+      "createdAt": "2026-05-13 12:18:16",
+      "printedAt": "NULL",
+      "orderNumber": "26-00522"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\torderId\toutletId\tkotData\tisPrinted\tcreatedAt\tprintedAt\torderNumber\n4380001\t4740001\t2\t{\"createdAt\": \"2026-05-13T12:18:16.250Z\", \"customerName\": \"Rosy\", \"customerPhone\": \"8099658506\", \"items\": [{\"addons\": [], \"iceLevel\": \"less_ice\", \"price\": 34500, \"productName\": \"Black Forest Tea Latte\", \"quantity\": 1, \"size\": \"regular\", \"specialInstructions\": \"\", \"sugarLevel\": \"75%\", \"withBoba\": false}, {\"addons\": [{\"name\": \"Spicy Japanese Curry\", \"price\": 0}], \"price\": 58000, \"productName\": \"Japanese ChickGozilla Curry Rice\", \"quantity\": 1, \"specialInstructions\": \"\"}], \"orderId\": \"26-00522\", \"orderType\": \"INSTORE\", \"specialInstructions\": \"\", \"tableNumber\": \"3\", \"totalAmount\": 97126}\t0\t2026-05-13 12:18:16\tNULL\t26-00522\n",
+  "stderr": "",
+  "execution_time_ms": 295
+}
