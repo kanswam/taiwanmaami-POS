@@ -2,7 +2,7 @@
 
 **Production-grade point-of-sale, ordering, and operations platform — built for and battle-tested by a real bubble tea chain.**
 
-[![CI](https://github.com/kanswam/taiwanmaami-practice/actions/workflows/ci.yml/badge.svg)](https://github.com/kanswam/taiwanmaami-practice/actions/workflows/ci.yml)
+[![CI](https://github.com/kanswam/taiwanmaami-POS/actions/workflows/ci.yml/badge.svg)](https://github.com/kanswam/taiwanmaami-POS/actions/workflows/ci.yml)
 [![License: Proprietary](https://img.shields.io/badge/License-Proprietary-red.svg)](#licence)
 [![Stack](https://img.shields.io/badge/Stack-Node.js%20%2F%20React%20%2F%20MySQL-blue.svg)](#tech-stack)
 

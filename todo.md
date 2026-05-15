@@ -3459,3 +3459,6 @@ Orders fixed:
 - [x] Remove temporary /api/server-ip endpoint
 - [x] Investigate: KOT did not auto-print for order #26-00522 (instore, UPI payment recovered via failed payment alert) — KOT was queued correctly, printer client getting HTTP 500
 - [x] Fix: /api/kot/poll and receipt poll returning HTTP 500 Internal Server Error to printer client — caused by Clerk migration deployment (now reverted), endpoints working again
+- [x] Fix: Individual order WhatsApp notifications removed (Option A) — all 3 notifyOwner calls removed from createOrder and verifyPayment
+- [ ] Fix: Daily digest not firing reliably (missed May 14) — migrating from GitHub Actions to Manus Heartbeat cron
+- [ ] Create Manus Heartbeat cron job for daily-digest at 1:00 AM IST (requires deploy first)

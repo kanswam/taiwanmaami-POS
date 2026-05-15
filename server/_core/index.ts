@@ -870,6 +870,291 @@ async function startServer() {
     }
   });
 
+  // ============ SCHEDULED DAILY DIGEST ============
+  // POST /api/scheduled/daily-digest — triggered by Manus Heartbeat cron
+  // Combines ETL + digest in one call: runs ETL first, waits, then composes and sends digest
+  app.post('/api/scheduled/daily-digest', async (req: any, res: any) => {
+    try {
+      // Authenticate via Manus OAuth session (Heartbeat injects $SCHEDULED_TASK_COOKIE)
+      const user = await sdk.authenticateRequest(req);
+      if (!user) {
+        return res.status(401).json({ error: 'unauthorized', message: 'Valid session cookie required' });
+      }
+
+      console.log('[Scheduled Digest] Starting ETL + Digest pipeline...');
+
+      // Step 1: Run ETL internally (call handleETL with a mock response to capture result)
+      let etlResult: any = null;
+      let etlStatus = 200;
+      const mockEtlRes = {
+        status(code: number) { etlStatus = code; return this; },
+        json(data: any) { etlResult = data; return this; },
+      };
+      await handleETL(req as any, mockEtlRes as any);
+      console.log(`[Scheduled Digest] ETL completed with status ${etlStatus}`);
+
+      // Step 2: Wait a moment for Supabase to be consistent
+      await new Promise(r => setTimeout(r, 3000));
+
+      // Step 3: Compose and send digest (reuse the /api/service/digest logic)
+      const { createClient } = await import('@supabase/supabase-js');
+      const supabaseUrl = process.env.SUPABASE_URL;
+      const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+      if (!supabaseUrl || !supabaseKey) {
+        return res.status(500).json({ error: 'config_error', message: 'Supabase credentials not configured' });
+      }
+      const supabase = createClient(supabaseUrl, supabaseKey);
+
+      // Get yesterday's date in IST (UTC+5:30)
+      const now = new Date();
+      const istOffset = 5.5 * 60 * 60 * 1000;
+      const istNow = new Date(now.getTime() + istOffset);
+      const yesterday = new Date(istNow);
+      yesterday.setDate(yesterday.getDate() - 1);
+      const dateStr = yesterday.toISOString().split('T')[0];
+
+      // Query sales_facts
+      const { data: salesData, error: sfError } = await supabase
+        .from('sales_facts')
+        .select('outlet, item_name, item_total_rupees, order_total_rupees, order_subtotal_rupees, order_tax_rupees, order_discount_rupees, source, channel, order_type, source_order_id')
+        .eq('order_date', dateStr);
+
+      if (sfError) {
+        return res.status(500).json({ error: 'query_error', message: sfError.message });
+      }
+
+      // Query stock_snapshots for low stock alerts
+      const { data: stockData } = await supabase
+        .from('stock_snapshots')
+        .select('item_name, current_quantity, unit, outlet, is_low_stock')
+        .eq('snapshot_date', dateStr)
+        .eq('is_low_stock', true);
+
+      // Query wastage_facts
+      const { data: wastageData } = await supabase
+        .from('wastage_facts')
+        .select('item_name, quantity, unit, outlet, cost_rupees')
+        .eq('wastage_date', dateStr);
+
+      // Query margin data
+      const { data: marginRawData } = await supabase
+        .from('sales_facts')
+        .select('outlet, item_quantity, item_unit_price_rupees, ingredient_cost_inr, gross_margin_inr')
+        .eq('order_date', dateStr)
+        .not('ingredient_cost_inr', 'is', null);
+
+      const { count: totalLineCount } = await supabase
+        .from('sales_facts')
+        .select('*', { count: 'exact', head: true })
+        .eq('order_date', dateStr);
+
+      // ═══ REVENUE BREAKDOWN ═══
+      type ChannelData = { subtotal: number; tax: number; total: number; discount: number; orders: Set<string> };
+      const byChannel: Record<string, ChannelData> = {};
+      const itemCounts: Record<string, number> = {};
+      let totalSubtotal = 0;
+      let totalTax = 0;
+      let totalRevenue = 0;
+      let totalDiscount = 0;
+      const allOrders = new Set<string>();
+      const seenOrders: Record<string, { key: string }> = {};
+      const voidedOrders = new Set<string>();
+
+      for (const row of (salesData || [])) {
+        const orderId = `${row.source}_${row.source_order_id}`;
+        const orderTotal = parseFloat(row.order_total_rupees) || 0;
+        if (orderTotal === 0 && !voidedOrders.has(orderId)) {
+          voidedOrders.add(orderId);
+        }
+      }
+
+      for (const row of (salesData || [])) {
+        const orderId = `${row.source}_${row.source_order_id}`;
+        if (voidedOrders.has(orderId)) continue;
+
+        const outlet = row.outlet || 'unknown';
+        let channelLabel: string;
+        if (row.order_type === 'delivery') {
+          channelLabel = 'delivery';
+        } else {
+          channelLabel = 'instore';
+        }
+
+        const key = `${outlet}_${channelLabel}`;
+        if (!byChannel[key]) byChannel[key] = { subtotal: 0, tax: 0, total: 0, discount: 0, orders: new Set() };
+
+        if (!seenOrders[orderId]) {
+          const orderSubtotal = parseFloat(row.order_subtotal_rupees) || 0;
+          const orderTax = parseFloat(row.order_tax_rupees) || 0;
+          const orderTotal = parseFloat(row.order_total_rupees) || 0;
+          const orderDiscount = parseFloat(row.order_discount_rupees) || 0;
+          seenOrders[orderId] = { key };
+          byChannel[key].subtotal += orderSubtotal;
+          byChannel[key].tax += orderTax;
+          byChannel[key].total += orderTotal;
+          byChannel[key].discount += orderDiscount;
+          totalSubtotal += orderSubtotal;
+          totalTax += orderTax;
+          totalRevenue += orderTotal;
+          totalDiscount += orderDiscount;
+        }
+        byChannel[key].orders.add(orderId);
+        allOrders.add(orderId);
+
+        const itemName = row.item_name || 'Unknown';
+        if (itemName !== 'Order Total (no line items)') {
+          itemCounts[itemName] = (itemCounts[itemName] || 0) + 1;
+        }
+      }
+
+      // ═══ FORMAT DIGEST ═══
+      let title = `Taiwan Maami Daily Digest — ${dateStr}`;
+      const lines: string[] = [];
+
+      if (totalRevenue === 0 && (salesData || []).length === 0) {
+        lines.push(`⚠️ No sales data found for ${dateStr}. ETL may not have run or no orders were placed.`);
+      } else {
+        lines.push(`🏪 *Taiwan Maami Daily Digest* _${dateStr}_`);
+        lines.push('');
+        lines.push(`💰 *REVENUE*`);
+
+        const channelOrder = ['palladium_instore', 'palladium_delivery', 'tnagar_instore', 'tnagar_delivery'];
+        const channelLabels: Record<string, string> = {
+          'palladium_instore': 'Palladium In-store',
+          'palladium_delivery': 'Palladium Delivery',
+          'tnagar_instore': 'T.Nagar In-store',
+          'tnagar_delivery': 'T.Nagar Delivery',
+        };
+
+        for (const key of channelOrder) {
+          const data = byChannel[key];
+          if (data) {
+            lines.push(`${channelLabels[key]}: ₹${Math.round(data.subtotal).toLocaleString('en-IN')} (${data.orders.size} orders)`);
+          } else {
+            lines.push(`${channelLabels[key]}: ₹0 (0 orders)`);
+          }
+        }
+
+        const packagingOther = Math.round(totalRevenue - (totalSubtotal - totalDiscount + totalTax));
+        lines.push(`Menu Sales: ₹${Math.round(totalSubtotal).toLocaleString('en-IN')}`);
+        if (totalDiscount > 0) {
+          lines.push(`Aggregator Discounts: -₹${Math.round(totalDiscount).toLocaleString('en-IN')}`);
+        }
+        if (packagingOther !== 0) {
+          const sign = packagingOther > 0 ? '+' : '-';
+          lines.push(`Packaging & Other: ${sign}₹${Math.abs(packagingOther).toLocaleString('en-IN')}`);
+        }
+        lines.push(`GST Collected: ₹${Math.round(totalTax).toLocaleString('en-IN')}`);
+        lines.push(`*Net Collected: ₹${Math.round(totalRevenue).toLocaleString('en-IN')} | Orders: ${allOrders.size}*`);
+
+        lines.push('');
+        if (marginRawData && marginRawData.length > 0) {
+          const marginByOutlet: Record<string, { revenue: number; margin: number }> = {};
+          for (const row of marginRawData) {
+            const outlet = row.outlet || 'unknown';
+            if (!marginByOutlet[outlet]) marginByOutlet[outlet] = { revenue: 0, margin: 0 };
+            const qty = parseInt(row.item_quantity) || 1;
+            marginByOutlet[outlet].revenue += (parseFloat(row.item_unit_price_rupees) || 0) * qty;
+            marginByOutlet[outlet].margin += parseFloat(row.gross_margin_inr) || 0;
+          }
+          const costedCount = marginRawData.length;
+          const coveragePct = totalLineCount ? Math.round((costedCount / totalLineCount) * 100) : 0;
+          lines.push(`📊 *GROSS MARGIN* _(${coveragePct}% of items costed)_`);
+          const outletOrder = ['palladium', 'tnagar'];
+          let combinedMargin = 0;
+          let combinedRevenue = 0;
+          for (const outlet of outletOrder) {
+            const data = marginByOutlet[outlet];
+            if (data) {
+              const pct = data.revenue > 0 ? (data.margin / data.revenue * 100) : 0;
+              const outletName = outlet === 'tnagar' ? 'T.Nagar' : 'Palladium';
+              lines.push(`${outletName}: ₹${Math.round(data.margin).toLocaleString('en-IN')} (${pct.toFixed(1)}%)`);
+              combinedMargin += data.margin;
+              combinedRevenue += data.revenue;
+            }
+          }
+          const combinedPct = combinedRevenue > 0 ? (combinedMargin / combinedRevenue * 100) : 0;
+          lines.push(`*Combined: ₹${Math.round(combinedMargin).toLocaleString('en-IN')} (${combinedPct.toFixed(1)}%)*`);
+        } else {
+          lines.push(`📊 *GROSS MARGIN*`);
+          lines.push(`_(populates once recipe costing is complete)_`);
+        }
+
+        lines.push('');
+        lines.push(`🏆 *TOP 3 ITEMS TODAY*`);
+        const sortedItems = Object.entries(itemCounts).sort((a, b) => b[1] - a[1]).slice(0, 3);
+        if (sortedItems.length > 0) {
+          for (const [name, count] of sortedItems) {
+            lines.push(`• ${name}: ${count} orders`);
+          }
+        } else {
+          lines.push(`_(no item-level data available)_`);
+        }
+
+        lines.push('');
+        lines.push(`📦 *STOCK ALERTS*`);
+        if (stockData && stockData.length > 0) {
+          const alerts = stockData.slice(0, 5);
+          for (const item of alerts) {
+            const outletName = item.outlet === 'tnagar' ? 'T.Nagar' : item.outlet === 'palladium' ? 'Palladium' : item.outlet;
+            lines.push(`• ${item.item_name} low at ${outletName}: ${item.current_quantity} ${item.unit || 'units'}`);
+          }
+          if (stockData.length > 5) {
+            lines.push(`_(+${stockData.length - 5} more alerts)_`);
+          }
+        } else {
+          lines.push(`No alerts today ✅`);
+        }
+
+        lines.push('');
+        lines.push(`🗑️ *WASTAGE*`);
+        if (wastageData && wastageData.length > 0) {
+          let totalWastageCost = 0;
+          for (const item of wastageData.slice(0, 3)) {
+            const outletName = item.outlet === 'tnagar' ? 'T.Nagar' : item.outlet === 'palladium' ? 'Palladium' : item.outlet;
+            lines.push(`• ${item.item_name}: ${item.quantity} ${item.unit || 'units'} (${outletName})`);
+            totalWastageCost += (item.cost_rupees || 0);
+          }
+          if (totalWastageCost > 0) {
+            lines.push(`Total wastage cost: ₹${Math.round(totalWastageCost).toLocaleString('en-IN')}`);
+          }
+        } else {
+          lines.push(`_(populates after stock take sync)_`);
+        }
+      }
+
+      const content = lines.join('\n');
+
+      const { notifyOwner } = await import('./notification');
+      const { sendWhatsApp } = await import('../whatsapp');
+
+      const [delivered, whatsappResult] = await Promise.all([
+        notifyOwner({ title, content }),
+        sendWhatsApp({ body: content }),
+      ]);
+
+      console.log(`[Scheduled Digest] Complete. ETL status: ${etlStatus}, Notification: ${delivered}, WhatsApp: ${whatsappResult.success}`);
+
+      return res.json({
+        success: true,
+        etl: { status: etlStatus, result: etlResult },
+        digest: {
+          title,
+          delivered,
+          whatsapp: whatsappResult.success ? 'sent' : whatsappResult.error,
+        },
+      });
+    } catch (err: any) {
+      console.error('[Scheduled Digest] Error:', err.message, err.stack);
+      return res.status(500).json({
+        error: err.message,
+        stack: err.stack,
+        context: { url: req.originalUrl },
+        timestamp: new Date().toISOString(),
+      });
+    }
+  });
+
   // ============ PAGEVIEW TRACKING ENDPOINT ============
   // Lightweight endpoint for client-side analytics tracking
   app.post('/api/track', async (req, res) => {

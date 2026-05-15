@@ -2493,18 +2493,7 @@ export const appRouter = router({
             isPrinted: false,
           });
           
-          // Send notification to owner about new order
-          try {
-            const orderTypeLabel = order.orderType === 'delivery' ? 'Delivery' : order.orderType === 'pickup' ? 'Pickup' : 'In-Store';
-            const itemsList = items.map(i => `${i.quantity}x ${i.productName}`).join(', ');
-            await notifyOwner({
-              title: `🆕 New ${orderTypeLabel} Order #${order.orderNumber}`,
-              content: `Customer: ${order.customerName || 'Guest'}\nPhone: ${order.customerPhone || 'N/A'}\nAmount: ₹${(order.totalAmount / 100).toFixed(2)}\nItems: ${itemsList}\n\nOrder placed via website. Please check the admin panel for details.`
-            });
-          } catch (notifyError) {
-            console.warn('[Order] Failed to send notification:', notifyError);
-            // Don't fail the order if notification fails
-          }
+          // Per-order WhatsApp notifications removed (Option A) — use admin dashboard instead
         }
         
         return { success: true, message: 'Payment verified successfully' };
@@ -4794,16 +4783,7 @@ export const appRouter = router({
               isPrinted: false,
             });
             
-            // Send notification for in-store guest order
-            try {
-              const itemsList = input.items.map(i => `${i.quantity}x ${i.productName}`).join(', ');
-              await notifyOwner({
-                title: `🆕 New In-Store Order #${orderNumber}`,
-                content: `Customer: ${input.guestName}\nPhone: ${input.guestPhone}\nTable: ${input.tableNumber || 'N/A'}\nAmount: ₹${(totalAmount / 100).toFixed(2)}\nItems: ${itemsList}\nPayment: Cash at Counter\n\nOrder placed via website. Please check the admin panel for details.`
-              });
-            } catch (notifyError) {
-              console.warn('[Order] Failed to send notification:', notifyError);
-            }
+            // Per-order WhatsApp notifications removed (Option A) — use admin dashboard instead
           } catch (kotError) {
             // CRITICAL: KOT queuing failed - notify owner immediately
             console.error('CRITICAL: KOT queuing failed for guest order', orderNumber, kotError);
@@ -4858,16 +4838,7 @@ export const appRouter = router({
               isPrinted: false,
             });
             
-            // Send notification for pickup order
-            try {
-              const itemsList = input.items.map(i => `${i.quantity}x ${i.productName}`).join(', ');
-              await notifyOwner({
-                title: `🆕 New Pickup Order #${orderNumber}`,
-                content: `Customer: ${input.guestName}\nPhone: ${input.guestPhone}\nAmount: ₹${(totalAmount / 100).toFixed(2)}\nItems: ${itemsList}\n\nPickup order placed. Please prepare and notify customer when ready.`
-              });
-            } catch (notifyError) {
-              console.warn('[Order] Failed to send notification:', notifyError);
-            }
+            // Per-order WhatsApp notifications removed (Option A) — use admin dashboard instead
           } catch (kotError) {
             // CRITICAL: KOT queuing failed - notify owner immediately
             console.error('CRITICAL: KOT queuing failed for pickup order', orderNumber, kotError);
