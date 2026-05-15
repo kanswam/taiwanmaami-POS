@@ -227,9 +227,6 @@ This system is available for licensing and deployment. If you run a restaurant, 
 - Ongoing updates and security patches
 
 **Pricing:**
-- India: ₹1,00,000 setup + ₹15,000/month
-- International: £2,000 setup + £500/month
-- Enterprise (multiple outlets): contact for pricing
 
 **Contact:** kannan.swamy@taiwanmaami.com
 
