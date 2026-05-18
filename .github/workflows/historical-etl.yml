@@ -20,5 +20,5 @@ jobs:
       - name: Run historical ETL
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          SUPABASE_KEY: ${{ secrets.SERVICE_ROLE }}
         run: python scripts/maami_historical_etl.py
