@@ -152,14 +152,14 @@ export const appRouter = router({
         const foodAvailable = await isFoodAvailable();
         const foodCategoryId = getFoodCategoryId();
         
-        // Filter out food category entirely when outside food hours
-        const cats = foodAvailable ? allCats : allCats.filter(c => c.id !== foodCategoryId);
+        // Keep all categories but mark food as unavailable when outside food hours
+        const cats = allCats;
         
         // Filter subcategories by availability for the order type
-        // Also filter out food subcategories when outside food hours
+        // Keep food subcategories even when food is off (for tile display), but mark them
         const subs = allSubs.filter(sub => {
-          // If food is not available, exclude all food subcategories
-          if (!foodAvailable && sub.categoryId === foodCategoryId) return false;
+          // Keep food subcategories even when unavailable (so tile shows)
+          if (sub.categoryId === foodCategoryId) return true;
           if (input.isDelivery) return sub.availableDelivery !== false;
           if (input.isPickup) return sub.availablePickup !== false;
           return sub.availableInstore !== false;

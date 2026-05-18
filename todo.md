@@ -3462,3 +3462,11 @@ Orders fixed:
 - [x] Fix: Individual order WhatsApp notifications removed (Option A) — all 3 notifyOwner calls removed from createOrder and verifyPayment
 - [ ] Fix: Daily digest not firing reliably (missed May 14) — migrating from GitHub Actions to Manus Heartbeat cron
 - [ ] Create Manus Heartbeat cron job for daily-digest at 1:00 AM IST (requires deploy first)
+
+- [ ] Fix: Customer login shows "Permission denied - Redirect URI is not set" on manus.im OAuth
+
+## Category Toggle Feature (May 17)
+
+- [ ] Feature: One-button category toggle at outlet level (e.g. turn off 'Food' at T.Nagar across all channels)
+- [ ] Feature: Optional per-channel category toggle (dine-in, delivery, pickup separately)
+- [x] Feature: Show Food category tile with 'Temporarily Unavailable' overlay when food is turned off (instead of hiding it completely)

@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { trpc } from '@/lib/trpc';
 import { useCart } from '@/contexts/CartContext';
-import { Search, ShoppingCart, Truck, Store, ChevronRight, ArrowLeft, Home, AlertCircle, MapPin, Sparkles, Check, ChevronsUpDown, Loader2 } from 'lucide-react';
+import { Search, ShoppingCart, Truck, Store, ChevronRight, ArrowLeft, Home, AlertCircle, MapPin, Sparkles, Check, ChevronsUpDown, Loader2, Clock } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Link } from 'wouter';
 import { formatPrice, OUTLET_HOURS, CHENNAI_AREAS, DELIVERY_CONFIG } from '@shared/types';
@@ -141,6 +141,9 @@ export default function Menu() {
     isDelivery: state.orderType === 'delivery',
     isPickup: state.orderType === 'pickup',
   });
+
+  // Check if food is currently available (for showing unavailable overlay)
+  const foodAvailable = menuData?.foodAvailable !== false;
 
   // Get delivery settings (radius and enabled status)
   const { data: deliverySettings } = trpc.menu.getDeliverySettings.useQuery();
@@ -308,13 +311,16 @@ export default function Menu() {
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
         {menuData?.categories.map((category) => {
           // Check if category is available for current order type
-          // Note: We show the category but mark products as disabled with appropriate badge
           const cat = category as any;
           const isNotAvailableForOrderType = (
             (state.orderType === 'instore' && cat.availableInstore === false) ||
             (state.orderType === 'delivery' && cat.availableDelivery === false) ||
             (state.orderType === 'pickup' && cat.availablePickup === false)
           );
+          
+          // Check if this is the food category and food is currently unavailable
+          const isFoodCategory = cat.slug === 'food';
+          const isFoodUnavailable = isFoodCategory && !foodAvailable;
           
           // Show all subcategories for this category (no outlet filtering)
           const subcategories = menuData.subcategories.filter(s => s.categoryId === category.id);
@@ -323,7 +329,8 @@ export default function Menu() {
           ).length;
           
           // Hide category if no subcategories available at this outlet
-          if (subcategories.length === 0 || productCount === 0) return null;
+          // But always show food category even with 0 products (for the unavailable overlay)
+          if (!isFoodCategory && (subcategories.length === 0 || productCount === 0)) return null;
 
           // Get a representative image from the first subcategory
           const firstSub = subcategories[0];
@@ -332,8 +339,14 @@ export default function Menu() {
           return (
             <button
               key={category.id}
-              onClick={() => handleCategoryClick(category.slug)}
-              className={`group relative overflow-hidden rounded-2xl bg-card border-2 border-border hover:border-primary transition-all duration-300 hover:shadow-xl text-left ${isNotAvailableForOrderType ? 'opacity-75' : ''}`}
+              onClick={() => {
+                if (isFoodUnavailable) {
+                  toast('Food is temporarily unavailable. Please check back during food service hours.');
+                  return;
+                }
+                handleCategoryClick(category.slug);
+              }}
+              className={`group relative overflow-hidden rounded-2xl bg-card border-2 border-border transition-all duration-300 text-left ${isFoodUnavailable ? 'opacity-60 cursor-not-allowed' : 'hover:border-primary hover:shadow-xl'} ${isNotAvailableForOrderType && !isFoodUnavailable ? 'opacity-75' : ''}`}
             >
               <div className="aspect-[4/3] overflow-hidden">
                 <img
@@ -341,14 +354,26 @@ export default function Menu() {
                   alt={category.name}
                   loading="lazy"
                   decoding="async"
-                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                  className={`w-full h-full object-cover transition-transform duration-500 ${isFoodUnavailable ? 'grayscale' : 'group-hover:scale-110'}`}
                   onError={(e) => {
                     (e.target as HTMLImageElement).src = 'https://res.cloudinary.com/drpu1dbqk/image/upload/f_auto,q_auto/v1778606603/taiwan-maami/static/fYHiyJVvyVYquZaW.webp';
                   }}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+                {/* Temporarily Unavailable overlay for food when turned off */}
+                {isFoodUnavailable && (
+                  <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-10">
+                    <div className="bg-red-700/90 text-white px-4 py-2 rounded-lg shadow-xl text-center transform -rotate-6">
+                      <div className="flex items-center gap-2 justify-center">
+                        <Clock className="w-4 h-4" />
+                        <span className="font-bold text-sm sm:text-base">Temporarily Unavailable</span>
+                      </div>
+                      <p className="text-xs mt-1 opacity-90">Check back during food hours</p>
+                    </div>
+                  </div>
+                )}
                 {/* In-store Only badge for categories not available for delivery/pickup */}
-                {isNotAvailableForOrderType && (
+                {isNotAvailableForOrderType && !isFoodUnavailable && (
                   <div className="absolute top-3 left-3">
                     <span className="bg-amber-600 text-white text-xs font-bold px-2 py-1 rounded-full shadow-lg">
                       In-store Only
@@ -360,9 +385,11 @@ export default function Menu() {
                 <h3 className="font-bold text-sm sm:text-lg leading-tight line-clamp-2">{category.name}</h3>
                 <p className="text-xs sm:text-sm text-white/70 mt-0.5 sm:mt-1">{subcategories.length} subcategories • {productCount} items</p>
               </div>
-              <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm rounded-full p-2 opacity-0 group-hover:opacity-100 transition-opacity shadow-lg">
-                <ChevronRight className="w-5 h-5 text-primary" />
-              </div>
+              {!isFoodUnavailable && (
+                <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm rounded-full p-2 opacity-0 group-hover:opacity-100 transition-opacity shadow-lg">
+                  <ChevronRight className="w-5 h-5 text-primary" />
+                </div>
+              )}
             </button>
           );
         })}
