@@ -38,18 +38,18 @@ BACKFILL_IDS_TO_DELETE = [
 
 PETPOOJA_FILES = [
     # (storage_filename, outlet, channel)
-    ("July_2024_to_31st_March_2025_Palladium_Delivery_Order_Palladium.xlsx", "palladium", "delivery"),
-    ("Apr2025_to_31st_March_2026_Delivery_Order_Palladium.xlsx",             "palladium", "delivery"),
-    ("Apr2026_to_18May2026_Palladium_delivery.xlsx",                         "palladium", "delivery"),
-    ("Palladium_instore_29Mar2024_to_31Mar2025.xlsx",                        "palladium", "instore"),
-    ("Palladium_instore_1Apr2025_to_31Mar2026.xlsx",                         "palladium", "instore"),
-    ("Palladium_instore_1Apr2026_to_18May2026.xlsx",                         "palladium", "instore"),
-    ("TNagar_Sep2025_to_18thMay_2026_Petpooja.xlsx",                         "tnagar",    "petpooja"),
+    ("July 2024 to 31st March 2025 Palladium Delivery Order Palladium.xlsx", "palladium", "delivery"),
+    ("Apr2025 to 31st March 2026 Delivery Order Palladium.xlsx",             "palladium", "delivery"),
+    ("Apr2026 to 18May2026 Palladium delivery.xlsx",                         "palladium", "delivery"),
+    ("Palladium instore 29Mar2024 to 31Mar2025.xlsx",                        "palladium", "instore"),
+    ("Palladium instore 1Apr2025 to 31Mar2026.xlsx",                         "palladium", "instore"),
+    ("Palladium instore 1Apr2026 to 18May2026.xlsx",                         "palladium", "instore"),
+    ("TNagar Sep2025 to 18thMay 2026 Petpooja.xlsx",                         "tnagar",    "petpooja"),
 ]
 
 OWN_POS_FILES = [
     # (storage_filename, outlet)
-    ("TNagar_Instore_POS_1Jan2026_to_18May2026.xlsx", "tnagar"),
+    ("TNagar Instore POS 1Jan2026 to 18May2026.xlsx", "tnagar"),
 ]
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
@@ -403,4 +403,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
