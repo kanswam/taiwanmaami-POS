@@ -5,6 +5,7 @@ import { createServer } from "http";
 import net from "net";
 import { createExpressMiddleware } from "@trpc/server/adapters/express";
 import { registerOAuthRoutes } from "./oauth";
+import { registerStorageProxy } from "./storageProxy";
 import { appRouter } from "../routers";
 import { handleSalesReportExport } from "../excelExport";
 import { handleItemwiseExport, handleChannelsExport, handleLeelaRegistrationsExport, handleCustomerDatabaseExport } from "../excelExportExtra";
@@ -202,6 +203,7 @@ async function startServer() {
   app.use(express.json({ limit: "50mb" }));
   app.use(express.urlencoded({ limit: "50mb", extended: true }));
   // OAuth callback under /api/oauth/callback
+  registerStorageProxy(app);
   registerOAuthRoutes(app);
   
   // Version marker for deployment verification: v2025.12.14.3
