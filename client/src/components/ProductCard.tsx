@@ -77,8 +77,11 @@ export function ProductCard({ product, subcategory, category, isDelivery = false
   const isInactive = product.isActive === false;
   
   // Check if category is available for current order type
+  // For Food category: availability is controlled by the food schedule, not channel flags.
+  // The food schedule overlay is handled at the category tile level in Menu.tsx.
+  const isFoodCategory = category?.slug === 'food';
   const isNotAvailableForOrderType = (() => {
-    if (!category) return false;
+    if (!category || isFoodCategory) return false;
     if (orderType === 'instore' && category.availableInstore === false) return true;
     if (orderType === 'delivery' && category.availableDelivery === false) return true;
     if (orderType === 'pickup' && category.availablePickup === false) return true;

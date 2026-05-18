@@ -3471,3 +3471,11 @@ Orders fixed:
 - [ ] Feature: Optional per-channel category toggle (dine-in, delivery, pickup separately)
 - [x] Feature: Show Food category tile with 'Temporarily Unavailable' overlay when food is turned off (instead of hiding it completely)
 - [x] Fix: Food force ON not cascading — now cascades availableAtTnagar/Palladium to all food subcategories and products when toggled.
+
+## Availability Algorithm Cleanup (May 18)
+
+- [x] Fix: Food Force ON/OFF should only control food schedule (time-based visibility), NOT overwrite channel/outlet flags
+- [x] Fix: Remove cascade that overwrites availableDelivery/availableInstore/availablePickup on Force toggle
+- [x] Fix: Reset DB state — set correct availability flags for all food categories/subcategories/products
+- [x] Fix: "In-store Only" badge should only show when the item's own availableDelivery=false (not from food schedule)
+- [x] Prepare: Availability system ready for third store addition

@@ -1,0 +1,18 @@
+{
+  "query": "SELECT id, name, slug, availableInstore, availableDelivery, availablePickup FROM categories WHERE id = 4;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT id, name, slug, availableInstore, availableDelivery, availablePickup FROM categories WHERE id = 4;",
+  "rows": [
+    {
+      "id": "4",
+      "name": "Food",
+      "slug": "food",
+      "availableInstore": "0",
+      "availableDelivery": "0",
+      "availablePickup": "0"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\tslug\tavailableInstore\tavailableDelivery\tavailablePickup\n4\tFood\tfood\t0\t0\t0\n",
+  "stderr": "",
+  "execution_time_ms": 255
+}

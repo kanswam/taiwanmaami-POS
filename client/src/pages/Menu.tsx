@@ -310,17 +310,19 @@ export default function Menu() {
       </button>
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
         {menuData?.categories.map((category) => {
-          // Check if category is available for current order type
+          // Check if this is the food category and food is currently unavailable
           const cat = category as any;
-          const isNotAvailableForOrderType = (
+          const isFoodCategory = cat.slug === 'food';
+          const isFoodUnavailable = isFoodCategory && !foodAvailable;
+          
+          // Check if category is available for current order type
+          // For Food category: availability is controlled by the food schedule (isFoodAvailable),
+          // NOT by channel flags. So skip channel check for food.
+          const isNotAvailableForOrderType = isFoodCategory ? false : (
             (state.orderType === 'instore' && cat.availableInstore === false) ||
             (state.orderType === 'delivery' && cat.availableDelivery === false) ||
             (state.orderType === 'pickup' && cat.availablePickup === false)
           );
-          
-          // Check if this is the food category and food is currently unavailable
-          const isFoodCategory = cat.slug === 'food';
-          const isFoodUnavailable = isFoodCategory && !foodAvailable;
           
           // Show all subcategories for this category (no outlet filtering)
           const subcategories = menuData.subcategories.filter(s => s.categoryId === category.id);
