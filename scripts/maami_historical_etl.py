@@ -170,10 +170,10 @@ def parse_petpooja_file(filepath: str, outlet: str, channel: str) -> list:
             "payment_status":         "completed",
             "customer_name":          str(row.get("Name", "") or ""),
             "customer_phone":         str(row.get("Phone", "") or ""),
-            "item_name":              None,
+            "item_name":              "_order_total_",
             "item_category":          None,
-            "item_quantity":          None,
-            "item_unit_price_rupees": None,
+            "item_quantity":          1,
+            "item_unit_price_rupees": my_amount,
             "item_total_rupees":      my_amount,
             "order_subtotal_rupees":  net_sales,
             "order_tax_rupees":       total_tax,
@@ -262,10 +262,10 @@ def parse_own_pos_file(filepath: str, outlet: str) -> list:
             "payment_status":         "completed",
             "customer_name":          None,
             "customer_phone":         None,
-            "item_name":              None,
+            "item_name":              "_order_total_",
             "item_category":          None,
-            "item_quantity":          None,
-            "item_unit_price_rupees": None,
+            "item_quantity":          1,
+            "item_unit_price_rupees": total,
             "item_total_rupees":      total,
             "order_subtotal_rupees":  taxable,
             "order_tax_rupees":       total_gst,
@@ -290,20 +290,33 @@ def parse_own_pos_file(filepath: str, outlet: str) -> list:
 
 def upsert_records(supabase, records: list, label: str):
     total = len(records)
-    print(f"  Upserting {total} records for {label}...")
+    print(f"  Inserting {total} records for {label}...")
     success = errors = 0
     for i in range(0, total, BATCH_SIZE):
         batch = records[i:i + BATCH_SIZE]
+        end = min(i + BATCH_SIZE, total)
         try:
-            supabase.table("sales_facts").upsert(
-                batch, on_conflict="source_order_id"
-            ).execute()
+            result = supabase.table("sales_facts").insert(batch).execute()
             success += len(batch)
-            print(f"    ✓ {min(i + BATCH_SIZE, total)}/{total}")
+            print(f"    ✓ {end}/{total}")
         except Exception as e:
-            errors += len(batch)
-            print(f"    ✗ Batch {i}–{i+BATCH_SIZE} failed: {e}")
-    print(f"  Done: {success} upserted, {errors} errors")
+            # Try one by one to skip duplicates and continue
+            for record in batch:
+                try:
+                    supabase.table("sales_facts").insert(record).execute()
+                    success += 1
+                except Exception as e2:
+                    err_str = str(e2)
+                    if "duplicate" in err_str.lower() or "23505" in err_str:
+                        pass  # already exists, skip silently
+                    else:
+                        errors += 1
+                        print(f"    ✗ Failed: {record.get('source_order_id')} — {e2}")
+            print(f"    ✓ {end}/{total} (with individual retry)")
+    print(f"  Done: {success} inserted, {errors} errors")
+    if errors > 0:
+        print(f"  WARNING: {errors} records failed to insert")
+        raise SystemExit(1)
 
 def delete_backfill_blobs(supabase):
     print("\n── Deleting backfill blob records ──────────────────────────────")
@@ -403,5 +416,6 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
