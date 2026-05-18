@@ -3479,3 +3479,7 @@ Orders fixed:
 - [x] Fix: Reset DB state — set correct availability flags for all food categories/subcategories/products
 - [x] Fix: "In-store Only" badge should only show when the item's own availableDelivery=false (not from food schedule)
 - [x] Prepare: Availability system ready for third store addition
+
+## Sales Report Timestamp (May 18)
+
+- [x] Add Time column to Sales Report sheet (next to Date column)

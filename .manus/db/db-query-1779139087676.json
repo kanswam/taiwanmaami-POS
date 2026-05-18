@@ -1,0 +1,30 @@
+{
+  "query": "SELECT orderNumber, createdAt FROM orders WHERE orderStatus != 'cancelled' ORDER BY createdAt DESC LIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT orderNumber, createdAt FROM orders WHERE orderStatus != 'cancelled' ORDER BY createdAt DESC LIMIT 5;",
+  "rows": [
+    {
+      "orderNumber": "26-00587",
+      "createdAt": "2026-05-18 18:10:25"
+    },
+    {
+      "orderNumber": "26-00586",
+      "createdAt": "2026-05-18 17:57:24"
+    },
+    {
+      "orderNumber": "26-00585",
+      "createdAt": "2026-05-18 16:39:12"
+    },
+    {
+      "orderNumber": "26-00584",
+      "createdAt": "2026-05-18 16:36:09"
+    },
+    {
+      "orderNumber": "26-00582",
+      "createdAt": "2026-05-18 14:48:58"
+    }
+  ],
+  "messages": [],
+  "stdout": "orderNumber\tcreatedAt\n26-00587\t2026-05-18 18:10:25\n26-00586\t2026-05-18 17:57:24\n26-00585\t2026-05-18 16:39:12\n26-00584\t2026-05-18 16:36:09\n26-00582\t2026-05-18 14:48:58\n",
+  "stderr": "",
+  "execution_time_ms": 303
+}

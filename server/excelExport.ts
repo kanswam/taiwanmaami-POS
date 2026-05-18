@@ -68,6 +68,29 @@ function formatDateLocal(d: Date | string): string {
   return `${day}/${month}/${year}`;
 }
 
+// Helper: format time as HH:MM AM/PM (IST = UTC+5:30)
+function formatTime(d: Date | string): string {
+  if (typeof d === 'string') {
+    // If it's a datetime string like "2026-05-18 18:10:25", parse the time part directly
+    const timeMatch = d.match(/(\d{2}):(\d{2}):(\d{2})/);
+    if (timeMatch) {
+      const hours = parseInt(timeMatch[1]);
+      const minutes = timeMatch[2];
+      const period = hours >= 12 ? 'PM' : 'AM';
+      const displayHour = hours === 0 ? 12 : hours > 12 ? hours - 12 : hours;
+      return `${displayHour}:${minutes} ${period}`;
+    }
+    d = new Date(d);
+  }
+  // For Date objects, add 5:30 offset for IST
+  const ist = new Date(d.getTime() + (5.5 * 60 * 60 * 1000));
+  const hours = ist.getUTCHours();
+  const minutes = String(ist.getUTCMinutes()).padStart(2, '0');
+  const period = hours >= 12 ? 'PM' : 'AM';
+  const displayHour = hours === 0 ? 12 : hours > 12 ? hours - 12 : hours;
+  return `${displayHour}:${minutes} ${period}`;
+}
+
 // Helper: get date key (YYYY-MM-DD) from a Date without timezone shift
 function getDateKey(d: Date | string): string {
   if (typeof d === 'string') {
@@ -171,11 +194,11 @@ export async function handleSalesReportExport(req: Request, res: Response) {
 
     // ===== Sheet 1: Sales Report (Retail Transactions) =====
     const salesSheet = workbook.addWorksheet('Sales Report');
-    const SALES_COLS = 12;
+    const SALES_COLS = 13;
     addTitleBlock(salesSheet, 'Taiwan Maami — Sales Report', `Period: ${formatDate(startDate)} to ${formatDate(endDate)}  ·  ${totalRetailTransactions} retail transactions`, SALES_COLS);
 
     const headers = [
-      'S.No', 'Invoice No.', 'Date', 'Source', 'Order Type', 'Outlet',
+      'S.No', 'Invoice No.', 'Date', 'Time', 'Source', 'Order Type', 'Outlet',
       'Taxable Amount', 'CGST', 'SGST', 'Total GST',
       'Total Amount', 'Payment Method'
     ];
@@ -184,9 +207,9 @@ export async function handleSalesReportExport(req: Request, res: Response) {
     styleHeaderRow(headerRow, SALES_COLS);
 
     setColumnWidths(salesSheet, [
-      [1, 6], [2, 18], [3, 14], [4, 14], [5, 14], [6, 16],
-      [7, 18], [8, 14], [9, 14], [10, 14],
-      [11, 18], [12, 18],
+      [1, 6], [2, 18], [3, 14], [4, 10], [5, 14], [6, 14], [7, 16],
+      [8, 18], [9, 14], [10, 14], [11, 14],
+      [12, 18], [13, 18],
     ]);
 
     let rowNum = 5;
@@ -217,6 +240,7 @@ export async function handleSalesReportExport(req: Request, res: Response) {
         serialNo++,
         order.orderNumber,
         formatDate(order.createdAt),
+        formatTime(order.createdAt),
         'Order',
         orderTypeLabel,
         outletName(order.outletId),
@@ -229,8 +253,8 @@ export async function handleSalesReportExport(req: Request, res: Response) {
       ];
 
       styleDataRow(row, SALES_COLS, serialNo % 2 === 0, {
-        currencyCols: [7, 8, 9, 10, 11],
-        centerCols: [1, 3, 5],
+        currencyCols: [8, 9, 10, 11, 12],
+        centerCols: [1, 3, 4, 6],
       });
       rowNum++;
     }
@@ -256,6 +280,7 @@ export async function handleSalesReportExport(req: Request, res: Response) {
         serialNo++,
         booking.bookingNumber,
         formatDate(booking.createdAt),
+        formatTime(booking.createdAt),
         'Workshop',
         '—',
         'T. Nagar',
@@ -268,8 +293,8 @@ export async function handleSalesReportExport(req: Request, res: Response) {
       ];
 
       styleDataRow(row, SALES_COLS, false, {
-        currencyCols: [7, 8, 9, 10, 11],
-        centerCols: [1, 3, 5],
+        currencyCols: [8, 9, 10, 11, 12],
+        centerCols: [1, 3, 4, 6],
         customBg: BRAND.WORKSHOP_BG,
       });
       rowNum++;
