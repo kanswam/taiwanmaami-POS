@@ -3470,3 +3470,4 @@ Orders fixed:
 - [ ] Feature: One-button category toggle at outlet level (e.g. turn off 'Food' at T.Nagar across all channels)
 - [ ] Feature: Optional per-channel category toggle (dine-in, delivery, pickup separately)
 - [x] Feature: Show Food category tile with 'Temporarily Unavailable' overlay when food is turned off (instead of hiding it completely)
+- [x] Fix: Food force ON not cascading — now cascades availableAtTnagar/Palladium to all food subcategories and products when toggled.

@@ -2844,6 +2844,38 @@ export const appRouter = router({
         const success = await saveFoodSchedule(input);
         if (!success) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to save food schedule' });
         invalidateScheduleCache();
+        
+        // Cascade outlet availability when food is force toggled on/off
+        if (input.manualOverride === 'on' || input.manualOverride === 'off') {
+          const dbInstance = await getDb();
+          if (dbInstance) {
+            const foodCategoryId = getFoodCategoryId();
+            const newAvailability = input.manualOverride === 'on';
+            
+            // Update all food subcategories
+            await dbInstance.update(subcategories)
+              .set({
+                availableAtTnagar: newAvailability,
+                availableAtPalladium: newAvailability,
+              })
+              .where(eq(subcategories.categoryId, foodCategoryId));
+            
+            // Update all food products (via subcategory join)
+            const foodSubIds = await dbInstance.select({ id: subcategories.id })
+              .from(subcategories)
+              .where(eq(subcategories.categoryId, foodCategoryId));
+            
+            if (foodSubIds.length > 0) {
+              await dbInstance.update(products)
+                .set({
+                  availableAtTnagar: newAvailability,
+                  availableAtPalladium: newAvailability,
+                })
+                .where(inArray(products.subcategoryId, foodSubIds.map(s => s.id)));
+            }
+          }
+        }
+        
         return { success: true };
       }),
 
