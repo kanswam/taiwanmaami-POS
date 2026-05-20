@@ -160,7 +160,8 @@ async function pullPOSOrders(reportDate: string, batchId: string): Promise<{ row
       const orderDiscount = (order.discountAmount ?? 0) / 100;
       const orderSubtotal = (order.subtotal ?? 0) / 100;
 
-      for (const item of items) {
+      for (let idx = 0; idx < items.length; idx++) {
+        const item = items[idx];
         rows.push({
           source: "pos",
           source_order_id: order.orderNumber || String(order.id),
@@ -185,6 +186,7 @@ async function pullPOSOrders(reportDate: string, batchId: string): Promise<{ row
           channel: order.orderType === "delivery" ? "delivery" : "instore",
           raw_data: { orderId: order.id, itemId: item.id },
           etl_batch_id: batchId,
+          item_sequence: idx,
         });
       }
     }
@@ -311,9 +313,11 @@ async function pullPetpoojaWebhookOrders(reportDate: string, batchId: string): P
           channel: "petpooja",
           raw_data: { supabaseOrderId: order.id },
           etl_batch_id: batchId,
+          item_sequence: 0,
         });
       } else {
-        for (const item of items) {
+        for (let idx = 0; idx < items.length; idx++) {
+          const item = items[idx];
           rows.push({
             source: "petpooja_webhook",
             source_order_id: String(order.petpooja_order_id),
@@ -338,6 +342,7 @@ async function pullPetpoojaWebhookOrders(reportDate: string, batchId: string): P
             channel: "petpooja",
             raw_data: { supabaseOrderId: order.id },
             etl_batch_id: batchId,
+            item_sequence: idx,
           });
         }
       }

@@ -1,0 +1,26 @@
+{
+  "query": "SELECT \n  outletId,\n  COUNT(*) as order_count,\n  SUM(totalAmount)/100 as total_amount_rupees,\n  SUM(centralGst)/100 as total_cgst_rupees,\n  SUM(stateGst)/100 as total_sgst_rupees,\n  SUM(subtotal)/100 as subtotal_rupees\nFROM orders \nWHERE createdAt >= '2026-04-01' \n  AND createdAt < '2026-05-01' \n  AND orderStatus != 'cancelled'\nGROUP BY outletId;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT \n  outletId,\n  COUNT(*) as order_count,\n  SUM(totalAmount)/100 as total_amount_rupees,\n  SUM(centralGst)/100 as total_cgst_rupees,\n  SUM(stateGst)/100 as total_sgst_rupees,\n  SUM(subtotal)/100 as subtotal_rupees\nFROM orders \nWHERE createdAt >= '2026-04-01' \n  AND createdAt < '2026-05-01' \n  AND orderStatus != 'cancelled'\nGROUP BY outletId;",
+  "rows": [
+    {
+      "outletId": "2",
+      "order_count": "338",
+      "total_amount_rupees": "431546.4000",
+      "total_cgst_rupees": "10320.0500",
+      "total_sgst_rupees": "10320.0500",
+      "subtotal_rupees": "415804.0000"
+    },
+    {
+      "outletId": "1",
+      "order_count": "1",
+      "total_amount_rupees": "2604.0000",
+      "total_cgst_rupees": "62.0000",
+      "total_sgst_rupees": "62.0000",
+      "subtotal_rupees": "2480.0000"
+    }
+  ],
+  "messages": [],
+  "stdout": "outletId\torder_count\ttotal_amount_rupees\ttotal_cgst_rupees\ttotal_sgst_rupees\tsubtotal_rupees\n2\t338\t431546.4000\t10320.0500\t10320.0500\t415804.0000\n1\t1\t2604.0000\t62.0000\t62.0000\t2480.0000\n",
+  "stderr": "",
+  "execution_time_ms": 289
+}

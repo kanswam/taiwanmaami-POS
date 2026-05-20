@@ -1,0 +1,15 @@
+{
+  "query": "SELECT COUNT(*) as total, MIN(createdAt) as earliest, MAX(createdAt) as latest FROM guest_orders WHERE createdAt >= '2026-04-01' AND createdAt < '2026-05-01';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT COUNT(*) as total, MIN(createdAt) as earliest, MAX(createdAt) as latest FROM guest_orders WHERE createdAt >= '2026-04-01' AND createdAt < '2026-05-01';",
+  "rows": [
+    {
+      "total": "108",
+      "earliest": "2026-04-01 13:55:39",
+      "latest": "2026-04-30 11:27:42"
+    }
+  ],
+  "messages": [],
+  "stdout": "total\tearliest\tlatest\n108\t2026-04-01 13:55:39\t2026-04-30 11:27:42\n",
+  "stderr": "",
+  "execution_time_ms": 271
+}

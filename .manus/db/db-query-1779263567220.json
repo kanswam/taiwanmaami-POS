@@ -1,0 +1,15 @@
+{
+  "query": "SELECT MIN(createdAt) as earliest, MAX(createdAt) as latest, COUNT(*) as total FROM petpooja_webhook_orders;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT MIN(createdAt) as earliest, MAX(createdAt) as latest, COUNT(*) as total FROM petpooja_webhook_orders;",
+  "rows": [
+    {
+      "earliest": "NULL",
+      "latest": "NULL",
+      "total": "0"
+    }
+  ],
+  "messages": [],
+  "stdout": "earliest\tlatest\ttotal\nNULL\tNULL\t0\n",
+  "stderr": "",
+  "execution_time_ms": 266
+}

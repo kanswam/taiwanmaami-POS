@@ -1,0 +1,15 @@
+{
+  "query": "SELECT \n  paymentMethod,\n  COUNT(*) as order_count,\n  SUM(totalAmount)/100 as total_amount_rupees\nFROM orders \nWHERE createdAt >= '2026-04-01' \n  AND createdAt < '2026-05-01' \n  AND orderStatus != 'cancelled'\n  AND outletId = 1\nGROUP BY paymentMethod\nORDER BY total_amount_rupees DESC;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT \n  paymentMethod,\n  COUNT(*) as order_count,\n  SUM(totalAmount)/100 as total_amount_rupees\nFROM orders \nWHERE createdAt >= '2026-04-01' \n  AND createdAt < '2026-05-01' \n  AND orderStatus != 'cancelled'\n  AND outletId = 1\nGROUP BY paymentMethod\nORDER BY total_amount_rupees DESC;",
+  "rows": [
+    {
+      "paymentMethod": "razorpay",
+      "order_count": "1",
+      "total_amount_rupees": "2604.0000"
+    }
+  ],
+  "messages": [],
+  "stdout": "paymentMethod\torder_count\ttotal_amount_rupees\nrazorpay\t1\t2604.0000\n",
+  "stderr": "",
+  "execution_time_ms": 259
+}

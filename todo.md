@@ -3483,3 +3483,13 @@ Orders fixed:
 ## Sales Report Timestamp (May 18)
 
 - [x] Add Time column to Sales Report sheet (next to Date column)
+
+## ETL / Supabase Constraint Fix (May 20)
+
+- [x] Add item_sequence column to sales_facts
+- [x] Update constraint to UNIQUE (source, source_order_id, item_name, item_sequence, order_date)
+- [x] Update ETL to populate item_sequence (0-indexed position within each order)
+- [x] Re-run May 19 ETL — 108 rows inserted cleanly
+- [x] Re-run May 20 ETL — 119 rows inserted cleanly
+- [x] Confirm digest fires correctly with data
+- [ ] (Future) Migrate source_order_id to outlet-prefixed format (e.g. tnagar_426) for cleaner uniqueness — not urgent, do during quiet period

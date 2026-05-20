@@ -1,0 +1,9 @@
+{
+  "query": "SELECT \n  orderFrom,\n  outletName,\n  COUNT(*) as order_count,\n  SUM(subtotal)/100 as subtotal_rupees,\n  SUM(cgst)/100 as cgst_rupees,\n  SUM(sgst)/100 as sgst_rupees,\n  SUM(tax)/100 as tax_rupees\nFROM petpooja_webhook_orders \nWHERE createdAt >= '2026-04-01' \n  AND createdAt < '2026-05-01'\nGROUP BY orderFrom, outletName\nORDER BY outletName, orderFrom;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT \n  orderFrom,\n  outletName,\n  COUNT(*) as order_count,\n  SUM(subtotal)/100 as subtotal_rupees,\n  SUM(cgst)/100 as cgst_rupees,\n  SUM(sgst)/100 as sgst_rupees,\n  SUM(tax)/100 as tax_rupees\nFROM petpooja_webhook_orders \nWHERE createdAt >= '2026-04-01' \n  AND createdAt < '2026-05-01'\nGROUP BY orderFrom, outletName\nORDER BY outletName, orderFrom;",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 275
+}

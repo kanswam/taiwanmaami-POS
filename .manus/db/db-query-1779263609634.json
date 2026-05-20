@@ -1,0 +1,62 @@
+{
+  "query": "SELECT id, periodLabel, periodStart, periodEnd, totalAmount/100 as totalAmt, grandTotal/100 as grandTot, zomatoAmount/100 as zomato, swiggyAmount/100 as swiggy, dineInAmount/100 as dineIn, cgst/100 as cgst, sgst/100 as sgst FROM delivery_sales_uploads WHERE (periodStart >= '2026-04-01' AND periodStart < '2026-05-01') OR (periodEnd > '2026-04-01' AND periodStart < '2026-04-01') ORDER BY periodStart;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT id, periodLabel, periodStart, periodEnd, totalAmount/100 as totalAmt, grandTotal/100 as grandTot, zomatoAmount/100 as zomato, swiggyAmount/100 as swiggy, dineInAmount/100 as dineIn, cgst/100 as cgst, sgst/100 as sgst FROM delivery_sales_uploads WHERE (periodStart >= '2026-04-01' AND periodStart < '2026-05-01') OR (periodEnd > '2026-04-01' AND periodStart < '2026-04-01') ORDER BY periodStart;",
+  "rows": [
+    {
+      "id": "150001",
+      "periodLabel": "Mid April 2026",
+      "periodStart": "2026-04-01 00:00:00",
+      "periodEnd": "2026-04-15 00:00:00",
+      "totalAmt": "101555.0000",
+      "grandTot": "104135.0000",
+      "zomato": "67514.0000",
+      "swiggy": "35662.0000",
+      "dineIn": "959.0000",
+      "cgst": "2479.7100",
+      "sgst": "2479.7100"
+    },
+    {
+      "id": "180001",
+      "periodLabel": "PAL-IN-2026-04-30",
+      "periodStart": "2026-04-30 00:00:00",
+      "periodEnd": "2026-05-01 00:00:00",
+      "totalAmt": "0.0000",
+      "grandTot": "12615.0000",
+      "zomato": "0.0000",
+      "swiggy": "0.0000",
+      "dineIn": "0.0000",
+      "cgst": "0.0000",
+      "sgst": "0.0000"
+    },
+    {
+      "id": "180002",
+      "periodLabel": "PAL-DEL-2026-04-30",
+      "periodStart": "2026-04-30 00:00:00",
+      "periodEnd": "2026-05-01 00:00:00",
+      "totalAmt": "0.0000",
+      "grandTot": "2915.0000",
+      "zomato": "0.0000",
+      "swiggy": "0.0000",
+      "dineIn": "0.0000",
+      "cgst": "0.0000",
+      "sgst": "0.0000"
+    },
+    {
+      "id": "180003",
+      "periodLabel": "TN-DEL-2026-04-30",
+      "periodStart": "2026-04-30 00:00:00",
+      "periodEnd": "2026-05-01 00:00:00",
+      "totalAmt": "0.0000",
+      "grandTot": "4300.0000",
+      "zomato": "0.0000",
+      "swiggy": "0.0000",
+      "dineIn": "0.0000",
+      "cgst": "0.0000",
+      "sgst": "0.0000"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tperiodLabel\tperiodStart\tperiodEnd\ttotalAmt\tgrandTot\tzomato\tswiggy\tdineIn\tcgst\tsgst\n150001\tMid April 2026\t2026-04-01 00:00:00\t2026-04-15 00:00:00\t101555.0000\t104135.0000\t67514.0000\t35662.0000\t959.0000\t2479.7100\t2479.7100\n180001\tPAL-IN-2026-04-30\t2026-04-30 00:00:00\t2026-05-01 00:00:00\t0.0000\t12615.0000\t0.0000\t0.0000\t0.0000\t0.0000\t0.0000\n180002\tPAL-DEL-2026-04-30\t2026-04-30 00:00:00\t2026-05-01 00:00:00\t0.0000\t2915.0000\t0.0000\t0.0000\t0.0000\t0.0000\t0.0000\n180003\tTN-DEL-2026-04-30\t2026-04-30 00:00:00\t2026-05-01 00:00:00\t0.0000\t4300.0000\t0.0000\t0.0000\t0.0000\t0.0000\t0.0000\n",
+  "stderr": "",
+  "execution_time_ms": 267
+}

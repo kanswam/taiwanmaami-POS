@@ -1,0 +1,14 @@
+{
+  "query": "SELECT COUNT(*) as order_count, SUM(totalAmount)/100 as total_amount FROM orders WHERE createdAt >= '2026-05-19 00:00:00' AND createdAt < '2026-05-20 00:00:00';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT COUNT(*) as order_count, SUM(totalAmount)/100 as total_amount FROM orders WHERE createdAt >= '2026-05-19 00:00:00' AND createdAt < '2026-05-20 00:00:00';",
+  "rows": [
+    {
+      "order_count": "15",
+      "total_amount": "8729.3600"
+    }
+  ],
+  "messages": [],
+  "stdout": "order_count\ttotal_amount\n15\t8729.3600\n",
+  "stderr": "",
+  "execution_time_ms": 275
+}

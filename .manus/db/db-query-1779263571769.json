@@ -1,0 +1,40 @@
+{
+  "query": "SHOW TABLES LIKE '%order%';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SHOW TABLES LIKE '%order%';",
+  "rows": [
+    {
+      "Tables_in_7xKVuVPoe4TavcqcxPZkpC (%order%)": "event_order_items"
+    },
+    {
+      "Tables_in_7xKVuVPoe4TavcqcxPZkpC (%order%)": "event_orders"
+    },
+    {
+      "Tables_in_7xKVuVPoe4TavcqcxPZkpC (%order%)": "guest_orders"
+    },
+    {
+      "Tables_in_7xKVuVPoe4TavcqcxPZkpC (%order%)": "order_audit_log"
+    },
+    {
+      "Tables_in_7xKVuVPoe4TavcqcxPZkpC (%order%)": "order_item_addons"
+    },
+    {
+      "Tables_in_7xKVuVPoe4TavcqcxPZkpC (%order%)": "order_items"
+    },
+    {
+      "Tables_in_7xKVuVPoe4TavcqcxPZkpC (%order%)": "orders"
+    },
+    {
+      "Tables_in_7xKVuVPoe4TavcqcxPZkpC (%order%)": "petpooja_webhook_orders"
+    },
+    {
+      "Tables_in_7xKVuVPoe4TavcqcxPZkpC (%order%)": "wholesale_order_items"
+    },
+    {
+      "Tables_in_7xKVuVPoe4TavcqcxPZkpC (%order%)": "wholesale_orders"
+    }
+  ],
+  "messages": [],
+  "stdout": "Tables_in_7xKVuVPoe4TavcqcxPZkpC (%order%)\nevent_order_items\nevent_orders\nguest_orders\norder_audit_log\norder_item_addons\norder_items\norders\npetpooja_webhook_orders\nwholesale_order_items\nwholesale_orders\n",
+  "stderr": "",
+  "execution_time_ms": 265
+}

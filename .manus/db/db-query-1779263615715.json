@@ -1,0 +1,26 @@
+{
+  "query": "SELECT \n  u.periodLabel,\n  SUM(i.amount)/100 as total_sales\nFROM delivery_item_sales i\nJOIN delivery_sales_uploads u ON i.uploadId = u.id\nWHERE u.periodStart >= '2026-04-01' AND u.periodStart < '2026-05-01'\nGROUP BY u.periodLabel;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT \n  u.periodLabel,\n  SUM(i.amount)/100 as total_sales\nFROM delivery_item_sales i\nJOIN delivery_sales_uploads u ON i.uploadId = u.id\nWHERE u.periodStart >= '2026-04-01' AND u.periodStart < '2026-05-01'\nGROUP BY u.periodLabel;",
+  "rows": [
+    {
+      "periodLabel": "TN-DEL-2026-04-30",
+      "total_sales": "4300.0000"
+    },
+    {
+      "periodLabel": "Mid April 2026",
+      "total_sales": "101555.0000"
+    },
+    {
+      "periodLabel": "PAL-IN-2026-04-30",
+      "total_sales": "12615.0000"
+    },
+    {
+      "periodLabel": "PAL-DEL-2026-04-30",
+      "total_sales": "2915.0000"
+    }
+  ],
+  "messages": [],
+  "stdout": "periodLabel\ttotal_sales\nTN-DEL-2026-04-30\t4300.0000\nMid April 2026\t101555.0000\nPAL-IN-2026-04-30\t12615.0000\nPAL-DEL-2026-04-30\t2915.0000\n",
+  "stderr": "",
+  "execution_time_ms": 263
+}

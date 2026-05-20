@@ -1,0 +1,42 @@
+{
+  "query": "SELECT \n  outletId,\n  orderType,\n  COUNT(*) as order_count,\n  SUM(totalAmount)/100 as total_amount_rupees,\n  SUM(centralGst)/100 as total_cgst_rupees,\n  SUM(stateGst)/100 as total_sgst_rupees\nFROM orders \nWHERE createdAt >= '2026-04-01' \n  AND createdAt < '2026-05-01' \n  AND orderStatus != 'cancelled'\nGROUP BY outletId, orderType\nORDER BY outletId, orderType;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT \n  outletId,\n  orderType,\n  COUNT(*) as order_count,\n  SUM(totalAmount)/100 as total_amount_rupees,\n  SUM(centralGst)/100 as total_cgst_rupees,\n  SUM(stateGst)/100 as total_sgst_rupees\nFROM orders \nWHERE createdAt >= '2026-04-01' \n  AND createdAt < '2026-05-01' \n  AND orderStatus != 'cancelled'\nGROUP BY outletId, orderType\nORDER BY outletId, orderType;",
+  "rows": [
+    {
+      "outletId": "1",
+      "orderType": "pickup",
+      "order_count": "1",
+      "total_amount_rupees": "2604.0000",
+      "total_cgst_rupees": "62.0000",
+      "total_sgst_rupees": "62.0000"
+    },
+    {
+      "outletId": "2",
+      "orderType": "instore",
+      "order_count": "280",
+      "total_amount_rupees": "362996.9800",
+      "total_cgst_rupees": "8704.4900",
+      "total_sgst_rupees": "8704.4900"
+    },
+    {
+      "outletId": "2",
+      "orderType": "delivery",
+      "order_count": "17",
+      "total_amount_rupees": "24589.7000",
+      "total_cgst_rupees": "563.5000",
+      "total_sgst_rupees": "563.5000"
+    },
+    {
+      "outletId": "2",
+      "orderType": "pickup",
+      "order_count": "41",
+      "total_amount_rupees": "43959.7200",
+      "total_cgst_rupees": "1052.0600",
+      "total_sgst_rupees": "1052.0600"
+    }
+  ],
+  "messages": [],
+  "stdout": "outletId\torderType\torder_count\ttotal_amount_rupees\ttotal_cgst_rupees\ttotal_sgst_rupees\n1\tpickup\t1\t2604.0000\t62.0000\t62.0000\n2\tinstore\t280\t362996.9800\t8704.4900\t8704.4900\n2\tdelivery\t17\t24589.7000\t563.5000\t563.5000\n2\tpickup\t41\t43959.7200\t1052.0600\t1052.0600\n",
+  "stderr": "",
+  "execution_time_ms": 270
+}

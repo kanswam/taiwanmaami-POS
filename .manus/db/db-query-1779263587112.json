@@ -1,0 +1,28 @@
+{
+  "query": "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'guest_orders' ORDER BY ORDINAL_POSITION;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'guest_orders' ORDER BY ORDINAL_POSITION;",
+  "rows": [
+    {
+      "COLUMN_NAME": "id"
+    },
+    {
+      "COLUMN_NAME": "orderId"
+    },
+    {
+      "COLUMN_NAME": "guestName"
+    },
+    {
+      "COLUMN_NAME": "guestPhone"
+    },
+    {
+      "COLUMN_NAME": "guestEmail"
+    },
+    {
+      "COLUMN_NAME": "createdAt"
+    }
+  ],
+  "messages": [],
+  "stdout": "COLUMN_NAME\nid\norderId\nguestName\nguestPhone\nguestEmail\ncreatedAt\n",
+  "stderr": "",
+  "execution_time_ms": 265
+}

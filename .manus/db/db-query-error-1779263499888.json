@@ -1,0 +1,8 @@
+{
+  "query": "SELECT id, name, slug FROM outlets;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT id, name, slug FROM outlets;",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1146 (42S02) at line 1: Table '7xkvuvpoe4tavcqcxpzkpc.outlets' doesn't exist"
+  ]
+}

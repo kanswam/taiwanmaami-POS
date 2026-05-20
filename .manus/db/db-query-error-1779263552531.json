@@ -1,0 +1,8 @@
+{
+  "query": "SELECT \n  COUNT(*) as order_count,\n  SUM(total)/100 as total_amount\nFROM petpooja_webhook_orders \nWHERE createdAt >= '2026-04-01' \n  AND createdAt < '2026-05-01';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT \n  COUNT(*) as order_count,\n  SUM(total)/100 as total_amount\nFROM petpooja_webhook_orders \nWHERE createdAt >= '2026-04-01' \n  AND createdAt < '2026-05-01';",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1054 (42S22) at line 1: Unknown column 'total' in 'where clause'"
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "query": "SELECT \n  SUM(totalAmount)/100 as gross_total,\n  SUM(centralGst)/100 as total_cgst,\n  SUM(stateGst)/100 as total_sgst,\n  (SUM(totalAmount) - SUM(centralGst) - SUM(stateGst))/100 as taxable_amount,\n  SUM(deliveryCharge)/100 as delivery_charges,\n  SUM(discountAmount)/100 as discounts\nFROM orders \nWHERE createdAt >= '2026-04-01' \n  AND createdAt < '2026-05-01' \n  AND orderStatus != 'cancelled';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT \n  SUM(totalAmount)/100 as gross_total,\n  SUM(centralGst)/100 as total_cgst,\n  SUM(stateGst)/100 as total_sgst,\n  (SUM(totalAmount) - SUM(centralGst) - SUM(stateGst))/100 as taxable_amount,\n  SUM(deliveryCharge)/100 as delivery_charges,\n  SUM(discountAmount)/100 as discounts\nFROM orders \nWHERE createdAt >= '2026-04-01' \n  AND createdAt < '2026-05-01' \n  AND orderStatus != 'cancelled';",
+  "rows": [
+    {
+      "gross_total": "434150.4000",
+      "total_cgst": "10382.0500",
+      "total_sgst": "10382.0500",
+      "taxable_amount": "413386.3000",
+      "delivery_charges": "2000.0000",
+      "discounts": "6897.7000"
+    }
+  ],
+  "messages": [],
+  "stdout": "gross_total\ttotal_cgst\ttotal_sgst\ttaxable_amount\tdelivery_charges\tdiscounts\n434150.4000\t10382.0500\t10382.0500\t413386.3000\t2000.0000\t6897.7000\n",
+  "stderr": "",
+  "execution_time_ms": 267
+}
