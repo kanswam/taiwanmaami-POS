@@ -1,0 +1,29 @@
+name: Inventory ETL — Daily Stock Movements Sync
+
+on:
+  schedule:
+    - cron: '0 19 * * *'   # 19:00 UTC daily — 30 min before Petpooja ETL
+  workflow_dispatch:         # allow manual trigger for testing
+
+jobs:
+  inventory-etl:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Inventory Movements ETL
+        run: |
+          echo "Triggering inventory ETL at $(date -u)"
+          response=$(curl -s -w "\n%{http_code}" \
+            -X POST https://inventory.thamaraifoods.com/api/service/inventory-etl/run \
+            -H "Authorization: Bearer ${{ secrets.MAAMITECH_SERVICE_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            --max-time 120 )
+          http_code=$(echo "$response" | tail -1 )
+          body=$(echo "$response" | head -1)
+          echo "Response code: $http_code"
+          echo "Response body: $body"
+          if [ "$http_code" != "200" ]; then
+            echo "Inventory ETL failed with HTTP $http_code"
+            exit 1
+          fi
+          rows=$(echo "$body" | python3 -c "import sys,json; d=json.load(sys.stdin ); print(d.get('rowsUpserted',0))" 2>/dev/null || echo "unknown")
+          echo "Inventory ETL completed — rows upserted: $rows"
