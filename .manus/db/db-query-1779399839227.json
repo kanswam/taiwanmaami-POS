@@ -1,0 +1,9 @@
+{
+  "query": "SELECT petpoojaOrderId, orderFrom, outletName, subtotal, totalAmount, items, JSON_LENGTH(items) as item_count FROM petpooja_webhook_orders WHERE JSON_LENGTH(items) > 2 ORDER BY id DESC LIMIT 1;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT petpoojaOrderId, orderFrom, outletName, subtotal, totalAmount, items, JSON_LENGTH(items) as item_count FROM petpooja_webhook_orders WHERE JSON_LENGTH(items) > 2 ORDER BY id DESC LIMIT 1;",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 266
+}

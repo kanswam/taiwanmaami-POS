@@ -1,0 +1,126 @@
+{
+  "query": "SELECT COLUMN_NAME, DATA_TYPE FROM information_schema.COLUMNS WHERE TABLE_NAME = 'petpooja_webhook_orders' AND TABLE_SCHEMA = DATABASE() ORDER BY ORDINAL_POSITION;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT COLUMN_NAME, DATA_TYPE FROM information_schema.COLUMNS WHERE TABLE_NAME = 'petpooja_webhook_orders' AND TABLE_SCHEMA = DATABASE() ORDER BY ORDINAL_POSITION;",
+  "rows": [
+    {
+      "COLUMN_NAME": "id",
+      "DATA_TYPE": "int"
+    },
+    {
+      "COLUMN_NAME": "petpoojaOrderId",
+      "DATA_TYPE": "varchar"
+    },
+    {
+      "COLUMN_NAME": "restId",
+      "DATA_TYPE": "varchar"
+    },
+    {
+      "COLUMN_NAME": "outletId",
+      "DATA_TYPE": "int"
+    },
+    {
+      "COLUMN_NAME": "outletName",
+      "DATA_TYPE": "varchar"
+    },
+    {
+      "COLUMN_NAME": "orderType",
+      "DATA_TYPE": "varchar"
+    },
+    {
+      "COLUMN_NAME": "orderFrom",
+      "DATA_TYPE": "varchar"
+    },
+    {
+      "COLUMN_NAME": "orderFromId",
+      "DATA_TYPE": "varchar"
+    },
+    {
+      "COLUMN_NAME": "subOrderType",
+      "DATA_TYPE": "varchar"
+    },
+    {
+      "COLUMN_NAME": "tokenNo",
+      "DATA_TYPE": "varchar"
+    },
+    {
+      "COLUMN_NAME": "customerName",
+      "DATA_TYPE": "varchar"
+    },
+    {
+      "COLUMN_NAME": "customerPhone",
+      "DATA_TYPE": "varchar"
+    },
+    {
+      "COLUMN_NAME": "customerAddress",
+      "DATA_TYPE": "text"
+    },
+    {
+      "COLUMN_NAME": "subtotal",
+      "DATA_TYPE": "int"
+    },
+    {
+      "COLUMN_NAME": "discount",
+      "DATA_TYPE": "int"
+    },
+    {
+      "COLUMN_NAME": "tax",
+      "DATA_TYPE": "int"
+    },
+    {
+      "COLUMN_NAME": "cgst",
+      "DATA_TYPE": "int"
+    },
+    {
+      "COLUMN_NAME": "sgst",
+      "DATA_TYPE": "int"
+    },
+    {
+      "COLUMN_NAME": "packagingCharge",
+      "DATA_TYPE": "int"
+    },
+    {
+      "COLUMN_NAME": "deliveryCharge",
+      "DATA_TYPE": "int"
+    },
+    {
+      "COLUMN_NAME": "totalAmount",
+      "DATA_TYPE": "int"
+    },
+    {
+      "COLUMN_NAME": "paymentType",
+      "DATA_TYPE": "varchar"
+    },
+    {
+      "COLUMN_NAME": "partPayments",
+      "DATA_TYPE": "json"
+    },
+    {
+      "COLUMN_NAME": "status",
+      "DATA_TYPE": "varchar"
+    },
+    {
+      "COLUMN_NAME": "items",
+      "DATA_TYPE": "json"
+    },
+    {
+      "COLUMN_NAME": "rawPayload",
+      "DATA_TYPE": "json"
+    },
+    {
+      "COLUMN_NAME": "orderTime",
+      "DATA_TYPE": "timestamp"
+    },
+    {
+      "COLUMN_NAME": "receivedAt",
+      "DATA_TYPE": "timestamp"
+    },
+    {
+      "COLUMN_NAME": "createdAt",
+      "DATA_TYPE": "timestamp"
+    }
+  ],
+  "messages": [],
+  "stdout": "COLUMN_NAME\tDATA_TYPE\nid\tint\npetpoojaOrderId\tvarchar\nrestId\tvarchar\noutletId\tint\noutletName\tvarchar\norderType\tvarchar\norderFrom\tvarchar\norderFromId\tvarchar\nsubOrderType\tvarchar\ntokenNo\tvarchar\ncustomerName\tvarchar\ncustomerPhone\tvarchar\ncustomerAddress\ttext\nsubtotal\tint\ndiscount\tint\ntax\tint\ncgst\tint\nsgst\tint\npackagingCharge\tint\ndeliveryCharge\tint\ntotalAmount\tint\npaymentType\tvarchar\npartPayments\tjson\nstatus\tvarchar\nitems\tjson\nrawPayload\tjson\norderTime\ttimestamp\nreceivedAt\ttimestamp\ncreatedAt\ttimestamp\n",
+  "stderr": "",
+  "execution_time_ms": 367
+}

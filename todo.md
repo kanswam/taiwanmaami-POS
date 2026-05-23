@@ -3493,3 +3493,20 @@ Orders fixed:
 - [x] Re-run May 20 ETL — 119 rows inserted cleanly
 - [x] Confirm digest fires correctly with data
 - [ ] (Future) Migrate source_order_id to outlet-prefixed format (e.g. tnagar_426) for cleaner uniqueness — not urgent, do during quiet period
+
+## Petpooja Itemised Backfill (May 21)
+
+- [x] Parse 5 Petpooja itemised Excel exports and preview 10-row mapping
+- [x] Ingest all ~64,000 rows into sales_facts with source='petpooja_itemised'
+- [x] Verify row counts match expected totals
+
+## Bug (logged for later): Petpooja Webhook ETL captures only 1 line item per order
+
+- [x] Investigated — webhook IS capturing all items correctly (V2 handler stores in Supabase petpooja_order_items). The MySQL petpooja_webhook_orders table is the deprecated V1 table (empty).
+
+## Revenue Overstatement Fix (May 23)
+
+- [x] Fix ETL: order_total_rupees/tax/discount/subtotal only on item_sequence=0 (NULL for subsequent items)
+- [x] Applied to both POS and petpooja_webhook code paths
+- [x] Backfill: UPDATE 383 existing rows to NULL where item_sequence > 0
+- [x] Verified: 0 rows remaining with item_sequence > 0 AND order_total_rupees NOT NULL
