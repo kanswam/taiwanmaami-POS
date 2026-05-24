@@ -725,7 +725,8 @@ async function startServer() {
           allOrders.add(orderId);
 
           // Track item popularity (count each line item row)
-          const itemName = row.item_name || 'Unknown';
+          // Strip size/variant suffixes like "(Regular (16oz) YES boba)" or "(Large [650 Ml])"
+          let itemName = (row.item_name || 'Unknown').replace(/\s*\((?:Regular|Large|Small)[\s\S]*\)\s*$/, '').trim();
           if (itemName !== 'Order Total (no line items)') {
             itemCounts[itemName] = (itemCounts[itemName] || 0) + 1;
           }
