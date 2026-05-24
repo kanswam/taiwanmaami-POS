@@ -3510,3 +3510,4 @@ Orders fixed:
 - [x] Applied to both POS and petpooja_webhook code paths
 - [x] Backfill: UPDATE 383 existing rows to NULL where item_sequence > 0
 - [x] Verified: 0 rows remaining with item_sequence > 0 AND order_total_rupees NOT NULL
+- [x] Fix digest code: voided-order detection was treating NULL order_total (item_sequence>0) as voided, excluding 74 of 128 orders. Rewrote to 3-pass approach: extract financials from non-NULL rows only, then aggregate, then count items.

@@ -655,8 +655,10 @@ async function startServer() {
           .eq('order_date', dateStr);
 
         // ═══ REVENUE BREAKDOWN ═══
-        // Use order_subtotal_rupees (pre-GST) and order_tax_rupees per UNIQUE order
-        // Exclude voided orders (order_total_rupees = 0)
+        // order_total_rupees is only populated on item_sequence=0 (first line item per order).
+        // Rows with item_sequence > 0 have NULL for order-level fields.
+        // Strategy: build a lookup of order-level totals from non-NULL rows first,
+        // then iterate all rows for item counts and channel assignment.
         type ChannelData = { subtotal: number; tax: number; total: number; discount: number; orders: Set<string> };
         const byChannel: Record<string, ChannelData> = {};
         const itemCounts: Record<string, number> = {};
@@ -665,54 +667,60 @@ async function startServer() {
         let totalRevenue = 0;
         let totalDiscount = 0;
         const allOrders = new Set<string>();
-        // Track unique orders to avoid double-counting
-        const seenOrders: Record<string, { key: string }> = {};
-        // Track voided orders to exclude them
+
+        // First pass: extract order-level totals from rows where they are populated (item_sequence=0)
+        // Also detect truly voided orders (order_total explicitly = 0, not NULL)
+        const orderFinancials: Record<string, { subtotal: number; tax: number; total: number; discount: number; outlet: string; orderType: string }> = {};
         const voidedOrders = new Set<string>();
 
-        // First pass: identify voided orders (order_total = 0)
         for (const row of (salesData || [])) {
           const orderId = `${row.source}_${row.source_order_id}`;
+          // Only process rows where order_total_rupees is explicitly set (not NULL)
+          if (row.order_total_rupees === null || row.order_total_rupees === undefined) continue;
           const orderTotal = parseFloat(row.order_total_rupees) || 0;
-          if (orderTotal === 0 && !voidedOrders.has(orderId)) {
+          if (orderTotal === 0) {
             voidedOrders.add(orderId);
+          } else if (!orderFinancials[orderId]) {
+            orderFinancials[orderId] = {
+              subtotal: parseFloat(row.order_subtotal_rupees) || 0,
+              tax: parseFloat(row.order_tax_rupees) || 0,
+              total: orderTotal,
+              discount: parseFloat(row.order_discount_rupees) || 0,
+              outlet: row.outlet || 'unknown',
+              orderType: row.order_type || 'instore',
+            };
           }
         }
 
+        // Second pass: aggregate revenue from orderFinancials and count items
+        // First, sum up revenue by channel from the financials lookup
+        for (const [orderId, fin] of Object.entries(orderFinancials)) {
+          if (voidedOrders.has(orderId)) continue;
+          const channelLabel = fin.orderType === 'delivery' ? 'delivery' : 'instore';
+          const key = `${fin.outlet}_${channelLabel}`;
+          if (!byChannel[key]) byChannel[key] = { subtotal: 0, tax: 0, total: 0, discount: 0, orders: new Set() };
+          byChannel[key].subtotal += fin.subtotal;
+          byChannel[key].tax += fin.tax;
+          byChannel[key].total += fin.total;
+          byChannel[key].discount += fin.discount;
+          byChannel[key].orders.add(orderId);
+          allOrders.add(orderId);
+          totalSubtotal += fin.subtotal;
+          totalTax += fin.tax;
+          totalRevenue += fin.total;
+          totalDiscount += fin.discount;
+        }
+
+        // Third pass: count items and track orders for display (includes all non-voided rows)
         for (const row of (salesData || [])) {
           const orderId = `${row.source}_${row.source_order_id}`;
-          // Skip voided orders entirely
           if (voidedOrders.has(orderId)) continue;
 
+          // Add order to channel's order set (for order count display)
           const outlet = row.outlet || 'unknown';
-          // Determine channel: delivery vs instore (pickup = instore)
-          let channelLabel: string;
-          if (row.order_type === 'delivery') {
-            channelLabel = 'delivery';
-          } else {
-            // instore, pickup, dine_in all count as instore
-            channelLabel = 'instore';
-          }
-
+          const channelLabel = row.order_type === 'delivery' ? 'delivery' : 'instore';
           const key = `${outlet}_${channelLabel}`;
           if (!byChannel[key]) byChannel[key] = { subtotal: 0, tax: 0, total: 0, discount: 0, orders: new Set() };
-
-          // Track unique orders — only count totals once per order
-          if (!seenOrders[orderId]) {
-            const orderSubtotal = parseFloat(row.order_subtotal_rupees) || 0;
-            const orderTax = parseFloat(row.order_tax_rupees) || 0;
-            const orderTotal = parseFloat(row.order_total_rupees) || 0;
-            const orderDiscount = parseFloat(row.order_discount_rupees) || 0;
-            seenOrders[orderId] = { key };
-            byChannel[key].subtotal += orderSubtotal;
-            byChannel[key].tax += orderTax;
-            byChannel[key].total += orderTotal;
-            byChannel[key].discount += orderDiscount;
-            totalSubtotal += orderSubtotal;
-            totalTax += orderTax;
-            totalRevenue += orderTotal;
-            totalDiscount += orderDiscount;
-          }
           byChannel[key].orders.add(orderId);
           allOrders.add(orderId);
 
