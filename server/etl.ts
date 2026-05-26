@@ -32,6 +32,7 @@ const INVENTORY_BASE_URL = "https://inventory.thamaraifoods.com";
 const POS_OUTLET_MAP: Record<number, string> = {
   1: "palladium",
   2: "tnagar",
+  3: "annanagar",
 };
 
 // Petpooja restId to outlet mapping (confirmed May 2026)
@@ -40,6 +41,7 @@ const PETPOOJA_OUTLET_MAP: Record<string, string> = {
   's16db4mw':   'palladium',  // License 157805 — Palladium In-store
   '9itpu6o0':   'palladium',  // License 334130 — Palladium Delivery
   'que6b2myco': 'tnagar',     // License 395793 — T.Nagar Delivery
+  'ANNANAGAR_TBD': 'annanagar', // Placeholder — Anna Nagar Delivery (restId TBD once Petpooja licence set up)
 };
 
 interface ETLResult {

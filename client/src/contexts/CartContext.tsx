@@ -7,8 +7,8 @@ interface CartState {
   items: CartItem[];
   orderType: 'instore' | 'delivery' | 'pickup';
   tableNumber: string | null; // For in-store orders
-  pickupOutlet: 'palladium' | 'tnagar' | null; // For pickup orders
-  instoreOutlet: 'palladium' | 'tnagar' | null; // For in-store orders
+  pickupOutlet: 'palladium' | 'tnagar' | 'annanagar' | null; // For pickup orders
+  instoreOutlet: 'palladium' | 'tnagar' | 'annanagar' | null; // For in-store orders
   discountCode: string | null;
   discountAmount: number;
   loyaltyPointsUsed: number;
@@ -24,8 +24,8 @@ type CartAction =
   | { type: 'CLEAR_CART' }
   | { type: 'SET_ORDER_TYPE'; payload: 'instore' | 'delivery' | 'pickup' }
   | { type: 'SET_TABLE_NUMBER'; payload: string | null }
-  | { type: 'SET_PICKUP_OUTLET'; payload: 'palladium' | 'tnagar' | null }
-  | { type: 'SET_INSTORE_OUTLET'; payload: 'palladium' | 'tnagar' | null }
+  | { type: 'SET_PICKUP_OUTLET'; payload: 'palladium' | 'tnagar' | 'annanagar' | null }
+  | { type: 'SET_INSTORE_OUTLET'; payload: 'palladium' | 'tnagar' | 'annanagar' | null }
   | { type: 'APPLY_DISCOUNT'; payload: { code: string; amount: number } }
   | { type: 'REMOVE_DISCOUNT' }
   | { type: 'USE_LOYALTY_POINTS'; payload: number }
@@ -203,8 +203,8 @@ interface CartContextValue {
   clearCart: () => void;
   setOrderType: (type: 'instore' | 'delivery' | 'pickup') => void;
   setTableNumber: (tableNumber: string | null) => void;
-  setPickupOutlet: (outlet: 'palladium' | 'tnagar' | null) => void;
-  setInstoreOutlet: (outlet: 'palladium' | 'tnagar' | null) => void;
+  setPickupOutlet: (outlet: 'palladium' | 'tnagar' | 'annanagar' | null) => void;
+  setInstoreOutlet: (outlet: 'palladium' | 'tnagar' | 'annanagar' | null) => void;
   applyDiscount: (code: string, amount: number) => void;
   removeDiscount: () => void;
   useLoyaltyPoints: (points: number) => void;
@@ -214,8 +214,8 @@ interface CartContextValue {
   total: number;
   itemCount: number;
   tableNumber: string | null;
-  pickupOutlet: 'palladium' | 'tnagar' | null;
-  instoreOutlet: 'palladium' | 'tnagar' | null;
+  pickupOutlet: 'palladium' | 'tnagar' | 'annanagar' | null;
+  instoreOutlet: 'palladium' | 'tnagar' | 'annanagar' | null;
   lastAddedItem: { productId: number; subcategoryId: number } | null;
   activeOrderId: number | null;
   isHydrated: boolean;

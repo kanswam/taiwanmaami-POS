@@ -143,8 +143,12 @@ describe('petpoojaWebhookV2 — pure functions', () => {
       expect(resolveOutlet('que6b2myco')).toEqual({ outletId: 'tnagar_delivery', outletName: 'T.Nagar Delivery' });
     });
 
-    it('has exactly 3 outlet mappings configured', () => {
-      expect(Object.keys(OUTLET_MAP)).toHaveLength(3);
+    it('resolves Anna Nagar Delivery (ANNANAGAR_TBD)', () => {
+      expect(resolveOutlet('ANNANAGAR_TBD')).toEqual({ outletId: 'annanagar_delivery', outletName: 'Anna Nagar Delivery' });
+    });
+
+    it('has exactly 4 outlet mappings configured', () => {
+      expect(Object.keys(OUTLET_MAP)).toHaveLength(4);
     });
   });
 

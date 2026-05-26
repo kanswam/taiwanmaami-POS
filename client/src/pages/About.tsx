@@ -201,6 +201,38 @@ export default function About() {
                 </a>
               </div>
             </Card>
+
+            <Card className="p-6">
+              <h3 className="font-semibold text-lg mb-4">Anna Nagar</h3>
+              <div className="space-y-3 text-sm">
+                <div className="flex items-start gap-3">
+                  <MapPin className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+                  <p className="text-muted-foreground">
+                    AC Block, Old No. 43, New No. 2<br />
+                    6th Main Road, 3rd Street<br />
+                    Anna Nagar, Chennai - 600040
+                  </p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <Clock className="w-5 h-5 text-primary flex-shrink-0" />
+                  <p className="text-muted-foreground">12:00 PM - 12:00 AM (All days)</p>
+                </div>
+              </div>
+              <div className="mt-4 pt-4 border-t flex items-center justify-between">
+                <p className="text-sm text-primary font-medium">
+                  Bubble Tea, Mochis & QSR
+                </p>
+                <a 
+                  href="https://maps.google.com/?q=AC+Block+6th+Main+Road+Anna+Nagar+Chennai" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 text-primary hover:text-primary/80 text-sm font-medium transition-colors"
+                >
+                  <Navigation className="w-4 h-4" />
+                  Directions
+                </a>
+              </div>
+            </Card>
           </div>
         </div>
       </section>

@@ -7,7 +7,7 @@ import { Card } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { Search, ChevronDown, ChevronUp, Store, MapPin, Filter } from 'lucide-react';
 
-type OutletKey = 'palladium' | 'tnagar';
+type OutletKey = 'palladium' | 'tnagar' | 'annanagar';
 
 export default function OutletAvailabilityTab() {
   const { data: menuData, refetch } = trpc.admin.getFullMenuAdmin.useQuery();
@@ -23,7 +23,7 @@ export default function OutletAvailabilityTab() {
 
   const [searchQuery, setSearchQuery] = useState('');
   const [collapsedCategories, setCollapsedCategories] = useState<Set<number>>(new Set());
-  const [filterOutlet, setFilterOutlet] = useState<'all' | 'palladium-only' | 'tnagar-only' | 'both' | 'neither'>('all');
+  const [filterOutlet, setFilterOutlet] = useState<'all' | 'palladium-only' | 'tnagar-only' | 'annanagar-only' | 'all-outlets' | 'neither'>('all');
 
   const categories = menuData?.categories || [];
   const subcategories = menuData?.subcategories || [];
@@ -44,10 +44,11 @@ export default function OutletAvailabilityTab() {
             })
             .filter((p: any) => {
               if (filterOutlet === 'all') return true;
-              if (filterOutlet === 'palladium-only') return p.availableAtPalladium && !p.availableAtTnagar;
-              if (filterOutlet === 'tnagar-only') return !p.availableAtPalladium && p.availableAtTnagar;
-              if (filterOutlet === 'both') return p.availableAtPalladium && p.availableAtTnagar;
-              if (filterOutlet === 'neither') return !p.availableAtPalladium && !p.availableAtTnagar;
+              if (filterOutlet === 'palladium-only') return p.availableAtPalladium && !p.availableAtTnagar && !p.availableAtAnnanagar;
+              if (filterOutlet === 'tnagar-only') return !p.availableAtPalladium && p.availableAtTnagar && !p.availableAtAnnanagar;
+              if (filterOutlet === 'annanagar-only') return !p.availableAtPalladium && !p.availableAtTnagar && p.availableAtAnnanagar;
+              if (filterOutlet === 'all-outlets') return p.availableAtPalladium && p.availableAtTnagar && p.availableAtAnnanagar;
+              if (filterOutlet === 'neither') return !p.availableAtPalladium && !p.availableAtTnagar && !p.availableAtAnnanagar;
               return true;
             });
           return { ...sub, products: subProducts };
@@ -68,7 +69,7 @@ export default function OutletAvailabilityTab() {
 
   const handleToggleProduct = (productId: number, outlet: OutletKey, currentValue: boolean) => {
     toggleProduct.mutate(
-      { productId, outlet, isAvailable: !currentValue },
+      { productId, outlet: outlet as 'palladium' | 'tnagar' | 'annanagar', isAvailable: !currentValue },
       {
         onSuccess: () => {
           // Silent success for individual toggles
@@ -79,13 +80,14 @@ export default function OutletAvailabilityTab() {
   };
 
   const handleToggleSubcategory = (subcategoryId: number, outlet: OutletKey, enable: boolean) => {
-    toggleSubcategory.mutate({ subcategoryId, outlet, isAvailable: enable });
+    toggleSubcategory.mutate({ subcategoryId, outlet: outlet as 'palladium' | 'tnagar' | 'annanagar', isAvailable: enable });
   };
 
   // Count stats
   const totalProducts = products.filter((p: any) => p.isActive !== false).length;
   const palladiumAvailable = products.filter((p: any) => p.isActive !== false && p.availableAtPalladium).length;
   const tnagarAvailable = products.filter((p: any) => p.isActive !== false && p.availableAtTnagar).length;
+  const annanagarAvailable = products.filter((p: any) => p.isActive !== false && p.availableAtAnnanagar).length;
 
   return (
     <div className="space-y-4">
@@ -100,7 +102,7 @@ export default function OutletAvailabilityTab() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <Card className="p-4 border-l-4 border-l-gray-400">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-gray-100 rounded-lg">
@@ -119,7 +121,7 @@ export default function OutletAvailabilityTab() {
             </div>
             <div>
               <p className="text-2xl font-bold">{palladiumAvailable}<span className="text-sm font-normal text-muted-foreground">/{totalProducts}</span></p>
-              <p className="text-xs text-muted-foreground">Palladium Mall</p>
+              <p className="text-xs text-muted-foreground">Palladium</p>
             </div>
           </div>
         </Card>
@@ -131,6 +133,17 @@ export default function OutletAvailabilityTab() {
             <div>
               <p className="text-2xl font-bold">{tnagarAvailable}<span className="text-sm font-normal text-muted-foreground">/{totalProducts}</span></p>
               <p className="text-xs text-muted-foreground">T.Nagar</p>
+            </div>
+          </div>
+        </Card>
+        <Card className="p-4 border-l-4 border-l-purple-500">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-purple-50 rounded-lg">
+              <MapPin className="w-5 h-5 text-purple-600" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold">{annanagarAvailable}<span className="text-sm font-normal text-muted-foreground">/{totalProducts}</span></p>
+              <p className="text-xs text-muted-foreground">Anna Nagar</p>
             </div>
           </div>
         </Card>
@@ -154,10 +167,11 @@ export default function OutletAvailabilityTab() {
             className="px-3 py-2 border rounded-md text-sm bg-background"
           >
             <option value="all">All Products</option>
-            <option value="both">Available at Both</option>
+            <option value="all-outlets">Available at All Outlets</option>
             <option value="palladium-only">Palladium Only</option>
             <option value="tnagar-only">T.Nagar Only</option>
-            <option value="neither">Neither (Hidden)</option>
+            <option value="annanagar-only">Anna Nagar Only</option>
+            <option value="neither">None (Hidden)</option>
           </select>
           <Button variant="outline" size="sm" onClick={() => setCollapsedCategories(new Set())}>
             Expand All
@@ -198,18 +212,20 @@ export default function OutletAvailabilityTab() {
                   // Calculate subcategory-level availability
                   const allPalladium = sub.products.length > 0 && sub.products.every((p: any) => p.availableAtPalladium);
                   const allTnagar = sub.products.length > 0 && sub.products.every((p: any) => p.availableAtTnagar);
+                  const allAnnanagar = sub.products.length > 0 && sub.products.every((p: any) => p.availableAtAnnanagar);
                   const somePalladium = sub.products.some((p: any) => p.availableAtPalladium);
                   const someTnagar = sub.products.some((p: any) => p.availableAtTnagar);
+                  const someAnnanagar = sub.products.some((p: any) => p.availableAtAnnanagar);
 
                   return (
                     <div key={sub.id}>
                       {/* Subcategory Header with bulk toggles */}
                       <div className="flex items-center justify-between px-4 py-3 bg-amber-50 border-b">
                         <span className="font-medium text-sm text-amber-900">{sub.name}</span>
-                        <div className="flex items-center gap-6">
+                        <div className="flex items-center gap-4">
                           {/* Subcategory-level Palladium toggle */}
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs text-blue-600 font-medium w-20 text-right">Palladium</span>
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-xs text-blue-600 font-medium w-16 text-right">Palladium</span>
                             <button
                               onClick={() => handleToggleSubcategory(sub.id, 'palladium', !allPalladium)}
                               className={`relative w-10 h-5 rounded-full transition-colors ${
@@ -223,8 +239,8 @@ export default function OutletAvailabilityTab() {
                             </button>
                           </div>
                           {/* Subcategory-level T.Nagar toggle */}
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs text-green-600 font-medium w-16 text-right">T.Nagar</span>
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-xs text-green-600 font-medium w-14 text-right">T.Nagar</span>
                             <button
                               onClick={() => handleToggleSubcategory(sub.id, 'tnagar', !allTnagar)}
                               className={`relative w-10 h-5 rounded-full transition-colors ${
@@ -234,6 +250,21 @@ export default function OutletAvailabilityTab() {
                             >
                               <span className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white transition-transform ${
                                 allTnagar ? 'translate-x-5' : someTnagar ? 'translate-x-2.5' : ''
+                              }`} />
+                            </button>
+                          </div>
+                          {/* Subcategory-level Anna Nagar toggle */}
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-xs text-purple-600 font-medium w-18 text-right">A.Nagar</span>
+                            <button
+                              onClick={() => handleToggleSubcategory(sub.id, 'annanagar', !allAnnanagar)}
+                              className={`relative w-10 h-5 rounded-full transition-colors ${
+                                allAnnanagar ? 'bg-purple-500' : someAnnanagar ? 'bg-purple-300' : 'bg-gray-300'
+                              }`}
+                              title={allAnnanagar ? 'Disable all for Anna Nagar' : 'Enable all for Anna Nagar'}
+                            >
+                              <span className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white transition-transform ${
+                                allAnnanagar ? 'translate-x-5' : someAnnanagar ? 'translate-x-2.5' : ''
                               }`} />
                             </button>
                           </div>
@@ -262,32 +293,46 @@ export default function OutletAvailabilityTab() {
                             </div>
                           </div>
 
-                          <div className="flex items-center gap-6 flex-shrink-0">
+                          <div className="flex items-center gap-4 flex-shrink-0">
                             {/* Palladium toggle */}
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-1.5">
                               <Switch
                                 checked={product.availableAtPalladium}
                                 onCheckedChange={() => handleToggleProduct(product.id, 'palladium', product.availableAtPalladium)}
                                 className="data-[state=checked]:bg-blue-500"
                               />
                               {product.availableAtPalladium ? (
-                                <span className="text-xs text-blue-600 w-8">ON</span>
+                                <span className="text-xs text-blue-600 w-7">ON</span>
                               ) : (
-                                <span className="text-xs text-gray-400 w-8">OFF</span>
+                                <span className="text-xs text-gray-400 w-7">OFF</span>
                               )}
                             </div>
 
                             {/* T.Nagar toggle */}
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-1.5">
                               <Switch
                                 checked={product.availableAtTnagar}
                                 onCheckedChange={() => handleToggleProduct(product.id, 'tnagar', product.availableAtTnagar)}
                                 className="data-[state=checked]:bg-green-500"
                               />
                               {product.availableAtTnagar ? (
-                                <span className="text-xs text-green-600 w-8">ON</span>
+                                <span className="text-xs text-green-600 w-7">ON</span>
                               ) : (
-                                <span className="text-xs text-gray-400 w-8">OFF</span>
+                                <span className="text-xs text-gray-400 w-7">OFF</span>
+                              )}
+                            </div>
+
+                            {/* Anna Nagar toggle */}
+                            <div className="flex items-center gap-1.5">
+                              <Switch
+                                checked={product.availableAtAnnanagar}
+                                onCheckedChange={() => handleToggleProduct(product.id, 'annanagar', product.availableAtAnnanagar)}
+                                className="data-[state=checked]:bg-purple-500"
+                              />
+                              {product.availableAtAnnanagar ? (
+                                <span className="text-xs text-purple-600 w-7">ON</span>
+                              ) : (
+                                <span className="text-xs text-gray-400 w-7">OFF</span>
                               )}
                             </div>
                           </div>
@@ -310,7 +355,7 @@ export default function OutletAvailabilityTab() {
 
       {groupedData.length === 0 && (
         <Card className="p-8 text-center text-muted-foreground">
-          <p>No products found matching your search.</p>
+          {searchQuery ? 'No products match your search' : 'No products found'}
         </Card>
       )}
     </div>

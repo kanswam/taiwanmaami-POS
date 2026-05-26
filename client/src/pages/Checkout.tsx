@@ -271,8 +271,8 @@ export default function Checkout() {
       // ─── OFFLINE MODE: Queue order locally when internet is down ───
       // Only for cash orders (instore/pickup) — delivery and online payments require internet
       if (offlineModeEnabled && !isOnline && paymentMethod === 'cash' && (state.orderType === 'instore' || state.orderType === 'pickup')) {
-        const outletId = selectedOutlet === 'palladium' ? 1 : 2;
-        const outletName = selectedOutlet === 'palladium' ? 'Palladium Mall' : 'T. Nagar';
+        const outletId = selectedOutlet === 'palladium' ? 1 : selectedOutlet === 'annanagar' ? 3 : 2;
+        const outletName = selectedOutlet === 'palladium' ? 'Palladium Mall' : selectedOutlet === 'annanagar' ? 'Anna Nagar' : 'T. Nagar';
         
         const offlineOrder = await placeOfflineOrder({
           orderType: state.orderType as 'instore' | 'pickup',
@@ -331,11 +331,11 @@ export default function Checkout() {
         return;
       }
 
-      // Determine outlet ID: 1 = Palladium, 2 = T.Nagar
-      // Delivery is always from T.Nagar
+      // Determine outlet ID: 1 = Palladium, 2 = T.Nagar, 3 = Anna Nagar
+      // Delivery origin depends on outlet
       const outletId = state.orderType === 'delivery' 
         ? 2 
-        : selectedOutlet === 'palladium' ? 1 : 2;
+        : selectedOutlet === 'palladium' ? 1 : selectedOutlet === 'annanagar' ? 3 : 2;
       
       // Create new order
       const orderData = await createOrder.mutateAsync({
@@ -427,7 +427,7 @@ export default function Checkout() {
   // Partner benefits preview
   const checkoutOutletId = state.orderType === 'delivery' 
     ? 2 
-    : selectedOutlet === 'palladium' ? 1 : 2;
+    : selectedOutlet === 'palladium' ? 1 : selectedOutlet === 'annanagar' ? 3 : 2;
 
   const partnerBenefitsInput = useMemo(() => ({
     outletId: checkoutOutletId,
@@ -501,8 +501,8 @@ export default function Checkout() {
     try {
       // ─── OFFLINE MODE: Queue order locally when internet is down ───
       if (offlineModeEnabled && !isOnline && paymentMethod === 'cash' && (state.orderType === 'instore' || state.orderType === 'pickup')) {
-        const outletId = selectedOutlet === 'palladium' ? 1 : 2;
-        const outletName = selectedOutlet === 'palladium' ? 'Palladium Mall' : 'T. Nagar';
+        const outletId = selectedOutlet === 'palladium' ? 1 : selectedOutlet === 'annanagar' ? 3 : 2;
+        const outletName = selectedOutlet === 'palladium' ? 'Palladium Mall' : selectedOutlet === 'annanagar' ? 'Anna Nagar' : 'T. Nagar';
         
         const offlineOrder = await placeOfflineOrder({
           orderType: state.orderType as 'instore' | 'pickup',
@@ -535,10 +535,10 @@ export default function Checkout() {
       const cartHash = state.items.map(i => `${i.productId}-${i.quantity}-${i.size || ''}`).join('|');
       const idempotencyKey = `${formData.phone}-${cartHash}`;
       
-      // Determine outlet ID: 1 = Palladium, 2 = T.Nagar (same logic as logged-in checkout)
+      // Determine outlet ID: 1 = Palladium, 2 = T.Nagar, 3 = Anna Nagar
       const guestOutletId = state.orderType === 'delivery' 
         ? 2 
-        : selectedOutlet === 'palladium' ? 1 : 2;
+        : selectedOutlet === 'palladium' ? 1 : selectedOutlet === 'annanagar' ? 3 : 2;
       
       const orderData = await createGuestOrder.mutateAsync({
         guestName: formData.name,

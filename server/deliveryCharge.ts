@@ -15,8 +15,14 @@
 
 import { makeRequest, DistanceMatrixResult } from "./_core/map";
 
-// T. Nagar outlet address (origin for all deliveries)
-const T_NAGAR_ORIGIN = "New No. 29, Burkit Road, T. Nagar, Chennai, Tamil Nadu 600017";
+// Outlet origin addresses for delivery distance calculation
+const OUTLET_ORIGINS: Record<string, string> = {
+  tnagar: "New No. 29, Burkit Road, T. Nagar, Chennai, Tamil Nadu 600017",
+  annanagar: "AC Block, Old No. 43, New No. 2, 6th Main Road, 3rd Street, Anna Nagar, Chennai 600040",
+  palladium: "New No. 29, Burkit Road, T. Nagar, Chennai, Tamil Nadu 600017", // Palladium delivery fulfilled from T.Nagar
+};
+// Default origin (T. Nagar) for backward compatibility
+const T_NAGAR_ORIGIN = OUTLET_ORIGINS.tnagar;
 
 // Delivery charge tiers (in paise)
 export const DELIVERY_TIERS = [
@@ -60,7 +66,7 @@ export function getChargeForDistance(distanceKm: number): {
  * @param deliveryAddress - Full delivery address string
  * @returns Delivery charge details including distance and charge in paise
  */
-export async function calculateDeliveryCharge(deliveryAddress: string): Promise<{
+export async function calculateDeliveryCharge(deliveryAddress: string, outletSlug?: string): Promise<{
   chargePaise: number;
   tierLabel: string;
   distanceKm: number;
@@ -72,7 +78,7 @@ export async function calculateDeliveryCharge(deliveryAddress: string): Promise<
     const result = await makeRequest<DistanceMatrixResult>(
       "/maps/api/distancematrix/json",
       {
-        origins: T_NAGAR_ORIGIN,
+        origins: (outletSlug && OUTLET_ORIGINS[outletSlug]) || T_NAGAR_ORIGIN,
         destinations: deliveryAddress,
         mode: "driving",
         units: "metric",

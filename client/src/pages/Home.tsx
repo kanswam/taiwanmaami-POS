@@ -124,9 +124,13 @@ export default function Home() {
   };
 
   // Handle outlet selection
-  const handleOutletSelect = (outlet: 'palladium' | 'tnagar') => {
+  const handleOutletSelect = (outlet: 'palladium' | 'tnagar' | 'annanagar') => {
     if (outlet === 'palladium' && !OUTLET_HOURS.palladium.orderingEnabled) {
-      toast('Online ordering not available at Palladium Mall yet. Please select T. Nagar.', { icon: '🚫' });
+      toast('Online ordering not available at Palladium Mall yet. Please select another outlet.', { icon: '🚫' });
+      return;
+    }
+    if (outlet === 'annanagar' && !OUTLET_HOURS.annanagar.orderingEnabled) {
+      toast('Online ordering not available at Anna Nagar yet. Please select another outlet.', { icon: '🚫' });
       return;
     }
     const type = pendingOrderType || cartState.orderType;
@@ -139,7 +143,7 @@ export default function Home() {
     setShowOutletSelector(false);
     setPendingOrderType(null);
     markModeChosen();
-    const outletName = outlet === 'palladium' ? 'Palladium Mall' : 'T. Nagar';
+    const outletName = outlet === 'palladium' ? 'Palladium Mall' : outlet === 'annanagar' ? 'Anna Nagar' : 'T. Nagar';
     const typeLabel = type === 'instore' ? 'Dine-In' : 'Pickup';
     toast.success(`${typeLabel} at ${outletName}`, { duration: 2000 });
     if (pendingQuickAddProductId) {
@@ -150,11 +154,12 @@ export default function Home() {
         if (!pendingProduct) return true; // If we can't find the product data, allow it
         if (outlet === 'palladium' && pendingProduct.availableAtPalladium === false) return false;
         if (outlet === 'tnagar' && pendingProduct.availableAtTnagar === false) return false;
+        if (outlet === 'annanagar' && pendingProduct.availableAtAnnanagar === false) return false;
         return true;
       })();
       
       if (!isAvailableAtNewOutlet) {
-        const outletLabel = outlet === 'palladium' ? 'Palladium Mall' : 'T. Nagar';
+        const outletLabel = outlet === 'palladium' ? 'Palladium Mall' : outlet === 'annanagar' ? 'Anna Nagar' : 'T. Nagar';
         toast.info(`This item is not available at ${outletLabel}. Try our other outlet!`, { duration: 3000 });
       } else {
         setQuickAddProductId(pendingQuickAddProductId);
@@ -176,6 +181,7 @@ export default function Home() {
     if (!currentOutlet) return true; // no outlet selected = show all as available
     if (currentOutlet === 'palladium' && product.availableAtPalladium === false) return false;
     if (currentOutlet === 'tnagar' && product.availableAtTnagar === false) return false;
+    if (currentOutlet === 'annanagar' && product.availableAtAnnanagar === false) return false;
     return true;
   }, [currentOutlet]);
 
@@ -354,6 +360,7 @@ export default function Home() {
         if (!catSubIds.includes(p.subcategoryId) || !p.isActive) return false;
         if (currentOutlet === 'palladium' && p.availableAtPalladium === false) return false;
         if (currentOutlet === 'tnagar' && p.availableAtTnagar === false) return false;
+        if (currentOutlet === 'annanagar' && p.availableAtAnnanagar === false) return false;
         return true;
       });
       if (hasProducts) return cat.id;
@@ -406,6 +413,7 @@ export default function Home() {
     if (!currentOutlet) return true; // no outlet selected = show all as available
     if (currentOutlet === 'palladium' && product.availableAtPalladium === false) return false;
     if (currentOutlet === 'tnagar' && product.availableAtTnagar === false) return false;
+    if (currentOutlet === 'annanagar' && product.availableAtAnnanagar === false) return false;
     return true;
   }, [currentOutlet]);
 
@@ -483,6 +491,17 @@ export default function Home() {
       phone: '+91 91505 70557',
       hours: '12:00 PM - 12:00 AM',
       services: 'In-store, Pickup & Delivery',
+    },
+    {
+      name: 'Taiwan Maami',
+      subtitle: 'Anna Nagar',
+      address: 'AC Block, 6th Main Road, 3rd Street',
+      city: 'Anna Nagar, Chennai - 600040',
+      video: '',
+      mapUrl: 'https://maps.google.com/?q=AC+Block+6th+Main+Road+Anna+Nagar+Chennai',
+      phone: '',
+      hours: '12:00 PM - 12:00 AM',
+      services: 'Bubble Tea, Mochis & QSR',
     },
   ];
 
@@ -622,7 +641,7 @@ export default function Home() {
                   <div
                     onClick={() => carouselAvailable
                       ? openQuickAdd(product.id, undefined, product)
-                      : toast.info(`This item is not available at ${currentOutlet === 'palladium' ? 'Palladium Mall' : 'T. Nagar'}. Try our other outlet!`, { duration: 3000 })
+                      : toast.info(`This item is not available at ${currentOutlet === 'palladium' ? 'Palladium Mall' : currentOutlet === 'annanagar' ? 'Anna Nagar' : 'T. Nagar'}. Try another outlet!`, { duration: 3000 })
                     }
                     className={carouselAvailable ? 'cursor-pointer' : 'cursor-default'}
                   >
@@ -650,7 +669,7 @@ export default function Home() {
                       {!carouselAvailable && currentOutlet && (
                         <div className="absolute inset-0 flex items-center justify-center">
                           <div className="bg-black/60 text-white text-[10px] sm:text-xs font-bold px-2 py-1 sm:px-3 sm:py-1.5 rounded-lg text-center leading-tight rotate-[-12deg] shadow-lg border border-white/20">
-                            Not available at<br />{currentOutlet === 'palladium' ? 'Palladium' : 'T. Nagar'}
+                            Not available at<br />{currentOutlet === 'palladium' ? 'Palladium' : currentOutlet === 'annanagar' ? 'A. Nagar' : 'T. Nagar'}
                           </div>
                         </div>
                       )}
@@ -671,7 +690,7 @@ export default function Home() {
                     <div
                       onClick={() => carouselAvailable
                         ? openQuickAdd(product.id, undefined, product)
-                        : toast.info(`This item is not available at ${currentOutlet === 'palladium' ? 'Palladium Mall' : 'T. Nagar'}. Try our other outlet!`, { duration: 3000 })
+                        : toast.info(`This item is not available at ${currentOutlet === 'palladium' ? 'Palladium Mall' : currentOutlet === 'annanagar' ? 'Anna Nagar' : 'T. Nagar'}. Try another outlet!`, { duration: 3000 })
                       }
                       className={carouselAvailable ? 'cursor-pointer' : 'cursor-default'}
                     >
@@ -731,7 +750,7 @@ export default function Home() {
                     </p>
                     <p className="text-sm text-muted-foreground">
                       {cartState.orderType === 'delivery' ? 'From T. Nagar outlet' :
-                       `At ${currentOutlet === 'palladium' ? 'Palladium Mall' : 'T. Nagar'}`}
+                       `At ${currentOutlet === 'palladium' ? 'Palladium Mall' : currentOutlet === 'annanagar' ? 'Anna Nagar' : 'T. Nagar'}`}
                     </p>
                   </div>
                 </div>
@@ -829,6 +848,20 @@ export default function Home() {
                           <p className="text-xs text-muted-foreground">Burkit Road • 12pm-12am</p>
                         </div>
                       </button>
+                      <button onClick={() => handleOutletSelect('annanagar')} className={`w-full flex items-center gap-3 p-4 rounded-xl border-2 transition-colors text-left ${
+                        !OUTLET_HOURS.annanagar.orderingEnabled
+                          ? 'border-gray-200 bg-gray-50 cursor-not-allowed opacity-60'
+                          : 'border-border hover:border-primary'
+                      }`}>
+                        <MapPin className={`w-5 h-5 flex-shrink-0 ${!OUTLET_HOURS.annanagar.orderingEnabled ? 'text-gray-400' : ''}`} />
+                        <div>
+                          <p className={`font-semibold ${!OUTLET_HOURS.annanagar.orderingEnabled ? 'text-gray-400' : ''}`}>Anna Nagar</p>
+                          <p className="text-xs text-muted-foreground">AC Block, 6th Main Road • 12pm-12am</p>
+                          {!OUTLET_HOURS.annanagar.orderingEnabled && (
+                            <p className="text-xs text-orange-600 font-medium">Opening soon</p>
+                          )}
+                        </div>
+                      </button>
                     </div>
                     <button onClick={() => setPendingOrderType(null)} className="mt-3 text-sm text-muted-foreground hover:text-foreground">
                       &larr; Back to order types
@@ -854,7 +887,7 @@ export default function Home() {
                  cartState.orderType === 'delivery' ? 'Delivery' : 'Pickup'}
               </span>
               <span className="text-muted-foreground">·</span>
-              <span>{currentOutlet === 'palladium' ? 'Palladium Mall' : 'T. Nagar'}</span>
+              <span>{currentOutlet === 'palladium' ? 'Palladium Mall' : currentOutlet === 'annanagar' ? 'Anna Nagar' : 'T. Nagar'}</span>
             </div>
             <button
               onClick={() => { setPendingOrderType(null); setShowOutletSelector(true); }}
@@ -876,7 +909,7 @@ export default function Home() {
                 ? 'From authentic bubble tea to delicious mochis and Asian street food, discover our carefully curated selection.'
                 : cartState.orderType === 'delivery'
                   ? 'Showing items available for delivery from T. Nagar'
-                  : `Showing items available at ${currentOutlet === 'palladium' ? 'Palladium Mall' : 'T. Nagar'}`}
+                  : `Showing items available at ${currentOutlet === 'palladium' ? 'Palladium Mall' : currentOutlet === 'annanagar' ? 'Anna Nagar' : 'T. Nagar'}`}
             </p>
           </div>
 
@@ -942,7 +975,7 @@ export default function Home() {
                   return (
                   <div
                     key={product.id}
-                    onClick={() => available ? openQuickAdd(product.id) : toast.info(`This item is not available at ${currentOutlet === 'palladium' ? 'Palladium Mall' : 'T. Nagar'}. Try our other outlet!`, { duration: 3000 })}
+                    onClick={() => available ? openQuickAdd(product.id) : toast.info(`This item is not available at ${currentOutlet === 'palladium' ? 'Palladium Mall' : currentOutlet === 'annanagar' ? 'Anna Nagar' : 'T. Nagar'}. Try another outlet!`, { duration: 3000 })}
                     className={`group ${available ? 'cursor-pointer' : 'cursor-default'}`}
                   >
                     <div className="relative aspect-square rounded-xl overflow-hidden mb-2 bg-secondary">
@@ -965,7 +998,7 @@ export default function Home() {
                       {!available && currentOutlet && (
                         <div className="absolute inset-0 flex items-center justify-center">
                           <div className="bg-black/60 text-white text-[10px] sm:text-xs font-bold px-2 py-1 sm:px-3 sm:py-1.5 rounded-lg text-center leading-tight rotate-[-12deg] shadow-lg border border-white/20">
-                            Not available at<br />{currentOutlet === 'palladium' ? 'Palladium' : 'T. Nagar'}
+                            Not available at<br />{currentOutlet === 'palladium' ? 'Palladium' : currentOutlet === 'annanagar' ? 'A. Nagar' : 'T. Nagar'}
                           </div>
                         </div>
                       )}
@@ -1252,6 +1285,7 @@ export default function Home() {
               <ul className="space-y-1.5 sm:space-y-2 text-xs sm:text-sm text-background/70">
                 <li><strong>Palladium:</strong> 10am - 10pm</li>
                 <li><strong>T Nagar:</strong> 12pm - 12am</li>
+                <li><strong>Anna Nagar:</strong> 12pm - 12am</li>
               </ul>
             </div>
           </div>

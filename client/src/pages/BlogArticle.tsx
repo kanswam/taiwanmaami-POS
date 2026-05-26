@@ -142,7 +142,7 @@ const staticArticles: Record<string, {
 <ul>
 <li><strong>2024</strong> - Taiwan Maami opens its first outlet at Palladium Mall, Velachery</li>
 <li><strong>2025</strong> - We expand to T Nagar, bringing boba closer to more Chennai neighborhoods</li>
-<li><strong>2026</strong> - Launching online ordering with delivery across Chennai</li>
+<li><strong>2026</strong> - Launching online ordering with delivery across Chennai, and opening our third outlet in Anna Nagar</li>
 </ul>
 
 <h2>Join Our Family</h2>

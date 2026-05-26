@@ -744,12 +744,14 @@ async function startServer() {
           lines.push('');
           lines.push(`💰 *REVENUE*`);
 
-          const channelOrder = ['palladium_instore', 'palladium_delivery', 'tnagar_instore', 'tnagar_delivery'];
+          const channelOrder = ['palladium_instore', 'palladium_delivery', 'tnagar_instore', 'tnagar_delivery', 'annanagar_instore', 'annanagar_delivery'];
           const channelLabels: Record<string, string> = {
             'palladium_instore': 'Palladium In-store',
             'palladium_delivery': 'Palladium Delivery',
             'tnagar_instore': 'T.Nagar In-store',
             'tnagar_delivery': 'T.Nagar Delivery',
+            'annanagar_instore': 'Anna Nagar In-store',
+            'annanagar_delivery': 'Anna Nagar Delivery',
           };
 
           for (const key of channelOrder) {
@@ -790,14 +792,14 @@ async function startServer() {
             const costedCount = marginRawData.length;
             const coveragePct = totalLineCount ? Math.round((costedCount / totalLineCount) * 100) : 0;
             lines.push(`📊 *GROSS MARGIN* _(${coveragePct}% of items costed)_`);
-            const outletOrder = ['palladium', 'tnagar'];
+            const outletOrder = ['palladium', 'tnagar', 'annanagar'];
             let combinedMargin = 0;
             let combinedRevenue = 0;
             for (const outlet of outletOrder) {
               const data = marginByOutlet[outlet];
               if (data) {
                 const pct = data.revenue > 0 ? (data.margin / data.revenue * 100) : 0;
-                const outletName = outlet === 'tnagar' ? 'T.Nagar' : 'Palladium';
+                const outletName = outlet === 'tnagar' ? 'T.Nagar' : outlet === 'annanagar' ? 'Anna Nagar' : 'Palladium';
                 lines.push(`${outletName}: ₹${Math.round(data.margin).toLocaleString('en-IN')} (${pct.toFixed(1)}%)`);
                 combinedMargin += data.margin;
                 combinedRevenue += data.revenue;
@@ -1029,12 +1031,14 @@ async function startServer() {
         lines.push('');
         lines.push(`💰 *REVENUE*`);
 
-        const channelOrder = ['palladium_instore', 'palladium_delivery', 'tnagar_instore', 'tnagar_delivery'];
+        const channelOrder = ['palladium_instore', 'palladium_delivery', 'tnagar_instore', 'tnagar_delivery', 'annanagar_instore', 'annanagar_delivery'];
         const channelLabels: Record<string, string> = {
           'palladium_instore': 'Palladium In-store',
           'palladium_delivery': 'Palladium Delivery',
           'tnagar_instore': 'T.Nagar In-store',
           'tnagar_delivery': 'T.Nagar Delivery',
+          'annanagar_instore': 'Anna Nagar In-store',
+          'annanagar_delivery': 'Anna Nagar Delivery',
         };
 
         for (const key of channelOrder) {
@@ -1071,14 +1075,14 @@ async function startServer() {
           const costedCount = marginRawData.length;
           const coveragePct = totalLineCount ? Math.round((costedCount / totalLineCount) * 100) : 0;
           lines.push(`📊 *GROSS MARGIN* _(${coveragePct}% of items costed)_`);
-          const outletOrder = ['palladium', 'tnagar'];
+          const outletOrder = ['palladium', 'tnagar', 'annanagar'];
           let combinedMargin = 0;
           let combinedRevenue = 0;
           for (const outlet of outletOrder) {
             const data = marginByOutlet[outlet];
             if (data) {
               const pct = data.revenue > 0 ? (data.margin / data.revenue * 100) : 0;
-              const outletName = outlet === 'tnagar' ? 'T.Nagar' : 'Palladium';
+              const outletName = outlet === 'tnagar' ? 'T.Nagar' : outlet === 'annanagar' ? 'Anna Nagar' : 'Palladium';
               lines.push(`${outletName}: ₹${Math.round(data.margin).toLocaleString('en-IN')} (${pct.toFixed(1)}%)`);
               combinedMargin += data.margin;
               combinedRevenue += data.revenue;

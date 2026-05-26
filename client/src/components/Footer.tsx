@@ -97,6 +97,7 @@ export function Footer() {
             <ul className="space-y-2 text-sm text-background/70">
               <li><strong>Palladium:</strong> 10am - 10pm</li>
               <li><strong>T Nagar:</strong> 12pm - 12am</li>
+              <li><strong>Anna Nagar:</strong> 12pm - 12am</li>
             </ul>
           </div>
         </div>

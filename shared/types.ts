@@ -288,6 +288,17 @@ export const OUTLET_HOURS = {
     onlineLastOrderMinutesBefore: 15, // Online orders till 11:45 PM
     orderingEnabled: true,
   },
+  annanagar: {
+    id: 3,
+    name: 'Anna Nagar',
+    openHour: 12, // 12:00 PM (noon)
+    openMinute: 0,
+    closeHour: 24, // 12:00 AM (midnight)
+    closeMinute: 0,
+    lastOrderMinutesBefore: 15, // In-store orders till 11:45 PM
+    onlineLastOrderMinutesBefore: 15, // Online orders till 11:45 PM
+    orderingEnabled: true, // Enabled from day 1
+  },
 } satisfies Record<string, {
   id: number;
   name: string;
@@ -310,7 +321,7 @@ export const GLOBAL_ORDER_HOURS = {
 
 // Check if a specific outlet is currently accepting orders
 export function isOutletOpen(
-  outlet: 'palladium' | 'tnagar',
+  outlet: 'palladium' | 'tnagar' | 'annanagar',
   orderType: 'instore' | 'delivery' | 'pickup' = 'pickup',
   timezone: string = 'Asia/Kolkata'
 ): { available: boolean; message: string; opensAt?: string; closesAt?: string } {

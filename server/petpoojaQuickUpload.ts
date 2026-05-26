@@ -25,6 +25,8 @@ const OUTLETS: Record<string, { label: string; periodPrefix: string }> = {
   'palladium-instore': { label: 'Palladium Instore', periodPrefix: 'PAL-IN' },
   'palladium-delivery': { label: 'Palladium Delivery', periodPrefix: 'PAL-DEL' },
   'tnagar-delivery': { label: 'T.Nagar Delivery', periodPrefix: 'TN-DEL' },
+  'annanagar-instore': { label: 'Anna Nagar Instore', periodPrefix: 'AN-IN' },
+  'annanagar-delivery': { label: 'Anna Nagar Delivery', periodPrefix: 'AN-DEL' },
 };
 
 // Normalize product names (same logic as existing deliveryUpload.ts)

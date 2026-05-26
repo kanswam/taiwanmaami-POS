@@ -1085,7 +1085,7 @@ export const appRouter = router({
     getRecent: staffProcedure
       .input(z.object({ 
         limit: z.number().default(200),
-        outlet: z.enum(['all', 'palladium', 'tnagar']).optional(),
+        outlet: z.enum(['all', 'palladium', 'tnagar', 'annanagar']).optional(),
         orderType: z.enum(['all', 'instore', 'delivery', 'pickup']).optional(),
         status: z.enum(['all', 'pending', 'confirmed', 'preparing', 'ready', 'out_for_delivery', 'completed', 'cancelled']).optional(),
         dateFilter: z.enum(['today', 'yesterday', 'week', 'all']).default('today'),
@@ -1133,10 +1133,10 @@ export const appRouter = router({
           }
         }
         
-        // Filter by outlet if specified - this website only handles T Nagar orders (outletId 2)
+        // Filter by outlet if specified
         if (input?.outlet && input.outlet !== 'all') {
-          // T Nagar is outletId 2
-          conditions.push(eq(orders.outletId, 2));
+          const outletId = input.outlet === 'palladium' ? 1 : input.outlet === 'annanagar' ? 3 : 2;
+          conditions.push(eq(orders.outletId, outletId));
         }
         
         // Filter by order type if specified
@@ -2504,7 +2504,7 @@ export const appRouter = router({
       .input(z.object({
         startDate: z.string(), // ISO date string
         endDate: z.string(),   // ISO date string
-        outlet: z.enum(['all', 'palladium', 'tnagar']).optional(),
+        outlet: z.enum(['all', 'palladium', 'tnagar', 'annanagar']).optional(),
         paymentMethod: z.string().optional(), // 'all', 'cash', 'upi', 'card', 'swiggy_dineout', 'zomato_dineout', 'other'
       }))
       .query(async ({ input }) => {
@@ -2523,9 +2523,9 @@ export const appRouter = router({
           eq(orders.orderStatus, 'completed'),
         ];
         
-        // Add outlet filter - Palladium is outletId 1, T.Nagar is outletId 2
+        // Add outlet filter - Palladium is outletId 1, T.Nagar is outletId 2, Anna Nagar is outletId 3
         if (input.outlet && input.outlet !== 'all') {
-          const outletId = input.outlet === 'palladium' ? 1 : 2;
+          const outletId = input.outlet === 'palladium' ? 1 : input.outlet === 'annanagar' ? 3 : 2;
           conditions.push(eq(orders.outletId, outletId));
         }
         
@@ -4082,16 +4082,16 @@ export const appRouter = router({
     bulkToggleOutletAvailability: adminProcedure
       .input(z.object({
         productIds: z.array(z.number()),
-        outlet: z.enum(['palladium', 'tnagar']),
+        outlet: z.enum(['palladium', 'tnagar', 'annanagar']),
         isAvailable: z.boolean(),
       }))
       .mutation(async ({ input }) => {
         const dbInstance = await getDb();
         if (!dbInstance) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
-        const field = input.outlet === 'palladium' ? products.availableAtPalladium : products.availableAtTnagar;
+        const col = input.outlet === 'palladium' ? 'availableAtPalladium' : input.outlet === 'annanagar' ? 'availableAtAnnanagar' : 'availableAtTnagar';
         for (const productId of input.productIds) {
           await dbInstance.update(products)
-            .set({ [input.outlet === 'palladium' ? 'availableAtPalladium' : 'availableAtTnagar']: input.isAvailable })
+            .set({ [col]: input.isAvailable })
             .where(eq(products.id, productId));
         }
         return { success: true, updated: input.productIds.length };
@@ -4101,14 +4101,15 @@ export const appRouter = router({
     toggleProductOutlet: adminProcedure
       .input(z.object({
         productId: z.number(),
-        outlet: z.enum(['palladium', 'tnagar']),
+        outlet: z.enum(['palladium', 'tnagar', 'annanagar']),
         isAvailable: z.boolean(),
       }))
       .mutation(async ({ input }) => {
         const dbInstance = await getDb();
         if (!dbInstance) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
+        const col = input.outlet === 'palladium' ? 'availableAtPalladium' : input.outlet === 'annanagar' ? 'availableAtAnnanagar' : 'availableAtTnagar';
         await dbInstance.update(products)
-          .set({ [input.outlet === 'palladium' ? 'availableAtPalladium' : 'availableAtTnagar']: input.isAvailable })
+          .set({ [col]: input.isAvailable })
           .where(eq(products.id, input.productId));
         return { success: true };
       }),
@@ -4117,7 +4118,7 @@ export const appRouter = router({
     toggleSubcategoryOutlet: adminProcedure
       .input(z.object({
         subcategoryId: z.number(),
-        outlet: z.enum(['palladium', 'tnagar']),
+        outlet: z.enum(['palladium', 'tnagar', 'annanagar']),
         isAvailable: z.boolean(),
       }))
       .mutation(async ({ input }) => {
@@ -4125,7 +4126,7 @@ export const appRouter = router({
         if (!dbInstance) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
         // Update all products in this subcategory
         const subProducts = await dbInstance.select({ id: products.id }).from(products).where(eq(products.subcategoryId, input.subcategoryId));
-        const col = input.outlet === 'palladium' ? 'availableAtPalladium' : 'availableAtTnagar';
+        const col = input.outlet === 'palladium' ? 'availableAtPalladium' : input.outlet === 'annanagar' ? 'availableAtAnnanagar' : 'availableAtTnagar';
         for (const p of subProducts) {
           await dbInstance.update(products).set({ [col]: input.isAvailable }).where(eq(products.id, p.id));
         }
@@ -10524,6 +10525,7 @@ export const appRouter = router({
         basePricePetiteNoBoba: subcategories.basePricePetiteNoBoba,
         availableAtPalladium: products.availableAtPalladium,
         availableAtTnagar: products.availableAtTnagar,
+        availableAtAnnanagar: products.availableAtAnnanagar,
       })
         .from(products)
         .innerJoin(subcategories, eq(products.subcategoryId, subcategories.id))
@@ -10642,14 +10644,15 @@ export const appRouter = router({
     /** Get offline mode settings (public — staff devices need this without admin auth) */
     getSettings: publicProcedure.query(async () => {
       const dbInstance = await getDb();
-      if (!dbInstance) return { palladiumEnabled: false, tNagarEnabled: false };
+      if (!dbInstance) return { palladiumEnabled: false, tNagarEnabled: false, annaNagarEnabled: false };
       const { siteSettings } = await import('../drizzle/schema.js');
       const rows = await dbInstance.select().from(siteSettings)
-        .where(sql`${siteSettings.key} IN ('offline_palladium_enabled', 'offline_tnagar_enabled')`);
+        .where(sql`${siteSettings.key} IN ('offline_palladium_enabled', 'offline_tnagar_enabled', 'offline_annanagar_enabled')`);
       const map = Object.fromEntries(rows.map(r => [r.key, r.value]));
       return {
         palladiumEnabled: map['offline_palladium_enabled'] === 'true',
         tNagarEnabled: map['offline_tnagar_enabled'] === 'true',
+        annaNagarEnabled: map['offline_annanagar_enabled'] === 'true',
       };
     }),
 
@@ -10658,6 +10661,7 @@ export const appRouter = router({
       .input(z.object({
         palladiumEnabled: z.boolean(),
         tNagarEnabled: z.boolean(),
+        annaNagarEnabled: z.boolean().optional(),
       }))
       .mutation(async ({ input }) => {
         const dbInstance = await getDb();
@@ -10667,6 +10671,7 @@ export const appRouter = router({
         const pairs = [
           { key: 'offline_palladium_enabled', value: String(input.palladiumEnabled) },
           { key: 'offline_tnagar_enabled', value: String(input.tNagarEnabled) },
+          { key: 'offline_annanagar_enabled', value: String(input.annaNagarEnabled ?? false) },
         ];
 
         for (const { key, value } of pairs) {

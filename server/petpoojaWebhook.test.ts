@@ -218,7 +218,7 @@ describe("Petpooja Webhook", () => {
 
   it.skipIf(!HAS_DB)("reports outlet mappings correctly", async () => {
     const res = await request(app).get("/api/petpooja/webhook/status");
-    expect(res.body.outlet_mappings).toBe(3);
+    expect(res.body.outlet_mappings).toBe(4);
     expect(res.body.unmapped_outlets_note).toBeUndefined();
   });
 

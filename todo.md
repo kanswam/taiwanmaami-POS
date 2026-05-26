@@ -3511,3 +3511,25 @@ Orders fixed:
 - [x] Backfill: UPDATE 383 existing rows to NULL where item_sequence > 0
 - [x] Verified: 0 rows remaining with item_sequence > 0 AND order_total_rupees NOT NULL
 - [x] Fix digest code: voided-order detection was treating NULL order_total (item_sequence>0) as voided, excluding 74 of 128 orders. Rewrote to 3-pass approach: extract financials from non-NULL rows only, then aggregate, then count items.
+- [x] Strip size/variant suffixes from Top 3 item names (e.g., 'Classic Taiwan Milk Tea' instead of 'Classic Taiwan Milk Tea (Regular (16oz) YES boba)')
+- [x] Re-triggered corrected May 24 digest to WhatsApp after publish
+
+## Anna Nagar Third Outlet (May 26 — target launch mid-June 2026)
+
+- [x] 1. DB: Add availableAtAnnanagar boolean column to products + subcategories tables, default false
+- [x] 2. DB: INSERT Anna Nagar row into store_locations (outletId=3, 12pm-midnight, Anna Nagar address)
+- [x] 3. shared/types.ts: Add 'annanagar' to outlet type union and OUTLET_HOURS config
+- [x] 4. shared/types.ts: Add 'annanagar' to isOutletOpen() parameter type
+- [x] 5. CartContext.tsx: Add 'annanagar' to pickupOutlet and instoreOutlet types
+- [x] 6. Home.tsx, Menu.tsx, Checkout.tsx: Add Anna Nagar as third outlet option in picker UI
+- [x] 7. server/routers.ts: Add 'annanagar' to all z.enum outlet filters and toggle enums
+- [x] 8. drizzle/schema.ts: Add availableAtAnnanagar column, run migration
+- [x] 9. OutletAvailabilityTab.tsx: Add Anna Nagar toggle in admin UI
+- [x] 10. server/etl.ts: Add Anna Nagar to POS_OUTLET_MAP (outletId 3) and PETPOOJA_OUTLET_MAP (placeholder)
+- [x] 11. Petpooja webhook V2: Add Anna Nagar placeholder to OUTLET_MAP
+- [x] 12. Petpooja quick upload: Add Anna Nagar to OUTLETS config
+- [x] 13. Digest completeness check: Add 'annanagar' to outlet list
+- [x] 14. Delivery charge: Add Anna Nagar origin address
+- [x] 15. Offline settings admin: Add Anna Nagar toggle
+- [x] 16. Staff Orders + Payment Report: Add Anna Nagar to outlet filter dropdowns
+- [x] 17. Product availability: Deferred — all products default false, will enable closer to launch

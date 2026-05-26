@@ -32,6 +32,7 @@ const OUTLET_MAP: Record<string, { outletId: string; outletName: string }> = {
   's16db4mw':   { outletId: 'palladium_instore',  outletName: 'Palladium In-store'  }, // License 157805
   '9itpu6o0':   { outletId: 'palladium_delivery',  outletName: 'Palladium Delivery'  }, // License 334130
   'que6b2myco': { outletId: 'tnagar_delivery',     outletName: 'T.Nagar Delivery'    }, // License 395793
+  'ANNANAGAR_TBD': { outletId: 'annanagar_delivery', outletName: 'Anna Nagar Delivery' }, // Placeholder — restId TBD
 };
 
 // ── Types ────────────────────────────────────────────────────────────────────

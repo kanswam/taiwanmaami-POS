@@ -15,6 +15,7 @@ const OUTLET_MAP: Record<string, { outletId: number; outletName: string }> = {
   's16db4mw':   { outletId: 1, outletName: 'Palladium In-store'  }, // License 157805
   '9itpu6o0':   { outletId: 1, outletName: 'Palladium Delivery'  }, // License 334130
   'que6b2myco': { outletId: 2, outletName: 'T.Nagar Delivery'    }, // License 395793
+  'ANNANAGAR_TBD': { outletId: 3, outletName: 'Anna Nagar Delivery' }, // Placeholder — restId TBD
 };
 
 // Convert rupees to paise (our standard storage format)

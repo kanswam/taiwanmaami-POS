@@ -87,6 +87,7 @@ export const subcategories = mysqlTable("subcategories", {
   availablePickup: boolean("availablePickup").default(true).notNull(),
   availableAtPalladium: boolean("availableAtPalladium").default(true).notNull(),
   availableAtTnagar: boolean("availableAtTnagar").default(true).notNull(),
+  availableAtAnnanagar: boolean("availableAtAnnanagar").default(false).notNull(), // Anna Nagar outlet availability
   displayOrder: int("displayOrder").default(0).notNull(),
   isActive: boolean("isActive").default(true).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
@@ -127,6 +128,7 @@ export const products = mysqlTable("products", {
   availableDelivery: boolean("availableDelivery").default(true).notNull(),
   availableAtPalladium: boolean("availableAtPalladium").default(true).notNull(), // Product availability at Palladium outlet
   availableAtTnagar: boolean("availableAtTnagar").default(true).notNull(), // Product availability at T.Nagar outlet
+  availableAtAnnanagar: boolean("availableAtAnnanagar").default(false).notNull(), // Product availability at Anna Nagar outlet
   // Size availability override (JSON array of sizes, null means all sizes from subcategory)
   // Example: ["large"] means only large size available
   availableSizes: json("availableSizes").$type<string[] | null>(),
