@@ -3533,3 +3533,13 @@ Orders fixed:
 - [x] 15. Offline settings admin: Add Anna Nagar toggle
 - [x] 16. Staff Orders + Payment Report: Add Anna Nagar to outlet filter dropdowns
 - [x] 17. Product availability: Deferred — all products default false, will enable closer to launch
+
+## Digest: Live Gross Margin + Zero-Order Suppression (May 27)
+
+- [x] Merged GitHub commit 26aa53b (feat: live GM in daily digest) into Manus project
+- [x] Resolved merge conflict: kept recipe-based COGS calculation, added annanagar to gmOutletOrder
+- [x] Applied same recipe-based GM to SCHEDULED daily digest section (was still using old marginRawData approach)
+- [x] Suppress zero-order outlets from revenue section (Anna Nagar won't show until it has orders)
+- [x] Pushed merged code back to GitHub (kanswam/taiwanmaami-POS)
+- [x] Verified: digest now shows live GM (Palladium: 90.0%, T.Nagar: 85.8%, Combined: 89.7%)
+- [x] All 42 tests pass
