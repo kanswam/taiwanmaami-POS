@@ -142,6 +142,19 @@ export function getImageForContext(
 }
 
 /**
+ * Generate a Low-Quality Image Placeholder (LQIP) URL.
+ * Returns a ~300-byte blurred thumbnail that loads instantly.
+ * Only works for Cloudinary URLs; returns empty string for others.
+ */
+export function getLqipUrl(imageUrl: string | null | undefined): string {
+  if (!imageUrl || !isCloudinaryUrl(imageUrl)) return '';
+  const match = imageUrl.match(/\/upload\/(?:v\d+\/)?(.+)$/);
+  if (!match) return '';
+  const publicId = match[1];
+  return `https://res.cloudinary.com/${CLOUD_NAME}/image/upload/q_10,f_auto,w_20,e_blur:200/${publicId}`;
+}
+
+/**
  * Preload critical images for better LCP
  */
 export function preloadImage(imageUrl: string, options?: { width?: number }): void {

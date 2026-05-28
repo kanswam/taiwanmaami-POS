@@ -13,6 +13,7 @@ import { Search, ShoppingCart, Truck, Store, ChevronRight, ArrowLeft, Home, Aler
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Link } from 'wouter';
 import { formatPrice, OUTLET_HOURS, CHENNAI_AREAS, DELIVERY_CONFIG } from '@shared/types';
+import { OptimizedImage } from '@/components/OptimizedImage';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { cn } from '@/lib/utils';
@@ -351,15 +352,11 @@ export default function Menu() {
               className={`group relative overflow-hidden rounded-2xl bg-card border-2 border-border transition-all duration-300 text-left ${isFoodUnavailable ? 'opacity-60 cursor-not-allowed' : 'hover:border-primary hover:shadow-xl'} ${isNotAvailableForOrderType && !isFoodUnavailable ? 'opacity-75' : ''}`}
             >
               <div className="aspect-[4/3] overflow-hidden">
-                <img
+                <OptimizedImage
                   src={imageUrl}
                   alt={category.name}
-                  loading="lazy"
-                  decoding="async"
-                  className={`w-full h-full object-cover transition-transform duration-500 ${isFoodUnavailable ? 'grayscale' : 'group-hover:scale-110'}`}
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).src = 'https://res.cloudinary.com/drpu1dbqk/image/upload/f_auto,q_auto/v1778606603/taiwan-maami/static/fYHiyJVvyVYquZaW.webp';
-                  }}
+                  className={`w-full h-full transition-transform duration-500 ${isFoodUnavailable ? 'grayscale' : 'group-hover:scale-110'}`}
+                  fallback="https://res.cloudinary.com/drpu1dbqk/image/upload/f_auto,q_auto/v1778606603/taiwan-maami/static/fYHiyJVvyVYquZaW.webp"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
                 {/* Temporarily Unavailable overlay for food when turned off */}
@@ -438,15 +435,11 @@ export default function Menu() {
                 className="group relative overflow-hidden rounded-xl bg-card border-2 border-border hover:border-primary transition-all duration-300 hover:shadow-lg text-left"
               >
                 <div className="aspect-[4/3] overflow-hidden">
-                  <img
+                  <OptimizedImage
                     src={imageUrl}
                     alt={subcategory.name}
-                    loading="lazy"
-                    decoding="async"
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).src = 'https://res.cloudinary.com/drpu1dbqk/image/upload/f_auto,q_auto/v1778606603/taiwan-maami/static/fYHiyJVvyVYquZaW.webp';
-                    }}
+                    className="w-full h-full group-hover:scale-105 transition-transform duration-300"
+                    fallback="https://res.cloudinary.com/drpu1dbqk/image/upload/f_auto,q_auto/v1778606603/taiwan-maami/static/fYHiyJVvyVYquZaW.webp"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
                 </div>

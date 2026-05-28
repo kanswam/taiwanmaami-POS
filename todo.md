@@ -3543,3 +3543,13 @@ Orders fixed:
 - [x] Pushed merged code back to GitHub (kanswam/taiwanmaami-POS)
 - [x] Verified: digest now shows live GM (Palladium: 90.0%, T.Nagar: 85.8%, Combined: 89.7%)
 - [x] All 42 tests pass
+
+## Image Loading Optimization (May 28)
+
+- [x] Created OptimizedImage component with LQIP blur-up placeholders (Cloudinary w_20,q_10,e_blur:200 = ~313 bytes)
+- [x] Added getLqipUrl() to imageOptimizer.ts for generating blur placeholder URLs
+- [x] Replaced raw img tags with OptimizedImage in Home.tsx (featured products + explore menu grid)
+- [x] Replaced raw img tags with OptimizedImage in Menu.tsx (category cards + subcategory cards)
+- [x] Replaced raw img tag with OptimizedImage in ProductCard.tsx (all product listings)
+- [x] IntersectionObserver-based loading with 200px rootMargin for early preloading
+- [x] Verified blur-up effect working in browser preview

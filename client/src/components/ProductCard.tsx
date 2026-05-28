@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { Leaf, Egg, Drumstick } from 'lucide-react';
 import { formatPrice } from '@shared/types';
 import { ProductCustomizationModal } from './ProductCustomizationModal';
-import { getImageForContext, getResponsiveSrcSet, isCloudinaryUrl } from '@/lib/imageOptimizer';
+import { getImageForContext } from '@/lib/imageOptimizer';
+import { OptimizedImage } from './OptimizedImage';
 
 interface ProductCardProps {
   product: {
@@ -120,7 +121,6 @@ export function ProductCard({ product, subcategory, category, isDelivery = false
   // Default placeholder image - use optimized version for Cloudinary images
   const rawImage = images[currentImageIndex] || product.imageUrl || '/placeholder-drink.jpg';
   const currentImage = getImageForContext(rawImage, 'card');
-  const srcSet = isCloudinaryUrl(rawImage) ? getResponsiveSrcSet(rawImage) : undefined;
 
   return (
     <>
@@ -130,19 +130,11 @@ export function ProductCard({ product, subcategory, category, isDelivery = false
       >
         {/* Image section - square aspect ratio, no padding */}
         <div className="relative overflow-hidden bg-secondary" style={{ aspectRatio: '1/1' }}>
-          <img
+          <OptimizedImage
             src={currentImage}
-            srcSet={srcSet}
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
             alt={product.name}
-            loading="lazy"
-            decoding="async"
-            fetchPriority="low"
-            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-            style={{ contentVisibility: 'auto' }}
-            onError={(e) => {
-              (e.target as HTMLImageElement).src = '/placeholder-drink.jpg';
-            }}
+            className="w-full h-full transition-transform duration-300 group-hover:scale-105"
           />
           {/* Image carousel dots */}
           {hasMultipleImages && (

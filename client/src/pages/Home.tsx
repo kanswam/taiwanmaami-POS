@@ -13,6 +13,7 @@ import { toast } from 'sonner';
 import { formatPrice, OUTLET_HOURS } from '@shared/types';
 import { ProductCustomizationModal } from '@/components/ProductCustomizationModal';
 import { getOptimizedImageUrl, getResponsiveSrcSet } from '@/lib/imageOptimizer';
+import { OptimizedImage } from '@/components/OptimizedImage';
 
 // Chinese painting jade green for CTAs
 const JADE_GREEN = '#5e6c48';
@@ -647,14 +648,11 @@ export default function Home() {
                   >
                     <div className="relative aspect-square rounded-xl overflow-hidden mb-3 bg-secondary">
                       {product.imageUrl ? (
-                        <img
+                        <OptimizedImage
                           src={getOptimizedImageUrl(product.imageUrl, { width: 400, crop: 'fill', quality: 'auto' })}
-                          srcSet={getResponsiveSrcSet(product.imageUrl)}
                           sizes="(max-width: 640px) 160px, (max-width: 1024px) 200px, 220px"
                           alt={product.name}
-                          className={`w-full h-full object-cover transition-transform duration-300 ${carouselAvailable ? 'group-hover:scale-105' : 'grayscale-[40%] opacity-70'}`}
-                          loading="lazy"
-                          decoding="async"
+                          className={`w-full h-full transition-transform duration-300 ${carouselAvailable ? 'group-hover:scale-105' : 'grayscale-[40%] opacity-70'}`}
                         />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-muted-foreground">
@@ -980,14 +978,11 @@ export default function Home() {
                   >
                     <div className="relative aspect-square rounded-xl overflow-hidden mb-2 bg-secondary">
                       {product.imageUrl ? (
-                        <img
+                        <OptimizedImage
                           src={getOptimizedImageUrl(product.imageUrl, { width: 300, crop: 'fill', quality: 'auto' })}
-                          srcSet={getResponsiveSrcSet(product.imageUrl)}
                           sizes="(max-width: 640px) 45vw, (max-width: 1024px) 30vw, 200px"
                           alt={product.name}
-                          className={`w-full h-full object-cover transition-transform duration-300 ${available ? 'group-hover:scale-105' : 'grayscale-[40%] opacity-70'}`}
-                          loading="lazy"
-                          decoding="async"
+                          className={`w-full h-full transition-transform duration-300 ${available ? 'group-hover:scale-105' : 'grayscale-[40%] opacity-70'}`}
                         />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-muted-foreground">
