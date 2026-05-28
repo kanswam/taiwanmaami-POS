@@ -549,11 +549,11 @@ export default function Home() {
             loop
             muted
             playsInline
-            preload="metadata"
+            preload="auto"
             className="w-full h-full object-cover"
             poster="https://res.cloudinary.com/drpu1dbqk/image/upload/f_auto,q_auto/v1778606599/taiwan-maami/static/cuoZWmjPGnGiJcSS.jpg"
           >
-            <source src="https://maami-media.sgp1.cdn.digitaloceanspaces.com/videos/ecOaguDqCiMAAaot.mp4" type="video/mp4" />
+            <source src="https://res.cloudinary.com/drpu1dbqk/video/upload/v1779960320/taiwan-maami/static/hero-video-compressed.mp4" type="video/mp4" />
             <img
               src="https://res.cloudinary.com/drpu1dbqk/image/upload/f_auto,q_auto/v1778606599/taiwan-maami/static/cuoZWmjPGnGiJcSS.jpg"
               alt="Taiwan Maami Interior"

@@ -3553,3 +3553,4 @@ Orders fixed:
 - [x] Replaced raw img tag with OptimizedImage in ProductCard.tsx (all product listings)
 - [x] IntersectionObserver-based loading with 200px rootMargin for early preloading
 - [x] Verified blur-up effect working in browser preview
+- [x] Hero video: compressed from 54MB to 2.7MB (95% smaller), uploaded to Cloudinary, changed preload to "auto" for instant buffering
