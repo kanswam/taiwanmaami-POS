@@ -156,16 +156,41 @@ async function startServer() {
             specialInstructions: order.specialInstructions || '',
             items: items.filter(i => i.status !== 'cancelled').map(item => {
               const addons = itemAddons.filter(a => a.orderItemId === item.id);
+              const addonMap = new Map<string, { name: string; price: number; qty: number }>();
+              for (const a of addons) {
+                const existing = addonMap.get(a.addonName);
+                if (existing) { existing.qty += 1; existing.price += Number(a.addonPrice); }
+                else { addonMap.set(a.addonName, { name: a.addonName, price: Number(a.addonPrice), qty: 1 }); }
+              }
+              const groupedAddons = Array.from(addonMap.values()).map(a => ({
+                name: a.qty > 1 ? `${a.name} ×${a.qty}` : a.name,
+                price: a.price,
+              }));
+              let bobaType = (item as any).bobaType;
+              let bobaSize = (item as any).bobaSize;
+              let poppingBobaFlavor = (item as any).poppingBobaFlavor;
+              if (!bobaType && item.withBoba) {
+                const poppingAddon = addons.find(a => a.addonName.toLowerCase().includes('popping'));
+                if (poppingAddon) {
+                  bobaType = 'popping';
+                  poppingBobaFlavor = poppingAddon.addonName.replace(/popping\s*boba/i, '').trim() || poppingAddon.addonName;
+                } else {
+                  bobaType = 'tapioca';
+                }
+              }
               return {
                 productName: item.productName,
                 quantity: item.quantity,
                 price: item.unitPrice,
                 size: item.size,
                 withBoba: item.withBoba,
+                bobaType: bobaType || undefined,
+                bobaSize: bobaSize || undefined,
+                poppingBobaFlavor: poppingBobaFlavor || undefined,
                 sugarLevel: item.sugarLevel,
                 iceLevel: item.iceLevel,
                 specialInstructions: item.specialInstructions || '',
-                addons: addons.map(a => ({ name: a.addonName, price: a.addonPrice })),
+                addons: groupedAddons,
               };
             }),
             totalAmount: order.totalAmount,
@@ -339,6 +364,16 @@ async function startServer() {
               bobaType = 'tapioca';
             }
           }
+          const addonMap = new Map<string, { name: string; price: number; qty: number }>();
+          for (const a of addons) {
+            const existing = addonMap.get(a.addonName);
+            if (existing) { existing.qty += 1; existing.price += Number(a.addonPrice); }
+            else { addonMap.set(a.addonName, { name: a.addonName, price: Number(a.addonPrice), qty: 1 }); }
+          }
+          const groupedAddons = Array.from(addonMap.values()).map(a => ({
+            name: a.qty > 1 ? `${a.name} ×${a.qty}` : a.name,
+            price: a.price,
+          }));
           return {
             productName: item.productName,
             quantity: item.quantity,
@@ -351,10 +386,7 @@ async function startServer() {
             sugarLevel: item.sugarLevel,
             iceLevel: item.iceLevel,
             specialInstructions: item.specialInstructions || '',
-            addons: addons.map(a => ({
-              name: a.addonName,
-              price: a.addonPrice,
-            })),
+            addons: groupedAddons,
           };
         }),
         totalAmount: order.totalAmount,
