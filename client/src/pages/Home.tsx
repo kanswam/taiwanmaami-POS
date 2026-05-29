@@ -541,6 +541,18 @@ export default function Home() {
 
 
 
+      {/* ===== T.NAGAR TEMPORARY CLOSURE NOTICE ===== */}
+      <div className="bg-amber-50 border-b border-amber-200 py-3">
+        <div className="container">
+          <div className="flex items-center justify-center gap-2 text-sm text-amber-900">
+            <Store className="w-4 h-4 flex-shrink-0" />
+            <span className="font-semibold">T.Nagar outlet</span>
+            <span>is temporarily closed for refurbishment (May 29–30). Reopening May 31.</span>
+            <span className="font-medium">Palladium remains open as usual.</span>
+          </div>
+        </div>
+      </div>
+
       {/* ===== 2. HERO SECTION with Warm Amber Overlay ===== */}
       <section className="relative overflow-hidden">
         <div className="absolute inset-0">

@@ -3554,3 +3554,8 @@ Orders fixed:
 - [x] IntersectionObserver-based loading with 200px rootMargin for early preloading
 - [x] Verified blur-up effect working in browser preview
 - [x] Hero video: compressed from 54MB to 2.7MB (95% smaller), uploaded to Cloudinary, changed preload to "auto" for instant buffering
+
+## T.Nagar Temporary Closure (May 29-30)
+
+- [x] Added notification banner on landing page: "T.Nagar outlet temporarily closed for refurbishment (May 29-30). Reopening May 31. Palladium remains open as usual."
+- [ ] REMOVE banner after May 31 reopening
