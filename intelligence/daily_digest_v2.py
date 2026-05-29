@@ -166,7 +166,7 @@ class DailyDigest:
             return ""
         return (f"\n📊 MONTH P&L ({self.today.strftime('%B %Y')})\n"
                 f"  Revenue:     ₹{pl['gross_revenue']:>10,.0f}\n"
-                f"  COGS:        ₹{pl['cogs_inr']:>10,.0f} ({pl['gross_margin_pct']}% GM)\n"
+                f"  COGS:        ₹{pl['recipe_cogs']:>10,.0f} ({pl['gross_margin_pct']}% GM)\n"
                 f"  OpEx:        ₹{pl['operating_expenses']:>10,.0f}\n"
                 f"  Net Profit:  ₹{pl['net_profit']:>10,.0f} ({pl['net_margin_pct']}% NM)\n")
 
