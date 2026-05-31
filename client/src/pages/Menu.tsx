@@ -203,12 +203,9 @@ export default function Menu() {
     return null; // delivery - no outlet restriction
   }, [state.orderType, instoreOutlet, outletFromUrl, pickupOutlet]);
 
-  // TEMPORARY: T.Nagar kitchen closed for food (refurbishment May 29 - May 31)
+  // TEMPORARY: Food unavailable at ALL outlets (kitchen refurbishment)
   // Auto-expires after June 1 2026 IST (May 31 18:30 UTC)
-  const tnagarFoodClosed = Date.now() < new Date('2026-06-01T00:00:00+05:30').getTime();
-  // Food is unavailable if: T.Nagar kitchen is closed AND order is from T.Nagar (instore/pickup) or delivery (routed to T.Nagar)
-  const isTnagarOrder = currentOutlet === 'tnagar' || state.orderType === 'delivery';
-  const foodBlockedByTnagarClosure = tnagarFoodClosed && isTnagarOrder;
+  const foodBlockedByTnagarClosure = Date.now() < new Date('2026-06-01T00:00:00+05:30').getTime();
 
   // Get subcategories for selected category (filtered by outlet availability)
   const categorySubcategories = useMemo(() => {
@@ -354,7 +351,7 @@ export default function Menu() {
               onClick={() => {
                 if (isFoodUnavailable) {
                   toast(foodBlockedByTnagarClosure
-                    ? 'Food is temporarily unavailable due to kitchen refurbishment. Available from June 1.'
+                    ? 'Food is temporarily unavailable. Available from June 1.'
                     : 'Food is temporarily unavailable. Please check back during food service hours.');
                   return;
                 }
@@ -380,7 +377,7 @@ export default function Menu() {
                       </div>
                       <p className="text-xs mt-1 opacity-90">
                         {foodBlockedByTnagarClosure
-                          ? 'Kitchen refurbishment — available from June 1'
+                          ? 'Available from June 1'
                           : 'Check back during food hours'}
                       </p>
                     </div>
