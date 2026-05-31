@@ -3558,5 +3558,10 @@ Orders fixed:
 ## T.Nagar Temporary Closure (May 29-30)
 
 - [x] Added notification banner on landing page (updated): "T.Nagar fully reopens June 1. Open today from 3 PM for beverages & mochis (delivery & pickup only — no dine-in). Palladium remains open as usual."
-- [ ] REMOVE banner after June 1 reopening
+- [x] REMOVE banner after June 1 reopening
 - [x] Food blocking (ALL outlets): Food category tile shows "Temporarily Unavailable / Available from June 1" overlay + greyscale + unclickable for ALL outlets (Palladium, T.Nagar, delivery). Auto-expires after June 1 2026 IST.
+
+## T.Nagar Reopening (June 1)
+
+- [x] Remove T.Nagar closure banner from Home.tsx
+- [x] Remove temporary food blocking code from Menu.tsx (auto-expired but clean up dead code)

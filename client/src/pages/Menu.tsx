@@ -203,10 +203,6 @@ export default function Menu() {
     return null; // delivery - no outlet restriction
   }, [state.orderType, instoreOutlet, outletFromUrl, pickupOutlet]);
 
-  // TEMPORARY: Food unavailable at ALL outlets (kitchen refurbishment)
-  // Auto-expires after June 1 2026 IST (May 31 18:30 UTC)
-  const foodBlockedByTnagarClosure = Date.now() < new Date('2026-06-01T00:00:00+05:30').getTime();
-
   // Get subcategories for selected category (filtered by outlet availability)
   const categorySubcategories = useMemo(() => {
     if (!menuData || selectedCategory === 'all') return [];
@@ -319,8 +315,7 @@ export default function Menu() {
           // Check if this is the food category and food is currently unavailable
           const cat = category as any;
           const isFoodCategory = cat.slug === 'food';
-          // Food unavailable due to schedule OR T.Nagar kitchen closure
-          const isFoodUnavailable = (isFoodCategory && !foodAvailable) || (isFoodCategory && foodBlockedByTnagarClosure);
+          const isFoodUnavailable = isFoodCategory && !foodAvailable;
           
           // Check if category is available for current order type
           // For Food category: availability is controlled by the food schedule (isFoodAvailable),
@@ -350,9 +345,7 @@ export default function Menu() {
               key={category.id}
               onClick={() => {
                 if (isFoodUnavailable) {
-                  toast(foodBlockedByTnagarClosure
-                    ? 'Food is temporarily unavailable. Available from June 1.'
-                    : 'Food is temporarily unavailable. Please check back during food service hours.');
+                  toast('Food is temporarily unavailable. Please check back during food service hours.');
                   return;
                 }
                 handleCategoryClick(category.slug);
@@ -375,11 +368,7 @@ export default function Menu() {
                         <Clock className="w-4 h-4" />
                         <span className="font-bold text-sm sm:text-base">Temporarily Unavailable</span>
                       </div>
-                      <p className="text-xs mt-1 opacity-90">
-                        {foodBlockedByTnagarClosure
-                          ? 'Available from June 1'
-                          : 'Check back during food hours'}
-                      </p>
+                      <p className="text-xs mt-1 opacity-90">Check back during food hours</p>
                     </div>
                   </div>
                 )}
