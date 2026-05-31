@@ -146,6 +146,7 @@ export default function Menu() {
   // Check if food is currently available (for showing unavailable overlay)
   const foodAvailable = menuData?.foodAvailable !== false;
 
+
   // Get delivery settings (radius and enabled status)
   const { data: deliverySettings } = trpc.menu.getDeliverySettings.useQuery();
 
@@ -201,6 +202,13 @@ export default function Menu() {
     if (state.orderType === 'pickup') return pickupOutlet;
     return null; // delivery - no outlet restriction
   }, [state.orderType, instoreOutlet, outletFromUrl, pickupOutlet]);
+
+  // TEMPORARY: T.Nagar kitchen closed for food (refurbishment May 29 - May 31)
+  // Auto-expires after June 1 2026 IST (May 31 18:30 UTC)
+  const tnagarFoodClosed = Date.now() < new Date('2026-06-01T00:00:00+05:30').getTime();
+  // Food is unavailable if: T.Nagar kitchen is closed AND order is from T.Nagar (instore/pickup) or delivery (routed to T.Nagar)
+  const isTnagarOrder = currentOutlet === 'tnagar' || state.orderType === 'delivery';
+  const foodBlockedByTnagarClosure = tnagarFoodClosed && isTnagarOrder;
 
   // Get subcategories for selected category (filtered by outlet availability)
   const categorySubcategories = useMemo(() => {
@@ -314,7 +322,8 @@ export default function Menu() {
           // Check if this is the food category and food is currently unavailable
           const cat = category as any;
           const isFoodCategory = cat.slug === 'food';
-          const isFoodUnavailable = isFoodCategory && !foodAvailable;
+          // Food unavailable due to schedule OR T.Nagar kitchen closure
+          const isFoodUnavailable = (isFoodCategory && !foodAvailable) || (isFoodCategory && foodBlockedByTnagarClosure);
           
           // Check if category is available for current order type
           // For Food category: availability is controlled by the food schedule (isFoodAvailable),
@@ -344,7 +353,9 @@ export default function Menu() {
               key={category.id}
               onClick={() => {
                 if (isFoodUnavailable) {
-                  toast('Food is temporarily unavailable. Please check back during food service hours.');
+                  toast(foodBlockedByTnagarClosure
+                    ? 'Food is temporarily unavailable due to kitchen refurbishment. Available from June 1.'
+                    : 'Food is temporarily unavailable. Please check back during food service hours.');
                   return;
                 }
                 handleCategoryClick(category.slug);
@@ -367,7 +378,11 @@ export default function Menu() {
                         <Clock className="w-4 h-4" />
                         <span className="font-bold text-sm sm:text-base">Temporarily Unavailable</span>
                       </div>
-                      <p className="text-xs mt-1 opacity-90">Check back during food hours</p>
+                      <p className="text-xs mt-1 opacity-90">
+                        {foodBlockedByTnagarClosure
+                          ? 'Kitchen refurbishment — available from June 1'
+                          : 'Check back during food hours'}
+                      </p>
                     </div>
                   </div>
                 )}
