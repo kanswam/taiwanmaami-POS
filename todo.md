@@ -3557,5 +3557,5 @@ Orders fixed:
 
 ## T.Nagar Temporary Closure (May 29-30)
 
-- [x] Added notification banner on landing page: "T.Nagar outlet temporarily closed for refurbishment (May 29-30). Reopening May 31. Palladium remains open as usual."
-- [ ] REMOVE banner after May 31 reopening
+- [x] Added notification banner on landing page (updated): "T.Nagar fully reopens June 1. Open today from 3 PM for beverages & mochis (delivery & pickup only — no dine-in). Palladium remains open as usual."
+- [ ] REMOVE banner after June 1 reopening
