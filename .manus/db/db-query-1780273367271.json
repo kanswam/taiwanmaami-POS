@@ -1,0 +1,20 @@
+{
+  "query": "SELECT CAST(id AS CHAR) as id, name, imageUrl FROM subcategories WHERE imageUrl IS NOT NULL AND imageUrl NOT LIKE '%cloudinary.com%' AND id > 7 ORDER BY id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT CAST(id AS CHAR) as id, name, imageUrl FROM subcategories WHERE imageUrl IS NOT NULL AND imageUrl NOT LIKE '%cloudinary.com%' AND id > 7 ORDER BY id;",
+  "rows": [
+    {
+      "id": "10",
+      "name": "Rice",
+      "imageUrl": "https://d2xsxph8kpxj0f.cloudfront.net/114675165/7xKVuVPoe4TavcqcxPZkpC/subcategories/10-1770672277404.jpg"
+    },
+    {
+      "id": "540001",
+      "name": "Taiwan Maami ChickGozilla",
+      "imageUrl": "https://d2xsxph8kpxj0f.cloudfront.net/114675165/7xKVuVPoe4TavcqcxPZkpC/subcategories/540001-1770408030839.jpg"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\timageUrl\n10\tRice\thttps://d2xsxph8kpxj0f.cloudfront.net/114675165/7xKVuVPoe4TavcqcxPZkpC/subcategories/10-1770672277404.jpg\n540001\tTaiwan Maami ChickGozilla\thttps://d2xsxph8kpxj0f.cloudfront.net/114675165/7xKVuVPoe4TavcqcxPZkpC/subcategories/540001-1770408030839.jpg\n",
+  "stderr": "",
+  "execution_time_ms": 268
+}

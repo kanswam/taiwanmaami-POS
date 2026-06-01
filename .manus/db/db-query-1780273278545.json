@@ -1,0 +1,38 @@
+{
+  "query": "SELECT name, imageUrl FROM products WHERE name LIKE '%Zilla Croissant%' OR name LIKE '%Power Salad%' OR name LIKE '%ChickGozilla%' ORDER BY name;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT name, imageUrl FROM products WHERE name LIKE '%Zilla Croissant%' OR name LIKE '%Power Salad%' OR name LIKE '%ChickGozilla%' ORDER BY name;",
+  "rows": [
+    {
+      "name": "ChickGozilla Power Salad",
+      "imageUrl": "https://d2xsxph8kpxj0f.cloudfront.net/114675165/7xKVuVPoe4TavcqcxPZkpC/products/690003-img1-1770406308449.jpeg"
+    },
+    {
+      "name": "ChickGozilla with Molten Cheesy Corn",
+      "imageUrl": "https://d2xsxph8kpxj0f.cloudfront.net/114675165/7xKVuVPoe4TavcqcxPZkpC/products/690002-img1-1770406255338.jpeg"
+    },
+    {
+      "name": "Coconut Japanese ChickGozilla Curry Rice ",
+      "imageUrl": "https://d2xsxph8kpxj0f.cloudfront.net/114675165/7xKVuVPoe4TavcqcxPZkpC/products/810004-img1-1770667759894.jpeg"
+    },
+    {
+      "name": "Japanese ChickGozilla Curry Rice",
+      "imageUrl": "https://d2xsxph8kpxj0f.cloudfront.net/114675165/7xKVuVPoe4TavcqcxPZkpC/products/810003-img1-1774110847540.jpeg"
+    },
+    {
+      "name": "Spicy Japanese ChickGozilla Curry Rice",
+      "imageUrl": "https://res.cloudinary.com/drpu1dbqk/image/upload/v1770667731/taiwan-maami/products/810005-img1-1770667728140.jpg"
+    },
+    {
+      "name": "Taiwan Maami Zilla Croissant",
+      "imageUrl": "https://d2xsxph8kpxj0f.cloudfront.net/114675165/7xKVuVPoe4TavcqcxPZkpC/products/690005-img1-1770406409507.jpg"
+    },
+    {
+      "name": "The Original ChickGozilla ",
+      "imageUrl": "https://d2xsxph8kpxj0f.cloudfront.net/114675165/7xKVuVPoe4TavcqcxPZkpC/products/690001-img1-1770394056834.jpeg"
+    }
+  ],
+  "messages": [],
+  "stdout": "name\timageUrl\nChickGozilla Power Salad\thttps://d2xsxph8kpxj0f.cloudfront.net/114675165/7xKVuVPoe4TavcqcxPZkpC/products/690003-img1-1770406308449.jpeg\nChickGozilla with Molten Cheesy Corn\thttps://d2xsxph8kpxj0f.cloudfront.net/114675165/7xKVuVPoe4TavcqcxPZkpC/products/690002-img1-1770406255338.jpeg\nCoconut Japanese ChickGozilla Curry Rice \thttps://d2xsxph8kpxj0f.cloudfront.net/114675165/7xKVuVPoe4TavcqcxPZkpC/products/810004-img1-1770667759894.jpeg\nJapanese ChickGozilla Curry Rice\thttps://d2xsxph8kpxj0f.cloudfront.net/114675165/7xKVuVPoe4TavcqcxPZkpC/products/810003-img1-1774110847540.jpeg\nSpicy Japanese ChickGozilla Curry Rice\thttps://res.cloudinary.com/drpu1dbqk/image/upload/v1770667731/taiwan-maami/products/810005-img1-1770667728140.jpg\nTaiwan Maami Zilla Croissant\thttps://d2xsxph8kpxj0f.cloudfront.net/114675165/7xKVuVPoe4TavcqcxPZkpC/products/690005-img1-1770406409507.jpg\nThe Original ChickGozilla \thttps://d2xsxph8kpxj0f.cloudfront.net/114675165/7xKVuVPoe4TavcqcxPZkpC/products/690001-img1-1770394056834.jpeg\n",
+  "stderr": "",
+  "execution_time_ms": 326
+}

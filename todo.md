@@ -3565,3 +3565,7 @@ Orders fixed:
 
 - [x] Remove T.Nagar closure banner from Home.tsx
 - [x] Remove temporary food blocking code from Menu.tsx (auto-expired but clean up dead code)
+
+## Image Performance Optimization
+
+- [x] Migrate all CloudFront/S3 images to Cloudinary (13 products + 5 subcategories). Reduced total from 213.6MB to 3.7MB stored. All images now get auto-format (WebP/AVIF), responsive srcSet, and LQIP blur-up placeholders.

@@ -1,0 +1,75 @@
+{
+  "query": "SELECT id, name, imageUrl FROM products WHERE imageUrl LIKE '%cloudfront.net%' OR imageUrl LIKE '%amazonaws.com%' ORDER BY id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zuxFhcSmgfRMF3Y.5443ef0e52ed --database 7xKVuVPoe4TavcqcxPZkpC --execute SELECT id, name, imageUrl FROM products WHERE imageUrl LIKE '%cloudfront.net%' OR imageUrl LIKE '%amazonaws.com%' ORDER BY id;",
+  "rows": [
+    {
+      "id": "300005",
+      "name": "Blueberry Matcha Brioche",
+      "imageUrl": "https://d2xsxph8kpxj0f.cloudfront.net/114675165/7xKVuVPoe4TavcqcxPZkpC/products/300005-img1-1770407215937.jpeg"
+    },
+    {
+      "id": "690001",
+      "name": "The Original ChickGozilla ",
+      "imageUrl": "https://d2xsxph8kpxj0f.cloudfront.net/114675165/7xKVuVPoe4TavcqcxPZkpC/products/690001-img1-1770394056834.jpeg"
+    },
+    {
+      "id": "690002",
+      "name": "ChickGozilla with Molten Cheesy Corn",
+      "imageUrl": "https://d2xsxph8kpxj0f.cloudfront.net/114675165/7xKVuVPoe4TavcqcxPZkpC/products/690002-img1-1770406255338.jpeg"
+    },
+    {
+      "id": "690003",
+      "name": "ChickGozilla Power Salad",
+      "imageUrl": "https://d2xsxph8kpxj0f.cloudfront.net/114675165/7xKVuVPoe4TavcqcxPZkpC/products/690003-img1-1770406308449.jpeg"
+    },
+    {
+      "id": "690005",
+      "name": "Taiwan Maami Zilla Croissant",
+      "imageUrl": "https://d2xsxph8kpxj0f.cloudfront.net/114675165/7xKVuVPoe4TavcqcxPZkpC/products/690005-img1-1770406409507.jpg"
+    },
+    {
+      "id": "810003",
+      "name": "Japanese ChickGozilla Curry Rice",
+      "imageUrl": "https://d2xsxph8kpxj0f.cloudfront.net/114675165/7xKVuVPoe4TavcqcxPZkpC/products/810003-img1-1774110847540.jpeg"
+    },
+    {
+      "id": "810004",
+      "name": "Coconut Japanese ChickGozilla Curry Rice ",
+      "imageUrl": "https://d2xsxph8kpxj0f.cloudfront.net/114675165/7xKVuVPoe4TavcqcxPZkpC/products/810004-img1-1770667759894.jpeg"
+    },
+    {
+      "id": "1170001",
+      "name": "Prawn Tempura (approx. 140g of Wild Tiger Prawn)",
+      "imageUrl": "https://d2xsxph8kpxj0f.cloudfront.net/114675165/7xKVuVPoe4TavcqcxPZkpC/products/1170001-img1-1774108605368.jpeg"
+    },
+    {
+      "id": "1170002",
+      "name": "Tofu Tempura (approx. 200g of Tofu Steak)",
+      "imageUrl": "https://d2xsxph8kpxj0f.cloudfront.net/114675165/7xKVuVPoe4TavcqcxPZkpC/products/1170002-img1-1774108459275.jpeg"
+    },
+    {
+      "id": "1170003",
+      "name": "Japanese Prawn Tempura Curry Rice (approx. 90g of wild tiger prawn)",
+      "imageUrl": "https://d2xsxph8kpxj0f.cloudfront.net/114675165/7xKVuVPoe4TavcqcxPZkpC/products/1170003-img1-1774111234855.jpeg"
+    },
+    {
+      "id": "1170004",
+      "name": "Japanese Tofu Katsu Curry Rice (approx. 100g of tofu steak)",
+      "imageUrl": "https://d2xsxph8kpxj0f.cloudfront.net/114675165/7xKVuVPoe4TavcqcxPZkpC/products/1170004-img1-1774111670361.jpeg"
+    },
+    {
+      "id": "1500002",
+      "name": "Petal-Cut Corn Ribs",
+      "imageUrl": "https://d2xsxph8kpxj0f.cloudfront.net/114675165/7xKVuVPoe4TavcqcxPZkpC/products/1500002-img1-1776242862049.jpeg"
+    },
+    {
+      "id": "1500003",
+      "name": "Dan Dan Noodles",
+      "imageUrl": "https://d2xsxph8kpxj0f.cloudfront.net/114675165/7xKVuVPoe4TavcqcxPZkpC/products/1500003-img1-1776264159990.jpeg"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\timageUrl\n300005\tBlueberry Matcha Brioche\thttps://d2xsxph8kpxj0f.cloudfront.net/114675165/7xKVuVPoe4TavcqcxPZkpC/products/300005-img1-1770407215937.jpeg\n690001\tThe Original ChickGozilla \thttps://d2xsxph8kpxj0f.cloudfront.net/114675165/7xKVuVPoe4TavcqcxPZkpC/products/690001-img1-1770394056834.jpeg\n690002\tChickGozilla with Molten Cheesy Corn\thttps://d2xsxph8kpxj0f.cloudfront.net/114675165/7xKVuVPoe4TavcqcxPZkpC/products/690002-img1-1770406255338.jpeg\n690003\tChickGozilla Power Salad\thttps://d2xsxph8kpxj0f.cloudfront.net/114675165/7xKVuVPoe4TavcqcxPZkpC/products/690003-img1-1770406308449.jpeg\n690005\tTaiwan Maami Zilla Croissant\thttps://d2xsxph8kpxj0f.cloudfront.net/114675165/7xKVuVPoe4TavcqcxPZkpC/products/690005-img1-1770406409507.jpg\n810003\tJapanese ChickGozilla Curry Rice\thttps://d2xsxph8kpxj0f.cloudfront.net/114675165/7xKVuVPoe4TavcqcxPZkpC/products/810003-img1-1774110847540.jpeg\n810004\tCoconut Japanese ChickGozilla Curry Rice \thttps://d2xsxph8kpxj0f.cloudfront.net/114675165/7xKVuVPoe4TavcqcxPZkpC/products/810004-img1-1770667759894.jpeg\n1170001\tPrawn Tempura (approx. 140g of Wild Tiger Prawn)\thttps://d2xsxph8kpxj0f.cloudfront.net/114675165/7xKVuVPoe4TavcqcxPZkpC/products/1170001-img1-1774108605368.jpeg\n1170002\tTofu Tempura (approx. 200g of Tofu Steak)\thttps://d2xsxph8kpxj0f.cloudfront.net/114675165/7xKVuVPoe4TavcqcxPZkpC/products/1170002-img1-1774108459275.jpeg\n1170003\tJapanese Prawn Tempura Curry Rice (approx. 90g of wild tiger prawn)\thttps://d2xsxph8kpxj0f.cloudfront.net/114675165/7xKVuVPoe4TavcqcxPZkpC/products/1170003-img1-1774111234855.jpeg\n1170004\tJapanese Tofu Katsu Curry Rice (approx. 100g of tofu steak)\thttps://d2xsxph8kpxj0f.cloudfront.net/114675165/7xKVuVPoe4TavcqcxPZkpC/products/1170004-img1-1774111670361.jpeg\n1500002\tPetal-Cut Corn Ribs\thttps://d2xsxph8kpxj0f.cloudfront.net/114675165/7xKVuVPoe4TavcqcxPZkpC/products/1500002-img1-1776242862049.jpeg\n1500003\tDan Dan Noodles\thttps://d2xsxph8kpxj0f.cloudfront.net/114675165/7xKVuVPoe4TavcqcxPZkpC/products/1500003-img1-1776264159990.jpeg\n",
+  "stderr": "",
+  "execution_time_ms": 272
+}
