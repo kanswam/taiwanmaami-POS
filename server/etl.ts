@@ -133,29 +133,50 @@ async function pullPOSOrders(reportDate: string, batchId: string): Promise<{ row
 
     const { ne } = await import("drizzle-orm");
 
-    const orderResults = await db
-      .select()
+    const joinResults = await db
+      .select({
+        orderId: orders.id,
+        orderNumber: orders.orderNumber,
+        createdAt: orders.createdAt,
+        outletId: orders.outletId,
+        orderType: orders.orderType,
+        paymentMethod: orders.paymentMethod,
+        paymentStatus: orders.paymentStatus,
+        customerName: orders.customerName,
+        customerPhone: orders.customerPhone,
+        totalAmount: orders.totalAmount,
+        stateGst: orders.stateGst,
+        centralGst: orders.centralGst,
+        discountAmount: orders.discountAmount,
+        subtotal: orders.subtotal,
+        itemId: orderItems.id,
+        productName: orderItems.productName,
+        quantity: orderItems.quantity,
+        unitPrice: orderItems.unitPrice,
+        lineTotal: orderItems.lineTotal,
+      })
       .from(orders)
+      .innerJoin(orderItems, eq(orderItems.orderId, orders.id))
       .where(
         and(
           gte(orders.createdAt, startOfDay),
           lte(orders.createdAt, endOfDay),
           eq(orders.isTestData, false),
-          ne(orders.orderStatus, "cancelled")
+          ne(orders.orderStatus, "cancelled"),
+          eq(orderItems.status, "active")
         )
-      );
+      )
+      .orderBy(orders.id, orderItems.id);
 
-    for (const order of orderResults) {
-      const items = await db
-        .select()
-        .from(orderItems)
-        .where(
-          and(
-            eq(orderItems.orderId, order.id),
-            eq(orderItems.status, "active")
-          )
-        );
+    const orderMap = new Map<number, { order: typeof joinResults[0]; items: typeof joinResults }>();
+    for (const row of joinResults) {
+      if (!orderMap.has(row.orderId)) {
+        orderMap.set(row.orderId, { order: row, items: [] });
+      }
+      orderMap.get(row.orderId)!.items.push(row);
+    }
 
+    for (const { order, items } of Array.from(orderMap.values())) {
       const outlet = POS_OUTLET_MAP[order.outletId ?? 1] || "unknown";
       const orderTotal = (order.totalAmount ?? 0) / 100;
       const orderTax = ((order.stateGst ?? 0) + (order.centralGst ?? 0)) / 100;
@@ -166,7 +187,7 @@ async function pullPOSOrders(reportDate: string, batchId: string): Promise<{ row
         const item = items[idx];
         rows.push({
           source: "pos",
-          source_order_id: order.orderNumber || String(order.id),
+          source_order_id: order.orderNumber || String(order.orderId),
           order_date: reportDate,
           order_timestamp: order.createdAt?.toISOString() || new Date().toISOString(),
           outlet,
@@ -186,14 +207,14 @@ async function pullPOSOrders(reportDate: string, batchId: string): Promise<{ row
           order_total_rupees: idx === 0 ? orderTotal.toFixed(2) : null,
           aggregator: null,
           channel: order.orderType === "delivery" ? "delivery" : "instore",
-          raw_data: { orderId: order.id, itemId: item.id },
+          raw_data: { orderId: order.orderId, itemId: item.itemId },
           etl_batch_id: batchId,
           item_sequence: idx,
         });
       }
     }
 
-    return { rows, count: orderResults.length, errors };
+    return { rows, count: orderMap.size, errors };
   } catch (err: any) {
     errors.push(`POS orders pull failed: ${err.message}`);
     return { rows, count: 0, errors };
