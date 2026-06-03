@@ -106,3 +106,4 @@ temp/
 *.sqlite
 *.sqlite3
 client/public/videos/
+.project-config.json

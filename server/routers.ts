@@ -360,14 +360,38 @@ export const appRouter = router({
                   const todayDay = now.getDate();
                   
                   if (todayMonth === birthdayUser.birthMonth && todayDay === birthdayUser.birthDay) {
-                    // It's their birthday! Find the most expensive item to make free
-                    const mostExpensiveItem = input.items.reduce((max, item) => 
-                      item.lineTotal > max.lineTotal ? item : max, input.items[0]);
+                    // It's their birthday! Find the most expensive DRINK item to make free
+                    // POLICY: Birthday free item MUST be a drink (category 1=Iced Beverages, 2=Hot Beverages)
+                    // Food (category 4) and Sweet Bites (category 3) are NOT eligible
+                    const DRINK_CATEGORY_IDS = [1, 2];
                     
-                    if (mostExpensiveItem) {
-                      discountAmount = mostExpensiveItem.lineTotal;
+                    // Look up categoryId for each item via product → subcategory → category
+                    const productIds = input.items.map(item => item.productId);
+                    const productCategories = await dbInstance!.select({
+                      productId: products.id,
+                      categoryId: subcategories.categoryId,
+                    }).from(products)
+                      .innerJoin(subcategories, eq(products.subcategoryId, subcategories.id))
+                      .where(inArray(products.id, productIds));
+                    
+                    const productCategoryMap = new Map(productCategories.map(pc => [pc.productId, pc.categoryId]));
+                    
+                    // Filter to only drink items
+                    const drinkItems = input.items.filter(item => {
+                      const catId = productCategoryMap.get(item.productId);
+                      return catId !== undefined && DRINK_CATEGORY_IDS.includes(catId);
+                    });
+                    
+                    if (drinkItems.length > 0) {
+                      // Find the most expensive drink
+                      const mostExpensiveDrink = drinkItems.reduce((max, item) => 
+                        item.lineTotal > max.lineTotal ? item : max, drinkItems[0]);
+                      
+                      discountAmount = mostExpensiveDrink.lineTotal;
                       birthdayFreeApplied = true;
-                      console.log(`[Order] Birthday free drink applied for user ${ctx.user.id}: ${mostExpensiveItem.productName} (₹${mostExpensiveItem.lineTotal / 100})`);
+                      console.log(`[Order] Birthday free drink applied for user ${ctx.user.id}: ${mostExpensiveDrink.productName} (₹${mostExpensiveDrink.lineTotal / 100})`);
+                    } else {
+                      console.log(`[Order] Birthday free drink skipped for user ${ctx.user?.id}: no drink items in order (only food/desserts)`);
                     }
                   }
                 }

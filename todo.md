@@ -3569,3 +3569,7 @@ Orders fixed:
 ## Image Performance Optimization
 
 - [x] Migrate all CloudFront/S3 images to Cloudinary (13 products + 5 subcategories). Reduced total from 213.6MB to 3.7MB stored. All images now get auto-format (WebP/AVIF), responsive srcSet, and LQIP blur-up placeholders.
+
+## Birthday Deal Bug Fix (June 3)
+
+- [x] Fix birthday free item to ONLY apply to drinks (category 1=Iced Beverages, 2=Hot Beverages). Food (category 4) and Sweet Bites (category 3) are NOT eligible. Previously it was giving away the most expensive item regardless of category.
