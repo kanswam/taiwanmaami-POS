@@ -282,11 +282,14 @@ async function pullPetpoojaWebhookOrders(reportDate: string, batchId: string): P
       }
     }
 
-    // Group items by petpooja_order_id
-    const itemsByOrderId: Record<number, any[]> = {};
+    // Group items by composite key petpooja_order_id + outlet_id
+    // petpooja_order_id alone is not unique — Palladium and T.Nagar use independent
+    // sequential counters and collide on 193 order IDs. outlet_id disambiguates.
+    const itemsByKey: Record<string, any[]> = {};
     for (const item of allItems) {
-      if (!itemsByOrderId[item.petpooja_order_id]) itemsByOrderId[item.petpooja_order_id] = [];
-      itemsByOrderId[item.petpooja_order_id].push(item);
+      const key = `${item.petpooja_order_id}__${item.outlet_id}`;
+      if (!itemsByKey[key]) itemsByKey[key] = [];
+      itemsByKey[key].push(item);
     }
 
     for (const order of webhookOrders) {
@@ -308,13 +311,13 @@ async function pullPetpoojaWebhookOrders(reportDate: string, batchId: string): P
       // Determine aggregator (Zomato, Swiggy, or null for POS/dine-in)
       const aggregator = order.order_from !== "POS" ? order.order_from : null;
 
-      const items = itemsByOrderId[order.petpooja_order_id] || [];
+      const items = itemsByKey[`${order.petpooja_order_id}__${order.outlet_id}`] || [];
       
       if (items.length === 0) {
         // If no line items, still create a single row for the order total
         rows.push({
           source: "petpooja_webhook",
-          source_order_id: String(order.petpooja_order_id),
+          source_order_id: `${order.petpooja_order_id}_${order.outlet_id}`,
           order_date: reportDate,
           order_timestamp: order.petpooja_created_at || order.ingested_at,
           outlet,
@@ -343,7 +346,7 @@ async function pullPetpoojaWebhookOrders(reportDate: string, batchId: string): P
           const item = items[idx];
           rows.push({
             source: "petpooja_webhook",
-            source_order_id: String(order.petpooja_order_id),
+            source_order_id: `${order.petpooja_order_id}_${order.outlet_id}`,
             order_date: reportDate,
             order_timestamp: order.petpooja_created_at || order.ingested_at,
             outlet,
