@@ -421,14 +421,15 @@ export default function OrdersTab() {
     return orders.filter((o: any) => o.orderType === orderTypeFilter);
   }, [orders, orderTypeFilter]);
 
-  // Order counts by type
+  // Order counts by type (exclude cancelled from badges)
   const orderCounts = useMemo(() => {
     if (!orders) return { all: 0, instore: 0, delivery: 0, pickup: 0 };
+    const nonCancelled = orders.filter((o: any) => o.orderStatus !== 'cancelled');
     return {
-      all: orders.length,
-      instore: orders.filter((o: any) => o.orderType === 'instore').length,
-      delivery: orders.filter((o: any) => o.orderType === 'delivery').length,
-      pickup: orders.filter((o: any) => o.orderType === 'pickup').length,
+      all: nonCancelled.length,
+      instore: nonCancelled.filter((o: any) => o.orderType === 'instore').length,
+      delivery: nonCancelled.filter((o: any) => o.orderType === 'delivery').length,
+      pickup: nonCancelled.filter((o: any) => o.orderType === 'pickup').length,
     };
   }, [orders]);
 

@@ -5703,8 +5703,8 @@ export const appRouter = router({
         if (!dbInstance) return { totalRevenue: 0, totalOrders: 0, avgOrderValue: 0, totalGst: 0 };
 
         let conditions: any[] = [sql`${orders.orderStatus} != 'cancelled'`, sql`${orders.isTestData} = false`];
-        if (input?.startDate) conditions.push(sql`${orders.createdAt} >= ${input.startDate}`);
-        if (input?.endDate) conditions.push(sql`${orders.createdAt} <= ${input.endDate + ' 23:59:59'}`);
+        if (input?.startDate) conditions.push(sql`DATE(CONVERT_TZ(${orders.createdAt}, '+00:00', '+05:30')) >= ${input.startDate}`);
+        if (input?.endDate) conditions.push(sql`DATE(CONVERT_TZ(${orders.createdAt}, '+00:00', '+05:30')) <= ${input.endDate}`);
         if (input?.orderType && input.orderType !== 'all') conditions.push(eq(orders.orderType, input.orderType));
 
         const whereClause = and(...conditions);
@@ -5736,8 +5736,8 @@ export const appRouter = router({
         if (!dbInstance) return { monthly: [], totals: { delivery: 0, deliveryRev: 0, pickup: 0, pickupRev: 0, instore: 0, instoreRev: 0, deliveryCharges: 0 } };
 
         let conditions: any[] = [sql`${orders.orderStatus} != 'cancelled'`, sql`${orders.isTestData} = false`];
-        if (input?.startDate) conditions.push(sql`${orders.createdAt} >= ${input.startDate}`);
-        if (input?.endDate) conditions.push(sql`${orders.createdAt} <= ${input.endDate + ' 23:59:59'}`);
+        if (input?.startDate) conditions.push(sql`DATE(CONVERT_TZ(${orders.createdAt}, '+00:00', '+05:30')) >= ${input.startDate}`);
+        if (input?.endDate) conditions.push(sql`DATE(CONVERT_TZ(${orders.createdAt}, '+00:00', '+05:30')) <= ${input.endDate}`);
 
         const matchingOrders = await dbInstance.select({
           createdAt: orders.createdAt,
@@ -5753,9 +5753,10 @@ export const appRouter = router({
         let totDelivery = 0, totDeliveryRev = 0, totPickup = 0, totPickupRev = 0, totInstore = 0, totInstoreRev = 0, totDelCharges = 0;
 
         for (const o of matchingOrders) {
-          const d = new Date(o.createdAt);
-          const mk = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-          if (!monthMap[mk]) monthMap[mk] = { month: `${monthNames[d.getMonth()]} ${d.getFullYear()}`, monthKey: mk, delivery: 0, deliveryRev: 0, pickup: 0, pickupRev: 0, instore: 0, instoreRev: 0, total: 0, totalRev: 0, deliveryCharges: 0, avgDeliveryOrder: 0, avgPickupOrder: 0, avgInstoreOrder: 0 };
+          // Convert UTC createdAt to IST for month bucketing
+          const ist = new Date(new Date(o.createdAt).getTime() + 5.5 * 60 * 60 * 1000);
+          const mk = `${ist.getUTCFullYear()}-${String(ist.getUTCMonth() + 1).padStart(2, '0')}`;
+          if (!monthMap[mk]) monthMap[mk] = { month: `${monthNames[ist.getUTCMonth()]} ${ist.getUTCFullYear()}`, monthKey: mk, delivery: 0, deliveryRev: 0, pickup: 0, pickupRev: 0, instore: 0, instoreRev: 0, total: 0, totalRev: 0, deliveryCharges: 0, avgDeliveryOrder: 0, avgPickupOrder: 0, avgInstoreOrder: 0 };
           const m = monthMap[mk];
           const amt = o.totalAmount;
           const delCharge = o.deliveryCharge || 0;
@@ -5793,8 +5794,8 @@ export const appRouter = router({
         if (!dbInstance) return [];
 
         let conditions: any[] = [sql`${orders.orderStatus} != 'cancelled'`, sql`${orders.isTestData} = false`];
-        if (input?.startDate) conditions.push(sql`${orders.createdAt} >= ${input.startDate}`);
-        if (input?.endDate) conditions.push(sql`${orders.createdAt} <= ${input.endDate + ' 23:59:59'}`);
+        if (input?.startDate) conditions.push(sql`DATE(CONVERT_TZ(${orders.createdAt}, '+00:00', '+05:30')) >= ${input.startDate}`);
+        if (input?.endDate) conditions.push(sql`DATE(CONVERT_TZ(${orders.createdAt}, '+00:00', '+05:30')) <= ${input.endDate}`);
         if (input?.orderType && input.orderType !== 'all') conditions.push(eq(orders.orderType, input.orderType));
 
         const whereClause = and(...conditions);
@@ -5864,8 +5865,8 @@ export const appRouter = router({
         if (!dbInstance) return [];
 
         let conditions: any[] = [sql`${orders.orderStatus} != 'cancelled'`, sql`${orders.isTestData} = false`];
-        if (input?.startDate) conditions.push(sql`${orders.createdAt} >= ${input.startDate}`);
-        if (input?.endDate) conditions.push(sql`${orders.createdAt} <= ${input.endDate + ' 23:59:59'}`);
+        if (input?.startDate) conditions.push(sql`DATE(CONVERT_TZ(${orders.createdAt}, '+00:00', '+05:30')) >= ${input.startDate}`);
+        if (input?.endDate) conditions.push(sql`DATE(CONVERT_TZ(${orders.createdAt}, '+00:00', '+05:30')) <= ${input.endDate}`);
         if (input?.orderType && input.orderType !== 'all') conditions.push(eq(orders.orderType, input.orderType));
 
         const whereClause = and(...conditions);
@@ -5941,8 +5942,8 @@ export const appRouter = router({
         if (!dbInstance) return [];
 
         let conditions: any[] = [sql`${orders.orderStatus} != 'cancelled'`, sql`${orders.isTestData} = false`];
-        if (input?.startDate) conditions.push(sql`${orders.createdAt} >= ${input.startDate}`);
-        if (input?.endDate) conditions.push(sql`${orders.createdAt} <= ${input.endDate + ' 23:59:59'}`);
+        if (input?.startDate) conditions.push(sql`DATE(CONVERT_TZ(${orders.createdAt}, '+00:00', '+05:30')) >= ${input.startDate}`);
+        if (input?.endDate) conditions.push(sql`DATE(CONVERT_TZ(${orders.createdAt}, '+00:00', '+05:30')) <= ${input.endDate}`);
         if (input?.orderType && input.orderType !== 'all') conditions.push(eq(orders.orderType, input.orderType));
 
         const whereClause = and(...conditions);
@@ -6004,8 +6005,8 @@ export const appRouter = router({
 
         // Step 1: Get orders in the selected date range
         let conditions: any[] = [sql`${orders.orderStatus} != 'cancelled'`, sql`${orders.isTestData} = false`];
-        if (input?.startDate) conditions.push(sql`${orders.createdAt} >= ${input.startDate}`);
-        if (input?.endDate) conditions.push(sql`${orders.createdAt} <= ${input.endDate + ' 23:59:59'}`);
+        if (input?.startDate) conditions.push(sql`DATE(CONVERT_TZ(${orders.createdAt}, '+00:00', '+05:30')) >= ${input.startDate}`);
+        if (input?.endDate) conditions.push(sql`DATE(CONVERT_TZ(${orders.createdAt}, '+00:00', '+05:30')) <= ${input.endDate}`);
 
         const whereClause = and(...conditions);
         const matchingOrders = await dbInstance.select().from(orders).where(whereClause);
@@ -6099,8 +6100,8 @@ export const appRouter = router({
         const staffPhones = new Set(staffUsers.map(u => u.phone).filter(Boolean));
 
         let conditions: any[] = [sql`${orders.orderStatus} != 'cancelled'`, sql`${orders.isTestData} = false`];
-        if (input?.startDate) conditions.push(sql`${orders.createdAt} >= ${input.startDate}`);
-        if (input?.endDate) conditions.push(sql`${orders.createdAt} <= ${input.endDate + ' 23:59:59'}`);
+        if (input?.startDate) conditions.push(sql`DATE(CONVERT_TZ(${orders.createdAt}, '+00:00', '+05:30')) >= ${input.startDate}`);
+        if (input?.endDate) conditions.push(sql`DATE(CONVERT_TZ(${orders.createdAt}, '+00:00', '+05:30')) <= ${input.endDate}`);
 
         const whereClause = and(...conditions);
         const matchingOrders = await dbInstance.select().from(orders).where(whereClause);
@@ -6142,8 +6143,8 @@ export const appRouter = router({
         if (!dbInstance) return [];
 
         let conditions: any[] = [sql`${orders.orderStatus} != 'cancelled'`, sql`${orders.isTestData} = false`];
-        if (input?.startDate) conditions.push(sql`${orders.createdAt} >= ${input.startDate}`);
-        if (input?.endDate) conditions.push(sql`${orders.createdAt} <= ${input.endDate + ' 23:59:59'}`);
+        if (input?.startDate) conditions.push(sql`DATE(CONVERT_TZ(${orders.createdAt}, '+00:00', '+05:30')) >= ${input.startDate}`);
+        if (input?.endDate) conditions.push(sql`DATE(CONVERT_TZ(${orders.createdAt}, '+00:00', '+05:30')) <= ${input.endDate}`);
 
         const whereClause = and(...conditions);
         const matchingOrders = await dbInstance.select().from(orders).where(whereClause);
@@ -6153,7 +6154,9 @@ export const appRouter = router({
         for (let i = 0; i < 7; i++) dayStats[i] = { revenue: 0, orders: 0 };
 
         matchingOrders.forEach(order => {
-          const dayOfWeek = new Date(order.createdAt).getDay();
+          // Convert UTC createdAt to IST for day-of-week bucketing
+          const ist = new Date(new Date(order.createdAt).getTime() + 5.5 * 60 * 60 * 1000);
+          const dayOfWeek = ist.getUTCDay();
           dayStats[dayOfWeek].revenue += order.totalAmount;
           dayStats[dayOfWeek].orders += 1;
         });
@@ -6178,8 +6181,8 @@ export const appRouter = router({
         if (!dbInstance) return [];
 
         let conditions: any[] = [sql`${orders.orderStatus} != 'cancelled'`, sql`${orders.isTestData} = false`];
-        if (input?.startDate) conditions.push(sql`${orders.createdAt} >= ${input.startDate}`);
-        if (input?.endDate) conditions.push(sql`${orders.createdAt} <= ${input.endDate + ' 23:59:59'}`);
+        if (input?.startDate) conditions.push(sql`DATE(CONVERT_TZ(${orders.createdAt}, '+00:00', '+05:30')) >= ${input.startDate}`);
+        if (input?.endDate) conditions.push(sql`DATE(CONVERT_TZ(${orders.createdAt}, '+00:00', '+05:30')) <= ${input.endDate}`);
 
         const whereClause = and(...conditions);
         const matchingOrders = await dbInstance.select().from(orders).where(whereClause);
@@ -6217,8 +6220,8 @@ export const appRouter = router({
 
         let conditions: any[] = [
           sql`${orders.orderStatus} != 'cancelled'`,
-          sql`${orders.createdAt} >= ${input.startDate}`,
-          sql`${orders.createdAt} <= ${input.endDate + ' 23:59:59'}`,
+          sql`DATE(CONVERT_TZ(${orders.createdAt}, '+00:00', '+05:30')) >= ${input.startDate}`,
+          sql`DATE(CONVERT_TZ(${orders.createdAt}, '+00:00', '+05:30')) <= ${input.endDate}`,
         ];
         if (input.orderType && input.orderType !== 'all') conditions.push(eq(orders.orderType, input.orderType));
 
@@ -6231,12 +6234,14 @@ export const appRouter = router({
         const start = new Date(input.startDate);
         const end = new Date(input.endDate);
         for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-          const dateStr = d.toISOString().split('T')[0];
+          const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
           dailyStats[dateStr] = { revenue: 0, orders: 0 };
         }
 
         matchingOrders.forEach(order => {
-          const dateStr = new Date(order.createdAt).toISOString().split('T')[0];
+          // Convert UTC createdAt to IST for bucketing
+          const ist = new Date(new Date(order.createdAt).getTime() + 5.5 * 60 * 60 * 1000);
+          const dateStr = `${ist.getUTCFullYear()}-${String(ist.getUTCMonth() + 1).padStart(2, '0')}-${String(ist.getUTCDate()).padStart(2, '0')}`;
           if (dailyStats[dateStr]) {
             dailyStats[dateStr].revenue += order.totalAmount;
             dailyStats[dateStr].orders += 1;
@@ -6266,8 +6271,8 @@ export const appRouter = router({
           .from(orders)
           .where(and(
             sql`${orders.orderStatus} != 'cancelled'`,
-            sql`${orders.createdAt} >= ${input.startDate}`,
-            sql`${orders.createdAt} <= ${input.endDate + ' 23:59:59'}`,
+            sql`DATE(CONVERT_TZ(${orders.createdAt}, '+00:00', '+05:30')) >= ${input.startDate}`,
+            sql`DATE(CONVERT_TZ(${orders.createdAt}, '+00:00', '+05:30')) <= ${input.endDate}`,
           ));
 
         // Group by period
@@ -6275,16 +6280,18 @@ export const appRouter = router({
         
         matchingOrders.forEach(order => {
           let period: string;
-          const orderDate = new Date(order.createdAt);
+          // Convert UTC createdAt to IST for bucketing
+          const ist = new Date(new Date(order.createdAt).getTime() + 5.5 * 60 * 60 * 1000);
+          const orderDateIST = `${ist.getUTCFullYear()}-${String(ist.getUTCMonth() + 1).padStart(2, '0')}-${String(ist.getUTCDate()).padStart(2, '0')}`;
           
           if (input.groupBy === 'daily') {
-            period = orderDate.toISOString().split('T')[0];
+            period = orderDateIST;
           } else if (input.groupBy === 'weekly') {
-            const weekStart = new Date(orderDate);
-            weekStart.setDate(orderDate.getDate() - orderDate.getDay());
-            period = `Week of ${weekStart.toISOString().split('T')[0]}`;
+            const weekDate = new Date(orderDateIST);
+            weekDate.setDate(weekDate.getDate() - weekDate.getDay());
+            period = `Week of ${weekDate.getFullYear()}-${String(weekDate.getMonth() + 1).padStart(2, '0')}-${String(weekDate.getDate()).padStart(2, '0')}`;
           } else {
-            period = `${orderDate.getFullYear()}-${String(orderDate.getMonth() + 1).padStart(2, '0')}`;
+            period = `${ist.getUTCFullYear()}-${String(ist.getUTCMonth() + 1).padStart(2, '0')}`;
           }
 
           if (!periodStats[period]) periodStats[period] = { taxableValue: 0, gst: 0, cgst: 0, sgst: 0, igst: 0, orderCount: 0, b2bTaxableValue: 0, b2bCgst: 0, b2bSgst: 0, b2bIgst: 0, b2bCount: 0 };
@@ -6377,10 +6384,8 @@ export const appRouter = router({
         const dbInstance = await getDb();
         if (!dbInstance) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Database not available' });
 
-        const startDate = new Date(input.startDate);
-        startDate.setHours(0, 0, 0, 0);
-        const endDate = new Date(input.endDate);
-        endDate.setHours(23, 59, 59, 999);
+        const startDate = new Date(input.startDate + 'T00:00:00+05:30');
+        const endDate = new Date(input.endDate + 'T23:59:59.999+05:30');
 
         // Get all Razorpay payments with their orders
         const razorpayOrders = await dbInstance
@@ -6493,7 +6498,9 @@ export const appRouter = router({
         // Group by date for daily breakdown
         const dailyBreakdown: Record<string, { orders: number; expected: number; collected: number; discrepancy: number }> = {};
         reconciliationItems.forEach(item => {
-          const dateStr = new Date(item.createdAt).toISOString().split('T')[0];
+          // Convert UTC createdAt to IST for bucketing
+          const ist = new Date(new Date(item.createdAt).getTime() + 5.5 * 60 * 60 * 1000);
+          const dateStr = `${ist.getUTCFullYear()}-${String(ist.getUTCMonth() + 1).padStart(2, '0')}-${String(ist.getUTCDate()).padStart(2, '0')}`;
           if (!dailyBreakdown[dateStr]) {
             dailyBreakdown[dateStr] = { orders: 0, expected: 0, collected: 0, discrepancy: 0 };
           }
@@ -6637,8 +6644,8 @@ export const appRouter = router({
 
         let conditions: any[] = [
           sql`${orders.orderStatus} != 'cancelled'`,
-          sql`${orders.createdAt} >= ${input.startDate}`,
-          sql`${orders.createdAt} <= ${input.endDate + ' 23:59:59'}`,
+          sql`DATE(CONVERT_TZ(${orders.createdAt}, '+00:00', '+05:30')) >= ${input.startDate}`,
+          sql`DATE(CONVERT_TZ(${orders.createdAt}, '+00:00', '+05:30')) <= ${input.endDate}`,
         ];
         if (input.orderType !== 'all') conditions.push(eq(orders.orderType, input.orderType));
 
@@ -6730,8 +6737,8 @@ export const appRouter = router({
 
         let conditions: any[] = [
           sql`${orders.orderStatus} != 'cancelled'`,
-          sql`${orders.createdAt} >= ${input.startDate}`,
-          sql`${orders.createdAt} <= ${input.endDate + ' 23:59:59'}`,
+          sql`DATE(CONVERT_TZ(${orders.createdAt}, '+00:00', '+05:30')) >= ${input.startDate}`,
+          sql`DATE(CONVERT_TZ(${orders.createdAt}, '+00:00', '+05:30')) <= ${input.endDate}`,
         ];
 
         const matchingOrders = await dbInstance.select({ id: orders.id }).from(orders).where(and(...conditions));
@@ -6835,8 +6842,8 @@ export const appRouter = router({
 
         let conditions: any[] = [
           sql`${orders.orderStatus} != 'cancelled'`,
-          sql`${orders.createdAt} >= ${input.startDate}`,
-          sql`${orders.createdAt} <= ${input.endDate + ' 23:59:59'}`,
+          sql`DATE(CONVERT_TZ(${orders.createdAt}, '+00:00', '+05:30')) >= ${input.startDate}`,
+          sql`DATE(CONVERT_TZ(${orders.createdAt}, '+00:00', '+05:30')) <= ${input.endDate}`,
         ];
         if (input.orderType !== 'all') conditions.push(eq(orders.orderType, input.orderType));
 
@@ -6919,9 +6926,8 @@ export const appRouter = router({
         const dbInstance = await getDb();
         if (!dbInstance) return { recommendations: [] };
 
-        const start = new Date(input.startDate);
-        const end = new Date(input.endDate);
-        end.setHours(23, 59, 59, 999);
+        const start = new Date(input.startDate + 'T00:00:00+05:30');
+        const end = new Date(input.endDate + 'T23:59:59.999+05:30');
 
         // Get order data with items
         const allOrders = await dbInstance.select({
@@ -7461,9 +7467,8 @@ export const appRouter = router({
       .query(async ({ input }) => {
         const dbInstance = await getDb();
         if (!dbInstance) return null;
-        const start = new Date(input.startDate);
-        const end = new Date(input.endDate);
-        end.setHours(23, 59, 59, 999);
+        const start = new Date(input.startDate + 'T00:00:00+05:30');
+        const end = new Date(input.endDate + 'T23:59:59.999+05:30');
 
         // 1. Website orders
         const websiteOrders = await dbInstance.select({
@@ -7735,8 +7740,8 @@ export const appRouter = router({
         if (!dbInstance) return { items: [], summary: { totalItems: 0, totalQuantity: 0, totalRevenue: 0, totalOrders: 0 } };
 
         let conditions: any[] = [sql`${orders.orderStatus} != 'cancelled'`, sql`${orders.isTestData} = false`];
-        if (input.startDate) conditions.push(sql`${orders.createdAt} >= ${input.startDate}`);
-        if (input.endDate) conditions.push(sql`${orders.createdAt} <= ${input.endDate + ' 23:59:59'}`);
+        if (input.startDate) conditions.push(sql`DATE(CONVERT_TZ(${orders.createdAt}, '+00:00', '+05:30')) >= ${input.startDate}`);
+        if (input.endDate) conditions.push(sql`DATE(CONVERT_TZ(${orders.createdAt}, '+00:00', '+05:30')) <= ${input.endDate}`);
         if (input.orderType && input.orderType !== 'all') conditions.push(eq(orders.orderType, input.orderType));
 
         const whereClause = and(...conditions);
@@ -9133,9 +9138,11 @@ export const appRouter = router({
         const dbInstance = await getDb();
         if (!dbInstance) return null;
 
-        const reportDate = input?.date ? new Date(input.date) : new Date();
-        const startOfDay = new Date(reportDate.getFullYear(), reportDate.getMonth(), reportDate.getDate(), 0, 0, 0);
-        const endOfDay = new Date(reportDate.getFullYear(), reportDate.getMonth(), reportDate.getDate(), 23, 59, 59);
+        // Use IST date string for CONVERT_TZ comparison
+        const reportDateStr = input?.date || new Date(Date.now() + 5.5 * 60 * 60 * 1000).toISOString().split('T')[0];
+        const reportDate = new Date(reportDateStr);
+        const startOfDay = new Date(reportDateStr + 'T00:00:00+05:30');
+        const endOfDay = new Date(reportDateStr + 'T23:59:59+05:30');
 
         const completedOrders = await dbInstance
           .select()

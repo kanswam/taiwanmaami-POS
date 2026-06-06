@@ -3573,3 +3573,8 @@ Orders fixed:
 ## Birthday Deal Bug Fix (June 3)
 
 - [x] Fix birthday free item to ONLY apply to drinks (category 1=Iced Beverages, 2=Hot Beverages). Food (category 4) and Sweet Bites (category 3) are NOT eligible. Previously it was giving away the most expensive item regardless of category.
+
+## Analytics Dashboard Fixes (June 6)
+
+- [x] Apply CONVERT_TZ(createdAt, '+00:00', '+05:30') to all analytics date filters in routers.ts
+- [x] Exclude cancelled orders from admin orders page count tabs (All Orders, In-Store, Delivery, Pickup)
