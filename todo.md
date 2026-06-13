@@ -3578,3 +3578,7 @@ Orders fixed:
 
 - [x] Apply CONVERT_TZ(createdAt, '+00:00', '+05:30') to all analytics date filters in routers.ts
 - [x] Exclude cancelled orders from admin orders page count tabs (All Orders, In-Store, Delivery, Pickup)
+
+## ETL: Item Size Modifier Capture (June 13)
+
+- [x] Add `size` field to pullPOSOrders SELECT and append to item_name as "(Regular)"/"(Large)" to match Petpooja convention

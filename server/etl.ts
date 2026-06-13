@@ -151,6 +151,7 @@ async function pullPOSOrders(reportDate: string, batchId: string): Promise<{ row
         subtotal: orders.subtotal,
         itemId: orderItems.id,
         productName: orderItems.productName,
+        size: orderItems.size,
         quantity: orderItems.quantity,
         unitPrice: orderItems.unitPrice,
         lineTotal: orderItems.lineTotal,
@@ -196,7 +197,9 @@ async function pullPOSOrders(reportDate: string, batchId: string): Promise<{ row
           payment_status: order.paymentStatus || null,
           customer_name: order.customerName || null,
           customer_phone: order.customerPhone || null,
-          item_name: item.productName || "Unknown",
+          item_name: item.productName
+            ? item.productName + (item.size ? ` (${item.size.charAt(0).toUpperCase() + item.size.slice(1)})` : '')
+            : "Unknown",
           item_category: null,
           item_quantity: item.quantity ?? 1,
           item_unit_price_rupees: ((item.unitPrice ?? 0) / 100).toFixed(2),

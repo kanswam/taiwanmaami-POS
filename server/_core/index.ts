@@ -630,7 +630,7 @@ async function startServer() {
   // If no body, auto-composes full digest from yesterday's Supabase data.
   app.post('/api/service/digest', async (req: any, res: any) => {
     try {
-      let { title, content } = req.body || {};
+      let { title, content, date: overrideDate } = req.body || {};
 
       // Auto-compose from Supabase if no content provided
       if (!title || !content) {
@@ -642,13 +642,18 @@ async function startServer() {
         }
         const supabase = createClient(supabaseUrl, supabaseKey);
 
-        // Get yesterday's date in IST (UTC+5:30)
-        const now = new Date();
-        const istOffset = 5.5 * 60 * 60 * 1000;
-        const istNow = new Date(now.getTime() + istOffset);
-        const yesterday = new Date(istNow);
-        yesterday.setDate(yesterday.getDate() - 1);
-        const dateStr = yesterday.toISOString().split('T')[0];
+        // Use override date if provided (YYYY-MM-DD), otherwise default to yesterday IST
+        let dateStr: string;
+        if (overrideDate && /^\d{4}-\d{2}-\d{2}$/.test(overrideDate)) {
+          dateStr = overrideDate;
+        } else {
+          const now = new Date();
+          const istOffset = 5.5 * 60 * 60 * 1000;
+          const istNow = new Date(now.getTime() + istOffset);
+          const yesterday = new Date(istNow);
+          yesterday.setDate(yesterday.getDate() - 1);
+          dateStr = yesterday.toISOString().split('T')[0];
+        }
 
         // Query sales_facts for that date (include item_name, order_type for breakdown)
         const { data: salesData, error: sfError } = await supabase
