@@ -3583,3 +3583,4 @@ Orders fixed:
 
 - [x] Add `size` field to pullPOSOrders SELECT and append to item_name as "(Regular)"/"(Large)" to match Petpooja convention
 - [x] Fix customer detail panel not rendering properly on mobile (overflow + no scroll)
+- [x] Fix kitchen KOT not printing (BAR was marking isPrinted before kitchen could poll — added separate kitchenPrinted flag)

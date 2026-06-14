@@ -239,6 +239,7 @@ async function startServer() {
     try {
       const secret = req.query.secret as string;
       const outletId = req.query.outletId ? parseInt(req.query.outletId as string) : null;
+      const printerType = (req.query.printerType as string) || 'bar'; // 'bar' or 'kitchen'
       
       if (!secret || secret !== process.env.KOT_PRINT_SECRET) {
         return res.status(401).json({ error: 'Invalid KOT secret' });
@@ -253,10 +254,13 @@ async function startServer() {
         return res.json({ kots: [] });
       }
       
+      // Use the appropriate printed flag based on printerType
+      const printedFlag = printerType === 'kitchen' ? kotQueue.kitchenPrinted : kotQueue.isPrinted;
+      
       // Filter by outlet if specified, otherwise return all pending KOTs
       const whereCondition = outletId 
-        ? and(eq(kotQueue.isPrinted, false), eq(kotQueue.outletId, outletId))
-        : eq(kotQueue.isPrinted, false);
+        ? and(eq(printedFlag, false), eq(kotQueue.outletId, outletId))
+        : eq(printedFlag, false);
       
       const pendingKots = await dbInstance
         .select()
@@ -282,7 +286,7 @@ async function startServer() {
   // Simple REST endpoint to mark KOT as printed
   app.post('/api/kot/printed', async (req, res) => {
     try {
-      const { secret, kotId } = req.body;
+      const { secret, kotId, printerType } = req.body;
       if (!secret || secret !== process.env.KOT_PRINT_SECRET) {
         return res.status(401).json({ error: 'Invalid KOT secret' });
       }
@@ -296,13 +300,24 @@ async function startServer() {
         return res.status(500).json({ error: 'Database not available' });
       }
       
-      await dbInstance
-        .update(kotQueue)
-        .set({
-          isPrinted: true,
-          printedAt: new Date(),
-        })
-        .where(eq(kotQueue.id, kotId));
+      // Update the appropriate printed flag based on printerType
+      if (printerType === 'kitchen') {
+        await dbInstance
+          .update(kotQueue)
+          .set({
+            kitchenPrinted: true,
+            kitchenPrintedAt: new Date(),
+          })
+          .where(eq(kotQueue.id, kotId));
+      } else {
+        await dbInstance
+          .update(kotQueue)
+          .set({
+            isPrinted: true,
+            printedAt: new Date(),
+          })
+          .where(eq(kotQueue.id, kotId));
+      }
       
       return res.json({ success: true });
     } catch (error) {

@@ -222,8 +222,8 @@ function formatKOT(kot) {
  */
 async function pollKOTs() {
   try {
-    // Poll with outlet filter for T. Nagar (outlet ID 2)
-    const response = await fetch(`${CONFIG.serverUrl}/api/kot/poll?secret=${CONFIG.kotSecret}&outletId=${CONFIG.outletId}`);
+    // Poll with outlet filter for T. Nagar (outlet ID 2) and printerType=kitchen
+    const response = await fetch(`${CONFIG.serverUrl}/api/kot/poll?secret=${CONFIG.kotSecret}&outletId=${CONFIG.outletId}&printerType=kitchen`);
     
     if (!response.ok) {
       if (response.status === 401) {
@@ -252,6 +252,7 @@ async function markPrinted(kotId) {
       body: JSON.stringify({
         secret: CONFIG.kotSecret,
         kotId: kotId,
+        printerType: 'kitchen',
       }),
     });
     

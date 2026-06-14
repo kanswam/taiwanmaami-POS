@@ -504,9 +504,11 @@ export const kotQueue = mysqlTable("kot_queue", {
   outletId: int("outletId").notNull(),
   orderNumber: varchar("orderNumber", { length: 50 }).notNull(),
   kotData: json("kotData").notNull(), // JSON object with order details
-  isPrinted: boolean("isPrinted").default(false).notNull(),
+  isPrinted: boolean("isPrinted").default(false).notNull(), // BAR printer flag
+  kitchenPrinted: boolean("kitchenPrinted").default(false).notNull(), // KITCHEN printer flag
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   printedAt: timestamp("printedAt"),
+  kitchenPrintedAt: timestamp("kitchenPrintedAt"),
 });
 
 // Receipt Queue for customer receipts
