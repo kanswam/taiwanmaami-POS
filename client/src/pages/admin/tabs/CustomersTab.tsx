@@ -10,7 +10,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
@@ -956,7 +955,7 @@ const [mergeSource, setMergeSource] = useState<{ id: number | string; name: stri
 
       {/* Customer Detail Panel */}
       <Sheet open={showDetailPanel} onOpenChange={setShowDetailPanel}>
-        <SheetContent className="w-[600px] sm:max-w-[600px] p-0 overflow-hidden">
+        <SheetContent className="w-full sm:w-[600px] sm:max-w-[600px] p-0 overflow-y-auto">
           <SheetHeader className="px-6 pt-6 pb-4 border-b">
             <SheetTitle className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
@@ -977,10 +976,10 @@ const [mergeSource, setMergeSource] = useState<{ id: number | string; name: stri
               <RefreshCw className="w-6 h-6 animate-spin text-muted-foreground" />
             </div>
           ) : customerDetails.data ? (
-            <ScrollArea className="h-[calc(100vh-120px)]">
+            <div className="flex-1 overflow-y-auto">
               <div className="p-6 space-y-6">
                 {/* Stats Cards */}
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div className="grid grid-cols-2 gap-3">
                   <div className="bg-blue-50 rounded-lg p-3 text-center">
                     <div className="text-2xl font-bold text-blue-700">{customerDetails.data.totalOrders}</div>
                     <div className="text-xs text-blue-600">Orders</div>
@@ -1191,7 +1190,7 @@ const [mergeSource, setMergeSource] = useState<{ id: number | string; name: stri
                   </TabsContent>
                 </Tabs>
               </div>
-            </ScrollArea>
+            </div>
           ) : (
             <div className="flex items-center justify-center h-64 text-muted-foreground">Failed to load customer details</div>
           )}

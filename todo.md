@@ -3582,3 +3582,4 @@ Orders fixed:
 ## ETL: Item Size Modifier Capture (June 13)
 
 - [x] Add `size` field to pullPOSOrders SELECT and append to item_name as "(Regular)"/"(Large)" to match Petpooja convention
+- [x] Fix customer detail panel not rendering properly on mobile (overflow + no scroll)
