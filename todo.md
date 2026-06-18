@@ -3585,3 +3585,4 @@ Orders fixed:
 - [x] Fix customer detail panel not rendering properly on mobile (overflow + no scroll)
 - [x] Fix kitchen KOT not printing (BAR was marking isPrinted before kitchen could poll — added separate kitchenPrinted flag)
 - [x] Fix KOT printing: capitalize Size/Ice values, show boba type instead of "true", show addon quantity (e.g. "Chicken Bites x2")
+- [x] Fix supplementary KOT (add items to order) not printing on kitchen printer (kitchenPrinted NULL not matched by poll query — fixed to use OR IS NULL)

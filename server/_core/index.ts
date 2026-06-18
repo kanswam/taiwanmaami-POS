@@ -247,7 +247,7 @@ async function startServer() {
       
       const { getDb } = await import('../db');
       const { kotQueue } = await import('../../drizzle/schema');
-      const { eq, asc, and } = await import('drizzle-orm');
+      const { eq, asc, and, or, isNull } = await import('drizzle-orm');
       
       const dbInstance = await getDb();
       if (!dbInstance) {
@@ -257,10 +257,15 @@ async function startServer() {
       // Use the appropriate printed flag based on printerType
       const printedFlag = printerType === 'kitchen' ? kotQueue.kitchenPrinted : kotQueue.isPrinted;
       
+      // For kitchen printer, also match NULL (rows inserted before kitchenPrinted column existed)
+      const notPrintedCondition = printerType === 'kitchen'
+        ? or(eq(printedFlag, false), isNull(printedFlag))
+        : eq(printedFlag, false);
+      
       // Filter by outlet if specified, otherwise return all pending KOTs
       const whereCondition = outletId 
-        ? and(eq(printedFlag, false), eq(kotQueue.outletId, outletId))
-        : eq(printedFlag, false);
+        ? and(notPrintedCondition, eq(kotQueue.outletId, outletId))
+        : notPrintedCondition;
       
       const pendingKots = await dbInstance
         .select()
