@@ -315,7 +315,7 @@ export default function Checkout() {
             addons: [
               ...item.addons,
               // Include product-specific addons (e.g., eggs for food items)
-              ...(item.productAddons || []).map(pa => ({ id: pa.id, name: pa.name, price: pa.totalPrice })),
+              ...(item.productAddons || []).map(pa => ({ id: pa.id, name: pa.name, price: pa.totalPrice, quantity: pa.quantity })),
             ],
             quantity: item.quantity,
             unitPrice: item.unitPrice,
@@ -353,7 +353,7 @@ export default function Checkout() {
           addons: [
             ...item.addons,
             // Include product-specific addons (e.g., eggs for food items)
-            ...(item.productAddons || []).map(pa => ({ id: pa.id, name: pa.name, price: pa.totalPrice })),
+            ...(item.productAddons || []).map(pa => ({ id: pa.id, name: pa.name, price: pa.totalPrice, quantity: pa.quantity })),
           ],
           quantity: item.quantity,
           unitPrice: item.unitPrice,
@@ -560,7 +560,7 @@ export default function Checkout() {
           addons: [
             ...item.addons.map(a => ({ id: a.id, name: a.name, price: a.price })),
             // Include product-specific addons (e.g., eggs for food items)
-            ...(item.productAddons || []).map(pa => ({ id: pa.id, name: pa.name, price: pa.totalPrice })),
+            ...(item.productAddons || []).map(pa => ({ id: pa.id, name: pa.name, price: pa.totalPrice, quantity: pa.quantity })),
           ],
         })),
         addressLine1: formData.addressLine1 || undefined,

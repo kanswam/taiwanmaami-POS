@@ -159,14 +159,15 @@ function formatKOT(kot) {
     output += `${item.quantity}x ${item.productName}\n`;
     
     if (item.size) {
-      output += `   Size: ${item.size}\n`;
+      output += `   Size: ${item.size.charAt(0).toUpperCase() + item.size.slice(1)}\n`;
     }
     
     if (item.withBoba !== null && item.withBoba !== undefined) {
       if (item.withBoba) {
+        const capitalize = s => s ? s.charAt(0).toUpperCase() + s.slice(1) : '';
         const bobaLabel = item.bobaType === 'popping' 
-          ? `Popping Boba${item.poppingBobaFlavor ? ` (${item.poppingBobaFlavor})` : ''}`
-          : `Tapioca Boba${item.bobaSize ? ` (${item.bobaSize})` : ''}`;
+          ? `Popping Boba${item.poppingBobaFlavor ? ` (${capitalize(item.poppingBobaFlavor)})` : ''}`
+          : `Tapioca Boba${item.bobaSize ? ` (${capitalize(item.bobaSize)})` : ''}`;
         output += `   Boba: ${bobaLabel}\n`;
       } else {
         output += `   Boba: No\n`;
@@ -178,13 +179,15 @@ function formatKOT(kot) {
     }
     
     if (item.iceLevel) {
-      output += `   Ice: ${item.iceLevel}\n`;
+      const iceLabel = item.iceLevel.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+      output += `   Ice: ${iceLabel}\n`;
     }
     
     if (item.addons && item.addons.length > 0) {
       output += `   Add-ons:\n`;
       item.addons.forEach(addon => {
-        output += `   - ${addon.name}\n`;
+        const qty = addon.quantity && addon.quantity > 1 ? ` x${addon.quantity}` : '';
+        output += `   - ${addon.name}${qty}\n`;
       });
     }
     

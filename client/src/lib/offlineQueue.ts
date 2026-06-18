@@ -126,7 +126,7 @@ export interface KotData {
     sugarLevel?: string;
     iceLevel?: string;
     specialInstructions: string;
-    addons: { name: string; price: number }[];
+    addons: { name: string; price: number; quantity?: number }[];
   }[];
   totalAmount: number;
   createdAt: string;
@@ -415,8 +415,8 @@ async function generateOfflineKot(order: OfflineOrder): Promise<OfflineKot> {
       iceLevel: item.iceLevel,
       specialInstructions: item.specialInstructions || '',
       addons: [
-        ...item.addons.map(a => ({ name: a.name, price: a.price })),
-        ...(item.productAddons || []).map(pa => ({ name: pa.name, price: pa.totalPrice })),
+        ...item.addons.map(a => ({ name: a.name, price: a.price, quantity: (a as any).quantity })),
+        ...(item.productAddons || []).map(pa => ({ name: pa.name, price: pa.totalPrice, quantity: pa.quantity })),
       ],
     })),
     totalAmount: order.totalAmount,
