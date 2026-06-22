@@ -3,8 +3,8 @@
 Taiwan Maami — Sales & GST Report (Daily / Weekly / Monthly)
 
 Queries clean_sales in Supabase via table select, aggregates in Python,
-builds an HTML table with outlet subtotals and grand total, then emails
-via Gmail SMTP.
+builds an HTML table with outlet subtotals and grand total, then saves
+the report as an HTML file (uploaded as GitHub Actions artifact).
 
 Usage:
   python intelligence/sales_gst_report.py --period daily
@@ -13,17 +13,14 @@ Usage:
   python intelligence/sales_gst_report.py --test  # hardcoded May 2026 test
 
 Required env vars:
-  SUPABASE_URL, SUPABASE_SERVICE_KEY, GMAIL_USER, GMAIL_APP_PASSWORD
+  SUPABASE_URL, SUPABASE_SERVICE_KEY
 """
 
 import argparse
 import os
-import smtplib
 import sys
 from collections import defaultdict
 from datetime import date, datetime, timedelta
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
 
 from supabase import create_client
 
@@ -162,7 +159,7 @@ def fmt_indian(amount: float) -> str:
 
 
 def build_html_report(rows: list[dict], period_label: str) -> str:
-    """Build a clean HTML email body with the sales table."""
+    """Build a clean HTML report with the sales table."""
 
     # Group by outlet (preserve order from sorted input)
     outlets: dict[str, list[dict]] = {}
@@ -249,31 +246,6 @@ def build_html_report(rows: list[dict], period_label: str) -> str:
     return html
 
 
-# ─── Email sender ─────────────────────────────────────────────────────────────
-
-RECIPIENTS = [
-    "kannan.swamy@taiwanmaami.com",
-    "theresa.hu.cy@taiwanmaami.com",
-]
-
-
-def send_email(subject: str, html_body: str):
-    gmail_user = os.environ["GMAIL_USER"]
-    gmail_pass = os.environ["GMAIL_APP_PASSWORD"]
-
-    msg = MIMEMultipart("alternative")
-    msg["Subject"] = subject
-    msg["From"] = gmail_user
-    msg["To"] = ", ".join(RECIPIENTS)
-    msg.attach(MIMEText(html_body, "html"))
-
-    with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
-        server.login(gmail_user, gmail_pass)
-        server.sendmail(gmail_user, RECIPIENTS, msg.as_string())
-
-    print(f"✓ Email sent: {subject}")
-
-
 # ─── Main ─────────────────────────────────────────────────────────────────────
 
 def main():
@@ -286,16 +258,11 @@ def main():
     parser.add_argument(
         "--test",
         action="store_true",
-        help="Run with hardcoded May 2026 test range (HTML saved to file, no email)",
-    )
-    parser.add_argument(
-        "--test-email",
-        action="store_true",
-        help="Run with hardcoded May 2026 range AND send a real email with [TEST] subject prefix",
+        help="Run with hardcoded May 2026 test range (HTML saved to file)",
     )
     args = parser.parse_args()
 
-    if args.test or args.test_email:
+    if args.test:
         # Hardcoded test: May 2026
         start_date = date(2026, 5, 1)
         end_date = date(2026, 5, 31)
@@ -308,18 +275,15 @@ def main():
             print(f"  {r['outlet']:12s} {r['channel_label']:12s} orders={r['orders']:,}  revenue={fmt_indian(r['revenue'])}  gst={fmt_indian(r['gst_collected'])}")
 
         html = build_html_report(rows, period_label)
-        out_path = "test_report_may2026.html"
-        with open(out_path, "w") as f:
+        output_path = "reports/sales_gst_test_may2026.html"
+        os.makedirs("reports", exist_ok=True)
+        with open(output_path, "w") as f:
             f.write(html)
-        print(f"\n✓ HTML report saved to: {out_path}")
-
-        if args.test_email:
-            subject = f"[TEST] Taiwan Maami — {period_label} Sales & GST Summary"
-            send_email(subject, html)
+        print(f"\n✓ Report saved: {output_path}")
         return
 
     if not args.period:
-        parser.error("--period is required (unless using --test or --test-email)")
+        parser.error("--period is required (unless using --test)")
 
     # For monthly: only proceed if run on the 1st of the month
     if args.period == "monthly" and date.today().day != 1:
@@ -331,12 +295,16 @@ def main():
 
     rows = fetch_data(start_date, end_date)
     if not rows:
-        print("No data returned for this period. Sending empty report.")
+        print("No data returned for this period. Saving empty report.")
 
     html = build_html_report(rows, period_label)
-    # TODO: Remove [TEST] prefix after verification run is confirmed
-    subject = f"[TEST] Taiwan Maami — {period_label} Sales & GST Summary"
-    send_email(subject, html)
+
+    # Save report to file (uploaded as GitHub Actions artifact)
+    output_path = f"reports/sales_gst_{args.period}_{start_date.isoformat()}.html"
+    os.makedirs("reports", exist_ok=True)
+    with open(output_path, "w") as f:
+        f.write(html)
+    print(f"✓ Report saved: {output_path}")
 
 
 if __name__ == "__main__":
