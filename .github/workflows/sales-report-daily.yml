@@ -18,10 +18,15 @@ jobs:
       - name: Install dependencies
         run: pip install supabase
 
-      - name: Generate and send daily report
+      - name: Generate daily report
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
-          GMAIL_USER: ${{ secrets.GMAIL_USER }}
-          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
         run: python intelligence/sales_gst_report.py --period daily
+
+      - name: Upload report artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sales-gst-report-${{ github.run_id }}
+          path: reports/
+          retention-days: 30
