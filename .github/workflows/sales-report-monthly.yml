@@ -1,0 +1,32 @@
+name: Sales & GST Report — Monthly
+
+on:
+  schedule:
+    - cron: "0 22 1 * *"  # 3:30 AM IST on 1st of month (22:00 UTC previous day)
+  workflow_dispatch:
+
+jobs:
+  monthly-report:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install supabase
+
+      - name: Generate monthly report
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: python intelligence/sales_gst_report.py --period monthly
+
+      - name: Upload report artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sales-gst-report-${{ github.run_id }}
+          path: reports/
+          retention-days: 30
