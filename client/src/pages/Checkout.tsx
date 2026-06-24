@@ -80,7 +80,7 @@ export default function Checkout() {
     ? (state.instoreOutlet || 'tnagar')
     : state.orderType === 'pickup'
       ? (state.pickupOutlet || 'tnagar')
-      : 'tnagar'; // Delivery defaults to T Nagar
+      : (state.deliveryOutlet || 'tnagar'); // Delivery uses assigned outlet
   
   // Check ordering hours based on outlet and order type
   const outletStatus = isOutletOpen(selectedOutlet, state.orderType);
@@ -332,9 +332,9 @@ export default function Checkout() {
       }
 
       // Determine outlet ID: 1 = Palladium, 2 = T.Nagar, 3 = Anna Nagar
-      // Delivery origin depends on outlet
+      // Delivery origin depends on assigned delivery outlet
       const outletId = state.orderType === 'delivery' 
-        ? 2 
+        ? (state.deliveryOutlet === 'annanagar' ? 3 : 2)
         : selectedOutlet === 'palladium' ? 1 : selectedOutlet === 'annanagar' ? 3 : 2;
       
       // Create new order
@@ -368,6 +368,8 @@ export default function Checkout() {
           : undefined,
         scheduledTime: formData.scheduledTime || undefined,
         specialInstructions: formData.notes || undefined,
+        partnerOverrideProductId,
+        maamiRupeesUsed: maamiRupeesApplied,
       });
 
       // Delivery orders must pay online
@@ -411,7 +413,7 @@ export default function Checkout() {
 
   // Query delivery charge based on address
   const { data: deliveryChargeData, isLoading: isLoadingDeliveryCharge } = trpc.orders.getDeliveryCharge.useQuery(
-    { deliveryAddress: deliveryAddressString },
+    { deliveryAddress: deliveryAddressString, outletSlug: state.deliveryOutlet || 'tnagar' },
     { 
       enabled: state.orderType === 'delivery' && deliveryAddressString.length > 10,
       staleTime: 5 * 60 * 1000, // Cache for 5 minutes
@@ -429,6 +431,9 @@ export default function Checkout() {
     ? 2 
     : selectedOutlet === 'palladium' ? 1 : selectedOutlet === 'annanagar' ? 3 : 2;
 
+  const [partnerOverrideProductId, setPartnerOverrideProductId] = useState<number | undefined>(undefined);
+  const [showItemPicker, setShowItemPicker] = useState(false);
+
   const partnerBenefitsInput = useMemo(() => ({
     outletId: checkoutOutletId,
     items: state.items.map(item => ({
@@ -438,7 +443,8 @@ export default function Checkout() {
       size: item.size || null,
       quantity: item.quantity,
     })),
-  }), [checkoutOutletId, state.items]);
+    overrideProductId: partnerOverrideProductId,
+  }), [checkoutOutletId, state.items, partnerOverrideProductId]);
 
   const { data: partnerBenefits } = trpc.partner.previewBenefits.useQuery(
     partnerBenefitsInput,
@@ -446,9 +452,16 @@ export default function Checkout() {
   );
 
   const partnerSavings = partnerBenefits?.totalBenefitAmount || 0;
+  const maamiRupeesBalance = partnerBenefits?.maamiRupeesBalance || 0;
+
+  // Maami Rupees redemption toggle (opt-in, off by default)
+  const [useMaamiRupees, setUseMaamiRupees] = useState(false);
+  const totalBeforeMaamiRupees = total + displayDeliveryCharge;
+  const maxRedeemable = Math.min(maamiRupeesBalance, Math.max(0, totalBeforeMaamiRupees));
+  const maamiRupeesApplied = useMaamiRupees ? maxRedeemable : 0;
 
   // total from useCart already includes gst.total, so displayTotal should include delivery charge
-  const displayTotal = total + displayDeliveryCharge;
+  const displayTotal = total + displayDeliveryCharge - maamiRupeesApplied;
 
   // Guest checkout mutation
   const createGuestOrder = trpc.guest.createOrder.useMutation();
@@ -1376,20 +1389,83 @@ export default function Checkout() {
                         <span className="text-xs font-semibold text-[#bd302c]">Partner Benefits</span>
                       </div>
                       {partnerBenefits.benefits.map((b, i) => (
-                        <div key={i} className="flex justify-between text-xs text-green-700 mb-0.5">
-                          <span>
+                        <div key={i} className="flex justify-between items-center text-xs text-green-700 mb-0.5">
+                          <span className="flex items-center gap-1 flex-wrap">
                             {b.type === 'complimentary_item' ? `Complimentary ${b.itemName}` :
-                             b.type === 'drink_discount' ? `5% off ${b.itemName}` :
                              b.type === 'free_biang_biang' ? `Complimentary ${b.itemName}` :
-                             b.type === 'free_large_tea' ? `Free ${b.itemName}` :
                              `Partner benefit`}
+                            {(b.type === 'complimentary_item' || b.type === 'free_biang_biang') &&
+                             partnerBenefits.eligibleItems && partnerBenefits.eligibleItems.length > 1 && (
+                              <button
+                                type="button"
+                                onClick={() => setShowItemPicker(!showItemPicker)}
+                                className="text-[#bd302c] underline text-[10px] ml-0.5 whitespace-nowrap"
+                              >
+                                {showItemPicker ? 'Close' : 'Change?'}
+                              </button>
+                            )}
                           </span>
-                          <span>-{formatPrice(b.amount)}</span>
+                          <span className="whitespace-nowrap">-{formatPrice(b.amount)}</span>
                         </div>
                       ))}
+                      {/* Item picker dropdown */}
+                      {showItemPicker && partnerBenefits.eligibleItems && partnerBenefits.eligibleItems.length > 1 && (
+                        <div className="mt-2 pt-2 border-t border-[#d4a574]/20 space-y-0.5">
+                          <p className="text-[10px] text-muted-foreground mb-1">Choose your free item:</p>
+                          {partnerBenefits.eligibleItems.map((item) => {
+                            const isSelected = partnerOverrideProductId === item.productId ||
+                              (!partnerOverrideProductId && partnerBenefits.benefits[0]?.itemName === item.productName);
+                            return (
+                              <button
+                                key={item.productId}
+                                type="button"
+                                onClick={() => {
+                                  setPartnerOverrideProductId(item.productId);
+                                  setShowItemPicker(false);
+                                }}
+                                className={`w-full flex justify-between items-center text-xs px-2 py-1.5 rounded transition-colors ${
+                                  isSelected
+                                    ? 'bg-green-100 text-green-800 font-medium'
+                                    : 'hover:bg-[#fef3e8] text-foreground'
+                                }`}
+                              >
+                                <span>{item.productName}</span>
+                                <span className="text-green-700">-{formatPrice(item.freeAmount)}</span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
                       <div className="flex justify-between text-sm font-semibold text-green-700 mt-1 pt-1 border-t border-green-200">
                         <span>Partner Savings</span>
                         <span>-{formatPrice(partnerSavings)}</span>
+                      </div>
+                    </div>
+                  )}
+                  {/* Maami Rupees redemption toggle */}
+                  {maamiRupeesBalance > 0 && isAuthenticated && (
+                    <div className="flex items-center justify-between p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                      <div>
+                        <p className="text-sm font-medium text-amber-900">Maami Rupees</p>
+                        <p className="text-xs text-amber-700">{formatPrice(maamiRupeesBalance)} available</p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {useMaamiRupees && maamiRupeesApplied > 0 && (
+                          <span className="text-sm text-green-700 font-medium">
+                            -{formatPrice(maamiRupeesApplied)}
+                          </span>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => setUseMaamiRupees(!useMaamiRupees)}
+                          className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
+                            useMaamiRupees ? 'bg-green-600' : 'bg-gray-300'
+                          }`}
+                        >
+                          <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${
+                            useMaamiRupees ? 'translate-x-4.5' : 'translate-x-0.5'
+                          }`} />
+                        </button>
                       </div>
                     </div>
                   )}

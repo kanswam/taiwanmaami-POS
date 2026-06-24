@@ -15,7 +15,7 @@ import { outletProducts, loyaltyRewards, stampTransactions, guestOrders, reviews
 import { ENV } from './_core/env';
 import { wholesaleRouter } from './wholesaleRouter';
 import { notifyOwner } from './_core/notification';
-import { calculateDeliveryCharge } from './deliveryCharge';
+import { calculateDeliveryCharge, calculateNearestOutlet } from './deliveryCharge';
 import { storagePut } from './storage';
 import { partnerRouter, calculatePartnerBenefits, getActivePartnerSubscription } from './partnerRouter';
 import { isFoodAvailable, getFoodCategoryId, getFoodSchedule, saveFoodSchedule, formatSchedule, invalidateScheduleCache } from './foodSchedule';
@@ -193,13 +193,14 @@ export const appRouter = router({
 
   // Order routes
   orders: router({
-    // Calculate delivery charge based on address distance from T. Nagar
+    // Calculate delivery charge based on address distance from nearest outlet
     getDeliveryCharge: publicProcedure
       .input(z.object({
         deliveryAddress: z.string().min(5),
+        outletSlug: z.string().optional(),
       }))
       .query(async ({ input }) => {
-        const result = await calculateDeliveryCharge(input.deliveryAddress);
+        const result = await calculateDeliveryCharge(input.deliveryAddress, input.outletSlug);
         return {
           chargePaise: result.chargePaise,
           chargeRupees: result.chargePaise / 100,
@@ -209,6 +210,15 @@ export const appRouter = router({
           durationText: result.durationText,
           usedFallback: result.usedFallback,
         };
+      }),
+
+    // Determine nearest delivery outlet for a given address
+    getNearestDeliveryOutlet: publicProcedure
+      .input(z.object({
+        deliveryAddress: z.string().min(5),
+      }))
+      .query(async ({ input }) => {
+        return await calculateNearestOutlet(input.deliveryAddress);
       }),
 
     create: publicProcedure
@@ -246,6 +256,8 @@ export const appRouter = router({
         discountCode: z.string().optional(),
         specialInstructions: z.string().optional(),
         loyaltyPointsUsed: z.number().default(0),
+        maamiRupeesUsed: z.number().default(0), // Maami Rupees to redeem (paise)
+        partnerOverrideProductId: z.number().optional(), // Partner's chosen free item
         // Offline sync: original timestamp when order was placed offline
         offlineCreatedAt: z.number().optional(),
       }))
@@ -412,7 +424,7 @@ export const appRouter = router({
         let partnerBenefitAmount = 0;
         let partnerSubId: number | null = null;
         let partnerBenefitsToLog: Array<{
-          type: 'free_biang_biang' | 'free_large_tea' | 'tea_discount' | 'complimentary_item' | 'drink_discount' | 'workshop_discount';
+          type: 'free_biang_biang' | 'free_large_tea' | 'tea_discount' | 'complimentary_item' | 'workshop_discount';
           amount: number;
           itemName?: string;
           itemOriginalPrice?: number;
@@ -423,7 +435,7 @@ export const appRouter = router({
 
         if (ctx.user?.id) {
           try {
-            const outletId = input.orderType === 'delivery' ? 2 : (input.outletId || 2);
+            const outletId = input.outletId || 2;
             const partnerResult = await calculatePartnerBenefits(
               ctx.user.id,
               outletId,
@@ -433,7 +445,8 @@ export const appRouter = router({
                 lineTotal: item.lineTotal,
                 size: item.size || null,
                 quantity: item.quantity,
-              }))
+              })),
+              input.partnerOverrideProductId // Server validates this is in eligibleOrderItems
             );
 
             if (partnerResult && partnerResult.totalBenefitAmount > 0) {
@@ -451,15 +464,31 @@ export const appRouter = router({
         // Recalculate GST on net amount after discount
         const netAfterDiscount = subtotal - discountAmount - partnerBenefitAmount;
         const finalGst = (birthdayFreeApplied || partnerBenefitAmount > 0) ? calculateGst(netAfterDiscount) : gst;
-        const totalAmount = subtotal + finalGst.total + deliveryCharge - discountAmount - partnerBenefitAmount - input.loyaltyPointsUsed;
+        let totalBeforeMaamiRupees = subtotal + finalGst.total + deliveryCharge - discountAmount - partnerBenefitAmount - input.loyaltyPointsUsed;
+        
+        // Validate and apply Maami Rupees redemption
+        let maamiRupeesUsed = 0;
+        if (input.maamiRupeesUsed > 0 && ctx.user?.id) {
+          // Server-side validation: cannot exceed balance or order total
+          const [userForMR] = await dbInstance!.select({ maamiRupeesBalance: users.maamiRupeesBalance }).from(users).where(eq(users.id, ctx.user.id));
+          const availableBalance = userForMR?.maamiRupeesBalance || 0;
+          if (input.maamiRupeesUsed > availableBalance) {
+            throw new TRPCError({ code: 'BAD_REQUEST', message: 'Insufficient Maami Rupees balance' });
+          }
+          // Cap at order total (cannot make order negative)
+          maamiRupeesUsed = Math.min(input.maamiRupeesUsed, Math.max(0, totalBeforeMaamiRupees));
+        }
+        const totalAmount = totalBeforeMaamiRupees - maamiRupeesUsed;
         
         // Generate sequential order number (resets each financial year on April 1st)
-        // Format: YY-NNNNN (e.g., "26-00001" for FY 2026-27)
-        const { generateNextOrderNumber } = await import('./orderNumberHelper');
-        const orderNumber = await generateNextOrderNumber(dbInstance!);
+        // Determine outletId: For delivery, use provided outletId (from nearest outlet calculation) or default to T.Nagar (2)
+        const outletId = input.outletId || 2;
 
-        // Determine outletId: Delivery always from T.Nagar (2), otherwise use provided outletId
-        const outletId = input.orderType === 'delivery' ? 2 : (input.outletId || 2);
+        // Generate order number — Anna Nagar (outletId 3) gets its own sequence (AN-XXXXX)
+        const { generateNextOrderNumber, generateNextAnnaOrderNumber } = await import('./orderNumberHelper');
+        const orderNumber = outletId === 3 
+          ? await generateNextAnnaOrderNumber(dbInstance!)
+          : await generateNextOrderNumber(dbInstance!);
         
         // Create order
         const [orderResult] = await dbInstance!.insert(orders).values({
@@ -484,6 +513,7 @@ export const appRouter = router({
           specialInstructions: input.specialInstructions,
           partnerBenefitAmount,
           partnerSubscriptionId: partnerSubId,
+          maamiRupeesUsed,
           // If this is an offline-synced order, use the original creation timestamp
           ...(input.offlineCreatedAt ? { createdAt: new Date(input.offlineCreatedAt) } : {}),
         });
@@ -684,7 +714,7 @@ export const appRouter = router({
         // Log Partner benefits
         if (partnerSubId && partnerBenefitsToLog.length > 0) {
           try {
-            const outletId = input.orderType === 'delivery' ? 2 : (input.outletId || 2);
+            const outletId = input.outletId || 2;
             for (const benefit of partnerBenefitsToLog) {
               await dbInstance!.insert(partnerBenefitsLog).values({
                 subscriptionId: partnerSubId,
@@ -706,7 +736,65 @@ export const appRouter = router({
           }
         }
 
-        return { orderId, orderNumber, totalAmount, partnerBenefitAmount };
+        // FIFO Maami Rupees deduction (after order is created successfully)
+        if (maamiRupeesUsed > 0 && ctx.user?.id) {
+          try {
+            const { maamiRupeesTransactions } = await import('../drizzle/schema.js');
+            let remaining = maamiRupeesUsed;
+
+            // Get oldest unexpired earn rows with remaining balance (FIFO by expiresAt ASC)
+            const earnRows = await dbInstance!.select()
+              .from(maamiRupeesTransactions)
+              .where(
+                and(
+                  eq(maamiRupeesTransactions.userId, ctx.user.id),
+                  sql`${maamiRupeesTransactions.type} IN ('earn_order', 'earn_referral')`,
+                  sql`${maamiRupeesTransactions.remainingAmount} > 0`,
+                  sql`${maamiRupeesTransactions.expiresAt} > NOW()`
+                )
+              )
+              .orderBy(asc(maamiRupeesTransactions.expiresAt));
+
+            for (const row of earnRows) {
+              if (remaining <= 0) break;
+              const deductFromThis = Math.min(remaining, row.remainingAmount!);
+              const newRemaining = row.remainingAmount! - deductFromThis;
+              await dbInstance!.update(maamiRupeesTransactions)
+                .set({ remainingAmount: newRemaining })
+                .where(eq(maamiRupeesTransactions.id, row.id));
+              remaining -= deductFromThis;
+            }
+
+            // Atomic decrement of user balance
+            await dbInstance!.update(users)
+              .set({ maamiRupeesBalance: sql`GREATEST(0, maamiRupeesBalance - ${maamiRupeesUsed})` })
+              .where(eq(users.id, ctx.user.id));
+
+            // Read updated balance for transaction log
+            const [updatedUserMR] = await dbInstance!.select({ maamiRupeesBalance: users.maamiRupeesBalance })
+              .from(users).where(eq(users.id, ctx.user.id));
+
+            // Insert single redeem transaction row
+            await dbInstance!.insert(maamiRupeesTransactions).values({
+              userId: ctx.user.id,
+              orderId,
+              orderNumber,
+              type: 'redeem',
+              amount: -maamiRupeesUsed,
+              balanceAfter: updatedUserMR?.maamiRupeesBalance || 0,
+              expiresAt: null,
+              remainingAmount: null,
+              description: `Redeemed on order #${orderNumber}`,
+            });
+
+            console.log(`[Maami Rupees] Redeemed \u20b9${(maamiRupeesUsed / 100).toFixed(2)} on order #${orderNumber} (user ${ctx.user.id})`);
+          } catch (mrErr) {
+            console.error('[Maami Rupees] FIFO deduction failed:', mrErr);
+            // Don't fail the order — balance discrepancy can be reconciled
+          }
+        }
+
+        return { orderId, orderNumber, totalAmount, partnerBenefitAmount, maamiRupeesUsed };
         } catch (err: any) {
           console.error('Order creation failed:', err);
           // Never expose raw SQL errors to customers
@@ -875,51 +963,9 @@ export const appRouter = router({
             .where(eq(orders.id, input.orderId));
         }
         
-        // Queue receipt for printing when order is completed
-        if (input.status === 'completed' && order) {
-          // Get order items with details
-          const items = await dbInstance!.select().from(orderItemsTable).where(eq(orderItemsTable.orderId, input.orderId));
-          // Get all item addons for this order's items
-          const itemIds = items.map(i => i.id);
-          const itemAddons = itemIds.length > 0 
-            ? await dbInstance!.select().from(orderItemAddons).where(sql`${orderItemAddons.orderItemId} IN (${sql.join(itemIds.map(id => sql`${id}`), sql`, `)})`)
-            : [];
-          
-          // Build receipt data
-          const receiptData = {
-            orderNumber: order.orderNumber,
-            orderType: order.orderType.toUpperCase(),
-            customerName: order.customerName || 'Guest',
-            customerPhone: order.customerPhone || '',
-            tableNumber: order.tableNumber || '',
-            items: items.map(item => {
-              const addons = itemAddons.filter(a => a.orderItemId === item.id);
-              return {
-                name: item.productName,
-                quantity: item.quantity,
-                price: item.unitPrice,
-                size: item.size,
-                addons: addons.map(a => ({ name: a.addonName, price: a.addonPrice })),
-              };
-            }),
-            subtotal: order.subtotal,
-            sgst: order.stateGst,
-            cgst: order.centralGst,
-            discount: order.discountAmount || 0,
-            deliveryCharge: order.deliveryCharge || 0,
-            total: order.totalAmount,
-            paymentMethod: input.paymentMethod || order.paymentMethod || 'cash',
-            createdAt: new Date().toISOString(),
-          };
-          
-          await dbInstance!.insert(receiptQueue).values({
-            orderId: order.id,
-            outletId: order.outletId || 2,
-            orderNumber: order.orderNumber,
-            receiptData: receiptData,
-            isPrinted: false,
-          });
-        }
+        // Track stamps and MR earned for receipt (populated below)
+        let receiptStampsEarned = 0;
+        let receiptMaamiRupeesEarned = 0;
         
         // Award stamps when order is marked as completed
         if (input.status === 'completed' && order && order.userId) {
@@ -957,6 +1003,7 @@ export const appRouter = router({
           }
           
           const totalStamps = stampsEarned + welcomeStamp;
+          receiptStampsEarned = totalStamps;
           
           if (totalStamps > 0) {
             // Update user stamps
@@ -1010,6 +1057,140 @@ export const appRouter = router({
             }
           }
           } // Close else block for staff/admin check
+        }
+        
+        // Award Maami Rupees (2% rebate) when order is completed — only for active partners
+        if (input.status === 'completed' && order && order.userId) {
+          try {
+            const { maamiRupeesTransactions } = await import('../drizzle/schema.js');
+            const partnerSub = await getActivePartnerSubscription(order.userId);
+            
+            if (partnerSub) {
+              // Idempotency check — prevent double-crediting on retry/double-tap
+              const [existingCredit] = await dbInstance!
+                .select({ id: maamiRupeesTransactions.id })
+                .from(maamiRupeesTransactions)
+                .where(
+                  and(
+                    eq(maamiRupeesTransactions.orderId, order.id),
+                    eq(maamiRupeesTransactions.type, 'earn_order')
+                  )
+                );
+              if (existingCredit) {
+                console.log(`[Maami Rupees] Already credited for order #${order.orderNumber} — skipping`);
+              } else {
+                // Get rebate percentage from config (default 2%)
+                const { partnerConfig } = await import('../drizzle/schema.js');
+                const [rebateConfig] = await dbInstance!
+                  .select({ configValue: partnerConfig.configValue })
+                  .from(partnerConfig)
+                  .where(eq(partnerConfig.configKey, 'maami_rupees_rebate_pct'));
+                const rebatePct = parseInt(rebateConfig?.configValue || "2");
+                
+                // Calculate 2% of amount actually paid (totalAmount already excludes partner benefit)
+                const orderTotal = order.totalAmount || 0;
+                if (orderTotal > 0) {
+                  const earnAmount = Math.round(orderTotal * rebatePct / 100); // in paise
+                  
+                  if (earnAmount > 0) {
+                    receiptMaamiRupeesEarned = earnAmount;
+                    // Atomic increment of balance — no read-then-write race condition
+                    await dbInstance!
+                      .update(users)
+                      .set({ maamiRupeesBalance: sql`maamiRupeesBalance + ${earnAmount}` })
+                      .where(eq(users.id, order.userId));
+                    
+                    // Read updated balance for the transaction log
+                    const [updatedUser] = await dbInstance!
+                      .select({ maamiRupeesBalance: users.maamiRupeesBalance })
+                      .from(users)
+                      .where(eq(users.id, order.userId));
+                    const newBalance = updatedUser?.maamiRupeesBalance || 0;
+                    
+                    // Insert transaction record
+                    await dbInstance!.insert(maamiRupeesTransactions).values({
+                      userId: order.userId,
+                      subscriptionId: partnerSub.id,
+                      orderId: order.id,
+                      orderNumber: order.orderNumber,
+                      type: 'earn_order',
+                      amount: earnAmount,
+                      balanceAfter: newBalance,
+                      expiresAt: new Date(Date.now() + 12 * 30 * 24 * 60 * 60 * 1000), // 12 months
+                      remainingAmount: earnAmount,
+                      description: `2% rebate on order #${order.orderNumber} (₹${(orderTotal / 100).toFixed(0)} paid)`,
+                    });
+                    
+                    console.log(`[Maami Rupees] Credited ₹${(earnAmount / 100).toFixed(2)} to user ${order.userId} (order #${order.orderNumber}, balance: ₹${(newBalance / 100).toFixed(2)})`);
+                  }
+                }
+              }
+            }
+          } catch (maamiErr) {
+            console.error('[Maami Rupees] Failed to credit:', maamiErr);
+            // Don't fail the order status update — Maami Rupees are non-critical
+          }
+        }
+        
+        // Queue receipt for printing AFTER stamps and MR are awarded (so receipt includes earned amounts)
+        if (input.status === 'completed' && order) {
+          const items = await dbInstance!.select().from(orderItemsTable).where(eq(orderItemsTable.orderId, input.orderId));
+          const itemIds = items.map(i => i.id);
+          const itemAddons = itemIds.length > 0 
+            ? await dbInstance!.select().from(orderItemAddons).where(sql`${orderItemAddons.orderItemId} IN (${sql.join(itemIds.map(id => sql`${id}`), sql`, `)})`)
+            : [];
+          
+          // Partner benefit label (only query if partner benefit was applied)
+          let partnerBenefitLabel = '';
+          if ((order.partnerBenefitAmount || 0) > 0 && order.partnerSubscriptionId) {
+            const [countResult] = await dbInstance!
+              .select({ count: sql<number>`COUNT(*)` })
+              .from(partnerBenefitsLog)
+              .where(eq(partnerBenefitsLog.subscriptionId, order.partnerSubscriptionId));
+            const usedCount = countResult?.count || 0;
+            partnerBenefitLabel = `Partner Benefit (${usedCount} of 15 used)`;
+          }
+          
+          const receiptData = {
+            orderNumber: order.orderNumber,
+            orderType: order.orderType.toUpperCase(),
+            customerName: order.customerName || 'Guest',
+            customerPhone: order.customerPhone || '',
+            tableNumber: order.tableNumber || '',
+            items: items.map(item => {
+              const addons = itemAddons.filter(a => a.orderItemId === item.id);
+              return {
+                name: item.productName,
+                quantity: item.quantity,
+                price: item.unitPrice,
+                size: item.size,
+                addons: addons.map(a => ({ name: a.addonName, price: a.addonPrice })),
+              };
+            }),
+            subtotal: order.subtotal,
+            sgst: order.stateGst,
+            cgst: order.centralGst,
+            discount: order.discountAmount || 0,
+            deliveryCharge: order.deliveryCharge || 0,
+            total: order.totalAmount,
+            paymentMethod: input.paymentMethod || order.paymentMethod || 'cash',
+            createdAt: new Date().toISOString(),
+            // Partner programme fields
+            partnerBenefitAmount: order.partnerBenefitAmount || 0,
+            partnerBenefitLabel,
+            maamiRupeesUsed: order.maamiRupeesUsed || 0,
+            // Earnings on this order
+            stampsEarned: receiptStampsEarned,
+            maamiRupeesEarned: receiptMaamiRupeesEarned, // in paise
+          };
+          
+          await dbInstance!.insert(receiptQueue).values({
+            orderId: order.id,
+            outletId: order.outletId || 2,
+            orderNumber: order.orderNumber,
+            receiptData: receiptData,
+            isPrinted: false,
+          });
         }
         
         // Deduct stamps when order is cancelled (if stamps were previously awarded)
@@ -2204,9 +2385,11 @@ export const appRouter = router({
         const gstDetails = calculateGst(subtotal);
         const totalAmount = subtotal + gstDetails.total;
 
-        // Generate order number
-        const { generateNextOrderNumber } = await import('./orderNumberHelper');
-        const orderNumber = await generateNextOrderNumber(dbInstance);
+        // Generate order number — Anna Nagar (outletId 3) gets its own sequence
+        const { generateNextOrderNumber, generateNextAnnaOrderNumber } = await import('./orderNumberHelper');
+        const orderNumber = input.outletId === 3
+          ? await generateNextAnnaOrderNumber(dbInstance)
+          : await generateNextOrderNumber(dbInstance);
 
         // Create order
         const [orderResult] = await dbInstance.insert(orders).values({
@@ -2441,7 +2624,7 @@ export const appRouter = router({
           })
           .where(eq(orders.id, input.orderId));
         
-        // Create KOT for kitchen printing
+        // Create KOT for kitchen printing (only if not already created during order placement)
         const [order] = await dbInstance!.select().from(orders).where(eq(orders.id, input.orderId));
         if (order) {
           // Get order items with details
@@ -2451,6 +2634,11 @@ export const appRouter = router({
           const itemAddons = itemIds.length > 0 
             ? await dbInstance!.select().from(orderItemAddons).where(sql`${orderItemAddons.orderItemId} IN (${sql.join(itemIds.map(id => sql`${id}`), sql`, `)})`)
             : [];
+          
+          // Check if KOT already exists for this order (in-store/pickup orders create KOT at order time)
+          const existingKots = await dbInstance!.select().from(kotQueue).where(eq(kotQueue.orderNumber, order.orderNumber));
+          
+          if (existingKots.length === 0) {
           
           // Build KOT data
           const kotData = {
@@ -2490,8 +2678,22 @@ export const appRouter = router({
             kotData: kotData, // JSON type, no need to stringify
             isPrinted: false,
           });
+          } else {
+            console.log(`[verifyPayment] KOT already exists for order ${order.orderNumber}, skipping duplicate creation`);
+          }
           
           // Queue receipt for printing
+          // Partner benefit label (only query if partner benefit was applied)
+          let partnerBenefitLabel = '';
+          if ((order.partnerBenefitAmount || 0) > 0 && order.partnerSubscriptionId) {
+            const [countResult] = await dbInstance!
+              .select({ count: sql<number>`COUNT(*)` })
+              .from(partnerBenefitsLog)
+              .where(eq(partnerBenefitsLog.subscriptionId, order.partnerSubscriptionId));
+            const usedCount = countResult?.count || 0;
+            partnerBenefitLabel = `Partner Benefit (${usedCount} of 15 used)`;
+          }
+          
           const receiptData = {
             orderNumber: order.orderNumber,
             orderType: order.orderType.toUpperCase(),
@@ -2511,7 +2713,15 @@ export const appRouter = router({
             cgst: order.centralGst,
             discount: order.discountAmount || 0,
             total: order.totalAmount,
+            paymentMethod: order.paymentMethod || 'online',
             createdAt: new Date().toISOString(),
+            // Partner programme fields
+            partnerBenefitAmount: order.partnerBenefitAmount || 0,
+            partnerBenefitLabel,
+            maamiRupeesUsed: order.maamiRupeesUsed || 0,
+            // Note: stamps/MR earned are not available here — they are awarded on order completion, not payment verification
+            stampsEarned: 0,
+            maamiRupeesEarned: 0,
           };
           
           await dbInstance!.insert(receiptQueue).values({
@@ -4702,10 +4912,11 @@ export const appRouter = router({
         }
         const totalAmount = subtotal + gstDetails.total + deliveryCharge;
         
-        // Generate sequential order number (resets each financial year on April 1st)
-        // Format: YY-NNNNN (e.g., "26-00001" for FY 2026-27)
-        const { generateNextOrderNumber } = await import('./orderNumberHelper');
-        const orderNumber = await generateNextOrderNumber(dbInstance!);
+        // Generate sequential order number — Anna Nagar (outletId 3) gets its own sequence
+        const { generateNextOrderNumber, generateNextAnnaOrderNumber } = await import('./orderNumberHelper');
+        const orderNumber = input.storeLocationId === 3
+          ? await generateNextAnnaOrderNumber(dbInstance!)
+          : await generateNextOrderNumber(dbInstance!);
         
         // Create order (userId = null for guest)
         const [orderResult] = await dbInstance!.insert(orders).values({
@@ -5705,6 +5916,7 @@ export const appRouter = router({
         orderType: z.enum(['all', 'instore', 'delivery', 'pickup']).default('all'),
         categoryId: z.number().optional(),
         subcategoryId: z.number().optional(),
+        outletId: z.number().optional(),
       }).optional())
       .query(async ({ input }) => {
         const dbInstance = await getDb();
@@ -5714,6 +5926,7 @@ export const appRouter = router({
         if (input?.startDate) conditions.push(sql`DATE(CONVERT_TZ(${orders.createdAt}, '+00:00', '+05:30')) >= ${input.startDate}`);
         if (input?.endDate) conditions.push(sql`DATE(CONVERT_TZ(${orders.createdAt}, '+00:00', '+05:30')) <= ${input.endDate}`);
         if (input?.orderType && input.orderType !== 'all') conditions.push(eq(orders.orderType, input.orderType));
+        if (input?.outletId) conditions.push(eq(orders.outletId, input.outletId));
 
         const whereClause = and(...conditions);
         const matchingOrders = await dbInstance.select().from(orders).where(whereClause);
@@ -5738,6 +5951,7 @@ export const appRouter = router({
       .input(z.object({
         startDate: z.string().optional(),
         endDate: z.string().optional(),
+        outletId: z.number().optional(),
       }).optional())
       .query(async ({ input }) => {
         const dbInstance = await getDb();
@@ -5746,6 +5960,7 @@ export const appRouter = router({
         let conditions: any[] = [sql`${orders.orderStatus} != 'cancelled'`, sql`${orders.isTestData} = false`];
         if (input?.startDate) conditions.push(sql`DATE(CONVERT_TZ(${orders.createdAt}, '+00:00', '+05:30')) >= ${input.startDate}`);
         if (input?.endDate) conditions.push(sql`DATE(CONVERT_TZ(${orders.createdAt}, '+00:00', '+05:30')) <= ${input.endDate}`);
+        if (input?.outletId) conditions.push(eq(orders.outletId, input.outletId));
 
         const matchingOrders = await dbInstance.select({
           createdAt: orders.createdAt,
@@ -5796,6 +6011,7 @@ export const appRouter = router({
         startDate: z.string().optional(),
         endDate: z.string().optional(),
         orderType: z.enum(['all', 'instore', 'delivery', 'pickup']).default('all'),
+        outletId: z.number().optional(),
       }).optional())
       .query(async ({ input }) => {
         const dbInstance = await getDb();
@@ -5805,6 +6021,7 @@ export const appRouter = router({
         if (input?.startDate) conditions.push(sql`DATE(CONVERT_TZ(${orders.createdAt}, '+00:00', '+05:30')) >= ${input.startDate}`);
         if (input?.endDate) conditions.push(sql`DATE(CONVERT_TZ(${orders.createdAt}, '+00:00', '+05:30')) <= ${input.endDate}`);
         if (input?.orderType && input.orderType !== 'all') conditions.push(eq(orders.orderType, input.orderType));
+        if (input?.outletId) conditions.push(eq(orders.outletId, input.outletId));
 
         const whereClause = and(...conditions);
         const matchingOrders = await dbInstance.select().from(orders).where(whereClause);
@@ -5867,6 +6084,7 @@ export const appRouter = router({
         endDate: z.string().optional(),
         categoryId: z.number().optional(),
         orderType: z.enum(['all', 'instore', 'delivery', 'pickup']).default('all'),
+        outletId: z.number().optional(),
       }).optional())
       .query(async ({ input }) => {
         const dbInstance = await getDb();
@@ -5876,6 +6094,7 @@ export const appRouter = router({
         if (input?.startDate) conditions.push(sql`DATE(CONVERT_TZ(${orders.createdAt}, '+00:00', '+05:30')) >= ${input.startDate}`);
         if (input?.endDate) conditions.push(sql`DATE(CONVERT_TZ(${orders.createdAt}, '+00:00', '+05:30')) <= ${input.endDate}`);
         if (input?.orderType && input.orderType !== 'all') conditions.push(eq(orders.orderType, input.orderType));
+        if (input?.outletId) conditions.push(eq(orders.outletId, input.outletId));
 
         const whereClause = and(...conditions);
         const matchingOrders = await dbInstance.select().from(orders).where(whereClause);
@@ -5941,6 +6160,7 @@ export const appRouter = router({
         categoryId: z.number().optional(),
         subcategoryId: z.number().optional(),
         orderType: z.enum(['all', 'instore', 'delivery', 'pickup']).default('all'),
+        outletId: z.number().optional(),
         sortBy: z.enum(['revenue', 'quantity']).default('revenue'),
         limit: z.number().default(20),
         order: z.enum(['top', 'bottom']).default('top'),
@@ -5953,6 +6173,7 @@ export const appRouter = router({
         if (input?.startDate) conditions.push(sql`DATE(CONVERT_TZ(${orders.createdAt}, '+00:00', '+05:30')) >= ${input.startDate}`);
         if (input?.endDate) conditions.push(sql`DATE(CONVERT_TZ(${orders.createdAt}, '+00:00', '+05:30')) <= ${input.endDate}`);
         if (input?.orderType && input.orderType !== 'all') conditions.push(eq(orders.orderType, input.orderType));
+        if (input?.outletId) conditions.push(eq(orders.outletId, input.outletId));
 
         const whereClause = and(...conditions);
         const matchingOrders = await dbInstance.select().from(orders).where(whereClause);
@@ -6006,6 +6227,7 @@ export const appRouter = router({
       .input(z.object({
         startDate: z.string().optional(),
         endDate: z.string().optional(),
+        outletId: z.number().optional(),
       }).optional())
       .query(async ({ input }) => {
         const dbInstance = await getDb();
@@ -6015,6 +6237,7 @@ export const appRouter = router({
         let conditions: any[] = [sql`${orders.orderStatus} != 'cancelled'`, sql`${orders.isTestData} = false`];
         if (input?.startDate) conditions.push(sql`DATE(CONVERT_TZ(${orders.createdAt}, '+00:00', '+05:30')) >= ${input.startDate}`);
         if (input?.endDate) conditions.push(sql`DATE(CONVERT_TZ(${orders.createdAt}, '+00:00', '+05:30')) <= ${input.endDate}`);
+        if (input?.outletId) conditions.push(eq(orders.outletId, input.outletId));
 
         const whereClause = and(...conditions);
         const matchingOrders = await dbInstance.select().from(orders).where(whereClause);
@@ -6093,6 +6316,7 @@ export const appRouter = router({
       .input(z.object({
         startDate: z.string().optional(),
         endDate: z.string().optional(),
+        outletId: z.number().optional(),
         limit: z.number().default(10),
         sortBy: z.enum(['totalSpent', 'orders']).default('totalSpent'),
       }).optional())
@@ -6107,13 +6331,12 @@ export const appRouter = router({
         const staffUserIds = new Set(staffUsers.map(u => u.id));
         const staffPhones = new Set(staffUsers.map(u => u.phone).filter(Boolean));
 
-        let conditions: any[] = [sql`${orders.orderStatus} != 'cancelled'`, sql`${orders.isTestData} = false`];
+                let conditions: any[] = [sql`${orders.orderStatus} != 'cancelled'`, sql`${orders.isTestData} = false`];
         if (input?.startDate) conditions.push(sql`DATE(CONVERT_TZ(${orders.createdAt}, '+00:00', '+05:30')) >= ${input.startDate}`);
         if (input?.endDate) conditions.push(sql`DATE(CONVERT_TZ(${orders.createdAt}, '+00:00', '+05:30')) <= ${input.endDate}`);
-
+        if (input?.outletId) conditions.push(eq(orders.outletId, input.outletId));
         const whereClause = and(...conditions);
         const matchingOrders = await dbInstance.select().from(orders).where(whereClause);
-
         const customerStats: Record<string, { name: string; phone: string; orders: number; totalSpent: number }> = {};
         matchingOrders.forEach(order => {
           // Skip orders from staff/admin users
@@ -6139,20 +6362,21 @@ export const appRouter = router({
       }),
 
     // Day of Week Analysis
-    getDayOfWeekAnalysis: adminProcedure
+        getDayOfWeekAnalysis: adminProcedure
       .input(z.object({
         startDate: z.string().optional(),
         endDate: z.string().optional(),
         categoryId: z.number().optional(),
         subcategoryId: z.number().optional(),
+        outletId: z.number().optional(),
       }).optional())
       .query(async ({ input }) => {
         const dbInstance = await getDb();
         if (!dbInstance) return [];
-
         let conditions: any[] = [sql`${orders.orderStatus} != 'cancelled'`, sql`${orders.isTestData} = false`];
         if (input?.startDate) conditions.push(sql`DATE(CONVERT_TZ(${orders.createdAt}, '+00:00', '+05:30')) >= ${input.startDate}`);
         if (input?.endDate) conditions.push(sql`DATE(CONVERT_TZ(${orders.createdAt}, '+00:00', '+05:30')) <= ${input.endDate}`);
+        if (input?.outletId) conditions.push(eq(orders.outletId, input.outletId));
 
         const whereClause = and(...conditions);
         const matchingOrders = await dbInstance.select().from(orders).where(whereClause);
@@ -6179,18 +6403,19 @@ export const appRouter = router({
       }),
 
     // Peak Hours Analysis
-    getPeakHoursAnalysis: adminProcedure
+        getPeakHoursAnalysis: adminProcedure
       .input(z.object({
         startDate: z.string().optional(),
         endDate: z.string().optional(),
+        outletId: z.number().optional(),
       }).optional())
       .query(async ({ input }) => {
         const dbInstance = await getDb();
         if (!dbInstance) return [];
-
         let conditions: any[] = [sql`${orders.orderStatus} != 'cancelled'`, sql`${orders.isTestData} = false`];
         if (input?.startDate) conditions.push(sql`DATE(CONVERT_TZ(${orders.createdAt}, '+00:00', '+05:30')) >= ${input.startDate}`);
         if (input?.endDate) conditions.push(sql`DATE(CONVERT_TZ(${orders.createdAt}, '+00:00', '+05:30')) <= ${input.endDate}`);
+        if (input?.outletId) conditions.push(eq(orders.outletId, input.outletId));
 
         const whereClause = and(...conditions);
         const matchingOrders = await dbInstance.select().from(orders).where(whereClause);
@@ -6214,24 +6439,25 @@ export const appRouter = router({
       }),
 
     // Daily Sales Trend
-    getDailySalesTrend: adminProcedure
+        getDailySalesTrend: adminProcedure
       .input(z.object({
         startDate: z.string(),
         endDate: z.string(),
         categoryId: z.number().optional(),
         subcategoryId: z.number().optional(),
         orderType: z.enum(['all', 'instore', 'delivery', 'pickup']).default('all'),
+        outletId: z.number().optional(),
       }))
       .query(async ({ input }) => {
         const dbInstance = await getDb();
         if (!dbInstance) return [];
-
         let conditions: any[] = [
           sql`${orders.orderStatus} != 'cancelled'`,
           sql`DATE(CONVERT_TZ(${orders.createdAt}, '+00:00', '+05:30')) >= ${input.startDate}`,
           sql`DATE(CONVERT_TZ(${orders.createdAt}, '+00:00', '+05:30')) <= ${input.endDate}`,
         ];
         if (input.orderType && input.orderType !== 'all') conditions.push(eq(orders.orderType, input.orderType));
+        if (input.outletId) conditions.push(eq(orders.outletId, input.outletId));
 
         const whereClause = and(...conditions);
         const matchingOrders = await dbInstance.select().from(orders).where(whereClause);
@@ -6264,23 +6490,26 @@ export const appRouter = router({
       }),
 
     // GST Report
-    getGstReport: adminProcedure
+        getGstReport: adminProcedure
       .input(z.object({
         startDate: z.string(),
         endDate: z.string(),
         groupBy: z.enum(['daily', 'weekly', 'monthly']).default('daily'),
+        outletId: z.number().optional(),
       }))
       .query(async ({ input }) => {
         const dbInstance = await getDb();
         if (!dbInstance) return { summary: { totalTaxableValue: 0, totalCgst: 0, totalSgst: 0, totalIgst: 0, totalGst: 0 }, details: [], b2bSummary: { totalTaxableValue: 0, totalCgst: 0, totalSgst: 0, totalIgst: 0, totalGst: 0, invoiceCount: 0 } };
-
+        let gstConditions: any[] = [
+          sql`${orders.orderStatus} != 'cancelled'`,
+          sql`DATE(CONVERT_TZ(${orders.createdAt}, '+00:00', '+05:30')) >= ${input.startDate}`,
+          sql`DATE(CONVERT_TZ(${orders.createdAt}, '+00:00', '+05:30')) <= ${input.endDate}`,
+        ];
+        if (input.outletId) gstConditions.push(eq(orders.outletId, input.outletId));
         const matchingOrders = await dbInstance
           .select()
           .from(orders)
-          .where(and(
-            sql`${orders.orderStatus} != 'cancelled'`,
-            sql`DATE(CONVERT_TZ(${orders.createdAt}, '+00:00', '+05:30')) >= ${input.startDate}`,
-            sql`DATE(CONVERT_TZ(${orders.createdAt}, '+00:00', '+05:30')) <= ${input.endDate}`,
+          .where(and(...gstConditions
           ));
 
         // Group by period
@@ -7736,21 +7965,22 @@ export const appRouter = router({
         };
       }),
 
-    getItemwiseSalesReport: adminProcedure
+        getItemwiseSalesReport: adminProcedure
       .input(z.object({
         startDate: z.string(),
         endDate: z.string(),
         orderType: z.enum(['all', 'instore', 'delivery', 'pickup']).default('all'),
         categoryId: z.number().optional(),
+        outletId: z.number().optional(),
       }))
       .query(async ({ input }) => {
         const dbInstance = await getDb();
         if (!dbInstance) return { items: [], summary: { totalItems: 0, totalQuantity: 0, totalRevenue: 0, totalOrders: 0 } };
-
         let conditions: any[] = [sql`${orders.orderStatus} != 'cancelled'`, sql`${orders.isTestData} = false`];
         if (input.startDate) conditions.push(sql`DATE(CONVERT_TZ(${orders.createdAt}, '+00:00', '+05:30')) >= ${input.startDate}`);
         if (input.endDate) conditions.push(sql`DATE(CONVERT_TZ(${orders.createdAt}, '+00:00', '+05:30')) <= ${input.endDate}`);
         if (input.orderType && input.orderType !== 'all') conditions.push(eq(orders.orderType, input.orderType));
+        if (input.outletId) conditions.push(eq(orders.outletId, input.outletId));
 
         const whereClause = and(...conditions);
         const matchingOrders = await dbInstance.select().from(orders).where(whereClause);

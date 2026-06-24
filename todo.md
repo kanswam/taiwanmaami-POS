@@ -138,6 +138,12 @@
 - [x] Fix customer list to exclude staff/admin users (Boichong onwards are staff)
 - [x] Stamp calculation verified correct (1 per ₹450 + welcome stamp for first order)
 - [x] Update Iced Beverages tile video with Moutan-FaloodaTea.mov
+
+## Moutan Rebrand (June 21)
+
+- [x] Remove all "Moutan" references from website — full rebrand to "Taiwan Maami" only
+- [x] Replace Anna Nagar video at bottom of landing page with placeholder photo (IMG_6143.webp)
+- [x] Fix Get Directions button for Anna Nagar to deliver accurate directions
 ## Content Updates (Jan 7)
 
 - [x] Update Our Story text
@@ -3586,3 +3592,73 @@ Orders fixed:
 - [x] Fix kitchen KOT not printing (BAR was marking isPrinted before kitchen could poll — added separate kitchenPrinted flag)
 - [x] Fix KOT printing: capitalize Size/Ice values, show boba type instead of "true", show addon quantity (e.g. "Chicken Bites x2")
 - [x] Fix supplementary KOT (add items to order) not printing on kitchen printer (kitchenPrinted NULL not matched by poll query — fixed to use OR IS NULL)
+
+## Anna Nagar Outlet Launch (June 21)
+
+- [x] Anna Nagar outlet: Make selectable in ordering flow (Menu.tsx outlet buttons)
+- [x] Anna Nagar outlet: Activate store_locations record (isActive = 1)
+- [x] Anna Nagar outlet: Enable drinks + mochis only (availableAtAnnanagar = 1 for categories 1,2,3)
+- [x] Anna Nagar outlet: Food items remain disabled (category 4 stays availableAtAnnanagar = 0)
+- [x] Delivery routing: Auto-assign nearest outlet (T.Nagar or Anna Nagar) based on distance
+- [x] Delivery routing: T.Nagar wins when closer in distance
+- [x] Delivery routing: Customer can override to Anna Nagar when both in range (only for available items)
+- [x] Delivery routing: Food items prompt "Switch to T.Nagar?" when Anna Nagar is assigned
+- [x] Delivery routing: Calculate delivery charge from assigned outlet address
+- [x] Delivery routing: Pass assigned outlet ID when creating delivery orders
+
+## Bug Fixes (June 21 - Delivery Routing)
+
+- [x] Fix delivery distance/time showing "Unknown" (Google Maps API call failing)
+- [x] Fix nearest outlet always defaulting to T.Nagar instead of Anna Nagar for nearby areas
+- [x] Expand CHENNAI_AREAS list with comprehensive Chennai neighborhoods and surrounds (145+ areas)
+
+## Admin Panel Fixes (June 21)
+
+- [x] Show outlet name against each order in admin panel (Today's Orders view)
+- [x] Anna Nagar orders should have separate numbering sequence (AN-00001 format)
+
+## Mochi Receipt Pricing Bug Fix (Jun 21)
+- [x] Fix receipt queue to use lineTotal instead of unitPrice * quantity (server/_core/index.ts)
+- [x] Fix Anna Nagar printer formatting for mochi pair pricing - show "Strawberry Mochi (2 pcs)" with correct price
+
+
+## Analytics Outlet Filter (June 22)
+
+- [x] Add Outlet filter dropdown (T. Nagar / Anna Nagar / All Outlets) to Analytics page
+- [x] Pass outletId to all analytics queries (sales overview, category, subcategory, products, customers, GST, order type, itemwise)
+- [x] Remove Trends tab from Analytics page
+- [x] Remove Insights tab from Analytics page
+- [x] Remove Channels tab from Analytics page
+- [x] Update ItemwiseSalesReport component to accept and pass outletId
+- [x] Reset outletId in resetFilters function
+
+## KOT Duplicate Fix (Jun 22)
+
+- [x] Fix duplicate KOT printing after payment - verifyPayment was creating a second KOT even when one already existed from order creation (added existingKots check)
+
+## Partner Programme Changes (Jun 24)
+
+- [x] CHANGE 1: Update pricing with GST (Founding ₹4,720 incl GST, Regular ₹5,900 incl GST), add GST fields to partner_config, show GST as separate line at checkout
+- [x] CHANGE 2: Update complimentary items quota from 25 to 24
+- [x] CHANGE 3: Eligible complimentary items by outlet (T.Nagar/Anna Nagar: drinks up to ₹500 + food items; Palladium: drinks up to ₹500 only)
+- [x] CHANGE 4: Referral rewards as Maami Money (store credit), ₹250 each, non-transferable, expires 12 months, show balance on dashboard
+- [x] CHANGE 5: Add refund policy text on /partner sign-up page before payment button
+- [x] CHANGE 6: Early renewal option on /partner/dashboard with Razorpay payment, extends 12 months from renewal date, resets quota to 24, stamps carry over
+- [ ] PENDING: Maami Money checkout integration (apply balance to reduce order total at checkout) — to be scoped separately
+
+## Partner Programme Full Implementation Brief (Jun 24)
+
+- [x] SECTION 1: Update partner_config with new pricing (Founding ₹3,888, Regular ₹4,500 incl GST), quota 15, daily limit, 2% Maami Rupees, gate OFF
+- [x] SECTION 2: Eligible complimentary items by outlet with hardcoded mochi exclusion
+- [x] SECTION 3: Automatic checkout logic (partner detection, daily check, auto free item selection, Maami Rupees 2%, stamps, receipt display)
+  - [x] 3a: "Change?" picker UI at checkout (overrideProductId passed to backend, validated server-side)
+  - [x] 3b: Maami Rupees earning logic (2% on order completion, atomic with balance update)
+  - [x] 3c: Maami Rupees redemption toggle at checkout (FIFO expiry)
+  - [x] 3d: Receipt/KOT display update
+  - [x] 3e: Remove drink_discount from benefitType enum
+- [ ] SECTION 4: Landing page redesign (/partner) - clean mobile-first layout with new copy
+- [ ] SECTION 5: Partner Dashboard improvements (header strip, complimentary widget, Maami Rupees widget, stamps widget, referral widget, early renewal)
+- [ ] SECTION 6: Maami Rupees checkout integration (toggle, FIFO expiry, cannot pay for membership)
+- [ ] SECTION 7: Referral programme (₹200 each, credited on first order completion)
+- [ ] SECTION 8: Refund enforcement (60-day window, zero benefits check)
+- [ ] SECTION 9: Staff briefing content (admin panel notice for partner programme)

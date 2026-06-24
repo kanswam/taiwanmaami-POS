@@ -144,6 +144,19 @@ function printReceipt(receiptData) {
           printer.text(`Discount: -${formatPrice(totalDiscount)}`);
         }
 
+        // Partner benefit (free item)
+        if (data.partnerBenefitAmount > 0) {
+          printer.text(`Partner Benefit: -${formatPrice(data.partnerBenefitAmount)}`);
+          if (data.partnerBenefitLabel) {
+            printer.text(`  ${data.partnerBenefitLabel}`);
+          }
+        }
+
+        // Maami Rupees redeemed
+        if (data.maamiRupeesUsed > 0) {
+          printer.text(`Maami Rupees: -${formatPrice(data.maamiRupeesUsed)}`);
+        }
+
         // GST (handle both field name formats)
         const sgst = data.stateGst || data.sgst || 0;
         const cgst = data.centralGst || data.cgst || 0;
@@ -164,7 +177,22 @@ function printReceipt(receiptData) {
           .size(1, 1)
           .text(`TOTAL: ${formatPrice(totalAmount)}`)
           .size(1, 1)
-          .style('normal')
+          .style('normal');
+
+        // Earnings summary (stamps and Maami Rupees earned on this order)
+        if (data.stampsEarned > 0 || data.maamiRupeesEarned > 0) {
+          printer
+            .text('--------------------------------')
+            .align('lt');
+          if (data.stampsEarned > 0) {
+            printer.text(`Stamps earned: +${data.stampsEarned}`);
+          }
+          if (data.maamiRupeesEarned > 0) {
+            printer.text(`Maami Rupees earned: +${formatPrice(data.maamiRupeesEarned)}`);
+          }
+        }
+
+        printer
           .text('--------------------------------')
           .align('ct')
           .text('Thank you for your order!')
@@ -188,7 +216,7 @@ function printReceipt(receiptData) {
 // ============ API FUNCTIONS ============
 async function pollForReceipts() {
   try {
-    const response = await fetch(`${API_URL}/api/receipt/poll?secret=${PRINT_SECRET}`);
+    const response = await fetch(`${API_URL}/api/receipt/poll?secret=${PRINT_SECRET}&outletId=2`);
     const data = await response.json();
     return data.receipts || [];
   } catch (error) {

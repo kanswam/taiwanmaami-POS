@@ -176,6 +176,19 @@ function formatTaxInvoice(receipt) {
     output += `Discount: -${formatPrice(totalDiscount)}\n`;
   }
   
+  // Partner benefit (free item)
+  if (data.partnerBenefitAmount > 0) {
+    output += `Partner Benefit: -${formatPrice(data.partnerBenefitAmount)}\n`;
+    if (data.partnerBenefitLabel) {
+      output += `  ${data.partnerBenefitLabel}\n`;
+    }
+  }
+  
+  // Maami Rupees redeemed
+  if (data.maamiRupeesUsed > 0) {
+    output += `Maami Rupees: -${formatPrice(data.maamiRupeesUsed)}\n`;
+  }
+  
   // GST (handle both field name formats)
   const sgst = data.stateGst || data.sgst || 0;
   const cgst = data.centralGst || data.cgst || 0;
@@ -197,6 +210,18 @@ function formatTaxInvoice(receipt) {
   // Payment method if available
   if (data.paymentMethod) {
     output += `Payment: ${data.paymentMethod}\n`;
+  }
+  
+  // Earnings summary (stamps and Maami Rupees earned on this order)
+  if (data.stampsEarned > 0 || data.maamiRupeesEarned > 0) {
+    output += PRINTER_COMMANDS.SEPARATOR;
+    output += PRINTER_COMMANDS.ALIGN_LEFT;
+    if (data.stampsEarned > 0) {
+      output += `Stamps earned: +${data.stampsEarned}\n`;
+    }
+    if (data.maamiRupeesEarned > 0) {
+      output += `Maami Rupees earned: +${formatPrice(data.maamiRupeesEarned)}\n`;
+    }
   }
   
   output += PRINTER_COMMANDS.SEPARATOR;

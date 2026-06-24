@@ -10,12 +10,15 @@ export const users = mysqlTable("users", {
   loginMethod: varchar("loginMethod", { length: 64 }),
   role: mysqlEnum("role", ["customer", "staff", "admin"]).default("customer").notNull(),
   loyaltyPoints: int("loyaltyPoints").default(0).notNull(),
-  // Store credit for refunds/compensation (in paise)
+  // Maami Money (store credit) for referral rewards and refunds (in paise)
   storeCredit: int("storeCredit").default(0).notNull(),
+  storeCreditExpiresAt: timestamp("storeCreditExpiresAt"), // Expiry date for Maami Money (null = no expiry)
   // Digital stamp card fields
   stampCount: int("stampCount").default(0).notNull(),
   lifetimeStamps: int("lifetimeStamps").default(0).notNull(),
   lastStampDate: timestamp("lastStampDate"),
+  // Maami Rupees balance (denormalized, updated atomically with transactions)
+  maamiRupeesBalance: int("maamiRupeesBalance").default(0).notNull(),
   // Admin notes for customer
   notes: text("notes"),
   // Birthday fields for birthday offer
@@ -243,6 +246,7 @@ export const orders = mysqlTable("orders", {
   // Partner programme benefit tracking
   partnerBenefitAmount: int("partnerBenefitAmount").default(0).notNull(), // Total Partner benefit discount (paise)
   partnerSubscriptionId: int("partnerSubscriptionId"), // FK to partner_subscriptions if Partner benefits applied
+  maamiRupeesUsed: int("maamiRupeesUsed").default(0).notNull(), // Maami Rupees redeemed on this order (paise)
   refundAmount: int("refundAmount").default(0).notNull(),
   refundMethod: mysqlEnum("refundMethod", ["store_credit", "original_payment", "none"]).default("none"),
   refundReason: text("refundReason"),
@@ -1387,7 +1391,6 @@ export const partnerBenefitsLog = mysqlTable("partner_benefits_log", {
     "tea_discount",         // Legacy: tea discount
     "maami_rupee_credit",   // Store credit from referral rewards
     "complimentary_item",   // Complimentary food item at T.Nagar (new)
-    "drink_discount",       // 5% off all drinks in order (new)
     "workshop_discount",    // 10% off workshops (new)
   ]).notNull(),
   // Amount saved (in paise)
@@ -1416,6 +1419,30 @@ export const partnerConfig = mysqlTable("partner_config", {
 
 export type PartnerConfig = typeof partnerConfig.$inferSelect;
 export type InsertPartnerConfig = typeof partnerConfig.$inferInsert;
+
+// Maami Rupees Transactions — individual credit/debit records with per-transaction expiry
+export const maamiRupeesTransactions = mysqlTable("maami_rupees_transactions", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  subscriptionId: int("subscriptionId"),              // FK to partner_subscriptions (null for referral credits)
+  orderId: int("orderId"),                            // FK to orders (null for referral credits before first order)
+  orderNumber: varchar("orderNumber", { length: 20 }),
+  type: mysqlEnum("type", [
+    "earn_order",       // 2% earned on order completion
+    "earn_referral",    // ₹200 referral credit
+    "redeem",           // Used toward an order
+    "expire",           // Expired after 12 months
+  ]).notNull(),
+  amount: int("amount").notNull(),                    // Positive for credits, negative for debits (paise)
+  balanceAfter: int("balanceAfter").notNull(),        // Running balance after this transaction (paise)
+  expiresAt: timestamp("expiresAt"),                  // null for redeem/expire types
+  remainingAmount: int("remainingAmount"),            // How much of this credit is still unspent (for FIFO)
+  description: varchar("description", { length: 255 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type MaamiRupeesTransaction = typeof maamiRupeesTransactions.$inferSelect;
+export type InsertMaamiRupeesTransaction = typeof maamiRupeesTransactions.$inferInsert;
 
 // ============================================================
 // B2B / External Sales (popup events, catering, corporate orders)

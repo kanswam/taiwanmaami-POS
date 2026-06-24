@@ -3,8 +3,8 @@ import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
 import { getDb } from "./db";
-import { partnerSubscriptions, partnerReferrals, partnerBenefitsLog, partnerConfig, users, orders, products, subcategories, categories } from "../drizzle/schema";
-import { eq, and, desc, sql, gte, lte } from "drizzle-orm";
+import { partnerSubscriptions, partnerReferrals, partnerBenefitsLog, partnerConfig, users, orders, products, subcategories, categories, maamiRupeesTransactions } from "../drizzle/schema";
+import { eq, and, desc, asc, sql, gte, lte } from "drizzle-orm";
 import { createRazorpayOrder, verifyPaymentSignature, getRazorpayKeyId } from "./razorpay";
 import { notifyOwner } from "./_core/notification";
 import crypto from "crypto";
@@ -76,13 +76,13 @@ export async function getActivePartnerSubscription(userId: number) {
 }
 
 // Helper: calculate Partner benefits for an order
-// UPDATED RULES (Apr 19):
-// 1. Complimentary food item at T. Nagar — NO minimum purchase required
-//    Eligible items: Biang Biang, Dan Dan Noodles, any Cong You Bing, any Brioche
-//    Limit: 1 per visit, 25 per subscription year
+// UPDATED RULES (Jun 24):
+// 1. Complimentary item at T. Nagar & Anna Nagar — drinks (up to ₹500) + food items
+//    Complimentary item at Palladium — drinks (up to ₹500) only, no food
+//    Limit: 1 per visit, 24 per subscription year
 // 2. 5% off all drinks in the order (all outlets)
 // 3. 10% off workshops (handled separately in workshop booking)
-// 4. Referral programme REMOVED
+// 4. Referral programme: Maami Money (store credit)
 // 5. Loyalty stamps should NOT be awarded on free items (handled in order creation)
 export async function calculatePartnerBenefits(
   userId: number,
@@ -94,42 +94,64 @@ export async function calculatePartnerBenefits(
     size?: string | null;
     quantity: number;
     categorySlug?: string;
-  }>
+  }>,
+  overrideProductId?: number // Partner's chosen free item (validated server-side)
 ) {
   const subscription = await getActivePartnerSubscription(userId);
   if (!subscription) return null;
-
   const config = await getConfigs([
     "tnagar_outlet_id",
+    "annanagar_outlet_id",
+    "palladium_outlet_id",
     "complimentary_items_per_year",
-    "drink_discount_percent",
+    "complimentary_item_cap_paise",
     "eligible_food_subcategories",
     "eligible_sweet_subcategories",
   ]);
-
   const tnagarOutletId = parseInt(config.tnagar_outlet_id || "2");
-  const maxComplimentaryPerYear = parseInt(config.complimentary_items_per_year || "25");
-  const drinkDiscountPercent = parseInt(config.drink_discount_percent || "5");
-  const eligibleFoodSubcats = (config.eligible_food_subcategories || "saucy-noodles,flat-bread,pillow-brioche").split(",").map(s => s.trim());
+  const annangarOutletId = parseInt(config.annanagar_outlet_id || "30001");
+  const palladiumOutletId = parseInt(config.palladium_outlet_id || "1");
+  const maxComplimentaryPerYear = parseInt(config.complimentary_items_per_year || "15");
+  const complimentaryCapPaise = parseInt(config.complimentary_item_cap_paise || "50000"); // ₹500
+  const eligibleFoodSubcats = (config.eligible_food_subcategories || "saucy-noodles,flat-bread,pillow-brioche,noodles").split(",").map(s => s.trim());
   const eligibleSweetSubcats = (config.eligible_sweet_subcategories || "sweet-pillow-brioche").split(",").map(s => s.trim());
-
   const dbInstance = await getDb();
   if (!dbInstance) return null;
-
   const benefits: Array<{
-    type: "complimentary_item" | "drink_discount" | "free_biang_biang" | "free_large_tea";
+    type: "complimentary_item" | "free_biang_biang" | "free_large_tea";
     amount: number; // paise saved
     itemName?: string;
     itemOriginalPrice?: number;
-    discountPercent?: number;
-    drinkItemsCount?: number;
   }> = [];
-
   let totalBenefitAmount = 0;
 
-  // 1. COMPLIMENTARY FOOD ITEM at T. Nagar (no minimum purchase required)
-  if (outletId === tnagarOutletId) {
-    // Check how many complimentary items used this subscription year
+  // Determine if this outlet qualifies for complimentary items
+  const isEligibleOutlet = (outletId === tnagarOutletId || outletId === annangarOutletId || outletId === palladiumOutletId);
+  const isPalladium = (outletId === palladiumOutletId);
+
+  // Hoisted so it's accessible for the eligibleItems return value
+  let eligibleOrderItems: typeof items = [];
+
+  // 1. COMPLIMENTARY ITEM (all outlets, but different eligible items per outlet)
+  if (isEligibleOutlet) {
+    // Check daily limit (IST timezone) — one free item per calendar day
+    const nowIST = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }));
+    const todayStartIST = new Date(nowIST.getFullYear(), nowIST.getMonth(), nowIST.getDate());
+    // Convert IST midnight back to UTC for DB comparison
+    const todayStartUTC = new Date(todayStartIST.getTime() - (5.5 * 60 * 60 * 1000));
+    const usedToday = await dbInstance
+      .select({ count: sql<number>`COUNT(*)` })
+      .from(partnerBenefitsLog)
+      .where(
+        and(
+          eq(partnerBenefitsLog.userId, userId),
+          sql`${partnerBenefitsLog.benefitType} IN ('complimentary_item', 'free_biang_biang')`,
+          gte(partnerBenefitsLog.createdAt, todayStartUTC)
+        )
+      );
+    const usedTodayCount = Number(usedToday[0]?.count) || 0;
+
+    // Check how many complimentary items used this subscription year (15/year cap)
     const complimentaryUsed = await dbInstance
       .select({ count: sql<number>`COUNT(*)` })
       .from(partnerBenefitsLog)
@@ -141,97 +163,196 @@ export async function calculatePartnerBenefits(
         )
       );
     const usedCount = Number(complimentaryUsed[0]?.count) || 0;
+    if (usedTodayCount === 0 && usedCount < maxComplimentaryPerYear) {
+      // Get drink category IDs
+      const drinkCategories = await dbInstance
+        .select({ id: categories.id })
+        .from(categories)
+        .where(sql`${categories.slug} IN ('bubble-tea', 'coffee')`);
+      const drinkCategoryIds = drinkCategories.map(c => c.id);
+      let drinkProductIds = new Set<number>();
+      if (drinkCategoryIds.length > 0) {
+        const drinkProducts = await dbInstance
+          .select({ productId: products.id })
+          .from(products)
+          .innerJoin(subcategories, eq(products.subcategoryId, subcategories.id))
+          .where(sql`${subcategories.categoryId} IN (${sql.join(drinkCategoryIds.map(id => sql`${id}`), sql`, `)})`);
+        drinkProductIds = new Set(drinkProducts.map(p => p.productId));
+      }
 
-    if (usedCount < maxComplimentaryPerYear) {
-      // Get all eligible product IDs from eligible subcategories
-      const allEligibleSubcats = [...eligibleFoodSubcats, ...eligibleSweetSubcats];
-      const eligibleProducts = await dbInstance
-        .select({
-          productId: products.id,
-          productName: products.name,
-          subcatSlug: subcategories.slug,
-        })
-        .from(products)
-        .innerJoin(subcategories, eq(products.subcategoryId, subcategories.id))
-        .where(sql`${subcategories.slug} IN (${sql.join(allEligibleSubcats.map(s => sql`${s}`), sql`, `)})`);
+      // HARDCODED MOCHI EXCLUSION — cannot be overridden by config
+      // Any item whose name contains "Mochi" (case-insensitive) is excluded from complimentary benefits
+      const isMochiExcluded = (itemName: string): boolean => {
+        return /mochi/i.test(itemName);
+      };
 
-      const eligibleProductIds = new Set(eligibleProducts.map(p => p.productId));
+      // Get all products from Sweet Bites category (slug: 'mochis') to exclude them
+      // EXCEPT sweet-pillow-brioche which is explicitly eligible
+      const sweetBitesCategory = await dbInstance
+        .select({ id: categories.id })
+        .from(categories)
+        .where(eq(categories.slug, "mochis"));
+      const sweetBitesCategoryId = sweetBitesCategory[0]?.id;
+      let mochiProductIds = new Set<number>();
+      if (sweetBitesCategoryId) {
+        const mochiProducts = await dbInstance
+          .select({ productId: products.id })
+          .from(products)
+          .innerJoin(subcategories, eq(products.subcategoryId, subcategories.id))
+          .where(
+            and(
+              eq(subcategories.categoryId, sweetBitesCategoryId),
+              // Exclude sweet-pillow-brioche from the exclusion (it IS eligible)
+              sql`${subcategories.slug} NOT IN ('sweet-pillow-brioche')`
+            )
+          );
+        mochiProductIds = new Set(mochiProducts.map(p => p.productId));
+      }
 
-      // Find eligible items in the order
-      const eligibleOrderItems = items.filter(item => eligibleProductIds.has(item.productId));
+      if (isPalladium) {
+        // Palladium: Only drinks up to ₹500 are eligible (no mochis)
+        eligibleOrderItems = items.filter(item => {
+          const unitPrice = Math.round(item.lineTotal / item.quantity);
+          // Exclude mochis by product ID and by name
+          if (mochiProductIds.has(item.productId) || isMochiExcluded(item.productName)) return false;
+          return drinkProductIds.has(item.productId) && unitPrice <= complimentaryCapPaise;
+        });
+      } else {
+        // T. Nagar & Anna Nagar: Drinks (up to ₹500) + eligible food items (no mochis)
+        const allEligibleSubcats = [...eligibleFoodSubcats, ...eligibleSweetSubcats];
+        const eligibleFoodProducts = await dbInstance
+          .select({
+            productId: products.id,
+            productName: products.name,
+            subcatSlug: subcategories.slug,
+          })
+          .from(products)
+          .innerJoin(subcategories, eq(products.subcategoryId, subcategories.id))
+          .where(sql`${subcategories.slug} IN (${sql.join(allEligibleSubcats.map(s => sql`${s}`), sql`, `)})`);
+        const eligibleFoodProductIds = new Set(eligibleFoodProducts.map(p => p.productId));
+
+        eligibleOrderItems = items.filter(item => {
+          const unitPrice = Math.round(item.lineTotal / item.quantity);
+          // HARDCODED: Exclude mochis by product ID and by name
+          if (mochiProductIds.has(item.productId) || isMochiExcluded(item.productName)) return false;
+          // Eligible if it's a drink under cap OR an eligible food item under cap
+          return unitPrice <= complimentaryCapPaise && (
+            drinkProductIds.has(item.productId) || eligibleFoodProductIds.has(item.productId)
+          );
+        });
+      }
 
       if (eligibleOrderItems.length > 0) {
-        // Make the most expensive eligible item complimentary (1 unit)
-        const mostExpensive = eligibleOrderItems.reduce((max, item) => {
-          const unitPrice = Math.round(item.lineTotal / item.quantity);
-          const maxUnitPrice = Math.round(max.lineTotal / max.quantity);
-          return unitPrice > maxUnitPrice ? item : max;
-        }, eligibleOrderItems[0]);
-
-        const freeAmount = Math.round(mostExpensive.lineTotal / mostExpensive.quantity);
+        // If partner chose a specific item, validate it's in the eligible list
+        let selectedItem;
+        if (overrideProductId) {
+          selectedItem = eligibleOrderItems.find(item => item.productId === overrideProductId);
+        }
+        // Default: highest-priced eligible item
+        if (!selectedItem) {
+          selectedItem = eligibleOrderItems.reduce((max, item) => {
+            const unitPrice = Math.round(item.lineTotal / item.quantity);
+            const maxUnitPrice = Math.round(max.lineTotal / max.quantity);
+            return unitPrice > maxUnitPrice ? item : max;
+          }, eligibleOrderItems[0]);
+        }
+        const unitPrice = Math.round(selectedItem.lineTotal / selectedItem.quantity);
+        const freeAmount = Math.min(unitPrice, complimentaryCapPaise);
         benefits.push({
           type: "complimentary_item",
           amount: freeAmount,
-          itemName: mostExpensive.productName,
-          itemOriginalPrice: freeAmount,
+          itemName: selectedItem.productName,
+          itemOriginalPrice: unitPrice,
         });
         totalBenefitAmount += freeAmount;
       }
     }
   }
 
-  // 2. 5% OFF ALL DRINKS in the order (any outlet)
-  if (drinkDiscountPercent > 0) {
-    // Get drink category IDs (Iced Beverages + Hot Beverages)
-    const drinkCategories = await dbInstance
-      .select({ id: categories.id })
-      .from(categories)
-      .where(sql`${categories.slug} IN ('bubble-tea', 'coffee')`);
-    const drinkCategoryIds = drinkCategories.map(c => c.id);
 
-    if (drinkCategoryIds.length > 0) {
-      const drinkProducts = await dbInstance
-        .select({ productId: products.id })
-        .from(products)
-        .innerJoin(subcategories, eq(products.subcategoryId, subcategories.id))
-        .where(sql`${subcategories.categoryId} IN (${sql.join(drinkCategoryIds.map(id => sql`${id}`), sql`, `)})`);
+  // Build eligible items list for the "Change?" picker (only when complimentary benefit is active)
+  const eligibleItemsList = (isEligibleOutlet && eligibleOrderItems.length > 0)
+    ? eligibleOrderItems.map(item => ({
+        productId: item.productId,
+        productName: item.productName,
+        unitPrice: Math.round(item.lineTotal / item.quantity),
+        freeAmount: Math.min(Math.round(item.lineTotal / item.quantity), complimentaryCapPaise),
+      }))
+    : [];
 
-      const drinkProductIds = new Set(drinkProducts.map(p => p.productId));
+  // Lazy expiry sweep — zero out expired earn rows and decrement balance
+  if (dbInstance) {
+    const expiredRows = await dbInstance
+      .select({ id: maamiRupeesTransactions.id, remainingAmount: maamiRupeesTransactions.remainingAmount })
+      .from(maamiRupeesTransactions)
+      .where(
+        and(
+          eq(maamiRupeesTransactions.userId, userId),
+          sql`${maamiRupeesTransactions.type} IN ('earn_order', 'earn_referral')`,
+          sql`${maamiRupeesTransactions.expiresAt} < NOW()`,
+          sql`${maamiRupeesTransactions.remainingAmount} > 0`
+        )
+      );
 
-      // Calculate discount on all drink items
-      const drinkItems = items.filter(item => drinkProductIds.has(item.productId));
-      if (drinkItems.length > 0) {
-        let totalDrinkDiscount = 0;
-        let drinkItemsCount = 0;
-        for (const item of drinkItems) {
-          const discount = Math.round(item.lineTotal * drinkDiscountPercent / 100);
-          totalDrinkDiscount += discount;
-          drinkItemsCount += item.quantity;
-        }
-
-        if (totalDrinkDiscount > 0) {
-          benefits.push({
-            type: "drink_discount",
-            amount: totalDrinkDiscount,
-            discountPercent: drinkDiscountPercent,
-            drinkItemsCount,
-          });
-          totalBenefitAmount += totalDrinkDiscount;
-        }
+    if (expiredRows.length > 0) {
+      let totalExpired = 0;
+      for (const row of expiredRows) {
+        totalExpired += row.remainingAmount || 0;
+        await dbInstance
+          .update(maamiRupeesTransactions)
+          .set({ remainingAmount: 0 })
+          .where(eq(maamiRupeesTransactions.id, row.id));
       }
+      // Atomic decrement of balance
+      await dbInstance
+        .update(users)
+        .set({ maamiRupeesBalance: sql`GREATEST(0, maamiRupeesBalance - ${totalExpired})` })
+        .where(eq(users.id, userId));
+      // Read updated balance for expire transaction logs
+      const [updatedAfterExpiry] = await dbInstance
+        .select({ maamiRupeesBalance: users.maamiRupeesBalance })
+        .from(users)
+        .where(eq(users.id, userId));
+      const balanceAfterExpiry = updatedAfterExpiry?.maamiRupeesBalance || 0;
+      // Insert expire transaction rows with correct balanceAfter
+      for (const row of expiredRows) {
+        await dbInstance.insert(maamiRupeesTransactions).values({
+          userId,
+          type: 'expire',
+          amount: -(row.remainingAmount || 0),
+          balanceAfter: balanceAfterExpiry,
+          description: `Expired Maami Rupees credit`,
+          expiresAt: null,
+          remainingAmount: null,
+        });
+      }
+      console.log(`[Maami Rupees] Expired ${expiredRows.length} credit(s) totalling \u20b9${(totalExpired / 100).toFixed(2)} for user ${userId}`);
     }
+  }
+
+  // Read current Maami Rupees balance (after any expiry sweep)
+  let maamiRupeesBalance = 0;
+  if (dbInstance) {
+    const [userBalance] = await dbInstance
+      .select({ maamiRupeesBalance: users.maamiRupeesBalance })
+      .from(users)
+      .where(eq(users.id, userId));
+    maamiRupeesBalance = userBalance?.maamiRupeesBalance || 0;
   }
 
   return {
     subscription,
     benefits,
     totalBenefitAmount,
+    eligibleItems: eligibleItemsList,
+    maamiRupeesBalance,
     complimentaryItemsUsedThisYear: undefined as number | undefined, // populated in getMySubscription
   };
 }
 
 export const partnerRouter = router({
   // Get Partner Programme info (public - for landing page)
+  // When programme_active = false, returns only the gate status — no pricing or details exposed
   getProgrammeInfo: publicProcedure.query(async () => {
     const config = await getConfigs([
       "founding_price_paise",
@@ -240,19 +361,52 @@ export const partnerRouter = router({
       "founding_slots_total",
       "programme_active",
       "complimentary_items_per_year",
-      "drink_discount_percent",
       "workshop_discount_percent",
+      "gst_rate_percent",
     ]);
+    const isActive = config.programme_active === "true";
 
+    // Gate check: if programme is not active, return minimal response
+    if (!isActive) {
+      return {
+        programmeActive: false,
+        foundingPrice: 0,
+        regularPrice: 0,
+        foundingBasePrice: 0,
+        regularBasePrice: 0,
+        gstRatePercent: 0,
+        foundingGstAmount: 0,
+        regularGstAmount: 0,
+        foundingSlotsRemaining: 0,
+        foundingSlotsTotal: 0,
+        complimentaryItemsPerYear: 0,
+        workshopDiscountPercent: 0,
+        maamiRupeesRebatePct: 0,
+      };
+    }
+
+    const foundingTotal = parseInt(config.founding_price_paise || "388800"); // Total incl. GST
+    const regularTotal = parseInt(config.regular_price_paise || "450000"); // Total incl. GST
+    const gstRate = parseInt(config.gst_rate_percent || "18");
+    // Back-calculate base from GST-inclusive amount: base = total / (1 + rate/100)
+    const foundingBase = Math.round(foundingTotal / (1 + gstRate / 100));
+    const regularBase = Math.round(regularTotal / (1 + gstRate / 100));
+    const foundingGst = foundingTotal - foundingBase;
+    const regularGst = regularTotal - regularBase;
     return {
-      foundingPrice: parseInt(config.founding_price_paise || "250000"),
-      regularPrice: parseInt(config.regular_price_paise || "350000"),
-      foundingSlotsRemaining: parseInt(config.founding_slots_remaining || "50"),
-      foundingSlotsTotal: parseInt(config.founding_slots_total || "50"),
-      programmeActive: config.programme_active === "true",
-      complimentaryItemsPerYear: parseInt(config.complimentary_items_per_year || "25"),
-      drinkDiscountPercent: parseInt(config.drink_discount_percent || "5"),
+      foundingPrice: foundingTotal, // Total incl. GST (₹3,888)
+      regularPrice: regularTotal, // Total incl. GST (₹4,500)
+      foundingBasePrice: foundingBase, // Net of GST (₹3,295)
+      regularBasePrice: regularBase, // Net of GST (₹3,814)
+      gstRatePercent: gstRate,
+      foundingGstAmount: foundingGst,
+      regularGstAmount: regularGst,
+      foundingSlotsRemaining: parseInt(config.founding_slots_remaining || "49"),
+      foundingSlotsTotal: parseInt(config.founding_slots_total || "49"),
+      programmeActive: true,
+      complimentaryItemsPerYear: parseInt(config.complimentary_items_per_year || "15"),
       workshopDiscountPercent: parseInt(config.workshop_discount_percent || "10"),
+      maamiRupeesRebatePct: 2,
     };
   }),
 
@@ -315,7 +469,7 @@ export const partnerRouter = router({
         )
       );
     const complimentaryItemsUsed = Number(complimentaryUsed[0]?.count) || 0;
-    const maxComplimentaryPerYear = parseInt((await getConfig("complimentary_items_per_year")) || "25");
+    const maxComplimentaryPerYear = parseInt((await getConfig("complimentary_items_per_year")) || "15");
 
     // Get total lifetime savings
     const allBenefits = await dbInstance
@@ -326,6 +480,15 @@ export const partnerRouter = router({
       .where(eq(partnerBenefitsLog.userId, ctx.user.id));
 
     const lifetimeSavings = Number(allBenefits[0]?.total) || 0;
+
+    // Get Maami Money balance and expiry
+    const [userRecord] = await dbInstance
+      .select({
+        storeCredit: users.storeCredit,
+        storeCreditExpiresAt: users.storeCreditExpiresAt,
+      })
+      .from(users)
+      .where(eq(users.id, ctx.user.id));
 
     return {
       ...sub,
@@ -340,6 +503,10 @@ export const partnerRouter = router({
         lifetimeSavings,
         complimentaryItemsUsed,
         maxComplimentaryPerYear,
+      },
+      maamiMoney: {
+        balance: userRecord?.storeCredit || 0,
+        expiresAt: userRecord?.storeCreditExpiresAt || null,
       },
     };
   }),
@@ -358,10 +525,11 @@ export const partnerRouter = router({
             quantity: z.number(),
           })
         ),
+        overrideProductId: z.number().optional(),
       })
     )
     .query(async ({ ctx, input }) => {
-      return calculatePartnerBenefits(ctx.user.id, input.outletId, input.items);
+      return calculatePartnerBenefits(ctx.user.id, input.outletId, input.items, input.overrideProductId);
     }),
 
   // Subscribe to Partner Programme
@@ -408,12 +576,15 @@ export const partnerRouter = router({
         }
       }
 
-      // Get price
+      // Get price (already GST-inclusive in partner_config)
       const priceKey =
         input.tier === "founding"
           ? "founding_price_paise"
           : "regular_price_paise";
-      const pricePaise = parseInt((await getConfig(priceKey)) || "250000");
+      const pricePaise = parseInt((await getConfig(priceKey)) || "388800"); // Already incl. GST
+      const gstRate = parseInt((await getConfig("gst_rate_percent")) || "18");
+      const basePricePaise = Math.round(pricePaise / (1 + gstRate / 100));
+      const gstAmountPaise = pricePaise - basePricePaise;
 
       // Generate referral code
       let referralCode = generateReferralCode(ctx.user.name || "");
@@ -480,10 +651,10 @@ export const partnerRouter = router({
             referredSubscriptionId: subscriptionId,
             referralCode: input.referralCode,
             referrerRewardAmount: parseInt(
-              config.referrer_reward_paise || "25000"
+              config.referrer_reward_paise || "20000"
             ),
             referredRewardAmount: parseInt(
-              config.referred_reward_paise || "10000"
+              config.referred_reward_paise || "20000"
             ),
             status: "registered",
           });
@@ -497,6 +668,9 @@ export const partnerRouter = router({
         razorpayKeyId: getRazorpayKeyId(),
         amount: razorpayOrder.amount,
         currency: razorpayOrder.currency,
+        baseAmount: basePricePaise,
+        gstAmount: gstAmountPaise,
+        gstRate,
         description: `Maami Partner - ${input.tier === "founding" ? "Founding" : "Regular"} (Annual)`,
       };
     }),
@@ -596,12 +770,15 @@ export const partnerRouter = router({
             })
             .where(eq(partnerReferrals.id, referral.id));
 
-          // Credit Maami Rupees to referrer (store credit)
+          // Credit Maami Money to referrer (store credit, expires in 12 months)
           if (referral.referrerRewardAmount > 0) {
+            const expiryDate = new Date();
+            expiryDate.setMonth(expiryDate.getMonth() + 12);
             await dbInstance
               .update(users)
               .set({
                 storeCredit: sql`${users.storeCredit} + ${referral.referrerRewardAmount}`,
+                storeCreditExpiresAt: expiryDate,
               })
               .where(eq(users.id, referral.referrerUserId));
 
@@ -614,12 +791,15 @@ export const partnerRouter = router({
               .where(eq(partnerReferrals.id, referral.id));
           }
 
-          // Credit Maami Rupees to referred (new partner)
+          // Credit Maami Money to referred new partner (store credit, expires in 12 months)
           if (referral.referredRewardAmount > 0) {
+            const referredExpiryDate = new Date();
+            referredExpiryDate.setMonth(referredExpiryDate.getMonth() + 12);
             await dbInstance
               .update(users)
               .set({
                 storeCredit: sql`${users.storeCredit} + ${referral.referredRewardAmount}`,
+                storeCreditExpiresAt: referredExpiryDate,
               })
               .where(eq(users.id, ctx.user.id));
 
@@ -681,8 +861,8 @@ export const partnerRouter = router({
 
     return {
       referralCode: sub.referralCode,
-      referrerReward: parseInt(config.referrer_reward_paise || "25000"),
-      referredReward: parseInt(config.referred_reward_paise || "10000"),
+      referrerReward: parseInt(config.referrer_reward_paise || "20000"),
+      referredReward: parseInt(config.referred_reward_paise || "20000"),
     };
   }),
 
@@ -927,6 +1107,180 @@ export const partnerRouter = router({
         .where(eq(partnerSubscriptions.id, input.subscriptionId));
 
       return { success: true };
+
+    }),
+
+  // Early renewal - renew membership before expiry
+  renewEarly: protectedProcedure
+    .input(
+      z.object({
+        tier: z.enum(["founding", "regular"]).optional(), // If not provided, uses current tier
+      }).optional()
+    )
+    .mutation(async ({ ctx, input }) => {
+      const dbInstance = await getDb();
+      if (!dbInstance)
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+
+      // Must have an active subscription to renew early
+      const existingSub = await getActivePartnerSubscription(ctx.user.id);
+      if (!existingSub) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "You don't have an active subscription to renew.",
+        });
+      }
+
+      // Use current tier unless upgrading
+      const tier = input?.tier || existingSub.tier;
+
+      // Check founding slots if founding tier
+      if (tier === "founding" && existingSub.tier !== "founding") {
+        const remaining = parseInt(
+          (await getConfig("founding_slots_remaining")) || "0"
+        );
+        if (remaining <= 0) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "All Founding Partner slots have been taken.",
+          });
+        }
+      }
+
+      // Get price with GST
+      const priceKey =
+        tier === "founding"
+          ? "founding_price_paise"
+          : "regular_price_paise";
+      const basePricePaise = parseInt((await getConfig(priceKey)) || "400000");
+      const gstRate = parseInt((await getConfig("gst_rate_percent")) || "18");
+      const gstAmountPaise = Math.round(basePricePaise * gstRate / 100);
+      const pricePaise = basePricePaise + gstAmountPaise;
+
+      // Create Razorpay order for renewal payment
+      const razorpayOrder = await createRazorpayOrder({
+        amount: pricePaise,
+        currency: "INR",
+        receipt: `PARTNER-RENEW-${ctx.user.id}-${Date.now()}`,
+        notes: {
+          userId: String(ctx.user.id),
+          tier,
+          type: "partner_renewal",
+          existingSubscriptionId: String(existingSub.id),
+        },
+      });
+
+      return {
+        existingSubscriptionId: existingSub.id,
+        razorpayOrderId: razorpayOrder.id,
+        razorpayKeyId: getRazorpayKeyId(),
+        amount: razorpayOrder.amount,
+        currency: razorpayOrder.currency,
+        baseAmount: basePricePaise,
+        gstAmount: gstAmountPaise,
+        gstRate,
+        tier,
+        description: `Maami Partner Renewal - ${tier === "founding" ? "Founding" : "Regular"} (Annual)`,
+      };
+    }),
+
+  // Verify renewal payment and extend subscription
+  verifyRenewalPayment: protectedProcedure
+    .input(
+      z.object({
+        existingSubscriptionId: z.number(),
+        razorpayOrderId: z.string(),
+        razorpayPaymentId: z.string(),
+        razorpaySignature: z.string(),
+        tier: z.enum(["founding", "regular"]),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const dbInstance = await getDb();
+      if (!dbInstance)
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+
+      // Verify signature
+      const isValid = verifyPaymentSignature(
+        input.razorpayOrderId,
+        input.razorpayPaymentId,
+        input.razorpaySignature
+      );
+
+      if (!isValid) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Payment verification failed",
+        });
+      }
+
+      // Get existing subscription
+      const [existingSub] = await dbInstance
+        .select()
+        .from(partnerSubscriptions)
+        .where(
+          and(
+            eq(partnerSubscriptions.id, input.existingSubscriptionId),
+            eq(partnerSubscriptions.userId, ctx.user.id)
+          )
+        );
+
+      if (!existingSub) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Subscription not found",
+        });
+      }
+
+      // Extend from renewal date (today), NOT from original expiry
+      const now = new Date();
+      const newEndDate = new Date(now);
+      newEndDate.setFullYear(newEndDate.getFullYear() + 1);
+
+      // Get price for recording
+      const priceKey =
+        input.tier === "founding"
+          ? "founding_price_paise"
+          : "regular_price_paise";
+      const basePricePaise = parseInt((await getConfig(priceKey)) || "400000");
+      const gstRate = parseInt((await getConfig("gst_rate_percent")) || "18");
+      const gstAmountPaise = Math.round(basePricePaise * gstRate / 100);
+      const pricePaise = basePricePaise + gstAmountPaise;
+
+      // Update the existing subscription with new dates and reset
+      await dbInstance
+        .update(partnerSubscriptions)
+        .set({
+          status: "active",
+          tier: input.tier,
+          startDate: now, // Reset start to renewal date
+          endDate: newEndDate, // 12 months from renewal date
+          amountPaid: pricePaise,
+          razorpayPaymentId: input.razorpayPaymentId,
+          razorpaySubscriptionId: input.razorpayOrderId,
+        })
+        .where(eq(partnerSubscriptions.id, input.existingSubscriptionId));
+
+      // NOTE: Stamps carry over — do NOT reset stamps
+      // Complimentary item quota resets because we reset startDate,
+      // and the benefits log query uses subscriptionId + date range from startDate
+
+      // Notify owner
+      try {
+        const tierLabel = input.tier === "founding" ? "Founding" : "Regular";
+        await notifyOwner({
+          title: `Partner Renewed: ${ctx.user.name || "Unknown"}`,
+          content: `${ctx.user.name} renewed their ${tierLabel} Partner subscription (\u20b9${pricePaise / 100}). New expiry: ${newEndDate.toLocaleDateString('en-IN')}.`,
+        });
+      } catch (e) {
+        console.error("Failed to notify owner about renewal:", e);
+      }
+
+      return {
+        success: true,
+        newEndDate,
+        tier: input.tier,
+      };
     }),
 });
 

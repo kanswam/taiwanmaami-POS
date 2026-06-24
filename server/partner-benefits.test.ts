@@ -3,73 +3,90 @@ import { describe, it, expect } from "vitest";
 /**
  * Partner Programme Benefits — unit tests
  *
- * UPDATED RULES (Apr 19):
- * 1. Complimentary food item at T. Nagar — NO minimum purchase required
- *    Eligible: Biang Biang, Dan Dan, Cong You Bing, Egg Cong You Bing, any Brioche
- *    Limit: 25 per subscription year, 1 per visit
- * 2. 5% off all drinks in every partner order
+ * UPDATED RULES (Jun 2026 — consolidated brief):
+ * 1. Complimentary food/drink item at all outlets — NO minimum purchase required
+ *    Eligible at T.Nagar/Anna Nagar: Any beverage up to ₹500 + eligible food items
+ *    Eligible at Palladium: Any beverage up to ₹500 only
+ *    Mochi items are EXCLUDED (hardcoded)
+ *    Limit: 15 per subscription year, 1 per calendar day (IST)
+ * 2. 2% Maami Rupees rebate on every order (earned on completion)
  * 3. 10% off workshops
- * 4. Referral programme REMOVED
- * 5. Two tiers: Founding (₹2,500, first 50) and Regular (₹3,500)
+ * 4. Referral programme: ₹200 each (referrer + referee)
+ * 5. Two tiers: Founding (₹3,888 incl GST, first 49) and Regular (₹4,500 incl GST)
  */
 
-// Eligible complimentary item slugs at T. Nagar
-const ELIGIBLE_COMPLIMENTARY_SLUGS = [
-  "biang-biang-noodles",
-  "dan-dan-noodles",
-  "cong-you-bing",
-  "egg-cong-you-bing",
-  // Any brioche variant
+// Eligible complimentary item slugs at T. Nagar / Anna Nagar
+const ELIGIBLE_FOOD_SUBCATEGORIES = [
+  "saucy-noodles",
+  "flat-bread",
+  "pillow-brioche",
+  "noodles",
 ];
+const ELIGIBLE_SWEET_SUBCATEGORIES = ["sweet-pillow-brioche"];
 
-function isEligibleComplimentaryItem(slug: string): boolean {
-  return ELIGIBLE_COMPLIMENTARY_SLUGS.includes(slug) || slug.includes("brioche");
+function isEligibleFoodItem(subcategorySlug: string): boolean {
+  return ELIGIBLE_FOOD_SUBCATEGORIES.includes(subcategorySlug) || ELIGIBLE_SWEET_SUBCATEGORIES.includes(subcategorySlug);
+}
+
+function isMochiExcluded(productName: string, categorySlug: string, subcategorySlug: string): boolean {
+  // Hardcoded mochi exclusion: category is 'mochis' AND subcategory is NOT 'sweet-pillow-brioche'
+  if (categorySlug === 'mochis' && subcategorySlug !== 'sweet-pillow-brioche') return true;
+  // Name-based exclusion
+  if (/mochi/i.test(productName)) return true;
+  return false;
 }
 
 // Replicate the new benefit calculation rules as pure functions
 function calculateComplimentaryItem(
   outletId: number,
   tnagarOutletId: number,
-  items: Array<{ productId: number; productName: string; slug: string; lineTotal: number; quantity: number }>,
+  annangarOutletId: number,
+  palladiumOutletId: number,
+  items: Array<{ productId: number; productName: string; subcategorySlug: string; categorySlug: string; lineTotal: number; quantity: number; isDrink: boolean }>,
   complimentaryUsedThisYear: number,
-  maxPerYear: number
+  maxPerYear: number,
+  capPaise: number = 50000
 ) {
-  if (outletId !== tnagarOutletId) return null;
+  const isEligibleOutlet = (outletId === tnagarOutletId || outletId === annangarOutletId || outletId === palladiumOutletId);
+  if (!isEligibleOutlet) return null;
   if (complimentaryUsedThisYear >= maxPerYear) return null;
 
-  // Find the most expensive eligible item
-  const eligibleItems = items.filter((item) => isEligibleComplimentaryItem(item.slug));
+  // Filter eligible items based on outlet
+  let eligibleItems;
+  if (outletId === palladiumOutletId) {
+    // Palladium: drinks only (up to cap)
+    eligibleItems = items.filter(item => item.isDrink && !isMochiExcluded(item.productName, item.categorySlug, item.subcategorySlug));
+  } else {
+    // T.Nagar / Anna Nagar: drinks + eligible food
+    eligibleItems = items.filter(item => {
+      if (isMochiExcluded(item.productName, item.categorySlug, item.subcategorySlug)) return false;
+      if (item.isDrink) return true;
+      return isEligibleFoodItem(item.subcategorySlug);
+    });
+  }
+
   if (eligibleItems.length === 0) return null;
 
+  // Select highest-priced eligible item (capped at ₹500)
   const mostExpensive = eligibleItems.reduce((max, item) => {
     const unitPrice = Math.round(item.lineTotal / item.quantity);
     const maxUnitPrice = Math.round(max.lineTotal / max.quantity);
     return unitPrice > maxUnitPrice ? item : max;
   }, eligibleItems[0]);
 
-  const freeAmount = Math.round(mostExpensive.lineTotal / mostExpensive.quantity);
+  const unitPrice = Math.round(mostExpensive.lineTotal / mostExpensive.quantity);
+  const freeAmount = Math.min(unitPrice, capPaise);
+
   return {
     type: "complimentary_item" as const,
     amount: freeAmount,
     itemName: mostExpensive.productName,
+    itemOriginalPrice: unitPrice,
   };
 }
 
-function calculateDrinkDiscount(
-  items: Array<{ productId: number; productName: string; lineTotal: number; quantity: number; isDrink: boolean }>,
-  discountPercent: number
-) {
-  const drinkItems = items.filter((item) => item.isDrink);
-  if (drinkItems.length === 0) return [];
-
-  return drinkItems.map((item) => {
-    const discountAmount = Math.round((item.lineTotal * discountPercent) / 100);
-    return {
-      type: "drink_discount" as const,
-      amount: discountAmount,
-      itemName: item.productName,
-    };
-  });
+function calculateMaamiRupeesEarned(orderTotal: number, rebatePct: number = 2): number {
+  return Math.round(orderTotal * rebatePct / 100);
 }
 
 function calculateStamps(orderTotal: number): number {
@@ -78,220 +95,147 @@ function calculateStamps(orderTotal: number): number {
 
 // Constants
 const TNAGAR_OUTLET = 2;
+const ANNANAGAR_OUTLET = 30001;
 const PALLADIUM_OUTLET = 1;
-const MAX_COMPLIMENTARY_PER_YEAR = 25;
+const MAX_COMPLIMENTARY_PER_YEAR = 15;
+const CAP_PAISE = 50000; // ₹500
 
-describe("Partner Programme: Complimentary Food Item at T. Nagar", () => {
-  it("gives complimentary Biang Biang at T. Nagar — no minimum purchase", () => {
-    const result = calculateComplimentaryItem(TNAGAR_OUTLET, TNAGAR_OUTLET, [
-      { productId: 100, productName: "Biang Biang Noodles", slug: "biang-biang-noodles", lineTotal: 41500, quantity: 1 },
-    ], 0, MAX_COMPLIMENTARY_PER_YEAR);
+describe("Partner Programme: Complimentary Item Selection", () => {
+  it("selects highest-priced eligible food item at T.Nagar", () => {
+    const result = calculateComplimentaryItem(TNAGAR_OUTLET, TNAGAR_OUTLET, ANNANAGAR_OUTLET, PALLADIUM_OUTLET, [
+      { productId: 100, productName: "Biang Biang Noodles", subcategorySlug: "saucy-noodles", categorySlug: "food", lineTotal: 41500, quantity: 1, isDrink: false },
+      { productId: 101, productName: "Cong You Bing", subcategorySlug: "flat-bread", categorySlug: "food", lineTotal: 25000, quantity: 1, isDrink: false },
+    ], 0, MAX_COMPLIMENTARY_PER_YEAR, CAP_PAISE);
     expect(result).not.toBeNull();
-    expect(result!.type).toBe("complimentary_item");
-    expect(result!.amount).toBe(41500);
     expect(result!.itemName).toBe("Biang Biang Noodles");
-  });
-
-  it("gives complimentary Dan Dan Noodles at T. Nagar", () => {
-    const result = calculateComplimentaryItem(TNAGAR_OUTLET, TNAGAR_OUTLET, [
-      { productId: 101, productName: "Dan Dan Noodles", slug: "dan-dan-noodles", lineTotal: 39500, quantity: 1 },
-    ], 0, MAX_COMPLIMENTARY_PER_YEAR);
-    expect(result).not.toBeNull();
-    expect(result!.amount).toBe(39500);
-  });
-
-  it("gives complimentary Cong You Bing at T. Nagar", () => {
-    const result = calculateComplimentaryItem(TNAGAR_OUTLET, TNAGAR_OUTLET, [
-      { productId: 102, productName: "Cong You Bing", slug: "cong-you-bing", lineTotal: 24500, quantity: 1 },
-    ], 0, MAX_COMPLIMENTARY_PER_YEAR);
-    expect(result).not.toBeNull();
-    expect(result!.amount).toBe(24500);
-  });
-
-  it("gives complimentary Egg Cong You Bing at T. Nagar", () => {
-    const result = calculateComplimentaryItem(TNAGAR_OUTLET, TNAGAR_OUTLET, [
-      { productId: 103, productName: "Egg Cong You Bing", slug: "egg-cong-you-bing", lineTotal: 29500, quantity: 1 },
-    ], 0, MAX_COMPLIMENTARY_PER_YEAR);
-    expect(result).not.toBeNull();
-    expect(result!.amount).toBe(29500);
-  });
-
-  it("gives complimentary Brioche variant at T. Nagar", () => {
-    const result = calculateComplimentaryItem(TNAGAR_OUTLET, TNAGAR_OUTLET, [
-      { productId: 104, productName: "Matcha Brioche", slug: "matcha-brioche", lineTotal: 18500, quantity: 1 },
-    ], 0, MAX_COMPLIMENTARY_PER_YEAR);
-    expect(result).not.toBeNull();
-    expect(result!.amount).toBe(18500);
-  });
-
-  it("picks the most expensive eligible item when multiple are in the order", () => {
-    const result = calculateComplimentaryItem(TNAGAR_OUTLET, TNAGAR_OUTLET, [
-      { productId: 100, productName: "Biang Biang Noodles", slug: "biang-biang-noodles", lineTotal: 41500, quantity: 1 },
-      { productId: 102, productName: "Cong You Bing", slug: "cong-you-bing", lineTotal: 24500, quantity: 1 },
-    ], 0, MAX_COMPLIMENTARY_PER_YEAR);
-    expect(result).not.toBeNull();
-    expect(result!.amount).toBe(41500);
-    expect(result!.itemName).toBe("Biang Biang Noodles");
-  });
-
-  it("does NOT give complimentary item at Palladium", () => {
-    const result = calculateComplimentaryItem(PALLADIUM_OUTLET, TNAGAR_OUTLET, [
-      { productId: 100, productName: "Biang Biang Noodles", slug: "biang-biang-noodles", lineTotal: 41500, quantity: 1 },
-    ], 0, MAX_COMPLIMENTARY_PER_YEAR);
-    expect(result).toBeNull();
-  });
-
-  it("does NOT give complimentary item if no eligible items in order", () => {
-    const result = calculateComplimentaryItem(TNAGAR_OUTLET, TNAGAR_OUTLET, [
-      { productId: 200, productName: "Brown Sugar Milk Tea", slug: "brown-sugar-milk-tea", lineTotal: 35000, quantity: 1 },
-    ], 0, MAX_COMPLIMENTARY_PER_YEAR);
-    expect(result).toBeNull();
-  });
-
-  it("does NOT give complimentary item if yearly limit reached", () => {
-    const result = calculateComplimentaryItem(TNAGAR_OUTLET, TNAGAR_OUTLET, [
-      { productId: 100, productName: "Biang Biang Noodles", slug: "biang-biang-noodles", lineTotal: 41500, quantity: 1 },
-    ], 25, MAX_COMPLIMENTARY_PER_YEAR);
-    expect(result).toBeNull();
-  });
-
-  it("gives complimentary item when at 24 out of 25 used", () => {
-    const result = calculateComplimentaryItem(TNAGAR_OUTLET, TNAGAR_OUTLET, [
-      { productId: 100, productName: "Biang Biang Noodles", slug: "biang-biang-noodles", lineTotal: 41500, quantity: 1 },
-    ], 24, MAX_COMPLIMENTARY_PER_YEAR);
-    expect(result).not.toBeNull();
     expect(result!.amount).toBe(41500);
   });
 
-  it("only gives 1 complimentary item even with qty=2", () => {
-    const result = calculateComplimentaryItem(TNAGAR_OUTLET, TNAGAR_OUTLET, [
-      { productId: 100, productName: "Biang Biang Noodles", slug: "biang-biang-noodles", lineTotal: 83000, quantity: 2 },
-    ], 0, MAX_COMPLIMENTARY_PER_YEAR);
+  it("caps free amount at ₹500", () => {
+    const result = calculateComplimentaryItem(TNAGAR_OUTLET, TNAGAR_OUTLET, ANNANAGAR_OUTLET, PALLADIUM_OUTLET, [
+      { productId: 100, productName: "Expensive Noodles", subcategorySlug: "saucy-noodles", categorySlug: "food", lineTotal: 65000, quantity: 1, isDrink: false },
+    ], 0, MAX_COMPLIMENTARY_PER_YEAR, CAP_PAISE);
+    expect(result).not.toBeNull();
+    expect(result!.amount).toBe(50000); // Capped at ₹500
+  });
+
+  it("returns null when yearly limit reached", () => {
+    const result = calculateComplimentaryItem(TNAGAR_OUTLET, TNAGAR_OUTLET, ANNANAGAR_OUTLET, PALLADIUM_OUTLET, [
+      { productId: 100, productName: "Biang Biang Noodles", subcategorySlug: "saucy-noodles", categorySlug: "food", lineTotal: 41500, quantity: 1, isDrink: false },
+    ], 15, MAX_COMPLIMENTARY_PER_YEAR, CAP_PAISE);
+    expect(result).toBeNull();
+  });
+
+  it("Palladium only allows drinks, not food", () => {
+    const result = calculateComplimentaryItem(PALLADIUM_OUTLET, TNAGAR_OUTLET, ANNANAGAR_OUTLET, PALLADIUM_OUTLET, [
+      { productId: 100, productName: "Biang Biang Noodles", subcategorySlug: "saucy-noodles", categorySlug: "food", lineTotal: 41500, quantity: 1, isDrink: false },
+    ], 0, MAX_COMPLIMENTARY_PER_YEAR, CAP_PAISE);
+    expect(result).toBeNull();
+  });
+
+  it("Palladium allows drinks", () => {
+    const result = calculateComplimentaryItem(PALLADIUM_OUTLET, TNAGAR_OUTLET, ANNANAGAR_OUTLET, PALLADIUM_OUTLET, [
+      { productId: 200, productName: "Brown Sugar Milk Tea", subcategorySlug: "iced-tea", categorySlug: "bubble-tea", lineTotal: 35000, quantity: 1, isDrink: true },
+    ], 0, MAX_COMPLIMENTARY_PER_YEAR, CAP_PAISE);
+    expect(result).not.toBeNull();
+    expect(result!.itemName).toBe("Brown Sugar Milk Tea");
+    expect(result!.amount).toBe(35000);
+  });
+
+  it("handles qty > 1 correctly (only 1 unit free)", () => {
+    const result = calculateComplimentaryItem(TNAGAR_OUTLET, TNAGAR_OUTLET, ANNANAGAR_OUTLET, PALLADIUM_OUTLET, [
+      { productId: 100, productName: "Biang Biang Noodles", subcategorySlug: "saucy-noodles", categorySlug: "food", lineTotal: 83000, quantity: 2, isDrink: false },
+    ], 0, MAX_COMPLIMENTARY_PER_YEAR, CAP_PAISE);
     expect(result).not.toBeNull();
     expect(result!.amount).toBe(41500); // Only 1 unit free
   });
+
+  it("returns null for non-eligible outlet", () => {
+    const result = calculateComplimentaryItem(999, TNAGAR_OUTLET, ANNANAGAR_OUTLET, PALLADIUM_OUTLET, [
+      { productId: 100, productName: "Biang Biang Noodles", subcategorySlug: "saucy-noodles", categorySlug: "food", lineTotal: 41500, quantity: 1, isDrink: false },
+    ], 0, MAX_COMPLIMENTARY_PER_YEAR, CAP_PAISE);
+    expect(result).toBeNull();
+  });
 });
 
-describe("Partner Programme: 5% Drink Discount", () => {
-  it("applies 5% discount to a single drink", () => {
-    const discounts = calculateDrinkDiscount([
-      { productId: 200, productName: "Brown Sugar Milk Tea", lineTotal: 35000, quantity: 1, isDrink: true },
-    ], 5);
-    expect(discounts).toHaveLength(1);
-    expect(discounts[0].type).toBe("drink_discount");
-    expect(discounts[0].amount).toBe(1750); // 5% of ₹350
+describe("Partner Programme: Mochi Exclusion", () => {
+  it("excludes items from mochis category", () => {
+    expect(isMochiExcluded("Taro Mochi", "mochis", "classic-mochi")).toBe(true);
   });
 
-  it("applies 5% discount to multiple drinks", () => {
-    const discounts = calculateDrinkDiscount([
-      { productId: 200, productName: "Brown Sugar Milk Tea", lineTotal: 35000, quantity: 1, isDrink: true },
-      { productId: 201, productName: "Matcha Latte", lineTotal: 45000, quantity: 1, isDrink: true },
-    ], 5);
-    expect(discounts).toHaveLength(2);
-    expect(discounts[0].amount).toBe(1750); // 5% of ₹350
-    expect(discounts[1].amount).toBe(2250); // 5% of ₹450
+  it("excludes items with 'mochi' in name regardless of category", () => {
+    expect(isMochiExcluded("Strawberry Mochi Ice Cream", "desserts", "ice-cream")).toBe(true);
   });
 
-  it("does NOT apply drink discount to food items", () => {
-    const discounts = calculateDrinkDiscount([
-      { productId: 100, productName: "Biang Biang Noodles", lineTotal: 41500, quantity: 1, isDrink: false },
-    ], 5);
-    expect(discounts).toHaveLength(0);
+  it("does NOT exclude sweet-pillow-brioche even though it's under mochis category", () => {
+    expect(isMochiExcluded("Nutella Brioche", "mochis", "sweet-pillow-brioche")).toBe(false);
   });
 
-  it("applies discount to drinks even when food items are present", () => {
-    const discounts = calculateDrinkDiscount([
-      { productId: 200, productName: "Brown Sugar Milk Tea", lineTotal: 35000, quantity: 1, isDrink: true },
-      { productId: 100, productName: "Biang Biang Noodles", lineTotal: 41500, quantity: 1, isDrink: false },
-    ], 5);
-    expect(discounts).toHaveLength(1);
-    expect(discounts[0].amount).toBe(1750);
+  it("does NOT exclude regular food items", () => {
+    expect(isMochiExcluded("Biang Biang Noodles", "food", "saucy-noodles")).toBe(false);
   });
 
-  it("returns empty array when no items", () => {
-    const discounts = calculateDrinkDiscount([], 5);
-    expect(discounts).toHaveLength(0);
-  });
-
-  it("handles qty > 1 correctly (discount on full line total)", () => {
-    const discounts = calculateDrinkDiscount([
-      { productId: 200, productName: "Brown Sugar Milk Tea", lineTotal: 70000, quantity: 2, isDrink: true },
-    ], 5);
-    expect(discounts).toHaveLength(1);
-    expect(discounts[0].amount).toBe(3500); // 5% of ₹700
+  it("mochi items are excluded from complimentary selection", () => {
+    const result = calculateComplimentaryItem(TNAGAR_OUTLET, TNAGAR_OUTLET, ANNANAGAR_OUTLET, PALLADIUM_OUTLET, [
+      { productId: 300, productName: "Taro Mochi", subcategorySlug: "classic-mochi", categorySlug: "mochis", lineTotal: 20000, quantity: 1, isDrink: false },
+    ], 0, MAX_COMPLIMENTARY_PER_YEAR, CAP_PAISE);
+    expect(result).toBeNull();
   });
 });
 
 describe("Partner Programme: Eligible Items Validation", () => {
-  it("biang-biang-noodles is eligible", () => {
-    expect(isEligibleComplimentaryItem("biang-biang-noodles")).toBe(true);
+  it("saucy-noodles subcategory is eligible", () => {
+    expect(isEligibleFoodItem("saucy-noodles")).toBe(true);
   });
 
-  it("dan-dan-noodles is eligible", () => {
-    expect(isEligibleComplimentaryItem("dan-dan-noodles")).toBe(true);
+  it("flat-bread subcategory is eligible", () => {
+    expect(isEligibleFoodItem("flat-bread")).toBe(true);
   });
 
-  it("cong-you-bing is eligible", () => {
-    expect(isEligibleComplimentaryItem("cong-you-bing")).toBe(true);
+  it("pillow-brioche subcategory is eligible", () => {
+    expect(isEligibleFoodItem("pillow-brioche")).toBe(true);
   });
 
-  it("egg-cong-you-bing is eligible", () => {
-    expect(isEligibleComplimentaryItem("egg-cong-you-bing")).toBe(true);
+  it("noodles subcategory is eligible", () => {
+    expect(isEligibleFoodItem("noodles")).toBe(true);
   });
 
-  it("any brioche variant is eligible", () => {
-    expect(isEligibleComplimentaryItem("matcha-brioche")).toBe(true);
-    expect(isEligibleComplimentaryItem("chocolate-brioche")).toBe(true);
-    expect(isEligibleComplimentaryItem("plain-brioche")).toBe(true);
+  it("sweet-pillow-brioche subcategory is eligible", () => {
+    expect(isEligibleFoodItem("sweet-pillow-brioche")).toBe(true);
   });
 
-  it("drinks are NOT eligible for complimentary item", () => {
-    expect(isEligibleComplimentaryItem("brown-sugar-milk-tea")).toBe(false);
-    expect(isEligibleComplimentaryItem("matcha-latte")).toBe(false);
+  it("random subcategory is NOT eligible", () => {
+    expect(isEligibleFoodItem("classic-mochi")).toBe(false);
   });
 
-  it("non-eligible food items are NOT eligible", () => {
-    expect(isEligibleComplimentaryItem("yaki-onigiri")).toBe(false);
-    expect(isEligibleComplimentaryItem("mochi")).toBe(false);
+  it("drinks subcategory is NOT eligible as food", () => {
+    expect(isEligibleFoodItem("iced-tea")).toBe(false);
   });
 });
 
-describe("Partner Programme: Tier Pricing", () => {
-  it("founding tier is ₹2,500 (250000 paise)", () => {
-    const foundingPrice = 250000;
-    expect(foundingPrice).toBe(250000);
-    expect(foundingPrice / 100).toBe(2500);
+describe("Partner Programme: Maami Rupees Earning", () => {
+  it("earns 2% on a ₹500 order", () => {
+    expect(calculateMaamiRupeesEarned(50000)).toBe(1000); // ₹10
   });
 
-  it("regular tier is ₹3,500 (350000 paise)", () => {
-    const regularPrice = 350000;
-    expect(regularPrice).toBe(350000);
-    expect(regularPrice / 100).toBe(3500);
+  it("earns 2% on a ₹1000 order", () => {
+    expect(calculateMaamiRupeesEarned(100000)).toBe(2000); // ₹20
   });
 
-  it("founding slots limited to 50", () => {
-    const totalSlots = 50;
-    expect(totalSlots).toBe(50);
+  it("rounds correctly on odd amounts", () => {
+    expect(calculateMaamiRupeesEarned(33333)).toBe(667); // ₹6.67
+  });
+
+  it("earns 0 on zero-value orders", () => {
+    expect(calculateMaamiRupeesEarned(0)).toBe(0);
   });
 });
 
-describe("Partner Programme: Stamp Calculation on Paid Amount", () => {
-  it("stamps calculated on amount after complimentary item deducted", () => {
-    // Order: BB ₹415 (complimentary) + Tea ₹350 → paid = ₹350 + GST
-    const totalAmountAfterBenefit = 36750; // ₹367.50 with GST
-    const stamps = calculateStamps(totalAmountAfterBenefit);
-    expect(stamps).toBe(0); // below ₹450 threshold
-  });
-
-  it("stamps earned on full paid amount when no partner benefit", () => {
-    const stamps = calculateStamps(90000); // ₹900 paid
-    expect(stamps).toBe(2);
-  });
-
-  it("stamps correct when complimentary item reduces total", () => {
-    // Order ₹900 total, complimentary ₹415 → paid ₹485 + GST = ₹509.25
-    const stamps = calculateStamps(50925);
-    expect(stamps).toBe(1);
+describe("Partner Programme: Stamps", () => {
+  it("earns 1 stamp per ₹450 spent", () => {
+    expect(calculateStamps(45000)).toBe(1);
+    expect(calculateStamps(90000)).toBe(2);
+    expect(calculateStamps(44999)).toBe(0);
   });
 
   it("no stamps on zero-value orders", () => {
@@ -299,63 +243,41 @@ describe("Partner Programme: Stamp Calculation on Paid Amount", () => {
   });
 });
 
-describe("Partner Programme: Referral Programme REMOVED", () => {
-  it("valid benefit types do NOT include referral-related types", () => {
-    const validBenefitTypes = ["complimentary_item", "drink_discount", "workshop_discount"];
-    expect(validBenefitTypes).not.toContain("referral_reward");
-    expect(validBenefitTypes).not.toContain("tea_discount");
+describe("Partner Programme: Benefit Types", () => {
+  it("valid benefit types do NOT include drink_discount (removed)", () => {
+    const validBenefitTypes = ["complimentary_item", "workshop_discount"];
+    expect(validBenefitTypes).not.toContain("drink_discount");
   });
 
-  it("subscribe input no longer requires referralCode", () => {
-    const subscribeInput = { tier: "founding" as const };
-    expect(subscribeInput).not.toHaveProperty("referralCode");
+  it("valid benefit types include complimentary_item and workshop_discount", () => {
+    const validBenefitTypes = ["complimentary_item", "workshop_discount"];
+    expect(validBenefitTypes).toContain("complimentary_item");
+    expect(validBenefitTypes).toContain("workshop_discount");
   });
 });
 
-describe("Partner Programme: Combined Benefits Scenario", () => {
-  it("partner gets complimentary food + drink discount in same order", () => {
-    const complimentary = calculateComplimentaryItem(TNAGAR_OUTLET, TNAGAR_OUTLET, [
-      { productId: 100, productName: "Biang Biang Noodles", slug: "biang-biang-noodles", lineTotal: 41500, quantity: 1 },
-    ], 0, MAX_COMPLIMENTARY_PER_YEAR);
-
-    const drinkDiscounts = calculateDrinkDiscount([
-      { productId: 200, productName: "Brown Sugar Milk Tea", lineTotal: 35000, quantity: 1, isDrink: true },
-    ], 5);
-
-    expect(complimentary).not.toBeNull();
-    expect(complimentary!.amount).toBe(41500);
-    expect(drinkDiscounts).toHaveLength(1);
-    expect(drinkDiscounts[0].amount).toBe(1750);
-
-    // Total savings: ₹415 + ₹17.50 = ₹432.50
-    const totalSavings = complimentary!.amount + drinkDiscounts.reduce((sum, d) => sum + d.amount, 0);
-    expect(totalSavings).toBe(43250);
+describe("Partner Programme: Pricing & Tiers", () => {
+  it("founding tier is ₹3,888 incl GST", () => {
+    const foundingPricePaise = 388800;
+    expect(foundingPricePaise).toBe(388800);
   });
 
-  it("partner gets only drink discount when no eligible food in order", () => {
-    const complimentary = calculateComplimentaryItem(TNAGAR_OUTLET, TNAGAR_OUTLET, [
-      { productId: 200, productName: "Brown Sugar Milk Tea", slug: "brown-sugar-milk-tea", lineTotal: 35000, quantity: 1 },
-    ], 0, MAX_COMPLIMENTARY_PER_YEAR);
-
-    const drinkDiscounts = calculateDrinkDiscount([
-      { productId: 200, productName: "Brown Sugar Milk Tea", lineTotal: 35000, quantity: 1, isDrink: true },
-    ], 5);
-
-    expect(complimentary).toBeNull();
-    expect(drinkDiscounts).toHaveLength(1);
-    expect(drinkDiscounts[0].amount).toBe(1750);
+  it("regular tier is ₹4,500 incl GST", () => {
+    const regularPricePaise = 450000;
+    expect(regularPricePaise).toBe(450000);
   });
 
-  it("partner gets only complimentary food when no drinks in order", () => {
-    const complimentary = calculateComplimentaryItem(TNAGAR_OUTLET, TNAGAR_OUTLET, [
-      { productId: 100, productName: "Biang Biang Noodles", slug: "biang-biang-noodles", lineTotal: 41500, quantity: 1 },
-    ], 0, MAX_COMPLIMENTARY_PER_YEAR);
+  it("founding slots total is 49", () => {
+    const foundingSlotsTotal = 49;
+    expect(foundingSlotsTotal).toBe(49);
+  });
 
-    const drinkDiscounts = calculateDrinkDiscount([
-      { productId: 100, productName: "Biang Biang Noodles", lineTotal: 41500, quantity: 1, isDrink: false },
-    ], 5);
-
-    expect(complimentary).not.toBeNull();
-    expect(drinkDiscounts).toHaveLength(0);
+  it("GST back-calculation: founding base = 3888 / 1.18", () => {
+    const foundingTotal = 388800;
+    const gstRate = 18;
+    const foundingBase = Math.round(foundingTotal / (1 + gstRate / 100));
+    const foundingGst = foundingTotal - foundingBase;
+    expect(foundingBase).toBe(329492); // ₹3,294.92
+    expect(foundingGst).toBe(59308); // ₹593.08
   });
 });

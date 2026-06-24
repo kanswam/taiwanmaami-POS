@@ -18,7 +18,6 @@ import {
   Ban,
   RefreshCw,
   UtensilsCrossed,
-  CupSoda,
   Star,
 } from 'lucide-react';
 
@@ -84,7 +83,6 @@ export default function AdminPartners() {
     { key: 'founding_slots_remaining', label: 'Founding Slots Remaining', type: 'number' },
     { key: 'founding_slots_total', label: 'Founding Slots Total', type: 'number' },
     { key: 'complimentary_items_per_year', label: 'Complimentary Items / Year', type: 'number' },
-    { key: 'drink_discount_percent', label: 'Drink Discount %', type: 'number' },
     { key: 'workshop_discount_percent', label: 'Workshop Discount %', type: 'number' },
   ] : [];
 
@@ -169,19 +167,11 @@ export default function AdminPartners() {
               <div>
                 <p className="font-medium text-sm">Complimentary Food Item</p>
                 <p className="text-xs text-muted-foreground mt-1">
-                  1 per visit at T. Nagar. {stats?.config?.complimentary_items_per_year || '25'}/year limit. No min purchase.
+                  1 per visit, up to ₹500. All outlets ({stats?.config?.complimentary_items_per_year || '24'}/year). Palladium: drinks only.
                 </p>
               </div>
             </div>
-            <div className="flex items-start gap-3 p-4 rounded-xl bg-muted/50">
-              <CupSoda className="w-5 h-5 text-[#bd302c] mt-0.5 shrink-0" />
-              <div>
-                <p className="font-medium text-sm">{stats?.config?.drink_discount_percent || '5'}% Off All Drinks</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Applied to every drink in every partner order.
-                </p>
-              </div>
-            </div>
+
             <div className="flex items-start gap-3 p-4 rounded-xl bg-muted/50">
               <Star className="w-5 h-5 text-[#bd302c] mt-0.5 shrink-0" />
               <div>

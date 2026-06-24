@@ -30,6 +30,7 @@ import {
   ShoppingBag,
   ChevronRight,
   MapPin,
+  Wallet,
 } from 'lucide-react';
 
 // Declare Razorpay types
@@ -201,13 +202,20 @@ export default function Partner() {
   }
 
   const info = programmeInfo!;
-  const foundingPrice = info?.foundingPrice || 250000;
-  const regularPrice = info?.regularPrice || 350000;
+  const foundingPrice = info?.foundingPrice || 388800;
+  const regularPrice = info?.regularPrice || 450000;
+  const foundingBasePrice = info?.foundingBasePrice || 329492;
+  const regularBasePrice = info?.regularBasePrice || 381356;
+  const gstRatePercent = info?.gstRatePercent || 18;
+  const foundingGstAmount = info?.foundingGstAmount || 59308;
+  const regularGstAmount = info?.regularGstAmount || 68644;
   const slotsRemaining = info?.foundingSlotsRemaining || 0;
-  const slotsTotal = info?.foundingSlotsTotal || 100;
-  const complimentaryPerYear = info?.complimentaryItemsPerYear || 25;
-  const drinkDiscount = info?.drinkDiscountPercent || 5;
+  const slotsTotal = info?.foundingSlotsTotal || 49;
+  const complimentaryPerYear = info?.complimentaryItemsPerYear || 15;
+  // drink_discount removed from programme — variable kept as 0 for legacy page sections until Section 4 rewrite
+  const drinkDiscount = 0;
   const workshopDiscount = info?.workshopDiscountPercent || 10;
+  const maamiRupeesRebatePct = (info as any)?.maamiRupeesRebatePct || 2;
 
   // Welcome screen after successful payment
   if (showWelcome && welcomeData) {
@@ -251,8 +259,8 @@ export default function Partner() {
                   <UtensilsCrossed className="w-5 h-5 text-[#f0a080]" />
                 </div>
                 <div>
-                  <p className="font-semibold">Complimentary Food Item</p>
-                  <p className="text-sm text-gray-400">Choose from Biang Biang, Dan Dan Noodles, Cong You Bing, Egg Cong You Bing, or any Brioche — on us at T. Nagar, every visit! ({complimentaryPerYear} per year)</p>
+                  <p className="font-semibold">Complimentary Item (up to ₹500)</p>
+                  <p className="text-sm text-gray-400">T. Nagar & Anna Nagar: Any drink or food item (Biang Biang, Dan Dan, Cong You Bing, Brioche). Palladium: Any drink. One per visit, {complimentaryPerYear}/year.</p>
                 </div>
               </div>
               <div className="flex items-start gap-4 p-4 rounded-xl bg-white/5">
@@ -360,13 +368,13 @@ export default function Partner() {
               <div className="w-14 h-14 rounded-2xl bg-[#bd302c]/10 flex items-center justify-center mb-5">
                 <UtensilsCrossed className="w-7 h-7 text-[#bd302c]" />
               </div>
-              <h3 className="text-xl font-bold mb-3">Complimentary Food Item</h3>
+              <h3 className="text-xl font-bold mb-3">Complimentary Item (up to ₹500)</h3>
               <p className="text-muted-foreground leading-relaxed">
-                Choose from Biang Biang Noodles, Dan Dan Noodles, Cong You Bing, Egg Cong You Bing, or any Brioche — 
-                complimentary at T. Nagar, every visit. No minimum purchase needed.
+                T. Nagar & Anna Nagar: Choose any drink or food item (Biang Biang, Dan Dan, Cong You Bing, Brioche).
+                Palladium: Any bubble tea or coffee. One item per visit, no minimum purchase.
               </p>
               <p className="mt-3 text-sm font-medium text-[#bd302c]">
-                {complimentaryPerYear} items per year · T. Nagar
+                {complimentaryPerYear} items per year · All outlets
               </p>
             </Card>
 
@@ -412,6 +420,21 @@ export default function Partner() {
               </p>
               <p className="mt-3 text-sm font-medium text-[#bd302c]">
                 Both outlets
+              </p>
+            </Card>
+
+            {/* Maami Money Referral */}
+            <Card className="p-8 border-2 border-[#bd302c]/20 bg-white hover:shadow-lg transition-shadow">
+              <div className="w-14 h-14 rounded-2xl bg-[#bd302c]/10 flex items-center justify-center mb-5">
+                <Wallet className="w-7 h-7 text-[#bd302c]" />
+              </div>
+              <h3 className="text-xl font-bold mb-3">Maami Money Referrals</h3>
+              <p className="text-muted-foreground leading-relaxed">
+                Refer a friend to become a partner and you both get ₹250 Maami Money (store credit). 
+                Use it on any future order. Valid for 12 months.
+              </p>
+              <p className="mt-3 text-sm font-medium text-[#bd302c]">
+                ₹250 for you + ₹250 for your friend
               </p>
             </Card>
 
@@ -465,7 +488,7 @@ export default function Partner() {
             <div>
               <div className="flex items-center gap-3 mb-8 justify-center">
                 <MapPin className="w-5 h-5 text-[#bd302c]" />
-                <h3 className="text-xl font-bold text-foreground">At T. Nagar (Moutan)</h3>
+                <h3 className="text-xl font-bold text-foreground">At T. Nagar</h3>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr_auto_1fr] items-center gap-4 md:gap-2">
                 {/* Step 1 */}
@@ -484,7 +507,7 @@ export default function Partner() {
                   <div className="w-12 h-12 rounded-full bg-[#bd302c] text-white flex items-center justify-center mx-auto mb-4 text-lg font-bold">2</div>
                   <UtensilsCrossed className="w-8 h-8 text-[#bd302c] mx-auto mb-3" />
                   <p className="font-semibold text-foreground mb-1">Pick your item</p>
-                  <p className="text-sm text-muted-foreground">Biang Biang, Dan Dan, Cong You Bing, Brioche — your choice!</p>
+                  <p className="text-sm text-muted-foreground">Any drink or food item up to ₹500 (Palladium: drinks only)</p>
                 </div>
                 {/* Arrow */}
                 <div className="hidden md:flex items-center justify-center">
@@ -621,10 +644,12 @@ export default function Partner() {
                 <Crown className="w-10 h-10 text-[#d4a574] mx-auto mb-3" />
                 <h3 className="text-2xl font-bold mb-1">Founding Partner</h3>
                 <p className="text-muted-foreground text-sm mb-6">Early supporter pricing</p>
-                <div className="mb-6">
-                  <span className="text-4xl font-bold">{formatPrice(foundingPrice)}</span>
+                <div className="mb-2">
+                  <span className="text-4xl font-bold">{formatPrice(foundingBasePrice)}</span>
                   <span className="text-muted-foreground">/year</span>
                 </div>
+                <p className="text-sm text-muted-foreground mb-1">+ GST ({gstRatePercent}%): {formatPrice(foundingGstAmount)}</p>
+                <p className="text-sm font-semibold text-foreground mb-6">Total: {formatPrice(foundingPrice)}</p>
                 <ul className="text-left space-y-3 mb-6">
                   {[
                     `Complimentary food item at T. Nagar (${complimentaryPerYear}/year)`,
@@ -659,10 +684,12 @@ export default function Partner() {
                 <Shield className="w-10 h-10 text-[#a86462] mx-auto mb-3" />
                 <h3 className="text-2xl font-bold mb-1">Regular Partner</h3>
                 <p className="text-muted-foreground text-sm mb-6">Always available</p>
-                <div className="mb-6">
-                  <span className="text-4xl font-bold">{formatPrice(regularPrice)}</span>
+                <div className="mb-2">
+                  <span className="text-4xl font-bold">{formatPrice(regularBasePrice)}</span>
                   <span className="text-muted-foreground">/year</span>
                 </div>
+                <p className="text-sm text-muted-foreground mb-1">+ GST ({gstRatePercent}%): {formatPrice(regularGstAmount)}</p>
+                <p className="text-sm font-semibold text-foreground mb-6">Total: {formatPrice(regularPrice)}</p>
                 <ul className="text-left space-y-3 mb-6">
                   {[
                     `Complimentary food item at T. Nagar (${complimentaryPerYear}/year)`,
@@ -683,8 +710,17 @@ export default function Partner() {
 
 
 
+          {/* Refund Policy */}
+          <div className="max-w-2xl mx-auto mt-10 p-5 bg-amber-50 border border-amber-200 rounded-xl">
+            <p className="text-sm text-foreground/80 leading-relaxed">
+              <span className="font-semibold">Refund Policy:</span> This membership is non-refundable once activated, except if you have made no use of any programme benefit whatsoever — no complimentary items redeemed, no discount applied, no stamps earned — in which case you may request a full refund within 90 days of your sign-up date by emailing{' '}
+              <a href="mailto:hello@taiwanmaami.com" className="text-[#bd302c] underline">hello@taiwanmaami.com</a>.
+              By completing payment, you confirm you have read and agree to these terms.
+            </p>
+          </div>
+
           {/* Subscribe Button */}
-          <div className="text-center mt-10">
+          <div className="text-center mt-6">
             <Button
               size="lg"
               className="bg-[#bd302c] hover:bg-[#9e0b0f] text-white text-lg px-12 py-6"
@@ -734,7 +770,7 @@ export default function Partner() {
             {[
               {
                 q: 'What complimentary items can I choose from?',
-                a: 'At T. Nagar, you can choose from Biang Biang Noodles, Dan Dan Noodles, Cong You Bing, Egg Cong You Bing, or any Brioche. One item per visit, up to ' + complimentaryPerYear + ' per year.',
+                a: 'At T. Nagar and Anna Nagar, choose any drink or food item (Biang Biang, Dan Dan, Cong You Bing, Brioche) up to \u20b9500. At Palladium, choose any bubble tea or coffee up to \u20b9500. One item per visit, up to ' + complimentaryPerYear + ' per year.',
               },
               {
                 q: 'Do I need to buy something else to get my complimentary item?',
