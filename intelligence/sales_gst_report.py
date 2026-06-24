@@ -22,14 +22,20 @@ import sys
 from collections import defaultdict
 from datetime import date, datetime, timedelta
 
+import pytz
 from supabase import create_client
 
 
 # ─── Date range helpers ───────────────────────────────────────────────────────
 
 def get_date_range(period: str) -> tuple[date, date, str]:
-    """Return (start_date, end_date, period_label) based on cadence."""
-    today = date.today()
+    """Return (start_date, end_date, period_label) based on cadence.
+    
+    Uses IST (Asia/Kolkata) to determine 'today' so that GitHub Actions
+    runners in UTC compute the correct Indian calendar day.
+    """
+    ist = pytz.timezone("Asia/Kolkata")
+    today = datetime.now(ist).date()
 
     if period == "daily":
         d = today - timedelta(days=1)
@@ -285,8 +291,10 @@ def main():
     if not args.period:
         parser.error("--period is required (unless using --test)")
 
-    # For monthly: only proceed if run on the 1st of the month
-    if args.period == "monthly" and date.today().day != 1:
+    # For monthly: only proceed if run on the 1st of the month (IST)
+    ist = pytz.timezone("Asia/Kolkata")
+    today_ist = datetime.now(ist).date()
+    if args.period == "monthly" and today_ist.day != 1:
         print("Monthly report: today is not the 1st — skipping.")
         sys.exit(0)
 
