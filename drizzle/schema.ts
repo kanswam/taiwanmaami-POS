@@ -1329,7 +1329,7 @@ export const partnerSubscriptions = mysqlTable("partner_subscriptions", {
   // Subscription tier
   tier: mysqlEnum("tier", ["founding", "regular"]).notNull(),
   // Status
-  status: mysqlEnum("status", ["active", "expired", "cancelled", "paused"]).default("active").notNull(),
+  status: mysqlEnum("status", ["active", "expired", "cancelled", "paused", "refund_requested"]).default("active").notNull(),
   // Pricing (in paise) - snapshot at time of subscription
   amountPaid: int("amountPaid").notNull(), // Amount paid for this subscription period
   // Razorpay subscription tracking
@@ -1349,6 +1349,7 @@ export const partnerSubscriptions = mysqlTable("partner_subscriptions", {
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
   cancelledAt: timestamp("cancelledAt"),
   cancellationReason: text("cancellationReason"),
+  refundRequestedAt: timestamp("refundRequestedAt"),
 });
 
 export type PartnerSubscription = typeof partnerSubscriptions.$inferSelect;

@@ -13,11 +13,13 @@ import { formatPrice } from '@shared/types';
 import { useLoginTransition } from '@/hooks/useLoginTransition';
 import { toast } from 'sonner';
 import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/components/ui/accordion';
+import {
   Crown,
-  UtensilsCrossed,
-  CupSoda,
-  Percent,
-  Users,
   Gift,
   Star,
   CheckCircle2,
@@ -26,11 +28,10 @@ import {
   Shield,
   Sparkles,
   Clock,
-  Heart,
-  ShoppingBag,
-  ChevronRight,
-  MapPin,
+  ChevronDown,
   Wallet,
+  GraduationCap,
+  Coffee,
 } from 'lucide-react';
 
 // Declare Razorpay types
@@ -124,7 +125,6 @@ export default function Partner() {
 
     setIsSubscribing(true);
     try {
-      // Load Razorpay
       const loaded = await loadRazorpayScript();
       if (!loaded) {
         toast.error('Payment system failed to load. Please try again.');
@@ -132,13 +132,11 @@ export default function Partner() {
         return;
       }
 
-      // Create subscription + Razorpay order
       const result = await subscribeMutation.mutateAsync({
         tier: selectedTier,
         referralCode: referralCode || undefined,
       });
 
-      // Open Razorpay checkout
       const options = {
         key: result.razorpayKeyId,
         amount: result.amount,
@@ -204,18 +202,9 @@ export default function Partner() {
   const info = programmeInfo!;
   const foundingPrice = info?.foundingPrice || 388800;
   const regularPrice = info?.regularPrice || 450000;
-  const foundingBasePrice = info?.foundingBasePrice || 329492;
-  const regularBasePrice = info?.regularBasePrice || 381356;
-  const gstRatePercent = info?.gstRatePercent || 18;
-  const foundingGstAmount = info?.foundingGstAmount || 59308;
-  const regularGstAmount = info?.regularGstAmount || 68644;
   const slotsRemaining = info?.foundingSlotsRemaining || 0;
   const slotsTotal = info?.foundingSlotsTotal || 49;
   const complimentaryPerYear = info?.complimentaryItemsPerYear || 15;
-  // drink_discount removed from programme — variable kept as 0 for legacy page sections until Section 4 rewrite
-  const drinkDiscount = 0;
-  const workshopDiscount = info?.workshopDiscountPercent || 10;
-  const maamiRupeesRebatePct = (info as any)?.maamiRupeesRebatePct || 2;
 
   // Welcome screen after successful payment
   if (showWelcome && welcomeData) {
@@ -226,11 +215,9 @@ export default function Partner() {
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <div className="absolute top-10 left-10 w-72 h-72 bg-[#bd302c] rounded-full blur-[120px] opacity-20" />
           <div className="absolute bottom-10 right-10 w-96 h-96 bg-[#d4a574] rounded-full blur-[150px] opacity-15" />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-[#d4a574] rounded-full blur-[200px] opacity-10" />
         </div>
 
         <div className="relative container max-w-2xl mx-auto py-12 md:py-20 px-4">
-          {/* Celebration Icon */}
           <div className="text-center mb-8">
             <div className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-gradient-to-br from-[#d4a574] to-[#f0c090] mb-6">
               <Crown className="w-12 h-12 text-[#1a0a08]" />
@@ -248,43 +235,35 @@ export default function Partner() {
             </Badge>
           </div>
 
-          {/* Benefits you can start enjoying */}
           <Card className="bg-white/10 backdrop-blur-sm border-white/20 p-6 md:p-8 mb-8">
             <h2 className="text-lg font-bold mb-5 text-center text-[#f0c090]">
-              Start Enjoying Your Benefits Right Away!
+              Your Benefits Are Now Active
             </h2>
             <div className="space-y-4">
               <div className="flex items-start gap-4 p-4 rounded-xl bg-white/5">
-                <div className="w-10 h-10 rounded-lg bg-[#bd302c]/30 flex items-center justify-center shrink-0">
-                  <UtensilsCrossed className="w-5 h-5 text-[#f0a080]" />
-                </div>
+                <Gift className="w-6 h-6 text-[#f0a080] shrink-0 mt-0.5" />
                 <div>
-                  <p className="font-semibold">Complimentary Item (up to ₹500)</p>
-                  <p className="text-sm text-gray-400">T. Nagar & Anna Nagar: Any drink or food item (Biang Biang, Dan Dan, Cong You Bing, Brioche). Palladium: Any drink. One per visit, {complimentaryPerYear}/year.</p>
+                  <p className="font-semibold">15 Complimentary Items Per Year</p>
+                  <p className="text-sm text-gray-400">One free item per day, up to {formatPrice(50000)}. Auto-selected at checkout.</p>
                 </div>
               </div>
               <div className="flex items-start gap-4 p-4 rounded-xl bg-white/5">
-                <div className="w-10 h-10 rounded-lg bg-[#bd302c]/30 flex items-center justify-center shrink-0">
-                  <CupSoda className="w-5 h-5 text-[#f0a080]" />
-                </div>
+                <Wallet className="w-6 h-6 text-[#f0a080] shrink-0 mt-0.5" />
                 <div>
-                  <p className="font-semibold">{drinkDiscount}% Off All Drinks</p>
-                  <p className="text-sm text-gray-400">Every drink in your order gets {drinkDiscount}% off — bubble tea, coffee, everything!</p>
+                  <p className="font-semibold">Maami Rupees (2% Back)</p>
+                  <p className="text-sm text-gray-400">Earn 2% of every order as store credit. Redeemable at any outlet.</p>
                 </div>
               </div>
               <div className="flex items-start gap-4 p-4 rounded-xl bg-white/5">
-                <div className="w-10 h-10 rounded-lg bg-[#bd302c]/30 flex items-center justify-center shrink-0">
-                  <Star className="w-5 h-5 text-[#f0a080]" />
-                </div>
+                <Coffee className="w-6 h-6 text-[#f0a080] shrink-0 mt-0.5" />
                 <div>
-                  <p className="font-semibold">{workshopDiscount}% Off Workshops</p>
-                  <p className="text-sm text-gray-400">Get {workshopDiscount}% off on all workshops run by Taiwan Maami.</p>
+                  <p className="font-semibold">Loyalty Stamps</p>
+                  <p className="text-sm text-gray-400">Collect 10 stamps, earn a free Large Bubble Tea.</p>
                 </div>
               </div>
             </div>
           </Card>
 
-          {/* CTA to Dashboard */}
           <div className="text-center">
             <Button
               size="lg"
@@ -307,423 +286,343 @@ export default function Partner() {
       <Header />
       {transitionPortal}
 
-      {/* Hero Section */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-[#1a0a08] via-[#2d1210] to-[#1a0a08] text-white">
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-10 left-10 w-72 h-72 bg-[#bd302c] rounded-full blur-[120px]" />
-          <div className="absolute bottom-10 right-10 w-96 h-96 bg-[#d4a574] rounded-full blur-[150px]" />
-        </div>
-        <div className="container relative py-20 md:py-28">
-          <div className="max-w-3xl mx-auto text-center">
-            <Badge className="mb-6 bg-[#bd302c]/20 text-[#f0a080] border-[#bd302c]/30 text-sm px-4 py-1.5">
-              <Crown className="w-4 h-4 mr-1.5" />
-              Limited Founding Partner Slots
-            </Badge>
-            <h1 className="text-4xl md:text-6xl font-bold tracking-tight mb-6">
-              Become a{' '}
-              <span className="bg-gradient-to-r from-[#d4a574] to-[#f0c090] bg-clip-text text-transparent">
-                Maami Partner
-              </span>
-            </h1>
-            <p className="text-lg md:text-xl text-gray-300 mb-8 max-w-2xl mx-auto leading-relaxed">
-              Complimentary food every visit at T. Nagar. {drinkDiscount}% off all drinks.
-              {workshopDiscount}% off workshops. One annual fee, {complimentaryPerYear} complimentary items a year.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button
-                size="lg"
-                className="bg-[#bd302c] hover:bg-[#9e0b0f] text-white text-lg px-8 py-6"
-                onClick={() => document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' })}
-              >
-                Join Now <ArrowRight className="w-5 h-5 ml-2" />
-              </Button>
-              <Button
-                size="lg"
-                variant="outline"
-                className="border-gray-500 text-gray-200 hover:bg-white/10 text-lg px-8 py-6"
-                onClick={() => document.getElementById('benefits')?.scrollIntoView({ behavior: 'smooth' })}
-              >
-                See Benefits
-              </Button>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Benefits Section */}
-      <section id="benefits" className="py-20 bg-[#faf6f1]">
-        <div className="container">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-              Your Partner Benefits
-            </h2>
-            <p className="text-muted-foreground text-lg max-w-xl mx-auto">
-              Every visit becomes more rewarding. Here's what you get as a Maami Partner.
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-5xl mx-auto">
-            {/* Complimentary Food Item */}
-            <Card className="p-8 border-2 border-[#bd302c]/20 bg-white hover:shadow-lg transition-shadow">
-              <div className="w-14 h-14 rounded-2xl bg-[#bd302c]/10 flex items-center justify-center mb-5">
-                <UtensilsCrossed className="w-7 h-7 text-[#bd302c]" />
-              </div>
-              <h3 className="text-xl font-bold mb-3">Complimentary Item (up to ₹500)</h3>
-              <p className="text-muted-foreground leading-relaxed">
-                T. Nagar & Anna Nagar: Choose any drink or food item (Biang Biang, Dan Dan, Cong You Bing, Brioche).
-                Palladium: Any bubble tea or coffee. One item per visit, no minimum purchase.
-              </p>
-              <p className="mt-3 text-sm font-medium text-[#bd302c]">
-                {complimentaryPerYear} items per year · All outlets
-              </p>
-            </Card>
-
-            {/* Drink Discount */}
-            <Card className="p-8 border-2 border-[#bd302c]/20 bg-white hover:shadow-lg transition-shadow">
-              <div className="w-14 h-14 rounded-2xl bg-[#bd302c]/10 flex items-center justify-center mb-5">
-                <CupSoda className="w-7 h-7 text-[#bd302c]" />
-              </div>
-              <h3 className="text-xl font-bold mb-3">{drinkDiscount}% Off All Drinks</h3>
-              <p className="text-muted-foreground leading-relaxed">
-                Every bubble tea, coffee, and beverage in your order gets {drinkDiscount}% off. 
-                Applies automatically at checkout.
-              </p>
-              <p className="mt-3 text-sm font-medium text-[#bd302c]">
-                All outlets · Every order
-              </p>
-            </Card>
-
-            {/* Workshop Discount */}
-            <Card className="p-8 border-2 border-[#bd302c]/20 bg-white hover:shadow-lg transition-shadow">
-              <div className="w-14 h-14 rounded-2xl bg-[#bd302c]/10 flex items-center justify-center mb-5">
-                <Star className="w-7 h-7 text-[#bd302c]" />
-              </div>
-              <h3 className="text-xl font-bold mb-3">{workshopDiscount}% Off Workshops</h3>
-              <p className="text-muted-foreground leading-relaxed">
-                Get {workshopDiscount}% off on all workshops and events run by Taiwan Maami. 
-                Learn to make noodles, bubble tea, and more.
-              </p>
-              <p className="mt-3 text-sm font-medium text-[#bd302c]">
-                All workshops
-              </p>
-            </Card>
-
-            {/* Loyalty Stamps */}
-            <Card className="p-8 border-2 border-[#bd302c]/20 bg-white hover:shadow-lg transition-shadow">
-              <div className="w-14 h-14 rounded-2xl bg-[#bd302c]/10 flex items-center justify-center mb-5">
-                <Heart className="w-7 h-7 text-[#bd302c]" />
-              </div>
-              <h3 className="text-xl font-bold mb-3">Loyalty Stamps</h3>
-              <p className="text-muted-foreground leading-relaxed">
-                Earn loyalty stamps on every order. Collect 10 stamps and get a free bubble tea on us.
-                Partner benefits stack with loyalty rewards.
-              </p>
-              <p className="mt-3 text-sm font-medium text-[#bd302c]">
-                Both outlets
-              </p>
-            </Card>
-
-            {/* Maami Money Referral */}
-            <Card className="p-8 border-2 border-[#bd302c]/20 bg-white hover:shadow-lg transition-shadow">
-              <div className="w-14 h-14 rounded-2xl bg-[#bd302c]/10 flex items-center justify-center mb-5">
-                <Wallet className="w-7 h-7 text-[#bd302c]" />
-              </div>
-              <h3 className="text-xl font-bold mb-3">Maami Money Referrals</h3>
-              <p className="text-muted-foreground leading-relaxed">
-                Refer a friend to become a partner and you both get ₹250 Maami Money (store credit). 
-                Use it on any future order. Valid for 12 months.
-              </p>
-              <p className="mt-3 text-sm font-medium text-[#bd302c]">
-                ₹250 for you + ₹250 for your friend
-              </p>
-            </Card>
-
-            {/* Partner Badge */}
-            <Card className="p-8 border-2 border-[#bd302c]/20 bg-white hover:shadow-lg transition-shadow">
-              <div className="w-14 h-14 rounded-2xl bg-[#bd302c]/10 flex items-center justify-center mb-5">
-                <Crown className="w-7 h-7 text-[#bd302c]" />
-              </div>
-              <h3 className="text-xl font-bold mb-3">Partner Badge</h3>
-              <p className="text-muted-foreground leading-relaxed">
-                Your profile gets a Partner badge. Staff will recognise you as 
-                part of the Maami family.
-              </p>
-              <p className="mt-3 text-sm font-medium text-[#bd302c]">
-                Founding Partners get a gold badge
-              </p>
-            </Card>
-
-            {/* No Minimum Purchase */}
-            <Card className="p-8 border-2 border-[#bd302c]/20 bg-white hover:shadow-lg transition-shadow">
-              <div className="w-14 h-14 rounded-2xl bg-[#bd302c]/10 flex items-center justify-center mb-5">
-                <Gift className="w-7 h-7 text-[#bd302c]" />
-              </div>
-              <h3 className="text-xl font-bold mb-3">No Minimum Purchase</h3>
-              <p className="text-muted-foreground leading-relaxed">
-                Walk in, pick your complimentary item, and leave. No need to buy anything else. 
-                It's that simple.
-              </p>
-              <p className="mt-3 text-sm font-medium text-[#bd302c]">
-                T. Nagar outlet
-              </p>
-            </Card>
-          </div>
-        </div>
-      </section>
-
-      {/* How It Works — Visual Step-by-Step Guide */}
-      <section className="py-20 bg-white">
-        <div className="container">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-              How It Works
-            </h2>
-            <p className="text-muted-foreground text-lg max-w-xl mx-auto">
-              Claiming your complimentary item is automatic. Just order normally and the system does the rest.
-            </p>
-          </div>
-
-          <div className="max-w-5xl mx-auto space-y-16">
-            {/* T. Nagar Flow */}
-            <div>
-              <div className="flex items-center gap-3 mb-8 justify-center">
-                <MapPin className="w-5 h-5 text-[#bd302c]" />
-                <h3 className="text-xl font-bold text-foreground">At T. Nagar</h3>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr_auto_1fr] items-center gap-4 md:gap-2">
-                {/* Step 1 */}
-                <div className="bg-[#faf6f1] rounded-2xl p-6 text-center">
-                  <div className="w-12 h-12 rounded-full bg-[#bd302c] text-white flex items-center justify-center mx-auto mb-4 text-lg font-bold">1</div>
-                  <ShoppingBag className="w-8 h-8 text-[#bd302c] mx-auto mb-3" />
-                  <p className="font-semibold text-foreground mb-1">Walk in</p>
-                  <p className="text-sm text-muted-foreground">No minimum purchase needed. Just be a Partner!</p>
-                </div>
-                {/* Arrow */}
-                <div className="hidden md:flex items-center justify-center">
-                  <ChevronRight className="w-6 h-6 text-[#bd302c]/40" />
-                </div>
-                {/* Step 2 */}
-                <div className="bg-[#faf6f1] rounded-2xl p-6 text-center">
-                  <div className="w-12 h-12 rounded-full bg-[#bd302c] text-white flex items-center justify-center mx-auto mb-4 text-lg font-bold">2</div>
-                  <UtensilsCrossed className="w-8 h-8 text-[#bd302c] mx-auto mb-3" />
-                  <p className="font-semibold text-foreground mb-1">Pick your item</p>
-                  <p className="text-sm text-muted-foreground">Any drink or food item up to ₹500 (Palladium: drinks only)</p>
-                </div>
-                {/* Arrow */}
-                <div className="hidden md:flex items-center justify-center">
-                  <ChevronRight className="w-6 h-6 text-[#bd302c]/40" />
-                </div>
-                {/* Step 3 */}
-                <div className="bg-gradient-to-br from-[#bd302c]/10 to-[#d4a574]/10 rounded-2xl p-6 text-center border-2 border-[#bd302c]/20">
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#bd302c] to-[#d4a574] text-white flex items-center justify-center mx-auto mb-4 text-lg font-bold">
-                    <CheckCircle2 className="w-6 h-6" />
-                  </div>
-                  <Sparkles className="w-8 h-8 text-[#bd302c] mx-auto mb-3" />
-                  <p className="font-semibold text-foreground mb-1">It's complimentary!</p>
-                  <p className="text-sm text-muted-foreground">Automatically deducted at checkout. Save up to ₹415!</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Drink Discount Flow */}
-            <div>
-              <div className="flex items-center gap-3 mb-8 justify-center">
-                <CupSoda className="w-5 h-5 text-[#bd302c]" />
-                <h3 className="text-xl font-bold text-foreground">Drink Discount (Any Outlet)</h3>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr_auto_1fr] items-center gap-4 md:gap-2">
-                {/* Step 1 */}
-                <div className="bg-[#faf6f1] rounded-2xl p-6 text-center">
-                  <div className="w-12 h-12 rounded-full bg-[#bd302c] text-white flex items-center justify-center mx-auto mb-4 text-lg font-bold">1</div>
-                  <CupSoda className="w-8 h-8 text-[#bd302c] mx-auto mb-3" />
-                  <p className="font-semibold text-foreground mb-1">Order any drink</p>
-                  <p className="text-sm text-muted-foreground">Bubble tea, coffee, any beverage</p>
-                </div>
-                {/* Arrow */}
-                <div className="hidden md:flex items-center justify-center">
-                  <ChevronRight className="w-6 h-6 text-[#bd302c]/40" />
-                </div>
-                {/* Step 2 */}
-                <div className="bg-[#faf6f1] rounded-2xl p-6 text-center">
-                  <div className="w-12 h-12 rounded-full bg-[#bd302c] text-white flex items-center justify-center mx-auto mb-4 text-lg font-bold">2</div>
-                  <Sparkles className="w-8 h-8 text-[#bd302c] mx-auto mb-3" />
-                  <p className="font-semibold text-foreground mb-1">Partner detected</p>
-                  <p className="text-sm text-muted-foreground">System recognises your Partner status</p>
-                </div>
-                {/* Arrow */}
-                <div className="hidden md:flex items-center justify-center">
-                  <ChevronRight className="w-6 h-6 text-[#bd302c]/40" />
-                </div>
-                {/* Step 3 */}
-                <div className="bg-gradient-to-br from-[#bd302c]/10 to-[#d4a574]/10 rounded-2xl p-6 text-center border-2 border-[#bd302c]/20">
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#bd302c] to-[#d4a574] text-white flex items-center justify-center mx-auto mb-4 text-lg font-bold">
-                    <CheckCircle2 className="w-6 h-6" />
-                  </div>
-                  <Percent className="w-8 h-8 text-[#bd302c] mx-auto mb-3" />
-                  <p className="font-semibold text-foreground mb-1">{drinkDiscount}% off applied!</p>
-                  <p className="text-sm text-muted-foreground">Discount on every drink in your order</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Tip callout */}
-            <div className="bg-[#faf6f1] border border-[#d4a574]/30 rounded-2xl p-6 md:p-8 text-center max-w-2xl mx-auto">
-              <Shield className="w-8 h-8 text-[#bd302c] mx-auto mb-3" />
-              <p className="font-semibold text-foreground mb-2">No codes needed. Fully automatic.</p>
-              <p className="text-sm text-muted-foreground leading-relaxed">
-                Just log in and place your order. The system recognises your Partner status and applies all benefits at checkout.
-                You'll see the savings in your order summary before you pay.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Value Proposition */}
-      <section className="py-16 bg-[#faf6f1]">
-        <div className="container">
-          <div className="max-w-4xl mx-auto">
-            <h2 className="text-3xl font-bold text-center mb-12">
-              How Much Will You Save?
-            </h2>
-            <div className="bg-[#faf6f1] rounded-2xl p-8 md:p-12">
-              <div className="grid md:grid-cols-3 gap-8 text-center">
-                <div>
-                  <p className="text-sm text-muted-foreground mb-2">Visit once a week</p>
-                  <p className="text-3xl font-bold text-[#bd302c]">₹21,500+</p>
-                  <p className="text-sm text-muted-foreground mt-1">saved per year</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground mb-2">Visit twice a week</p>
-                  <p className="text-3xl font-bold text-[#bd302c]">₹10,750+</p>
-                  <p className="text-sm text-muted-foreground mt-1">saved (25 item limit)</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground mb-2">Plus drink savings</p>
-                  <p className="text-3xl font-bold text-[#bd302c]">{drinkDiscount}% off</p>
-                  <p className="text-sm text-muted-foreground mt-1">on every drink, every order</p>
-                </div>
-              </div>
-              <p className="text-center text-sm text-muted-foreground mt-8">
-                Based on 1 complimentary item (~₹415) per visit at T. Nagar, capped at {complimentaryPerYear} per year, plus {drinkDiscount}% off drinks
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Pricing Section */}
-      <section id="pricing" className="py-20 bg-[#faf6f1]">
-        <div className="container">
+      {/* ═══════════════════════════════════════════════════════════════════
+          BLOCK 1 — Hero (above fold on mobile)
+      ═══════════════════════════════════════════════════════════════════ */}
+      <section className="bg-gradient-to-br from-[#1a0a08] via-[#2d1210] to-[#1a0a08] text-white py-16 md:py-24">
+        <div className="container max-w-4xl mx-auto px-4">
           <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-              Choose Your Plan
-            </h2>
-            <p className="text-muted-foreground text-lg">
-              Same benefits. Founding Partners get early access pricing.
+            <h1 className="text-3xl md:text-5xl font-bold tracking-tight mb-3">
+              Taiwan Maami Partner Programme
+            </h1>
+            <p className="text-lg md:text-xl text-gray-300">
+              Every visit. Something on us.
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-8 max-w-3xl mx-auto">
-            {/* Founding Partner */}
+          {/* Two tier cards */}
+          <div className="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto">
+            {/* Founding Partner Card */}
             <Card
-              className={`relative p-8 cursor-pointer transition-all ${
+              className={`relative p-6 cursor-pointer transition-all bg-white/5 backdrop-blur-sm border-white/20 hover:border-[#d4a574]/60 ${
                 selectedTier === 'founding'
-                  ? 'border-2 border-[#bd302c] shadow-xl ring-2 ring-[#bd302c]/20'
-                  : 'border-2 border-gray-200 hover:border-[#bd302c]/50'
-              } ${slotsRemaining <= 0 ? 'opacity-60 pointer-events-none' : ''}`}
+                  ? 'border-[#d4a574] ring-2 ring-[#d4a574]/30'
+                  : ''
+              } ${slotsRemaining <= 0 ? 'opacity-50 pointer-events-none' : ''}`}
               onClick={() => slotsRemaining > 0 && setSelectedTier('founding')}
             >
               {slotsRemaining > 0 && (
-                <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#bd302c] text-white px-4 py-1">
-                  <Sparkles className="w-3.5 h-3.5 mr-1" />
-                  Only {slotsRemaining} of {slotsTotal} slots left
+                <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#d4a574] text-[#1a0a08] text-xs px-3 py-0.5">
+                  <Sparkles className="w-3 h-3 mr-1" />
+                  {slotsRemaining} of {slotsTotal} slots left
                 </Badge>
               )}
-              <div className="text-center pt-4">
-                <Crown className="w-10 h-10 text-[#d4a574] mx-auto mb-3" />
-                <h3 className="text-2xl font-bold mb-1">Founding Partner</h3>
-                <p className="text-muted-foreground text-sm mb-6">Early supporter pricing</p>
-                <div className="mb-2">
-                  <span className="text-4xl font-bold">{formatPrice(foundingBasePrice)}</span>
-                  <span className="text-muted-foreground">/year</span>
-                </div>
-                <p className="text-sm text-muted-foreground mb-1">+ GST ({gstRatePercent}%): {formatPrice(foundingGstAmount)}</p>
-                <p className="text-sm font-semibold text-foreground mb-6">Total: {formatPrice(foundingPrice)}</p>
-                <ul className="text-left space-y-3 mb-6">
-                  {[
-                    `Complimentary food item at T. Nagar (${complimentaryPerYear}/year)`,
-                    `${drinkDiscount}% off all drinks, every order`,
-                    `${workshopDiscount}% off all workshops`,
-                    'Loyalty stamps on every order',
-                    'Gold Partner badge',
-                    'Founding Partner recognition',
-                  ].map((item) => (
-                    <li key={item} className="flex items-start gap-2 text-sm">
-                      <CheckCircle2 className="w-4 h-4 text-green-600 mt-0.5 shrink-0" />
-                      <span>{item}</span>
-                    </li>
-                  ))}
-                </ul>
+              <div className="text-center pt-3">
+                <Crown className="w-8 h-8 text-[#d4a574] mx-auto mb-2" />
+                <h3 className="text-xl font-bold text-white mb-1">Founding Partner</h3>
+                <p className="text-3xl font-bold text-[#d4a574] mb-1">{formatPrice(foundingPrice)}</p>
+                <p className="text-sm text-gray-400 mb-4">per year (incl. GST)</p>
+                <Button
+                  size="sm"
+                  className="bg-[#bd302c] hover:bg-[#9e0b0f] text-white w-full"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSelectedTier('founding');
+                    document.getElementById('signup')?.scrollIntoView({ behavior: 'smooth' });
+                  }}
+                >
+                  Join Now <ArrowRight className="w-4 h-4 ml-1" />
+                </Button>
                 {slotsRemaining <= 0 && (
-                  <Badge variant="secondary" className="mb-4">Sold Out</Badge>
+                  <Badge variant="secondary" className="mt-3">Sold Out</Badge>
                 )}
               </div>
             </Card>
 
-            {/* Regular Partner */}
+            {/* Regular Partner Card */}
             <Card
-              className={`relative p-8 cursor-pointer transition-all ${
+              className={`relative p-6 cursor-pointer transition-all bg-white/5 backdrop-blur-sm border-white/20 hover:border-white/40 ${
                 selectedTier === 'regular'
-                  ? 'border-2 border-[#bd302c] shadow-xl ring-2 ring-[#bd302c]/20'
-                  : 'border-2 border-gray-200 hover:border-[#bd302c]/50'
+                  ? 'border-white ring-2 ring-white/20'
+                  : ''
               }`}
               onClick={() => setSelectedTier('regular')}
             >
-              <div className="text-center pt-4">
-                <Shield className="w-10 h-10 text-[#a86462] mx-auto mb-3" />
-                <h3 className="text-2xl font-bold mb-1">Regular Partner</h3>
-                <p className="text-muted-foreground text-sm mb-6">Always available</p>
-                <div className="mb-2">
-                  <span className="text-4xl font-bold">{formatPrice(regularBasePrice)}</span>
-                  <span className="text-muted-foreground">/year</span>
-                </div>
-                <p className="text-sm text-muted-foreground mb-1">+ GST ({gstRatePercent}%): {formatPrice(regularGstAmount)}</p>
-                <p className="text-sm font-semibold text-foreground mb-6">Total: {formatPrice(regularPrice)}</p>
-                <ul className="text-left space-y-3 mb-6">
-                  {[
-                    `Complimentary food item at T. Nagar (${complimentaryPerYear}/year)`,
-                    `${drinkDiscount}% off all drinks, every order`,
-                    `${workshopDiscount}% off all workshops`,
-                    'Loyalty stamps on every order',
-                    'Partner badge',
-                  ].map((item) => (
-                    <li key={item} className="flex items-start gap-2 text-sm">
-                      <CheckCircle2 className="w-4 h-4 text-green-600 mt-0.5 shrink-0" />
-                      <span>{item}</span>
-                    </li>
-                  ))}
-                </ul>
+              <div className="text-center pt-3">
+                <Shield className="w-8 h-8 text-gray-300 mx-auto mb-2" />
+                <h3 className="text-xl font-bold text-white mb-1">Regular Partner</h3>
+                <p className="text-3xl font-bold text-white mb-1">{formatPrice(regularPrice)}</p>
+                <p className="text-sm text-gray-400 mb-4">per year (incl. GST) · Always open</p>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="border-gray-500 text-gray-200 hover:bg-white/10 w-full"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSelectedTier('regular');
+                    document.getElementById('signup')?.scrollIntoView({ behavior: 'smooth' });
+                  }}
+                >
+                  Join Now <ArrowRight className="w-4 h-4 ml-1" />
+                </Button>
               </div>
             </Card>
           </div>
 
+          {/* Cultural note */}
+          <p className="text-center text-sm italic text-gray-400 mt-6">
+            In Taiwanese culture, 8 is the number of prosperity.
+          </p>
+        </div>
+      </section>
 
+      {/* ═══════════════════════════════════════════════════════════════════
+          BLOCK 2 — Benefits (4 cards)
+      ═══════════════════════════════════════════════════════════════════ */}
+      <section className="py-16 bg-[#faf6f1]">
+        <div className="container max-w-4xl mx-auto px-4">
+          <h2 className="text-2xl md:text-3xl font-bold text-center mb-10">Your Benefits</h2>
+          <div className="grid sm:grid-cols-2 gap-6">
+            <Card className="p-6 border-[#bd302c]/15 bg-white">
+              <div className="flex items-start gap-4">
+                <div className="w-11 h-11 rounded-xl bg-[#bd302c]/10 flex items-center justify-center shrink-0">
+                  <Gift className="w-5 h-5 text-[#bd302c]" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-base mb-1">{complimentaryPerYear} Complimentary Items Per Year</h3>
+                  <p className="text-sm text-muted-foreground">One free item per day, any item up to {formatPrice(50000)}. Mochis excluded.</p>
+                </div>
+              </div>
+            </Card>
 
-          {/* Refund Policy */}
-          <div className="max-w-2xl mx-auto mt-10 p-5 bg-amber-50 border border-amber-200 rounded-xl">
-            <p className="text-sm text-foreground/80 leading-relaxed">
-              <span className="font-semibold">Refund Policy:</span> This membership is non-refundable once activated, except if you have made no use of any programme benefit whatsoever — no complimentary items redeemed, no discount applied, no stamps earned — in which case you may request a full refund within 90 days of your sign-up date by emailing{' '}
-              <a href="mailto:hello@taiwanmaami.com" className="text-[#bd302c] underline">hello@taiwanmaami.com</a>.
-              By completing payment, you confirm you have read and agree to these terms.
-            </p>
+            <Card className="p-6 border-[#bd302c]/15 bg-white">
+              <div className="flex items-start gap-4">
+                <div className="w-11 h-11 rounded-xl bg-[#bd302c]/10 flex items-center justify-center shrink-0">
+                  <Wallet className="w-5 h-5 text-[#bd302c]" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-base mb-1">Earn Maami Rupees</h3>
+                  <p className="text-sm text-muted-foreground">2% of every order back as store credit, redeemable at any outlet.</p>
+                </div>
+              </div>
+            </Card>
+
+            <Card className="p-6 border-[#bd302c]/15 bg-white">
+              <div className="flex items-start gap-4">
+                <div className="w-11 h-11 rounded-xl bg-[#bd302c]/10 flex items-center justify-center shrink-0">
+                  <Coffee className="w-5 h-5 text-[#bd302c]" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-base mb-1">Loyalty Stamps</h3>
+                  <p className="text-sm text-muted-foreground">Collect 10 stamps, earn a free Large Bubble Tea.</p>
+                </div>
+              </div>
+            </Card>
+
+            <Card className="p-6 border-[#bd302c]/15 bg-white">
+              <div className="flex items-start gap-4">
+                <div className="w-11 h-11 rounded-xl bg-[#bd302c]/10 flex items-center justify-center shrink-0">
+                  <GraduationCap className="w-5 h-5 text-[#bd302c]" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-base mb-1">10% Off Workshops & Events</h3>
+                  <p className="text-sm text-muted-foreground">Learn to make noodles, bubble tea, and more — at a discount.</p>
+                </div>
+              </div>
+            </Card>
           </div>
+        </div>
+      </section>
 
-          {/* Subscribe Button */}
-          <div className="text-center mt-6">
+      {/* ═══════════════════════════════════════════════════════════════════
+          BLOCK 3 — Savings Table
+      ═══════════════════════════════════════════════════════════════════ */}
+      <section className="py-16 bg-white">
+        <div className="container max-w-4xl mx-auto px-4">
+          <h2 className="text-2xl md:text-3xl font-bold text-center mb-8">Your Savings</h2>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm border-collapse">
+              <thead>
+                <tr className="border-b-2 border-[#bd302c]/20">
+                  <th className="text-left py-3 pr-4 font-semibold text-foreground"></th>
+                  <th className="text-center py-3 px-4 font-semibold text-foreground">Once a month<br /><span className="text-xs text-muted-foreground font-normal">(12 visits)</span></th>
+                  <th className="text-center py-3 px-4 font-semibold text-foreground">Every 3 weeks<br /><span className="text-xs text-muted-foreground font-normal">(15 visits)</span></th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                <tr>
+                  <td className="py-3 pr-4 text-muted-foreground">{complimentaryPerYear} complimentary items (avg {formatPrice(42000)})</td>
+                  <td className="py-3 px-4 text-center font-medium">{formatPrice(504000)}</td>
+                  <td className="py-3 px-4 text-center font-medium">{formatPrice(630000)}</td>
+                </tr>
+                <tr>
+                  <td className="py-3 pr-4 text-muted-foreground">Maami Rupees earned (2% on orders)</td>
+                  <td className="py-3 px-4 text-center font-medium">~{formatPrice(12000)}+</td>
+                  <td className="py-3 px-4 text-center font-medium">~{formatPrice(15000)}+</td>
+                </tr>
+                <tr>
+                  <td className="py-3 pr-4 text-muted-foreground">Free stamp teas</td>
+                  <td className="py-3 px-4 text-center font-medium">~{formatPrice(44500)}</td>
+                  <td className="py-3 px-4 text-center font-medium">~{formatPrice(89000)}</td>
+                </tr>
+                <tr className="border-t-2 border-[#bd302c]/20 font-semibold">
+                  <td className="py-3 pr-4">Total value</td>
+                  <td className="py-3 px-4 text-center text-[#bd302c]">~{formatPrice(560500)}</td>
+                  <td className="py-3 px-4 text-center text-[#bd302c]">~{formatPrice(734000)}</td>
+                </tr>
+                <tr>
+                  <td className="py-3 pr-4 text-muted-foreground">Founding Partner fee</td>
+                  <td className="py-3 px-4 text-center">{formatPrice(foundingPrice)}</td>
+                  <td className="py-3 px-4 text-center">{formatPrice(foundingPrice)}</td>
+                </tr>
+                <tr>
+                  <td className="py-3 pr-4 text-muted-foreground">Regular Partner fee</td>
+                  <td className="py-3 px-4 text-center">{formatPrice(regularPrice)}</td>
+                  <td className="py-3 px-4 text-center">{formatPrice(regularPrice)}</td>
+                </tr>
+                <tr className="bg-green-50">
+                  <td className="py-3 pr-4 font-semibold text-green-800">Your saving — Founding</td>
+                  <td className="py-3 px-4 text-center font-bold text-green-700">{formatPrice(171700)}</td>
+                  <td className="py-3 px-4 text-center font-bold text-green-700">{formatPrice(345200)}</td>
+                </tr>
+                <tr className="bg-green-50/50">
+                  <td className="py-3 pr-4 font-semibold text-green-800">Your saving — Regular</td>
+                  <td className="py-3 px-4 text-center font-bold text-green-700">{formatPrice(110500)}</td>
+                  <td className="py-3 px-4 text-center font-bold text-green-700">{formatPrice(284000)}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p className="text-xs text-muted-foreground text-center mt-4">
+            Maami Rupees scale with your actual spend — 2% of every order. Estimates use {formatPrice(50000)} avg order.
+          </p>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════════════════════════════
+          BLOCK 4 — How It Works (5 steps)
+      ═══════════════════════════════════════════════════════════════════ */}
+      <section className="py-16 bg-[#faf6f1]">
+        <div className="container max-w-3xl mx-auto px-4">
+          <h2 className="text-2xl md:text-3xl font-bold text-center mb-10">How It Works</h2>
+          <div className="space-y-6">
+            {[
+              { step: 1, text: 'Sign up and pay via Razorpay' },
+              { step: 2, text: 'Benefits apply automatically from your next order' },
+              { step: 3, text: 'Your free item is selected automatically — the highest-priced eligible item in your order. You can change it if you prefer something else.' },
+              { step: 4, text: 'Earn Maami Rupees and stamps on every order' },
+              { step: 5, text: 'Track everything on your Partner Dashboard' },
+            ].map(({ step, text }) => (
+              <div key={step} className="flex items-start gap-4">
+                <div className="w-9 h-9 rounded-full bg-[#bd302c] text-white flex items-center justify-center shrink-0 text-sm font-bold">
+                  {step}
+                </div>
+                <p className="text-foreground pt-1.5 leading-relaxed">{text}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════════════════════════════
+          BLOCK 5 — Sign-up Form
+      ═══════════════════════════════════════════════════════════════════ */}
+      <section id="signup" className="py-16 bg-white">
+        <div className="container max-w-lg mx-auto px-4">
+          <h2 className="text-2xl md:text-3xl font-bold text-center mb-8">Join the Partner Programme</h2>
+
+          <Card className="p-6 md:p-8 border-2 border-gray-100">
+            {/* Tier selector */}
+            <div className="mb-6">
+              <label className="text-sm font-medium text-foreground mb-2 block">Select your tier</label>
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  className={`p-3 rounded-lg border-2 text-center transition-all ${
+                    selectedTier === 'founding'
+                      ? 'border-[#d4a574] bg-[#d4a574]/5'
+                      : 'border-gray-200 hover:border-gray-300'
+                  } ${slotsRemaining <= 0 ? 'opacity-50 pointer-events-none' : ''}`}
+                  onClick={() => slotsRemaining > 0 && setSelectedTier('founding')}
+                >
+                  <Crown className="w-5 h-5 text-[#d4a574] mx-auto mb-1" />
+                  <p className="font-semibold text-sm">Founding</p>
+                  <p className="text-xs text-muted-foreground">{formatPrice(foundingPrice)}/yr</p>
+                </button>
+                <button
+                  className={`p-3 rounded-lg border-2 text-center transition-all ${
+                    selectedTier === 'regular'
+                      ? 'border-[#bd302c] bg-[#bd302c]/5'
+                      : 'border-gray-200 hover:border-gray-300'
+                  }`}
+                  onClick={() => setSelectedTier('regular')}
+                >
+                  <Shield className="w-5 h-5 text-[#bd302c] mx-auto mb-1" />
+                  <p className="font-semibold text-sm">Regular</p>
+                  <p className="text-xs text-muted-foreground">{formatPrice(regularPrice)}/yr</p>
+                </button>
+              </div>
+              {selectedTier === 'founding' && slotsRemaining > 0 && (
+                <p className="text-xs text-[#d4a574] mt-2 text-center">
+                  <Sparkles className="w-3 h-3 inline mr-1" />
+                  {slotsRemaining} of {slotsTotal} founding slots remaining
+                </p>
+              )}
+            </div>
+
+            {/* Pre-filled info */}
+            {isAuthenticated && user && (
+              <div className="mb-6 space-y-3">
+                <div>
+                  <label className="text-sm font-medium text-foreground mb-1 block">Name</label>
+                  <Input value={user.name || ''} disabled className="bg-gray-50" />
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-foreground mb-1 block">Email</label>
+                  <Input value={user.email || ''} disabled className="bg-gray-50" />
+                </div>
+              </div>
+            )}
+
+            {/* Referral code */}
+            <div className="mb-6">
+              <label className="text-sm font-medium text-foreground mb-1 block">
+                Referral code <span className="text-muted-foreground font-normal">(optional)</span>
+              </label>
+              <Input
+                placeholder="e.g. MAAMI-KANNAN"
+                value={referralCode}
+                onChange={(e) => setReferralCode(e.target.value.toUpperCase())}
+                className="uppercase"
+              />
+              {referralCode.length >= 4 && referralValidation && (
+                <p className={`text-xs mt-1.5 ${referralValidation.valid ? 'text-green-600' : 'text-red-500'}`}>
+                  {referralValidation.valid
+                    ? `✓ Referred by ${referralValidation.partnerName} — you'll receive ₹200 in Maami Rupees on your first order`
+                    : '✗ Invalid referral code'}
+                </p>
+              )}
+              {!referralCode && (
+                <p className="text-xs text-muted-foreground mt-1.5">
+                  Your friend gets ₹200 in Maami Rupees too
+                </p>
+              )}
+            </div>
+
+            {/* ═══════════════════════════════════════════════════════════════
+                BLOCK 6 — Refund Policy (non-collapsible, above payment)
+            ═══════════════════════════════════════════════════════════════ */}
+            <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+              <p className="text-xs text-foreground/80 leading-relaxed">
+                <span className="font-semibold">Refund Policy:</span> Non-refundable once any benefit has been used. Full refund within 60 days if no benefits redeemed — email{' '}
+                <a href="mailto:hello@taiwanmaami.com" className="text-[#bd302c] underline">hello@taiwanmaami.com</a>.
+                By completing payment you agree to these terms.
+              </p>
+            </div>
+
+            {/* Subscribe button */}
             <Button
               size="lg"
-              className="bg-[#bd302c] hover:bg-[#9e0b0f] text-white text-lg px-12 py-6"
+              className="bg-[#bd302c] hover:bg-[#9e0b0f] text-white w-full text-base py-6"
               onClick={handleSubscribe}
               disabled={isSubscribing || !info?.programmeActive}
             >
@@ -738,67 +637,72 @@ export default function Partner() {
                 </>
               ) : (
                 <>
-                  Join as {selectedTier === 'founding' ? 'Founding' : 'Regular'} Partner — {formatPrice(selectedTier === 'founding' ? foundingPrice : regularPrice)}
+                  Pay {formatPrice(selectedTier === 'founding' ? foundingPrice : regularPrice)} — Join as {selectedTier === 'founding' ? 'Founding' : 'Regular'} Partner
                   <ArrowRight className="w-5 h-5 ml-2" />
                 </>
               )}
             </Button>
             {!info?.programmeActive && (
-              <p className="text-sm text-muted-foreground mt-3">
+              <p className="text-sm text-muted-foreground mt-3 text-center">
                 The Partner Programme is not currently accepting new subscriptions.
               </p>
             )}
-            <div className="flex items-center justify-center gap-6 mt-6 text-sm text-muted-foreground">
-              <span className="flex items-center gap-1.5">
-                <Shield className="w-4 h-4" /> Secure payment via Razorpay
+            <div className="flex items-center justify-center gap-4 mt-4 text-xs text-muted-foreground">
+              <span className="flex items-center gap-1">
+                <Shield className="w-3.5 h-3.5" /> Secure payment
               </span>
-              <span className="flex items-center gap-1.5">
-                <Clock className="w-4 h-4" /> Annual subscription
+              <span className="flex items-center gap-1">
+                <Clock className="w-3.5 h-3.5" /> Annual · No auto-renew
               </span>
             </div>
-          </div>
+          </Card>
         </div>
       </section>
 
-      {/* FAQ Section */}
-      <section className="py-16 bg-white">
-        <div className="container">
-          <h2 className="text-3xl font-bold text-center mb-12">
-            Frequently Asked Questions
-          </h2>
-          <div className="max-w-2xl mx-auto space-y-6">
-            {[
-              {
-                q: 'What complimentary items can I choose from?',
-                a: 'At T. Nagar and Anna Nagar, choose any drink or food item (Biang Biang, Dan Dan, Cong You Bing, Brioche) up to \u20b9500. At Palladium, choose any bubble tea or coffee up to \u20b9500. One item per visit, up to ' + complimentaryPerYear + ' per year.',
-              },
-              {
-                q: 'Do I need to buy something else to get my complimentary item?',
-                a: 'No! There is no minimum purchase. Walk in, pick your complimentary item, and enjoy. You can of course order more if you like.',
-              },
-              {
-                q: `How does the ${drinkDiscount}% drink discount work?`,
-                a: `Every drink in your order — bubble tea, coffee, any beverage — gets ${drinkDiscount}% off automatically. This works at all outlets, on every order.`,
-              },
-              {
-                q: 'Do I earn loyalty stamps on complimentary items?',
-                a: 'Loyalty stamps are earned based on the amount you actually pay. Complimentary items are not counted towards stamp calculation.',
-              },
-              {
-                q: 'Is this a subscription? Does it auto-renew?',
-                a: 'It\'s an annual membership. It does NOT auto-renew — you\'ll get a reminder before expiry to renew if you wish.',
-              },
-              {
-                q: 'What\'s the difference between Founding and Regular?',
-                a: `Founding Partners get the same benefits at a lower price (${formatPrice(foundingPrice)}/year vs ${formatPrice(regularPrice)}/year) plus a gold badge. Limited to ${slotsTotal} slots.`,
-              },
-            ].map((faq) => (
-              <div key={faq.q} className="border rounded-xl p-6">
-                <h3 className="font-semibold text-lg mb-2">{faq.q}</h3>
-                <p className="text-muted-foreground">{faq.a}</p>
-              </div>
-            ))}
-          </div>
+      {/* ═══════════════════════════════════════════════════════════════════
+          BLOCK 7 — Terms & Conditions (collapsed by default)
+      ═══════════════════════════════════════════════════════════════════ */}
+      <section className="py-12 bg-[#faf6f1]">
+        <div className="container max-w-2xl mx-auto px-4">
+          <Accordion type="single" collapsible>
+            <AccordionItem value="terms" className="border rounded-xl bg-white px-6">
+              <AccordionTrigger className="text-base font-semibold py-4">
+                Terms & Conditions
+              </AccordionTrigger>
+              <AccordionContent className="pb-5">
+                <ul className="space-y-3 text-sm text-muted-foreground">
+                  <li className="flex items-start gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-[#bd302c] shrink-0 mt-0.5" />
+                    <span>One free item per day (not per visit)</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-[#bd302c] shrink-0 mt-0.5" />
+                    <span>Mochis excluded at all outlets</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-[#bd302c] shrink-0 mt-0.5" />
+                    <span>Maami Rupees: store credit only, not cash, cannot pay for Partner Programme fee, expire 12 months from earned date</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-[#bd302c] shrink-0 mt-0.5" />
+                    <span>Stamps earned on amount paid after discounts</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-[#bd302c] shrink-0 mt-0.5" />
+                    <span>Unused items do not carry over on renewal</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-[#bd302c] shrink-0 mt-0.5" />
+                    <span>Non-transferable, non-refundable after use</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-[#bd302c] shrink-0 mt-0.5" />
+                    <span>Benefits will not be reduced during active membership year without credit or adjustment</span>
+                  </li>
+                </ul>
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
         </div>
       </section>
 

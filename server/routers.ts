@@ -19,7 +19,7 @@ import { calculateDeliveryCharge, calculateNearestOutlet } from './deliveryCharg
 import { storagePut } from './storage';
 import { partnerRouter, calculatePartnerBenefits, getActivePartnerSubscription } from './partnerRouter';
 import { isFoodAvailable, getFoodCategoryId, getFoodSchedule, saveFoodSchedule, formatSchedule, invalidateScheduleCache } from './foodSchedule';
-import { partnerBenefitsLog, partnerSubscriptions } from '../drizzle/schema';
+import { partnerBenefitsLog, partnerSubscriptions, partnerReferrals, maamiRupeesTransactions } from '../drizzle/schema';
 
 // Admin procedure - only allows admin role
 const adminProcedure = protectedProcedure.use(({ ctx, next }) => {
@@ -1132,6 +1132,101 @@ export const appRouter = router({
           }
         }
         
+        // Credit ₹200 Maami Rupees to BOTH referrer and referred on referred partner's FIRST completed order
+        if (input.status === 'completed' && order && order.userId) {
+          try {
+            // Check if this user has a partner subscription with a referredByCode
+            const [partnerSub] = await dbInstance!
+              .select()
+              .from(partnerSubscriptions)
+              .where(
+                and(
+                  eq(partnerSubscriptions.userId, order.userId),
+                  eq(partnerSubscriptions.status, 'active')
+                )
+              );
+
+            if (partnerSub?.referredByCode) {
+              // Find the referral record
+              const [referral] = await dbInstance!
+                .select()
+                .from(partnerReferrals)
+                .where(
+                  and(
+                    eq(partnerReferrals.referredUserId, order.userId),
+                    eq(partnerReferrals.referralCode, partnerSub.referredByCode),
+                    eq(partnerReferrals.status, 'subscribed') // Not yet rewarded
+                  )
+                );
+
+              if (referral && !referral.referrerRewardCredited) {
+                const referrerReward = referral.referrerRewardAmount || 20000; // ₹200
+                const referredReward = referral.referredRewardAmount || 20000; // ₹200
+                const expiresAt = new Date(Date.now() + 12 * 30 * 24 * 60 * 60 * 1000); // 12 months
+
+                // Credit referrer
+                await dbInstance!
+                  .update(users)
+                  .set({ maamiRupeesBalance: sql`${users.maamiRupeesBalance} + ${referrerReward}` })
+                  .where(eq(users.id, referral.referrerUserId));
+                const [referrerUser] = await dbInstance!
+                  .select({ maamiRupeesBalance: users.maamiRupeesBalance })
+                  .from(users)
+                  .where(eq(users.id, referral.referrerUserId));
+                await dbInstance!.insert(maamiRupeesTransactions).values({
+                  userId: referral.referrerUserId,
+                  subscriptionId: referral.referrerSubscriptionId,
+                  orderId: order.id,
+                  orderNumber: order.orderNumber,
+                  type: 'earn_referral',
+                  amount: referrerReward,
+                  balanceAfter: referrerUser?.maamiRupeesBalance || referrerReward,
+                  expiresAt,
+                  remainingAmount: referrerReward,
+                  description: `Referral reward — ${order.customerName || 'partner'} completed first order`,
+                });
+
+                // Credit referred (this user)
+                await dbInstance!
+                  .update(users)
+                  .set({ maamiRupeesBalance: sql`${users.maamiRupeesBalance} + ${referredReward}` })
+                  .where(eq(users.id, order.userId));
+                const [referredUser] = await dbInstance!
+                  .select({ maamiRupeesBalance: users.maamiRupeesBalance })
+                  .from(users)
+                  .where(eq(users.id, order.userId));
+                await dbInstance!.insert(maamiRupeesTransactions).values({
+                  userId: order.userId,
+                  subscriptionId: partnerSub.id,
+                  orderId: order.id,
+                  orderNumber: order.orderNumber,
+                  type: 'earn_referral',
+                  amount: referredReward,
+                  balanceAfter: referredUser?.maamiRupeesBalance || referredReward,
+                  expiresAt,
+                  remainingAmount: referredReward,
+                  description: `Referral welcome bonus — first order completed`,
+                });
+
+                // Mark referral as rewarded
+                await dbInstance!
+                  .update(partnerReferrals)
+                  .set({
+                    referrerRewardCredited: true,
+                    referredRewardCredited: true,
+                    status: 'rewarded',
+                  })
+                  .where(eq(partnerReferrals.id, referral.id));
+
+                console.log(`[Referral] Credited ₹${referrerReward / 100} to referrer (user ${referral.referrerUserId}) and ₹${referredReward / 100} to referred (user ${order.userId})`);
+              }
+            }
+          } catch (refErr) {
+            console.error('[Referral] Failed to credit referral rewards:', refErr);
+            // Non-critical — don't fail the order status update
+          }
+        }
+
         // Queue receipt for printing AFTER stamps and MR are awarded (so receipt includes earned amounts)
         if (input.status === 'completed' && order) {
           const items = await dbInstance!.select().from(orderItemsTable).where(eq(orderItemsTable.orderId, input.orderId));

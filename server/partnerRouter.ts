@@ -3,7 +3,7 @@ import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
 import { getDb } from "./db";
-import { partnerSubscriptions, partnerReferrals, partnerBenefitsLog, partnerConfig, users, orders, products, subcategories, categories, maamiRupeesTransactions } from "../drizzle/schema";
+import { partnerSubscriptions, partnerReferrals, partnerBenefitsLog, partnerConfig, users, orders, products, subcategories, categories, maamiRupeesTransactions, stampTransactions } from "../drizzle/schema";
 import { eq, and, desc, asc, sql, gte, lte } from "drizzle-orm";
 import { createRazorpayOrder, verifyPaymentSignature, getRazorpayKeyId } from "./razorpay";
 import { notifyOwner } from "./_core/notification";
@@ -73,6 +73,76 @@ export async function getActivePartnerSubscription(userId: number) {
     .orderBy(desc(partnerSubscriptions.createdAt))
     .limit(1);
   return sub ?? null;
+}
+
+// Helper: Check if a partner subscription is eligible for refund
+// ALL conditions must be true: age ≤60 days, 0 complimentary items, 0 MR earned, 0 stamps (excl welcome)
+async function checkRefundEligibility(subscriptionId: number, userId: number, startDate: Date): Promise<{ eligible: boolean; reasons: string[] }> {
+  const dbInstance = await getDb();
+  if (!dbInstance) return { eligible: false, reasons: ["Database unavailable"] };
+
+  const reasons: string[] = [];
+
+  // Condition 1: Account age ≤ 60 days from subscription startDate
+  const now = new Date();
+  const daysSinceStart = Math.floor((now.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+  if (daysSinceStart > 60) {
+    reasons.push(`Subscription is ${daysSinceStart} days old (max 60 days)`);
+  }
+
+  // Condition 2: 0 complimentary items used
+  const [benefitsResult] = await dbInstance
+    .select({ count: sql<number>`COUNT(*)` })
+    .from(partnerBenefitsLog)
+    .where(
+      and(
+        eq(partnerBenefitsLog.subscriptionId, subscriptionId),
+        eq(partnerBenefitsLog.userId, userId),
+        sql`${partnerBenefitsLog.benefitType} IN ('complimentary_item', 'free_biang_biang', 'free_large_tea')`
+      )
+    );
+  const complimentaryUsed = Number(benefitsResult?.count) || 0;
+  if (complimentaryUsed > 0) {
+    reasons.push(`${complimentaryUsed} complimentary item(s) used`);
+  }
+
+  // Condition 3: 0 Maami Rupees earned
+  const [mrResult] = await dbInstance
+    .select({ count: sql<number>`COUNT(*)` })
+    .from(maamiRupeesTransactions)
+    .where(
+      and(
+        eq(maamiRupeesTransactions.userId, userId),
+        sql`${maamiRupeesTransactions.type} IN ('earn_order', 'earn_referral')`,
+        gte(maamiRupeesTransactions.createdAt, startDate)
+      )
+    );
+  const mrEarned = Number(mrResult?.count) || 0;
+  if (mrEarned > 0) {
+    reasons.push(`${mrEarned} Maami Rupees transaction(s) earned`);
+  }
+
+  // Condition 4: 0 stamps earned (excluding welcome stamp)
+  const [stampsResult] = await dbInstance
+    .select({ count: sql<number>`COUNT(*)` })
+    .from(stampTransactions)
+    .where(
+      and(
+        eq(stampTransactions.userId, userId),
+        sql`${stampTransactions.action} != 'welcome'`,
+        sql`${stampTransactions.stamps} > 0`,
+        gte(stampTransactions.createdAt, startDate)
+      )
+    );
+  const stampsEarned = Number(stampsResult?.count) || 0;
+  if (stampsEarned > 0) {
+    reasons.push(`${stampsEarned} stamp transaction(s) earned (excl. welcome)`);
+  }
+
+  return {
+    eligible: reasons.length === 0,
+    reasons,
+  };
 }
 
 // Helper: calculate Partner benefits for an order
@@ -481,14 +551,59 @@ export const partnerRouter = router({
 
     const lifetimeSavings = Number(allBenefits[0]?.total) || 0;
 
-    // Get Maami Money balance and expiry
+    // Get user record with Maami Rupees balance and stamps
     const [userRecord] = await dbInstance
       .select({
         storeCredit: users.storeCredit,
         storeCreditExpiresAt: users.storeCreditExpiresAt,
+        maamiRupeesBalance: users.maamiRupeesBalance,
+        stampCount: users.stampCount,
+        lifetimeStamps: users.lifetimeStamps,
       })
       .from(users)
       .where(eq(users.id, ctx.user.id));
+
+    // Check today's complimentary usage (IST)
+    const nowIST = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }));
+    const todayStartIST = new Date(nowIST.getFullYear(), nowIST.getMonth(), nowIST.getDate());
+    const todayStartUTC = new Date(todayStartIST.getTime() - (5.5 * 60 * 60 * 1000));
+    const [usedTodayResult] = await dbInstance
+      .select({ count: sql<number>`COUNT(*)` })
+      .from(partnerBenefitsLog)
+      .where(
+        and(
+          eq(partnerBenefitsLog.userId, ctx.user.id),
+          sql`${partnerBenefitsLog.benefitType} IN ('complimentary_item', 'free_biang_biang')`,
+          gte(partnerBenefitsLog.createdAt, todayStartUTC)
+        )
+      );
+    const usedToday = Number(usedTodayResult?.count) || 0;
+
+    // Get recent Maami Rupees transactions (last 10)
+    const recentMRTransactions = await dbInstance
+      .select()
+      .from(maamiRupeesTransactions)
+      .where(eq(maamiRupeesTransactions.userId, ctx.user.id))
+      .orderBy(desc(maamiRupeesTransactions.createdAt))
+      .limit(10);
+
+    // Get soonest-expiring MR credit
+    const [expiringCredit] = await dbInstance
+      .select({
+        amount: maamiRupeesTransactions.remainingAmount,
+        expiresAt: maamiRupeesTransactions.expiresAt,
+      })
+      .from(maamiRupeesTransactions)
+      .where(
+        and(
+          eq(maamiRupeesTransactions.userId, ctx.user.id),
+          sql`${maamiRupeesTransactions.type} IN ('earn_order', 'earn_referral')`,
+          sql`${maamiRupeesTransactions.remainingAmount} > 0`,
+          sql`${maamiRupeesTransactions.expiresAt} > NOW()`
+        )
+      )
+      .orderBy(asc(maamiRupeesTransactions.expiresAt))
+      .limit(1);
 
     return {
       ...sub,
@@ -503,11 +618,33 @@ export const partnerRouter = router({
         lifetimeSavings,
         complimentaryItemsUsed,
         maxComplimentaryPerYear,
+        usedToday,
       },
+      maamiRupees: {
+        balance: userRecord?.maamiRupeesBalance || 0,
+        expiringSoon: expiringCredit ? {
+          amount: expiringCredit.amount || 0,
+          expiresAt: expiringCredit.expiresAt,
+        } : null,
+        recentTransactions: recentMRTransactions.map(t => ({
+          id: t.id,
+          type: t.type,
+          amount: t.amount,
+          description: t.description,
+          createdAt: t.createdAt,
+        })),
+      },
+      stamps: {
+        current: userRecord?.stampCount || 0,
+        lifetime: userRecord?.lifetimeStamps || 0,
+      },
+      // Legacy — keep for backward compat
       maamiMoney: {
         balance: userRecord?.storeCredit || 0,
         expiresAt: userRecord?.storeCreditExpiresAt || null,
       },
+      // Refund eligibility (Section 8)
+      refundEligibility: await checkRefundEligibility(sub.id, ctx.user.id, sub.startDate),
     };
   }),
 
@@ -599,6 +736,11 @@ export const partnerRouter = router({
         referralCode = generateReferralCode(ctx.user.name || "");
         attempts++;
       }
+
+      // GUARD: Maami Rupees CANNOT be used to pay for Partner Programme membership.
+      // The full amount must be paid via Razorpay. This is enforced by architecture:
+      // the subscribe flow uses a separate Razorpay order (not the order placement flow)
+      // and has no maamiRupeesUsed input field.
 
       // Create Razorpay order for payment
       const razorpayOrder = await createRazorpayOrder({
@@ -748,7 +890,8 @@ export const partnerRouter = router({
           .where(eq(partnerConfig.configKey, "founding_slots_remaining"));
       }
 
-      // Process referral rewards
+      // Process referral — mark as 'subscribed' only.
+      // Actual ₹200 MR credit to BOTH parties happens on the referred partner's FIRST completed order.
       if (sub.referredByCode) {
         const [referral] = await dbInstance
           .select()
@@ -761,7 +904,6 @@ export const partnerRouter = router({
           );
 
         if (referral) {
-          // Update referral status
           await dbInstance
             .update(partnerReferrals)
             .set({
@@ -769,64 +911,6 @@ export const partnerRouter = router({
               referredSubscriptionId: input.subscriptionId,
             })
             .where(eq(partnerReferrals.id, referral.id));
-
-          // Credit Maami Money to referrer (store credit, expires in 12 months)
-          if (referral.referrerRewardAmount > 0) {
-            const expiryDate = new Date();
-            expiryDate.setMonth(expiryDate.getMonth() + 12);
-            await dbInstance
-              .update(users)
-              .set({
-                storeCredit: sql`${users.storeCredit} + ${referral.referrerRewardAmount}`,
-                storeCreditExpiresAt: expiryDate,
-              })
-              .where(eq(users.id, referral.referrerUserId));
-
-            await dbInstance
-              .update(partnerReferrals)
-              .set({
-                referrerRewardCredited: true,
-                status: "rewarded",
-              })
-              .where(eq(partnerReferrals.id, referral.id));
-          }
-
-          // Credit Maami Money to referred new partner (store credit, expires in 12 months)
-          if (referral.referredRewardAmount > 0) {
-            const referredExpiryDate = new Date();
-            referredExpiryDate.setMonth(referredExpiryDate.getMonth() + 12);
-            await dbInstance
-              .update(users)
-              .set({
-                storeCredit: sql`${users.storeCredit} + ${referral.referredRewardAmount}`,
-                storeCreditExpiresAt: referredExpiryDate,
-              })
-              .where(eq(users.id, ctx.user.id));
-
-            await dbInstance
-              .update(partnerReferrals)
-              .set({ referredRewardCredited: true })
-              .where(eq(partnerReferrals.id, referral.id));
-          }
-
-          // Send email notification to the referrer about the successful referral
-          try {
-            const [referrerUser] = await dbInstance
-              .select({ name: users.name, email: users.email })
-              .from(users)
-              .where(eq(users.id, referral.referrerUserId));
-
-            if (referrerUser?.email) {
-              await sendReferralNotificationEmail(
-                referrerUser.email,
-                referrerUser.name || "Partner",
-                ctx.user.name || "Someone",
-                referral.referrerRewardAmount
-              );
-            }
-          } catch (e) {
-            console.error("Failed to send referral notification email:", e);
-          }
         }
       }
 
@@ -905,7 +989,7 @@ export const partnerRouter = router({
   adminGetPartners: adminProcedure
     .input(
       z.object({
-        status: z.enum(["all", "active", "expired", "cancelled", "paused"]).default("all"),
+        status: z.enum(["all", "active", "expired", "cancelled", "paused", "refund_requested"]).default("all"),
         page: z.number().default(1),
         limit: z.number().default(50),
       }).optional()
@@ -1085,11 +1169,13 @@ export const partnerRouter = router({
     }),
 
   // Admin: Cancel a partner subscription
+  // If withRefund=true, enforces refund eligibility check before cancelling
   adminCancelSubscription: adminProcedure
     .input(
       z.object({
         subscriptionId: z.number(),
         reason: z.string().optional(),
+        withRefund: z.boolean().optional(), // If true, validate refund eligibility first
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -1097,16 +1183,36 @@ export const partnerRouter = router({
       if (!dbInstance)
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
 
+      // If processing as refund, validate eligibility
+      if (input.withRefund) {
+        const [sub] = await dbInstance
+          .select()
+          .from(partnerSubscriptions)
+          .where(eq(partnerSubscriptions.id, input.subscriptionId));
+
+        if (!sub) {
+          throw new TRPCError({ code: "NOT_FOUND", message: "Subscription not found" });
+        }
+
+        const { eligible, reasons } = await checkRefundEligibility(sub.id, sub.userId, sub.startDate);
+        if (!eligible) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: `Cannot process refund: ${reasons.join("; ")}`,
+          });
+        }
+      }
+
       await dbInstance
         .update(partnerSubscriptions)
         .set({
           status: "cancelled",
           cancelledAt: new Date(),
-          cancellationReason: input.reason || "Cancelled by admin",
+          cancellationReason: input.reason || (input.withRefund ? "Cancelled with refund by admin" : "Cancelled by admin"),
         })
         .where(eq(partnerSubscriptions.id, input.subscriptionId));
 
-      return { success: true };
+      return { success: true, refundProcessed: !!input.withRefund };
 
     }),
 
@@ -1281,6 +1387,72 @@ export const partnerRouter = router({
         newEndDate,
         tier: input.tier,
       };
+    }),
+
+  // Section 8: Request refund (customer-facing)
+  // Validates eligibility, marks subscription as refund_requested. Admin reviews manually.
+  requestRefund: protectedProcedure
+    .mutation(async ({ ctx }) => {
+      const dbInstance = await getDb();
+      if (!dbInstance)
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+
+      const sub = await getActivePartnerSubscription(ctx.user.id);
+      if (!sub) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "No active subscription found.",
+        });
+      }
+
+      // Check eligibility
+      const { eligible, reasons } = await checkRefundEligibility(sub.id, ctx.user.id, sub.startDate);
+      if (!eligible) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: `Refund not available: ${reasons.join("; ")}`,
+        });
+      }
+
+      // Mark as refund_requested (admin processes the actual Razorpay refund)
+      await dbInstance
+        .update(partnerSubscriptions)
+        .set({
+          status: "refund_requested",
+          refundRequestedAt: new Date(),
+          cancellationReason: "Refund requested by customer (all eligibility conditions met)",
+        })
+        .where(eq(partnerSubscriptions.id, sub.id));
+
+      // Notify owner
+      try {
+        await notifyOwner({
+          title: `Partner Refund Requested: ${ctx.user.name || "Unknown"}`,
+          content: `${ctx.user.name} has requested a refund for their ${sub.tier} Partner subscription (\u20b9${sub.amountPaid / 100}). All eligibility conditions verified. Please process via Razorpay dashboard.`,
+        });
+      } catch (e) {
+        console.error("Failed to notify owner about refund request:", e);
+      }
+
+      return { success: true, message: "Refund request submitted. Our team will process it within 5-7 business days." };
+    }),
+
+  // Section 8: Check refund eligibility (for admin panel display)
+  adminCheckRefundEligibility: adminProcedure
+    .input(z.object({ subscriptionId: z.number() }))
+    .query(async ({ input }) => {
+      const dbInstance = await getDb();
+      if (!dbInstance)
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+
+      const [sub] = await dbInstance
+        .select()
+        .from(partnerSubscriptions)
+        .where(eq(partnerSubscriptions.id, input.subscriptionId));
+
+      if (!sub) return { eligible: false, reasons: ["Subscription not found"] };
+
+      return checkRefundEligibility(sub.id, sub.userId, sub.startDate);
     }),
 });
 

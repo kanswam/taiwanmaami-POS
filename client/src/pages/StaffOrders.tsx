@@ -1261,6 +1261,22 @@ export default function StaffOrders() {
         {/* Payment Failure Alert */}
         <PaymentFailureAlert />
 
+        {/* Section 9: Partner Programme Staff Briefing Notice */}
+        <div className="mb-4 p-3 rounded-lg bg-amber-50 border border-amber-200 text-sm">
+          <div className="flex items-start gap-2">
+            <span className="text-amber-600 font-bold text-base leading-none mt-0.5">⚠</span>
+            <div>
+              <p className="font-semibold text-amber-900 mb-1">Partner Programme — Staff Reminder</p>
+              <ul className="text-amber-800 space-y-0.5 text-xs list-disc list-inside">
+                <li>Free items are applied <strong>automatically</strong> at checkout — do not override manually</li>
+                <li>Mochis are <strong>NOT</strong> eligible as complimentary items (system enforced)</li>
+                <li>Two partners dining together = <strong>two separate orders</strong> (one per account)</li>
+                <li>Do not manually override or adjust partner benefit logic</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
         {/* Filters */}
         <div className="flex flex-wrap items-center gap-3 mb-6 p-3 bg-muted/30 rounded-lg">
           <Filter className="w-4 h-4 text-muted-foreground" />
@@ -1287,6 +1303,7 @@ export default function StaffOrders() {
               <SelectItem value="all">All Outlets</SelectItem>
               <SelectItem value="palladium">Palladium</SelectItem>
               <SelectItem value="tnagar">T Nagar</SelectItem>
+              <SelectItem value="annanagar">Anna Nagar</SelectItem>
             </SelectContent>
           </Select>
           
@@ -1907,6 +1924,7 @@ export default function StaffOrders() {
                   <SelectContent>
                     <SelectItem value="1">Palladium Mall</SelectItem>
                     <SelectItem value="2">T. Nagar</SelectItem>
+                    <SelectItem value="3">Anna Nagar</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

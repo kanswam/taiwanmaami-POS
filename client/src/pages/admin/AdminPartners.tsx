@@ -195,6 +195,7 @@ export default function AdminPartners() {
               <SelectContent>
                 <SelectItem value="all">All Status</SelectItem>
                 <SelectItem value="active">Active</SelectItem>
+                <SelectItem value="refund_requested">Refund Requested</SelectItem>
                 <SelectItem value="paused">Pending</SelectItem>
                 <SelectItem value="expired">Expired</SelectItem>
                 <SelectItem value="cancelled">Cancelled</SelectItem>
@@ -240,8 +241,8 @@ export default function AdminPartners() {
                       </td>
                       <td className="py-3">
                         <Badge variant={p.status === 'active' ? 'default' : p.status === 'cancelled' ? 'destructive' : 'secondary'}
-                          className={p.status === 'active' ? 'bg-green-100 text-green-800' : ''}>
-                          {p.status}
+                          className={p.status === 'active' ? 'bg-green-100 text-green-800' : p.status === 'refund_requested' ? 'bg-amber-100 text-amber-800 border-amber-200' : ''}>
+                          {p.status === 'refund_requested' ? 'Refund Req.' : p.status}
                         </Badge>
                       </td>
                       <td className="py-3">{formatPrice(p.totalBenefitsUsed)}</td>
@@ -259,6 +260,30 @@ export default function AdminPartners() {
                           >
                             <Ban className="w-3.5 h-3.5 mr-1" /> Cancel
                           </Button>
+                        )}
+                        {p.status === 'refund_requested' && (
+                          <div className="flex gap-1">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="text-green-600 hover:text-green-700 hover:bg-green-50 text-xs"
+                              onClick={() => {
+                                if (confirm(`Process refund for ${p.userName || 'this partner'}? This will cancel their subscription. Remember to process the Razorpay refund manually.`)) {
+                                  cancelSubscription.mutate({ subscriptionId: p.id, reason: 'Refund processed by admin', withRefund: true });
+                                }
+                              }}
+                            >
+                              Approve Refund
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="text-red-600 hover:text-red-700 hover:bg-red-50 text-xs"
+                              onClick={() => handleCancel(p.id, p.userName || 'this partner')}
+                            >
+                              Deny
+                            </Button>
+                          </div>
                         )}
                       </td>
                     </tr>
