@@ -16,7 +16,7 @@ jobs:
           python-version: "3.11"
 
       - name: Install dependencies
-        run: pip install supabase pytz
+        run: pip install supabase pytz openpyxl
 
       - name: Generate daily report
         env:
