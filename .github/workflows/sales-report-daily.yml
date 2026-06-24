@@ -16,7 +16,7 @@ jobs:
           python-version: "3.11"
 
       - name: Install dependencies
-        run: pip install supabase
+        run: pip install supabase pytz
 
       - name: Generate daily report
         env:
