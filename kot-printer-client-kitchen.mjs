@@ -8,6 +8,8 @@
  * 
  * This client polls for pending KOTs for T. Nagar (outlet ID 2)
  * and prints them to the KITCHEN thermal printer.
+ * 
+ * v2.0 - Fixed: infinite retry loop, cancellation KOT crash
  */
 
 import net from 'net';
@@ -34,12 +36,18 @@ const CONFIG = {
   // Polling interval (milliseconds)
   pollInterval: 5000, // Check every 5 seconds
   
+  // Retry settings
+  maxRetries: 3, // Max print attempts before giving up on a KOT
+  
   // Audio alert settings
   enableSound: true,
   soundFile: null, // Optional: path to custom WAV file (e.g., 'C:\\alert.wav')
   beepCount: 3, // Number of beeps for alert
   beepDelay: 200, // Delay between beeps in ms
 };
+
+// Track failed print attempts per KOT ID
+const failedAttempts = new Map(); // kotId -> { count, lastError }
 
 // ESC/POS commands for Essae PR-55
 const ESC = '\x1B';
@@ -76,8 +84,8 @@ async function printToThermal(data) {
     });
     
     client.on('error', (err) => {
-      console.error(`${CONFIG.printerName} printer error:`, err.message);
-      reject(err);
+      client.destroy();
+      reject(new Error(`${CONFIG.printerName} printer error: ${err.message}`));
     });
     
     // Timeout after 10 seconds
@@ -89,10 +97,9 @@ async function printToThermal(data) {
 }
 
 /**
- * Format KOT data for thermal printer
+ * Format a CANCELLATION KOT for thermal printer
  */
-function formatKOT(kot) {
-  // kotData is already a JSON object from the database (not a string)
+function formatCancellationKOT(kot) {
   const kotData = typeof kot.kotData === 'string' ? JSON.parse(kot.kotData) : kot.kotData;
   let output = '';
   
@@ -105,7 +112,104 @@ function formatKOT(kot) {
   output += 'TAIWAN MAAMI\n';
   output += 'T. NAGAR - KITCHEN\n';
   output += PRINTER_COMMANDS.BOLD_OFF;
-  output += 'Kitchen Order Ticket\n';
+  output += '*** CANCELLATION ***\n';
+  output += PRINTER_COMMANDS.ALIGN_LEFT;
+  output += PRINTER_COMMANDS.SEPARATOR;
+  
+  // Order details
+  output += PRINTER_COMMANDS.BOLD_ON;
+  output += `Order #: ${kotData.orderId}\n`;
+  output += PRINTER_COMMANDS.BOLD_OFF;
+  output += `Time: ${new Date().toLocaleString('en-IN', { 
+    timeZone: 'Asia/Kolkata',
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true
+  })}\n`;
+  output += `Customer: ${kotData.customerName || 'N/A'}\n`;
+  
+  if (kotData.tableNumber) {
+    output += PRINTER_COMMANDS.BOLD_ON;
+    output += `Table: ${kotData.tableNumber}\n`;
+    output += PRINTER_COMMANDS.BOLD_OFF;
+  }
+  
+  output += PRINTER_COMMANDS.SEPARATOR;
+  
+  // Cancelled item
+  output += PRINTER_COMMANDS.BOLD_ON;
+  output += 'CANCELLED ITEM:\n';
+  output += PRINTER_COMMANDS.BOLD_OFF;
+  output += `${kotData.cancelledItemQuantity || 1}x ${kotData.cancelledItemName || 'Unknown item'}\n`;
+  
+  if (kotData.cancellationReason) {
+    output += `\nReason: ${kotData.cancellationReason}\n`;
+  }
+  
+  output += PRINTER_COMMANDS.SEPARATOR;
+  
+  // Footer
+  output += PRINTER_COMMANDS.ALIGN_CENTER;
+  output += `KOT ID: ${kot.id}\n`;
+  output += `Printed: ${new Date().toLocaleTimeString('en-IN', { 
+    timeZone: 'Asia/Kolkata',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: true
+  })}\n`;
+  output += '\n\n\n';
+  
+  // Cut paper
+  output += PRINTER_COMMANDS.CUT_PAPER;
+  
+  return output;
+}
+
+/**
+ * Format KOT data for thermal printer
+ */
+function formatKOT(kot) {
+  const kotData = typeof kot.kotData === 'string' ? JSON.parse(kot.kotData) : kot.kotData;
+  
+  // Handle cancellation KOTs (no items array)
+  if (kotData.isCancellation) {
+    return formatCancellationKOT(kot);
+  }
+  
+  // Handle addition KOTs or KOTs without items gracefully
+  if (!kotData.items || !Array.isArray(kotData.items) || kotData.items.length === 0) {
+    // If it's an addition with a custom item structure, try to handle it
+    if (kotData.isAddition && kotData.isCustomItem) {
+      return formatCustomItemKOT(kot, kotData);
+    }
+    // Skip KOTs with no items and no cancellation data
+    console.warn(`⚠️  KOT #${kot.id} has no items array and is not a cancellation. Skipping format.`);
+    return null;
+  }
+  
+  let output = '';
+  
+  // Initialize printer
+  output += PRINTER_COMMANDS.INIT;
+  
+  // Header
+  output += PRINTER_COMMANDS.ALIGN_CENTER;
+  output += PRINTER_COMMANDS.BOLD_ON;
+  output += 'TAIWAN MAAMI\n';
+  output += 'T. NAGAR - KITCHEN\n';
+  output += PRINTER_COMMANDS.BOLD_OFF;
+  
+  // Show if this is an addition
+  if (kotData.isAddition) {
+    output += '*** ADDITION ***\n';
+  } else {
+    output += 'Kitchen Order Ticket\n';
+  }
+  
   output += PRINTER_COMMANDS.ALIGN_LEFT;
   output += PRINTER_COMMANDS.SEPARATOR;
   
@@ -123,7 +227,7 @@ function formatKOT(kot) {
     minute: '2-digit',
     hour12: true
   })}\n`;
-  output += `Customer: ${kotData.customerName}\n`;
+  output += `Customer: ${kotData.customerName || 'N/A'}\n`;
   if (kotData.customerPhone) {
     output += `Phone: ${kotData.customerPhone}\n`;
   }
@@ -155,8 +259,10 @@ function formatKOT(kot) {
   output += 'ITEMS:\n';
   output += PRINTER_COMMANDS.BOLD_OFF;
   
-  kotData.items.forEach((item, index) => {
-    output += `${item.quantity}x ${item.productName}\n`;
+  kotData.items.forEach((item) => {
+    if (!item) return; // Skip null/undefined items
+    
+    output += `${item.quantity || 1}x ${item.productName || 'Unknown'}\n`;
     
     if (item.size) {
       output += `   Size: ${item.size.charAt(0).toUpperCase() + item.size.slice(1)}\n`;
@@ -186,8 +292,9 @@ function formatKOT(kot) {
     if (item.addons && item.addons.length > 0) {
       output += `   Add-ons:\n`;
       item.addons.forEach(addon => {
+        if (!addon) return;
         const qty = addon.quantity && addon.quantity > 1 ? ` x${addon.quantity}` : '';
-        output += `   - ${addon.name}${qty}\n`;
+        output += `   - ${addon.name || 'Unknown'}${qty}\n`;
       });
     }
     
@@ -201,6 +308,15 @@ function formatKOT(kot) {
     
     output += PRINTER_COMMANDS.SEPARATOR;
   });
+  
+  // Partner benefit display
+  if (kotData.partnerBenefit) {
+    output += PRINTER_COMMANDS.BOLD_ON;
+    output += '*** PARTNER BENEFIT ***\n';
+    output += PRINTER_COMMANDS.BOLD_OFF;
+    output += `Free: ${kotData.partnerBenefit.itemName || 'N/A'}\n`;
+    output += PRINTER_COMMANDS.SEPARATOR;
+  }
   
   // Footer
   output += PRINTER_COMMANDS.ALIGN_CENTER;
@@ -221,11 +337,61 @@ function formatKOT(kot) {
 }
 
 /**
+ * Format a custom item addition KOT
+ */
+function formatCustomItemKOT(kot, kotData) {
+  let output = '';
+  
+  output += PRINTER_COMMANDS.INIT;
+  output += PRINTER_COMMANDS.ALIGN_CENTER;
+  output += PRINTER_COMMANDS.BOLD_ON;
+  output += 'TAIWAN MAAMI\n';
+  output += 'T. NAGAR - KITCHEN\n';
+  output += PRINTER_COMMANDS.BOLD_OFF;
+  output += '*** ADDITION ***\n';
+  output += PRINTER_COMMANDS.ALIGN_LEFT;
+  output += PRINTER_COMMANDS.SEPARATOR;
+  
+  output += PRINTER_COMMANDS.BOLD_ON;
+  output += `Order #: ${kotData.orderId || 'N/A'}\n`;
+  output += PRINTER_COMMANDS.BOLD_OFF;
+  output += `Customer: ${kotData.customerName || 'N/A'}\n`;
+  
+  if (kotData.tableNumber) {
+    output += `Table: ${kotData.tableNumber}\n`;
+  }
+  
+  output += PRINTER_COMMANDS.SEPARATOR;
+  output += PRINTER_COMMANDS.BOLD_ON;
+  output += 'CUSTOM ITEM ADDED\n';
+  output += PRINTER_COMMANDS.BOLD_OFF;
+  
+  // Try to extract items if they exist in any form
+  if (kotData.items && Array.isArray(kotData.items)) {
+    kotData.items.forEach(item => {
+      if (!item) return;
+      output += `${item.quantity || 1}x ${item.productName || 'Custom Item'}\n`;
+    });
+  } else if (kotData.itemName) {
+    output += `1x ${kotData.itemName}\n`;
+  } else {
+    output += '(See order details)\n';
+  }
+  
+  output += PRINTER_COMMANDS.SEPARATOR;
+  output += PRINTER_COMMANDS.ALIGN_CENTER;
+  output += `KOT ID: ${kot.id}\n`;
+  output += '\n\n\n';
+  output += PRINTER_COMMANDS.CUT_PAPER;
+  
+  return output;
+}
+
+/**
  * Poll server for pending KOTs (filtered by outlet)
  */
 async function pollKOTs() {
   try {
-    // Poll with outlet filter for T. Nagar (outlet ID 2) and printerType=kitchen
     const response = await fetch(`${CONFIG.serverUrl}/api/kot/poll?secret=${CONFIG.kotSecret}&outletId=${CONFIG.outletId}&printerType=kitchen`);
     
     if (!response.ok) {
@@ -245,7 +411,7 @@ async function pollKOTs() {
 }
 
 /**
- * Mark KOT as printed
+ * Mark KOT as printed on the server
  */
 async function markPrinted(kotId) {
   try {
@@ -271,6 +437,22 @@ async function markPrinted(kotId) {
 }
 
 /**
+ * Mark KOT as printed even if it failed (to stop infinite retries)
+ */
+async function forceMarkPrinted(kotId, reason) {
+  console.error(`⛔ KOT #${kotId} exceeded max retries (${CONFIG.maxRetries}). Marking as printed to stop loop.`);
+  console.error(`   Reason: ${reason}`);
+  console.error(`   This KOT will need to be reprinted manually from Admin panel if needed.`);
+  try {
+    await markPrinted(kotId);
+  } catch (e) {
+    console.error(`   Could not mark KOT #${kotId} on server: ${e.message}`);
+  }
+  // Clear from local tracking
+  failedAttempts.delete(kotId);
+}
+
+/**
  * Play audio alert when new KOT arrives
  */
 function playAlert() {
@@ -278,7 +460,6 @@ function playAlert() {
   
   // Check for custom sound file first
   if (CONFIG.soundFile && existsSync(CONFIG.soundFile)) {
-    // Play custom WAV file on Windows
     const soundPath = path.resolve(CONFIG.soundFile);
     exec(`powershell -c "(New-Object Media.SoundPlayer '${soundPath}').PlaySync()"`, (err) => {
       if (err) console.log('Sound file playback failed, using system beep');
@@ -286,11 +467,9 @@ function playAlert() {
     return;
   }
   
-  // Use Windows system sounds or PowerShell beep
   const isWindows = process.platform === 'win32';
   
   if (isWindows) {
-    // Multiple beeps using PowerShell for louder alert
     const beepCommands = [];
     for (let i = 0; i < CONFIG.beepCount; i++) {
       beepCommands.push('[console]::beep(1000, 300)');
@@ -300,14 +479,12 @@ function playAlert() {
     }
     exec(`powershell -c "${beepCommands.join('; ')}"`, (err) => {
       if (err) {
-        // Fallback to ASCII bell
         for (let i = 0; i < CONFIG.beepCount; i++) {
           process.stdout.write('\x07');
         }
       }
     });
   } else {
-    // Linux/Mac - use ASCII bell multiple times
     for (let i = 0; i < CONFIG.beepCount; i++) {
       process.stdout.write('\x07');
     }
@@ -320,13 +497,14 @@ function playAlert() {
  * Main polling loop
  */
 async function startPolling() {
-  console.log('🖨️  Taiwan Maami KOT Printer Client - T. NAGAR KITCHEN');
-  console.log('======================================================');
+  console.log('🖨️  Taiwan Maami KOT Printer Client - T. NAGAR KITCHEN v2.0');
+  console.log('=============================================================');
   console.log(`Server: ${CONFIG.serverUrl}`);
   console.log(`Printer: ${CONFIG.printerName} @ ${CONFIG.printerIp}:${CONFIG.printerPort}`);
   console.log(`Outlet ID: ${CONFIG.outletId} (T. Nagar)`);
   console.log(`Poll interval: ${CONFIG.pollInterval}ms`);
-  console.log('======================================================\n');
+  console.log(`Max retries per KOT: ${CONFIG.maxRetries}`);
+  console.log('=============================================================\n');
   console.log('✅ Started polling for KOTs (T. NAGAR KITCHEN)...\n');
   
   setInterval(async () => {
@@ -339,19 +517,51 @@ async function startPolling() {
       playAlert();
       
       for (const kot of kots) {
+        const kotId = kot.id;
+        
+        // Check if we've already exceeded retries for this KOT
+        const attempts = failedAttempts.get(kotId);
+        if (attempts && attempts.count >= CONFIG.maxRetries) {
+          await forceMarkPrinted(kotId, attempts.lastError);
+          continue;
+        }
+        
         try {
-          console.log(`\n🖨️  Printing KOT #${kot.id} to ${CONFIG.printerName} (Order: ${kot.orderNumber})...`);
+          console.log(`\n🖨️  Printing KOT #${kotId} to ${CONFIG.printerName} (Order: ${kot.orderNumber})...`);
           
-          // Format and print
+          // Format the KOT (handles cancellations, additions, normal orders)
           const printData = formatKOT(kot);
+          
+          if (printData === null) {
+            // formatKOT returned null — unrecognized KOT format, mark as printed to avoid loop
+            console.warn(`⚠️  KOT #${kotId} has unrecognized format. Marking as printed.`);
+            await markPrinted(kotId);
+            failedAttempts.delete(kotId);
+            continue;
+          }
+          
+          // Send to printer
           await printToThermal(printData);
           
-          // Mark as printed
-          await markPrinted(kot.id);
+          // Mark as printed on server
+          await markPrinted(kotId);
           
-          console.log(`✅ KOT #${kot.id} printed to ${CONFIG.printerName} successfully`);
+          // Clear any previous failure tracking
+          failedAttempts.delete(kotId);
+          
+          console.log(`✅ KOT #${kotId} printed to ${CONFIG.printerName} successfully`);
         } catch (error) {
-          console.error(`❌ Failed to print KOT #${kot.id} to ${CONFIG.printerName}:`, error.message);
+          const currentAttempts = failedAttempts.get(kotId) || { count: 0, lastError: '' };
+          currentAttempts.count += 1;
+          currentAttempts.lastError = error.message;
+          failedAttempts.set(kotId, currentAttempts);
+          
+          console.error(`❌ Failed to print KOT #${kotId} to ${CONFIG.printerName}: ${error.message} (attempt ${currentAttempts.count}/${CONFIG.maxRetries})`);
+          
+          // If max retries reached, force-mark it
+          if (currentAttempts.count >= CONFIG.maxRetries) {
+            await forceMarkPrinted(kotId, error.message);
+          }
         }
       }
     }
