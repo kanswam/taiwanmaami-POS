@@ -436,25 +436,6 @@ export const partnerRouter = router({
     ]);
     const isActive = config.programme_active === "true";
 
-    // Gate check: if programme is not active, return minimal response
-    if (!isActive) {
-      return {
-        programmeActive: false,
-        foundingPrice: 0,
-        regularPrice: 0,
-        foundingBasePrice: 0,
-        regularBasePrice: 0,
-        gstRatePercent: 0,
-        foundingGstAmount: 0,
-        regularGstAmount: 0,
-        foundingSlotsRemaining: 0,
-        foundingSlotsTotal: 0,
-        complimentaryItemsPerYear: 0,
-        workshopDiscountPercent: 0,
-        maamiRupeesRebatePct: 0,
-      };
-    }
-
     const foundingTotal = parseInt(config.founding_price_paise || "388800"); // Total incl. GST
     const regularTotal = parseInt(config.regular_price_paise || "450000"); // Total incl. GST
     const gstRate = parseInt(config.gst_rate_percent || "18");
@@ -473,7 +454,7 @@ export const partnerRouter = router({
       regularGstAmount: regularGst,
       foundingSlotsRemaining: parseInt(config.founding_slots_remaining || "49"),
       foundingSlotsTotal: parseInt(config.founding_slots_total || "49"),
-      programmeActive: true,
+      programmeActive: isActive,
       complimentaryItemsPerYear: parseInt(config.complimentary_items_per_year || "15"),
       workshopDiscountPercent: parseInt(config.workshop_discount_percent || "10"),
       maamiRupeesRebatePct: 2,
