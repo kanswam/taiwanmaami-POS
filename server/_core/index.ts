@@ -247,12 +247,17 @@ async function startServer() {
       
       const { getDb } = await import('../db');
       const { kotQueue } = await import('../../drizzle/schema');
-      const { eq, asc, and, or, isNull } = await import('drizzle-orm');
+      const { eq, asc, and, or, isNull, gt } = await import('drizzle-orm');
       
       const dbInstance = await getDb();
       if (!dbInstance) {
         return res.json({ kots: [] });
       }
+      
+      // Max age in minutes — only return KOTs created within this window.
+      // Prevents stale KOTs from flooding the printer on client restart.
+      const maxAgeMinutes = req.query.maxAge ? parseInt(req.query.maxAge as string) : 30;
+      const cutoffTime = new Date(Date.now() - maxAgeMinutes * 60 * 1000);
       
       // Use the appropriate printed flag based on printerType
       const printedFlag = printerType === 'kitchen' ? kotQueue.kitchenPrinted : kotQueue.isPrinted;
@@ -263,9 +268,37 @@ async function startServer() {
         : eq(printedFlag, false);
       
       // Filter by outlet if specified, otherwise return all pending KOTs
-      const whereCondition = outletId 
+      const baseCondition = outletId 
         ? and(notPrintedCondition, eq(kotQueue.outletId, outletId))
         : notPrintedCondition;
+      
+      // Apply time window filter
+      const whereCondition = and(baseCondition, gt(kotQueue.createdAt, cutoffTime));
+      
+      // Also auto-mark any STALE KOTs (older than cutoff) as printed so they never come back
+      const staleCondition = outletId
+        ? and(notPrintedCondition, eq(kotQueue.outletId, outletId))
+        : notPrintedCondition;
+      
+      // Mark stale KOTs in background (don't block the response)
+      dbInstance
+        .select({ id: kotQueue.id, createdAt: kotQueue.createdAt })
+        .from(kotQueue)
+        .where(staleCondition)
+        .then(async (allPending) => {
+          const staleIds = allPending
+            .filter(k => k.createdAt && new Date(k.createdAt) <= cutoffTime)
+            .map(k => k.id);
+          if (staleIds.length > 0) {
+            const { inArray } = await import('drizzle-orm');
+            const updateData = printerType === 'kitchen'
+              ? { kitchenPrinted: true, kitchenPrintedAt: new Date() }
+              : { isPrinted: true, printedAt: new Date() };
+            await dbInstance.update(kotQueue).set(updateData).where(inArray(kotQueue.id, staleIds));
+            console.log(`[KOT Poll] Auto-marked ${staleIds.length} stale KOT(s) as ${printerType}-printed (older than ${maxAgeMinutes}min)`);
+          }
+        })
+        .catch(err => console.error('[KOT Poll] Error marking stale KOTs:', err.message));
       
       const pendingKots = await dbInstance
         .select()
@@ -435,23 +468,29 @@ async function startServer() {
   app.get('/api/receipt/poll', async (req, res) => {
     try {
       const secret = req.query.secret as string;
+      const outletId = req.query.outletId ? parseInt(req.query.outletId as string) : null;
       if (!secret || secret !== process.env.KOT_PRINT_SECRET) {
         return res.status(401).json({ error: 'Invalid secret' });
       }
       
       const { getDb } = await import('../db');
       const { receiptQueue } = await import('../../drizzle/schema');
-      const { eq, asc } = await import('drizzle-orm');
+      const { eq, asc, and } = await import('drizzle-orm');
       
       const dbInstance = await getDb();
       if (!dbInstance) {
         return res.json({ receipts: [] });
       }
       
+      // Filter by outlet if specified, otherwise return all pending receipts
+      const whereCondition = outletId
+        ? and(eq(receiptQueue.isPrinted, false), eq(receiptQueue.outletId, outletId))
+        : eq(receiptQueue.isPrinted, false);
+      
       const pendingReceipts = await dbInstance
         .select()
         .from(receiptQueue)
-        .where(eq(receiptQueue.isPrinted, false))
+        .where(whereCondition)
         .orderBy(asc(receiptQueue.createdAt));
       
       return res.json({
@@ -545,7 +584,7 @@ async function startServer() {
             productName: item.productName,
             quantity: item.quantity,
             unitPrice: item.unitPrice,
-            totalPrice: item.unitPrice * item.quantity,
+            totalPrice: item.lineTotal || (item.unitPrice * item.quantity),
             size: item.size,
             withBoba: item.withBoba,
             sugarLevel: item.sugarLevel,
